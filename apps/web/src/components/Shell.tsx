@@ -7,6 +7,7 @@ const links = [
   { to: "/", label: "Box office", end: true },
   { to: "/admission", label: "Admission", end: false },
   { to: "/resale", label: "Resale", end: false },
+  { to: "/marketing", label: "Marketing", end: false },
 ];
 
 export function Shell({ children }: { children: ReactNode }) {

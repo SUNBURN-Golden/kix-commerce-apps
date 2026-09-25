@@ -1,0 +1,3 @@
+# Wave 7 marketing demo. This file is not a production crawl policy.
+User-agent: *
+Disallow: /

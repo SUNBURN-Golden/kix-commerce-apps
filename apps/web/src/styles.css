@@ -102,6 +102,7 @@ button:disabled {
 
 nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
 }
 
@@ -254,6 +255,169 @@ input {
 
 .codes {
   letter-spacing: 0.14em;
+}
+
+.mkt {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 4rem;
+}
+
+.mkt h2,
+.mkt h3,
+.mkt-card h3 {
+  font-family: Palatino, "Iowan Old Style", Georgia, serif;
+  font-weight: 600;
+  margin: 0;
+}
+
+.mkt-legend,
+.mkt-grid,
+.mkt-log,
+.mkt-slots {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+}
+
+.mkt-legend,
+.mkt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.75rem;
+}
+
+.mkt-legend li,
+.mkt-card,
+.mkt-slot,
+.mkt-log li {
+  border: 1px solid var(--line);
+  background: var(--card);
+  padding: 0.9rem 1rem;
+}
+
+.mkt-card {
+  display: grid;
+  gap: 0.45rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.mkt-card:hover,
+.mkt-card:focus-visible {
+  box-shadow: var(--shadow);
+}
+
+.mkt-code {
+  margin: 0;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mkt-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(16rem, 0.8fr);
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.mkt-poster {
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(141, 29, 50, 0.08), transparent 7rem),
+    var(--card);
+  box-shadow: var(--shadow);
+  padding: 1.2rem 1.2rem 1.4rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.mkt-poster h2 {
+  font-size: clamp(2rem, 4vw, 3.15rem);
+  line-height: 1.02;
+}
+
+.mkt-lead {
+  margin: 0;
+  font-family: Palatino, Georgia, serif;
+  font-size: 1.45rem;
+  line-height: 1.25;
+}
+
+.mkt-variants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mkt-variants button[aria-pressed="true"] {
+  background: var(--stamp);
+  color: var(--paper);
+}
+
+.mkt-shell h3 {
+  margin-bottom: 0.8rem;
+}
+
+.mkt-shell dl {
+  margin: 0;
+}
+
+.mkt-shell dt {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.mkt-shell dd {
+  margin: 0.15rem 0 0.7rem;
+  overflow-wrap: anywhere;
+}
+
+.mkt-slots {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.mkt-slot {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.mkt-slot textarea {
+  width: 100%;
+  max-width: none;
+  min-height: 5.5rem;
+  font: inherit;
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--ink);
+  padding: 0.55rem 0.65rem;
+  resize: vertical;
+}
+
+.mkt-fixed {
+  margin: 0;
+}
+
+.mkt-log {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.mkt :focus-visible {
+  outline: 2px solid var(--stamp);
+  outline-offset: 2px;
+}
+
+@media (max-width: 800px) {
+  .mkt-hero {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 720px) {
