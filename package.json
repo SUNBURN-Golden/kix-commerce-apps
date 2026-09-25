@@ -1,0 +1,17 @@
+{
+  "name": "kix-commerce-apps",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @kix/web",
+    "build": "npm run typecheck -w @kix/protocol-adapter && npm run build -w @kix/web",
+    "typecheck": "npm run typecheck -w @kix/protocol-adapter && npm run typecheck -w @kix/web",
+    "test": "npm run test -w @kix/protocol-adapter"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

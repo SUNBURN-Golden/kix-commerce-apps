@@ -1,0 +1,269 @@
+:root {
+  color-scheme: light;
+  --paper: #efe4d2;
+  --card: #f7f1e4;
+  --ink: #241910;
+  --muted: #5e5146;
+  --line: #241910;
+  --stamp: #8d1d32;
+  --ok: #1d5c3d;
+  --shadow: 6px 6px 0 #241910;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-image: radial-gradient(circle at top left, rgba(141, 29, 50, 0.08), transparent 28rem);
+}
+
+a {
+  color: inherit;
+}
+
+button,
+.button {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: var(--ink);
+  color: var(--paper);
+  font: inherit;
+  padding: 0.55rem 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+button.ghost,
+.button.ghost,
+.ghost {
+  background: transparent;
+  color: var(--ink);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: end;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 1rem;
+}
+
+.brand {
+  display: flex;
+  gap: 0.9rem;
+  align-items: center;
+}
+
+.brand h1,
+.section-head h2,
+.ticket h3,
+.row h3 {
+  font-family: Palatino, "Iowan Old Style", Georgia, serif;
+  font-weight: 600;
+  margin: 0;
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+nav {
+  display: flex;
+  gap: 1rem;
+}
+
+nav a {
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 0.15rem;
+}
+
+nav a[aria-current="page"] {
+  border-color: var(--stamp);
+}
+
+.banner,
+.alert,
+.empty,
+.panel,
+.ticket,
+.stamp,
+.row {
+  border: 1px solid var(--line);
+  background: var(--card);
+}
+
+.banner {
+  margin: 1rem 0 1.5rem;
+  padding: 0.75rem 0.9rem;
+  box-shadow: var(--shadow);
+}
+
+.section-head {
+  margin-bottom: 1rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.program {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.row,
+.panel,
+.ticket,
+.stamp {
+  padding: 1rem;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.when {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel {
+  display: grid;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.92rem;
+}
+
+input {
+  font: inherit;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--ink);
+  max-width: 24rem;
+}
+
+.alert {
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 1rem;
+  border-color: var(--stamp);
+}
+
+.empty {
+  padding: 0.9rem;
+}
+
+.ticket {
+  box-shadow: var(--shadow);
+  background:
+    radial-gradient(circle at left, transparent 10px, var(--card) 11px) left / 16px 100% repeat-y,
+    var(--card);
+  padding-left: 1.4rem;
+}
+
+.ticket dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.8rem;
+  margin: 1rem 0;
+}
+
+.ticket dt {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ticket dd {
+  margin: 0.15rem 0 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.stamp {
+  margin-top: 1rem;
+}
+
+.stamp-word {
+  margin: 0 0 0.4rem;
+  font-family: Palatino, Georgia, serif;
+  font-size: 2.4rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.stamp.ok .stamp-word {
+  color: var(--ok);
+}
+
+.stamp.deny .stamp-word {
+  color: var(--stamp);
+}
+
+.codes {
+  letter-spacing: 0.14em;
+}
+
+@media (max-width: 720px) {
+  .top,
+  .row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  nav {
+    gap: 0.8rem;
+  }
+}

@@ -1,0 +1,268 @@
+import { CONSUMED_SURFACES, type CommerceProtocol } from "./protocol.js";
+import { SURFACES } from "./surfaces.js";
+import {
+  ProtocolError,
+  type AdmissionDecision,
+  type AdapterMeta,
+  type Booking,
+  type Hold,
+  type Performance,
+  type ResaleListing,
+  type SettlementPreview,
+} from "./types.js";
+
+const HOLD_MS = 10 * 60 * 1000;
+
+const DEFAULT_SEED: Performance[] = [
+  {
+    eventId: "evt_lanterns",
+    title: "North Station Lanterns",
+    venue: "Hall A",
+    startsAt: "2026-10-03T19:00:00.000Z",
+    remainingCapacity: 40,
+  },
+  {
+    eventId: "evt_paper_orchestra",
+    title: "Paper Orchestra",
+    venue: "Hall B",
+    startsAt: "2026-10-04T15:30:00.000Z",
+    remainingCapacity: 24,
+  },
+  {
+    eventId: "evt_last_ferry",
+    title: "Last Ferry Diagram",
+    venue: "Studio",
+    startsAt: "2026-10-05T20:00:00.000Z",
+    remainingCapacity: 12,
+  },
+];
+
+interface HoldRecord extends Hold {
+  consumed: boolean;
+}
+
+/**
+ * In-memory stand-in used when no kix-protocol HTTP base is configured.
+ * Policies in this class are stub policies for the UI and tests.
+ * They are not kix-protocol or Move semantics.
+ */
+export class StubProtocolAdapter implements CommerceProtocol {
+  private readonly performances: Performance[];
+  private readonly holds = new Map<string, HoldRecord>();
+  private readonly bookings = new Map<string, Booking>();
+  private readonly listings = new Map<string, ResaleListing>();
+  private readonly admitted = new Set<string>();
+  private seq = 0;
+
+  constructor(seed: Performance[] = DEFAULT_SEED, private readonly now: () => number = Date.now) {
+    this.performances = seed.map((item) => ({ ...item }));
+  }
+
+  describe(): AdapterMeta {
+    return {
+      adapter: "stub",
+      liveChain: false,
+      fundsMovement: "none",
+      surfaces: [...CONSUMED_SURFACES],
+    };
+  }
+
+  async listPerformances(): Promise<Performance[]> {
+    return this.performances.map((item) => ({ ...item }));
+  }
+
+  async placeHold(input: { eventId: string; quantity: number }): Promise<Hold> {
+    const performance = this.requirePerformance(input.eventId);
+    const quantity = requireQuantity(input.quantity);
+    if (quantity > performance.remainingCapacity) {
+      throw new ProtocolError("Not enough remaining capacity for that hold.");
+    }
+    performance.remainingCapacity -= quantity;
+    const hold: HoldRecord = {
+      holdId: this.nextId("hold"),
+      eventId: performance.eventId,
+      quantity,
+      expiresAt: new Date(this.now() + HOLD_MS).toISOString(),
+      surface: SURFACES.booking,
+      consumed: false,
+    };
+    this.holds.set(hold.holdId, hold);
+    return { ...hold };
+  }
+
+  async releaseHold(holdId: string): Promise<void> {
+    const hold = this.holds.get(holdId);
+    if (!hold || hold.consumed) {
+      throw new ProtocolError("Hold is not active.");
+    }
+    hold.consumed = true;
+    this.requirePerformance(hold.eventId).remainingCapacity += hold.quantity;
+  }
+
+  async confirmBooking(holdId: string): Promise<Booking> {
+    const hold = this.holds.get(holdId);
+    if (!hold || hold.consumed) {
+      throw new ProtocolError("Hold is not active.");
+    }
+    if (Date.parse(hold.expiresAt) <= this.now()) {
+      hold.consumed = true;
+      this.requirePerformance(hold.eventId).remainingCapacity += hold.quantity;
+      throw new ProtocolError("Hold has expired.");
+    }
+    hold.consumed = true;
+    const bookingId = this.nextId("bkg");
+    const booking: Booking = {
+      bookingId,
+      eventId: hold.eventId,
+      quantity: hold.quantity,
+      rightsRef: `right_${bookingId}`,
+      status: "confirmed",
+      payment: "simulated-no-funds",
+      surfaces: [SURFACES.booking, SURFACES.rightsIssuance],
+    };
+    this.bookings.set(booking.bookingId, booking);
+    return { ...booking, surfaces: [...booking.surfaces] };
+  }
+
+  async getBooking(bookingId: string): Promise<Booking | null> {
+    const booking = this.bookings.get(bookingId);
+    return booking ? { ...booking, surfaces: [...booking.surfaces] } : null;
+  }
+
+  async checkAdmission(input: { rightsRef: string; gateId: string }): Promise<AdmissionDecision> {
+    const gateId = input.gateId.trim();
+    const rightsRef = input.rightsRef.trim();
+    const base = {
+      rightsRef,
+      gateId,
+      surface: SURFACES.admission,
+      zkSurface: SURFACES.zkGate,
+      proofMode: "stub" as const,
+    };
+    if (!gateId) {
+      return { ...base, admitted: false, detail: "Stub: a gate id is required." };
+    }
+    const booking = [...this.bookings.values()].find((item) => item.rightsRef === rightsRef);
+    if (!booking) {
+      return { ...base, admitted: false, detail: "Stub: unknown right." };
+    }
+    if (booking.status === "transferred") {
+      return { ...base, admitted: false, detail: "Stub: right was transferred." };
+    }
+    const openListing = [...this.listings.values()].find(
+      (item) => item.rightsRef === rightsRef && item.status === "open",
+    );
+    if (openListing) {
+      return { ...base, admitted: false, detail: "Stub: right is in an open resale listing." };
+    }
+    if (this.admitted.has(rightsRef)) {
+      return { ...base, admitted: false, detail: "Stub: right was already admitted." };
+    }
+    this.admitted.add(rightsRef);
+    return {
+      ...base,
+      admitted: true,
+      detail: "Stub: admitted once. zk_gate proof was not evaluated on a chain.",
+    };
+  }
+
+  async listResale(eventId?: string): Promise<ResaleListing[]> {
+    return [...this.listings.values()]
+      .filter((item) => (eventId ? item.eventId === eventId : true))
+      .map(copyListing);
+  }
+
+  async openResale(input: { bookingId: string; askLabel: string }): Promise<ResaleListing> {
+    const booking = this.bookings.get(input.bookingId);
+    if (!booking || booking.status !== "confirmed") {
+      throw new ProtocolError("Only a confirmed booking can be listed.");
+    }
+    const askLabel = input.askLabel.trim();
+    if (!askLabel || askLabel.length > 40) {
+      throw new ProtocolError("Ask label must be 1–40 characters and is display-only.");
+    }
+    const already = [...this.listings.values()].find(
+      (item) => item.bookingId === booking.bookingId && item.status === "open",
+    );
+    if (already) {
+      throw new ProtocolError("That booking already has an open listing.");
+    }
+    if (this.admitted.has(booking.rightsRef)) {
+      throw new ProtocolError("An admitted right cannot be listed.");
+    }
+    const listing: ResaleListing = {
+      listingId: this.nextId("rsl"),
+      bookingId: booking.bookingId,
+      rightsRef: booking.rightsRef,
+      eventId: booking.eventId,
+      askLabel,
+      status: "open",
+      surface: SURFACES.resale,
+    };
+    this.listings.set(listing.listingId, listing);
+    return copyListing(listing);
+  }
+
+  async acceptResale(listingId: string): Promise<{ listing: ResaleListing; booking: Booking }> {
+    const listing = this.listings.get(listingId);
+    if (!listing || listing.status !== "open") {
+      throw new ProtocolError("Listing is not open.");
+    }
+    const previous = this.bookings.get(listing.bookingId);
+    if (!previous || previous.status !== "confirmed") {
+      throw new ProtocolError("Listing booking is no longer confirmed.");
+    }
+    listing.status = "transferred";
+    previous.status = "transferred";
+    const bookingId = this.nextId("bkg");
+    const booking: Booking = {
+      bookingId,
+      eventId: previous.eventId,
+      quantity: previous.quantity,
+      rightsRef: `right_${bookingId}`,
+      status: "confirmed",
+      payment: "simulated-no-funds",
+      surfaces: [SURFACES.resale, SURFACES.rightsIssuance],
+    };
+    this.bookings.set(booking.bookingId, booking);
+    return {
+      listing: copyListing(listing),
+      booking: { ...booking, surfaces: [...booking.surfaces] },
+    };
+  }
+
+  async settlementPreview(eventId: string): Promise<SettlementPreview> {
+    this.requirePerformance(eventId);
+    return {
+      eventId,
+      mode: "mock",
+      surface: SURFACES.settlementMock,
+      references: ["F01", "F02", "F03"],
+      note: "Read-only pointer to the kix-protocol Wave 3 settlement mock. This app does not compute shares or disburse funds.",
+    };
+  }
+
+  private requirePerformance(eventId: string): Performance {
+    const performance = this.performances.find((item) => item.eventId === eventId);
+    if (!performance) {
+      throw new ProtocolError("Unknown performance.");
+    }
+    return performance;
+  }
+
+  private nextId(prefix: string): string {
+    this.seq += 1;
+    return `${prefix}_${this.seq}`;
+  }
+}
+
+function requireQuantity(quantity: number): number {
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 6) {
+    throw new ProtocolError("Quantity must be a whole number from 1 to 6.");
+  }
+  return quantity;
+}
+
+function copyListing(listing: ResaleListing): ResaleListing {
+  return { ...listing };
+}
