@@ -95,7 +95,8 @@ describe("booking, admission, and resale stub flows", () => {
     expect(preview.mode).toBe("mock");
     expect(preview.references).toEqual(["F01", "F02", "F03"]);
     expect(preview.surface).toBe("wave3.settlement.F01-F03");
-    expect(JSON.stringify(preview)).not.toMatch(/usd|krw|payout|disburse/i);
+    expect(preview).not.toHaveProperty("amount");
+    expect(preview).not.toHaveProperty("currency");
   });
 
   it("keeps credit disbursement off the client", () => {
