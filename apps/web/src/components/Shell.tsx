@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { NavLink } from "react-router-dom";
+import { useEffect, type ReactNode } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import { CREDIT_BOUNDARY } from "@kix/protocol-adapter";
 import { protocol } from "../protocol";
 
@@ -7,10 +7,17 @@ const links = [
   { to: "/", label: "Box office", end: true },
   { to: "/admission", label: "Admission", end: false },
   { to: "/resale", label: "Resale", end: false },
+  { to: "/marketing", label: "Marketing", end: false },
 ];
 
 export function Shell({ children }: { children: ReactNode }) {
   const meta = protocol.describe();
+  const location = useLocation();
+  const onMarketing = location.pathname === "/marketing" || location.pathname.startsWith("/marketing/");
+
+  useEffect(() => {
+    document.title = onMarketing ? "KIX Marketing · 설계중" : "KIX Box Office";
+  }, [onMarketing]);
 
   return (
     <div className="shell">
@@ -18,8 +25,8 @@ export function Shell({ children }: { children: ReactNode }) {
         <div className="brand">
           <span className="mark">KIX</span>
           <div>
-            <p className="eyebrow">Commerce desk</p>
-            <h1>Box office</h1>
+            <p className="eyebrow">{onMarketing ? "Marketing desk · 설계중" : "Commerce desk"}</p>
+            <h1>{onMarketing ? "Marketing" : "Box office"}</h1>
           </div>
         </div>
         <nav aria-label="Surfaces">

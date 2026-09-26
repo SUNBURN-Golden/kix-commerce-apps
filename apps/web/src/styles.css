@@ -75,7 +75,8 @@ button:disabled {
 .brand h1,
 .section-head h2,
 .ticket h3,
-.row h3 {
+.row h3,
+.panel h3 {
   font-family: Palatino, "Iowan Old Style", Georgia, serif;
   font-weight: 600;
   margin: 0;
@@ -102,7 +103,8 @@ button:disabled {
 
 nav {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
 }
 
 nav a {
@@ -186,13 +188,25 @@ label {
   font-size: 0.92rem;
 }
 
-input {
+input,
+select {
   font: inherit;
   padding: 0.5rem 0.6rem;
   border: 1px solid var(--line);
   background: white;
   color: var(--ink);
   max-width: 24rem;
+}
+
+label.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+}
+
+label.check input {
+  margin-top: 0.2rem;
+  max-width: none;
 }
 
 .alert {
@@ -211,6 +225,7 @@ input {
     radial-gradient(circle at left, transparent 10px, var(--card) 11px) left / 16px 100% repeat-y,
     var(--card);
   padding-left: 1.4rem;
+  margin-bottom: 1rem;
 }
 
 .ticket dl {
@@ -254,6 +269,42 @@ input {
 
 .codes {
   letter-spacing: 0.14em;
+}
+
+.tabs {
+  margin: 0 0 1rem;
+}
+
+.tabs a {
+  text-decoration: none;
+  border: 1px solid var(--line);
+  padding: 0.35rem 0.55rem;
+  background: transparent;
+}
+
+.tabs a[aria-current="page"] {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.hub {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.75rem;
+}
+
+a.panel {
+  text-decoration: none;
+  color: inherit;
+}
+
+.section-head .muted,
+.section-head p {
+  margin: 0.35rem 0 0;
 }
 
 @media (max-width: 720px) {

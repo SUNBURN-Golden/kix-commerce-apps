@@ -8,5 +8,5 @@
       "@kix/protocol-adapter": ["../../packages/protocol-adapter/src/index.ts"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "test"]
 }
