@@ -1,9 +1,11 @@
 import { isRecord } from "./record.js";
 import { SURFACES } from "./surfaces.js";
 import {
+  isResalePhase,
   isReservationPhase,
   isSettlementPhase,
   ProtocolError,
+  RESALE_PROVENANCE,
   RESERVATION_PROVENANCE,
   SETTLEMENT_PROVENANCE,
   type Booking,
@@ -14,6 +16,15 @@ const PRODUCTION_ADMISSION_COPY = [
   /gate scanned live/i,
   /venue admitted/i,
   /ticket printed for entry/i,
+  /portone/i,
+  /toss/i,
+];
+
+const PRODUCTION_RESALE_COPY = [
+  /listed on exchange/i,
+  /kyc cleared/i,
+  /funds settled/i,
+  /seller bank/i,
   /portone/i,
   /toss/i,
 ];
@@ -50,13 +61,15 @@ function scan(value: unknown): void {
   if ("bookingId" in value && "payment" in value) {
     asBooking(value);
   }
-  if (isReservationPayload(value)) {
+  if (isResalePayload(value)) {
+    asResale(value);
+  } else if (isReservationPayload(value)) {
     asReservation(value);
   }
   if (isAdmissionPayload(value)) {
     asAdmission(value);
   }
-  if ("mode" in value && "references" in value && !isReservationPayload(value)) {
+  if ("mode" in value && "references" in value && !isReservationPayload(value) && !isResalePayload(value)) {
     if ("amount" in value || "currency" in value) {
       throw new ProtocolError("Settlement preview must not carry an amount or currency.");
     }
@@ -123,6 +136,99 @@ function asSettlement(value: Record<string, unknown>): SettlementPreview {
     references: ["F01", "F02", "F03"],
     note: readString(value, "note"),
   };
+}
+
+function isResalePayload(value: Record<string, unknown>): boolean {
+  if (
+    "listingId" in value ||
+    "ownershipTransferred" in value ||
+    "priorPresentationValid" in value ||
+    "priorCredentialInvalidated" in value ||
+    "venueCredentialReissued" in value ||
+    "externalMarketplace" in value ||
+    "salePhase" in value ||
+    "settlementFailure" in value ||
+    "pendingSale" in value ||
+    "rightEligible" in value ||
+    "matchesCurrentRight" in value
+  ) {
+    return true;
+  }
+  if (isResalePhase(value.phase)) {
+    return true;
+  }
+  return Array.isArray(value.references) && value.references[0] === "R01";
+}
+
+function asResale(value: Record<string, unknown>): void {
+  if ("economicFinalityClaimed" in value && value.economicFinalityClaimed !== false) {
+    throw new ProtocolError("Resale payload must not claim economic finality.");
+  }
+  if ("economic_finality_claimed" in value && value.economic_finality_claimed !== false) {
+    throw new ProtocolError("Resale payload must not claim economic finality.");
+  }
+  if ("fundsExecuted" in value && value.fundsExecuted !== false) {
+    throw new ProtocolError("Resale payload must not claim executed funds.");
+  }
+  if ("venueCredentialReissued" in value && value.venueCredentialReissued !== false) {
+    throw new ProtocolError("Resale payload must not claim a venue credential reissue.");
+  }
+  if ("chainOwnerCurrent" in value && value.chainOwnerCurrent !== false) {
+    throw new ProtocolError("Resale payload must not claim a chain owner.");
+  }
+  if ("externalMarketplace" in value && value.externalMarketplace !== "UNSUPPORTED") {
+    throw new ProtocolError("Resale payload must keep the external marketplace unsupported.");
+  }
+  if ("externalPayment" in value && value.externalPayment !== "UNSUPPORTED") {
+    throw new ProtocolError("Resale payload must keep external payment unsupported.");
+  }
+  if ("admissionRoutingProduction" in value && value.admissionRoutingProduction !== false) {
+    throw new ProtocolError("Resale payload must not claim production admission routing.");
+  }
+  if (
+    "amount" in value ||
+    "currency" in value ||
+    "gross" in value ||
+    "sellerDue" in value ||
+    "organizerDue" in value ||
+    "platformDue" in value
+  ) {
+    throw new ProtocolError("Resale payload must not carry an amount or a fee split.");
+  }
+  const shaped =
+    "listingId" in value ||
+    "salePhase" in value ||
+    "ownershipTransferred" in value ||
+    "matchesCurrentRight" in value ||
+    isResalePhase(value.phase) ||
+    (Array.isArray(value.references) && value.references[0] === "R01");
+  if (shaped) {
+    if (value.mode !== "mock") {
+      throw new ProtocolError("Resale payload must stay in mock mode.");
+    }
+    if (value.provenance !== RESALE_PROVENANCE) {
+      throw new ProtocolError("Resale payload must stay MOCK_GATE_ONLY.");
+    }
+  }
+  if ("phase" in value && !isResalePhase(value.phase)) {
+    throw new ProtocolError("Resale phase must be a mock FSM phase.");
+  }
+  if ("salePhase" in value && value.salePhase !== null && !isResalePhase(value.salePhase)) {
+    throw new ProtocolError("Resale phase must be a mock FSM phase.");
+  }
+  assertNoProductionResaleCopy(value);
+}
+
+function assertNoProductionResaleCopy(value: Record<string, unknown>): void {
+  for (const key of ["note", "detail"] as const) {
+    const field = value[key];
+    if (typeof field !== "string") {
+      continue;
+    }
+    if (PRODUCTION_RESALE_COPY.some((pattern) => pattern.test(field))) {
+      throw new ProtocolError("Resale payload must not use production-marketplace wording.");
+    }
+  }
 }
 
 function isReservationPayload(value: Record<string, unknown>): boolean {

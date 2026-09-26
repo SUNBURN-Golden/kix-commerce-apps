@@ -20,6 +20,22 @@ import type {
   ReservationShowRegister,
   ReservationShowView,
   ReservationStep,
+  ResaleAccept,
+  ResaleAdopt,
+  ResaleBind,
+  ResaleCancelListing,
+  ResaleCaseView,
+  ResaleClock,
+  ResaleCommandReceipt,
+  ResaleHoldBuy,
+  ResaleList,
+  ResalePayment,
+  ResalePresentationQuery,
+  ResalePresentationView,
+  ResaleReconcileReceipt,
+  ResaleReleaseHold,
+  ResaleRightView,
+  ResaleStep,
   SettlementCaseView,
   SettlementCommandReceipt,
   SettlementInitiate,
@@ -82,6 +98,27 @@ export interface CommerceProtocol {
   viewReservation(reservationId: string): Promise<ReservationCaseView>;
   viewReservationShow(showId: string): Promise<ReservationShowView>;
   rejectExternalReservation(kind: string): Promise<never>;
+  /**
+   * Stub-local resale case commands.
+   * These names are not OpenAPI operations. HttpProtocolAdapter leaves them not-bound.
+   * The authoritative FSM stays in kix-protocol. This app does not list a live
+   * marketplace, move funds, or reissue a venue credential.
+   */
+  advanceResaleClock(input: ResaleClock): Promise<ResaleCommandReceipt>;
+  adoptResaleIssued(input: ResaleAdopt): Promise<ResaleCommandReceipt>;
+  listResaleCase(input: ResaleList): Promise<ResaleCommandReceipt>;
+  holdResaleBuy(input: ResaleHoldBuy): Promise<ResaleCommandReceipt>;
+  releaseResaleHold(input: ResaleReleaseHold): Promise<ResaleCommandReceipt>;
+  cancelResaleListing(input: ResaleCancelListing): Promise<ResaleCommandReceipt>;
+  observeResalePayment(input: ResalePayment): Promise<ResaleCommandReceipt>;
+  bindResaleSettlement(input: ResaleBind): Promise<ResaleCommandReceipt>;
+  acceptResaleTransfer(input: ResaleAccept): Promise<ResaleCommandReceipt>;
+  closeResaleListing(input: ResaleStep): Promise<ResaleCommandReceipt>;
+  reconcileResale(input: ResaleStep): Promise<ResaleReconcileReceipt>;
+  viewResaleCase(listingId: string): Promise<ResaleCaseView>;
+  viewResaleRight(rightId: string): Promise<ResaleRightView>;
+  viewResalePresentation(input: ResalePresentationQuery): Promise<ResalePresentationView>;
+  rejectExternalResale(kind: string): Promise<never>;
 }
 
 export const CONSUMED_SURFACES: SurfaceId[] = [
@@ -92,6 +129,7 @@ export const CONSUMED_SURFACES: SurfaceId[] = [
   "wave4.booking.B01-B05",
   "wave4.booking.B01-B05.fsm",
   "wave4.resale.R01-R05",
+  "wave4.resale.R01-R05.fsm",
   "wave4.admission.P03",
   "wave4.admission.P03.fsm",
 ];

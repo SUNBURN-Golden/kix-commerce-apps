@@ -382,6 +382,286 @@ export interface ReservationReconcileReceipt extends ReservationCommandReceipt {
   matched: true;
 }
 
+/**
+ * Listing phases from kix-protocol resale_fsm.py.
+ * R01–R05 stay 설계중. These strings are not OpenAPI commands.
+ * ELIGIBLE is a right-eligibility label in that machine, not a listing phase.
+ */
+export const RESALE_PHASES = [
+  "LISTED",
+  "BUY_HELD",
+  "PAYMENT_NOTED",
+  "TRANSFERRED",
+  "CLOSED",
+  "CANCELLED",
+] as const;
+
+export type ResalePhase = (typeof RESALE_PHASES)[number];
+
+export const RESALE_ELIGIBILITY = ["ELIGIBLE", "LOCKED"] as const;
+
+export type ResaleEligibility = (typeof RESALE_ELIGIBILITY)[number];
+
+export const RESALE_PROVENANCE = "MOCK_GATE_ONLY" as const;
+
+export const RESALE_REFERENCES = ["R01", "R02", "R03", "R04", "R05"] as const;
+
+export const RESALE_SETTLEMENT_GATES = ["UNBOUND", "BOUND", "MOCK_COMMIT_OBSERVED"] as const;
+
+export type ResaleSettlementGate = (typeof RESALE_SETTLEMENT_GATES)[number];
+
+const RESALE_PHASE_SET: ReadonlySet<string> = new Set(RESALE_PHASES);
+
+export function isResalePhase(value: unknown): value is ResalePhase {
+  return typeof value === "string" && RESALE_PHASE_SET.has(value);
+}
+
+export interface ResaleClock {
+  idempotencyKey: string;
+  /** ISO-8601 timestamp for the stub's logical clock. Not a marketplace clock. */
+  nowAt: string;
+}
+
+export interface ResaleAdopt {
+  rightId: string;
+  showId: string;
+  eventId: string;
+  slot: string;
+  holderRole: string;
+  /** Null adopts a desk-local right. A reservation id is checked against the mock reservation case. */
+  reservationId: string | null;
+  /** Opaque mock reference from issuance. Not a provider payment id. */
+  paymentRef: string;
+  idempotencyKey: string;
+}
+
+export interface ResaleList {
+  listingId: string;
+  rightId: string;
+  /** Listed holder version. Not a price and not a fee. */
+  version: number;
+  sellerRole: string;
+  recipientRole: string;
+  /** ISO-8601 listing window. Expiry does not cancel the phase by itself. */
+  expiresAt: string;
+  reservationId: string | null;
+  idempotencyKey: string;
+}
+
+export interface ResaleHoldBuy {
+  holdId: string;
+  listingId: string;
+  buyerRole: string;
+  idempotencyKey: string;
+}
+
+export interface ResaleReleaseHold {
+  holdId: string;
+  buyerRole: string;
+  idempotencyKey: string;
+}
+
+export interface ResaleCancelListing {
+  listingId: string;
+  sellerRole: string;
+  idempotencyKey: string;
+}
+
+export interface ResalePayment {
+  listingId: string;
+  idempotencyKey: string;
+  /** Opaque mock reference. Not a provider payment id. */
+  paymentRef: string;
+  buyerRole: string | null;
+}
+
+export interface ResaleBind {
+  listingId: string;
+  settlementId: string;
+  idempotencyKey: string;
+}
+
+export interface ResaleAccept {
+  transferId: string;
+  listingId: string;
+  idempotencyKey: string;
+}
+
+export interface ResaleStep {
+  listingId: string;
+  idempotencyKey: string;
+}
+
+export interface ResalePresentationQuery {
+  rightId: string;
+  version: number;
+  holderRole: string;
+}
+
+/**
+ * Desk view of one adopted mock right.
+ * Eligibility is a label. It is not a marketplace quote and not MockGates arithmetic.
+ */
+export interface ResaleRightView {
+  mode: "mock";
+  surface: typeof SURFACES.resaleFsm;
+  references: typeof RESALE_REFERENCES;
+  provenance: typeof RESALE_PROVENANCE;
+  lifecycleAuthority: "IN_MEMORY_FSM";
+  rightId: string;
+  eligibility: ResaleEligibility;
+  eligible: boolean;
+  /** Live listing phase, or null when no listing is open. */
+  salePhase: ResalePhase | null;
+  reservationId: string | null;
+  showId: string;
+  eventId: string;
+  slot: string;
+  holderRole: string;
+  version: number;
+  /** This desk does not mint a new generation. */
+  generation: 1;
+  activeListingId: string | null;
+  economicFinalityClaimed: false;
+  fundsExecuted: false;
+  venueCredentialReissued: false;
+  externalMarketplace: "UNSUPPORTED";
+  logicalTimeMs: number;
+  lastRejectCode: string | null;
+  note: string;
+}
+
+/**
+ * Desk view of one in-process mock listing.
+ * No prices and no fee splits. Protocol truth stays in kix-protocol.
+ */
+export interface ResaleCaseView {
+  mode: "mock";
+  surface: typeof SURFACES.resaleFsm;
+  references: typeof RESALE_REFERENCES;
+  provenance: typeof RESALE_PROVENANCE;
+  lifecycleAuthority: "IN_MEMORY_FSM";
+  listingId: string;
+  phase: ResalePhase;
+  terminal: boolean;
+  /** True while the phase is still an open sale. Not a live order book. */
+  pendingSale: boolean;
+  rightId: string;
+  showId: string;
+  eventId: string;
+  slot: string;
+  sellerRole: string;
+  recipientRole: string;
+  buyerRole: string | null;
+  holdId: string | null;
+  expiresAt: string;
+  expired: boolean;
+  /** True when this open listing is the right's live listing. */
+  attached: boolean;
+  /** Version named by the listing. */
+  version: number;
+  versionAfter: number | null;
+  /** Holder version on the mock right after any transfer in this process. */
+  currentVersion: number;
+  holderRole: string;
+  generation: 1;
+  paymentRef: string | null;
+  settlementId: string | null;
+  settlementGate: ResaleSettlementGate;
+  /** True when the bound mock settlement view is FAILED. Not a bank return. */
+  settlementFailure: boolean;
+  mockSettlementCommitObserved: boolean;
+  transferId: string | null;
+  ownershipTransferred: boolean;
+  priorPresentationValid: boolean;
+  /** True when the listed holder and version no longer match. Not a venue reissue. */
+  priorCredentialInvalidated: boolean;
+  rightEligible: boolean;
+  slotState: "ISSUED";
+  slotRightId: string;
+  economicFinalityClaimed: false;
+  fundsExecuted: false;
+  venueCredentialReissued: false;
+  chainOwnerCurrent: false;
+  compensationDefined: false;
+  admissionRoutingProduction: false;
+  externalMarketplace: "UNSUPPORTED";
+  externalPayment: "UNSUPPORTED";
+  logicalTimeMs: number;
+  idempotencyKey: string;
+  lastRejectCode: string | null;
+  /**
+   * Process-local journal replay flag.
+   * Null until reconcile succeeds here. Not a marketplace match and not chain finality.
+   */
+  reconcileMatched: boolean | null;
+  note: string;
+}
+
+export interface ResalePresentationView {
+  mode: "mock";
+  surface: typeof SURFACES.resaleFsm;
+  references: typeof RESALE_REFERENCES;
+  provenance: typeof RESALE_PROVENANCE;
+  lifecycleAuthority: "IN_MEMORY_FSM";
+  rightId: string;
+  version: number;
+  holderRole: string;
+  matchesCurrentRight: boolean;
+  currentVersion: number;
+  currentHolderRole: string;
+  venueCredentialReissued: false;
+  admissionRoutingProduction: false;
+  economicFinalityClaimed: false;
+  fundsExecuted: false;
+  externalMarketplace: "UNSUPPORTED";
+  note: string;
+}
+
+/** Transfer note without fee splits. Amounts stay in kix-protocol. */
+export interface ResaleTransferEvidence {
+  rightId: string;
+  fromRole: string;
+  toRole: string;
+  versionAfter: number;
+  fundsExecuted: false;
+  chainOwnerCurrent: false;
+}
+
+export type ResaleLifecycleCommand =
+  | "set_clock"
+  | "adopt_issued"
+  | "list_resale"
+  | "hold_buy"
+  | "release_hold"
+  | "cancel_listing"
+  | "observe_resale_payment"
+  | "bind_settlement"
+  | "accept_resale"
+  | "close"
+  | "reconcile";
+
+export interface ResaleCommandReceipt {
+  duplicate: boolean;
+  applied: ResaleLifecycleCommand | null;
+  provenance: typeof RESALE_PROVENANCE;
+  economicFinalityClaimed: false;
+  fundsExecuted: false;
+  venueCredentialReissued: false;
+  externalMarketplace: "UNSUPPORTED";
+  externalPayment: "UNSUPPORTED";
+  idempotencyKey: string;
+  logicalTimeMs: number;
+  listing: ResaleCaseView | null;
+  right: ResaleRightView | null;
+  evidence: ResaleTransferEvidence | null;
+}
+
+export interface ResaleReconcileReceipt extends ResaleCommandReceipt {
+  applied: "reconcile" | null;
+  matched: true;
+}
+
 export interface AdapterMeta {
   adapter: "stub" | "http";
   liveChain: false;

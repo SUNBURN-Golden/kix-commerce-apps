@@ -23,6 +23,13 @@ export const SURFACES = {
    */
   bookingFsm: "wave4.booking.B01-B05.fsm",
   resale: "wave4.resale.R01-R05",
+  /**
+   * Charter label for the desk's mock resale case.
+   * The authoritative machine remains kix-protocol
+   * reference/booking_resale_admission/resale_fsm.py.
+   * This id is not an OpenAPI operation.
+   */
+  resaleFsm: "wave4.resale.R01-R05.fsm",
   admission: "wave4.admission.P03",
   /**
    * Charter label for the desk's mock admission phase.

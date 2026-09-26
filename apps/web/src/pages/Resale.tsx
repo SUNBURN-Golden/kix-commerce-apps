@@ -1,7 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import type { Booking, ResaleListing } from "@kix/protocol-adapter";
+import type { Booking, Performance, ResaleListing } from "@kix/protocol-adapter";
 import { protocol } from "../protocol";
+import { useResaleDesk } from "../resale-desk";
+import { ResalePanel } from "./ResalePanel";
 
 export function ResalePage() {
   const [params] = useSearchParams();
@@ -11,6 +13,9 @@ export function ResalePage() {
   const [transfer, setTransfer] = useState<Booking | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [performances, setPerformances] = useState<Performance[] | null>(null);
+  const [eventId, setEventId] = useState("evt_lanterns");
+  const resale = useResaleDesk(eventId);
 
   async function refresh() {
     setListings(await protocol.listResale());
@@ -28,6 +33,18 @@ export function ResalePage() {
       .catch((reason: unknown) => {
         if (!cancelled) {
           setError(reason instanceof Error ? reason.message : "Could not load listings.");
+        }
+      });
+    protocol
+      .listPerformances()
+      .then((rows) => {
+        if (!cancelled) {
+          setPerformances(rows);
+        }
+      })
+      .catch((reason: unknown) => {
+        if (!cancelled) {
+          setError(reason instanceof Error ? reason.message : "Could not load performances.");
         }
       });
     return () => {
@@ -69,6 +86,10 @@ export function ResalePage() {
       <header className="section-head">
         <p className="eyebrow">Resale · R01–R05 · transfer is simulated</p>
         <h2>Listings</h2>
+        <p className="muted">
+          The form is the Wave 4 listing pointer. The case below is a mock phase on the adapter stub. Not live
+          marketplace.
+        </p>
       </header>
       <form className="panel" onSubmit={(event) => void openListing(event)}>
         <label>
@@ -135,6 +156,30 @@ export function ResalePage() {
           </Link>
         </article>
       ) : null}
+      <div className="panel">
+        <label>
+          Mock case event
+          <select value={eventId} onChange={(event) => setEventId(event.target.value)}>
+            {(performances && performances.length > 0
+              ? performances
+              : [{ eventId: "evt_lanterns", title: "North Station Lanterns" }]
+            ).map((item) => (
+              <option key={item.eventId} value={item.eventId}>
+                {item.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p className="muted">Adopt reads the issued mock reservation for this event. It does not create a live ticket.</p>
+      </div>
+      <ResalePanel
+        eventTitle={performances?.find((item) => item.eventId === eventId)?.title ?? eventId}
+        view={resale.view}
+        right={resale.right}
+        error={resale.error}
+        pending={resale.pending}
+        onCommand={(command) => void resale.run(command)}
+      />
     </section>
   );
 }

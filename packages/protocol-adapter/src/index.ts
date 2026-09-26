@@ -15,12 +15,18 @@ export {
   type PinnedAction,
 } from "./openapi-contract-pin.js";
 export { CONSUMED_SURFACES, type CommerceProtocol } from "./protocol.js";
+export { RESALE_CASE_NOTE, RESALE_DEPTH_BASELINE } from "./resale-case.js";
 export { RESERVATION_CASE_NOTE, RESERVATION_DEPTH_BASELINE } from "./reservation-case.js";
 export { SETTLEMENT_CASE_NOTE, SETTLEMENT_DEPTH_BASELINE } from "./settlement-case.js";
 export { StubProtocolAdapter } from "./stub-adapter.js";
 export { CREDIT_BOUNDARY, SURFACES } from "./surfaces.js";
 export {
   ProtocolError,
+  RESALE_ELIGIBILITY,
+  RESALE_PHASES,
+  RESALE_PROVENANCE,
+  RESALE_REFERENCES,
+  RESALE_SETTLEMENT_GATES,
   RESERVATION_ADMISSION_REFERENCE,
   RESERVATION_ISSUE_STATUSES,
   RESERVATION_PHASES,
@@ -31,6 +37,7 @@ export {
   SETTLEMENT_PHASES,
   SETTLEMENT_PROVENANCE,
   SETTLEMENT_REFERENCES,
+  isResalePhase,
   isReservationPhase,
   type AdapterMeta,
   type AdmissionDecision,
@@ -58,6 +65,27 @@ export {
   type ReservationSlotState,
   type ReservationSlotView,
   type ReservationStep,
+  type ResaleAccept,
+  type ResaleAdopt,
+  type ResaleBind,
+  type ResaleCancelListing,
+  type ResaleCaseView,
+  type ResaleClock,
+  type ResaleCommandReceipt,
+  type ResaleEligibility,
+  type ResaleHoldBuy,
+  type ResaleLifecycleCommand,
+  type ResaleList,
+  type ResalePayment,
+  type ResalePhase,
+  type ResalePresentationQuery,
+  type ResalePresentationView,
+  type ResaleReconcileReceipt,
+  type ResaleReleaseHold,
+  type ResaleRightView,
+  type ResaleSettlementGate,
+  type ResaleStep,
+  type ResaleTransferEvidence,
   type SettlementCaseView,
   type SettlementCommandReceipt,
   type SettlementInitiate,
