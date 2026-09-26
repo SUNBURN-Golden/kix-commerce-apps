@@ -39,10 +39,10 @@ The vendored contract-only catalogue is unchanged:
 | Status | `contract-only`. `liveHttpServer` and `productionEndpoint` are false |
 | Catalogue tip recorded for that file | `a744b0a036d7e1edb48416871af20cd182f23df4` |
 
-FSM lifecycle names are not OpenAPI operations and are not `protocol_contract` commands. `HttpProtocolAdapter` leaves the reservation and admission FSM methods not-bound. It does not send `capture` or `settle_capture`, and it does not invent a venue scan endpoint.
+FSM lifecycle names are not OpenAPI operations and are not `protocol_contract` commands. `HttpProtocolAdapter` leaves the reservation and admission FSM methods not-bound. It does not map them onto `capture`, `admit`, or a venue scan. An explicit `invokeLocalCall` may post those published bodies to the loopback integration gate. A reference reject is not this desk's mock phase.
 
-Stub mode is the default. `mode=http` without a base URL throws.
+Stub mode is the default. `mode=http` requires an explicit `http://127.0.0.1` origin. See [http-integration-gate-apps-bind.md](http-integration-gate-apps-bind.md).
 
 ## Hold
 
-No live admission, no venue inventory, no production ticket issuance, no live HTTP server, and no PG or bank settlement. This bind does not expand resale. Credit depth is a separate adapter stub.
+No live admission, no venue inventory, no production ticket issuance, and no PG or bank settlement. Local HTTP success is not production approval. This bind does not expand resale. Credit depth is a separate adapter stub.

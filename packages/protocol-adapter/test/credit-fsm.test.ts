@@ -608,7 +608,7 @@ describe("http credit binding", () => {
       calls.push(String(input));
       return new Response("{}", { status: 200, headers: { "content-type": "application/json" } });
     };
-    const http = new HttpProtocolAdapter("https://protocol.example.test", fetchImpl);
+    const http = new HttpProtocolAdapter("http://127.0.0.1:8765", fetchImpl);
     expect("disburseCredit" in http).toBe(false);
     const methods = [
       "offerCredit",
@@ -698,9 +698,13 @@ describe("http credit binding", () => {
     const fetchImpl: typeof fetch = async () =>
       new Response(JSON.stringify(responseBody), {
         status: 200,
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          "x-kix-transport": "integration-gate",
+          "x-kix-production-endpoint": "false",
+        },
       });
-    const http = new HttpProtocolAdapter("https://protocol.example.test", fetchImpl);
+    const http = new HttpProtocolAdapter("http://127.0.0.1:8765", fetchImpl);
     const command = {
       operationId: "op-close-credit",
       actor: "fixture-actor",

@@ -6,16 +6,22 @@ import { describe, expect, it } from "vitest";
 import {
   COMMERCE_COMMAND_BINDINGS,
   COMMERCE_METHODS,
+  INTEGRATION_GATE_HEALTH_PATH,
+  INTEGRATION_GATE_READY_PATH,
   OPENAPI_CONTRACT_PIN,
+  OPENAPI_INTEGRATION_GATE_PIN,
   PINNED_ACTIONS,
   ProtocolError,
   CREDIT_DEPTH_BASELINE,
   RESALE_DEPTH_BASELINE,
   RESERVATION_DEPTH_BASELINE,
   SETTLEMENT_DEPTH_BASELINE,
+  assertIntegrationGateDocument,
+  assertIntegrationGateRaw,
   assertOpenApiContractDocument,
   assertOpenApiContractRaw,
   isPinnedAction,
+  readPinnedIntegrationGateDocument,
   readPinnedOpenApiDocument,
 } from "../src/index.js";
 import { sha256Hex } from "../src/sha256.js";
@@ -140,5 +146,87 @@ describe("contract-only OpenAPI pin", () => {
         expect(isPinnedAction(binding.consideredAction)).toBe(true);
       }
     }
+  });
+
+  it("rejects an integration-gate status on the contract-only catalogue", () => {
+    const doc = asRecord(readPinnedOpenApiDocument());
+    doc["x-kix-contract-status"] = "integration-gate";
+    expect(() => assertOpenApiContractDocument(doc)).toThrow(/contract status mismatch/);
+  });
+});
+
+const gateVendorPath = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../vendor/kix-protocol.integration-gate.openapi.json",
+);
+
+describe("integration-gate OpenAPI pin", () => {
+  it("hashes the vendored gate file to the published sha256", () => {
+    const bytes = readFileSync(gateVendorPath);
+    const digest = createHash("sha256").update(bytes).digest("hex");
+    expect(digest).toBe(OPENAPI_INTEGRATION_GATE_PIN.openApiFileSha256);
+    expect(digest).not.toBe(OPENAPI_CONTRACT_PIN.openApiFileSha256);
+    expect(() => assertIntegrationGateRaw(bytes.toString("utf8"))).not.toThrow();
+  });
+
+  it("records the merged protocol tip and non-production flags", () => {
+    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolRepo).toBe("BeautifulMind-JT/kix-protocol");
+    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha).toBe("5c59d95ec52379e010f8e9c660da11cfa6498def");
+    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolFeatureSha).toBe("007af9021991965d4af79c4f8497061c6daa77eb");
+    expect(OPENAPI_INTEGRATION_GATE_PIN.openApiPath).toBe(
+      "docs/contracts/openapi/kix-protocol.integration-gate.openapi.json",
+    );
+    expect(OPENAPI_INTEGRATION_GATE_PIN.infoVersion).toBe(
+      "0.3-rc1-integration-gate+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
+    );
+    expect(OPENAPI_INTEGRATION_GATE_PIN.sourceProtocolContractSha256).toBe(
+      "ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
+    );
+    expect(OPENAPI_INTEGRATION_GATE_PIN.sourceProtocolContractGitBlob).toBe(
+      "619ae21c82ca3df5661bd3831613f15fa65225ff",
+    );
+    expect(OPENAPI_INTEGRATION_GATE_PIN.contractStatus).toBe("integration-gate");
+    expect(OPENAPI_INTEGRATION_GATE_PIN.liveHttpServerMode).toBe("non-production-local-integration");
+    expect(OPENAPI_INTEGRATION_GATE_PIN.liveHttpServerProduction).toBe(false);
+    expect(OPENAPI_INTEGRATION_GATE_PIN.publicHost).toBe(false);
+    expect(OPENAPI_INTEGRATION_GATE_PIN.loopbackOnly).toBe(true);
+    expect(OPENAPI_INTEGRATION_GATE_PIN.defaultBindHost).toBe("127.0.0.1");
+    expect(OPENAPI_INTEGRATION_GATE_PIN.productionEndpoint).toBe(false);
+    expect(OPENAPI_INTEGRATION_GATE_PIN.contractOnlyOpenApiFileSha256).toBe(
+      "fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e",
+    );
+    expect(OPENAPI_CONTRACT_PIN.liveHttpServer).toBe(false);
+    expect(OPENAPI_CONTRACT_PIN.productionEndpoint).toBe(false);
+    const doc = asRecord(readPinnedIntegrationGateDocument());
+    expect(doc["x-kix-contract-status"]).toBe("integration-gate");
+    expect(Object.keys(asRecord(doc.paths))).toEqual(["/x-kix-contract-only/local-call"]);
+    expect(INTEGRATION_GATE_HEALTH_PATH in asRecord(doc.paths)).toBe(false);
+    expect(INTEGRATION_GATE_READY_PATH in asRecord(doc.paths)).toBe(false);
+    expect(doc).not.toHaveProperty("servers");
+  });
+
+  it("rejects a wrong gate file sha256, status, or production claim", () => {
+    const raw = readFileSync(gateVendorPath, "utf8").replace("integration-gate", "production");
+    expect(() => assertIntegrationGateRaw(raw)).toThrow(/sha256 mismatch/);
+
+    const status = asRecord(readPinnedIntegrationGateDocument());
+    status["x-kix-contract-status"] = "contract-only";
+    expect(() => assertIntegrationGateDocument(status)).toThrow(/contract status mismatch/);
+
+    const production = asRecord(readPinnedIntegrationGateDocument());
+    production["x-kix-production-endpoint"] = true;
+    expect(() => assertIntegrationGateDocument(production)).toThrow(/x-kix-production-endpoint false/);
+
+    const host = asRecord(readPinnedIntegrationGateDocument());
+    host["x-kix-public-host"] = true;
+    expect(() => assertIntegrationGateDocument(host)).toThrow(/x-kix-public-host false/);
+
+    const live = asRecord(readPinnedIntegrationGateDocument());
+    asRecord(live["x-kix-live-http-server"]).production = true;
+    expect(() => assertIntegrationGateDocument(live)).toThrow(/production false/);
+
+    const servers = asRecord(readPinnedIntegrationGateDocument());
+    servers.servers = [{ url: "https://protocol.example.test" }];
+    expect(() => assertIntegrationGateDocument(servers)).toThrow(/must not publish servers/);
   });
 });

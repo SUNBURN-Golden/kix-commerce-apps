@@ -112,10 +112,21 @@ describe("booking, admission, and resale stub flows", () => {
 });
 
 describe("http adapter binding", () => {
-  it("refuses http mode without a base URL", () => {
+  it("refuses http mode without an explicit loopback base URL", () => {
     expect(() => createProtocol({ mode: "http" })).toThrow(ProtocolError);
     expect(() => createProtocol({ mode: "http", baseUrl: "   " })).toThrow(ProtocolError);
     expect(() => createProtocol({ mode: "http", baseUrl: "file:///tmp/kix" })).toThrow(ProtocolError);
+    expect(() => createProtocol({ mode: "http", baseUrl: "https://127.0.0.1:8765" })).toThrow(/127\.0\.0\.1/);
+    expect(() => createProtocol({ mode: "http", baseUrl: "http://localhost:8765" })).toThrow(/no default public host/);
+    expect(() => createProtocol({ mode: "http", baseUrl: "http://127.0.0.1" })).toThrow(/explicit/);
+    expect(() => createProtocol({ mode: "http", baseUrl: "http://127.0.0.1:8765/v1" })).toThrow(/origin only/);
+    expect(() => createProtocol({ mode: "http", baseUrl: "http://example.test:8765" })).toThrow(/no default public host/);
+    expect(createProtocol({ mode: "http", baseUrl: "http://127.0.0.1:8765" }).describe()).toMatchObject({
+      adapter: "http",
+      liveChain: false,
+      fundsMovement: "none",
+    });
+    expect(createProtocol().describe().adapter).toBe("stub");
   });
 
   it("leaves desk methods not-bound and does not call provisional REST paths", async () => {
@@ -124,7 +135,7 @@ describe("http adapter binding", () => {
       calls.push(String(input));
       return jsonResponse({});
     };
-    const protocol = new HttpProtocolAdapter("https://protocol.example.test", fetchImpl);
+    const protocol = new HttpProtocolAdapter("http://127.0.0.1:8765", fetchImpl);
     expect(protocol.describe().adapter).toBe("http");
     expect(protocol.describe().fundsMovement).toBe("none");
     expect(protocol.describe().liveChain).toBe(false);
@@ -199,7 +210,7 @@ describe("http adapter binding", () => {
       });
       return jsonResponse(responseBody);
     };
-    const protocol = new HttpProtocolAdapter("https://protocol.example.test/", fetchImpl);
+    const protocol = new HttpProtocolAdapter("http://127.0.0.1:8765/", fetchImpl);
     const commandBody = { domain: PINNED_PROTOCOL_DOMAIN, eventId: "evt_lanterns" };
 
     const receipt = await protocol.invokeLocalCall({
@@ -211,7 +222,7 @@ describe("http adapter binding", () => {
     expect(receipt).toMatchObject({ action: "close_sales" });
     expect(calls[0]).toEqual({
       method: "POST",
-      url: `https://protocol.example.test${CONTRACT_ONLY_LOCAL_CALL_PATH}`,
+      url: `http://127.0.0.1:8765${CONTRACT_ONLY_LOCAL_CALL_PATH}`,
       body: JSON.stringify({
         operationId: "op-close-1",
         actor: "fixture-actor",
@@ -444,15 +455,19 @@ describe("http adapter binding", () => {
         body: commandBody,
       }),
     ).resolves.toMatchObject({ mode: "mock", references: ["F01", "F02", "F03"], phase: "CAPTURED" });
-    expect(calls.every((call) => call.url === `https://protocol.example.test${CONTRACT_ONLY_LOCAL_CALL_PATH}`)).toBe(
+    expect(calls.every((call) => call.url === `http://127.0.0.1:8765${CONTRACT_ONLY_LOCAL_CALL_PATH}`)).toBe(
       true,
     );
   });
 });
 
-function jsonResponse(body: unknown): Response {
+function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
-    status: 200,
-    headers: { "content-type": "application/json" },
+    status,
+    headers: {
+      "content-type": "application/json",
+      "x-kix-transport": "integration-gate",
+      "x-kix-production-endpoint": "false",
+    },
   });
 }

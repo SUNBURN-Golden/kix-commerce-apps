@@ -37,10 +37,10 @@ The vendored contract-only catalogue is unchanged:
 | Status | `contract-only`. `liveHttpServer` and `productionEndpoint` are false |
 | Catalogue tip recorded for that file | `a744b0a036d7e1edb48416871af20cd182f23df4` |
 
-FSM lifecycle names are not OpenAPI operations and are not `protocol_contract` commands. `HttpProtocolAdapter` leaves `initiateSettlement`, `authorizeSettlement`, `captureSettlement`, `commitSettlement`, `failSettlement`, `cancelSettlement`, `reconcileSettlement`, and `viewSettlement` not-bound. `settle_capture` remains a monetary posting. The desk does not send it.
+FSM lifecycle names are not OpenAPI operations and are not `protocol_contract` commands. `HttpProtocolAdapter` leaves `initiateSettlement`, `authorizeSettlement`, `captureSettlement`, `commitSettlement`, `failSettlement`, `cancelSettlement`, `reconcileSettlement`, and `viewSettlement` not-bound. `settle_capture` remains a published catalogue command. The desk does not map the mock case onto it. An explicit `invokeLocalCall` may post that body to the loopback integration gate. The reference result is not this desk's mock phase.
 
-Stub mode is the default. `mode=http` without a base URL throws.
+Stub mode is the default. `mode=http` requires an explicit `http://127.0.0.1` origin. See [http-integration-gate-apps-bind.md](http-integration-gate-apps-bind.md).
 
 ## Hold
 
-No live payment, no card capture, no PG or bank settlement, no production integration, and no live HTTP server.
+No live payment, no card capture, no PG or bank settlement, and no production endpoint. Local HTTP success is not production approval.

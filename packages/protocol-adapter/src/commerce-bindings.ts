@@ -4,6 +4,8 @@ import { type PinnedAction } from "./openapi-contract-pin.js";
  * Desk methods compared with the published command set.
  * status is not-bound when the method's arguments are not the command body.
  * consideredAction records the nearest catalogue name and is not a request.
+ * HTTP mode may post that catalogue command through invokeLocalCall when the
+ * caller supplies the published body. It does not map a desk method onto a different body.
  */
 export const COMMERCE_METHODS = [
   "listPerformances",

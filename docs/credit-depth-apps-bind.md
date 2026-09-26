@@ -45,10 +45,10 @@ The vendored contract-only catalogue is unchanged:
 | Status | `contract-only`. `liveHttpServer` and `productionEndpoint` are false |
 | Catalogue tip recorded for that file | `a744b0a036d7e1edb48416871af20cd182f23df4` |
 
-FSM lifecycle names are not OpenAPI operations and are not `protocol_contract` commands. `HttpProtocolAdapter` leaves the credit FSM methods not-bound. It does not invent a lending endpoint and it does not send `settle_capture`.
+FSM lifecycle names are not OpenAPI operations and are not `protocol_contract` commands. `HttpProtocolAdapter` leaves the credit FSM methods not-bound. The catalogue has no credit command, so HTTP mode does not invent a lending endpoint. `offer_gift` is not a draw. The desk does not send `settle_capture`.
 
-Stub mode is the default. `mode=http` without a base URL throws.
+Stub mode is the default. `mode=http` requires an explicit `http://127.0.0.1` origin. See [http-integration-gate-apps-bind.md](http-integration-gate-apps-bind.md).
 
 ## Hold
 
-No live underwriting, no KYC-AML, no interest calculation, no PG or bank rail, no real lending, no production credit claim, and no live HTTP server. There is no ownership bypass around the adapter.
+No live underwriting, no KYC-AML, no interest calculation, no PG or bank rail, no real lending, and no production credit claim. Local HTTP success is not production approval. There is no ownership bypass around the adapter.

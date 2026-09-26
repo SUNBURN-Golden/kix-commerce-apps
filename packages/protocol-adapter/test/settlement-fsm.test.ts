@@ -298,7 +298,7 @@ describe("http settlement commands stay not-bound", () => {
       calls.push(String(input));
       return new Response("{}", { status: 200, headers: { "content-type": "application/json" } });
     };
-    const protocol = new HttpProtocolAdapter("https://protocol.example.test", fetchImpl);
+    const protocol = new HttpProtocolAdapter("http://127.0.0.1:8765", fetchImpl);
     const step = { settlementId: "stl_evt_lanterns", idempotencyKey: "k-1" };
 
     await expect(

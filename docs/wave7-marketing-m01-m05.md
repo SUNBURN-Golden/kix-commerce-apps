@@ -26,7 +26,7 @@ Marketing code does not read the protocol-adapter OpenAPI pin and does not add m
 
 ## Required gate
 
-The protocol adapter pins the published contract-only OpenAPI catalogue. That pin is not a live HTTP server, not a production endpoint, and not a conformance claim. A live HTTP server is still required before any claim of:
+The protocol adapter pins the published contract-only catalogue and, separately, the non-production integration-gate transport. Neither pin is a production endpoint or a conformance claim. Local HTTP success does not authorize:
 
 - live chain or chain finality
 - real payment or funds movement
