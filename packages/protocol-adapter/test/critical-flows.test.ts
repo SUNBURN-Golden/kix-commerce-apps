@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  COMMERCE_COMMAND_BINDINGS,
+  CONTRACT_ONLY_LOCAL_CALL_PATH,
   CREDIT_BOUNDARY,
   createProtocol,
   HttpProtocolAdapter,
-  PROVISIONAL_HTTP_PATHS,
+  PINNED_PROTOCOL_DOMAIN,
   ProtocolError,
   StubProtocolAdapter,
 } from "../src/index.js";
@@ -102,6 +104,7 @@ describe("booking, admission, and resale stub flows", () => {
   it("keeps credit disbursement off the client", () => {
     expect(CREDIT_BOUNDARY.action).toBe("none");
     const protocol = createProtocol();
+    expect(protocol.describe().adapter).toBe("stub");
     expect("disburseCredit" in protocol).toBe(false);
     expect(protocol.describe().fundsMovement).toBe("none");
     expect(protocol.describe().liveChain).toBe(false);
@@ -111,46 +114,219 @@ describe("booking, admission, and resale stub flows", () => {
 describe("http adapter binding", () => {
   it("refuses http mode without a base URL", () => {
     expect(() => createProtocol({ mode: "http" })).toThrow(ProtocolError);
+    expect(() => createProtocol({ mode: "http", baseUrl: "   " })).toThrow(ProtocolError);
+    expect(() => createProtocol({ mode: "http", baseUrl: "file:///tmp/kix" })).toThrow(ProtocolError);
   });
 
-  it("posts booking confirmation to the provisional path and rejects real payment markers", async () => {
-    const calls: { url: string; method: string; body?: string }[] = [];
-    const fetchImpl: typeof fetch = async (input, init) => {
-      const url = String(input);
-      const method = init?.method ?? "GET";
-      const body = typeof init?.body === "string" ? init.body : undefined;
-      calls.push({ url, method, body });
-      if (url.endsWith(PROVISIONAL_HTTP_PATHS.confirmBooking)) {
-        return jsonResponse({
-          bookingId: "bkg_remote",
-          eventId: "evt_lanterns",
-          quantity: 1,
-          rightsRef: "right_remote",
-          status: "confirmed",
-          payment: "simulated-no-funds",
-        });
-      }
-      return jsonResponse({
-        eventId: "evt_lanterns",
-        mode: "mock",
-        references: ["F01", "F02", "F03"],
-        note: "remote mock pointer",
-      });
+  it("leaves desk methods not-bound and does not call provisional REST paths", async () => {
+    const calls: string[] = [];
+    const fetchImpl: typeof fetch = async (input) => {
+      calls.push(String(input));
+      return jsonResponse({});
     };
-
     const protocol = new HttpProtocolAdapter("https://protocol.example.test", fetchImpl);
-    const booking = await protocol.confirmBooking("hold_9");
-    expect(booking.rightsRef).toBe("right_remote");
-    expect(calls[0]).toMatchObject({
-      method: "POST",
-      url: `https://protocol.example.test${PROVISIONAL_HTTP_PATHS.confirmBooking}`,
-      body: JSON.stringify({ holdId: "hold_9" }),
-    });
-    expect(calls.some((call) => call.url.includes("credit") || call.url.includes("disburse"))).toBe(false);
+    expect(protocol.describe().adapter).toBe("http");
+    expect(protocol.describe().fundsMovement).toBe("none");
+    expect(protocol.describe().liveChain).toBe(false);
+    expect("disburseCredit" in protocol).toBe(false);
 
-    const preview = await protocol.settlementPreview("evt_lanterns");
-    expect(preview.mode).toBe("mock");
-    expect(preview.references).toEqual(["F01", "F02", "F03"]);
+    await expect(protocol.listPerformances()).rejects.toThrow(/not-bound/);
+    await expect(protocol.placeHold({ eventId: "evt_lanterns", quantity: 1 })).rejects.toThrow(/not-bound/);
+    await expect(protocol.releaseHold("hold_9")).rejects.toThrow(/not-bound/);
+    await expect(protocol.confirmBooking("hold_9")).rejects.toThrow(/not-bound/);
+    await expect(protocol.getBooking("bkg_9")).rejects.toThrow(/not-bound/);
+    await expect(protocol.checkAdmission({ rightsRef: "right_9", gateId: "gate-main" })).rejects.toThrow(/not-bound/);
+    await expect(protocol.listResale("evt_lanterns")).rejects.toThrow(/not-bound/);
+    await expect(protocol.openResale({ bookingId: "bkg_9", askLabel: "display" })).rejects.toThrow(/not-bound/);
+    await expect(protocol.acceptResale("rsl_9")).rejects.toThrow(/not-bound/);
+    await expect(protocol.settlementPreview("evt_lanterns")).rejects.toThrow(/not-bound/);
+
+    expect(calls).toEqual([]);
+    expect(Object.values(COMMERCE_COMMAND_BINDINGS).every((binding) => binding.status === "not-bound")).toBe(true);
+    expect(JSON.stringify(COMMERCE_COMMAND_BINDINGS)).not.toContain("/v1/commerce");
+    expect(CONTRACT_ONLY_LOCAL_CALL_PATH).toBe("/x-kix-contract-only/local-call");
+  });
+
+  it("posts a pinned local-call envelope and keeps booking and settlement guards", async () => {
+    const calls: { url: string; method: string; body?: string }[] = [];
+    let responseBody: unknown = {
+      domain: PINNED_PROTOCOL_DOMAIN,
+      operationId: "op-close-1",
+      sequence: 1,
+      action: "close_sales",
+      result: {},
+    };
+    const fetchImpl: typeof fetch = async (input, init) => {
+      calls.push({
+        url: String(input),
+        method: init?.method ?? "GET",
+        body: typeof init?.body === "string" ? init.body : undefined,
+      });
+      return jsonResponse(responseBody);
+    };
+    const protocol = new HttpProtocolAdapter("https://protocol.example.test/", fetchImpl);
+    const commandBody = { domain: PINNED_PROTOCOL_DOMAIN, eventId: "evt_lanterns" };
+
+    const receipt = await protocol.invokeLocalCall({
+      operationId: "op-close-1",
+      actor: "fixture-actor",
+      action: "close_sales",
+      body: commandBody,
+    });
+    expect(receipt).toMatchObject({ action: "close_sales" });
+    expect(calls[0]).toEqual({
+      method: "POST",
+      url: `https://protocol.example.test${CONTRACT_ONLY_LOCAL_CALL_PATH}`,
+      body: JSON.stringify({
+        operationId: "op-close-1",
+        actor: "fixture-actor",
+        action: "close_sales",
+        body: commandBody,
+      }),
+    });
+    expect(calls.some((call) => /credit|disburse|\/v1\/commerce/.test(call.url))).toBe(false);
+
+    await expect(
+      protocol.invokeLocalCall({
+        operationId: "op-unknown",
+        actor: "fixture-actor",
+        action: "list_performances",
+        body: commandBody,
+      }),
+    ).rejects.toThrow(/Unknown protocol action/);
+    await expect(
+      protocol.invokeLocalCall({
+        operationId: "op-extra",
+        actor: "fixture-actor",
+        action: "close_sales",
+        body: { ...commandBody, note: "extra" },
+      }),
+    ).rejects.toThrow(/Unknown field body\.note/);
+    await expect(
+      protocol.invokeLocalCall({
+        operationId: "op-domain",
+        actor: " fixture-actor",
+        action: "close_sales",
+        body: { domain: "kix:other", eventId: "evt_lanterns" },
+      }),
+    ).rejects.toThrow(/no leading or trailing whitespace/);
+    await expect(
+      protocol.invokeLocalCall({
+        operationId: "op-domain",
+        actor: "fixture-actor",
+        action: "close_sales",
+        body: { domain: "kix:other", eventId: "evt_lanterns" },
+      }),
+    ).rejects.toThrow(/DOMAIN_MISMATCH/);
+    expect(calls).toHaveLength(1);
+
+    responseBody = {
+      bookingId: "bkg_remote",
+      eventId: "evt_lanterns",
+      quantity: 1,
+      rightsRef: "right_remote",
+      status: "confirmed",
+      payment: "card",
+    };
+    await expect(
+      protocol.invokeLocalCall({
+        operationId: "op-close-2",
+        actor: "fixture-actor",
+        action: "close_sales",
+        body: commandBody,
+      }),
+    ).rejects.toThrow(/simulated-no-funds/);
+
+    responseBody = {
+      bookingId: "bkg_remote",
+      eventId: "evt_lanterns",
+      quantity: 1,
+      rightsRef: "right_remote",
+      status: "confirmed",
+      payment: "simulated-no-funds",
+    };
+    await expect(
+      protocol.invokeLocalCall({
+        operationId: "op-close-3",
+        actor: "fixture-actor",
+        action: "close_sales",
+        body: commandBody,
+      }),
+    ).resolves.toMatchObject({ payment: "simulated-no-funds" });
+
+    responseBody = {
+      eventId: "evt_lanterns",
+      mode: "live",
+      references: ["F01", "F02", "F03"],
+      note: "remote",
+    };
+    await expect(
+      protocol.invokeLocalCall({
+        operationId: "op-close-4",
+        actor: "fixture-actor",
+        action: "close_sales",
+        body: commandBody,
+      }),
+    ).rejects.toThrow(/mock mode/);
+
+    responseBody = {
+      eventId: "evt_lanterns",
+      mode: "mock",
+      references: ["F01", "F02", "F04"],
+      note: "remote",
+    };
+    await expect(
+      protocol.invokeLocalCall({
+        operationId: "op-close-5",
+        actor: "fixture-actor",
+        action: "close_sales",
+        body: commandBody,
+      }),
+    ).rejects.toThrow(/F01, F02, and F03/);
+
+    responseBody = {
+      eventId: "evt_lanterns",
+      mode: "mock",
+      references: ["F01", "F02", "F03"],
+      note: "remote mock pointer",
+      amount: 1,
+    };
+    await expect(
+      protocol.invokeLocalCall({
+        operationId: "op-close-6",
+        actor: "fixture-actor",
+        action: "close_sales",
+        body: commandBody,
+      }),
+    ).rejects.toThrow(/amount or currency/);
+
+    responseBody = { disburseCredit: { amount: 1 } };
+    await expect(
+      protocol.invokeLocalCall({
+        operationId: "op-close-7",
+        actor: "fixture-actor",
+        action: "close_sales",
+        body: commandBody,
+      }),
+    ).rejects.toThrow(/does not disburse credit/);
+
+    responseBody = {
+      eventId: "evt_lanterns",
+      mode: "mock",
+      references: ["F01", "F02", "F03"],
+      note: "remote mock pointer",
+    };
+    await expect(
+      protocol.invokeLocalCall({
+        operationId: "op-close-8",
+        actor: "fixture-actor",
+        action: "close_sales",
+        body: commandBody,
+      }),
+    ).resolves.toMatchObject({ mode: "mock", references: ["F01", "F02", "F03"] });
+    expect(calls.every((call) => call.url === `https://protocol.example.test${CONTRACT_ONLY_LOCAL_CALL_PATH}`)).toBe(
+      true,
+    );
   });
 });
 

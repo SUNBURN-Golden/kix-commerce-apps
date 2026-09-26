@@ -14,7 +14,7 @@ export function MarketingChrome({
   return (
     <section>
       <p className="banner" role="status">
-        Stub demo · 설계중 · not protocol law. No live chain, no funds, and no outbound message.
+        Stub demo · 설계중 · not protocol law. The adapter pin is not this desk. No live chain, no funds, and no outbound message.
       </p>
       <nav className="tabs" aria-label="Marketing labels">
         <NavLink to="/marketing" end>

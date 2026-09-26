@@ -17,10 +17,11 @@ export function createProtocol(options: ProtocolOptions = {}): CommerceProtocol 
     return new StubProtocolAdapter();
   }
   if (mode === "http") {
-    if (!options.baseUrl) {
+    const baseUrl = options.baseUrl?.trim() ?? "";
+    if (!baseUrl) {
       throw new ProtocolError("KIX_PROTOCOL_API_BASE is required when KIX_PROTOCOL_MODE=http.");
     }
-    return new HttpProtocolAdapter(options.baseUrl, options.fetchImpl);
+    return new HttpProtocolAdapter(baseUrl, options.fetchImpl);
   }
   throw new ProtocolError(`Unknown protocol mode: ${mode}`);
 }

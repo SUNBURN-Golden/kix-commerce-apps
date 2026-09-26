@@ -2,8 +2,10 @@
  * In-memory marketing fixtures for Wave 7 M01–M05.
  * Data lives for one page load of the demo. It is not a kix-protocol type,
  * not an OpenAPI schema, and not a Move layout.
+ * The protocol-adapter contract pin is not read here.
  */
 
+/** Marketing session boundary. The protocol-adapter OpenAPI pin does not flip these flags. */
 export const MARKETING_BOUNDARY = {
   status: "설계중",
   protocolBinding: "none",

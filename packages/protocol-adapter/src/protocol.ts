@@ -12,6 +12,8 @@ import type {
 /**
  * App-facing seam for Wave 2–4 commerce surfaces.
  * Implementations must not embed Move, settlement math, or credit disbursement.
+ * HttpProtocolAdapter leaves these methods not-bound when the published
+ * command body is not the same shape. The stub still serves the desk.
  */
 export interface CommerceProtocol {
   describe(): AdapterMeta;

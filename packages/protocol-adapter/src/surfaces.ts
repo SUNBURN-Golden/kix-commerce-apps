@@ -22,21 +22,3 @@ export const CREDIT_BOUNDARY = {
   action: "none",
   note: "Wave 6 does not disburse credit. F04 stays mock/sim in kix-protocol until a separate ruling.",
 } as const;
-
-/**
- * Provisional HTTP paths used only by HttpProtocolAdapter.
- * They are an app-side binding placeholder. Replace this table when the
- * kix-protocol OpenAPI on main is confirmed. They are not the protocol spec.
- */
-export const PROVISIONAL_HTTP_PATHS = {
-  listPerformances: "/v1/commerce/performances",
-  placeHold: "/v1/commerce/holds",
-  releaseHold: "/v1/commerce/holds",
-  confirmBooking: "/v1/commerce/bookings",
-  getBooking: "/v1/commerce/bookings",
-  checkAdmission: "/v1/commerce/admission/checks",
-  listResale: "/v1/commerce/resale/listings",
-  openResale: "/v1/commerce/resale/listings",
-  acceptResale: "/v1/commerce/resale/listings",
-  settlementPreview: "/v1/commerce/settlement-preview",
-} as const;

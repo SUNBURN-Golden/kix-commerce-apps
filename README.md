@@ -5,12 +5,12 @@ Wave 7 adds marketing screens for ORIGINAL_32 labels M01–M05. Those screens ar
 This repository is the BeautifulMind-JT app host JunTae selected for product frontends.
 Protocol, Move, and settlement contracts stay in [BeautifulMind-JT/kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol).
 
-The UI is an operator desk over a protocol adapter, plus a separate marketing stub. The default adapter is an in-memory stub so the desk can run without a chain. An HTTP adapter is included for a later bind to the kix-protocol API. Neither adapter moves funds or disburses credit. The marketing stub does not call booking, resale, admission, or settlement writes.
+The UI is an operator desk over a protocol adapter, plus a separate marketing stub. The default adapter is an in-memory stub so the desk can run without a chain. The HTTP adapter is bound to the published contract-only local-call catalogue. It stays fail-closed unless an explicit base URL is configured, and desk methods stay not-bound when no command body matches. Neither adapter moves funds or disburses credit. The marketing stub does not call booking, resale, admission, or settlement writes.
 
 ## Non-goals
 
 - Product frontend trees do not belong in `kix-protocol`. This repo does not copy Move, the kernel, or settlement math.
-- Wave 7 marketing (M01–M05) is a browser-session stub. Labels stay 설계중. Limits are in [docs/wave7-marketing-m01-m05.md](docs/wave7-marketing-m01-m05.md). HTTP/OpenAPI binding remains a required gate before chain, payment, production, contract-conformance, or launch claims.
+- Wave 7 marketing (M01–M05) is a browser-session stub. Labels stay 설계중. Limits are in [docs/wave7-marketing-m01-m05.md](docs/wave7-marketing-m01-m05.md). The contract-only OpenAPI pin is adapter-level. A live HTTP server remains a required gate before chain, payment, production, contract-conformance, or launch claims.
 - No real money, no card capture, and no credit disbursement. F04 stays a mock/sim boundary in kix-protocol. This app has no disburse action (`CREDIT_BOUNDARY.action` is `none`).
 - No product TPS, p99, or fail-rate SLOs.
 - ZARI, film-unit, maeum-gyeol, SOULBOUND, ai-ops-control-plane, and beautiful-mind are out of this wave.
@@ -42,16 +42,25 @@ Wave 7 marketing routes use the local stub in `apps/web/src/marketing`. They are
 
 `packages/protocol-adapter` is the only seam:
 
-- `StubProtocolAdapter` — default. In-memory fixtures. `proofMode` is `stub` because `zk_gate` is not evaluated here.
-- `HttpProtocolAdapter` — used when `VITE_KIX_PROTOCOL_MODE=http` and `VITE_KIX_PROTOCOL_API_BASE` is set. Paths live in `PROVISIONAL_HTTP_PATHS`. Those paths are an app-side placeholder, not the OpenAPI spec. Replace that table when the published contract is bound. The client rejects booking payloads that are not marked `simulated-no-funds`, and it rejects settlement payloads that are not `mode: "mock"` with references `F01`, `F02`, `F03`.
+- `StubProtocolAdapter` — default when `VITE_KIX_PROTOCOL_MODE` is unset or `stub`. In-memory fixtures. `proofMode` is `stub` because `zk_gate` is not evaluated here.
+- `HttpProtocolAdapter` — used only when `VITE_KIX_PROTOCOL_MODE=http` and `VITE_KIX_PROTOCOL_API_BASE` is an explicit http(s) URL. There is no default base URL. The client loads the vendored contract-only OpenAPI pin and rejects a wrong file sha256, a wrong `info.version`, or a contract status other than `contract-only`. Desk methods are not-bound: none of them has the same body as one of the 40 local-call commands, so they throw before any request. An explicit `invokeLocalCall` may POST `{ operationId, actor, action, body }` to the placeholder path `/x-kix-contract-only/local-call`. That path is marked contract-only in the published document. It is not a live HTTP service, and POST is the OpenAPI grammar slot rather than a published protocol method. `action` must be one of the 40 pinned command names. The `actor` string is only that local-call argument. It is not an authentication result, and this client defines no auth scheme. The client rejects booking payloads that are not marked `simulated-no-funds`, and it rejects settlement payloads that are not `mode: "mock"` with references `F01`, `F02`, `F03`.
 
-View-model field names (`eventId`, `rightsRef`, and the rest) are local until that OpenAPI bind. They are not Move struct layouts.
+View-model field names (`eventId`, `rightsRef`, and the rest) stay local. They are not Move struct layouts and they are not command bodies.
 
-Marketing fixtures are not added to `CommerceProtocol` and do not read `PROVISIONAL_HTTP_PATHS`. M02’s catalog list is display-only. A recorded presale interest does not place a hold. M05 consent flags keep `channelSend: "none"`.
+Marketing fixtures are not added to `CommerceProtocol` and do not read the OpenAPI pin. M02’s catalog list is display-only. A recorded presale interest does not place a hold. M05 consent flags keep `channelSend: "none"`.
 
-## Protocol tip
+## Protocol pin
 
-The Wave 6 gate cited kix-protocol `main` near `b61e48d`. This workspace’s GitHub token cannot read `BeautifulMind-JT/kix-protocol` (`gh api` returns 404, `git ls-remote` returns repository not found), so that tip was **not** re-verified from here. Do not treat the stub or the provisional paths as the merged contract.
+The adapter vendors `packages/protocol-adapter/vendor/kix-protocol.contract-only.openapi.json` from [kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol) `main` `a744b0a036d7e1edb48416871af20cd182f23df4`, path `docs/contracts/openapi/kix-protocol.contract-only.openapi.json`.
+
+| Pin | Value |
+| --- | --- |
+| OpenAPI file sha256 | `fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e` |
+| `info.version` | `0.3-rc1+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e` |
+| Source `protocol_contract.json` sha256 | `ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e` |
+| Status | `contract-only`. `x-kix-live-http-server` and `x-kix-production-endpoint` are false |
+
+The rest of kix-protocol is not vendored. This pin is not a live integration and not a production-conformance claim. The commit id is the recorded main tip of that artifact. Load time checks the file bytes.
 
 ## Run locally
 
@@ -63,11 +72,7 @@ npm run dev
 
 The desk listens on port 5173. Booking state and the marketing session stay in the browser for that page load. A reload clears both.
 
-To point the desk at an HTTP base after the contract bind:
-
-```bash
-VITE_KIX_PROTOCOL_MODE=http VITE_KIX_PROTOCOL_API_BASE=https://your-protocol-host.example npm run dev
-```
+The desk uses the stub. Setting `VITE_KIX_PROTOCOL_MODE=http` without `VITE_KIX_PROTOCOL_API_BASE` throws at startup. With a base URL, desk calls still throw `not-bound`. This repo does not start a server and does not ship a production base URL.
 
 `npm run build` typechecks the adapter and builds the web app. `npm run typecheck` checks both packages.
 
@@ -79,6 +84,8 @@ VITE_KIX_PROTOCOL_MODE=http VITE_KIX_PROTOCOL_API_BASE=https://your-protocol-hos
 - resale lock, simulated transfer, and admission of only the new right
 - hold release and unknown-right denial
 - settlement preview stays a mock code pointer
-- HTTP confirm posts to the provisional booking path and does not call a credit route
+- HTTP desk methods stay not-bound and do not call `/v1/commerce` or a credit route
+- the vendored OpenAPI pin rejects a wrong file sha256, `info.version`, or contract status
+- a local-call with an unknown `action` is rejected before any request
 - marketing labels stay 설계중, with session-only cards, presale notes, coupon markers, referral markers, and consent flags
 - marketing routes render, and the box office route still mounts

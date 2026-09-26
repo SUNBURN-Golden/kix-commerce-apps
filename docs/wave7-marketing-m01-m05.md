@@ -22,11 +22,11 @@ Fixtures and session writes live in `apps/web/src/marketing`. A reload clears th
 - M04 markers are a count. The desk has no disburse action. F04 stays outside this UI.
 - M05 stores boolean flags on the stub. `channelSend` is `none`. The form has no address field and no sender.
 
-`packages/protocol-adapter` is unchanged. Marketing code does not read `PROVISIONAL_HTTP_PATHS` and does not add methods to `CommerceProtocol`. View-model fields already used by the box office (`eventId`, title, venue, start time, remaining capacity) stay local names until an OpenAPI bind.
+Marketing code does not read the protocol-adapter OpenAPI pin and does not add methods to `CommerceProtocol`. `openApiBound` stays false. View-model fields already used by the box office (`eventId`, title, venue, start time, remaining capacity) stay local names. The pin is adapter-level. It is not marketing protocol truth, and M01–M05 do not call `authorize_marketing` or `set_consent`.
 
 ## Required gate
 
-HTTP/OpenAPI binding to kix-protocol is still required before any claim of:
+The protocol adapter pins the published contract-only OpenAPI catalogue. That pin is not a live HTTP server, not a production endpoint, and not a conformance claim. A live HTTP server is still required before any claim of:
 
 - live chain or chain finality
 - real payment or funds movement
