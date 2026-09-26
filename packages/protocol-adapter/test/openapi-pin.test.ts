@@ -9,6 +9,7 @@ import {
   OPENAPI_CONTRACT_PIN,
   PINNED_ACTIONS,
   ProtocolError,
+  CREDIT_DEPTH_BASELINE,
   RESALE_DEPTH_BASELINE,
   RESERVATION_DEPTH_BASELINE,
   SETTLEMENT_DEPTH_BASELINE,
@@ -73,7 +74,16 @@ describe("contract-only OpenAPI pin", () => {
     expect(RESALE_DEPTH_BASELINE.featureCommit).toBe("70c6d52d4289e23d0d4141b7f3a6b310eea236f2");
     expect(RESALE_DEPTH_BASELINE.fsmPath).toBe("reference/booking_resale_admission/resale_fsm.py");
     expect(RESALE_DEPTH_BASELINE.provenance).toBe("MOCK_GATE_ONLY");
+    expect(CREDIT_DEPTH_BASELINE.protocolRepo).toBe("BeautifulMind-JT/kix-protocol");
+    expect(CREDIT_DEPTH_BASELINE.protocolMainSha).toBe("8c1a4db7cfe70b0e772a2ef0f24492967c84f7f1");
+    expect(CREDIT_DEPTH_BASELINE.featureCommit).toBe("4608460ba1fe57165e88e74f6e8d8c23e8e53277");
+    expect(CREDIT_DEPTH_BASELINE.fsmPath).toBe("reference/credit_advance_f04/credit_fsm.py");
+    expect(CREDIT_DEPTH_BASELINE.provenance).toBe("MOCK_CREDIT_F04_ONLY");
     expect(isPinnedAction("initiate")).toBe(false);
+    expect(isPinnedAction("offer")).toBe(false);
+    expect(isPinnedAction("draw")).toBe(false);
+    expect(isPinnedAction("repay")).toBe(false);
+    expect(isPinnedAction("default")).toBe(false);
     expect(isPinnedAction("reconcile")).toBe(false);
     expect(isPinnedAction("reject_external")).toBe(false);
     expect(PINNED_ACTIONS).toHaveLength(40);

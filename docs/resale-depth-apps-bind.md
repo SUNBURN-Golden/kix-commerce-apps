@@ -47,4 +47,4 @@ Stub mode is the default. `mode=http` without a base URL throws.
 
 ## Hold
 
-No live marketplace, no identity KYC, no venue credential reissue, no live HTTP server, and no PG or bank settlement. This bind does not expand credit. There is no ownership bypass around the adapter.
+No live marketplace, no identity KYC, no venue credential reissue, no live HTTP server, and no PG or bank settlement. This bind does not write the credit case. Credit depth is a separate adapter stub. There is no ownership bypass around the adapter.

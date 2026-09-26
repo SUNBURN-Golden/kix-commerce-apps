@@ -52,6 +52,15 @@ import {
   type SettlementReason,
   type SettlementReconcileReceipt,
   type SettlementStep,
+  type CreditBind,
+  type CreditCaseView,
+  type CreditCommandReceipt,
+  type CreditDraw,
+  type CreditOffer,
+  type CreditReason,
+  type CreditReconcileReceipt,
+  type CreditRepay,
+  type CreditStep,
 } from "./types.js";
 
 type FetchLike = typeof fetch;
@@ -289,6 +298,54 @@ export class HttpProtocolAdapter implements CommerceProtocol {
 
   rejectExternalResale(_kind: string): Promise<never> {
     return Promise.reject(unbound("rejectExternalResale"));
+  }
+
+  offerCredit(_input: CreditOffer): Promise<CreditCommandReceipt> {
+    return Promise.reject(unbound("offerCredit"));
+  }
+
+  approveCredit(_input: CreditStep): Promise<CreditCommandReceipt> {
+    return Promise.reject(unbound("approveCredit"));
+  }
+
+  rejectCredit(_input: CreditReason): Promise<CreditCommandReceipt> {
+    return Promise.reject(unbound("rejectCredit"));
+  }
+
+  cancelCredit(_input: CreditReason): Promise<CreditCommandReceipt> {
+    return Promise.reject(unbound("cancelCredit"));
+  }
+
+  bindCreditSettlement(_input: CreditBind): Promise<CreditCommandReceipt> {
+    return Promise.reject(unbound("bindCreditSettlement"));
+  }
+
+  drawCredit(_input: CreditDraw): Promise<CreditCommandReceipt> {
+    return Promise.reject(unbound("drawCredit"));
+  }
+
+  repayCredit(_input: CreditRepay): Promise<CreditCommandReceipt> {
+    return Promise.reject(unbound("repayCredit"));
+  }
+
+  closeCredit(_input: CreditStep): Promise<CreditCommandReceipt> {
+    return Promise.reject(unbound("closeCredit"));
+  }
+
+  defaultCredit(_input: CreditReason): Promise<CreditCommandReceipt> {
+    return Promise.reject(unbound("defaultCredit"));
+  }
+
+  reconcileCredit(_input: CreditStep): Promise<CreditReconcileReceipt> {
+    return Promise.reject(unbound("reconcileCredit"));
+  }
+
+  viewCredit(_advanceId: string): Promise<CreditCaseView> {
+    return Promise.reject(unbound("viewCredit"));
+  }
+
+  rejectUnsupportedCredit(_kind: string): Promise<never> {
+    return Promise.reject(unbound("rejectUnsupportedCredit"));
   }
 
   /**

@@ -14,6 +14,7 @@ export {
   readPinnedOpenApiDocument,
   type PinnedAction,
 } from "./openapi-contract-pin.js";
+export { CREDIT_CASE_NOTE, CREDIT_DEPTH_BASELINE } from "./credit-case.js";
 export { CONSUMED_SURFACES, type CommerceProtocol } from "./protocol.js";
 export { RESALE_CASE_NOTE, RESALE_DEPTH_BASELINE } from "./resale-case.js";
 export { RESERVATION_CASE_NOTE, RESERVATION_DEPTH_BASELINE } from "./reservation-case.js";
@@ -95,4 +96,23 @@ export {
   type SettlementReason,
   type SettlementReconcileReceipt,
   type SettlementStep,
+  CREDIT_NOTE_STATUSES,
+  CREDIT_PHASES,
+  CREDIT_PROVENANCE,
+  CREDIT_REFERENCES,
+  CREDIT_SETTLEMENT_GATES,
+  isCreditPhase,
+  type CreditBind,
+  type CreditCaseView,
+  type CreditCommandReceipt,
+  type CreditDraw,
+  type CreditLifecycleCommand,
+  type CreditNoteStatus,
+  type CreditOffer,
+  type CreditPhase,
+  type CreditReason,
+  type CreditReconcileReceipt,
+  type CreditRepay,
+  type CreditSettlementGate,
+  type CreditStep,
 } from "./types.js";

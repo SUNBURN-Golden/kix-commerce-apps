@@ -662,6 +662,173 @@ export interface ResaleReconcileReceipt extends ResaleCommandReceipt {
   matched: true;
 }
 
+/**
+ * Mock FSM phase names from kix-protocol credit_fsm.py.
+ * F04 and E06 stay 설계중. These strings are not OpenAPI commands.
+ */
+export const CREDIT_PHASES = [
+  "OFFERED",
+  "APPROVED",
+  "REJECTED",
+  "CANCELLED",
+  "DRAWN",
+  "CLOSED",
+  "DEFAULTED",
+] as const;
+
+export type CreditPhase = (typeof CREDIT_PHASES)[number];
+
+export const CREDIT_PROVENANCE = "MOCK_CREDIT_F04_ONLY" as const;
+
+export const CREDIT_REFERENCES = ["F04"] as const;
+
+export const CREDIT_SETTLEMENT_GATES = ["UNBOUND", "BOUND", "MOCK_COMMIT_OBSERVED"] as const;
+
+export type CreditSettlementGate = (typeof CREDIT_SETTLEMENT_GATES)[number];
+
+export const CREDIT_NOTE_STATUSES = ["NOTED", "RELEASED"] as const;
+
+export type CreditNoteStatus = (typeof CREDIT_NOTE_STATUSES)[number];
+
+const CREDIT_PHASE_SET: ReadonlySet<string> = new Set(CREDIT_PHASES);
+
+export function isCreditPhase(value: unknown): value is CreditPhase {
+  return typeof value === "string" && CREDIT_PHASE_SET.has(value);
+}
+
+export interface CreditOffer {
+  advanceId: string;
+  claimId: string;
+  idempotencyKey: string;
+  /** Mock open-face ceiling in integer units. Not a bank limit and not a currency posting. */
+  openFace: number;
+  /** Full mock draw amount. There is no partial draw on this desk. */
+  amount: number;
+  beneficiaryRole: string;
+  /** A product label is refused. Null keeps the mock offer. */
+  product?: string | null;
+}
+
+export interface CreditStep {
+  advanceId: string;
+  idempotencyKey: string;
+}
+
+export interface CreditReason extends CreditStep {
+  reason: string;
+}
+
+export interface CreditBind extends CreditStep {
+  settlementId: string;
+}
+
+export interface CreditDraw extends CreditStep {
+  drawId: string;
+}
+
+export interface CreditRepay extends CreditStep {
+  repayId: string;
+  /** Next positive sequence. A gap is refused. */
+  sequence: number;
+  /** Mock exposure units. Not a bank receipt. */
+  amount: number;
+}
+
+/**
+ * Desk view of one in-process mock credit case.
+ * Amounts are simulated exposure. Protocol truth stays in kix-protocol.
+ */
+export interface CreditCaseView {
+  mode: "mock";
+  surface: typeof SURFACES.creditFsm;
+  references: typeof CREDIT_REFERENCES;
+  provenance: typeof CREDIT_PROVENANCE;
+  lifecycleAuthority: "IN_MEMORY_FSM";
+  exposureLedger: "MOCK_EXPOSURE";
+  advanceId: string;
+  phase: CreditPhase;
+  terminal: boolean;
+  claimId: string;
+  beneficiaryRole: string;
+  /** Frozen offer ceiling for this case. Not a licensed limit. */
+  openFace: number;
+  /** Unreserved mock units on the shared claim ceiling. */
+  availableCredit: number;
+  /** Offer amount while the case has not drawn. Otherwise 0. */
+  pendingDraw: number;
+  offerAmount: number;
+  /** Units still reserved on the claim. Partial repayment does not free them. */
+  reservedOpen: number;
+  noteStatus: CreditNoteStatus | null;
+  drawId: string | null;
+  drawnExposure: number;
+  repaidExposure: number;
+  outstandingExposure: number;
+  repaymentCount: number;
+  /** Next repay sequence while exposure remains. Otherwise null. */
+  nextRepaymentSequence: number | null;
+  settlementId: string | null;
+  settlementGate: CreditSettlementGate;
+  mockSettlementCommitObserved: boolean;
+  /** True when the bound mock settlement view is FAILED. Not a bank return. */
+  settlementFailure: boolean;
+  rejectReason: string | null;
+  cancelReason: string | null;
+  defaultReason: string | null;
+  idempotencyKey: string;
+  lastRejectCode: string | null;
+  /**
+   * Process-local journal replay flag.
+   * Null until reconcile succeeds here. Not a bank match and not chain finality.
+   */
+  reconcileMatched: boolean | null;
+  economicFinalityClaimed: false;
+  fundsExecuted: false;
+  bankDebitObserved: false;
+  repaymentObserved: false;
+  interestDefined: false;
+  underwritingExecuted: false;
+  kycExecuted: false;
+  ownershipMutated: false;
+  ticketOwnershipAuthoritative: false;
+  externalCredit: "UNSUPPORTED";
+  note: string;
+}
+
+export type CreditLifecycleCommand =
+  | "offer"
+  | "approve"
+  | "reject"
+  | "cancel"
+  | "bind_settlement"
+  | "draw"
+  | "repay"
+  | "close"
+  | "default"
+  | "reconcile";
+
+export interface CreditCommandReceipt {
+  duplicate: boolean;
+  applied: CreditLifecycleCommand | null;
+  provenance: typeof CREDIT_PROVENANCE;
+  lifecycleAuthority: "IN_MEMORY_FSM";
+  externalCredit: "UNSUPPORTED";
+  economicFinalityClaimed: false;
+  fundsExecuted: false;
+  bankDebitObserved: false;
+  repaymentObserved: false;
+  interestDefined: false;
+  underwritingExecuted: false;
+  kycExecuted: false;
+  idempotencyKey: string;
+  credit: CreditCaseView;
+}
+
+export interface CreditReconcileReceipt extends CreditCommandReceipt {
+  applied: "reconcile" | null;
+  matched: true;
+}
+
 export interface AdapterMeta {
   adapter: "stub" | "http";
   liveChain: false;

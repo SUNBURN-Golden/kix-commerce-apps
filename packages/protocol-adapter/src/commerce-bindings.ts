@@ -55,6 +55,18 @@ export const COMMERCE_METHODS = [
   "viewResaleRight",
   "viewResalePresentation",
   "rejectExternalResale",
+  "offerCredit",
+  "approveCredit",
+  "rejectCredit",
+  "cancelCredit",
+  "bindCreditSettlement",
+  "drawCredit",
+  "repayCredit",
+  "closeCredit",
+  "defaultCredit",
+  "reconcileCredit",
+  "viewCredit",
+  "rejectUnsupportedCredit",
 ] as const;
 
 export type CommerceMethod = (typeof COMMERCE_METHODS)[number];
@@ -352,5 +364,76 @@ export const COMMERCE_COMMAND_BINDINGS = {
     consideredAction: null,
     reason:
       "rejectExternalResale is an in-memory FSM refusal. The HTTP adapter does not bind it and does not send a catalogue command.",
+  },
+  offerCredit: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "offerCredit is a stub-local FSM command. It is not offer_gift and it is not an OpenAPI catalogue command. The HTTP adapter does not invent a lending endpoint.",
+  },
+  approveCredit: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "approveCredit is a stub-local FSM command. It is not an underwriting result and not an OpenAPI catalogue command. The HTTP adapter does not invent a lending endpoint.",
+  },
+  rejectCredit: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "rejectCredit is a stub-local FSM command. It is not an OpenAPI catalogue command. The HTTP adapter does not invent a lending endpoint.",
+  },
+  cancelCredit: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "cancelCredit is a stub-local FSM command. It is not cancel_event. The HTTP adapter does not invent a lending endpoint.",
+  },
+  bindCreditSettlement: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "bindCreditSettlement is a stub-local FSM command. It is not settle_capture. The HTTP adapter does not send settle_capture.",
+  },
+  drawCredit: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "drawCredit records mock exposure on the stub. It is not a disbursement and not an OpenAPI catalogue command. The HTTP adapter does not invent a lending endpoint.",
+  },
+  repayCredit: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "repayCredit records a mock exposure note on the stub. It is not a bank receipt and not an OpenAPI catalogue command. The HTTP adapter does not invent a lending endpoint.",
+  },
+  closeCredit: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "closeCredit is a stub-local FSM command. It is not an OpenAPI catalogue command. The HTTP adapter does not invent a lending endpoint.",
+  },
+  defaultCredit: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "defaultCredit is a stub-local FSM command. It is not a foreclosure and not an OpenAPI catalogue command. The HTTP adapter does not invent a lending endpoint.",
+  },
+  reconcileCredit: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "reconcileCredit is a process-local stub check. It is not an OpenAPI catalogue command. The HTTP adapter does not invent a lending endpoint.",
+  },
+  viewCredit: {
+    status: "not-bound",
+    consideredAction: null,
+    reason: "viewCredit reads the stub case. The contract-only catalogue has no read command for an FSM advance id.",
+  },
+  rejectUnsupportedCredit: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "rejectUnsupportedCredit is an in-memory FSM refusal. The HTTP adapter does not bind it and does not send a catalogue command.",
   },
 } as const satisfies Record<CommerceMethod, CommerceBinding>;
