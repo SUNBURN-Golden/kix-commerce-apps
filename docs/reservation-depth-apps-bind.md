@@ -39,7 +39,7 @@ The vendored contract-only catalogue is unchanged:
 | Status | `contract-only`. `liveHttpServer` and `productionEndpoint` are false |
 | Catalogue tip recorded for that file | `a744b0a036d7e1edb48416871af20cd182f23df4` |
 
-FSM lifecycle names are not OpenAPI operations and are not `protocol_contract` commands. `HttpProtocolAdapter` leaves the reservation and admission FSM methods not-bound. It does not map them onto `capture`, `admit`, or a venue scan. An explicit `invokeLocalCall` may post those published bodies to the loopback integration gate. A reference reject is not this desk's mock phase.
+FSM lifecycle names are not OpenAPI operations and are not `protocol_contract` commands. `HttpProtocolAdapter` leaves the reservation and admission FSM methods not-bound. It does not map them onto `capture`, `admit`, or a venue scan. An explicit `invokeLocalCall` may post those published bodies to the loopback integration gate. A reference reject is not this desk's mock phase. Credential labels and the health-probe boundary are in [admission-harden-apps-bind.md](admission-harden-apps-bind.md).
 
 Stub mode is the default. `mode=http` requires an explicit `http://127.0.0.1` origin. See [http-integration-gate-apps-bind.md](http-integration-gate-apps-bind.md).
 

@@ -1,3 +1,9 @@
+import {
+  ADMISSION_CASE_NOTE,
+  AdmissionCaseStore,
+  admissionBoundaryPresentation,
+  type AdmissionSources,
+} from "./admission-case.js";
 import { CreditCaseStore } from "./credit-case.js";
 import { CONSUMED_SURFACES, type CommerceProtocol } from "./protocol.js";
 import { ResaleCaseStore } from "./resale-case.js";
@@ -6,7 +12,16 @@ import { SettlementCaseStore } from "./settlement-case.js";
 import { SURFACES } from "./surfaces.js";
 import {
   ProtocolError,
+  type AdmissionAdopt,
+  type AdmissionAuthorize,
+  type AdmissionClock,
+  type AdmissionCommandReceipt,
+  type AdmissionConsume,
   type AdmissionDecision,
+  type AdmissionPresentation,
+  type AdmissionPresentationQuery,
+  type AdmissionReconcile,
+  type AdmissionReconcileReceipt,
   type AdapterMeta,
   type Booking,
   type Hold,
@@ -105,6 +120,7 @@ export class StubProtocolAdapter implements CommerceProtocol {
   private readonly settlementCases = new SettlementCaseStore();
   private readonly reservationCases: ReservationCaseStore;
   private readonly resaleCases: ResaleCaseStore;
+  private readonly admissionCases: AdmissionCaseStore;
   private readonly creditCases: CreditCaseStore;
   private seq = 0;
 
@@ -135,6 +151,25 @@ export class StubProtocolAdapter implements CommerceProtocol {
         return { phase: view.phase, fundsExecuted: view.fundsExecuted };
       },
     );
+    this.admissionCases = new AdmissionCaseStore(this.admissionSources());
+  }
+
+  private admissionSources(): AdmissionSources {
+    return {
+      viewReservation: (reservationId) => this.reservationCases.view(reservationId),
+      authorizeReservation: (input) => this.reservationCases.authorizeAdmission(input),
+      consumeReservation: (input) => this.reservationCases.consume(input),
+      viewResaleRight: (rightId) => this.resaleCases.viewRight(rightId),
+      viewResalePresentation: (input) => this.resaleCases.viewPresentation(input),
+      viewSettlement: (settlementId) => {
+        const view = this.settlementCases.view(settlementId);
+        return {
+          fundsExecuted: view.fundsExecuted,
+          economicFinalityClaimed: false,
+          admissionGranted: false,
+        };
+      },
+    };
   }
 
   describe(): AdapterMeta {
@@ -417,6 +452,52 @@ export class StubProtocolAdapter implements CommerceProtocol {
 
   async rejectExternalReservation(kind: string): Promise<never> {
     return this.reservationCases.rejectExternal(kind);
+  }
+
+  async advanceAdmissionClock(input: AdmissionClock): Promise<AdmissionCommandReceipt> {
+    return this.admissionCases.advanceClock(input);
+  }
+
+  async adoptAdmissionIssued(input: AdmissionAdopt): Promise<AdmissionCommandReceipt> {
+    return this.admissionCases.adoptIssued(input);
+  }
+
+  async authorizeAdmissionCredential(input: AdmissionAuthorize): Promise<AdmissionCommandReceipt> {
+    return this.admissionCases.authorize(input);
+  }
+
+  async consumeAdmissionCredential(input: AdmissionConsume): Promise<AdmissionCommandReceipt> {
+    return this.admissionCases.consume(input);
+  }
+
+  async reconcileAdmission(input: AdmissionReconcile): Promise<AdmissionReconcileReceipt> {
+    return this.admissionCases.reconcile(input);
+  }
+
+  async rejectExternalAdmission(kind: string): Promise<never> {
+    return this.admissionCases.rejectExternal(kind);
+  }
+
+  async presentAdmission(input: AdmissionPresentationQuery): Promise<AdmissionPresentation> {
+    try {
+      return this.admissionCases.present(input);
+    } catch (error) {
+      if (error instanceof ProtocolError && error.code) {
+        return admissionBoundaryPresentation({
+          rightId: input.rightId,
+          version: typeof input.version === "number" ? input.version : 0,
+          holderRole: input.holderRole,
+          decision: error.code,
+          fresh: false,
+          transferObserved: false,
+          phase: null,
+          mode: "mock",
+          lifecycleAuthority: "IN_MEMORY_FSM",
+          note: ADMISSION_CASE_NOTE,
+        });
+      }
+      throw error;
+    }
   }
 
   async advanceResaleClock(input: ResaleClock): Promise<ResaleCommandReceipt> {

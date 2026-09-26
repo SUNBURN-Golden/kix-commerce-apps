@@ -3,6 +3,7 @@ import { isRecord } from "./record.js";
 import { SURFACES } from "./surfaces.js";
 import {
   CREDIT_PROVENANCE,
+  isAdmissionDeskState,
   isCreditPhase,
   isResalePhase,
   isReservationPhase,
@@ -155,6 +156,9 @@ function scan(value: unknown): void {
   }
   if (isAdmissionPayload(value)) {
     asAdmission(value);
+  }
+  if ("deskState" in value) {
+    asAdmissionBoundary(value);
   }
   if (
     "mode" in value &&
@@ -496,6 +500,25 @@ function isAdmissionPayload(value: Record<string, unknown>): boolean {
 function asAdmission(value: Record<string, unknown>): void {
   if ("proofMode" in value && value.proofMode !== "stub" && value.proofMode !== "remote") {
     throw new ProtocolError("Admission payload proof mode must stay stub or remote.");
+  }
+  assertNoProductionAdmissionCopy(value);
+}
+
+function asAdmissionBoundary(value: Record<string, unknown>): void {
+  if (!isAdmissionDeskState(value.deskState)) {
+    throw new ProtocolError("Admission desk state is not a known label.");
+  }
+  if ("admissionRoutingProduction" in value && value.admissionRoutingProduction !== false) {
+    throw new ProtocolError("Admission payload must not claim production routing.");
+  }
+  if ("externalAdmission" in value && value.externalAdmission !== "UNSUPPORTED") {
+    throw new ProtocolError("Admission payload must keep external admission unsupported.");
+  }
+  if ("offlineAdmission" in value && value.offlineAdmission !== false) {
+    throw new ProtocolError("Admission payload must not claim offline admission.");
+  }
+  if (value.deskState === "valid" && value.fresh !== true) {
+    throw new ProtocolError("Admission payload must not mark an unfresh credential valid.");
   }
   assertNoProductionAdmissionCopy(value);
 }

@@ -134,8 +134,9 @@ describe("reservation panel copy", () => {
     expect(html).toContain("Not observed");
     expect(html).toContain("false");
     expect(html).toContain("Not live admission");
-    expect(html).toContain("Authorize mock admission phase");
-    expect(html).toContain("Consume mock once");
+    expect(html).not.toContain("Authorize mock admission phase");
+    expect(html).not.toContain("Consume mock once");
+    expect(html).toContain("Reconcile process-local");
     expect(html).toContain("MOCK_GATE_ONLY");
     for (const pattern of BANNED_COPY) {
       expect(html).not.toMatch(pattern);
@@ -149,12 +150,19 @@ describe("reservation panel copy", () => {
       "src/pages/Admission.tsx",
       "src/pages/BoxOffice.tsx",
       "src/reservation-desk.ts",
+      "src/admission-desk.ts",
+      "src/pages/AdmissionCredentialPanel.tsx",
     ];
     const combined = files.map((file) => readFileSync(path.join(webRoot, file), "utf8")).join("\n");
     for (const pattern of BANNED_COPY) {
       expect(combined).not.toMatch(pattern);
     }
     expect(combined).not.toContain("reservation_fsm");
+    expect(combined).not.toContain("admission_fsm");
+    expect(readFileSync(path.join(webRoot, "src/pages/Admission.tsx"), "utf8")).not.toContain("checkAdmission");
+    expect(readFileSync(path.join(webRoot, "src/admission-desk.ts"), "utf8")).not.toContain("consumeReservation");
+    expect(readFileSync(path.join(webRoot, "src/admission-desk.ts"), "utf8")).not.toContain("authorizeReservationAdmission");
+    expect(readFileSync(path.join(webRoot, "src/pages/Booking.tsx"), "utf8")).toContain("commands={false}");
     expect(combined).not.toContain("mock_gates");
     expect(combined).not.toContain("settle_capture");
     expect(combined).not.toContain("fetch(");

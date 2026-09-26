@@ -2,7 +2,7 @@
 
 This bind points `@kix/protocol-adapter` at the reviewed non-production loopback gate in kix-protocol. Stub mode stays the default. HTTP mode is opt-in. A successful local call is not production deployment approval, not a public endpoint, and not a conformance claim.
 
-The protocol merge is `5c59d95ec52379e010f8e9c660da11cfa6498def`. The feature commit is `007af9021991965d4af79c4f8497061c6daa77eb`.
+The OpenAPI bytes come from feature `007af9021991965d4af79c4f8497061c6daa77eb`. Apps tests start the process at main `3b6bdd26f61bb828af3781946b63a3a3fa03187b`. That tip does not add commands. Admission labeling is in [admission-harden-apps-bind.md](admission-harden-apps-bind.md).
 
 ## What HTTP mode does
 
@@ -45,7 +45,7 @@ The process listens on `127.0.0.1` only. Then point this app at that origin:
 VITE_KIX_PROTOCOL_MODE=http VITE_KIX_PROTOCOL_API_BASE=http://127.0.0.1:8765 npm run dev
 ```
 
-`GET http://127.0.0.1:8765/health` answers when the process is up. `GET http://127.0.0.1:8765/ready` answers when the in-memory core is accepting calls. Desk screens still use stub behavior unless a caller uses `invokeLocalCall`. The box office, booking, admission, resale, and credit panels keep their mock cases on the stub. They do not become live payment, live admission, a live marketplace, or live credit when the gate is up.
+`GET http://127.0.0.1:8765/health` answers when the process is up. `GET http://127.0.0.1:8765/ready` answers when the in-memory core is accepting calls. Desk commands stay not-bound. `presentAdmission` is the one desk read that calls `GET /health` in HTTP mode. It does not post `admit`. The box office, booking, admission, resale, and credit panels keep their mock cases on the stub. They do not become live payment, live admission, a live marketplace, or live credit when the gate is up.
 
 ## What the adapter tests run
 
@@ -61,7 +61,7 @@ Against that process the test calls:
 
 - settlement catalogue commands `capture` and `settle_capture` (reference reject `TRADE_NOT_FOUND` for a missing trade)
 - reservation catalogue commands `reserve_listing` and `release_inventory` (missing listing and missing inventory)
-- admission catalogue commands `open_admission` on a created fixture event, and `admit` (missing ticket)
+- admission catalogue commands `open_admission` on a created fixture event, and `admit` (missing ticket). `presentAdmission` reads `/health` only. `authorize_admission` and `consume_admission` are rejected before a request. A missing `admit` is labeled `invalid`, the same desk label as an unknown stub credential. A closed port is `unavailable-server`
 - resale catalogue commands `create_listing` and `accept_trade` (missing ticket and missing trade)
 - credit: desk `offerCredit` and `drawCredit` stay not-bound and send no request. `offer_gift` is sent as itself and rejects `TICKET_NOT_FOUND`. The action `draw` is rejected in the client before a request
 

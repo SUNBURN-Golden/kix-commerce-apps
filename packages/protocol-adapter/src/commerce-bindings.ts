@@ -42,6 +42,13 @@ export const COMMERCE_METHODS = [
   "viewReservation",
   "viewReservationShow",
   "rejectExternalReservation",
+  "advanceAdmissionClock",
+  "adoptAdmissionIssued",
+  "authorizeAdmissionCredential",
+  "consumeAdmissionCredential",
+  "reconcileAdmission",
+  "rejectExternalAdmission",
+  "presentAdmission",
   "advanceResaleClock",
   "adoptResaleIssued",
   "listResaleCase",
@@ -278,6 +285,48 @@ export const COMMERCE_COMMAND_BINDINGS = {
     consideredAction: null,
     reason:
       "rejectExternalReservation is an in-memory FSM refusal. The HTTP adapter does not bind it and does not send a catalogue command.",
+  },
+  advanceAdmissionClock: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "advanceAdmissionClock moves the stub credential clock. It is not advance_clock. The HTTP adapter does not send a catalogue command.",
+  },
+  adoptAdmissionIssued: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "adoptAdmissionIssued reads the stub reservation case. It is not a catalogue issuance and it does not post admit.",
+  },
+  authorizeAdmissionCredential: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "authorizeAdmissionCredential is a stub-local freshness check. It is not admit and it is not a venue scan. The HTTP adapter does not invent a binding.",
+  },
+  consumeAdmissionCredential: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "consumeAdmissionCredential is a stub-local one-time consume after authorize. It is not admit and it does not scan a venue. The HTTP adapter does not invent a binding.",
+  },
+  reconcileAdmission: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "reconcileAdmission is a process-local stub check. It is not an OpenAPI catalogue command. The HTTP adapter does not invent a binding.",
+  },
+  rejectExternalAdmission: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "rejectExternalAdmission refuses a venue scanner, offline admit, or public bind. The HTTP adapter does not send a catalogue command.",
+  },
+  presentAdmission: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "presentAdmission reads stub credential freshness, or the loopback health probe in HTTP mode. It does not post admit and it does not scan a venue.",
   },
   advanceResaleClock: {
     status: "not-bound",

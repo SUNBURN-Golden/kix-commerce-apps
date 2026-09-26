@@ -20,6 +20,15 @@ import type {
   ReservationShowRegister,
   ReservationShowView,
   ReservationStep,
+  AdmissionAdopt,
+  AdmissionAuthorize,
+  AdmissionClock,
+  AdmissionCommandReceipt,
+  AdmissionConsume,
+  AdmissionPresentation,
+  AdmissionPresentationQuery,
+  AdmissionReconcile,
+  AdmissionReconcileReceipt,
   ResaleAccept,
   ResaleAdopt,
   ResaleBind,
@@ -107,6 +116,23 @@ export interface CommerceProtocol {
   viewReservation(reservationId: string): Promise<ReservationCaseView>;
   viewReservationShow(showId: string): Promise<ReservationShowView>;
   rejectExternalReservation(kind: string): Promise<never>;
+  /**
+   * Stub-local admission credential commands.
+   * These names are not OpenAPI operations. HttpProtocolAdapter leaves them not-bound.
+   * They do not post `admit`. The authoritative machine stays in kix-protocol.
+   * This app does not scan a venue and does not grant offline admission.
+   */
+  advanceAdmissionClock(input: AdmissionClock): Promise<AdmissionCommandReceipt>;
+  adoptAdmissionIssued(input: AdmissionAdopt): Promise<AdmissionCommandReceipt>;
+  authorizeAdmissionCredential(input: AdmissionAuthorize): Promise<AdmissionCommandReceipt>;
+  consumeAdmissionCredential(input: AdmissionConsume): Promise<AdmissionCommandReceipt>;
+  reconcileAdmission(input: AdmissionReconcile): Promise<AdmissionReconcileReceipt>;
+  rejectExternalAdmission(kind: string): Promise<never>;
+  /**
+   * Read a credential label from the stub, or the loopback health probe in HTTP mode.
+   * HTTP mode does not post `admit`. A reachable gate is not entry.
+   */
+  presentAdmission(input: AdmissionPresentationQuery): Promise<AdmissionPresentation>;
   /**
    * Stub-local resale case commands.
    * These names are not OpenAPI operations. HttpProtocolAdapter leaves them not-bound.

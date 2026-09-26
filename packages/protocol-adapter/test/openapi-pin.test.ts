@@ -171,7 +171,7 @@ describe("integration-gate OpenAPI pin", () => {
 
   it("records the merged protocol tip and non-production flags", () => {
     expect(OPENAPI_INTEGRATION_GATE_PIN.protocolRepo).toBe("BeautifulMind-JT/kix-protocol");
-    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha).toBe("5c59d95ec52379e010f8e9c660da11cfa6498def");
+    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha).toBe("3b6bdd26f61bb828af3781946b63a3a3fa03187b");
     expect(OPENAPI_INTEGRATION_GATE_PIN.protocolFeatureSha).toBe("007af9021991965d4af79c4f8497061c6daa77eb");
     expect(OPENAPI_INTEGRATION_GATE_PIN.openApiPath).toBe(
       "docs/contracts/openapi/kix-protocol.integration-gate.openapi.json",
