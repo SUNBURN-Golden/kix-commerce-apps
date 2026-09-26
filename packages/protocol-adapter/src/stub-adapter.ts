@@ -1,3 +1,4 @@
+import { CreditCaseStore } from "./credit-case.js";
 import { CONSUMED_SURFACES, type CommerceProtocol } from "./protocol.js";
 import { ResaleCaseStore } from "./resale-case.js";
 import { ReservationCaseStore } from "./reservation-case.js";
@@ -48,6 +49,15 @@ import {
   type SettlementReason,
   type SettlementReconcileReceipt,
   type SettlementStep,
+  type CreditBind,
+  type CreditCaseView,
+  type CreditCommandReceipt,
+  type CreditDraw,
+  type CreditOffer,
+  type CreditReason,
+  type CreditReconcileReceipt,
+  type CreditRepay,
+  type CreditStep,
 } from "./types.js";
 
 const HOLD_MS = 10 * 60 * 1000;
@@ -83,7 +93,7 @@ interface HoldRecord extends Hold {
 /**
  * In-memory stand-in used when no kix-protocol HTTP base is configured.
  * Wave 4 hold, resale, and admission policies here are stub policies for the UI and tests.
- * The reservation case and the resale case use protocol phase names at the UI contract only.
+ * The reservation case, the resale case, and the credit case use protocol phase names at the UI contract only.
  * None of these paths is Move, and none of them is the protocol machine.
  */
 export class StubProtocolAdapter implements CommerceProtocol {
@@ -95,10 +105,15 @@ export class StubProtocolAdapter implements CommerceProtocol {
   private readonly settlementCases = new SettlementCaseStore();
   private readonly reservationCases: ReservationCaseStore;
   private readonly resaleCases: ResaleCaseStore;
+  private readonly creditCases: CreditCaseStore;
   private seq = 0;
 
   constructor(seed: Performance[] = DEFAULT_SEED, private readonly now: () => number = Date.now) {
     this.performances = seed.map((item) => ({ ...item }));
+    this.creditCases = new CreditCaseStore((settlementId) => {
+      const view = this.settlementCases.view(settlementId);
+      return { phase: view.phase, fundsExecuted: view.fundsExecuted };
+    });
     this.reservationCases = new ReservationCaseStore((settlementId) => this.settlementCases.view(settlementId).phase);
     this.resaleCases = new ResaleCaseStore(
       (reservationId) => {
@@ -462,6 +477,54 @@ export class StubProtocolAdapter implements CommerceProtocol {
 
   async rejectExternalResale(kind: string): Promise<never> {
     return this.resaleCases.rejectExternal(kind);
+  }
+
+  async offerCredit(input: CreditOffer): Promise<CreditCommandReceipt> {
+    return this.creditCases.offer(input);
+  }
+
+  async approveCredit(input: CreditStep): Promise<CreditCommandReceipt> {
+    return this.creditCases.approve(input);
+  }
+
+  async rejectCredit(input: CreditReason): Promise<CreditCommandReceipt> {
+    return this.creditCases.reject(input);
+  }
+
+  async cancelCredit(input: CreditReason): Promise<CreditCommandReceipt> {
+    return this.creditCases.cancel(input);
+  }
+
+  async bindCreditSettlement(input: CreditBind): Promise<CreditCommandReceipt> {
+    return this.creditCases.bindSettlement(input);
+  }
+
+  async drawCredit(input: CreditDraw): Promise<CreditCommandReceipt> {
+    return this.creditCases.draw(input);
+  }
+
+  async repayCredit(input: CreditRepay): Promise<CreditCommandReceipt> {
+    return this.creditCases.repay(input);
+  }
+
+  async closeCredit(input: CreditStep): Promise<CreditCommandReceipt> {
+    return this.creditCases.close(input);
+  }
+
+  async defaultCredit(input: CreditReason): Promise<CreditCommandReceipt> {
+    return this.creditCases.defaultCase(input);
+  }
+
+  async reconcileCredit(input: CreditStep): Promise<CreditReconcileReceipt> {
+    return this.creditCases.reconcile(input);
+  }
+
+  async viewCredit(advanceId: string): Promise<CreditCaseView> {
+    return this.creditCases.view(advanceId);
+  }
+
+  async rejectUnsupportedCredit(kind: string): Promise<never> {
+    return this.creditCases.rejectUnsupported(kind);
   }
 
   private requirePerformance(eventId: string): Performance {

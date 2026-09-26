@@ -45,4 +45,4 @@ Stub mode is the default. `mode=http` without a base URL throws.
 
 ## Hold
 
-No live admission, no venue inventory, no production ticket issuance, no live HTTP server, and no PG or bank settlement. This bind does not expand resale or credit.
+No live admission, no venue inventory, no production ticket issuance, no live HTTP server, and no PG or bank settlement. This bind does not expand resale. Credit depth is a separate adapter stub.

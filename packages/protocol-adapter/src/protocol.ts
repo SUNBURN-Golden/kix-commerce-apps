@@ -43,6 +43,15 @@ import type {
   SettlementReason,
   SettlementReconcileReceipt,
   SettlementStep,
+  CreditBind,
+  CreditCaseView,
+  CreditCommandReceipt,
+  CreditDraw,
+  CreditOffer,
+  CreditReason,
+  CreditReconcileReceipt,
+  CreditRepay,
+  CreditStep,
 } from "./types.js";
 
 /**
@@ -119,6 +128,24 @@ export interface CommerceProtocol {
   viewResaleRight(rightId: string): Promise<ResaleRightView>;
   viewResalePresentation(input: ResalePresentationQuery): Promise<ResalePresentationView>;
   rejectExternalResale(kind: string): Promise<never>;
+  /**
+   * Stub-local credit case commands.
+   * These names are not OpenAPI operations. HttpProtocolAdapter leaves them not-bound.
+   * The authoritative FSM stays in kix-protocol. This app does not disburse to a bank,
+   * underwrite, or mutate booking or resale ownership.
+   */
+  offerCredit(input: CreditOffer): Promise<CreditCommandReceipt>;
+  approveCredit(input: CreditStep): Promise<CreditCommandReceipt>;
+  rejectCredit(input: CreditReason): Promise<CreditCommandReceipt>;
+  cancelCredit(input: CreditReason): Promise<CreditCommandReceipt>;
+  bindCreditSettlement(input: CreditBind): Promise<CreditCommandReceipt>;
+  drawCredit(input: CreditDraw): Promise<CreditCommandReceipt>;
+  repayCredit(input: CreditRepay): Promise<CreditCommandReceipt>;
+  closeCredit(input: CreditStep): Promise<CreditCommandReceipt>;
+  defaultCredit(input: CreditReason): Promise<CreditCommandReceipt>;
+  reconcileCredit(input: CreditStep): Promise<CreditReconcileReceipt>;
+  viewCredit(advanceId: string): Promise<CreditCaseView>;
+  rejectUnsupportedCredit(kind: string): Promise<never>;
 }
 
 export const CONSUMED_SURFACES: SurfaceId[] = [
@@ -132,4 +159,5 @@ export const CONSUMED_SURFACES: SurfaceId[] = [
   "wave4.resale.R01-R05.fsm",
   "wave4.admission.P03",
   "wave4.admission.P03.fsm",
+  "wave5.credit.F04.fsm",
 ];

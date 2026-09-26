@@ -1,6 +1,8 @@
 import { isRecord } from "./record.js";
 import { SURFACES } from "./surfaces.js";
 import {
+  CREDIT_PROVENANCE,
+  isCreditPhase,
   isResalePhase,
   isReservationPhase,
   isSettlementPhase,
@@ -30,6 +32,15 @@ const PRODUCTION_RESALE_COPY = [
 ];
 
 const CREDIT_KEYS = ["disburseCredit", "creditDisbursement", "disburse"] as const;
+
+const PRODUCTION_CREDIT_COPY = [
+  /loan approved by bank/i,
+  /funds wired/i,
+  /kyc cleared/i,
+  /\bAPR\b/,
+  /licensed lender/i,
+  /interest rate/i,
+];
 
 /**
  * Fail-closed checks for any payload this client is willing to treat as a
@@ -61,7 +72,9 @@ function scan(value: unknown): void {
   if ("bookingId" in value && "payment" in value) {
     asBooking(value);
   }
-  if (isResalePayload(value)) {
+  if (isCreditPayload(value)) {
+    asCredit(value);
+  } else if (isResalePayload(value)) {
     asResale(value);
   } else if (isReservationPayload(value)) {
     asReservation(value);
@@ -69,7 +82,13 @@ function scan(value: unknown): void {
   if (isAdmissionPayload(value)) {
     asAdmission(value);
   }
-  if ("mode" in value && "references" in value && !isReservationPayload(value) && !isResalePayload(value)) {
+  if (
+    "mode" in value &&
+    "references" in value &&
+    !isReservationPayload(value) &&
+    !isResalePayload(value) &&
+    !isCreditPayload(value)
+  ) {
     if ("amount" in value || "currency" in value) {
       throw new ProtocolError("Settlement preview must not carry an amount or currency.");
     }
@@ -136,6 +155,100 @@ function asSettlement(value: Record<string, unknown>): SettlementPreview {
     references: ["F01", "F02", "F03"],
     note: readString(value, "note"),
   };
+}
+
+function isCreditPayload(value: Record<string, unknown>): boolean {
+  if (
+    "advanceId" in value ||
+    "outstandingExposure" in value ||
+    "availableCredit" in value ||
+    "pendingDraw" in value ||
+    "offerAmount" in value ||
+    "drawnExposure" in value ||
+    "repaidExposure" in value ||
+    "exposureLedger" in value ||
+    "ownershipMutated" in value ||
+    "ticketOwnershipAuthoritative" in value ||
+    "bankDebitObserved" in value
+  ) {
+    return true;
+  }
+  if (value.provenance === CREDIT_PROVENANCE) {
+    return true;
+  }
+  if (Array.isArray(value.references) && value.references[0] === "F04") {
+    return true;
+  }
+  return isCreditPhase(value.phase) && value.phase !== "CANCELLED";
+}
+
+function asCredit(value: Record<string, unknown>): void {
+  if ("economicFinalityClaimed" in value && value.economicFinalityClaimed !== false) {
+    throw new ProtocolError("Credit payload must not claim economic finality.");
+  }
+  if ("economic_finality_claimed" in value && value.economic_finality_claimed !== false) {
+    throw new ProtocolError("Credit payload must not claim economic finality.");
+  }
+  if ("fundsExecuted" in value && value.fundsExecuted !== false) {
+    throw new ProtocolError("Credit payload must not claim executed funds.");
+  }
+  if ("bankDebitObserved" in value && value.bankDebitObserved !== false) {
+    throw new ProtocolError("Credit payload must not claim a bank debit.");
+  }
+  if ("repaymentObserved" in value && value.repaymentObserved !== false) {
+    throw new ProtocolError("Credit payload must not claim an observed repayment.");
+  }
+  if ("interestDefined" in value && value.interestDefined !== false) {
+    throw new ProtocolError("Credit payload must not define interest.");
+  }
+  if ("underwritingExecuted" in value && value.underwritingExecuted !== false) {
+    throw new ProtocolError("Credit payload must not claim underwriting.");
+  }
+  if ("kycExecuted" in value && value.kycExecuted !== false) {
+    throw new ProtocolError("Credit payload must not claim a KYC execution.");
+  }
+  if ("ownershipMutated" in value && value.ownershipMutated !== false) {
+    throw new ProtocolError("Credit payload must not claim an ownership change.");
+  }
+  if ("ticketOwnershipAuthoritative" in value && value.ticketOwnershipAuthoritative !== false) {
+    throw new ProtocolError("Credit payload must not claim ticket authority.");
+  }
+  if ("externalCredit" in value && value.externalCredit !== "UNSUPPORTED") {
+    throw new ProtocolError("Credit payload must keep external credit unsupported.");
+  }
+  if ("amount" in value || "currency" in value || "gross" in value) {
+    throw new ProtocolError("Credit payload must not carry a currency posting.");
+  }
+  const viewShaped =
+    "advanceId" in value ||
+    "availableCredit" in value ||
+    "outstandingExposure" in value ||
+    (Array.isArray(value.references) && value.references[0] === "F04") ||
+    (isCreditPhase(value.phase) && value.phase !== "CANCELLED");
+  if (viewShaped) {
+    if (value.mode !== "mock") {
+      throw new ProtocolError("Credit payload must stay in mock mode.");
+    }
+    if (value.provenance !== CREDIT_PROVENANCE) {
+      throw new ProtocolError("Credit payload must stay MOCK_CREDIT_F04_ONLY.");
+    }
+  }
+  if ("phase" in value && !isCreditPhase(value.phase)) {
+    throw new ProtocolError("Credit phase must be a mock FSM phase.");
+  }
+  assertNoProductionCreditCopy(value);
+}
+
+function assertNoProductionCreditCopy(value: Record<string, unknown>): void {
+  for (const key of ["note", "detail"] as const) {
+    const field = value[key];
+    if (typeof field !== "string") {
+      continue;
+    }
+    if (PRODUCTION_CREDIT_COPY.some((pattern) => pattern.test(field))) {
+      throw new ProtocolError("Credit payload must not use production-finance wording.");
+    }
+  }
 }
 
 function isResalePayload(value: Record<string, unknown>): boolean {

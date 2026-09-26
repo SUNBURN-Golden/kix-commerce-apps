@@ -34,6 +34,8 @@ describe("protocol seam", () => {
     expect(combined).not.toContain("settlement_fsm");
     expect(combined).not.toContain("reservation_fsm");
     expect(combined).not.toContain("resale_fsm");
+    expect(combined).not.toContain("credit_fsm");
+    expect(combined).not.toContain("mock_credit");
     expect(combined).not.toContain("mock_gates");
     expect(combined).not.toContain("settle_capture");
 
