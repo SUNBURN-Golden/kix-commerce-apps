@@ -9,6 +9,7 @@ import {
   OPENAPI_CONTRACT_PIN,
   PINNED_ACTIONS,
   ProtocolError,
+  RESALE_DEPTH_BASELINE,
   RESERVATION_DEPTH_BASELINE,
   SETTLEMENT_DEPTH_BASELINE,
   assertOpenApiContractDocument,
@@ -67,6 +68,11 @@ describe("contract-only OpenAPI pin", () => {
     expect(RESERVATION_DEPTH_BASELINE.featureCommit).toBe("2183d0b5b5010ec2692c43c277e99926ad9250db");
     expect(RESERVATION_DEPTH_BASELINE.fsmPath).toBe("reference/booking_resale_admission/reservation_fsm.py");
     expect(RESERVATION_DEPTH_BASELINE.provenance).toBe("MOCK_GATE_ONLY");
+    expect(RESALE_DEPTH_BASELINE.protocolRepo).toBe("BeautifulMind-JT/kix-protocol");
+    expect(RESALE_DEPTH_BASELINE.protocolMainSha).toBe("ef942b7713c7468e8851c6b372b64d42b5333ad8");
+    expect(RESALE_DEPTH_BASELINE.featureCommit).toBe("70c6d52d4289e23d0d4141b7f3a6b310eea236f2");
+    expect(RESALE_DEPTH_BASELINE.fsmPath).toBe("reference/booking_resale_admission/resale_fsm.py");
+    expect(RESALE_DEPTH_BASELINE.provenance).toBe("MOCK_GATE_ONLY");
     expect(isPinnedAction("initiate")).toBe(false);
     expect(isPinnedAction("reconcile")).toBe(false);
     expect(isPinnedAction("reject_external")).toBe(false);

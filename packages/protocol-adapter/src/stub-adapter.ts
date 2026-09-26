@@ -1,4 +1,5 @@
 import { CONSUMED_SURFACES, type CommerceProtocol } from "./protocol.js";
+import { ResaleCaseStore } from "./resale-case.js";
 import { ReservationCaseStore } from "./reservation-case.js";
 import { SettlementCaseStore } from "./settlement-case.js";
 import { SURFACES } from "./surfaces.js";
@@ -24,6 +25,22 @@ import {
   type ReservationShowRegister,
   type ReservationShowView,
   type ReservationStep,
+  type ResaleAccept,
+  type ResaleAdopt,
+  type ResaleBind,
+  type ResaleCancelListing,
+  type ResaleCaseView,
+  type ResaleClock,
+  type ResaleCommandReceipt,
+  type ResaleHoldBuy,
+  type ResaleList,
+  type ResalePayment,
+  type ResalePresentationQuery,
+  type ResalePresentationView,
+  type ResaleReconcileReceipt,
+  type ResaleReleaseHold,
+  type ResaleRightView,
+  type ResaleStep,
   type SettlementCaseView,
   type SettlementCommandReceipt,
   type SettlementInitiate,
@@ -66,8 +83,8 @@ interface HoldRecord extends Hold {
 /**
  * In-memory stand-in used when no kix-protocol HTTP base is configured.
  * Wave 4 hold, resale, and admission policies here are stub policies for the UI and tests.
- * The reservation case uses protocol phase names at the UI contract only.
- * Neither path is Move, and neither path is the protocol machine.
+ * The reservation case and the resale case use protocol phase names at the UI contract only.
+ * None of these paths is Move, and none of them is the protocol machine.
  */
 export class StubProtocolAdapter implements CommerceProtocol {
   private readonly performances: Performance[];
@@ -77,11 +94,32 @@ export class StubProtocolAdapter implements CommerceProtocol {
   private readonly admitted = new Set<string>();
   private readonly settlementCases = new SettlementCaseStore();
   private readonly reservationCases: ReservationCaseStore;
+  private readonly resaleCases: ResaleCaseStore;
   private seq = 0;
 
   constructor(seed: Performance[] = DEFAULT_SEED, private readonly now: () => number = Date.now) {
     this.performances = seed.map((item) => ({ ...item }));
     this.reservationCases = new ReservationCaseStore((settlementId) => this.settlementCases.view(settlementId).phase);
+    this.resaleCases = new ResaleCaseStore(
+      (reservationId) => {
+        const view = this.reservationCases.view(reservationId);
+        return {
+          phase: view.phase,
+          rightId: view.rightId,
+          buyerRole: view.buyerRole,
+          admissionId: view.admissionId,
+          showId: view.showId,
+          slot: view.slot,
+          eventId: view.eventId,
+          economicFinalityClaimed: view.economicFinalityClaimed,
+          fundsExecuted: view.fundsExecuted,
+        };
+      },
+      (settlementId) => {
+        const view = this.settlementCases.view(settlementId);
+        return { phase: view.phase, fundsExecuted: view.fundsExecuted };
+      },
+    );
   }
 
   describe(): AdapterMeta {
@@ -364,6 +402,66 @@ export class StubProtocolAdapter implements CommerceProtocol {
 
   async rejectExternalReservation(kind: string): Promise<never> {
     return this.reservationCases.rejectExternal(kind);
+  }
+
+  async advanceResaleClock(input: ResaleClock): Promise<ResaleCommandReceipt> {
+    return this.resaleCases.advanceClock(input);
+  }
+
+  async adoptResaleIssued(input: ResaleAdopt): Promise<ResaleCommandReceipt> {
+    return this.resaleCases.adoptIssued(input);
+  }
+
+  async listResaleCase(input: ResaleList): Promise<ResaleCommandReceipt> {
+    return this.resaleCases.list(input);
+  }
+
+  async holdResaleBuy(input: ResaleHoldBuy): Promise<ResaleCommandReceipt> {
+    return this.resaleCases.holdBuy(input);
+  }
+
+  async releaseResaleHold(input: ResaleReleaseHold): Promise<ResaleCommandReceipt> {
+    return this.resaleCases.releaseHold(input);
+  }
+
+  async cancelResaleListing(input: ResaleCancelListing): Promise<ResaleCommandReceipt> {
+    return this.resaleCases.cancelListing(input);
+  }
+
+  async observeResalePayment(input: ResalePayment): Promise<ResaleCommandReceipt> {
+    return this.resaleCases.observePayment(input);
+  }
+
+  async bindResaleSettlement(input: ResaleBind): Promise<ResaleCommandReceipt> {
+    return this.resaleCases.bindSettlement(input);
+  }
+
+  async acceptResaleTransfer(input: ResaleAccept): Promise<ResaleCommandReceipt> {
+    return this.resaleCases.acceptTransfer(input);
+  }
+
+  async closeResaleListing(input: ResaleStep): Promise<ResaleCommandReceipt> {
+    return this.resaleCases.close(input);
+  }
+
+  async reconcileResale(input: ResaleStep): Promise<ResaleReconcileReceipt> {
+    return this.resaleCases.reconcile(input);
+  }
+
+  async viewResaleCase(listingId: string): Promise<ResaleCaseView> {
+    return this.resaleCases.view(listingId);
+  }
+
+  async viewResaleRight(rightId: string): Promise<ResaleRightView> {
+    return this.resaleCases.viewRight(rightId);
+  }
+
+  async viewResalePresentation(input: ResalePresentationQuery): Promise<ResalePresentationView> {
+    return this.resaleCases.viewPresentation(input);
+  }
+
+  async rejectExternalResale(kind: string): Promise<never> {
+    return this.resaleCases.rejectExternal(kind);
   }
 
   private requirePerformance(eventId: string): Performance {

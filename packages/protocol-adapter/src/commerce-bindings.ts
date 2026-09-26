@@ -40,6 +40,21 @@ export const COMMERCE_METHODS = [
   "viewReservation",
   "viewReservationShow",
   "rejectExternalReservation",
+  "advanceResaleClock",
+  "adoptResaleIssued",
+  "listResaleCase",
+  "holdResaleBuy",
+  "releaseResaleHold",
+  "cancelResaleListing",
+  "observeResalePayment",
+  "bindResaleSettlement",
+  "acceptResaleTransfer",
+  "closeResaleListing",
+  "reconcileResale",
+  "viewResaleCase",
+  "viewResaleRight",
+  "viewResalePresentation",
+  "rejectExternalResale",
 ] as const;
 
 export type CommerceMethod = (typeof COMMERCE_METHODS)[number];
@@ -249,5 +264,93 @@ export const COMMERCE_COMMAND_BINDINGS = {
     consideredAction: null,
     reason:
       "rejectExternalReservation is an in-memory FSM refusal. The HTTP adapter does not bind it and does not send a catalogue command.",
+  },
+  advanceResaleClock: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "advanceResaleClock is a stub-local FSM clock. It is not an OpenAPI catalogue command. The HTTP adapter does not invent a marketplace endpoint.",
+  },
+  adoptResaleIssued: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "adoptResaleIssued is a stub-local FSM command. It is not an OpenAPI catalogue command. The HTTP adapter does not invent a marketplace endpoint.",
+  },
+  listResaleCase: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "listResaleCase is a stub-local FSM command. It is not create_listing. The HTTP adapter does not invent a marketplace endpoint.",
+  },
+  holdResaleBuy: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "holdResaleBuy is a stub-local FSM command. It is not reserve_listing. The HTTP adapter does not invent a marketplace endpoint.",
+  },
+  releaseResaleHold: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "releaseResaleHold is a stub-local FSM command. It is not release_inventory. The HTTP adapter does not invent a marketplace endpoint.",
+  },
+  cancelResaleListing: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "cancelResaleListing is a stub-local FSM command. It is not an OpenAPI catalogue command. The HTTP adapter does not invent a marketplace endpoint.",
+  },
+  observeResalePayment: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "observeResalePayment records a mock payment note. It is not observe_funding. The HTTP adapter does not send a catalogue command.",
+  },
+  bindResaleSettlement: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "bindResaleSettlement is a stub-local FSM command. It is not settle_capture. The HTTP adapter does not send settle_capture.",
+  },
+  acceptResaleTransfer: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "acceptResaleTransfer is a stub-local FSM command. It is not accept_trade. The HTTP adapter does not invent a marketplace endpoint.",
+  },
+  closeResaleListing: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "closeResaleListing is a stub-local FSM command. It is not an OpenAPI catalogue command. The HTTP adapter does not invent a marketplace endpoint.",
+  },
+  reconcileResale: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "reconcileResale is a process-local stub check. It is not an OpenAPI catalogue command. The HTTP adapter does not invent a marketplace endpoint.",
+  },
+  viewResaleCase: {
+    status: "not-bound",
+    consideredAction: null,
+    reason: "viewResaleCase reads the stub case. The contract-only catalogue has no read command for an FSM listing id.",
+  },
+  viewResaleRight: {
+    status: "not-bound",
+    consideredAction: null,
+    reason: "viewResaleRight reads the stub right. The contract-only catalogue has no read command for an FSM right id.",
+  },
+  viewResalePresentation: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "viewResalePresentation reads a stub holder check. It is not a venue scan and not a catalogue command.",
+  },
+  rejectExternalResale: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "rejectExternalResale is an in-memory FSM refusal. The HTTP adapter does not bind it and does not send a catalogue command.",
   },
 } as const satisfies Record<CommerceMethod, CommerceBinding>;

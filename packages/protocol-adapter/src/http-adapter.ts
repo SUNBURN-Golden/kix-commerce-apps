@@ -29,6 +29,22 @@ import {
   type ReservationShowRegister,
   type ReservationShowView,
   type ReservationStep,
+  type ResaleAccept,
+  type ResaleAdopt,
+  type ResaleBind,
+  type ResaleCancelListing,
+  type ResaleCaseView,
+  type ResaleClock,
+  type ResaleCommandReceipt,
+  type ResaleHoldBuy,
+  type ResaleList,
+  type ResalePayment,
+  type ResalePresentationQuery,
+  type ResalePresentationView,
+  type ResaleReconcileReceipt,
+  type ResaleReleaseHold,
+  type ResaleRightView,
+  type ResaleStep,
   type SettlementCaseView,
   type SettlementCommandReceipt,
   type SettlementInitiate,
@@ -213,6 +229,66 @@ export class HttpProtocolAdapter implements CommerceProtocol {
 
   rejectExternalReservation(_kind: string): Promise<never> {
     return Promise.reject(unbound("rejectExternalReservation"));
+  }
+
+  advanceResaleClock(_input: ResaleClock): Promise<ResaleCommandReceipt> {
+    return Promise.reject(unbound("advanceResaleClock"));
+  }
+
+  adoptResaleIssued(_input: ResaleAdopt): Promise<ResaleCommandReceipt> {
+    return Promise.reject(unbound("adoptResaleIssued"));
+  }
+
+  listResaleCase(_input: ResaleList): Promise<ResaleCommandReceipt> {
+    return Promise.reject(unbound("listResaleCase"));
+  }
+
+  holdResaleBuy(_input: ResaleHoldBuy): Promise<ResaleCommandReceipt> {
+    return Promise.reject(unbound("holdResaleBuy"));
+  }
+
+  releaseResaleHold(_input: ResaleReleaseHold): Promise<ResaleCommandReceipt> {
+    return Promise.reject(unbound("releaseResaleHold"));
+  }
+
+  cancelResaleListing(_input: ResaleCancelListing): Promise<ResaleCommandReceipt> {
+    return Promise.reject(unbound("cancelResaleListing"));
+  }
+
+  observeResalePayment(_input: ResalePayment): Promise<ResaleCommandReceipt> {
+    return Promise.reject(unbound("observeResalePayment"));
+  }
+
+  bindResaleSettlement(_input: ResaleBind): Promise<ResaleCommandReceipt> {
+    return Promise.reject(unbound("bindResaleSettlement"));
+  }
+
+  acceptResaleTransfer(_input: ResaleAccept): Promise<ResaleCommandReceipt> {
+    return Promise.reject(unbound("acceptResaleTransfer"));
+  }
+
+  closeResaleListing(_input: ResaleStep): Promise<ResaleCommandReceipt> {
+    return Promise.reject(unbound("closeResaleListing"));
+  }
+
+  reconcileResale(_input: ResaleStep): Promise<ResaleReconcileReceipt> {
+    return Promise.reject(unbound("reconcileResale"));
+  }
+
+  viewResaleCase(_listingId: string): Promise<ResaleCaseView> {
+    return Promise.reject(unbound("viewResaleCase"));
+  }
+
+  viewResaleRight(_rightId: string): Promise<ResaleRightView> {
+    return Promise.reject(unbound("viewResaleRight"));
+  }
+
+  viewResalePresentation(_input: ResalePresentationQuery): Promise<ResalePresentationView> {
+    return Promise.reject(unbound("viewResalePresentation"));
+  }
+
+  rejectExternalResale(_kind: string): Promise<never> {
+    return Promise.reject(unbound("rejectExternalResale"));
   }
 
   /**
