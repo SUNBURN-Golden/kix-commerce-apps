@@ -171,8 +171,8 @@ describe("integration-gate OpenAPI pin", () => {
 
   it("records the merged protocol tip and non-production flags", () => {
     expect(OPENAPI_INTEGRATION_GATE_PIN.protocolRepo).toBe("BeautifulMind-JT/kix-protocol");
-    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha).toBe("3b6bdd26f61bb828af3781946b63a3a3fa03187b");
-    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolFeatureSha).toBe("007af9021991965d4af79c4f8497061c6daa77eb");
+    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha).toBe("52a9b5cbf7777df55d2d2062cb8d99d862b423bb");
+    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolFeatureSha).toBe("c7238bc24a399a6cabbab87ac23dbfd7e9c252dd");
     expect(OPENAPI_INTEGRATION_GATE_PIN.openApiPath).toBe(
       "docs/contracts/openapi/kix-protocol.integration-gate.openapi.json",
     );
@@ -192,6 +192,10 @@ describe("integration-gate OpenAPI pin", () => {
     expect(OPENAPI_INTEGRATION_GATE_PIN.loopbackOnly).toBe(true);
     expect(OPENAPI_INTEGRATION_GATE_PIN.defaultBindHost).toBe("127.0.0.1");
     expect(OPENAPI_INTEGRATION_GATE_PIN.productionEndpoint).toBe(false);
+    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolTruth).toBe(false);
+    expect(OPENAPI_INTEGRATION_GATE_PIN.productionConformance).toBe(false);
+    expect(OPENAPI_INTEGRATION_GATE_PIN.maxInFlight).toBe(8);
+    expect(OPENAPI_INTEGRATION_GATE_PIN.readinessJournalDefaultEnabled).toBe(false);
     expect(OPENAPI_INTEGRATION_GATE_PIN.contractOnlyOpenApiFileSha256).toBe(
       "fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e",
     );
@@ -199,6 +203,11 @@ describe("integration-gate OpenAPI pin", () => {
     expect(OPENAPI_CONTRACT_PIN.productionEndpoint).toBe(false);
     const doc = asRecord(readPinnedIntegrationGateDocument());
     expect(doc["x-kix-contract-status"]).toBe("integration-gate");
+    expect(doc["x-kix-protocol-truth"]).toBe(false);
+    expect(doc["x-kix-production-conformance"]).toBe(false);
+    expect(asRecord(doc["x-kix-readiness-runtime"]).defaultEnabled).toBe(false);
+    expect(asRecord(doc["x-kix-limits"]).maxInFlight).toBe(8);
+    expect(asRecord(doc["x-kix-limits"]).durableAcrossRestart).toBe(false);
     expect(Object.keys(asRecord(doc.paths))).toEqual(["/x-kix-contract-only/local-call"]);
     expect(INTEGRATION_GATE_HEALTH_PATH in asRecord(doc.paths)).toBe(false);
     expect(INTEGRATION_GATE_READY_PATH in asRecord(doc.paths)).toBe(false);
@@ -220,6 +229,14 @@ describe("integration-gate OpenAPI pin", () => {
     const host = asRecord(readPinnedIntegrationGateDocument());
     host["x-kix-public-host"] = true;
     expect(() => assertIntegrationGateDocument(host)).toThrow(/x-kix-public-host false/);
+
+    const truth = asRecord(readPinnedIntegrationGateDocument());
+    truth["x-kix-protocol-truth"] = true;
+    expect(() => assertIntegrationGateDocument(truth)).toThrow(/protocol truth/);
+
+    const conformance = asRecord(readPinnedIntegrationGateDocument());
+    conformance["x-kix-production-conformance"] = true;
+    expect(() => assertIntegrationGateDocument(conformance)).toThrow(/production conformance/);
 
     const live = asRecord(readPinnedIntegrationGateDocument());
     asRecord(live["x-kix-live-http-server"]).production = true;

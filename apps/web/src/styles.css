@@ -134,6 +134,15 @@ nav a[aria-current="page"] {
   box-shadow: var(--shadow);
 }
 
+.banner.transport {
+  margin-top: -0.75rem;
+}
+
+.banner.transport[data-transport-state="unavailable"],
+.banner.transport[data-transport-state="degraded"] {
+  border-color: var(--stamp);
+}
+
 .section-head {
   margin-bottom: 1rem;
 }

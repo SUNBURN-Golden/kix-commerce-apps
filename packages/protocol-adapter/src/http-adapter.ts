@@ -16,8 +16,10 @@ import {
   PINNED_PROTOCOL_DOMAIN,
   requireOpenApiContractPin,
 } from "./openapi-contract-pin.js";
+import { integrationHttpObservation, mapOperationalError, type TransportObservation } from "./operational-error.js";
 import { enforceRemotePayloadGuards } from "./payload-guards.js";
 import { isRecord } from "./record.js";
+import { assertSingleAttempt, rejectRetryHeader } from "./retry-policy.js";
 import { CONSUMED_SURFACES, type CommerceProtocol } from "./protocol.js";
 import {
   ProtocolError,
@@ -109,10 +111,42 @@ export class HttpProtocolAdapter implements CommerceProtocol {
   describe(): AdapterMeta {
     return {
       adapter: "http",
+      environment: "integration-http",
       liveChain: false,
       fundsMovement: "none",
+      publicDeploy: false,
+      productionConformance: false,
+      protocolTruth: false,
       surfaces: [...CONSUMED_SURFACES],
     };
+  }
+
+  /**
+   * Reads the loopback probes. A failure stays on this adapter.
+   * It does not construct a stub and it does not retry.
+   */
+  async observeTransport(): Promise<TransportObservation> {
+    try {
+      await this.readGateHealth();
+    } catch (error) {
+      return observationFromError(error);
+    }
+    try {
+      const ready = await this.readProbe(INTEGRATION_GATE_READY_PATH);
+      const journal = ready.body.localFileJournal === true;
+      return integrationHttpObservation({
+        state: "up",
+        code: null,
+        requestId: ready.requestId,
+        correlationId: ready.correlationId,
+        localFileJournal: journal,
+        detail: journal
+          ? "Loopback gate answered with a process-local file journal. That journal is not production readiness and durable stays false."
+          : "Loopback gate answered in memory. Restart drops that state. Not production readiness.",
+      });
+    } catch (error) {
+      return observationFromError(error);
+    }
   }
 
   listPerformances(): Promise<Performance[]> {
@@ -424,14 +458,14 @@ export class HttpProtocolAdapter implements CommerceProtocol {
    * Process liveness. Not a protocol command and not readiness.
    */
   readGateHealth(): Promise<unknown> {
-    return this.readProbe(INTEGRATION_GATE_HEALTH_PATH);
+    return this.readProbe(INTEGRATION_GATE_HEALTH_PATH).then((parsed) => parsed.body);
   }
 
   /**
    * In-memory reference core is loaded. Not production readiness.
    */
   readGateReady(): Promise<unknown> {
-    return this.readProbe(INTEGRATION_GATE_READY_PATH);
+    return this.readProbe(INTEGRATION_GATE_READY_PATH).then((parsed) => parsed.body);
   }
 
   /**
@@ -455,12 +489,16 @@ export class HttpProtocolAdapter implements CommerceProtocol {
     });
     if (!parsed.ok || (isRecord(parsed.body) && parsed.body.rejected === true)) {
       const code = isRecord(parsed.body) && typeof parsed.body.error === "string" ? parsed.body.error : "GATE_REJECTED";
-      throw new ProtocolError(`Integration gate rejected the local call (${code}).`, code);
+      throw new ProtocolError(`Integration gate rejected the local call (${code}).`, code, parsed.trace);
     }
     return parsed.body;
   }
 
-  private async readProbe(path: "/health" | "/ready"): Promise<unknown> {
+  private async readProbe(path: "/health" | "/ready"): Promise<{
+    body: Record<string, unknown>;
+    requestId: string;
+    correlationId: string;
+  }> {
     const parsed = await this.exchange(this.endpoint(path), {
       method: "GET",
       headers: { accept: "application/json" },
@@ -468,32 +506,65 @@ export class HttpProtocolAdapter implements CommerceProtocol {
     enforceRemotePayloadGuards(parsed.body);
     if (!parsed.ok || (isRecord(parsed.body) && parsed.body.rejected === true)) {
       const code = isRecord(parsed.body) && typeof parsed.body.error === "string" ? parsed.body.error : "GATE_UNAVAILABLE";
-      throw new ProtocolError(`Integration gate probe failed (${code}).`, code);
+      throw new ProtocolError(`Integration gate probe failed (${code}).`, code, parsed.trace);
     }
-    assertProbeBody(path, parsed.body);
-    return parsed.body;
+    return {
+      body: assertProbeBody(path, parsed.body),
+      requestId: parsed.trace.requestId,
+      correlationId: parsed.trace.correlationId,
+    };
   }
 
-  private async exchange(url: string, init: RequestInit): Promise<{ ok: boolean; body: unknown }> {
+  private async exchange(
+    url: string,
+    init: RequestInit,
+  ): Promise<{ ok: boolean; body: unknown; trace: { requestId: string; correlationId: string } }> {
+    assertSingleAttempt(1);
+    const trace = { requestId: newTraceId(), correlationId: newTraceId() };
+    const headers = new Headers(init.headers);
+    try {
+      rejectRetryHeader(headers);
+    } catch (error) {
+      if (error instanceof ProtocolError) {
+        throw new ProtocolError(error.message, error.code, trace);
+      }
+      throw error;
+    }
+    headers.set("X-Request-Id", trace.requestId);
+    headers.set("X-Correlation-Id", trace.correlationId);
     let response: Response;
     try {
-      response = await this.fetchImpl(url, init);
+      response = await this.fetchImpl(url, { ...init, headers });
     } catch {
-      throw new ProtocolError("Integration gate is unavailable.", "GATE_UNAVAILABLE");
+      throw new ProtocolError("Integration gate is unavailable.", "GATE_UNAVAILABLE", trace);
+    }
+    const echoedRequest = response.headers.get("x-request-id");
+    const echoedCorrelation = response.headers.get("x-correlation-id");
+    if (echoedRequest !== trace.requestId || echoedCorrelation !== trace.correlationId) {
+      throw new ProtocolError("Integration gate response does not match this request.", "STALE_RESPONSE", trace);
     }
     const transport = response.headers.get("x-kix-transport");
     const production = response.headers.get("x-kix-production-endpoint");
     if (transport !== INTEGRATION_GATE_TRANSPORT || production !== "false") {
-      throw new ProtocolError("Remote transport is not the non-production integration gate.", "GATE_TRANSPORT");
+      throw new ProtocolError("Remote transport is not the non-production integration gate.", "GATE_TRANSPORT", trace);
+    }
+    const protocolTruth = response.headers.get("x-kix-protocol-truth");
+    const conformance = response.headers.get("x-kix-production-conformance");
+    if (protocolTruth !== "false" || conformance !== "false") {
+      throw new ProtocolError(
+        "Remote transport claims protocol truth or production conformance.",
+        "PRODUCTION_ENDPOINT",
+        trace,
+      );
     }
     const text = await response.text();
     if (!text) {
-      return { ok: response.ok, body: undefined };
+      return { ok: response.ok, body: undefined, trace };
     }
     try {
-      return { ok: response.ok, body: JSON.parse(text) as unknown };
+      return { ok: response.ok, body: JSON.parse(text) as unknown, trace };
     } catch {
-      throw new ProtocolError("Integration gate returned non-JSON.", "GATE_STATUS");
+      throw new ProtocolError("Integration gate returned non-JSON.", "GATE_STATUS", trace);
     }
   }
 
@@ -527,7 +598,7 @@ function requireLoopbackBase(baseUrl: string): string {
   return `http://${INTEGRATION_GATE_LOOPBACK_HOST}:${parsed.port}`;
 }
 
-function assertProbeBody(path: "/health" | "/ready", body: unknown): void {
+function assertProbeBody(path: "/health" | "/ready", body: unknown): Record<string, unknown> {
   if (!isRecord(body)) {
     throw new ProtocolError("Integration gate probe was not an object.", "GATE_STATUS");
   }
@@ -535,16 +606,29 @@ function assertProbeBody(path: "/health" | "/ready", body: unknown): void {
     body.production !== false ||
     body.publicHost !== false ||
     body.productionReadiness !== false ||
-    body.liveHttpServer !== OPENAPI_INTEGRATION_GATE_PIN.liveHttpServerMode ||
-    body.role !== "integration-gate"
+    body.productionConformance !== false ||
+    body.protocolTruth !== false
   ) {
     throw new ProtocolError("Integration gate probe claims production readiness.", "PRODUCTION_ENDPOINT");
   }
+  if (
+    body.liveHttpServer !== OPENAPI_INTEGRATION_GATE_PIN.liveHttpServerMode ||
+    body.role !== "integration-gate" ||
+    typeof body.localFileJournal !== "boolean"
+  ) {
+    throw new ProtocolError("Integration gate probe does not match the published non-production marker.", "GATE_STATUS");
+  }
   if (path === INTEGRATION_GATE_HEALTH_PATH) {
-    if (body.status !== "up" || "commandCount" in body || "liveMoney" in body || "durable" in body) {
+    if (
+      body.status !== "up" ||
+      "commandCount" in body ||
+      "liveMoney" in body ||
+      "durable" in body ||
+      "journalRecords" in body
+    ) {
       throw new ProtocolError("Health probe must stay liveness only.", "GATE_STATUS");
     }
-    return;
+    return body;
   }
   if (
     body.status !== "ready" ||
@@ -555,6 +639,58 @@ function assertProbeBody(path: "/health" | "/ready", body: unknown): void {
   ) {
     throw new ProtocolError("Integration gate readiness does not match the published catalogue.", "GATE_STATUS");
   }
+  if (body.localFileJournal === true) {
+    if (typeof body.journalRecords !== "number" || !Number.isInteger(body.journalRecords) || body.journalRecords < 0) {
+      throw new ProtocolError("Integration gate journal count is not a process-local total.", "GATE_STATUS");
+    }
+  } else if ("journalRecords" in body) {
+    throw new ProtocolError("Integration gate reported a journal count while the file journal is off.", "GATE_STATUS");
+  }
+  return body;
+}
+
+function observationFromError(error: unknown): TransportObservation {
+  const code = error instanceof ProtocolError && error.code ? error.code : "GATE_UNAVAILABLE";
+  const mapped = mapOperationalError(code);
+  return integrationHttpObservation({
+    state: mapped.state === "degraded" ? "degraded" : "unavailable",
+    code,
+    requestId: error instanceof ProtocolError ? error.requestId ?? null : null,
+    correlationId: error instanceof ProtocolError ? error.correlationId ?? null : null,
+    localFileJournal: null,
+    detail: mapped.detail,
+  });
+}
+
+const TRACE_TOKEN = /^[A-Za-z0-9._:-]{1,64}$/;
+
+function newTraceId(): string {
+  const id = globalThis.crypto.randomUUID();
+  if (!TRACE_TOKEN.test(id)) {
+    throw new ProtocolError("Client trace id is not a gate token.", "GATE_STATUS");
+  }
+  return id;
+}
+
+/**
+ * Copies the trace ids from a request onto a mock or test response.
+ * The adapter rejects a response whose ids do not match the request it sent.
+ */
+export function echoIntegrationGateHeaders(
+  init: RequestInit | undefined,
+  overrides: Record<string, string> = {},
+): Record<string, string> {
+  const sent = new Headers(init?.headers);
+  return {
+    "content-type": "application/json",
+    "x-kix-transport": INTEGRATION_GATE_TRANSPORT,
+    "x-kix-production-endpoint": "false",
+    "x-kix-protocol-truth": "false",
+    "x-kix-production-conformance": "false",
+    "x-request-id": sent.get("x-request-id") ?? "",
+    "x-correlation-id": sent.get("x-correlation-id") ?? "",
+    ...overrides,
+  };
 }
 
 function unbound(method: CommerceMethod): ProtocolError {

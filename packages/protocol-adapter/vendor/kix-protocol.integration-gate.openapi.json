@@ -4,7 +4,7 @@
     "title": "KIX integration-gate local-call transport",
     "version": "0.3-rc1-integration-gate+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
     "summary": "Non-production loopback integration gate. No production endpoint. No public host.",
-    "description": "Non-production loopback integration gate for the published KIX v0.3-rc1 local call. There is no production endpoint and no public host. Successful local HTTP tests are not production approval.\n\nThe only protocol path is POST /x-kix-contract-only/local-call. The JSON body is the published local-call envelope: operationId, actor, action, and body. action is one of the published command keys. body is validated against that command JSON Schema, then passed to Core.execute(operationId, actor, action, body). No new protocol command is defined. No REST resource tree is defined for events, tickets, payments, venues, or marketplaces.\n\nState is the in-memory reference model. It is not durable across process restart. Inside one process, the same operationId with the same actor, action, and body replays the stored receipt. A different fingerprint for that operationId is OPERATION_ID_CONFLICT. An HTTP Idempotency-Key header is not consulted.\n\nExternal payment, KYC, venue, and bank adapters are not attached. Fixture reject codes from the reference model stay reject codes. GET /health and GET /ready are process probes, not protocol commands. Readiness is not production readiness.\n\nThe contract-only catalogue remains a pin that does not declare a live server. This document only describes the local integration-gate transport."
+    "description": "Non-production loopback integration gate for the published KIX v0.3-rc1 local call. There is no production endpoint and no public host. Successful local HTTP tests are not production approval.\n\nThe only protocol path is POST /x-kix-contract-only/local-call. The JSON body is the published local-call envelope: operationId, actor, action, and body. action is one of the published command keys. body is validated against that command JSON Schema, then passed to Core.execute(operationId, actor, action, body). No new protocol command is defined. No REST resource tree is defined for events, tickets, payments, venues, or marketplaces.\n\nDefault state is the in-memory reference model. It is not durable across process restart. An optional process-local file journal can replay committed local-call receipts after a restart of this loopback process. That journal is a readiness runtime. It is not protocol truth and it is not a production conformance claim. Inside one process, and after a recovered journal, the same operationId with the same actor, action, and body replays the stored receipt. A different fingerprint for that operationId is OPERATION_ID_CONFLICT. An HTTP Idempotency-Key header is not consulted.\n\nExternal payment, KYC, venue, and bank adapters are not attached. Fixture reject codes from the reference model stay reject codes. GET /health and GET /ready are process probes, not protocol commands. Readiness is not production readiness.\n\nThe contract-only catalogue remains a pin that does not declare a live server. This document only describes the local integration-gate transport."
   },
   "x-kix-contract-status": "integration-gate",
   "x-kix-live-http-server": {
@@ -15,7 +15,18 @@
     "defaultBindHost": "127.0.0.1"
   },
   "x-kix-production-endpoint": false,
+  "x-kix-protocol-truth": false,
+  "x-kix-production-conformance": false,
   "x-kix-public-host": false,
+  "x-kix-readiness-runtime": {
+    "role": "optional-local-file-journal",
+    "protocolTruth": false,
+    "productionConformance": false,
+    "productionEndpoint": false,
+    "defaultEnabled": false,
+    "defaultBindHost": "127.0.0.1",
+    "whenEnabled": "Replays committed local-call receipts from a process-local file after a loopback restart. Not protocol truth. Not a production conformance claim. Not a public endpoint."
+  },
   "x-kix-omitted-commands": [],
   "x-kix-source": {
     "protocolContract": "reference/v0.3-rc1/protocol_contract.json",
@@ -33,11 +44,20 @@
     "requestTimeoutSeconds": 5.0,
     "headerLimitBytes": 8192,
     "bindHost": "127.0.0.1",
-    "durableAcrossRestart": false
+    "maxInFlight": 8,
+    "maxJournalRecords": 4096,
+    "maxJournalBytes": 8388608,
+    "durableAcrossRestart": false,
+    "localReadinessJournal": {
+      "defaultEnabled": false,
+      "protocolTruth": false,
+      "productionConformance": false,
+      "restartReplay": "optional-process-local-file"
+    }
   },
   "x-kix-idempotency": {
     "identity": "envelope.operationId",
-    "sameFingerprint": "Inside one process, Core.execute returns the stored receipt.",
+    "sameFingerprint": "Inside one process, Core.execute returns the stored receipt. With the optional local journal, a later loopback process recovers that receipt from the file and does not apply the effect again. This is not a production conformance claim.",
     "conflict": "OPERATION_ID_CONFLICT",
     "durableAcrossRestart": false,
     "httpIdempotencyKeyHeader": false
@@ -59,7 +79,7 @@
     "ready": {
       "method": "GET",
       "path": "/ready",
-      "meaning": "In-memory reference core and the published command catalogue are loaded. Not production readiness."
+      "meaning": "In-memory reference core and the published command catalogue are loaded. If a local readiness journal is enabled, it has been recovered or the process is fail-closed. Not production readiness."
     }
   },
   "x-kix-local-call-operations": [

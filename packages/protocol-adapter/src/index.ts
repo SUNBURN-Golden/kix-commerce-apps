@@ -1,6 +1,22 @@
 export { COMMERCE_COMMAND_BINDINGS, COMMERCE_METHODS, type CommerceMethod } from "./commerce-bindings.js";
 export { createProtocol, type ProtocolOptions } from "./create-protocol.js";
-export { HttpProtocolAdapter } from "./http-adapter.js";
+export { echoIntegrationGateHeaders, HttpProtocolAdapter } from "./http-adapter.js";
+export {
+  integrationHttpObservation,
+  localStubObservation,
+  mapOperationalError,
+  type OperationalMapping,
+  type TransportObservation,
+  type TransportState,
+} from "./operational-error.js";
+export { INTEGRATION_HTTP_RETRY_POLICY, assertSingleAttempt, rejectRetryHeader } from "./retry-policy.js";
+export {
+  INTEGRATION_HTTP_ENVIRONMENT,
+  STUB_ENVIRONMENT,
+  resolveRuntimeEnvironment,
+  type RuntimeEnvironment,
+  type RuntimeEnvironmentName,
+} from "./runtime-env.js";
 export { type LocalCallInput } from "./local-call.js";
 export {
   INTEGRATION_GATE_HEALTH_PATH,

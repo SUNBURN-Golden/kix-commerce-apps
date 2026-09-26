@@ -5,7 +5,7 @@ Wave 7 adds marketing screens for ORIGINAL_32 labels M01–M05. Those screens ar
 This repository is the BeautifulMind-JT app host JunTae selected for product frontends.
 Protocol, Move, and settlement contracts stay in [BeautifulMind-JT/kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol).
 
-The UI is an operator desk over a protocol adapter, plus a separate marketing stub. The default adapter is an in-memory stub so the desk can run without a chain. HTTP mode is explicit and non-production. It runs only with an `http://127.0.0.1` base URL and posts the published local-call envelope to the reviewed integration gate. Desk methods stay not-bound when no command body matches. There is no default public host. A successful local call is not production approval. Neither adapter moves funds or disburses credit. The box office settlement case is that same stub: mock FSM phases, no live funds. Booking and admission read a mock reservation case from that stub: mock FSM phases, not live admission. Resale reads a mock resale case from that stub: mock FSM phases, not a live marketplace. Credit reads a mock credit case from that stub: mock FSM phases, not live credit. The marketing stub does not call booking, resale, admission, settlement, or credit writes.
+The UI is an operator desk over a protocol adapter, plus a separate marketing stub. The default adapter is an in-memory stub so the desk can run without a chain. HTTP mode is explicit and non-production. It runs only with an `http://127.0.0.1` base URL and posts the published local-call envelope to the reviewed integration gate. Desk methods stay not-bound when no command body matches. There is no default public host. A failed HTTP call stays on the HTTP adapter. It does not fall back to the stub. Each local call is one attempt. A successful local call is not production approval. Neither adapter moves funds or disburses credit. The box office settlement case is that same stub: mock FSM phases, no live funds. Booking and admission read a mock reservation case from that stub: mock FSM phases, not live admission. Resale reads a mock resale case from that stub: mock FSM phases, not a live marketplace. Credit reads a mock credit case from that stub: mock FSM phases, not live credit. The marketing stub does not call booking, resale, admission, settlement, or credit writes.
 
 ## Non-goals
 
@@ -47,8 +47,8 @@ Admission also renders a mock credential label from that adapter: `valid`, `inva
 
 `packages/protocol-adapter` is the only seam:
 
-- `StubProtocolAdapter` — default when `VITE_KIX_PROTOCOL_MODE` is unset or `stub`. In-memory fixtures. `proofMode` is `stub` because `zk_gate` is not evaluated here.
-- `HttpProtocolAdapter` — used only when `VITE_KIX_PROTOCOL_MODE=http` and `VITE_KIX_PROTOCOL_API_BASE` is an explicit `http://127.0.0.1:<port>` origin. There is no default base URL and no public host. `https`, `localhost`, a missing port, and any other host are rejected. The client loads both vendored pins and rejects a wrong file sha256, a wrong `info.version`, a contract-only file that is not `contract-only`, or an integration-gate file whose status is not `integration-gate` with `productionEndpoint: false`. Desk methods are not-bound: none of them has the same body as one of the 40 local-call commands, so they throw before any request. An explicit `invokeLocalCall` POSTs `{ operationId, actor, action, body }` to `/x-kix-contract-only/local-call` on that loopback origin. That path is the published integration-gate transport for `Core.execute`. It is not a REST resource tree. `action` must be one of the 40 pinned command names. The `actor` string is only that local-call argument. It is not an authentication result, and this client defines no auth scheme. A non-success status, a missing integration-gate transport header, or `X-Kix-Production-Endpoint` other than `false` is a reject. The client rejects booking payloads that are not marked `simulated-no-funds`, settlement payloads that are not `mode: "mock"` with references `F01`, `F02`, `F03`, reservation payloads that claim economic finality or leave mock mode, resale payloads that claim economic finality, a venue reissue, a fee split, or leave mock mode, and credit payloads that claim economic finality, executed funds, a currency posting, or leave mock mode. A published catalogue receipt is not rewritten into a desk FSM phase. `disburseCredit` is still rejected. `GET /health` and `GET /ready` are process probes on the adapter, not protocol commands and not production readiness. The web UI does not call them with `fetch`.
+- `StubProtocolAdapter` — default when `VITE_KIX_PROTOCOL_MODE` is unset or `stub`. In-memory fixtures. `proofMode` is `stub` because `zk_gate` is not evaluated here. The environment name is `stub`. A base URL in this mode does not open HTTP.
+- `HttpProtocolAdapter` — used only when `VITE_KIX_PROTOCOL_MODE` is `http` or `integration-http` and `VITE_KIX_PROTOCOL_API_BASE` is an explicit `http://127.0.0.1:<port>` origin. The environment name is `integration-http`. Modes named production or public are refused and do not select the stub. There is no default base URL and no public host. `https`, `localhost`, a missing port, and any other host are rejected. A transport failure stays on this adapter. The client sends each local call once and does not retry. `X-Request-Id` and `X-Correlation-Id` must be echoed. A mismatch is `STALE_RESPONSE`. The client loads both vendored pins and rejects a wrong file sha256, a wrong `info.version`, a contract-only file that is not `contract-only`, or an integration-gate file whose status is not `integration-gate` with `productionEndpoint: false`. Desk methods are not-bound: none of them has the same body as one of the 40 local-call commands, so they throw before any request. An explicit `invokeLocalCall` POSTs `{ operationId, actor, action, body }` to `/x-kix-contract-only/local-call` on that loopback origin. That path is the published integration-gate transport for `Core.execute`. It is not a REST resource tree. `action` must be one of the 40 pinned command names. The `actor` string is only that local-call argument. It is not an authentication result, and this client defines no auth scheme. A non-success status, a missing integration-gate transport header, or `X-Kix-Production-Endpoint` other than `false` is a reject. The client rejects booking payloads that are not marked `simulated-no-funds`, settlement payloads that are not `mode: "mock"` with references `F01`, `F02`, `F03`, reservation payloads that claim economic finality or leave mock mode, resale payloads that claim economic finality, a venue reissue, a fee split, or leave mock mode, and credit payloads that claim economic finality, executed funds, a currency posting, or leave mock mode. A published catalogue receipt is not rewritten into a desk FSM phase. `disburseCredit` is still rejected. `GET /health` and `GET /ready` are process probes on the adapter, not protocol commands and not production readiness. The web UI does not call them with `fetch`.
 
 View-model field names (`eventId`, `rightsRef`, and the rest) stay local. They are not Move struct layouts and they are not command bodies.
 
@@ -56,7 +56,7 @@ Marketing fixtures are not added to `CommerceProtocol` and do not read the OpenA
 
 ## Protocol pin
 
-The adapter vendors two OpenAPI files from [kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol). The command catalogue is unchanged. The integration-gate file is the loopback transport description from feature `007af9021991965d4af79c4f8497061c6daa77eb`. Apps tests start that process from main `3b6bdd26f61bb828af3781946b63a3a3fa03187b`. The OpenAPI bytes are the same.
+The adapter vendors two OpenAPI files from [kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol). The command catalogue is unchanged. The integration-gate file is the loopback transport description from feature `c7238bc24a399a6cabbab87ac23dbfd7e9c252dd`, merged as `52a9b5cbf7777df55d2d2062cb8d99d862b423bb`. Those two commits share one tree. Apps tests start that process from either checkout. The contract-only bytes are unchanged.
 
 Contract-only catalogue, path `docs/contracts/openapi/kix-protocol.contract-only.openapi.json`, recorded at main `a744b0a036d7e1edb48416871af20cd182f23df4`. Those bytes are the same at the integration-gate merge.
 
@@ -72,12 +72,15 @@ Integration-gate transport, path `docs/contracts/openapi/kix-protocol.integratio
 
 | Pin | Value |
 | --- | --- |
-| OpenAPI file sha256 | `94b9559610c8260ce2428a59126ef24e260a6769dbbcf0056d2c861ae85e0f19` |
+| OpenAPI file sha256 | `2a2af554cb1a8b128f2cf1b1d5b8cf6b1c8fa90adf30865dbc3e64932b3bd13f` |
 | `info.version` | `0.3-rc1-integration-gate+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e` |
 | Source `protocol_contract.json` sha256 | `ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e` |
 | Status | `integration-gate` |
 | Live HTTP server | `non-production-local-integration`, production false, public host false, loopback only, bind `127.0.0.1` |
 | `x-kix-production-endpoint` | false |
+| `x-kix-protocol-truth` | false |
+| `x-kix-production-conformance` | false |
+| In-flight cap | 8. `durableAcrossRestart` stays false. The optional file journal defaults off |
 
 The rest of kix-protocol is not vendored. These pins are not a production-conformance claim. Load time checks the file bytes. The settlement FSM dependency baseline is protocol main `85145eb33799a7c712890ff81708def8a7d61ee5` (feature commit `838370d9ce8e8aeeceeb94f3b4d212204e7ecf19`). The reservation FSM dependency baseline is protocol main `a47828dd4517c5a7397e09eb6b563a64e4265c82` (feature commit `2183d0b5b5010ec2692c43c277e99926ad9250db`). The resale FSM dependency baseline is protocol main `ef942b7713c7468e8851c6b372b64d42b5333ad8` (feature commit `70c6d52d4289e23d0d4141b7f3a6b310eea236f2`). The credit FSM dependency baseline is protocol main `8c1a4db7cfe70b0e772a2ef0f24492967c84f7f1` (feature commit `4608460ba1fe57165e88e74f6e8d8c23e8e53277`). Those lifecycle names are not catalogue commands. How to run the gate is in [docs/http-integration-gate-apps-bind.md](docs/http-integration-gate-apps-bind.md).
 
@@ -125,16 +128,22 @@ npm run dev
 
 The desk listens on port 5173. Booking state, the marketing session, the mock settlement case, the mock reservation case, the mock resale case, and the mock credit case stay in the browser for that page load. A reload clears them.
 
-The desk uses the stub. Setting `VITE_KIX_PROTOCOL_MODE=http` without `VITE_KIX_PROTOCOL_API_BASE` throws at startup. With `VITE_KIX_PROTOCOL_API_BASE=http://127.0.0.1:8765`, desk calls still throw `not-bound`. Catalogue calls go through `invokeLocalCall` on the adapter. This repo does not start the protocol server and does not ship a production base URL.
+The desk uses the stub. Setting `VITE_KIX_PROTOCOL_MODE=http` or `integration-http` without `VITE_KIX_PROTOCOL_API_BASE` throws at startup. It does not fall back to the stub. With `VITE_KIX_PROTOCOL_API_BASE=http://127.0.0.1:8765`, desk calls still throw `not-bound`. Catalogue calls go through `invokeLocalCall` on the adapter. This repo does not start the protocol server and does not ship a production base URL.
 
-To point the app at the reviewed gate, start that server from the kix-protocol checkout at merge `3b6bdd26f61bb828af3781946b63a3a3fa03187b` and then start this app:
+To point the app at the reviewed gate, start that server from the kix-protocol checkout at merge `52a9b5cbf7777df55d2d2062cb8d99d862b423bb` and then start this app:
 
 ```bash
 python3 -m integration_gate --port 8765
 VITE_KIX_PROTOCOL_MODE=http VITE_KIX_PROTOCOL_API_BASE=http://127.0.0.1:8765 npm run dev
 ```
 
-The process binds `127.0.0.1` only. `GET /health` is liveness. `GET /ready` means the in-memory reference core is loaded. Neither probe is production readiness. Details and the test subprocess are in [docs/http-integration-gate-apps-bind.md](docs/http-integration-gate-apps-bind.md).
+An optional process-local journal replays committed local calls after a restart of that loopback process. It is not production conformance:
+
+```bash
+python3 -m integration_gate --port 8765 --readiness-dir /tmp/kix-ig-journal
+```
+
+The process binds `127.0.0.1` only. `GET /health` is liveness. `GET /ready` means the in-memory reference core is loaded, and, when the journal flag is set, that the file recovered or the process is fail-closed. `localFileJournal` is that file bit. `durable` stays false. Neither probe is production readiness. The desk banner shows unavailable and degraded states. Details are in [docs/http-integration-gate-apps-bind.md](docs/http-integration-gate-apps-bind.md) and [docs/prod-readiness-apps-bind.md](docs/prod-readiness-apps-bind.md).
 
 `npm run build` typechecks the adapter and builds the web app. `npm run typecheck` checks both packages.
 
@@ -172,7 +181,10 @@ The process binds `127.0.0.1` only. `GET /health` is liveness. `GET /ready` mean
 - marketing labels stay 설계중, with session-only cards, presale notes, coupon markers, referral markers, and consent flags
 - marketing routes render, and the box office route still mounts
 - HTTP mode rejects a missing base URL, a public host, `localhost`, and a non-loopback scheme
-- the integration-gate pin rejects a wrong file sha256, a wrong status, and a production flag
+- production and public mode names are refused and do not select the stub
+- a closed port, a stale response, and a degraded ready probe stay on the HTTP adapter and do not retry
+- the integration-gate pin rejects a wrong file sha256, a wrong status, a production flag, protocol truth, and production conformance
 - adapter tests start `python3 -m integration_gate --port 0` from the reviewed protocol checkout and send settlement, reservation, admission, resale, and credit-adjacent catalogue calls over that transport
+- with `--readiness-dir`, one committed local call replays after restart and a second id does not apply it again. `durable` stays false
 - those desk methods stay not-bound against the live process, unknown actions never leave the client, and a closed port is `GATE_UNAVAILABLE`
 - stub replay and HTTP `operationId` replay both avoid a second apply inside their own process, and they do not share a phase journal

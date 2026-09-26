@@ -11,6 +11,7 @@ import {
   RESERVATION_DEPTH_BASELINE,
   StubProtocolAdapter,
   createProtocol,
+  echoIntegrationGateHeaders,
   isPinnedAction,
 } from "../src/index.js";
 
@@ -615,14 +616,10 @@ describe("http reservation commands stay not-bound", () => {
 describe("reservation payload guards", () => {
   it("keeps reservation and admission payloads mock", async () => {
     let responseBody: unknown = {};
-    const fetchImpl: typeof fetch = async () =>
+    const fetchImpl: typeof fetch = async (_input, init) =>
       new Response(JSON.stringify(responseBody), {
         status: 200,
-        headers: {
-          "content-type": "application/json",
-          "x-kix-transport": "integration-gate",
-          "x-kix-production-endpoint": "false",
-        },
+        headers: echoIntegrationGateHeaders(init),
       });
     const adapter = new HttpProtocolAdapter("http://127.0.0.1:8765", fetchImpl);
     const commandBody = { domain: PINNED_PROTOCOL_DOMAIN, eventId: EVENT };
