@@ -140,6 +140,41 @@ describe("http adapter binding", () => {
     await expect(protocol.openResale({ bookingId: "bkg_9", askLabel: "display" })).rejects.toThrow(/not-bound/);
     await expect(protocol.acceptResale("rsl_9")).rejects.toThrow(/not-bound/);
     await expect(protocol.settlementPreview("evt_lanterns")).rejects.toThrow(/not-bound/);
+    await expect(
+      protocol.initiateSettlement({
+        settlementId: "stl_evt_lanterns",
+        eventId: "evt_lanterns",
+        idempotencyKey: "init-http",
+      }),
+    ).rejects.toThrow(/not-bound/);
+    await expect(
+      protocol.authorizeSettlement({ settlementId: "stl_evt_lanterns", idempotencyKey: "auth-http" }),
+    ).rejects.toThrow(/not-bound/);
+    await expect(
+      protocol.captureSettlement({ settlementId: "stl_evt_lanterns", idempotencyKey: "cap-http" }),
+    ).rejects.toThrow(/not-bound/);
+    await expect(
+      protocol.commitSettlement({ settlementId: "stl_evt_lanterns", idempotencyKey: "commit-http" }),
+    ).rejects.toThrow(/not-bound/);
+    await expect(
+      protocol.failSettlement({
+        settlementId: "stl_evt_lanterns",
+        idempotencyKey: "fail-http",
+        reason: "FIXTURE_DECLINE",
+      }),
+    ).rejects.toThrow(/not-bound/);
+    await expect(
+      protocol.cancelSettlement({
+        settlementId: "stl_evt_lanterns",
+        idempotencyKey: "cancel-http",
+        reason: "FIXTURE_WITHDRAW",
+      }),
+    ).rejects.toThrow(/not-bound/);
+    await expect(
+      protocol.reconcileSettlement({ settlementId: "stl_evt_lanterns", idempotencyKey: "recon-http" }),
+    ).rejects.toThrow(/not-bound/);
+    await expect(protocol.viewSettlement("stl_evt_lanterns")).rejects.toThrow(/not-bound/);
+    await expect(protocol.rejectExternalSettlement("EXTERNAL_ATTEMPT")).rejects.toThrow(/not-bound/);
 
     expect(calls).toEqual([]);
     expect(Object.values(COMMERCE_COMMAND_BINDINGS).every((binding) => binding.status === "not-bound")).toBe(true);
@@ -315,6 +350,7 @@ describe("http adapter binding", () => {
       mode: "mock",
       references: ["F01", "F02", "F03"],
       note: "remote mock pointer",
+      phase: "PAID",
     };
     await expect(
       protocol.invokeLocalCall({
@@ -323,7 +359,91 @@ describe("http adapter binding", () => {
         action: "close_sales",
         body: commandBody,
       }),
-    ).resolves.toMatchObject({ mode: "mock", references: ["F01", "F02", "F03"] });
+    ).rejects.toThrow(/mock FSM phase/);
+
+    responseBody = {
+      eventId: "evt_lanterns",
+      mode: "mock",
+      references: ["F01", "F02", "F03"],
+      note: "remote mock pointer",
+      fundsExecuted: true,
+    };
+    await expect(
+      protocol.invokeLocalCall({
+        operationId: "op-close-9",
+        actor: "fixture-actor",
+        action: "close_sales",
+        body: commandBody,
+      }),
+    ).rejects.toThrow(/executed funds/);
+
+    responseBody = {
+      eventId: "evt_lanterns",
+      mode: "mock",
+      references: ["F01", "F02", "F03"],
+      note: "remote mock pointer",
+      provenance: "LIVE",
+    };
+    await expect(
+      protocol.invokeLocalCall({
+        operationId: "op-close-10",
+        actor: "fixture-actor",
+        action: "close_sales",
+        body: commandBody,
+      }),
+    ).rejects.toThrow(/MOCK_SETTLEMENT_ONLY/);
+
+    responseBody = {
+      eventId: "evt_lanterns",
+      mode: "mock",
+      references: ["F01", "F02", "F03"],
+      note: "remote mock pointer",
+      externalPayment: "CARD",
+    };
+    await expect(
+      protocol.invokeLocalCall({
+        operationId: "op-close-11",
+        actor: "fixture-actor",
+        action: "close_sales",
+        body: commandBody,
+      }),
+    ).rejects.toThrow(/external payment unsupported/);
+
+    responseBody = {
+      eventId: "evt_lanterns",
+      mode: "mock",
+      references: ["F01", "F02", "F03"],
+      note: "remote mock pointer",
+      providerAuthorizationExecuted: true,
+    };
+    await expect(
+      protocol.invokeLocalCall({
+        operationId: "op-close-12",
+        actor: "fixture-actor",
+        action: "close_sales",
+        body: commandBody,
+      }),
+    ).rejects.toThrow(/provider authorization/);
+
+    responseBody = {
+      eventId: "evt_lanterns",
+      mode: "mock",
+      references: ["F01", "F02", "F03"],
+      note: "remote mock pointer",
+      phase: "CAPTURED",
+      fundsExecuted: false,
+      provenance: "MOCK_SETTLEMENT_ONLY",
+      externalPayment: "UNSUPPORTED",
+      providerAuthorizationExecuted: false,
+    };
+    await expect(
+      protocol.invokeLocalCall({
+        operationId: "op-close-13",
+        actor: "fixture-actor",
+        action: "close_sales",
+        body: commandBody,
+      }),
+    ).resolves.toMatchObject({ mode: "mock", references: ["F01", "F02", "F03"], phase: "CAPTURED" });
     expect(calls.every((call) => call.url === `https://protocol.example.test${CONTRACT_ONLY_LOCAL_CALL_PATH}`)).toBe(
       true,
     );

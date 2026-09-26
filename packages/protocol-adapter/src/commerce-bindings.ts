@@ -16,6 +16,15 @@ export const COMMERCE_METHODS = [
   "openResale",
   "acceptResale",
   "settlementPreview",
+  "initiateSettlement",
+  "authorizeSettlement",
+  "captureSettlement",
+  "commitSettlement",
+  "failSettlement",
+  "cancelSettlement",
+  "reconcileSettlement",
+  "viewSettlement",
+  "rejectExternalSettlement",
 ] as const;
 
 export type CommerceMethod = (typeof COMMERCE_METHODS)[number];
@@ -82,5 +91,58 @@ export const COMMERCE_COMMAND_BINDINGS = {
     consideredAction: "settle_capture",
     reason:
       "settlementPreview stays a mock F01–F03 pointer. settle_capture is a monetary posting, so the desk does not send it.",
+  },
+  initiateSettlement: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "initiateSettlement is a stub-local FSM command. It is not an OpenAPI catalogue command. The HTTP adapter does not invent a binding.",
+  },
+  authorizeSettlement: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "authorizeSettlement is a stub-local FSM command. It is not an OpenAPI catalogue command. The HTTP adapter does not invent a binding.",
+  },
+  captureSettlement: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "captureSettlement marks a mock FSM phase on the stub. It is not the catalogue command capture. The HTTP adapter does not send capture.",
+  },
+  commitSettlement: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "commitSettlement marks a mock FSM phase on the stub. It is not commit_trade. settle_capture remains a monetary posting, so the desk must not send it.",
+  },
+  failSettlement: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "failSettlement is a stub-local FSM command. It is not an OpenAPI catalogue command. The HTTP adapter does not invent a binding.",
+  },
+  cancelSettlement: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "cancelSettlement is a stub-local FSM command. It is not cancel_event or any other catalogue command. The HTTP adapter does not invent a binding.",
+  },
+  reconcileSettlement: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "reconcileSettlement is a process-local stub check. It is not an OpenAPI catalogue command. The HTTP adapter does not invent a binding.",
+  },
+  viewSettlement: {
+    status: "not-bound",
+    consideredAction: null,
+    reason: "viewSettlement reads the stub case. The contract-only catalogue has no read command for an FSM settlement id.",
+  },
+  rejectExternalSettlement: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "rejectExternalSettlement is an in-memory FSM refusal. The HTTP adapter does not bind it and does not send a catalogue command.",
   },
 } as const satisfies Record<CommerceMethod, CommerceBinding>;

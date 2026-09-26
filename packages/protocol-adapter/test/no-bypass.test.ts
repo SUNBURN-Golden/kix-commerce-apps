@@ -31,6 +31,8 @@ describe("protocol seam", () => {
     expect(combined).not.toContain("/x-kix-contract-only");
     expect(combined).not.toContain("invokeLocalCall");
     expect(combined).not.toContain("fetch(");
+    expect(combined).not.toContain("settlement_fsm");
+    expect(combined).not.toContain("settle_capture");
 
     const protocolFiles = files.filter((file) => readFileSync(file, "utf8").includes("createProtocol"));
     expect(protocolFiles.map((file) => path.basename(file))).toEqual(["protocol.ts"]);
