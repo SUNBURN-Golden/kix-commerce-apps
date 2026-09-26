@@ -26,7 +26,11 @@ export function useReservationDesk(eventId: string) {
   const [showRegistered, setShowRegistered] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [attempt, setAttempt] = useState(0);
+  const [attempt, setAttempt] = useState(() => readAttempt(eventId));
+
+  useEffect(() => {
+    setAttempt(readAttempt(eventId));
+  }, [eventId]);
 
   const refresh = useCallback(async () => {
     const trimmed = eventId.trim();
@@ -159,7 +163,11 @@ export function useReservationDesk(eventId: string) {
       }
       await refresh();
     } catch (reason) {
-      setAttempt((value) => value + 1);
+      setAttempt((value) => {
+        const next = value + 1;
+        writeAttempt(trimmed, next);
+        return next;
+      });
       setError(message(reason));
       try {
         await refresh();
@@ -176,4 +184,23 @@ export function useReservationDesk(eventId: string) {
 
 function message(reason: unknown): string {
   return reason instanceof Error ? reason.message : "Mock reservation command was rejected.";
+}
+
+function attemptKey(eventId: string): string {
+  return `kix-reservation-attempt:${eventId.trim()}`;
+}
+
+function readAttempt(eventId: string): number {
+  if (eventId.trim().length === 0 || typeof sessionStorage === "undefined") {
+    return 0;
+  }
+  const parsed = Number(sessionStorage.getItem(attemptKey(eventId)));
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : 0;
+}
+
+function writeAttempt(eventId: string, attempt: number): void {
+  if (typeof sessionStorage === "undefined") {
+    return;
+  }
+  sessionStorage.setItem(attemptKey(eventId), String(attempt));
 }

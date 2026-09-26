@@ -10,7 +10,7 @@ The in-process case uses the protocol phase names:
 
 `RELEASED` replaces a hold only when release runs. An expired mock hold stays `HELD` until that release. `CANCELLED` is the pre-payment terminal. `RELEASED`, `CANCELLED`, and `CONSUMED` reject later mutation. `reconcile` and `view` still read a terminal case.
 
-The same idempotency key and the same arguments replay the first result (`duplicate: true`). The same key with a different body is `IDEMPOTENCY_CONFLICT`. A second consume is `ALREADY_CONSUMED`. Reconcile `matched: true` means this process replayed its own journal and the case still agreed. It is not admission routing, not a venue scan, and not chain finality.
+The same idempotency key and the same arguments replay the first result (`duplicate: true`). The same key with a different body is `IDEMPOTENCY_CONFLICT`. A rejected key stays rejected. The desk advances its key after a mock rejection and keeps that counter for the browser tab, so a later click can use a new key. A second consume is `ALREADY_CONSUMED`. Reconcile `matched: true` means this process replayed its own journal and the case still agreed. It is not admission routing, not a venue scan, and not chain finality.
 
 Slot rows are occupancy labels (`FREE`, `RESERVED`, `ISSUED`). They are not catalog capacity and not MockGates arithmetic. The Wave 4 `placeHold` counter stays a separate desk pointer.
 
