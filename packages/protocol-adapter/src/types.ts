@@ -1,8 +1,8 @@
 import { SURFACES, type SurfaceId } from "./surfaces.js";
 
 /**
- * App view models. Field names are local until bound to kix-protocol OpenAPI.
- * They are not Move struct layouts.
+ * App view models. Field names stay local: no desk method is a 1:1 command
+ * in the contract-only OpenAPI pin. They are not Move struct layouts.
  */
 
 export interface Performance {

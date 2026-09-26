@@ -16,8 +16,8 @@ export function MarketingHubPage() {
         <h2>Marketing desk</h2>
         <p lang="ko">팬 자격, 선예매, 쿠폰, 추천, 데이터 동의의 스텁 데모입니다.</p>
         <p className="muted">
-          Fixtures stay in this browser session. They are not kix-protocol types. OpenAPI binding is still required
-          before any contract claim.
+          Fixtures stay in this browser session. They are not kix-protocol types. This desk stays on the marketing
+          stub and makes no contract claim.
         </p>
       </header>
       <article className="ticket" aria-label="Marketing session">

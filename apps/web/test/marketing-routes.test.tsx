@@ -26,6 +26,8 @@ describe("marketing routes", () => {
     expect(html).toContain("CRM / 데이터 활용");
     expect(html).toContain("설계중");
     expect(html).toContain("not protocol law");
+    expect(html).toContain("adapter pin is not this desk");
+    expect(html).toContain("makes no contract claim");
     expect(html).toContain("Box office");
     expect(html).toContain("Admission");
     expect(html).toContain("Resale");
@@ -37,6 +39,7 @@ describe("marketing routes", () => {
       const html = renderAt(path);
       expect(html).toContain("설계중");
       expect(html).toContain("not protocol law");
+      expect(html).toContain("adapter pin is not this desk");
       expect(html).toContain("No live chain");
     },
   );
@@ -46,5 +49,6 @@ describe("marketing routes", () => {
     expect(html).toContain("Box office");
     expect(html).toContain("Tonight");
     expect(html).not.toContain("not protocol law");
+    expect(html).not.toContain("adapter pin is not this desk");
   });
 });
