@@ -504,7 +504,7 @@ describe("http resale commands stay not-bound", () => {
       calls.push(String(input));
       return new Response("{}", { status: 200, headers: { "content-type": "application/json" } });
     };
-    const adapter = new HttpProtocolAdapter("https://protocol.example.test", fetchImpl);
+    const adapter = new HttpProtocolAdapter("http://127.0.0.1:8765", fetchImpl);
     expect(() => createProtocol({ mode: "http" })).toThrow(ProtocolError);
 
     await expect(adapter.advanceResaleClock({ idempotencyKey: "clock-http", nowAt: EXPIRES })).rejects.toThrow(
@@ -569,9 +569,13 @@ describe("resale payload guards", () => {
     const fetchImpl: typeof fetch = async () =>
       new Response(JSON.stringify(responseBody), {
         status: 200,
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          "x-kix-transport": "integration-gate",
+          "x-kix-production-endpoint": "false",
+        },
       });
-    const adapter = new HttpProtocolAdapter("https://protocol.example.test", fetchImpl);
+    const adapter = new HttpProtocolAdapter("http://127.0.0.1:8765", fetchImpl);
     const commandBody = { domain: PINNED_PROTOCOL_DOMAIN, eventId: EVENT };
     const call = (operationId: string) =>
       adapter.invokeLocalCall({

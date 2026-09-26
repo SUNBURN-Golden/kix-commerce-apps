@@ -1,3 +1,4 @@
+import { isPinnedAction, PINNED_PROTOCOL_DOMAIN } from "./openapi-contract-pin.js";
 import { isRecord } from "./record.js";
 import { SURFACES } from "./surfaces.js";
 import {
@@ -44,13 +45,75 @@ const PRODUCTION_CREDIT_COPY = [
 
 /**
  * Fail-closed checks for any payload this client is willing to treat as a
- * booking or a settlement preview. Catalogue receipts without those fields
- * pass through. HTTP status is not a transport contract.
+ * booking or a settlement preview. A published Core receipt is the reference
+ * model result. It is not a desk FSM view and it is not a production claim.
  */
-export function enforceRemotePayloadGuards(value: unknown): void {
+export function enforceRemotePayloadGuards(
+  value: unknown,
+  expected?: { action: string; operationId: string },
+): void {
+  rejectTransportProductionClaims(value);
+  if (isCatalogueReceipt(value)) {
+    if (expected && (value.action !== expected.action || value.operationId !== expected.operationId)) {
+      throw new ProtocolError("Integration gate receipt does not match the local call.", "GATE_STATUS");
+    }
+    scan(value.result);
+    return;
+  }
   scan(value);
   if (isRecord(value) && "result" in value) {
     scan(value.result);
+  }
+}
+
+function isCatalogueReceipt(value: unknown): value is {
+  domain: string;
+  operationId: string;
+  sequence: number;
+  action: string;
+  result: Record<string, unknown>;
+} {
+  if (!isRecord(value)) {
+    return false;
+  }
+  if (!sameKeys(value, ["domain", "operationId", "sequence", "action", "result"])) {
+    return false;
+  }
+  return (
+    value.domain === PINNED_PROTOCOL_DOMAIN &&
+    typeof value.operationId === "string" &&
+    typeof value.sequence === "number" &&
+    Number.isInteger(value.sequence) &&
+    typeof value.action === "string" &&
+    isPinnedAction(value.action) &&
+    isRecord(value.result)
+  );
+}
+
+function sameKeys(value: Record<string, unknown>, expected: readonly string[]): boolean {
+  const keys = Object.keys(value);
+  return keys.length === expected.length && expected.every((key) => keys.includes(key));
+}
+
+function rejectTransportProductionClaims(value: unknown): void {
+  if (Array.isArray(value)) {
+    value.forEach(rejectTransportProductionClaims);
+    return;
+  }
+  if (!isRecord(value)) {
+    return;
+  }
+  if (
+    value.production === true ||
+    value.productionReadiness === true ||
+    value.liveMoney === true ||
+    value.publicHost === true ||
+    value["x-kix-production-endpoint"] === true
+  ) {
+    throw new ProtocolError("Remote payload claims a production endpoint.", "PRODUCTION_ENDPOINT");
+  }
+  for (const child of Object.values(value)) {
+    rejectTransportProductionClaims(child);
   }
 }
 
@@ -62,6 +125,17 @@ function scan(value: unknown): void {
     if (key in value) {
       throw new ProtocolError("This client does not disburse credit.");
     }
+  }
+  if (
+    "listingId" in value &&
+    ("amount" in value ||
+      "currency" in value ||
+      "gross" in value ||
+      "sellerDue" in value ||
+      "organizerDue" in value ||
+      "platformDue" in value)
+  ) {
+    throw new ProtocolError("Resale payload must not carry an amount or a fee split.");
   }
   if (value.action === "disburse" || value.action === "disburseCredit") {
     throw new ProtocolError("This client does not disburse credit.");
@@ -252,8 +326,25 @@ function assertNoProductionCreditCopy(value: Record<string, unknown>): void {
 }
 
 function isResalePayload(value: Record<string, unknown>): boolean {
+  const deskMarker =
+    "mode" in value ||
+    "provenance" in value ||
+    "phase" in value ||
+    "references" in value ||
+    "salePhase" in value ||
+    "ownershipTransferred" in value ||
+    "priorPresentationValid" in value ||
+    "priorCredentialInvalidated" in value ||
+    "venueCredentialReissued" in value ||
+    "externalMarketplace" in value ||
+    "settlementFailure" in value ||
+    "pendingSale" in value ||
+    "rightEligible" in value ||
+    "matchesCurrentRight" in value;
+  if ("listingId" in value && deskMarker) {
+    return true;
+  }
   if (
-    "listingId" in value ||
     "ownershipTransferred" in value ||
     "priorPresentationValid" in value ||
     "priorCredentialInvalidated" in value ||

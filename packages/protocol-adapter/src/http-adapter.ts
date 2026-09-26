@@ -1,11 +1,22 @@
 import { COMMERCE_COMMAND_BINDINGS, type CommerceMethod } from "./commerce-bindings.js";
+import {
+  INTEGRATION_GATE_HEALTH_PATH,
+  INTEGRATION_GATE_LOOPBACK_HOST,
+  INTEGRATION_GATE_READY_PATH,
+  INTEGRATION_GATE_TRANSPORT,
+  OPENAPI_INTEGRATION_GATE_PIN,
+  requireIntegrationGatePin,
+} from "./integration-gate-pin.js";
 import { buildLocalCallEnvelope, type LocalCallInput } from "./local-call.js";
 import {
   CONTRACT_ONLY_LOCAL_CALL_METHOD,
   CONTRACT_ONLY_LOCAL_CALL_PATH,
+  PINNED_ACTIONS,
+  PINNED_PROTOCOL_DOMAIN,
   requireOpenApiContractPin,
 } from "./openapi-contract-pin.js";
 import { enforceRemotePayloadGuards } from "./payload-guards.js";
+import { isRecord } from "./record.js";
 import { CONSUMED_SURFACES, type CommerceProtocol } from "./protocol.js";
 import {
   ProtocolError,
@@ -66,10 +77,12 @@ import {
 type FetchLike = typeof fetch;
 
 /**
- * HTTP mode talks only to an explicit base URL, and only with the published
- * local-call placeholder. Desk methods stay not-bound until a 1:1 command
- * body exists. This class does not start a server and does not disburse credit.
- * POST is the OpenAPI grammar slot on that placeholder, not a published protocol method.
+ * HTTP mode talks only to an explicit loopback base URL, and only with the
+ * published local-call path. Desk methods stay not-bound when their arguments
+ * are not a command body. invokeLocalCall posts that envelope to the
+ * non-production integration gate. This class does not start a server, does
+ * not choose a public host, and does not disburse credit.
+ * A successful local call is not production approval.
  */
 export class HttpProtocolAdapter implements CommerceProtocol {
   private readonly baseUrl: string;
@@ -79,20 +92,8 @@ export class HttpProtocolAdapter implements CommerceProtocol {
     private readonly fetchImpl: FetchLike = fetch,
   ) {
     requireOpenApiContractPin();
-    const trimmed = baseUrl.trim();
-    if (!trimmed) {
-      throw new ProtocolError("KIX_PROTOCOL_API_BASE is required for http mode.");
-    }
-    let parsed: URL;
-    try {
-      parsed = new URL(trimmed);
-    } catch {
-      throw new ProtocolError("KIX_PROTOCOL_API_BASE is not a valid URL.");
-    }
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      throw new ProtocolError("KIX_PROTOCOL_API_BASE must be an http(s) URL.");
-    }
-    this.baseUrl = trimmed;
+    requireIntegrationGatePin();
+    this.baseUrl = requireLoopbackBase(baseUrl);
   }
 
   describe(): AdapterMeta {
@@ -349,12 +350,27 @@ export class HttpProtocolAdapter implements CommerceProtocol {
   }
 
   /**
-   * Sends one local-call envelope. The URL path is the contract-only placeholder.
-   * action must be one of the pinned commands. Unknown actions fail closed.
+   * Process liveness. Not a protocol command and not readiness.
+   */
+  readGateHealth(): Promise<unknown> {
+    return this.readProbe(INTEGRATION_GATE_HEALTH_PATH);
+  }
+
+  /**
+   * In-memory reference core is loaded. Not production readiness.
+   */
+  readGateReady(): Promise<unknown> {
+    return this.readProbe(INTEGRATION_GATE_READY_PATH);
+  }
+
+  /**
+   * Sends one local-call envelope to the published integration-gate path.
+   * action must be one of the pinned commands. Unknown actions fail closed
+   * before a request. A non-success HTTP status stays a reject.
    */
   async invokeLocalCall(input: LocalCallInput): Promise<unknown> {
     const envelope = buildLocalCallEnvelope(input);
-    const response = await this.fetchImpl(this.endpoint(), {
+    const parsed = await this.exchange(this.endpoint(CONTRACT_ONLY_LOCAL_CALL_PATH), {
       method: CONTRACT_ONLY_LOCAL_CALL_METHOD,
       headers: {
         accept: "application/json",
@@ -362,29 +378,111 @@ export class HttpProtocolAdapter implements CommerceProtocol {
       },
       body: JSON.stringify(envelope),
     });
-    if (!response.ok) {
-      throw new ProtocolError(
-        `Local-call placeholder request failed (${response.status}). HTTP status is not a kix-protocol transport contract.`,
-      );
+    enforceRemotePayloadGuards(parsed.body, {
+      action: envelope.action,
+      operationId: envelope.operationId,
+    });
+    if (!parsed.ok || (isRecord(parsed.body) && parsed.body.rejected === true)) {
+      const code = isRecord(parsed.body) && typeof parsed.body.error === "string" ? parsed.body.error : "GATE_REJECTED";
+      throw new ProtocolError(`Integration gate rejected the local call (${code}).`, code);
+    }
+    return parsed.body;
+  }
+
+  private async readProbe(path: "/health" | "/ready"): Promise<unknown> {
+    const parsed = await this.exchange(this.endpoint(path), {
+      method: "GET",
+      headers: { accept: "application/json" },
+    });
+    enforceRemotePayloadGuards(parsed.body);
+    if (!parsed.ok || (isRecord(parsed.body) && parsed.body.rejected === true)) {
+      const code = isRecord(parsed.body) && typeof parsed.body.error === "string" ? parsed.body.error : "GATE_UNAVAILABLE";
+      throw new ProtocolError(`Integration gate probe failed (${code}).`, code);
+    }
+    assertProbeBody(path, parsed.body);
+    return parsed.body;
+  }
+
+  private async exchange(url: string, init: RequestInit): Promise<{ ok: boolean; body: unknown }> {
+    let response: Response;
+    try {
+      response = await this.fetchImpl(url, init);
+    } catch {
+      throw new ProtocolError("Integration gate is unavailable.", "GATE_UNAVAILABLE");
+    }
+    const transport = response.headers.get("x-kix-transport");
+    const production = response.headers.get("x-kix-production-endpoint");
+    if (transport !== INTEGRATION_GATE_TRANSPORT || production !== "false") {
+      throw new ProtocolError("Remote transport is not the non-production integration gate.", "GATE_TRANSPORT");
     }
     const text = await response.text();
     if (!text) {
-      return undefined;
+      return { ok: response.ok, body: undefined };
     }
-    let parsed: unknown;
     try {
-      parsed = JSON.parse(text);
+      return { ok: response.ok, body: JSON.parse(text) as unknown };
     } catch {
-      throw new ProtocolError("Local-call placeholder returned non-JSON.");
+      throw new ProtocolError("Integration gate returned non-JSON.", "GATE_STATUS");
     }
-    enforceRemotePayloadGuards(parsed);
-    return parsed;
   }
 
-  private endpoint(): string {
-    const base = this.baseUrl.endsWith("/") ? this.baseUrl : `${this.baseUrl}/`;
-    const relative = CONTRACT_ONLY_LOCAL_CALL_PATH.slice(1);
-    return new URL(relative, base).toString();
+  private endpoint(path: string): string {
+    return `${this.baseUrl}${path}`;
+  }
+}
+
+function requireLoopbackBase(baseUrl: string): string {
+  const trimmed = baseUrl.trim();
+  if (!trimmed) {
+    throw new ProtocolError("KIX_PROTOCOL_API_BASE is required for http mode.");
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    throw new ProtocolError("KIX_PROTOCOL_API_BASE is not a valid URL.");
+  }
+  if (parsed.username || parsed.password) {
+    throw new ProtocolError("KIX_PROTOCOL_API_BASE must not carry credentials.");
+  }
+  if (parsed.protocol !== "http:" || parsed.hostname !== INTEGRATION_GATE_LOOPBACK_HOST || !parsed.port) {
+    throw new ProtocolError(
+      "KIX_PROTOCOL_API_BASE must be an explicit http://127.0.0.1 URL with a port. There is no default public host.",
+    );
+  }
+  if (parsed.pathname !== "/" || parsed.search || parsed.hash) {
+    throw new ProtocolError("KIX_PROTOCOL_API_BASE must be the loopback origin only. The client appends the published path.");
+  }
+  return `http://${INTEGRATION_GATE_LOOPBACK_HOST}:${parsed.port}`;
+}
+
+function assertProbeBody(path: "/health" | "/ready", body: unknown): void {
+  if (!isRecord(body)) {
+    throw new ProtocolError("Integration gate probe was not an object.", "GATE_STATUS");
+  }
+  if (
+    body.production !== false ||
+    body.publicHost !== false ||
+    body.productionReadiness !== false ||
+    body.liveHttpServer !== OPENAPI_INTEGRATION_GATE_PIN.liveHttpServerMode ||
+    body.role !== "integration-gate"
+  ) {
+    throw new ProtocolError("Integration gate probe claims production readiness.", "PRODUCTION_ENDPOINT");
+  }
+  if (path === INTEGRATION_GATE_HEALTH_PATH) {
+    if (body.status !== "up" || "commandCount" in body || "liveMoney" in body || "durable" in body) {
+      throw new ProtocolError("Health probe must stay liveness only.", "GATE_STATUS");
+    }
+    return;
+  }
+  if (
+    body.status !== "ready" ||
+    body.liveMoney !== false ||
+    body.durable !== false ||
+    body.commandCount !== PINNED_ACTIONS.length ||
+    body.domain !== PINNED_PROTOCOL_DOMAIN
+  ) {
+    throw new ProtocolError("Integration gate readiness does not match the published catalogue.", "GATE_STATUS");
   }
 }
 

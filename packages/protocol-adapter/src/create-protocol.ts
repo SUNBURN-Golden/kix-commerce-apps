@@ -6,7 +6,7 @@ import { StubProtocolAdapter } from "./stub-adapter.js";
 export interface ProtocolOptions {
   /** "stub" (default) or "http". */
   mode?: string;
-  /** Required when mode is http. */
+  /** Required when mode is http. Must be an explicit http://127.0.0.1 origin with a port. */
   baseUrl?: string;
   fetchImpl?: typeof fetch;
 }

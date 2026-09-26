@@ -3,6 +3,16 @@ export { createProtocol, type ProtocolOptions } from "./create-protocol.js";
 export { HttpProtocolAdapter } from "./http-adapter.js";
 export { type LocalCallInput } from "./local-call.js";
 export {
+  INTEGRATION_GATE_HEALTH_PATH,
+  INTEGRATION_GATE_LOOPBACK_HOST,
+  INTEGRATION_GATE_READY_PATH,
+  INTEGRATION_GATE_TRANSPORT,
+  OPENAPI_INTEGRATION_GATE_PIN,
+  assertIntegrationGateDocument,
+  assertIntegrationGateRaw,
+  readPinnedIntegrationGateDocument,
+} from "./integration-gate-pin.js";
+export {
   CONTRACT_ONLY_LOCAL_CALL_METHOD,
   CONTRACT_ONLY_LOCAL_CALL_PATH,
   OPENAPI_CONTRACT_PIN,

@@ -41,10 +41,10 @@ The vendored contract-only catalogue is unchanged:
 | Status | `contract-only`. `liveHttpServer` and `productionEndpoint` are false |
 | Catalogue tip recorded for that file | `a744b0a036d7e1edb48416871af20cd182f23df4` |
 
-FSM lifecycle names are not OpenAPI operations and are not `protocol_contract` commands. `HttpProtocolAdapter` leaves the resale FSM methods not-bound. It does not send `create_listing`, `accept_trade`, or `settle_capture`, and it does not invent a marketplace endpoint.
+FSM lifecycle names are not OpenAPI operations and are not `protocol_contract` commands. `HttpProtocolAdapter` leaves the resale FSM methods not-bound. It does not map them onto `create_listing`, `accept_trade`, or a marketplace path. An explicit `invokeLocalCall` may post those published bodies to the loopback integration gate. That call is not a live marketplace.
 
-Stub mode is the default. `mode=http` without a base URL throws.
+Stub mode is the default. `mode=http` requires an explicit `http://127.0.0.1` origin. See [http-integration-gate-apps-bind.md](http-integration-gate-apps-bind.md).
 
 ## Hold
 
-No live marketplace, no identity KYC, no venue credential reissue, no live HTTP server, and no PG or bank settlement. This bind does not write the credit case. Credit depth is a separate adapter stub. There is no ownership bypass around the adapter.
+No live marketplace, no identity KYC, no venue credential reissue, and no PG or bank settlement. Local HTTP success is not production approval. This bind does not write the credit case. Credit depth is a separate adapter stub. There is no ownership bypass around the adapter.

@@ -7,7 +7,8 @@ import { ProtocolError } from "./types.js";
  * Published contract-only OpenAPI pin from BeautifulMind-JT/kix-protocol.
  * The file is the local-call catalogue. It is not a live HTTP server,
  * not a production endpoint, and not a conformance claim.
- * POST on the placeholder path is an OpenAPI grammar slot, not protocol law.
+ * POST on this file's path is an OpenAPI grammar slot, not protocol law.
+ * The non-production integration-gate transport is a separate pin.
  */
 export const OPENAPI_CONTRACT_PIN = {
   protocolRepo: "BeautifulMind-JT/kix-protocol",

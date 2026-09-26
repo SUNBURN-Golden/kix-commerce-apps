@@ -31,6 +31,9 @@ describe("protocol seam", () => {
     expect(combined).not.toContain("/x-kix-contract-only");
     expect(combined).not.toContain("invokeLocalCall");
     expect(combined).not.toContain("fetch(");
+    expect(combined).not.toContain("/health");
+    expect(combined).not.toContain("/ready");
+    expect(combined).not.toContain("127.0.0.1");
     expect(combined).not.toContain("settlement_fsm");
     expect(combined).not.toContain("reservation_fsm");
     expect(combined).not.toContain("resale_fsm");
