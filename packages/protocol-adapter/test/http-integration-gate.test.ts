@@ -13,6 +13,7 @@ import {
   OPENAPI_INTEGRATION_GATE_PIN,
   PINNED_PROTOCOL_DOMAIN,
   StubProtocolAdapter,
+  admissionDeskState,
 } from "../src/index.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -270,6 +271,28 @@ describe.sequential("loopback integration gate", () => {
       idempotencyKey: "hold-http",
     })).rejects.toThrow(/not-bound/);
     await expect(http.checkAdmission({ rightsRef: "right_http", gateId: "gate-main" })).rejects.toThrow(/not-bound/);
+    await expect(
+      http.consumeAdmissionCredential({
+        consumeId: "csm_http",
+        rightId: "iss_http",
+        version: 1,
+        gateRole: "gate-main",
+        request: "desk-request",
+        idempotencyKey: "consume-http",
+      }),
+    ).rejects.toThrow(/not-bound/);
+    await expect(
+      http.authorizeAdmissionCredential({
+        admissionId: "adm_http",
+        rightId: "iss_http",
+        version: 1,
+        holderRole: "buyer",
+        gateRole: "gate-main",
+        request: "desk-request",
+        expiresAt: "2099-06-01T00:00:00.000Z",
+        idempotencyKey: "admit-http",
+      }),
+    ).rejects.toThrow(/not-bound/);
     await expect(http.openResale({ bookingId: "bkg_http", askLabel: "display" })).rejects.toThrow(/not-bound/);
     await expect(http.acceptResale("rsl_http")).rejects.toThrow(/not-bound/);
     await expect(
@@ -563,6 +586,76 @@ describe.sequential("loopback integration gate", () => {
     expect(credit.credit.phase).toBe("OFFERED");
     expect(credit.credit.mode).toBe("mock");
   }, 20000);
+
+  it("classifies a live missing admit as invalid and does not treat the gate as entry", async () => {
+    const paths: string[] = [];
+    const fetchImpl: typeof fetch = async (input, init) => {
+      paths.push(new URL(String(input)).pathname);
+      return fetch(input, init);
+    };
+    const http = new HttpProtocolAdapter(baseUrl, fetchImpl);
+    const boundary = await http.presentAdmission({ rightId: "missing", version: 0, holderRole: "A" });
+    expect(boundary.deskState).toBe("invalid");
+    expect(boundary.decision).toBe("NOT_BOUND");
+    expect(boundary.fresh).toBe(false);
+    expect(boundary.admissionRoutingProduction).toBe(false);
+    expect(boundary.externalAdmission).toBe("UNSUPPORTED");
+    expect(boundary.mode).toBe("http-boundary");
+    expect(paths).toEqual([INTEGRATION_GATE_HEALTH_PATH]);
+
+    const before = paths.length;
+    await expect(
+      http.invokeLocalCall({
+        operationId: "op-admit-missing",
+        actor: "venue",
+        action: "admit",
+        body: {
+          domain: PINNED_PROTOCOL_DOMAIN,
+          ticketId: "missing-ticket",
+          holder: "A",
+          expectedVersion: 0,
+          admissionEpoch: 0,
+        },
+      }),
+    ).rejects.toMatchObject({ code: "TICKET_NOT_FOUND" });
+    await expect(
+      http.invokeLocalCall({
+        operationId: "op-admit-missing",
+        actor: "venue",
+        action: "admit",
+        body: {
+          domain: PINNED_PROTOCOL_DOMAIN,
+          ticketId: "missing-ticket",
+          holder: "A",
+          expectedVersion: 0,
+          admissionEpoch: 0,
+        },
+      }),
+    ).rejects.toMatchObject({ code: "TICKET_NOT_FOUND" });
+    expect(
+      admissionDeskState({ decision: "TICKET_NOT_FOUND", fresh: false, transferObserved: false }),
+    ).toBe("invalid");
+    expect(
+      admissionDeskState({ decision: "TICKET_NOT_FOUND", fresh: false, transferObserved: false }),
+    ).toBe(boundary.deskState);
+
+    const stub = new StubProtocolAdapter();
+    const missing = await stub.presentAdmission({ rightId: "missing", version: 0, holderRole: "A" });
+    expect(missing.deskState).toBe("invalid");
+    expect(missing.admissionRoutingProduction).toBe(false);
+    expect(missing.deskState).toBe(boundary.deskState);
+
+    await expect(
+      http.invokeLocalCall({
+        operationId: "op-authorize-admission",
+        actor: "venue",
+        action: "authorize_admission",
+        body: { domain: PINNED_PROTOCOL_DOMAIN },
+      }),
+    ).rejects.toThrow(/Unknown protocol action/);
+    expect(paths.slice(before).every((path) => path === CONTRACT_ONLY_LOCAL_CALL_PATH)).toBe(true);
+    expect(paths.includes("/admit")).toBe(false);
+  });
 });
 
 function asRecord(value: unknown): Record<string, unknown> {

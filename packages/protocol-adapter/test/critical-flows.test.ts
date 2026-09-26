@@ -147,6 +147,35 @@ describe("http adapter binding", () => {
     await expect(protocol.confirmBooking("hold_9")).rejects.toThrow(/not-bound/);
     await expect(protocol.getBooking("bkg_9")).rejects.toThrow(/not-bound/);
     await expect(protocol.checkAdmission({ rightsRef: "right_9", gateId: "gate-main" })).rejects.toThrow(/not-bound/);
+    await expect(
+      protocol.adoptAdmissionIssued({ rightId: "iss_9", reservationId: "rsv_9", idempotencyKey: "adopt-http" }),
+    ).rejects.toThrow(/not-bound/);
+    await expect(
+      protocol.authorizeAdmissionCredential({
+        admissionId: "adm_9",
+        rightId: "iss_9",
+        version: 1,
+        holderRole: "buyer",
+        gateRole: "gate-main",
+        request: "desk-request",
+        expiresAt: "2099-06-01T00:00:00.000Z",
+        idempotencyKey: "admit-http",
+      }),
+    ).rejects.toThrow(/not-bound/);
+    await expect(
+      protocol.consumeAdmissionCredential({
+        consumeId: "csm_9",
+        rightId: "iss_9",
+        version: 1,
+        gateRole: "gate-main",
+        request: "desk-request",
+        idempotencyKey: "consume-http",
+      }),
+    ).rejects.toThrow(/not-bound/);
+    await expect(protocol.reconcileAdmission({ rightId: "iss_9", idempotencyKey: "recon-http" })).rejects.toThrow(
+      /not-bound/,
+    );
+    await expect(protocol.rejectExternalAdmission("venue-scanner")).rejects.toThrow(/not-bound/);
     await expect(protocol.listResale("evt_lanterns")).rejects.toThrow(/not-bound/);
     await expect(protocol.openResale({ bookingId: "bkg_9", askLabel: "display" })).rejects.toThrow(/not-bound/);
     await expect(protocol.acceptResale("rsl_9")).rejects.toThrow(/not-bound/);

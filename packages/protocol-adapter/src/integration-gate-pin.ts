@@ -19,7 +19,12 @@ import { ProtocolError } from "./types.js";
  */
 export const OPENAPI_INTEGRATION_GATE_PIN = {
   protocolRepo: "BeautifulMind-JT/kix-protocol",
-  protocolMergeSha: "5c59d95ec52379e010f8e9c660da11cfa6498def",
+  /**
+   * Checkout the apps tests start. OpenAPI bytes stay the integration-gate pin
+   * from feature 007af902. This tip is the admission-harden merge, which does
+   * not add commands.
+   */
+  protocolMergeSha: "3b6bdd26f61bb828af3781946b63a3a3fa03187b",
   protocolFeatureSha: "007af9021991965d4af79c4f8497061c6daa77eb",
   openApiPath: "docs/contracts/openapi/kix-protocol.integration-gate.openapi.json",
   openApiFileSha256: "94b9559610c8260ce2428a59126ef24e260a6769dbbcf0056d2c861ae85e0f19",

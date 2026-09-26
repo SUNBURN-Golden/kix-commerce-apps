@@ -1,3 +1,4 @@
+import { ADMISSION_TRANSPORT_NOTE, admissionBoundaryPresentation } from "./admission-case.js";
 import { COMMERCE_COMMAND_BINDINGS, type CommerceMethod } from "./commerce-bindings.js";
 import {
   INTEGRATION_GATE_HEALTH_PATH,
@@ -21,7 +22,16 @@ import { CONSUMED_SURFACES, type CommerceProtocol } from "./protocol.js";
 import {
   ProtocolError,
   type AdapterMeta,
+  type AdmissionAdopt,
+  type AdmissionAuthorize,
+  type AdmissionClock,
+  type AdmissionCommandReceipt,
+  type AdmissionConsume,
   type AdmissionDecision,
+  type AdmissionPresentation,
+  type AdmissionPresentationQuery,
+  type AdmissionReconcile,
+  type AdmissionReconcileReceipt,
   type Booking,
   type Hold,
   type Performance,
@@ -239,6 +249,67 @@ export class HttpProtocolAdapter implements CommerceProtocol {
 
   rejectExternalReservation(_kind: string): Promise<never> {
     return Promise.reject(unbound("rejectExternalReservation"));
+  }
+
+  advanceAdmissionClock(_input: AdmissionClock): Promise<AdmissionCommandReceipt> {
+    return Promise.reject(unbound("advanceAdmissionClock"));
+  }
+
+  adoptAdmissionIssued(_input: AdmissionAdopt): Promise<AdmissionCommandReceipt> {
+    return Promise.reject(unbound("adoptAdmissionIssued"));
+  }
+
+  authorizeAdmissionCredential(_input: AdmissionAuthorize): Promise<AdmissionCommandReceipt> {
+    return Promise.reject(unbound("authorizeAdmissionCredential"));
+  }
+
+  consumeAdmissionCredential(_input: AdmissionConsume): Promise<AdmissionCommandReceipt> {
+    return Promise.reject(unbound("consumeAdmissionCredential"));
+  }
+
+  reconcileAdmission(_input: AdmissionReconcile): Promise<AdmissionReconcileReceipt> {
+    return Promise.reject(unbound("reconcileAdmission"));
+  }
+
+  rejectExternalAdmission(_kind: string): Promise<never> {
+    return Promise.reject(unbound("rejectExternalAdmission"));
+  }
+
+  /**
+   * Classifies the loopback health probe. Does not post admit.
+   * A closed port is unavailable-server. A reachable gate is not a fresh credential.
+   */
+  async presentAdmission(input: AdmissionPresentationQuery): Promise<AdmissionPresentation> {
+    const version = typeof input.version === "number" ? input.version : 0;
+    try {
+      await this.readGateHealth();
+    } catch (error) {
+      const code = error instanceof ProtocolError && error.code ? error.code : "GATE_UNAVAILABLE";
+      return admissionBoundaryPresentation({
+        rightId: input.rightId,
+        version,
+        holderRole: input.holderRole,
+        decision: code,
+        fresh: false,
+        transferObserved: false,
+        phase: null,
+        mode: "http-boundary",
+        lifecycleAuthority: "INTEGRATION_GATE_TRANSPORT",
+        note: ADMISSION_TRANSPORT_NOTE,
+      });
+    }
+    return admissionBoundaryPresentation({
+      rightId: input.rightId,
+      version,
+      holderRole: input.holderRole,
+      decision: "NOT_BOUND",
+      fresh: false,
+      transferObserved: false,
+      phase: null,
+      mode: "http-boundary",
+      lifecycleAuthority: "INTEGRATION_GATE_TRANSPORT",
+      note: ADMISSION_TRANSPORT_NOTE,
+    });
   }
 
   advanceResaleClock(_input: ResaleClock): Promise<ResaleCommandReceipt> {

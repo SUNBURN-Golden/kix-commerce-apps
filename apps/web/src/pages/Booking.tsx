@@ -3,7 +3,9 @@ import { Link, useParams } from "react-router-dom";
 import type { Booking, Hold, Performance } from "@kix/protocol-adapter";
 import { formatWhen } from "../format";
 import { protocol } from "../protocol";
+import { useAdmissionDesk } from "../admission-desk";
 import { useReservationDesk } from "../reservation-desk";
+import { AdmissionCredentialPanel } from "./AdmissionCredentialPanel";
 import { ReservationPanel } from "./ReservationPanel";
 
 export function BookingPage() {
@@ -15,6 +17,7 @@ export function BookingPage() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const reservation = useReservationDesk(eventId);
+  const admission = useAdmissionDesk(eventId, "gate-main");
 
   useEffect(() => {
     let cancelled = false;
@@ -211,6 +214,13 @@ export function BookingPage() {
         error={reservation.error}
         pending={reservation.pending}
         onCommand={(command) => void reservation.run(command)}
+      />
+      <AdmissionCredentialPanel
+        title={performance.title}
+        presentation={admission.presentation}
+        error={admission.error}
+        pending={admission.pending}
+        commands={false}
       />
       <p>
         <Link to={`/admission?eventId=${encodeURIComponent(eventId)}`}>Mock admission phase</Link>

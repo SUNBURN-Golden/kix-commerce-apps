@@ -33,8 +33,6 @@ const BOOKING_CONTROLS: readonly { command: ReservationDeskCommand; label: strin
   ];
 
 const ADMISSION_CONTROLS: readonly { command: ReservationDeskCommand; label: string; needs: "case" }[] = [
-  { command: "authorize_admission", label: "Authorize mock admission phase", needs: "case" },
-  { command: "consume", label: "Consume mock once", needs: "case" },
   { command: "reconcile", label: "Reconcile process-local", needs: "case" },
 ];
 

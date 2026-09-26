@@ -36,6 +36,7 @@ describe("protocol seam", () => {
     expect(combined).not.toContain("127.0.0.1");
     expect(combined).not.toContain("settlement_fsm");
     expect(combined).not.toContain("reservation_fsm");
+    expect(combined).not.toContain("admission_fsm");
     expect(combined).not.toContain("resale_fsm");
     expect(combined).not.toContain("credit_fsm");
     expect(combined).not.toContain("mock_credit");

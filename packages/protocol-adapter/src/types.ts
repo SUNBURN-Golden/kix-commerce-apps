@@ -383,6 +383,166 @@ export interface ReservationReconcileReceipt extends ReservationCommandReceipt {
 }
 
 /**
+ * Credential phases from kix-protocol admission_fsm.py.
+ * P03 stays 설계중. These strings are not OpenAPI commands.
+ */
+export const ADMISSION_PHASES = ["ELIGIBLE", "AUTHORIZED", "CONSUMED"] as const;
+
+export type AdmissionPhase = (typeof ADMISSION_PHASES)[number];
+
+/**
+ * Desk labels for a credential check.
+ * The adapter assigns the label. The UI prints it and does not choose entry.
+ */
+export const ADMISSION_DESK_STATES = [
+  "valid",
+  "invalid",
+  "stale",
+  "already-consumed",
+  "transferred",
+  "cancelled",
+  "unavailable-server",
+] as const;
+
+export type AdmissionDeskState = (typeof ADMISSION_DESK_STATES)[number];
+
+const ADMISSION_PHASE_SET: ReadonlySet<string> = new Set(ADMISSION_PHASES);
+const ADMISSION_DESK_STATE_SET: ReadonlySet<string> = new Set(ADMISSION_DESK_STATES);
+
+export function isAdmissionPhase(value: unknown): value is AdmissionPhase {
+  return typeof value === "string" && ADMISSION_PHASE_SET.has(value);
+}
+
+export function isAdmissionDeskState(value: unknown): value is AdmissionDeskState {
+  return typeof value === "string" && ADMISSION_DESK_STATE_SET.has(value);
+}
+
+export interface AdmissionClock {
+  idempotencyKey: string;
+  /** ISO-8601 timestamp for the stub's logical clock. Not a venue clock. */
+  nowAt: string;
+}
+
+export interface AdmissionAdopt {
+  rightId: string;
+  reservationId: string;
+  idempotencyKey: string;
+}
+
+export interface AdmissionAuthorize {
+  admissionId: string;
+  rightId: string;
+  version: number;
+  holderRole: string;
+  gateRole: string;
+  request: string;
+  expiresAt: string;
+  idempotencyKey: string;
+  externalDependency?: string | null;
+}
+
+export interface AdmissionConsume {
+  consumeId: string;
+  rightId: string;
+  version: number;
+  gateRole: string;
+  request: string;
+  idempotencyKey: string;
+  externalDependency?: string | null;
+}
+
+export interface AdmissionReconcile {
+  rightId: string;
+  idempotencyKey: string;
+}
+
+export interface AdmissionPresentationQuery {
+  rightId: string;
+  version: number;
+  holderRole: string;
+}
+
+/**
+ * Read-only desk view of one mock credential.
+ * `deskState` is the adapter label. It is not a venue scan result.
+ */
+export interface AdmissionPresentation {
+  mode: "mock" | "http-boundary";
+  surface: typeof SURFACES.admissionFsm;
+  provenance: typeof RESERVATION_PROVENANCE;
+  lifecycleAuthority: "IN_MEMORY_FSM" | "INTEGRATION_GATE_TRANSPORT";
+  rightId: string;
+  version: number;
+  holderRole: string;
+  phase: AdmissionPhase | null;
+  fresh: boolean;
+  decision: string | null;
+  deskState: AdmissionDeskState;
+  transferObserved: boolean;
+  offlineAdmission: false;
+  venueCredentialReissued: false;
+  admissionRoutingProduction: false;
+  externalAdmission: "UNSUPPORTED";
+  economicFinalityClaimed: false;
+  fundsExecuted: false;
+  note: string;
+}
+
+export interface AdmissionCredentialView {
+  mode: "mock";
+  surface: typeof SURFACES.admissionFsm;
+  admissionReference: typeof RESERVATION_ADMISSION_REFERENCE;
+  provenance: typeof RESERVATION_PROVENANCE;
+  lifecycleAuthority: "IN_MEMORY_FSM";
+  rightId: string;
+  reservationId: string;
+  phase: AdmissionPhase;
+  terminal: boolean;
+  holderRole: string;
+  version: number;
+  admissionId: string | null;
+  consumeId: string | null;
+  gateRole: string | null;
+  admissionExpired: boolean;
+  offlineAdmission: false;
+  venueCredentialReissued: false;
+  admissionRoutingProduction: false;
+  externalAdmission: "UNSUPPORTED";
+  economicFinalityClaimed: false;
+  fundsExecuted: false;
+  logicalTimeMs: number;
+  idempotencyKey: string;
+  lastRejectCode: string | null;
+  reconcileMatched: boolean | null;
+  note: string;
+}
+
+export type AdmissionLifecycleCommand = "set_clock" | "adopt_issued" | "authorize_admission" | "consume" | "reconcile";
+
+export interface AdmissionCommandReceipt {
+  duplicate: boolean;
+  applied: AdmissionLifecycleCommand | null;
+  provenance: typeof RESERVATION_PROVENANCE;
+  lifecycleAuthority: "IN_MEMORY_FSM";
+  offlineAdmission: false;
+  venueCredentialReissued: false;
+  admissionRoutingProduction: false;
+  externalAdmission: "UNSUPPORTED";
+  economicFinalityClaimed: false;
+  fundsExecuted: false;
+  idempotencyKey: string;
+  logicalTimeMs: number;
+  credential: AdmissionCredentialView | null;
+  presentation: AdmissionPresentation;
+}
+
+export interface AdmissionReconcileReceipt extends AdmissionCommandReceipt {
+  applied: "reconcile" | null;
+  /** True only when this process's journal replays to the same credential. */
+  matched: true;
+}
+
+/**
  * Listing phases from kix-protocol resale_fsm.py.
  * R01–R05 stay 설계중. These strings are not OpenAPI commands.
  * ELIGIBLE is a right-eligibility label in that machine, not a listing phase.

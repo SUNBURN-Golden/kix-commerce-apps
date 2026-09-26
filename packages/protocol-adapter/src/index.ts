@@ -24,6 +24,12 @@ export {
   readPinnedOpenApiDocument,
   type PinnedAction,
 } from "./openapi-contract-pin.js";
+export {
+  ADMISSION_CASE_NOTE,
+  ADMISSION_DEPTH_BASELINE,
+  ADMISSION_TRANSPORT_NOTE,
+  admissionDeskState,
+} from "./admission-case.js";
 export { CREDIT_CASE_NOTE, CREDIT_DEPTH_BASELINE } from "./credit-case.js";
 export { CONSUMED_SURFACES, type CommerceProtocol } from "./protocol.js";
 export { RESALE_CASE_NOTE, RESALE_DEPTH_BASELINE } from "./resale-case.js";
@@ -38,6 +44,8 @@ export {
   RESALE_PROVENANCE,
   RESALE_REFERENCES,
   RESALE_SETTLEMENT_GATES,
+  ADMISSION_DESK_STATES,
+  ADMISSION_PHASES,
   RESERVATION_ADMISSION_REFERENCE,
   RESERVATION_ISSUE_STATUSES,
   RESERVATION_PHASES,
@@ -48,10 +56,25 @@ export {
   SETTLEMENT_PHASES,
   SETTLEMENT_PROVENANCE,
   SETTLEMENT_REFERENCES,
+  isAdmissionDeskState,
+  isAdmissionPhase,
   isResalePhase,
   isReservationPhase,
   type AdapterMeta,
+  type AdmissionAdopt,
+  type AdmissionAuthorize,
+  type AdmissionClock,
+  type AdmissionCommandReceipt,
+  type AdmissionConsume,
+  type AdmissionCredentialView,
   type AdmissionDecision,
+  type AdmissionDeskState,
+  type AdmissionLifecycleCommand,
+  type AdmissionPhase,
+  type AdmissionPresentation,
+  type AdmissionPresentationQuery,
+  type AdmissionReconcile,
+  type AdmissionReconcileReceipt,
   type Booking,
   type Hold,
   type Performance,

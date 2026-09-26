@@ -43,6 +43,8 @@ Wave 7 marketing routes use the local stub in `apps/web/src/marketing`. They are
 
 The booking and admission panels render a mock reservation case from the same stub. They list B01–B05 and P03 and do not compute inventory. Limits are in [docs/reservation-depth-apps-bind.md](docs/reservation-depth-apps-bind.md).
 
+Admission also renders a mock credential label from that adapter: `valid`, `invalid`, `stale`, `already-consumed`, `transferred`, `cancelled`, or `unavailable-server`. The adapter assigns the label. The page prints it. HTTP mode reads the loopback health probe and does not post `admit`. A reachable gate is not entry. Limits are in [docs/admission-harden-apps-bind.md](docs/admission-harden-apps-bind.md).
+
 `packages/protocol-adapter` is the only seam:
 
 - `StubProtocolAdapter` — default when `VITE_KIX_PROTOCOL_MODE` is unset or `stub`. In-memory fixtures. `proofMode` is `stub` because `zk_gate` is not evaluated here.
@@ -54,7 +56,7 @@ Marketing fixtures are not added to `CommerceProtocol` and do not read the OpenA
 
 ## Protocol pin
 
-The adapter vendors two OpenAPI files from [kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol). The command catalogue is unchanged. The integration-gate file is the loopback transport description from merge `5c59d95ec52379e010f8e9c660da11cfa6498def` (feature `007af9021991965d4af79c4f8497061c6daa77eb`).
+The adapter vendors two OpenAPI files from [kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol). The command catalogue is unchanged. The integration-gate file is the loopback transport description from feature `007af9021991965d4af79c4f8497061c6daa77eb`. Apps tests start that process from main `3b6bdd26f61bb828af3781946b63a3a3fa03187b`. The OpenAPI bytes are the same.
 
 Contract-only catalogue, path `docs/contracts/openapi/kix-protocol.contract-only.openapi.json`, recorded at main `a744b0a036d7e1edb48416871af20cd182f23df4`. Those bytes are the same at the integration-gate merge.
 
@@ -125,7 +127,7 @@ The desk listens on port 5173. Booking state, the marketing session, the mock se
 
 The desk uses the stub. Setting `VITE_KIX_PROTOCOL_MODE=http` without `VITE_KIX_PROTOCOL_API_BASE` throws at startup. With `VITE_KIX_PROTOCOL_API_BASE=http://127.0.0.1:8765`, desk calls still throw `not-bound`. Catalogue calls go through `invokeLocalCall` on the adapter. This repo does not start the protocol server and does not ship a production base URL.
 
-To point the app at the reviewed gate, start that server from the kix-protocol checkout at merge `5c59d95ec52379e010f8e9c660da11cfa6498def` and then start this app:
+To point the app at the reviewed gate, start that server from the kix-protocol checkout at merge `3b6bdd26f61bb828af3781946b63a3a3fa03187b` and then start this app:
 
 ```bash
 python3 -m integration_gate --port 8765
@@ -151,6 +153,10 @@ The process binds `127.0.0.1` only. `GET /health` is liveness. `GET /ready` mean
 - a bound reservation issue stays refused unless the mock settlement view is `COMMITTED`, and `economicFinalityClaimed` stays false
 - HTTP reservation and admission FSM commands stay not-bound. The desk methods do not send `capture`, `settle_capture`, or a venue scan
 - reservation and admission panel copy stays mock and does not use production-admission wording
+- the admission credential walks fresh, stale, transferred, cancelled, already-consumed, and unavailable labels from the adapter
+- a credential consume before authorize stays `ADMISSION_REQUIRED` and does not consume the reservation
+- HTTP `presentAdmission` reads loopback health only, does not post `admit`, and labels a closed port `unavailable-server`
+- a live missing `admit` and an unknown credential both label `invalid`, and `authorize_admission` never leaves the client
 - the stub resale case walks mock FSM phases, rejects a second live listing, a stale version, a consumed or cancelled reservation, and a post-transfer replay of the prior holder
 - a bound resale transfer stays refused unless the mock settlement view is `COMMITTED`, a failed mock settlement stays a non-claim, and `economicFinalityClaimed` stays false
 - HTTP resale FSM commands stay not-bound. The desk methods do not send `create_listing`, `accept_trade`, or `settle_capture`
