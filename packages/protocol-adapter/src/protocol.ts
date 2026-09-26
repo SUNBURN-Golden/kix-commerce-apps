@@ -6,7 +6,13 @@ import type {
   Hold,
   Performance,
   ResaleListing,
+  SettlementCaseView,
+  SettlementCommandReceipt,
+  SettlementInitiate,
   SettlementPreview,
+  SettlementReason,
+  SettlementReconcileReceipt,
+  SettlementStep,
 } from "./types.js";
 
 /**
@@ -27,12 +33,27 @@ export interface CommerceProtocol {
   openResale(input: { bookingId: string; askLabel: string }): Promise<ResaleListing>;
   acceptResale(listingId: string): Promise<{ listing: ResaleListing; booking: Booking }>;
   settlementPreview(eventId: string): Promise<SettlementPreview>;
+  /**
+   * Stub-local settlement case commands.
+   * These names are not OpenAPI operations. HttpProtocolAdapter leaves them not-bound.
+   * The authoritative FSM stays in kix-protocol. This app does not post money.
+   */
+  initiateSettlement(input: SettlementInitiate): Promise<SettlementCommandReceipt>;
+  authorizeSettlement(input: SettlementStep): Promise<SettlementCommandReceipt>;
+  captureSettlement(input: SettlementStep): Promise<SettlementCommandReceipt>;
+  commitSettlement(input: SettlementStep): Promise<SettlementCommandReceipt>;
+  failSettlement(input: SettlementReason): Promise<SettlementCommandReceipt>;
+  cancelSettlement(input: SettlementReason): Promise<SettlementCommandReceipt>;
+  reconcileSettlement(input: SettlementStep): Promise<SettlementReconcileReceipt>;
+  viewSettlement(settlementId: string): Promise<SettlementCaseView>;
+  rejectExternalSettlement(kind: string): Promise<never>;
 }
 
 export const CONSUMED_SURFACES: SurfaceId[] = [
   "wave2.rights",
   "wave2.zk_gate",
   "wave3.settlement.F01-F03",
+  "wave3.settlement.F01-F03.fsm",
   "wave4.booking.B01-B05",
   "wave4.resale.R01-R05",
   "wave4.admission.P03",

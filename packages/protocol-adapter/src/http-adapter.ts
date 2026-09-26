@@ -15,7 +15,13 @@ import {
   type Hold,
   type Performance,
   type ResaleListing,
+  type SettlementCaseView,
+  type SettlementCommandReceipt,
+  type SettlementInitiate,
   type SettlementPreview,
+  type SettlementReason,
+  type SettlementReconcileReceipt,
+  type SettlementStep,
 } from "./types.js";
 
 type FetchLike = typeof fetch;
@@ -97,6 +103,42 @@ export class HttpProtocolAdapter implements CommerceProtocol {
 
   settlementPreview(_eventId: string): Promise<SettlementPreview> {
     return Promise.reject(unbound("settlementPreview"));
+  }
+
+  initiateSettlement(_input: SettlementInitiate): Promise<SettlementCommandReceipt> {
+    return Promise.reject(unbound("initiateSettlement"));
+  }
+
+  authorizeSettlement(_input: SettlementStep): Promise<SettlementCommandReceipt> {
+    return Promise.reject(unbound("authorizeSettlement"));
+  }
+
+  captureSettlement(_input: SettlementStep): Promise<SettlementCommandReceipt> {
+    return Promise.reject(unbound("captureSettlement"));
+  }
+
+  commitSettlement(_input: SettlementStep): Promise<SettlementCommandReceipt> {
+    return Promise.reject(unbound("commitSettlement"));
+  }
+
+  failSettlement(_input: SettlementReason): Promise<SettlementCommandReceipt> {
+    return Promise.reject(unbound("failSettlement"));
+  }
+
+  cancelSettlement(_input: SettlementReason): Promise<SettlementCommandReceipt> {
+    return Promise.reject(unbound("cancelSettlement"));
+  }
+
+  reconcileSettlement(_input: SettlementStep): Promise<SettlementReconcileReceipt> {
+    return Promise.reject(unbound("reconcileSettlement"));
+  }
+
+  viewSettlement(_settlementId: string): Promise<SettlementCaseView> {
+    return Promise.reject(unbound("viewSettlement"));
+  }
+
+  rejectExternalSettlement(_kind: string): Promise<never> {
+    return Promise.reject(unbound("rejectExternalSettlement"));
   }
 
   /**

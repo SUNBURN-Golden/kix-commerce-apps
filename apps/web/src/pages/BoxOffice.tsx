@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import type { Performance, SettlementPreview } from "@kix/protocol-adapter";
+import { ProtocolError, type Performance, type SettlementCaseView } from "@kix/protocol-adapter";
 import { formatWhen } from "../format";
 import { protocol } from "../protocol";
+import { SettlementPanel, type SettlementDeskCommand } from "./SettlementPanel";
+
+const FAIL_REASON = "FIXTURE_DECLINE";
+const CANCEL_REASON = "FIXTURE_WITHDRAW";
 
 export function BoxOfficePage() {
   const [performances, setPerformances] = useState<Performance[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<SettlementPreview | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [settlement, setSettlement] = useState<SettlementCaseView | null>(null);
+  const [settlementError, setSettlementError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -20,7 +27,7 @@ export function BoxOfficePage() {
       })
       .catch((reason: unknown) => {
         if (!cancelled) {
-          setError(reason instanceof Error ? reason.message : "Could not load performances.");
+          setLoadError(reason instanceof Error ? reason.message : "Could not load performances.");
         }
       });
     return () => {
@@ -28,13 +35,77 @@ export function BoxOfficePage() {
     };
   }, []);
 
-  async function showSettlement(eventId: string) {
-    setError(null);
+  const selected = performances?.find((item) => item.eventId === selectedEventId) ?? null;
+
+  async function refreshCase(eventId: string) {
     try {
-      setPreview(await protocol.settlementPreview(eventId));
+      setSettlement(await protocol.viewSettlement(settlementIdFor(eventId)));
     } catch (reason) {
-      setPreview(null);
-      setError(reason instanceof Error ? reason.message : "Could not load the settlement pointer.");
+      if (reason instanceof ProtocolError && reason.code === "UNKNOWN_SETTLEMENT") {
+        setSettlement(null);
+        return;
+      }
+      throw reason;
+    }
+  }
+
+  async function openSettlement(eventId: string) {
+    setSelectedEventId(eventId);
+    setSettlementError(null);
+    setPending(true);
+    try {
+      await refreshCase(eventId);
+    } catch (reason) {
+      setSettlement(null);
+      setSettlementError(message(reason, "Could not read the mock settlement case."));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function onCommand(command: SettlementDeskCommand) {
+    if (!selectedEventId || pending) {
+      return;
+    }
+    const eventId = selectedEventId;
+    const settlementId = settlementIdFor(eventId);
+    const idempotencyKey = `desk-${command}:${settlementId}`;
+    setPending(true);
+    setSettlementError(null);
+    try {
+      switch (command) {
+        case "initiate":
+          await protocol.initiateSettlement({ settlementId, eventId, idempotencyKey });
+          break;
+        case "authorize":
+          await protocol.authorizeSettlement({ settlementId, idempotencyKey });
+          break;
+        case "capture":
+          await protocol.captureSettlement({ settlementId, idempotencyKey });
+          break;
+        case "commit":
+          await protocol.commitSettlement({ settlementId, idempotencyKey });
+          break;
+        case "fail":
+          await protocol.failSettlement({ settlementId, idempotencyKey, reason: FAIL_REASON });
+          break;
+        case "cancel":
+          await protocol.cancelSettlement({ settlementId, idempotencyKey, reason: CANCEL_REASON });
+          break;
+        case "reconcile":
+          await protocol.reconcileSettlement({ settlementId, idempotencyKey });
+          break;
+      }
+      await refreshCase(eventId);
+    } catch (reason) {
+      setSettlementError(message(reason, "Mock settlement command was rejected."));
+      try {
+        await refreshCase(eventId);
+      } catch {
+        // The command error stays on the panel.
+      }
+    } finally {
+      setPending(false);
     }
   }
 
@@ -44,9 +115,9 @@ export function BoxOfficePage() {
         <p className="eyebrow">Wave 4 catalog · Wave 2 rights issued at booking</p>
         <h2>Tonight’s window</h2>
       </header>
-      {error ? (
+      {loadError ? (
         <p className="alert" role="alert">
-          {error}
+          {loadError}
         </p>
       ) : null}
       {performances === null ? <p className="muted">Loading performances.</p> : null}
@@ -63,8 +134,8 @@ export function BoxOfficePage() {
                 </p>
               </div>
               <div className="row-actions">
-                <button type="button" className="ghost" onClick={() => showSettlement(item.eventId)}>
-                  Settlement pointer
+                <button type="button" className="ghost" onClick={() => void openSettlement(item.eventId)}>
+                  Mock settlement
                 </button>
                 <Link className="button" to={`/booking/${item.eventId}`}>
                   Book
@@ -74,15 +145,28 @@ export function BoxOfficePage() {
           </li>
         ))}
       </ul>
-      {preview ? (
-        <aside className="panel" aria-label="Settlement preview">
-          <p className="eyebrow">{preview.surface}</p>
-          <h3>Mock settlement reference</h3>
-          <p>{preview.note}</p>
-          <p className="codes">{preview.references.join(" · ")}</p>
-          <p className="muted">Event {preview.eventId}. Mode {preview.mode}.</p>
-        </aside>
+      {selectedEventId ? (
+        <SettlementPanel
+          eventTitle={selected?.title ?? selectedEventId}
+          view={settlement}
+          error={settlementError}
+          pending={pending}
+          onCommand={(command) => void onCommand(command)}
+          onClose={() => {
+            setSelectedEventId(null);
+            setSettlement(null);
+            setSettlementError(null);
+          }}
+        />
       ) : null}
     </section>
   );
+}
+
+function settlementIdFor(eventId: string): string {
+  return `stl_${eventId}`;
+}
+
+function message(reason: unknown, fallback: string): string {
+  return reason instanceof Error ? reason.message : fallback;
 }

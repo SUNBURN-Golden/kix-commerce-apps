@@ -7,6 +7,13 @@ export const SURFACES = {
   rightsIssuance: "wave2.rights",
   zkGate: "wave2.zk_gate",
   settlementMock: "wave3.settlement.F01-F03",
+  /**
+   * Charter label for the desk's mock FSM case.
+   * The authoritative machine remains kix-protocol
+   * reference/settlement_f01_f03/settlement_fsm.py.
+   * This id is not an OpenAPI operation.
+   */
+  settlementFsm: "wave3.settlement.F01-F03.fsm",
   booking: "wave4.booking.B01-B05",
   resale: "wave4.resale.R01-R05",
   admission: "wave4.admission.P03",

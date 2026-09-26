@@ -1,4 +1,5 @@
 import { CONSUMED_SURFACES, type CommerceProtocol } from "./protocol.js";
+import { SettlementCaseStore } from "./settlement-case.js";
 import { SURFACES } from "./surfaces.js";
 import {
   ProtocolError,
@@ -8,7 +9,13 @@ import {
   type Hold,
   type Performance,
   type ResaleListing,
+  type SettlementCaseView,
+  type SettlementCommandReceipt,
+  type SettlementInitiate,
   type SettlementPreview,
+  type SettlementReason,
+  type SettlementReconcileReceipt,
+  type SettlementStep,
 } from "./types.js";
 
 const HOLD_MS = 10 * 60 * 1000;
@@ -52,6 +59,7 @@ export class StubProtocolAdapter implements CommerceProtocol {
   private readonly bookings = new Map<string, Booking>();
   private readonly listings = new Map<string, ResaleListing>();
   private readonly admitted = new Set<string>();
+  private readonly settlementCases = new SettlementCaseStore();
   private seq = 0;
 
   constructor(seed: Performance[] = DEFAULT_SEED, private readonly now: () => number = Date.now) {
@@ -238,8 +246,45 @@ export class StubProtocolAdapter implements CommerceProtocol {
       mode: "mock",
       surface: SURFACES.settlementMock,
       references: ["F01", "F02", "F03"],
-      note: "Read-only pointer to the kix-protocol Wave 3 settlement mock. This app does not compute shares or disburse funds.",
+      note: "Mock F01–F03 pointer. The desk case is the adapter stub FSM. This app does not compute shares or move funds.",
     };
+  }
+
+  async initiateSettlement(input: SettlementInitiate): Promise<SettlementCommandReceipt> {
+    this.requirePerformance(input.eventId);
+    return this.settlementCases.initiate(input);
+  }
+
+  async authorizeSettlement(input: SettlementStep): Promise<SettlementCommandReceipt> {
+    return this.settlementCases.authorize(input);
+  }
+
+  async captureSettlement(input: SettlementStep): Promise<SettlementCommandReceipt> {
+    return this.settlementCases.capture(input);
+  }
+
+  async commitSettlement(input: SettlementStep): Promise<SettlementCommandReceipt> {
+    return this.settlementCases.commit(input);
+  }
+
+  async failSettlement(input: SettlementReason): Promise<SettlementCommandReceipt> {
+    return this.settlementCases.fail(input);
+  }
+
+  async cancelSettlement(input: SettlementReason): Promise<SettlementCommandReceipt> {
+    return this.settlementCases.cancel(input);
+  }
+
+  async reconcileSettlement(input: SettlementStep): Promise<SettlementReconcileReceipt> {
+    return this.settlementCases.reconcile(input);
+  }
+
+  async viewSettlement(settlementId: string): Promise<SettlementCaseView> {
+    return this.settlementCases.view(settlementId);
+  }
+
+  async rejectExternalSettlement(kind: string): Promise<never> {
+    return this.settlementCases.rejectExternal(kind);
   }
 
   private requirePerformance(eventId: string): Performance {

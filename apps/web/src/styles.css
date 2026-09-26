@@ -307,6 +307,31 @@ a.panel {
   margin: 0.35rem 0 0;
 }
 
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.facts dt {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.facts dd {
+  margin: 0.15rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.phase-name {
+  font-family: Palatino, "Iowan Old Style", Georgia, serif;
+  font-size: 1.35rem;
+  letter-spacing: 0.06em;
+}
+
 @media (max-width: 720px) {
   .top,
   .row {

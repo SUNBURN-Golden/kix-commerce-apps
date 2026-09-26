@@ -1,7 +1,9 @@
 import { isRecord } from "./record.js";
 import { SURFACES } from "./surfaces.js";
 import {
+  isSettlementPhase,
   ProtocolError,
+  SETTLEMENT_PROVENANCE,
   type Booking,
   type SettlementPreview,
 } from "./types.js";
@@ -82,6 +84,21 @@ function asSettlement(value: Record<string, unknown>): SettlementPreview {
   }
   if (value.mode !== "mock") {
     throw new ProtocolError("Settlement preview must stay in mock mode.");
+  }
+  if ("phase" in value && !isSettlementPhase(value.phase)) {
+    throw new ProtocolError("Settlement phase must be a mock FSM phase.");
+  }
+  if ("fundsExecuted" in value && value.fundsExecuted !== false) {
+    throw new ProtocolError("Settlement payload must not claim executed funds.");
+  }
+  if ("provenance" in value && value.provenance !== SETTLEMENT_PROVENANCE) {
+    throw new ProtocolError("Settlement payload must stay MOCK_SETTLEMENT_ONLY.");
+  }
+  if ("externalPayment" in value && value.externalPayment !== "UNSUPPORTED") {
+    throw new ProtocolError("Settlement payload must keep external payment unsupported.");
+  }
+  if ("providerAuthorizationExecuted" in value && value.providerAuthorizationExecuted !== false) {
+    throw new ProtocolError("Settlement payload must not claim a provider authorization.");
   }
   return {
     eventId: readString(value, "eventId"),

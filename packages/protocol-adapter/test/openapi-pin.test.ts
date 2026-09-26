@@ -9,6 +9,7 @@ import {
   OPENAPI_CONTRACT_PIN,
   PINNED_ACTIONS,
   ProtocolError,
+  SETTLEMENT_DEPTH_BASELINE,
   assertOpenApiContractDocument,
   assertOpenApiContractRaw,
   isPinnedAction,
@@ -52,6 +53,17 @@ describe("contract-only OpenAPI pin", () => {
     expect(OPENAPI_CONTRACT_PIN.contractStatus).toBe("contract-only");
     expect(OPENAPI_CONTRACT_PIN.liveHttpServer).toBe(false);
     expect(OPENAPI_CONTRACT_PIN.productionEndpoint).toBe(false);
+    expect(OPENAPI_CONTRACT_PIN.openApiFileSha256).toBe(
+      "fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e",
+    );
+    expect(SETTLEMENT_DEPTH_BASELINE.protocolRepo).toBe("BeautifulMind-JT/kix-protocol");
+    expect(SETTLEMENT_DEPTH_BASELINE.protocolMainSha).toBe("85145eb33799a7c712890ff81708def8a7d61ee5");
+    expect(SETTLEMENT_DEPTH_BASELINE.featureCommit).toBe("838370d9ce8e8aeeceeb94f3b4d212204e7ecf19");
+    expect(SETTLEMENT_DEPTH_BASELINE.fsmPath).toBe("reference/settlement_f01_f03/settlement_fsm.py");
+    expect(SETTLEMENT_DEPTH_BASELINE.provenance).toBe("MOCK_SETTLEMENT_ONLY");
+    expect(isPinnedAction("initiate")).toBe(false);
+    expect(isPinnedAction("reconcile")).toBe(false);
+    expect(isPinnedAction("reject_external")).toBe(false);
     expect(PINNED_ACTIONS).toHaveLength(40);
     expect(isPinnedAction("admit")).toBe(true);
     expect(isPinnedAction("invokeLocalCall")).toBe(false);
