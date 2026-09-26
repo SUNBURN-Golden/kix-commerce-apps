@@ -1,3 +1,4 @@
+import type { TransportObservation } from "./operational-error.js";
 import type { SurfaceId } from "./surfaces.js";
 import type {
   AdapterMeta,
@@ -71,6 +72,11 @@ import type {
  */
 export interface CommerceProtocol {
   describe(): AdapterMeta;
+  /**
+   * Reports the selected environment. HTTP failures stay on integration-http.
+   * This does not select the stub and it is not production readiness.
+   */
+  observeTransport(): Promise<TransportObservation>;
   listPerformances(): Promise<Performance[]>;
   placeHold(input: { eventId: string; quantity: number }): Promise<Hold>;
   releaseHold(holdId: string): Promise<void>;

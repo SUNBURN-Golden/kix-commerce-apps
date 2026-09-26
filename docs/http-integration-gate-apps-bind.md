@@ -2,7 +2,7 @@
 
 This bind points `@kix/protocol-adapter` at the reviewed non-production loopback gate in kix-protocol. Stub mode stays the default. HTTP mode is opt-in. A successful local call is not production deployment approval, not a public endpoint, and not a conformance claim.
 
-The OpenAPI bytes come from feature `007af9021991965d4af79c4f8497061c6daa77eb`. Apps tests start the process at main `3b6bdd26f61bb828af3781946b63a3a3fa03187b`. That tip does not add commands. Admission labeling is in [admission-harden-apps-bind.md](admission-harden-apps-bind.md).
+The OpenAPI bytes come from feature `c7238bc24a399a6cabbab87ac23dbfd7e9c252dd`, merged as `52a9b5cbf7777df55d2d2062cb8d99d862b423bb`. Those commits share one tree. That tip does not add commands. Admission labeling is in [admission-harden-apps-bind.md](admission-harden-apps-bind.md). Operational limits are in [prod-readiness-apps-bind.md](prod-readiness-apps-bind.md).
 
 ## What HTTP mode does
 
@@ -18,14 +18,14 @@ Desk methods stay not-bound. Their arguments are not those command bodies. The a
 
 `GET /health` and `GET /ready` are process probes on the adapter. Health is liveness. Ready means the in-memory reference core loaded. Ready is not production readiness. The probes are not OpenAPI path items.
 
-Responses must carry `X-Kix-Transport: integration-gate` and `X-Kix-Production-Endpoint: false`. Any other transport marker is rejected. HTTP 422 and any body with `rejected: true` stay rejects. A closed port is `GATE_UNAVAILABLE`.
+Responses must carry `X-Kix-Transport: integration-gate`, `X-Kix-Production-Endpoint: false`, `X-Kix-Protocol-Truth: false`, and `X-Kix-Production-Conformance: false`. The client sends `X-Request-Id` and `X-Correlation-Id` and requires the response to echo them. A mismatch is `STALE_RESPONSE`. Any other transport marker is rejected. HTTP 422 and any body with `rejected: true` stay rejects. A closed port is `GATE_UNAVAILABLE`. The client does not retry and does not fall back to the stub.
 
 ## Pins
 
 | File | sha256 | Status |
 | --- | --- | --- |
 | `kix-protocol.contract-only.openapi.json` | `fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e` | `contract-only`. Live server flag false. `productionEndpoint` false |
-| `kix-protocol.integration-gate.openapi.json` | `94b9559610c8260ce2428a59126ef24e260a6769dbbcf0056d2c861ae85e0f19` | `integration-gate`. Mode `non-production-local-integration`. `productionEndpoint` false. Public host false. Loopback only |
+| `kix-protocol.integration-gate.openapi.json` | `2a2af554cb1a8b128f2cf1b1d5b8cf6b1c8fa90adf30865dbc3e64932b3bd13f` | `integration-gate`. Mode `non-production-local-integration`. `productionEndpoint` false. Protocol truth false. Production conformance false. Public host false. Loopback only |
 
 Both files pin `protocol_contract.json` sha256 `ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e` and git blob `619ae21c82ca3df5661bd3831613f15fa65225ff`. The gate `info.version` is `0.3-rc1-integration-gate+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e`.
 
@@ -37,6 +37,12 @@ From the kix-protocol checkout at the merge above:
 
 ```bash
 python3 -m integration_gate --port 8765
+```
+
+Optional process-local journal. Restart replay is still not production conformance. `durableAcrossRestart` in the pin stays false.
+
+```bash
+python3 -m integration_gate --port 8765 --readiness-dir /tmp/kix-ig-journal
 ```
 
 The process listens on `127.0.0.1` only. Then point this app at that origin:
@@ -67,7 +73,7 @@ Against that process the test calls:
 
 `advance_clock` with the same `operationId` and body replays one receipt. A different body for that id is `OPERATION_ID_CONFLICT`. The stub settlement case still replays with `duplicate: true` inside its own journal. Those are separate machines. The HTTP receipt has no desk phase.
 
-The gate state is in-memory. Restarting the process drops it. An HTTP `Idempotency-Key` header is not the protocol identity.
+Without `--readiness-dir`, the gate state is in-memory. Restarting the process drops it. With that directory, committed local calls replay from the file and a second id does not apply the same effect again. `localFileJournal` reports the file. `durable` on the ready probe stays false. An HTTP `Idempotency-Key` header is not the protocol identity. The client does not send one.
 
 ## Hold
 

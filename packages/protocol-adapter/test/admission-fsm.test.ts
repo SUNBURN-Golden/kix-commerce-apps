@@ -12,6 +12,7 @@ import {
   ProtocolError,
   StubProtocolAdapter,
   admissionDeskState,
+  echoIntegrationGateHeaders,
 } from "../src/index.js";
 import { AdmissionCaseStore, type AdmissionSources } from "../src/admission-case.js";
 
@@ -109,6 +110,9 @@ describe("admission desk labels", () => {
       { decision: "STALE_VERSION", fresh: false, transferObserved: true, state: "transferred" },
       { decision: "TICKET_CANCELLED", fresh: false, transferObserved: false, state: "cancelled" },
       { decision: "GATE_UNAVAILABLE", fresh: false, transferObserved: false, state: "unavailable-server" },
+      { decision: "NOT_READY", fresh: false, transferObserved: false, state: "unavailable-server" },
+      { decision: "STALE_RESPONSE", fresh: false, transferObserved: false, state: "unavailable-server" },
+      { decision: "OVERLOADED", fresh: false, transferObserved: false, state: "unavailable-server" },
       { decision: "TICKET_SOURCE_UNAVAILABLE", fresh: false, transferObserved: false, state: "unavailable-server" },
       { decision: "VENUE_SOURCE_UNAVAILABLE", fresh: false, transferObserved: false, state: "unavailable-server" },
     ];
@@ -121,7 +125,7 @@ describe("admission desk labels", () => {
       "fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e",
     );
     expect(OPENAPI_INTEGRATION_GATE_PIN.openApiFileSha256).toBe(
-      "94b9559610c8260ce2428a59126ef24e260a6769dbbcf0056d2c861ae85e0f19",
+      "2a2af554cb1a8b128f2cf1b1d5b8cf6b1c8fa90adf30865dbc3e64932b3bd13f",
     );
     expect(OPENAPI_INTEGRATION_GATE_PIN.sourceProtocolContractSha256).toBe(
       "ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
@@ -658,14 +662,13 @@ describe("http admission boundary", () => {
           production: false,
           publicHost: false,
           productionReadiness: false,
+          productionConformance: false,
+          protocolTruth: false,
+          localFileJournal: false,
         }),
         {
           status: 200,
-          headers: {
-            "content-type": "application/json",
-            "x-kix-transport": "integration-gate",
-            "x-kix-production-endpoint": "false",
-          },
+          headers: echoIntegrationGateHeaders(init),
         },
       );
     };

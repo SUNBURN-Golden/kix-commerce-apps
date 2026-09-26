@@ -1,7 +1,8 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { CREDIT_BOUNDARY } from "@kix/protocol-adapter";
+import { CREDIT_BOUNDARY, ProtocolError, type TransportObservation } from "@kix/protocol-adapter";
 import { protocol } from "../protocol";
+import { preferFresh, transportBannerText, type HeldObservation } from "../transport-status";
 
 const links = [
   { to: "/", label: "Box office", end: true },
@@ -15,10 +16,53 @@ export function Shell({ children }: { children: ReactNode }) {
   const meta = protocol.describe();
   const location = useLocation();
   const onMarketing = location.pathname === "/marketing" || location.pathname.startsWith("/marketing/");
+  const [held, setHeld] = useState<HeldObservation | null>(null);
 
   useEffect(() => {
     document.title = onMarketing ? "KIX Marketing · 설계중" : "KIX Box Office";
   }, [onMarketing]);
+
+  useEffect(() => {
+    let generation = 0;
+    let cancelled = false;
+    const ticket = ++generation;
+    protocol
+      .observeTransport()
+      .then((observation) => {
+        if (cancelled) {
+          return;
+        }
+        setHeld((current) => preferFresh(current, { generation: ticket, observation }));
+      })
+      .catch((error: unknown) => {
+        if (cancelled) {
+          return;
+        }
+        const code = error instanceof ProtocolError && error.code ? error.code : "GATE_UNAVAILABLE";
+        const observation: TransportObservation = {
+          environment: meta.environment,
+          state: meta.environment === "stub" ? "local" : "unavailable",
+          productionReadiness: false,
+          productionConformance: false,
+          protocolTruth: false,
+          publicDeploy: false,
+          durable: false,
+          localFileJournal: null,
+          fallbackToStub: false,
+          retry: false,
+          requestId: error instanceof ProtocolError ? (error.requestId ?? null) : null,
+          correlationId: error instanceof ProtocolError ? (error.correlationId ?? null) : null,
+          code,
+          detail: "Integration HTTP stayed selected. The desk did not fall back to the stub.",
+        };
+        setHeld((current) => preferFresh(current, { generation: ticket, observation }));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [meta.environment]);
+
+  const transport = transportBannerText(meta.environment, held?.observation ?? null);
 
   return (
     <div className="shell">
@@ -39,8 +83,11 @@ export function Shell({ children }: { children: ReactNode }) {
         </nav>
       </header>
       <p className="banner" role="status">
-        Adapter <strong>{meta.adapter}</strong>. No live chain and no funds movement.{" "}
-        {CREDIT_BOUNDARY.note}
+        Adapter <strong>{meta.adapter}</strong>. Environment <strong>{meta.environment}</strong>. No live chain and no
+        funds movement. Public production deployment is not selected. {CREDIT_BOUNDARY.note}
+      </p>
+      <p className="banner transport" role="status" data-transport-state={transport.state}>
+        {transport.text}
       </p>
       <main>{children}</main>
     </div>

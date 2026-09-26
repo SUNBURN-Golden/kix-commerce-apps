@@ -26,17 +26,17 @@ The desk surface `wave4.admission.P03.fsm` is a charter label. P03 stays **ì„¤ê³
 
 ## Transport
 
-The OpenAPI pins are unchanged:
+The contract-only pin is unchanged. The integration-gate file digest moved in the production-readiness bind. See [prod-readiness-apps-bind.md](prod-readiness-apps-bind.md).
 
 | Pin | Value |
 | --- | --- |
 | Contract-only file sha256 | `fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e` |
-| Integration-gate file sha256 | `94b9559610c8260ce2428a59126ef24e260a6769dbbcf0056d2c861ae85e0f19` |
+| Integration-gate file sha256 | `2a2af554cb1a8b128f2cf1b1d5b8cf6b1c8fa90adf30865dbc3e64932b3bd13f` |
 | Source `protocol_contract.json` sha256 | `ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e` |
 
 `liveHttpServer` on the contract-only file stays false. The gate file stays loopback-only with `productionEndpoint` false. Catalogue commands stay 40. `authorize_admission` and `consume_admission` are not commands. The client rejects those names before a request.
 
-Run the gate from kix-protocol at the merge above:
+Run the gate from the production-readiness merge in [prod-readiness-apps-bind.md](prod-readiness-apps-bind.md). The admission FSM baseline above is the machine this desk mirrors. It is not the gate process tip:
 
 ```bash
 python3 -m integration_gate --port 8765

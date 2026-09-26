@@ -4,6 +4,7 @@ import {
   CONTRACT_ONLY_LOCAL_CALL_PATH,
   CREDIT_BOUNDARY,
   createProtocol,
+  echoIntegrationGateHeaders,
   HttpProtocolAdapter,
   PINNED_PROTOCOL_DOMAIN,
   ProtocolError,
@@ -237,7 +238,7 @@ describe("http adapter binding", () => {
         method: init?.method ?? "GET",
         body: typeof init?.body === "string" ? init.body : undefined,
       });
-      return jsonResponse(responseBody);
+      return jsonResponse(responseBody, init);
     };
     const protocol = new HttpProtocolAdapter("http://127.0.0.1:8765/", fetchImpl);
     const commandBody = { domain: PINNED_PROTOCOL_DOMAIN, eventId: "evt_lanterns" };
@@ -490,13 +491,9 @@ describe("http adapter binding", () => {
   });
 });
 
-function jsonResponse(body: unknown, status = 200): Response {
+function jsonResponse(body: unknown, init?: RequestInit, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: {
-      "content-type": "application/json",
-      "x-kix-transport": "integration-gate",
-      "x-kix-production-endpoint": "false",
-    },
+    headers: echoIntegrationGateHeaders(init),
   });
 }

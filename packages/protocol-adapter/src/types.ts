@@ -991,18 +991,28 @@ export interface CreditReconcileReceipt extends CreditCommandReceipt {
 
 export interface AdapterMeta {
   adapter: "stub" | "http";
+  /** stub, or integration-http for the explicit loopback gate. Never a public production environment. */
+  environment: "stub" | "integration-http";
   liveChain: false;
   fundsMovement: "none";
+  publicDeploy: false;
+  productionConformance: false;
+  protocolTruth: false;
   surfaces: SurfaceId[];
 }
 
 export class ProtocolError extends Error {
   /** Set for mock settlement rejections. Absent on older desk errors. */
   readonly code?: string;
+  /** Loopback trace echoed by the gate. Not an authentication result. */
+  readonly requestId?: string;
+  readonly correlationId?: string;
 
-  constructor(message: string, code?: string) {
+  constructor(message: string, code?: string, trace?: { requestId?: string; correlationId?: string }) {
     super(message);
     this.name = "ProtocolError";
     this.code = code;
+    this.requestId = trace?.requestId;
+    this.correlationId = trace?.correlationId;
   }
 }

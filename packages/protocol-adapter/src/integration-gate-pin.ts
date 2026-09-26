@@ -20,14 +20,14 @@ import { ProtocolError } from "./types.js";
 export const OPENAPI_INTEGRATION_GATE_PIN = {
   protocolRepo: "BeautifulMind-JT/kix-protocol",
   /**
-   * Checkout the apps tests start. OpenAPI bytes stay the integration-gate pin
-   * from feature 007af902. This tip is the admission-harden merge, which does
-   * not add commands.
+   * Checkout the apps tests start. The command catalogue is unchanged.
+   * Feature c7238bc and merge 52a9b5c share one tree. The integration-gate
+   * file digest moved. Contract-only and protocol_contract pins did not.
    */
-  protocolMergeSha: "3b6bdd26f61bb828af3781946b63a3a3fa03187b",
-  protocolFeatureSha: "007af9021991965d4af79c4f8497061c6daa77eb",
+  protocolMergeSha: "52a9b5cbf7777df55d2d2062cb8d99d862b423bb",
+  protocolFeatureSha: "c7238bc24a399a6cabbab87ac23dbfd7e9c252dd",
   openApiPath: "docs/contracts/openapi/kix-protocol.integration-gate.openapi.json",
-  openApiFileSha256: "94b9559610c8260ce2428a59126ef24e260a6769dbbcf0056d2c861ae85e0f19",
+  openApiFileSha256: "2a2af554cb1a8b128f2cf1b1d5b8cf6b1c8fa90adf30865dbc3e64932b3bd13f",
   infoVersion:
     "0.3-rc1-integration-gate+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
   infoTitle: "KIX integration-gate local-call transport",
@@ -44,10 +44,16 @@ export const OPENAPI_INTEGRATION_GATE_PIN = {
   loopbackOnly: true,
   defaultBindHost: "127.0.0.1",
   productionEndpoint: false,
+  protocolTruth: false,
+  productionConformance: false,
   localCallPath: CONTRACT_ONLY_LOCAL_CALL_PATH,
   maxBodyBytes: 65536,
   requestTimeoutSeconds: 5,
   headerLimitBytes: 8192,
+  maxInFlight: 8,
+  maxJournalRecords: 4096,
+  maxJournalBytes: 8388608,
+  readinessJournalDefaultEnabled: false,
   commandCount: 40,
 } as const;
 
@@ -62,7 +68,10 @@ const TOP_LEVEL_KEYS = [
   "x-kix-contract-status",
   "x-kix-live-http-server",
   "x-kix-production-endpoint",
+  "x-kix-protocol-truth",
+  "x-kix-production-conformance",
   "x-kix-public-host",
+  "x-kix-readiness-runtime",
   "x-kix-omitted-commands",
   "x-kix-source",
   "x-kix-limits",
@@ -88,6 +97,9 @@ export function assertIntegrationGateRaw(raw: string): void {
   }
   if (raw.includes("http://") || raw.includes("https://") || raw.toLowerCase().includes("localhost")) {
     throw new ProtocolError("Integration-gate OpenAPI must not publish an endpoint URL.");
+  }
+  if (raw.toLowerCase().includes("production-ready")) {
+    throw new ProtocolError("Integration-gate OpenAPI must not claim production-ready.");
   }
   let parsed: unknown;
   try {
@@ -121,6 +133,13 @@ export function assertIntegrationGateDocument(doc: unknown): void {
   if (doc["x-kix-public-host"] !== false) {
     throw new ProtocolError("Integration-gate pin must keep x-kix-public-host false.");
   }
+  if (doc["x-kix-protocol-truth"] !== false) {
+    throw new ProtocolError("Integration-gate pin must keep x-kix-protocol-truth false.");
+  }
+  if (doc["x-kix-production-conformance"] !== false) {
+    throw new ProtocolError("Integration-gate pin must keep x-kix-production-conformance false.");
+  }
+  assertReadinessRuntime(doc["x-kix-readiness-runtime"]);
   if (!Array.isArray(doc["x-kix-omitted-commands"]) || doc["x-kix-omitted-commands"].length !== 0) {
     throw new ProtocolError("Integration-gate pin x-kix-omitted-commands must be empty.");
   }
@@ -155,7 +174,8 @@ export function assertIntegrationGateDocument(doc: unknown): void {
   if (
     !info.description.includes("no production endpoint") ||
     !info.description.includes("no public host") ||
-    !info.description.includes("not production approval")
+    !info.description.includes("not production approval") ||
+    !info.description.includes("not a production conformance claim")
   ) {
     throw new ProtocolError("Integration-gate description must deny production approval.");
   }
@@ -191,13 +211,41 @@ export function assertIntegrationGateDocument(doc: unknown): void {
 
   const limits = requireRecord(doc["x-kix-limits"], "Integration-gate limits");
   if (
+    !sameMembers(Object.keys(limits), [
+      "maxBodyBytes",
+      "requestTimeoutSeconds",
+      "headerLimitBytes",
+      "bindHost",
+      "maxInFlight",
+      "maxJournalRecords",
+      "maxJournalBytes",
+      "durableAcrossRestart",
+      "localReadinessJournal",
+    ])
+  ) {
+    throw new ProtocolError("Integration-gate limits mismatch.");
+  }
+  if (
     limits.maxBodyBytes !== OPENAPI_INTEGRATION_GATE_PIN.maxBodyBytes ||
     limits.requestTimeoutSeconds !== OPENAPI_INTEGRATION_GATE_PIN.requestTimeoutSeconds ||
     limits.headerLimitBytes !== OPENAPI_INTEGRATION_GATE_PIN.headerLimitBytes ||
     limits.bindHost !== OPENAPI_INTEGRATION_GATE_PIN.defaultBindHost ||
+    limits.maxInFlight !== OPENAPI_INTEGRATION_GATE_PIN.maxInFlight ||
+    limits.maxJournalRecords !== OPENAPI_INTEGRATION_GATE_PIN.maxJournalRecords ||
+    limits.maxJournalBytes !== OPENAPI_INTEGRATION_GATE_PIN.maxJournalBytes ||
     limits.durableAcrossRestart !== false
   ) {
     throw new ProtocolError("Integration-gate limits mismatch.");
+  }
+  const journal = requireRecord(limits.localReadinessJournal, "Integration-gate local readiness journal");
+  if (
+    !sameMembers(Object.keys(journal), ["defaultEnabled", "protocolTruth", "productionConformance", "restartReplay"]) ||
+    journal.defaultEnabled !== false ||
+    journal.protocolTruth !== false ||
+    journal.productionConformance !== false ||
+    journal.restartReplay !== "optional-process-local-file"
+  ) {
+    throw new ProtocolError("Integration-gate local readiness journal marker mismatch.");
   }
 
   const idempotency = requireRecord(doc["x-kix-idempotency"], "Integration-gate idempotency");
@@ -205,7 +253,9 @@ export function assertIntegrationGateDocument(doc: unknown): void {
     idempotency.identity !== "envelope.operationId" ||
     idempotency.conflict !== "OPERATION_ID_CONFLICT" ||
     idempotency.durableAcrossRestart !== false ||
-    idempotency.httpIdempotencyKeyHeader !== false
+    idempotency.httpIdempotencyKeyHeader !== false ||
+    typeof idempotency.sameFingerprint !== "string" ||
+    !idempotency.sameFingerprint.includes("not a production conformance claim")
   ) {
     throw new ProtocolError("Integration-gate idempotency marker mismatch.");
   }
@@ -314,7 +364,11 @@ export function requireIntegrationGatePin(): typeof OPENAPI_INTEGRATION_GATE_PIN
     pin.liveHttpServerProduction !== false ||
     pin.loopbackOnly !== true ||
     pin.defaultBindHost !== INTEGRATION_GATE_LOOPBACK_HOST ||
-    pin.liveHttpServerMode !== "non-production-local-integration"
+    pin.liveHttpServerMode !== "non-production-local-integration" ||
+    pin.protocolTruth !== false ||
+    pin.productionConformance !== false ||
+    pin.readinessJournalDefaultEnabled !== false ||
+    pin.maxInFlight !== 8
   ) {
     throw new ProtocolError("Refusing an integration-gate pin that claims production or a public host.");
   }
@@ -332,6 +386,35 @@ export function readPinnedIntegrationGateDocument(): unknown {
   return structuredClone(liveDocument);
 }
 
+function assertReadinessRuntime(value: unknown): void {
+  const runtime = requireRecord(value, "Integration-gate readiness runtime");
+  if (
+    !sameMembers(Object.keys(runtime), [
+      "role",
+      "protocolTruth",
+      "productionConformance",
+      "productionEndpoint",
+      "defaultEnabled",
+      "defaultBindHost",
+      "whenEnabled",
+    ])
+  ) {
+    throw new ProtocolError("Integration-gate readiness runtime marker mismatch.");
+  }
+  if (
+    runtime.role !== "optional-local-file-journal" ||
+    runtime.protocolTruth !== false ||
+    runtime.productionConformance !== false ||
+    runtime.productionEndpoint !== false ||
+    runtime.defaultEnabled !== false ||
+    runtime.defaultBindHost !== OPENAPI_INTEGRATION_GATE_PIN.defaultBindHost ||
+    runtime.whenEnabled !==
+      "Replays committed local-call receipts from a process-local file after a loopback restart. Not protocol truth. Not a production conformance claim. Not a public endpoint."
+  ) {
+    throw new ProtocolError("Integration-gate readiness runtime must stay optional and non-production.");
+  }
+}
+
 function assertProbe(value: unknown, path: string): void {
   const probe = requireRecord(value, "Integration-gate probe");
   if (probe.method !== "GET" || probe.path !== path) {
@@ -339,6 +422,9 @@ function assertProbe(value: unknown, path: string): void {
   }
   if (typeof probe.meaning !== "string" || probe.meaning.length === 0) {
     throw new ProtocolError("Integration-gate probe meaning mismatch.");
+  }
+  if (path === INTEGRATION_GATE_READY_PATH && !probe.meaning.includes("Not production readiness")) {
+    throw new ProtocolError("Integration-gate ready probe must deny production readiness.");
   }
 }
 
@@ -359,6 +445,18 @@ function rejectForbiddenKeys(value: unknown): void {
     }
     if (key === "production" && value[key] !== false) {
       throw new ProtocolError("Integration-gate pin must keep production false.");
+    }
+    if (
+      (key === "protocolTruth" ||
+        key === "productionConformance" ||
+        key === "x-kix-protocol-truth" ||
+        key === "x-kix-production-conformance") &&
+      value[key] !== false
+    ) {
+      throw new ProtocolError("Integration-gate pin must keep protocol truth and production conformance false.");
+    }
+    if ((key === "defaultEnabled" || key === "durableAcrossRestart") && value[key] !== false) {
+      throw new ProtocolError("Integration-gate pin must keep durable restart and the readiness journal off by default.");
     }
     const child = value[key];
     if (typeof child === "string" && (child.includes("http://") || child.includes("https://") || child.toLowerCase().includes("localhost"))) {

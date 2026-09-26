@@ -5,6 +5,7 @@ import {
   type AdmissionSources,
 } from "./admission-case.js";
 import { CreditCaseStore } from "./credit-case.js";
+import { localStubObservation } from "./operational-error.js";
 import { CONSUMED_SURFACES, type CommerceProtocol } from "./protocol.js";
 import { ResaleCaseStore } from "./resale-case.js";
 import { ReservationCaseStore } from "./reservation-case.js";
@@ -175,10 +176,18 @@ export class StubProtocolAdapter implements CommerceProtocol {
   describe(): AdapterMeta {
     return {
       adapter: "stub",
+      environment: "stub",
       liveChain: false,
       fundsMovement: "none",
+      publicDeploy: false,
+      productionConformance: false,
+      protocolTruth: false,
       surfaces: [...CONSUMED_SURFACES],
     };
+  }
+
+  observeTransport() {
+    return Promise.resolve(localStubObservation());
   }
 
   async listPerformances(): Promise<Performance[]> {

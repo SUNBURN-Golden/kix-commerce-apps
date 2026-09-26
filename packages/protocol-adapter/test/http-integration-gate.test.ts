@@ -1,8 +1,4 @@
-import { execFileSync, spawn, type ChildProcess } from "node:child_process";
-import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { type ChildProcess } from "node:child_process";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   CONTRACT_ONLY_LOCAL_CALL_PATH,
@@ -10,13 +6,12 @@ import {
   HttpProtocolAdapter,
   INTEGRATION_GATE_HEALTH_PATH,
   INTEGRATION_GATE_READY_PATH,
-  OPENAPI_INTEGRATION_GATE_PIN,
   PINNED_PROTOCOL_DOMAIN,
   StubProtocolAdapter,
   admissionDeskState,
+  echoIntegrationGateHeaders,
 } from "../src/index.js";
-
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+import { assertReviewedCheckout, protocolRoot, startGate, stopGate } from "./support/reviewed-gate.js";
 
 /**
  * Reference Core.SCOPE from kix-protocol. The string is the in-memory fixture
@@ -39,114 +34,6 @@ const SHOW_POLICY = {
   refundProfile: "FULL_CHAIN_UNWIND_FIXTURE",
 };
 
-function protocolRoot(): string {
-  const candidates = [process.env.KIX_PROTOCOL_ROOT, path.resolve(repoRoot, "../kix-protocol-http-gate")].filter(
-    (item): item is string => Boolean(item),
-  );
-  for (const candidate of candidates) {
-    if (existsSync(path.join(candidate, "integration_gate", "__main__.py"))) {
-      return candidate;
-    }
-  }
-  throw new Error("Set KIX_PROTOCOL_ROOT to the kix-protocol checkout that contains integration_gate.");
-}
-
-function assertReviewedCheckout(root: string): void {
-  const gateDoc = path.join(root, OPENAPI_INTEGRATION_GATE_PIN.openApiPath);
-  const digest = createHash("sha256").update(readFileSync(gateDoc)).digest("hex");
-  if (digest !== OPENAPI_INTEGRATION_GATE_PIN.openApiFileSha256) {
-    throw new Error(`integration-gate OpenAPI at ${root} does not match the vendored pin`);
-  }
-  const catalogue = path.join(root, "docs/contracts/openapi/kix-protocol.contract-only.openapi.json");
-  const catalogueDigest = createHash("sha256").update(readFileSync(catalogue)).digest("hex");
-  if (catalogueDigest !== OPENAPI_INTEGRATION_GATE_PIN.contractOnlyOpenApiFileSha256) {
-    throw new Error(`contract-only OpenAPI at ${root} does not match the vendored pin`);
-  }
-  const head = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
-  if (head !== OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha) {
-    throw new Error(`protocol HEAD ${head} is not the reviewed merge ${OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha}`);
-  }
-  const dirty = execFileSync("git", ["-C", root, "status", "--porcelain"], { encoding: "utf8" });
-  if (dirty.trim()) {
-    throw new Error("protocol checkout is dirty");
-  }
-}
-
-function startGate(root: string): Promise<{ baseUrl: string; child: ChildProcess }> {
-  return new Promise((resolve, reject) => {
-    const child = spawn("python3", ["-m", "integration_gate", "--port", "0"], {
-      cwd: root,
-      stdio: ["ignore", "pipe", "pipe"],
-      env: { ...process.env, PYTHONDONTWRITEBYTECODE: "1" },
-    });
-    let stdout = "";
-    let stderr = "";
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      child.kill("SIGTERM");
-      reject(new Error(`integration gate did not listen\n${stderr}`));
-    }, 15000);
-    child.stdout?.setEncoding("utf8");
-    child.stderr?.setEncoding("utf8");
-    child.stdout?.on("data", (chunk: string) => {
-      stdout += chunk;
-      const match = stdout.match(/integration-gate listening 127\.0\.0\.1 (\d+)/);
-      if (match?.[1] && !settled) {
-        settled = true;
-        clearTimeout(timer);
-        resolve({ baseUrl: `http://127.0.0.1:${match[1]}`, child });
-      }
-    });
-    child.stderr?.on("data", (chunk: string) => {
-      stderr += chunk;
-    });
-    child.on("error", (error) => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      clearTimeout(timer);
-      reject(error);
-    });
-    child.on("exit", (code) => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      clearTimeout(timer);
-      reject(new Error(`integration gate exited ${code}: ${stderr}`));
-    });
-  });
-}
-
-async function stopGate(child: ChildProcess | undefined): Promise<void> {
-  if (!child || child.exitCode !== null || child.signalCode !== null) {
-    return;
-  }
-  child.kill("SIGTERM");
-  await new Promise<void>((resolve) => {
-    const timer = setTimeout(() => {
-      child.kill("SIGKILL");
-      resolve();
-    }, 2000);
-    child.once("exit", () => {
-      clearTimeout(timer);
-      resolve();
-    });
-  });
-}
-
-function gateHeaders(production = "false"): Record<string, string> {
-  return {
-    "content-type": "application/json",
-    "x-kix-transport": "integration-gate",
-    "x-kix-production-endpoint": production,
-  };
-}
 
 describe("http mode fail-closed without a server", () => {
   it("rejects a closed port, a wrong transport header, and a production claim", async () => {
@@ -160,8 +47,8 @@ describe("http mode fail-closed without a server", () => {
       }),
     ).rejects.toMatchObject({ code: "GATE_UNAVAILABLE" });
 
-    const fetchImpl: typeof fetch = async () =>
-      new Response(JSON.stringify({ production: true }), { status: 200, headers: gateHeaders() });
+    const fetchImpl: typeof fetch = async (_input, init) =>
+      new Response(JSON.stringify({ production: true }), { status: 200, headers: echoIntegrationGateHeaders(init) });
     const claiming = new HttpProtocolAdapter("http://127.0.0.1:8765", fetchImpl);
     await expect(
       claiming.invokeLocalCall({
@@ -172,17 +59,20 @@ describe("http mode fail-closed without a server", () => {
       }),
     ).rejects.toMatchObject({ code: "PRODUCTION_ENDPOINT" });
 
-    const wrongHeader: typeof fetch = async () =>
-      new Response("{}", { status: 200, headers: gateHeaders("true") });
+    const wrongHeader: typeof fetch = async (_input, init) =>
+      new Response("{}", {
+        status: 200,
+        headers: echoIntegrationGateHeaders(init, { "x-kix-production-endpoint": "true" }),
+      });
     const mismatched = new HttpProtocolAdapter("http://127.0.0.1:9", wrongHeader);
     await expect(
       mismatched.readGateHealth(),
     ).rejects.toMatchObject({ code: "GATE_TRANSPORT" });
 
-    const hidden: typeof fetch = async () =>
+    const hidden: typeof fetch = async (_input, init) =>
       new Response(JSON.stringify({ error: "HIDDEN", rejected: true }), {
         status: 200,
-        headers: gateHeaders(),
+        headers: echoIntegrationGateHeaders(init),
       });
     const hiddenAdapter = new HttpProtocolAdapter("http://127.0.0.1:9", hidden);
     await expect(
@@ -194,7 +84,7 @@ describe("http mode fail-closed without a server", () => {
       }),
     ).rejects.toMatchObject({ code: "HIDDEN" });
 
-    const listing: typeof fetch = async () =>
+    const listing: typeof fetch = async (_input, init) =>
       new Response(
         JSON.stringify({
           domain: PINNED_PROTOCOL_DOMAIN,
@@ -203,7 +93,7 @@ describe("http mode fail-closed without a server", () => {
           action: "create_listing",
           result: { listingId: "lst_fixture", termsHash: "abc", rightLocked: false },
         }),
-        { status: 200, headers: gateHeaders() },
+        { status: 200, headers: echoIntegrationGateHeaders(init) },
       );
     const listingAdapter = new HttpProtocolAdapter("http://127.0.0.1:9", listing);
     await expect(
@@ -250,7 +140,15 @@ describe.sequential("loopback integration gate", () => {
       return fetch(input, init);
     };
     const http = new HttpProtocolAdapter(baseUrl, fetchImpl);
-    expect(http.describe()).toMatchObject({ adapter: "http", liveChain: false, fundsMovement: "none" });
+    expect(http.describe()).toMatchObject({
+      adapter: "http",
+      environment: "integration-http",
+      liveChain: false,
+      fundsMovement: "none",
+      publicDeploy: false,
+      productionConformance: false,
+      protocolTruth: false,
+    });
     expect("disburseCredit" in http).toBe(false);
     expect(CREDIT_BOUNDARY.action).toBe("none");
 
@@ -319,18 +217,26 @@ describe.sequential("loopback integration gate", () => {
       production: false,
       publicHost: false,
       productionReadiness: false,
+      productionConformance: false,
+      protocolTruth: false,
+      localFileJournal: false,
     });
     expect(health).not.toHaveProperty("commandCount");
+    expect(health).not.toHaveProperty("durable");
     expect(ready).toMatchObject({
       status: "ready",
       production: false,
       publicHost: false,
       productionReadiness: false,
+      productionConformance: false,
+      protocolTruth: false,
       liveMoney: false,
       durable: false,
+      localFileJournal: false,
       commandCount: 40,
       domain: PINNED_PROTOCOL_DOMAIN,
     });
+    expect(ready).not.toHaveProperty("journalRecords");
     expect(calls.map((url) => new URL(url).pathname)).toEqual([
       INTEGRATION_GATE_HEALTH_PATH,
       INTEGRATION_GATE_READY_PATH,

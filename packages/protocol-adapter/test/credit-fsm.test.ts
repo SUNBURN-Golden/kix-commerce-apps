@@ -8,6 +8,7 @@ import {
   PINNED_ACTIONS,
   StubProtocolAdapter,
   createProtocol,
+  echoIntegrationGateHeaders,
   isPinnedAction,
 } from "../src/index.js";
 
@@ -695,14 +696,10 @@ describe("http credit binding", () => {
       references: ["F04"],
       note: "Simulated exposure. Not live credit.",
     };
-    const fetchImpl: typeof fetch = async () =>
+    const fetchImpl: typeof fetch = async (_input, init) =>
       new Response(JSON.stringify(responseBody), {
         status: 200,
-        headers: {
-          "content-type": "application/json",
-          "x-kix-transport": "integration-gate",
-          "x-kix-production-endpoint": "false",
-        },
+        headers: echoIntegrationGateHeaders(init),
       });
     const http = new HttpProtocolAdapter("http://127.0.0.1:8765", fetchImpl);
     const command = {

@@ -107,9 +107,13 @@ function rejectTransportProductionClaims(value: unknown): void {
   if (
     value.production === true ||
     value.productionReadiness === true ||
+    value.productionConformance === true ||
+    value.protocolTruth === true ||
     value.liveMoney === true ||
     value.publicHost === true ||
-    value["x-kix-production-endpoint"] === true
+    value["x-kix-production-endpoint"] === true ||
+    value["x-kix-production-conformance"] === true ||
+    value["x-kix-protocol-truth"] === true
   ) {
     throw new ProtocolError("Remote payload claims a production endpoint.", "PRODUCTION_ENDPOINT");
   }
