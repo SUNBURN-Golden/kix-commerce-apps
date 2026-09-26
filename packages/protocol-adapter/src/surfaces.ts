@@ -15,8 +15,20 @@ export const SURFACES = {
    */
   settlementFsm: "wave3.settlement.F01-F03.fsm",
   booking: "wave4.booking.B01-B05",
+  /**
+   * Charter label for the desk's mock reservation case.
+   * The authoritative machine remains kix-protocol
+   * reference/booking_resale_admission/reservation_fsm.py.
+   * This id is not an OpenAPI operation.
+   */
+  bookingFsm: "wave4.booking.B01-B05.fsm",
   resale: "wave4.resale.R01-R05",
   admission: "wave4.admission.P03",
+  /**
+   * Charter label for the desk's mock admission phase.
+   * Protocol truth for P03 stays in kix-protocol. This id is not an OpenAPI operation.
+   */
+  admissionFsm: "wave4.admission.P03.fsm",
 } as const;
 
 export type SurfaceId = (typeof SURFACES)[keyof typeof SURFACES];

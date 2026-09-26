@@ -1,12 +1,22 @@
 import { isRecord } from "./record.js";
 import { SURFACES } from "./surfaces.js";
 import {
+  isReservationPhase,
   isSettlementPhase,
   ProtocolError,
+  RESERVATION_PROVENANCE,
   SETTLEMENT_PROVENANCE,
   type Booking,
   type SettlementPreview,
 } from "./types.js";
+
+const PRODUCTION_ADMISSION_COPY = [
+  /gate scanned live/i,
+  /venue admitted/i,
+  /ticket printed for entry/i,
+  /portone/i,
+  /toss/i,
+];
 
 const CREDIT_KEYS = ["disburseCredit", "creditDisbursement", "disburse"] as const;
 
@@ -40,7 +50,13 @@ function scan(value: unknown): void {
   if ("bookingId" in value && "payment" in value) {
     asBooking(value);
   }
-  if ("mode" in value && "references" in value) {
+  if (isReservationPayload(value)) {
+    asReservation(value);
+  }
+  if (isAdmissionPayload(value)) {
+    asAdmission(value);
+  }
+  if ("mode" in value && "references" in value && !isReservationPayload(value)) {
     if ("amount" in value || "currency" in value) {
       throw new ProtocolError("Settlement preview must not carry an amount or currency.");
     }
@@ -107,6 +123,83 @@ function asSettlement(value: Record<string, unknown>): SettlementPreview {
     references: ["F01", "F02", "F03"],
     note: readString(value, "note"),
   };
+}
+
+function isReservationPayload(value: Record<string, unknown>): boolean {
+  if (
+    "reservationId" in value ||
+    "economicFinalityClaimed" in value ||
+    "economic_finality_claimed" in value ||
+    "mockSettlementCommitObserved" in value ||
+    "admissionRoutingProduction" in value ||
+    "chainIssued" in value ||
+    "settlementGate" in value
+  ) {
+    return true;
+  }
+  if (value.provenance === RESERVATION_PROVENANCE) {
+    return true;
+  }
+  return isReservationPhase(value.phase);
+}
+
+function asReservation(value: Record<string, unknown>): void {
+  if ("economicFinalityClaimed" in value && value.economicFinalityClaimed !== false) {
+    throw new ProtocolError("Reservation payload must not claim economic finality.");
+  }
+  if ("economic_finality_claimed" in value && value.economic_finality_claimed !== false) {
+    throw new ProtocolError("Reservation payload must not claim economic finality.");
+  }
+  if ("reservationId" in value || isReservationPhase(value.phase)) {
+    if (value.mode !== "mock") {
+      throw new ProtocolError("Reservation payload must stay in mock mode.");
+    }
+    if (value.provenance !== RESERVATION_PROVENANCE) {
+      throw new ProtocolError("Reservation payload must stay MOCK_GATE_ONLY.");
+    }
+  }
+  if ("fundsExecuted" in value && value.fundsExecuted !== false) {
+    throw new ProtocolError("Reservation payload must not claim executed funds.");
+  }
+  if ("chainIssued" in value && value.chainIssued !== false) {
+    throw new ProtocolError("Reservation payload must not claim a chain issuance.");
+  }
+  if ("admissionRoutingProduction" in value && value.admissionRoutingProduction !== false) {
+    throw new ProtocolError("Admission payload must not claim production routing.");
+  }
+  if ("externalAdmission" in value && value.externalAdmission !== "UNSUPPORTED") {
+    throw new ProtocolError("Admission payload must keep external admission unsupported.");
+  }
+  if ("externalPayment" in value && value.externalPayment !== "UNSUPPORTED") {
+    throw new ProtocolError("Reservation payload must keep external payment unsupported.");
+  }
+  if ("phase" in value && !isReservationPhase(value.phase)) {
+    throw new ProtocolError("Reservation phase must be a mock FSM phase.");
+  }
+  assertNoProductionAdmissionCopy(value);
+}
+
+function isAdmissionPayload(value: Record<string, unknown>): boolean {
+  return typeof value.admitted === "boolean" && ("gateId" in value || "proofMode" in value || "rightsRef" in value);
+}
+
+function asAdmission(value: Record<string, unknown>): void {
+  if ("proofMode" in value && value.proofMode !== "stub" && value.proofMode !== "remote") {
+    throw new ProtocolError("Admission payload proof mode must stay stub or remote.");
+  }
+  assertNoProductionAdmissionCopy(value);
+}
+
+function assertNoProductionAdmissionCopy(value: Record<string, unknown>): void {
+  for (const key of ["note", "detail"] as const) {
+    const field = value[key];
+    if (typeof field !== "string") {
+      continue;
+    }
+    if (PRODUCTION_ADMISSION_COPY.some((pattern) => pattern.test(field))) {
+      throw new ProtocolError("Reservation payload must not use production-admission wording.");
+    }
+  }
 }
 
 function readString(value: Record<string, unknown>, key: string): string {

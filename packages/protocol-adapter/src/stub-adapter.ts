@@ -1,4 +1,5 @@
 import { CONSUMED_SURFACES, type CommerceProtocol } from "./protocol.js";
+import { ReservationCaseStore } from "./reservation-case.js";
 import { SettlementCaseStore } from "./settlement-case.js";
 import { SURFACES } from "./surfaces.js";
 import {
@@ -9,6 +10,20 @@ import {
   type Hold,
   type Performance,
   type ResaleListing,
+  type ReservationAuthorize,
+  type ReservationBind,
+  type ReservationCaseView,
+  type ReservationClock,
+  type ReservationCommandReceipt,
+  type ReservationConfirm,
+  type ReservationConsume,
+  type ReservationHold,
+  type ReservationIssue,
+  type ReservationPayment,
+  type ReservationReconcileReceipt,
+  type ReservationShowRegister,
+  type ReservationShowView,
+  type ReservationStep,
   type SettlementCaseView,
   type SettlementCommandReceipt,
   type SettlementInitiate,
@@ -50,8 +65,9 @@ interface HoldRecord extends Hold {
 
 /**
  * In-memory stand-in used when no kix-protocol HTTP base is configured.
- * Policies in this class are stub policies for the UI and tests.
- * They are not kix-protocol or Move semantics.
+ * Wave 4 hold, resale, and admission policies here are stub policies for the UI and tests.
+ * The reservation case uses protocol phase names at the UI contract only.
+ * Neither path is Move, and neither path is the protocol machine.
  */
 export class StubProtocolAdapter implements CommerceProtocol {
   private readonly performances: Performance[];
@@ -60,10 +76,12 @@ export class StubProtocolAdapter implements CommerceProtocol {
   private readonly listings = new Map<string, ResaleListing>();
   private readonly admitted = new Set<string>();
   private readonly settlementCases = new SettlementCaseStore();
+  private readonly reservationCases: ReservationCaseStore;
   private seq = 0;
 
   constructor(seed: Performance[] = DEFAULT_SEED, private readonly now: () => number = Date.now) {
     this.performances = seed.map((item) => ({ ...item }));
+    this.reservationCases = new ReservationCaseStore((settlementId) => this.settlementCases.view(settlementId).phase);
   }
 
   describe(): AdapterMeta {
@@ -285,6 +303,67 @@ export class StubProtocolAdapter implements CommerceProtocol {
 
   async rejectExternalSettlement(kind: string): Promise<never> {
     return this.settlementCases.rejectExternal(kind);
+  }
+
+  async advanceReservationClock(input: ReservationClock): Promise<ReservationCommandReceipt> {
+    return this.reservationCases.advanceClock(input);
+  }
+
+  async registerReservationShow(input: ReservationShowRegister): Promise<ReservationCommandReceipt> {
+    this.requirePerformance(input.eventId);
+    return this.reservationCases.registerShow(input);
+  }
+
+  async holdReservation(input: ReservationHold): Promise<ReservationCommandReceipt> {
+    return this.reservationCases.hold(input);
+  }
+
+  async releaseReservation(input: ReservationStep): Promise<ReservationCommandReceipt> {
+    return this.reservationCases.release(input);
+  }
+
+  async confirmReservation(input: ReservationConfirm): Promise<ReservationCommandReceipt> {
+    return this.reservationCases.confirm(input);
+  }
+
+  async cancelReservation(input: ReservationStep): Promise<ReservationCommandReceipt> {
+    return this.reservationCases.cancel(input);
+  }
+
+  async observeReservationPayment(input: ReservationPayment): Promise<ReservationCommandReceipt> {
+    return this.reservationCases.observePayment(input);
+  }
+
+  async bindReservationSettlement(input: ReservationBind): Promise<ReservationCommandReceipt> {
+    return this.reservationCases.bindSettlement(input);
+  }
+
+  async issueReservation(input: ReservationIssue): Promise<ReservationCommandReceipt> {
+    return this.reservationCases.issue(input);
+  }
+
+  async authorizeReservationAdmission(input: ReservationAuthorize): Promise<ReservationCommandReceipt> {
+    return this.reservationCases.authorizeAdmission(input);
+  }
+
+  async consumeReservation(input: ReservationConsume): Promise<ReservationCommandReceipt> {
+    return this.reservationCases.consume(input);
+  }
+
+  async reconcileReservation(input: ReservationStep): Promise<ReservationReconcileReceipt> {
+    return this.reservationCases.reconcile(input);
+  }
+
+  async viewReservation(reservationId: string): Promise<ReservationCaseView> {
+    return this.reservationCases.view(reservationId);
+  }
+
+  async viewReservationShow(showId: string): Promise<ReservationShowView> {
+    return this.reservationCases.viewShow(showId);
+  }
+
+  async rejectExternalReservation(kind: string): Promise<never> {
+    return this.reservationCases.rejectExternal(kind);
   }
 
   private requirePerformance(eventId: string): Performance {

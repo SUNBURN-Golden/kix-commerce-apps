@@ -25,6 +25,21 @@ export const COMMERCE_METHODS = [
   "reconcileSettlement",
   "viewSettlement",
   "rejectExternalSettlement",
+  "advanceReservationClock",
+  "registerReservationShow",
+  "holdReservation",
+  "releaseReservation",
+  "confirmReservation",
+  "cancelReservation",
+  "observeReservationPayment",
+  "bindReservationSettlement",
+  "issueReservation",
+  "authorizeReservationAdmission",
+  "consumeReservation",
+  "reconcileReservation",
+  "viewReservation",
+  "viewReservationShow",
+  "rejectExternalReservation",
 ] as const;
 
 export type CommerceMethod = (typeof COMMERCE_METHODS)[number];
@@ -144,5 +159,95 @@ export const COMMERCE_COMMAND_BINDINGS = {
     consideredAction: null,
     reason:
       "rejectExternalSettlement is an in-memory FSM refusal. The HTTP adapter does not bind it and does not send a catalogue command.",
+  },
+  advanceReservationClock: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "advanceReservationClock is a stub-local FSM clock. It is not the catalogue command advance_clock. The HTTP adapter does not invent a binding.",
+  },
+  registerReservationShow: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "registerReservationShow is a stub-local FSM command. It is not an OpenAPI catalogue command. The HTTP adapter does not invent a binding.",
+  },
+  holdReservation: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "holdReservation is a stub-local FSM command. It is not reserve_listing. The HTTP adapter does not map it onto a catalogue action.",
+  },
+  releaseReservation: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "releaseReservation is a stub-local FSM command. It is not release_inventory. The HTTP adapter does not map it onto a catalogue action.",
+  },
+  confirmReservation: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "confirmReservation is a stub-local FSM command. It is not capture. The HTTP adapter does not send capture.",
+  },
+  cancelReservation: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "cancelReservation is a stub-local FSM command. It is not cancel_event or any other catalogue command. The HTTP adapter does not invent a binding.",
+  },
+  observeReservationPayment: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "observeReservationPayment records a mock payment note. It is not observe_funding. The HTTP adapter does not send a catalogue command.",
+  },
+  bindReservationSettlement: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "bindReservationSettlement is a stub-local FSM command. It is not settle_capture. The HTTP adapter does not send settle_capture.",
+  },
+  issueReservation: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "issueReservation is a stub-local FSM command. It is not a catalogue issuance. The HTTP adapter does not send capture or settle_capture.",
+  },
+  authorizeReservationAdmission: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "authorizeReservationAdmission is a stub-local FSM command. It is not admit and it is not a venue scan endpoint. The HTTP adapter does not invent a binding.",
+  },
+  consumeReservation: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "consumeReservation is a stub-local FSM command. It is not admit and it does not scan a venue. The HTTP adapter does not invent a binding.",
+  },
+  reconcileReservation: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "reconcileReservation is a process-local stub check. It is not an OpenAPI catalogue command. The HTTP adapter does not invent a binding.",
+  },
+  viewReservation: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "viewReservation reads the stub case. The contract-only catalogue has no read command for an FSM reservation id.",
+  },
+  viewReservationShow: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "viewReservationShow reads the stub show. The contract-only catalogue has no read command for an FSM show id.",
+  },
+  rejectExternalReservation: {
+    status: "not-bound",
+    consideredAction: null,
+    reason:
+      "rejectExternalReservation is an in-memory FSM refusal. The HTTP adapter does not bind it and does not send a catalogue command.",
   },
 } as const satisfies Record<CommerceMethod, CommerceBinding>;
