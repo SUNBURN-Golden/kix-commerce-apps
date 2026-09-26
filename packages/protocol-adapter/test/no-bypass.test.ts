@@ -32,6 +32,8 @@ describe("protocol seam", () => {
     expect(combined).not.toContain("invokeLocalCall");
     expect(combined).not.toContain("fetch(");
     expect(combined).not.toContain("settlement_fsm");
+    expect(combined).not.toContain("reservation_fsm");
+    expect(combined).not.toContain("mock_gates");
     expect(combined).not.toContain("settle_capture");
 
     const protocolFiles = files.filter((file) => readFileSync(file, "utf8").includes("createProtocol"));

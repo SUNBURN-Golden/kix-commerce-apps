@@ -15,6 +15,20 @@ import {
   type Hold,
   type Performance,
   type ResaleListing,
+  type ReservationAuthorize,
+  type ReservationBind,
+  type ReservationCaseView,
+  type ReservationClock,
+  type ReservationCommandReceipt,
+  type ReservationConfirm,
+  type ReservationConsume,
+  type ReservationHold,
+  type ReservationIssue,
+  type ReservationPayment,
+  type ReservationReconcileReceipt,
+  type ReservationShowRegister,
+  type ReservationShowView,
+  type ReservationStep,
   type SettlementCaseView,
   type SettlementCommandReceipt,
   type SettlementInitiate,
@@ -139,6 +153,66 @@ export class HttpProtocolAdapter implements CommerceProtocol {
 
   rejectExternalSettlement(_kind: string): Promise<never> {
     return Promise.reject(unbound("rejectExternalSettlement"));
+  }
+
+  advanceReservationClock(_input: ReservationClock): Promise<ReservationCommandReceipt> {
+    return Promise.reject(unbound("advanceReservationClock"));
+  }
+
+  registerReservationShow(_input: ReservationShowRegister): Promise<ReservationCommandReceipt> {
+    return Promise.reject(unbound("registerReservationShow"));
+  }
+
+  holdReservation(_input: ReservationHold): Promise<ReservationCommandReceipt> {
+    return Promise.reject(unbound("holdReservation"));
+  }
+
+  releaseReservation(_input: ReservationStep): Promise<ReservationCommandReceipt> {
+    return Promise.reject(unbound("releaseReservation"));
+  }
+
+  confirmReservation(_input: ReservationConfirm): Promise<ReservationCommandReceipt> {
+    return Promise.reject(unbound("confirmReservation"));
+  }
+
+  cancelReservation(_input: ReservationStep): Promise<ReservationCommandReceipt> {
+    return Promise.reject(unbound("cancelReservation"));
+  }
+
+  observeReservationPayment(_input: ReservationPayment): Promise<ReservationCommandReceipt> {
+    return Promise.reject(unbound("observeReservationPayment"));
+  }
+
+  bindReservationSettlement(_input: ReservationBind): Promise<ReservationCommandReceipt> {
+    return Promise.reject(unbound("bindReservationSettlement"));
+  }
+
+  issueReservation(_input: ReservationIssue): Promise<ReservationCommandReceipt> {
+    return Promise.reject(unbound("issueReservation"));
+  }
+
+  authorizeReservationAdmission(_input: ReservationAuthorize): Promise<ReservationCommandReceipt> {
+    return Promise.reject(unbound("authorizeReservationAdmission"));
+  }
+
+  consumeReservation(_input: ReservationConsume): Promise<ReservationCommandReceipt> {
+    return Promise.reject(unbound("consumeReservation"));
+  }
+
+  reconcileReservation(_input: ReservationStep): Promise<ReservationReconcileReceipt> {
+    return Promise.reject(unbound("reconcileReservation"));
+  }
+
+  viewReservation(_reservationId: string): Promise<ReservationCaseView> {
+    return Promise.reject(unbound("viewReservation"));
+  }
+
+  viewReservationShow(_showId: string): Promise<ReservationShowView> {
+    return Promise.reject(unbound("viewReservationShow"));
+  }
+
+  rejectExternalReservation(_kind: string): Promise<never> {
+    return Promise.reject(unbound("rejectExternalReservation"));
   }
 
   /**

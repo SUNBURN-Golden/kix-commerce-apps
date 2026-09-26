@@ -5,7 +5,7 @@ Wave 7 adds marketing screens for ORIGINAL_32 labels M01–M05. Those screens ar
 This repository is the BeautifulMind-JT app host JunTae selected for product frontends.
 Protocol, Move, and settlement contracts stay in [BeautifulMind-JT/kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol).
 
-The UI is an operator desk over a protocol adapter, plus a separate marketing stub. The default adapter is an in-memory stub so the desk can run without a chain. The HTTP adapter is bound to the published contract-only local-call catalogue. It stays fail-closed unless an explicit base URL is configured, and desk methods stay not-bound when no command body matches. Neither adapter moves funds or disburses credit. The box office settlement case is that same stub: mock FSM phases, no live funds. The marketing stub does not call booking, resale, admission, or settlement writes.
+The UI is an operator desk over a protocol adapter, plus a separate marketing stub. The default adapter is an in-memory stub so the desk can run without a chain. The HTTP adapter is bound to the published contract-only local-call catalogue. It stays fail-closed unless an explicit base URL is configured, and desk methods stay not-bound when no command body matches. Neither adapter moves funds or disburses credit. The box office settlement case is that same stub: mock FSM phases, no live funds. Booking and admission read a mock reservation case from that stub: mock FSM phases, not live admission. The marketing stub does not call booking, resale, admission, or settlement writes.
 
 ## Non-goals
 
@@ -23,8 +23,8 @@ Charter labels are from Task 005. The app names those surfaces and calls an adap
 | Desk | Route | ORIGINAL_32 / wave | Adapter call |
 | --- | --- | --- | --- |
 | Box office | `/` | E04 client over the catalog; settlement case F01–F03 (Wave 3, mock FSM, 설계중) | `listPerformances`, settlement case commands (`initiateSettlement` through `viewSettlement`) |
-| Booking | `/booking/:eventId` | B01–B05 (Wave 4) and a rights reference from Wave 2 `rights` | `placeHold`, `releaseHold`, `confirmBooking` |
-| Admission | `/admission` | P03 admission gate, referencing Wave 2 `zk_gate` | `checkAdmission` |
+| Booking | `/booking/:eventId` | B01–B05 (Wave 4, 설계중) and charter label `wave4.booking.B01-B05.fsm` | `placeHold`, `releaseHold`, `confirmBooking`, plus stub reservation commands (`registerReservationShow` through `viewReservation`) |
+| Admission | `/admission` | P03 admission gate (설계중), referencing Wave 2 `zk_gate`, and charter label `wave4.admission.P03.fsm` | `checkAdmission`, plus `authorizeReservationAdmission` and `consumeReservation` |
 | Resale | `/resale` | R01–R05 (Wave 4) | `openResale`, `listResale`, `acceptResale` |
 
 Wave 7 marketing routes use the local stub in `apps/web/src/marketing`. They are not protocol calls, except a display-only `listPerformances` read on M02.
@@ -40,10 +40,12 @@ Wave 7 marketing routes use the local stub in `apps/web/src/marketing`. They are
 
 `confirmBooking` and `acceptResale` record `payment: "simulated-no-funds"`. The settlement panel renders a mock FSM case from the stub. It lists F01, F02, and F03 and does not compute shares. Limits are in [docs/settlement-depth-apps-bind.md](docs/settlement-depth-apps-bind.md).
 
+The booking and admission panels render a mock reservation case from the same stub. They list B01–B05 and P03 and do not compute inventory. Limits are in [docs/reservation-depth-apps-bind.md](docs/reservation-depth-apps-bind.md).
+
 `packages/protocol-adapter` is the only seam:
 
 - `StubProtocolAdapter` — default when `VITE_KIX_PROTOCOL_MODE` is unset or `stub`. In-memory fixtures. `proofMode` is `stub` because `zk_gate` is not evaluated here.
-- `HttpProtocolAdapter` — used only when `VITE_KIX_PROTOCOL_MODE=http` and `VITE_KIX_PROTOCOL_API_BASE` is an explicit http(s) URL. There is no default base URL. The client loads the vendored contract-only OpenAPI pin and rejects a wrong file sha256, a wrong `info.version`, or a contract status other than `contract-only`. Desk methods are not-bound: none of them has the same body as one of the 40 local-call commands, so they throw before any request. An explicit `invokeLocalCall` may POST `{ operationId, actor, action, body }` to the placeholder path `/x-kix-contract-only/local-call`. That path is marked contract-only in the published document. It is not a live HTTP service, and POST is the OpenAPI grammar slot rather than a published protocol method. `action` must be one of the 40 pinned command names. The `actor` string is only that local-call argument. It is not an authentication result, and this client defines no auth scheme. The client rejects booking payloads that are not marked `simulated-no-funds`, and it rejects settlement payloads that are not `mode: "mock"` with references `F01`, `F02`, `F03`.
+- `HttpProtocolAdapter` — used only when `VITE_KIX_PROTOCOL_MODE=http` and `VITE_KIX_PROTOCOL_API_BASE` is an explicit http(s) URL. There is no default base URL. The client loads the vendored contract-only OpenAPI pin and rejects a wrong file sha256, a wrong `info.version`, or a contract status other than `contract-only`. Desk methods are not-bound: none of them has the same body as one of the 40 local-call commands, so they throw before any request. An explicit `invokeLocalCall` may POST `{ operationId, actor, action, body }` to the placeholder path `/x-kix-contract-only/local-call`. That path is marked contract-only in the published document. It is not a live HTTP service, and POST is the OpenAPI grammar slot rather than a published protocol method. `action` must be one of the 40 pinned command names. The `actor` string is only that local-call argument. It is not an authentication result, and this client defines no auth scheme. The client rejects booking payloads that are not marked `simulated-no-funds`, settlement payloads that are not `mode: "mock"` with references `F01`, `F02`, `F03`, and reservation payloads that claim economic finality or leave mock mode.
 
 View-model field names (`eventId`, `rightsRef`, and the rest) stay local. They are not Move struct layouts and they are not command bodies.
 
@@ -60,7 +62,7 @@ The adapter vendors `packages/protocol-adapter/vendor/kix-protocol.contract-only
 | Source `protocol_contract.json` sha256 | `ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e` |
 | Status | `contract-only`. `x-kix-live-http-server` and `x-kix-production-endpoint` are false |
 
-The rest of kix-protocol is not vendored. This pin is not a live integration and not a production-conformance claim. The commit id is the recorded main tip of that artifact. Load time checks the file bytes. Settlement depth does not move this pin. The FSM dependency baseline is protocol main `85145eb33799a7c712890ff81708def8a7d61ee5` (feature commit `838370d9ce8e8aeeceeb94f3b4d212204e7ecf19`). Those lifecycle names are not catalogue commands.
+The rest of kix-protocol is not vendored. This pin is not a live integration and not a production-conformance claim. The commit id is the recorded main tip of that artifact. Load time checks the file bytes. Settlement depth does not move this pin. Reservation depth does not move this pin either. The settlement FSM dependency baseline is protocol main `85145eb33799a7c712890ff81708def8a7d61ee5` (feature commit `838370d9ce8e8aeeceeb94f3b4d212204e7ecf19`). The reservation FSM dependency baseline is protocol main `a47828dd4517c5a7397e09eb6b563a64e4265c82` (feature commit `2183d0b5b5010ec2692c43c277e99926ad9250db`). Those lifecycle names are not catalogue commands.
 
 ## Settlement depth
 
@@ -70,6 +72,16 @@ The authoritative machine remains `reference/settlement_f01_f03/settlement_fsm.p
 
 `HttpProtocolAdapter` leaves the case commands not-bound. It does not send `settle_capture`. Live payment, a live HTTP server, and production integration stay on HOLD. See [docs/settlement-depth-apps-bind.md](docs/settlement-depth-apps-bind.md).
 
+## Reservation depth
+
+Booking and admission read and command a mock reservation case through `@kix/protocol-adapter`. The stub keeps phases `HELD`, `RELEASED`, `CONFIRMED`, `CANCELLED`, `PAYMENT_NOTED`, `ISSUED`, `ADMISSION_AUTHORIZED`, and `CONSUMED`. `RELEASED`, `CANCELLED`, and `CONSUMED` are terminal. An expired hold stays `HELD` until release. The stub echoes idempotency keys, rejects a second consume, and reports reconcile `matched` only as a process-local journal check.
+
+`economicFinalityClaimed` stays false. A bound issue is refused unless the mock settlement view is `COMMITTED`. That observation is not economic finality. Slot rows are occupancy labels. They do not change catalog capacity and they are not MockGates arithmetic.
+
+The authoritative machine remains `reference/booking_resale_admission/reservation_fsm.py` in kix-protocol. The charter surfaces `wave4.booking.B01-B05.fsm` and `wave4.admission.P03.fsm` are labels for the desk case. B01–B05, R01–R05, and P03 stay 설계중. Provenance on the case is `MOCK_GATE_ONLY`.
+
+`HttpProtocolAdapter` leaves the reservation commands not-bound. It does not send `capture` or `settle_capture`, and it does not invent a venue scan. Live admission, venue inventory, production ticket issuance, and a live HTTP server stay on HOLD. This bind does not expand resale or credit. See [docs/reservation-depth-apps-bind.md](docs/reservation-depth-apps-bind.md).
+
 ## Run locally
 
 ```bash
@@ -78,7 +90,7 @@ npm test
 npm run dev
 ```
 
-The desk listens on port 5173. Booking state, the marketing session, and the mock settlement case stay in the browser for that page load. A reload clears them.
+The desk listens on port 5173. Booking state, the marketing session, the mock settlement case, and the mock reservation case stay in the browser for that page load. A reload clears them.
 
 The desk uses the stub. Setting `VITE_KIX_PROTOCOL_MODE=http` without `VITE_KIX_PROTOCOL_API_BASE` throws at startup. With a base URL, desk calls still throw `not-bound`. This repo does not start a server and does not ship a production base URL.
 
@@ -95,6 +107,10 @@ The desk uses the stub. Setting `VITE_KIX_PROTOCOL_MODE=http` without `VITE_KIX_
 - the stub settlement case walks mock FSM phases, rejects illegal and terminal mutations, and replays an idempotency key
 - HTTP settlement case commands stay not-bound and do not send `settle_capture`
 - settlement panel copy stays mock and does not use production-payment wording
+- the stub reservation case walks mock FSM phases, rejects illegal and terminal mutations, replays an idempotency key, and rejects a second consume
+- a bound reservation issue stays refused unless the mock settlement view is `COMMITTED`, and `economicFinalityClaimed` stays false
+- HTTP reservation and admission FSM commands stay not-bound and do not send `capture`, `settle_capture`, or a venue scan
+- reservation and admission panel copy stays mock and does not use production-admission wording
 - HTTP desk methods stay not-bound and do not call `/v1/commerce` or a credit route
 - the vendored OpenAPI pin rejects a wrong file sha256, `info.version`, or contract status
 - a local-call with an unknown `action` is rejected before any request

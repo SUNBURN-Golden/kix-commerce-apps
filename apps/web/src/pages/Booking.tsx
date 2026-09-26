@@ -3,6 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import type { Booking, Hold, Performance } from "@kix/protocol-adapter";
 import { formatWhen } from "../format";
 import { protocol } from "../protocol";
+import { useReservationDesk } from "../reservation-desk";
+import { ReservationPanel } from "./ReservationPanel";
 
 export function BookingPage() {
   const { eventId = "" } = useParams();
@@ -12,6 +14,7 @@ export function BookingPage() {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const reservation = useReservationDesk(eventId);
 
   useEffect(() => {
     let cancelled = false;
@@ -101,10 +104,14 @@ export function BookingPage() {
   return (
     <section>
       <header className="section-head">
-        <p className="eyebrow">Booking · B01–B05 · rights issued as a reference</p>
+        <p className="eyebrow">Booking · B01–B05 · mock FSM phase · rights issued as a reference</p>
         <h2>{performance.title}</h2>
         <p className="muted">
           {performance.venue} · {formatWhen(performance.startsAt)} · {performance.remainingCapacity} still open
+        </p>
+        <p className="muted">
+          The hold form is the Wave 4 pointer. The reservation case is a simulated mock phase. Not live admission.
+          B01–B05 stay 설계중.
         </p>
       </header>
       {error ? (
@@ -136,7 +143,10 @@ export function BookingPage() {
           </dl>
           <p className="muted">Surfaces: {booking.surfaces.join(", ")}</p>
           <div className="row-actions">
-            <Link className="button" to={`/admission?rightsRef=${encodeURIComponent(booking.rightsRef)}`}>
+            <Link
+              className="button"
+              to={`/admission?rightsRef=${encodeURIComponent(booking.rightsRef)}&eventId=${encodeURIComponent(eventId)}`}
+            >
               Check admission
             </Link>
             <Link className="ghost button" to={`/resale?bookingId=${encodeURIComponent(booking.bookingId)}`}>
@@ -192,6 +202,19 @@ export function BookingPage() {
           </div>
         </form>
       )}
+      <ReservationPanel
+        variant="booking"
+        eventTitle={performance.title}
+        view={reservation.view}
+        showRegistered={reservation.showRegistered}
+        eventReady={eventId.trim().length > 0}
+        error={reservation.error}
+        pending={reservation.pending}
+        onCommand={(command) => void reservation.run(command)}
+      />
+      <p>
+        <Link to={`/admission?eventId=${encodeURIComponent(eventId)}`}>Mock admission phase</Link>
+      </p>
     </section>
   );
 }

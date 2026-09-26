@@ -6,6 +6,20 @@ import type {
   Hold,
   Performance,
   ResaleListing,
+  ReservationAuthorize,
+  ReservationBind,
+  ReservationCaseView,
+  ReservationClock,
+  ReservationCommandReceipt,
+  ReservationConfirm,
+  ReservationConsume,
+  ReservationHold,
+  ReservationIssue,
+  ReservationPayment,
+  ReservationReconcileReceipt,
+  ReservationShowRegister,
+  ReservationShowView,
+  ReservationStep,
   SettlementCaseView,
   SettlementCommandReceipt,
   SettlementInitiate,
@@ -47,6 +61,27 @@ export interface CommerceProtocol {
   reconcileSettlement(input: SettlementStep): Promise<SettlementReconcileReceipt>;
   viewSettlement(settlementId: string): Promise<SettlementCaseView>;
   rejectExternalSettlement(kind: string): Promise<never>;
+  /**
+   * Stub-local reservation case commands.
+   * These names are not OpenAPI operations. HttpProtocolAdapter leaves them not-bound.
+   * The authoritative FSM stays in kix-protocol. This app does not issue a live ticket
+   * and does not scan a venue.
+   */
+  advanceReservationClock(input: ReservationClock): Promise<ReservationCommandReceipt>;
+  registerReservationShow(input: ReservationShowRegister): Promise<ReservationCommandReceipt>;
+  holdReservation(input: ReservationHold): Promise<ReservationCommandReceipt>;
+  releaseReservation(input: ReservationStep): Promise<ReservationCommandReceipt>;
+  confirmReservation(input: ReservationConfirm): Promise<ReservationCommandReceipt>;
+  cancelReservation(input: ReservationStep): Promise<ReservationCommandReceipt>;
+  observeReservationPayment(input: ReservationPayment): Promise<ReservationCommandReceipt>;
+  bindReservationSettlement(input: ReservationBind): Promise<ReservationCommandReceipt>;
+  issueReservation(input: ReservationIssue): Promise<ReservationCommandReceipt>;
+  authorizeReservationAdmission(input: ReservationAuthorize): Promise<ReservationCommandReceipt>;
+  consumeReservation(input: ReservationConsume): Promise<ReservationCommandReceipt>;
+  reconcileReservation(input: ReservationStep): Promise<ReservationReconcileReceipt>;
+  viewReservation(reservationId: string): Promise<ReservationCaseView>;
+  viewReservationShow(showId: string): Promise<ReservationShowView>;
+  rejectExternalReservation(kind: string): Promise<never>;
 }
 
 export const CONSUMED_SURFACES: SurfaceId[] = [
@@ -55,6 +90,8 @@ export const CONSUMED_SURFACES: SurfaceId[] = [
   "wave3.settlement.F01-F03",
   "wave3.settlement.F01-F03.fsm",
   "wave4.booking.B01-B05",
+  "wave4.booking.B01-B05.fsm",
   "wave4.resale.R01-R05",
   "wave4.admission.P03",
+  "wave4.admission.P03.fsm",
 ];

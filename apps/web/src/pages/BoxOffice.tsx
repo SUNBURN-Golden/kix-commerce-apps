@@ -114,6 +114,9 @@ export function BoxOfficePage() {
       <header className="section-head">
         <p className="eyebrow">Wave 4 catalog · Wave 2 rights issued at booking</p>
         <h2>Tonight’s window</h2>
+        <p className="muted">
+          Booking and admission can open a simulated reservation phase on the adapter stub. Not live admission.
+        </p>
       </header>
       {loadError ? (
         <p className="alert" role="alert">

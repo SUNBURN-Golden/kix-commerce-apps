@@ -159,6 +159,229 @@ export interface SettlementReconcileReceipt extends SettlementCommandReceipt {
   matched: true;
 }
 
+/**
+ * Mock FSM phase names from kix-protocol reservation_fsm.py.
+ * B01–B05, R01–R05, and P03 stay 설계중. These strings are not OpenAPI commands.
+ */
+export const RESERVATION_PHASES = [
+  "HELD",
+  "RELEASED",
+  "CONFIRMED",
+  "CANCELLED",
+  "PAYMENT_NOTED",
+  "ISSUED",
+  "ADMISSION_AUTHORIZED",
+  "CONSUMED",
+] as const;
+
+export type ReservationPhase = (typeof RESERVATION_PHASES)[number];
+
+export const RESERVATION_PROVENANCE = "MOCK_GATE_ONLY" as const;
+
+export const RESERVATION_REFERENCES = ["B01", "B02", "B03", "B04", "B05"] as const;
+
+export const RESERVATION_ADMISSION_REFERENCE = "P03" as const;
+
+export const RESERVATION_SLOT_STATES = ["FREE", "RESERVED", "ISSUED"] as const;
+
+export type ReservationSlotState = (typeof RESERVATION_SLOT_STATES)[number];
+
+export const RESERVATION_SETTLEMENT_GATES = ["UNBOUND", "BOUND", "MOCK_COMMIT_OBSERVED"] as const;
+
+export type ReservationSettlementGate = (typeof RESERVATION_SETTLEMENT_GATES)[number];
+
+export const RESERVATION_ISSUE_STATUSES = ["unissued", "issued", "consumed"] as const;
+
+export type ReservationIssueStatus = (typeof RESERVATION_ISSUE_STATUSES)[number];
+
+const RESERVATION_PHASE_SET: ReadonlySet<string> = new Set(RESERVATION_PHASES);
+
+export function isReservationPhase(value: unknown): value is ReservationPhase {
+  return typeof value === "string" && RESERVATION_PHASE_SET.has(value);
+}
+
+export interface ReservationClock {
+  idempotencyKey: string;
+  /** ISO-8601 timestamp for the stub's logical clock. Not a venue clock. */
+  nowAt: string;
+}
+
+export interface ReservationShowRegister {
+  showId: string;
+  eventId: string;
+  idempotencyKey: string;
+  /** Slot labels declared by the desk. Not a capacity calculation. */
+  slots: readonly string[];
+}
+
+export interface ReservationHold {
+  reservationId: string;
+  showId: string;
+  slot: string;
+  buyerRole: string;
+  /** ISO-8601 hold window. Expiry does not release the slot by itself. */
+  expiresAt: string;
+  idempotencyKey: string;
+}
+
+export interface ReservationStep {
+  reservationId: string;
+  idempotencyKey: string;
+}
+
+export interface ReservationConfirm {
+  orderId: string;
+  reservationId: string;
+  idempotencyKey: string;
+}
+
+export interface ReservationPayment {
+  orderId: string;
+  idempotencyKey: string;
+  /** Opaque mock reference. Not a provider payment id. */
+  paymentRef: string;
+}
+
+export interface ReservationBind {
+  reservationId: string;
+  settlementId: string;
+  idempotencyKey: string;
+}
+
+export interface ReservationIssue {
+  issuanceId: string;
+  orderId: string;
+  idempotencyKey: string;
+}
+
+export interface ReservationAuthorize {
+  admissionId: string;
+  rightId: string;
+  idempotencyKey: string;
+}
+
+export interface ReservationConsume {
+  consumeId: string;
+  rightId: string;
+  idempotencyKey: string;
+}
+
+export interface ReservationSlotView {
+  slot: string;
+  state: ReservationSlotState;
+  reservationId: string | null;
+  rightId: string | null;
+}
+
+/**
+ * Desk view of one declared mock show.
+ * Slot rows are occupancy labels. They are not catalog capacity and not MockGates arithmetic.
+ */
+export interface ReservationShowView {
+  mode: "mock";
+  surface: typeof SURFACES.bookingFsm;
+  provenance: typeof RESERVATION_PROVENANCE;
+  showId: string;
+  eventId: string;
+  /** Stub logical clock in milliseconds. Not a venue clock. */
+  logicalTimeMs: number;
+  slots: ReservationSlotView[];
+  note: string;
+}
+
+/**
+ * Desk view of one in-process mock reservation.
+ * No prices and no inventory math. Protocol truth stays in kix-protocol.
+ */
+export interface ReservationCaseView {
+  mode: "mock";
+  surface: typeof SURFACES.bookingFsm;
+  admissionSurface: typeof SURFACES.admissionFsm;
+  references: typeof RESERVATION_REFERENCES;
+  admissionReference: typeof RESERVATION_ADMISSION_REFERENCE;
+  provenance: typeof RESERVATION_PROVENANCE;
+  /** Labels the mock machine. Not legal, venue, or chain authority. */
+  lifecycleAuthority: "IN_MEMORY_FSM";
+  reservationId: string;
+  phase: ReservationPhase;
+  terminal: boolean;
+  showId: string;
+  eventId: string;
+  slot: string;
+  slotState: ReservationSlotState;
+  /** True when the live slot row still names this case. */
+  slotHeldByCase: boolean;
+  buyerRole: string;
+  expiresAt: string;
+  /** True only while a pre-issue phase is at or past its window. Release is still required. */
+  expired: boolean;
+  orderId: string | null;
+  paymentRef: string | null;
+  issuanceId: string | null;
+  rightId: string | null;
+  issueStatus: ReservationIssueStatus;
+  admissionId: string | null;
+  consumeId: string | null;
+  settlementId: string | null;
+  settlementGate: ReservationSettlementGate;
+  /** True only after issue observed a mock settlement view in COMMITTED. */
+  mockSettlementCommitObserved: boolean;
+  /** Ticket evidence is not economic finality. This flag stays false. */
+  economicFinalityClaimed: false;
+  fundsExecuted: false;
+  chainIssued: false;
+  admissionRoutingProduction: false;
+  externalPayment: "UNSUPPORTED";
+  externalAdmission: "UNSUPPORTED";
+  /** Stub logical clock in milliseconds. Not a venue clock. */
+  logicalTimeMs: number;
+  /** Echo of the last accepted idempotency key. */
+  idempotencyKey: string;
+  /** Last rejected command code in this process. Not journaled. */
+  lastRejectCode: string | null;
+  /**
+   * Process-local journal replay flag.
+   * Null until reconcile succeeds here. Not admission routing and not chain finality.
+   */
+  reconcileMatched: boolean | null;
+  note: string;
+}
+
+export type ReservationLifecycleCommand =
+  | "set_clock"
+  | "register_show"
+  | "hold"
+  | "release"
+  | "confirm"
+  | "cancel"
+  | "observe_payment"
+  | "bind_settlement"
+  | "issue"
+  | "authorize_admission"
+  | "consume"
+  | "reconcile";
+
+export interface ReservationCommandReceipt {
+  duplicate: boolean;
+  applied: ReservationLifecycleCommand | null;
+  provenance: typeof RESERVATION_PROVENANCE;
+  economicFinalityClaimed: false;
+  fundsExecuted: false;
+  externalPayment: "UNSUPPORTED";
+  externalAdmission: "UNSUPPORTED";
+  /** Echo of the idempotency key on this call. */
+  idempotencyKey: string;
+  logicalTimeMs: number;
+  reservation: ReservationCaseView | null;
+  show: ReservationShowView | null;
+}
+
+export interface ReservationReconcileReceipt extends ReservationCommandReceipt {
+  applied: "reconcile" | null;
+  /** True only when this process's journal replays to the same case. */
+  matched: true;
+}
+
 export interface AdapterMeta {
   adapter: "stub" | "http";
   liveChain: false;
