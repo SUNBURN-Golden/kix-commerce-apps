@@ -14,6 +14,7 @@ import {
   echoIntegrationGateHeaders,
   isPinnedAction,
 } from "../src/index.js";
+import { localCallReceipt } from "./support/receipt.js";
 
 const SHOW = "show_evt_lanterns";
 const EVENT = "evt_lanterns";
@@ -496,6 +497,34 @@ describe("stub resale case", () => {
     expect(isPinnedAction("accept_trade")).toBe(true);
     expect(isPinnedAction("settle_capture")).toBe(true);
   });
+
+  it("keeps reconcile matched after the reservation moves on to admission and consume", async () => {
+    const adapter = protocol();
+    await issueRight(adapter);
+    await adapter.adoptResaleIssued(adoptInput());
+    await adapter.listResaleCase(listInput());
+    await adapter.cancelResaleListing({ listingId: LISTING, sellerRole: SELLER, idempotencyKey: "cancel-1" });
+    await expect(adapter.reconcileResale({ listingId: LISTING, idempotencyKey: "recon-before" })).resolves.toMatchObject({
+      matched: true,
+    });
+
+    await adapter.authorizeReservationAdmission({ admissionId: ADMIT, rightId: ISSUE, idempotencyKey: "admit-1" });
+    await expect(adapter.reconcileResale({ listingId: LISTING, idempotencyKey: "recon-admitted" })).resolves.toMatchObject({
+      matched: true,
+    });
+
+    await adapter.consumeReservation({ consumeId: CONSUME, rightId: ISSUE, idempotencyKey: "consume-1" });
+    await expect(adapter.reconcileResale({ listingId: LISTING, idempotencyKey: "recon-consumed" })).resolves.toMatchObject({
+      matched: true,
+    });
+    const view = await adapter.viewResaleCase(LISTING);
+    expect(view.reconcileMatched).toBe(true);
+    expect(view.lastRejectCode).toBeNull();
+
+    await expect(adapter.listResaleCase(listInput({ listingId: "list-2" }))).rejects.toMatchObject({
+      code: "ALREADY_CONSUMED",
+    });
+  });
 });
 
 describe("http resale commands stay not-bound", () => {
@@ -582,7 +611,7 @@ describe("resale payload guards", () => {
         body: commandBody,
       });
 
-    responseBody = {
+    responseBody = localCallReceipt("op-resale-ok", "close_sales", {
       listingId: LISTING,
       mode: "mock",
       phase: "TRANSFERRED",
@@ -594,11 +623,9 @@ describe("resale payload guards", () => {
       externalMarketplace: "UNSUPPORTED",
       priorCredentialInvalidated: true,
       note: "Simulated mock phase. Not live marketplace.",
-    };
+    });
     await expect(call("op-resale-ok")).resolves.toMatchObject({
-      phase: "TRANSFERRED",
-      economicFinalityClaimed: false,
-      mode: "mock",
+      result: { phase: "TRANSFERRED", economicFinalityClaimed: false, mode: "mock" },
     });
 
     responseBody = {

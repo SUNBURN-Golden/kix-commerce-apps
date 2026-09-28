@@ -11,7 +11,9 @@ import {
   admissionDeskState,
   echoIntegrationGateHeaders,
 } from "../src/index.js";
-import { assertReviewedCheckout, protocolRoot, startGate, stopGate } from "./support/reviewed-gate.js";
+import { assertReviewedCheckout, protocolRoot, REVIEWED_GATE_RUNS, startGate, stopGate } from "./support/reviewed-gate.js";
+
+const describeGate = REVIEWED_GATE_RUNS ? describe.sequential : describe.skip;
 
 /**
  * Reference Core.SCOPE from kix-protocol. The string is the in-memory fixture
@@ -117,7 +119,7 @@ describe("http mode fail-closed without a server", () => {
   });
 });
 
-describe.sequential("loopback integration gate", () => {
+describeGate("loopback integration gate", () => {
   let baseUrl = "";
   let child: ChildProcess | undefined;
   const calls: string[] = [];

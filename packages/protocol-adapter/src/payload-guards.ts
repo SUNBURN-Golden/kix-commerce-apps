@@ -45,25 +45,36 @@ const PRODUCTION_CREDIT_COPY = [
 ];
 
 /**
+ * Deepest nesting this client walks in a remote payload. Deeper payloads are
+ * refused instead of being walked partway.
+ */
+const MAX_PAYLOAD_DEPTH = 32;
+
+/**
  * Fail-closed checks for any payload this client is willing to treat as a
  * booking or a settlement preview. A published Core receipt is the reference
  * model result. It is not a desk FSM view and it is not a production claim.
+ * Every nested object is checked, not only the top level and result.
  */
-export function enforceRemotePayloadGuards(
+export function enforceRemotePayloadGuards(value: unknown): void {
+  rejectTransportProductionClaims(value, 0);
+  scanDeep(value, 0);
+}
+
+/**
+ * A successful local call must answer with exactly one published Core
+ * receipt for the same operationId and action. An empty body, a bare value,
+ * or a receipt with extra keys is not a success.
+ */
+export function assertLocalCallReceipt(
   value: unknown,
-  expected?: { action: string; operationId: string },
+  expected: { action: string; operationId: string },
 ): void {
-  rejectTransportProductionClaims(value);
-  if (isCatalogueReceipt(value)) {
-    if (expected && (value.action !== expected.action || value.operationId !== expected.operationId)) {
-      throw new ProtocolError("Integration gate receipt does not match the local call.", "GATE_STATUS");
-    }
-    scan(value.result);
-    return;
+  if (!isCatalogueReceipt(value)) {
+    throw new ProtocolError("Integration gate success was not a published local-call receipt.", "GATE_STATUS");
   }
-  scan(value);
-  if (isRecord(value) && "result" in value) {
-    scan(value.result);
+  if (value.action !== expected.action || value.operationId !== expected.operationId) {
+    throw new ProtocolError("Integration gate receipt does not match the local call.", "GATE_STATUS");
   }
 }
 
@@ -96,9 +107,18 @@ function sameKeys(value: Record<string, unknown>, expected: readonly string[]): 
   return keys.length === expected.length && expected.every((key) => keys.includes(key));
 }
 
-function rejectTransportProductionClaims(value: unknown): void {
+function assertDepth(depth: number): void {
+  if (depth > MAX_PAYLOAD_DEPTH) {
+    throw new ProtocolError("Remote payload is nested too deeply.", "GATE_STATUS");
+  }
+}
+
+function rejectTransportProductionClaims(value: unknown, depth: number): void {
+  assertDepth(depth);
   if (Array.isArray(value)) {
-    value.forEach(rejectTransportProductionClaims);
+    for (const item of value) {
+      rejectTransportProductionClaims(item, depth + 1);
+    }
     return;
   }
   if (!isRecord(value)) {
@@ -118,7 +138,24 @@ function rejectTransportProductionClaims(value: unknown): void {
     throw new ProtocolError("Remote payload claims a production endpoint.", "PRODUCTION_ENDPOINT");
   }
   for (const child of Object.values(value)) {
-    rejectTransportProductionClaims(child);
+    rejectTransportProductionClaims(child, depth + 1);
+  }
+}
+
+function scanDeep(value: unknown, depth: number): void {
+  assertDepth(depth);
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      scanDeep(item, depth + 1);
+    }
+    return;
+  }
+  if (!isRecord(value)) {
+    return;
+  }
+  scan(value);
+  for (const child of Object.values(value)) {
+    scanDeep(child, depth + 1);
   }
 }
 

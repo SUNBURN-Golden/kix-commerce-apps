@@ -372,7 +372,7 @@ export class SettlementCaseStore {
     return {
       mode: "mock",
       surface: SURFACES.settlementFsm,
-      references: SETTLEMENT_REFERENCES,
+      references: [...SETTLEMENT_REFERENCES],
       provenance: SETTLEMENT_PROVENANCE,
       lifecycleAuthority: "IN_MEMORY_FSM",
       settlementId: record.settlementId,

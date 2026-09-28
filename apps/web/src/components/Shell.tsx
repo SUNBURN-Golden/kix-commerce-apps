@@ -1,8 +1,11 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { CREDIT_BOUNDARY, ProtocolError, type TransportObservation } from "@kix/protocol-adapter";
 import { protocol } from "../protocol";
 import { preferFresh, transportBannerText, type HeldObservation } from "../transport-status";
+
+/** How often integration HTTP reads the loopback probes again. The stub is not polled. */
+const TRANSPORT_PROBE_MS = 15_000;
 
 const links = [
   { to: "/", label: "Box office", end: true },
@@ -17,50 +20,75 @@ export function Shell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const onMarketing = location.pathname === "/marketing" || location.pathname.startsWith("/marketing/");
   const [held, setHeld] = useState<HeldObservation | null>(null);
+  const generation = useRef(0);
+  const probing = useRef(false);
 
   useEffect(() => {
     document.title = onMarketing ? "KIX Marketing · 설계중" : "KIX Box Office";
   }, [onMarketing]);
 
   useEffect(() => {
-    let generation = 0;
     let cancelled = false;
-    const ticket = ++generation;
-    protocol
-      .observeTransport()
-      .then((observation) => {
-        if (cancelled) {
-          return;
-        }
-        setHeld((current) => preferFresh(current, { generation: ticket, observation }));
-      })
-      .catch((error: unknown) => {
-        if (cancelled) {
-          return;
-        }
-        const code = error instanceof ProtocolError && error.code ? error.code : "GATE_UNAVAILABLE";
-        const observation: TransportObservation = {
-          environment: meta.environment,
-          state: meta.environment === "stub" ? "local" : "unavailable",
-          productionReadiness: false,
-          productionConformance: false,
-          protocolTruth: false,
-          publicDeploy: false,
-          durable: false,
-          localFileJournal: null,
-          fallbackToStub: false,
-          retry: false,
-          requestId: error instanceof ProtocolError ? (error.requestId ?? null) : null,
-          correlationId: error instanceof ProtocolError ? (error.correlationId ?? null) : null,
-          code,
-          detail: "Integration HTTP stayed selected. The desk did not fall back to the stub.",
-        };
-        setHeld((current) => preferFresh(current, { generation: ticket, observation }));
-      });
+    // Each probe gets a newer generation than the last, so a late reply from an
+    // older probe cannot replace a newer state. A timed probe waits while one
+    // is still in flight or the tab is hidden.
+    const probe = (timed: boolean) => {
+      if (timed && (probing.current || document.hidden)) {
+        return;
+      }
+      probing.current = true;
+      const ticket = ++generation.current;
+      protocol
+        .observeTransport()
+        .then((observation) => {
+          if (cancelled) {
+            return;
+          }
+          setHeld((current) => preferFresh(current, { generation: ticket, observation }));
+        })
+        .catch((error: unknown) => {
+          if (cancelled) {
+            return;
+          }
+          const code = error instanceof ProtocolError && error.code ? error.code : "GATE_UNAVAILABLE";
+          const observation: TransportObservation = {
+            environment: meta.environment,
+            state: meta.environment === "stub" ? "local" : "unavailable",
+            productionReadiness: false,
+            productionConformance: false,
+            protocolTruth: false,
+            publicDeploy: false,
+            durable: false,
+            localFileJournal: null,
+            fallbackToStub: false,
+            retry: false,
+            requestId: error instanceof ProtocolError ? (error.requestId ?? null) : null,
+            correlationId: error instanceof ProtocolError ? (error.correlationId ?? null) : null,
+            code,
+            detail: "Integration HTTP stayed selected. The desk did not fall back to the stub.",
+          };
+          setHeld((current) => preferFresh(current, { generation: ticket, observation }));
+        })
+        .finally(() => {
+          // Only the newest probe clears the flag. An older one finishing
+          // late must not open the way while a newer one is in flight.
+          if (generation.current === ticket) {
+            probing.current = false;
+          }
+        });
+    };
+    probe(false);
+    if (meta.environment === "stub") {
+      return () => {
+        cancelled = true;
+      };
+    }
+    const timer = setInterval(() => probe(true), TRANSPORT_PROBE_MS);
     return () => {
       cancelled = true;
+      clearInterval(timer);
     };
-  }, [meta.environment]);
+  }, [meta.environment, location.pathname]);
 
   const transport = transportBannerText(meta.environment, held?.observation ?? null);
 

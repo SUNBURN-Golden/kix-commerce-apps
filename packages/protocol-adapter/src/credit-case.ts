@@ -741,7 +741,7 @@ export class CreditCaseStore {
     return {
       mode: "mock",
       surface: SURFACES.creditFsm,
-      references: CREDIT_REFERENCES,
+      references: [...CREDIT_REFERENCES],
       provenance: CREDIT_PROVENANCE,
       lifecycleAuthority: "IN_MEMORY_FSM",
       exposureLedger: "MOCK_EXPOSURE",

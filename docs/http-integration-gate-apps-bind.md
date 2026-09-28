@@ -6,7 +6,7 @@ The OpenAPI bytes come from feature `c7238bc24a399a6cabbab87ac23dbfd7e9c252dd`, 
 
 ## What HTTP mode does
 
-`createProtocol({ mode: "http", baseUrl })` builds `HttpProtocolAdapter` only when `baseUrl` is an explicit `http://127.0.0.1:<port>` origin. There is no default host. `https`, `localhost`, a missing port, a path, and any other host are rejected.
+`createProtocol({ mode: "http", baseUrl })` builds `HttpProtocolAdapter` only when `baseUrl` is an explicit `http://127.0.0.1:<port>` origin. There is no default host. `https`, `localhost`, a missing or default port, port 0, a path, and any other host are rejected.
 
 The only protocol request is:
 
@@ -19,6 +19,10 @@ Desk methods stay not-bound. Their arguments are not those command bodies. The a
 `GET /health` and `GET /ready` are process probes on the adapter. Health is liveness. Ready means the in-memory reference core loaded. Ready is not production readiness. The probes are not OpenAPI path items.
 
 Responses must carry `X-Kix-Transport: integration-gate`, `X-Kix-Production-Endpoint: false`, `X-Kix-Protocol-Truth: false`, and `X-Kix-Production-Conformance: false`. The client sends `X-Request-Id` and `X-Correlation-Id` and requires the response to echo them. A mismatch is `STALE_RESPONSE`. Any other transport marker is rejected. HTTP 422 and any body with `rejected: true` stay rejects. A closed port is `GATE_UNAVAILABLE`. The client does not retry and does not fall back to the stub.
+
+The client does not follow redirects. It asks fetch for `redirect: "manual"`, and a 3xx status, an opaque redirect, a followed redirect, or a response from another origin is `GATE_TRANSPORT`. Nothing is sent to the redirect target. Each exchange, including the body read, has a client limit of twice the pinned gate `requestTimeoutSeconds` (10 seconds). Past that it is `REQUEST_TIMEOUT`. The client does not retry, and the `operationId` may already have applied. A body cut off mid-read is `GATE_UNAVAILABLE`.
+
+A successful local call must answer with exactly one published receipt, `{ domain, operationId, sequence, action, result }`, for the same `operationId` and `action`. An empty body, a bare value, a receipt for another call, or a receipt with extra keys is `GATE_STATUS`. The payload guards check every nested object and array in the response, not only the top level and `result`. A payload nested deeper than 32 levels is refused.
 
 ## Pins
 
@@ -51,6 +55,8 @@ The process listens on `127.0.0.1` only. Then point this app at that origin:
 VITE_KIX_PROTOCOL_MODE=http VITE_KIX_PROTOCOL_API_BASE=http://127.0.0.1:8765 npm run dev
 ```
 
+The reviewed gate does not answer CORS. A preflight `OPTIONS` gets 405, and no response carries `Access-Control-Allow-Origin`. The adapter sends `X-Request-Id` and `X-Correlation-Id`, so every browser request needs that preflight. In a browser the desk banner therefore reads unavailable and the desk stays on integration HTTP. It does not fall back to the stub. The Node adapter tests are the path that exercises the live gate. A browser path needs a gate change in kix-protocol. This app does not add a proxy around it.
+
 `GET http://127.0.0.1:8765/health` answers when the process is up. `GET http://127.0.0.1:8765/ready` answers when the in-memory core is accepting calls. Desk commands stay not-bound. `presentAdmission` is the one desk read that calls `GET /health` in HTTP mode. It does not post `admit`. The box office, booking, admission, resale, and credit panels keep their mock cases on the stub. They do not become live payment, live admission, a live marketplace, or live credit when the gate is up.
 
 ## What the adapter tests run
@@ -61,7 +67,7 @@ VITE_KIX_PROTOCOL_MODE=http VITE_KIX_PROTOCOL_API_BASE=http://127.0.0.1:8765 npm
 python3 -m integration_gate --port 0
 ```
 
-The working directory is `KIX_PROTOCOL_ROOT`, or `../kix-protocol-http-gate` when that checkout is present. The test requires that checkout's `HEAD` to be the merge SHA above, requires a clean worktree, and requires the OpenAPI file hashes to match the vendored pins. The process prints `integration-gate listening 127.0.0.1 <port>`. The test uses that port and stops the process when it finishes.
+The working directory is `KIX_PROTOCOL_ROOT`, or `../kix-protocol-http-gate` when that checkout is present. The test requires that checkout's `HEAD` to be the merge SHA above, requires a clean worktree, and requires the OpenAPI file hashes to match the vendored pins. The process prints `integration-gate listening 127.0.0.1 <port>`. The test uses that port and stops the process when it finishes. On a local run with no checkout found, the live gate suites are skipped with a warning and the rest of `npm test` still runs. A set `KIX_PROTOCOL_ROOT`, `CI=true`, or `KIX_REQUIRE_GATE=1` makes a missing checkout a failure, so a wrong path or a failed checkout step does not pass quietly. `KIX_REQUIRE_GATE=0` allows the skip.
 
 Against that process the test calls:
 

@@ -158,11 +158,22 @@ interface HoldRecord {
   listingId: string;
 }
 
+/**
+ * Upstream views one command read while it applied. Reconcile replays against
+ * these, so a later admission or consume on the reservation does not change
+ * whether an earlier resale command still replays.
+ */
+interface ObservedAuthorities {
+  reservations: Map<string, ReservationAuthority>;
+  settlements: Map<string, SettlementAuthority>;
+}
+
 interface JournalEntry {
   op: JournalOp;
   idempotencyKey: string;
   subjectId: string;
   body: Record<string, string>;
+  observed: ObservedAuthorities;
 }
 
 interface StoredCall {
@@ -185,6 +196,7 @@ export class ResaleCaseStore {
   private readonly paymentRefs = new Set<string>();
   private readonly journal: JournalEntry[] = [];
   private readonly idempotency = new Map<string, StoredCall>();
+  private observing: ObservedAuthorities | null = null;
 
   constructor(
     private readonly reservationView: (reservationId: string) => ReservationAuthority,
@@ -375,8 +387,13 @@ export class ResaleCaseStore {
       (key, request) => {
         const listingId = ident(input.listingId);
         const listing = this.requireListing(listingId);
-        const rebuilt = new ResaleCaseStore(this.reservationView, this.settlementView);
+        let replaying: JournalEntry | null = null;
+        const rebuilt = new ResaleCaseStore(
+          (reservationId) => recordedView(replaying?.observed.reservations, reservationId, "UNKNOWN_RESERVATION"),
+          (settlementId) => recordedView(replaying?.observed.settlements, settlementId, "UNKNOWN_SETTLEMENT"),
+        );
         for (const entry of this.journal) {
+          replaying = entry;
           rebuilt.replay(entry);
         }
         if (rebuilt.canonical() !== this.canonical()) {
@@ -418,7 +435,7 @@ export class ResaleCaseStore {
     return {
       mode: "mock",
       surface: SURFACES.resaleFsm,
-      references: RESALE_REFERENCES,
+      references: [...RESALE_REFERENCES],
       provenance: RESALE_PROVENANCE,
       lifecycleAuthority: "IN_MEMORY_FSM",
       rightId,
@@ -770,7 +787,7 @@ export class ResaleCaseStore {
     }
     let view: SettlementAuthority;
     try {
-      view = this.settlementView(listing.settlementId);
+      view = this.settlementAuthority(listing.settlementId);
     } catch (error) {
       if (error instanceof ProtocolError && typeof error.code === "string") {
         throw resaleError(error.code);
@@ -809,9 +826,21 @@ export class ResaleCaseStore {
     return view;
   }
 
+  private reservationAuthority(reservationId: string): ReservationAuthority {
+    const view = this.reservationView(reservationId);
+    this.observing?.reservations.set(reservationId, structuredClone(view));
+    return view;
+  }
+
+  private settlementAuthority(settlementId: string): SettlementAuthority {
+    const view = this.settlementView(settlementId);
+    this.observing?.settlements.set(settlementId, structuredClone(view));
+    return view;
+  }
+
   private readReservation(reservationId: string): ReservationAuthority {
     try {
-      return this.reservationView(reservationId);
+      return this.reservationAuthority(reservationId);
     } catch (error) {
       if (error instanceof ProtocolError && (error.code === "UNKNOWN_RESERVATION" || error.code === "UNKNOWN_SHOW")) {
         throw resaleError("TICKET_NOT_ISSUED");
@@ -849,6 +878,7 @@ export class ResaleCaseStore {
       idempotencyKey: key,
       subjectId,
       body: { ...journalBody },
+      observed: structuredClone(this.observing ?? emptyObserved()),
     });
     const receipt = this.commandReceipt(false, op, key, listingId, rightId, evidence);
     this.idempotency.set(key, { request, result: structuredClone(receipt), error: null });
@@ -908,6 +938,7 @@ export class ResaleCaseStore {
       }
       return replay;
     }
+    this.observing = emptyObserved();
     try {
       return execute(key, request);
     } catch (error) {
@@ -921,6 +952,8 @@ export class ResaleCaseStore {
         this.noteReject(safeTarget(targetOf), error.code);
       }
       throw error;
+    } finally {
+      this.observing = null;
     }
   }
 
@@ -970,6 +1003,8 @@ export class ResaleCaseStore {
       idempotencyKey: entry.idempotencyKey,
       subjectId: entry.subjectId,
       body: { ...entry.body },
+      // The rebuilt store only lives for one reconcile and never writes these.
+      observed: entry.observed,
     });
   }
 
@@ -1080,7 +1115,7 @@ export class ResaleCaseStore {
     return {
       mode: "mock",
       surface: SURFACES.resaleFsm,
-      references: RESALE_REFERENCES,
+      references: [...RESALE_REFERENCES],
       provenance: RESALE_PROVENANCE,
       lifecycleAuthority: "IN_MEMORY_FSM",
       listingId: listing.listingId,
@@ -1139,7 +1174,7 @@ export class ResaleCaseStore {
     return {
       mode: "mock",
       surface: SURFACES.resaleFsm,
-      references: RESALE_REFERENCES,
+      references: [...RESALE_REFERENCES],
       provenance: RESALE_PROVENANCE,
       lifecycleAuthority: "IN_MEMORY_FSM",
       rightId: ticket.rightId,
@@ -1173,7 +1208,7 @@ export class ResaleCaseStore {
     let state: "ACTIVE" | "CONSUMED" = "ACTIVE";
     if (ticket.reservationId !== null) {
       try {
-        const reservation = this.reservationView(ticket.reservationId);
+        const reservation = this.reservationAuthority(ticket.reservationId);
         if (reservation.phase === "CONSUMED") {
           state = "CONSUMED";
         }
@@ -1196,7 +1231,7 @@ export class ResaleCaseStore {
       return false;
     }
     try {
-      return this.settlementView(listing.settlementId).phase === "FAILED";
+      return this.settlementAuthority(listing.settlementId).phase === "FAILED";
     } catch (error) {
       if (error instanceof ProtocolError) {
         return false;
@@ -1424,6 +1459,22 @@ function ident(value: string): string {
     throw resaleError("INVALID_ID");
   }
   return value;
+}
+
+function emptyObserved(): ObservedAuthorities {
+  return { reservations: new Map(), settlements: new Map() };
+}
+
+/**
+ * Replay reads only what the original command read. A view that command did
+ * not read is unknown during replay, the same way a failed live read was.
+ */
+function recordedView<T>(recorded: Map<string, T> | undefined, id: string, code: string): T {
+  const view = recorded?.get(id);
+  if (view === undefined) {
+    throw resaleError(code);
+  }
+  return structuredClone(view);
 }
 
 function resaleError(code: string): ProtocolError {

@@ -10,6 +10,7 @@ import {
   ProtocolError,
   StubProtocolAdapter,
 } from "../src/index.js";
+import { localCallReceipt } from "./support/receipt.js";
 
 describe("booking, admission, and resale stub flows", () => {
   it("books a hold and admits the issued right only once", async () => {
@@ -313,14 +314,14 @@ describe("http adapter binding", () => {
       }),
     ).rejects.toThrow(/simulated-no-funds/);
 
-    responseBody = {
+    responseBody = localCallReceipt("op-close-3", "close_sales", {
       bookingId: "bkg_remote",
       eventId: "evt_lanterns",
       quantity: 1,
       rightsRef: "right_remote",
       status: "confirmed",
       payment: "simulated-no-funds",
-    };
+    });
     await expect(
       protocol.invokeLocalCall({
         operationId: "op-close-3",
@@ -328,7 +329,7 @@ describe("http adapter binding", () => {
         action: "close_sales",
         body: commandBody,
       }),
-    ).resolves.toMatchObject({ payment: "simulated-no-funds" });
+    ).resolves.toMatchObject({ result: { payment: "simulated-no-funds" } });
 
     responseBody = {
       eventId: "evt_lanterns",
@@ -466,7 +467,7 @@ describe("http adapter binding", () => {
       }),
     ).rejects.toThrow(/provider authorization/);
 
-    responseBody = {
+    responseBody = localCallReceipt("op-close-13", "close_sales", {
       eventId: "evt_lanterns",
       mode: "mock",
       references: ["F01", "F02", "F03"],
@@ -476,7 +477,7 @@ describe("http adapter binding", () => {
       provenance: "MOCK_SETTLEMENT_ONLY",
       externalPayment: "UNSUPPORTED",
       providerAuthorizationExecuted: false,
-    };
+    });
     await expect(
       protocol.invokeLocalCall({
         operationId: "op-close-13",
@@ -484,7 +485,7 @@ describe("http adapter binding", () => {
         action: "close_sales",
         body: commandBody,
       }),
-    ).resolves.toMatchObject({ mode: "mock", references: ["F01", "F02", "F03"], phase: "CAPTURED" });
+    ).resolves.toMatchObject({ result: { mode: "mock", references: ["F01", "F02", "F03"], phase: "CAPTURED" } });
     expect(calls.every((call) => call.url === `http://127.0.0.1:8765${CONTRACT_ONLY_LOCAL_CALL_PATH}`)).toBe(
       true,
     );

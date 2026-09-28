@@ -17,7 +17,7 @@ import {
   requireOpenApiContractPin,
 } from "./openapi-contract-pin.js";
 import { integrationHttpObservation, mapOperationalError, type TransportObservation } from "./operational-error.js";
-import { enforceRemotePayloadGuards } from "./payload-guards.js";
+import { assertLocalCallReceipt, enforceRemotePayloadGuards } from "./payload-guards.js";
 import { isRecord } from "./record.js";
 import { assertSingleAttempt, rejectRetryHeader } from "./retry-policy.js";
 import { CONSUMED_SURFACES, type CommerceProtocol } from "./protocol.js";
@@ -89,6 +89,27 @@ import {
 type FetchLike = typeof fetch;
 
 /**
+ * A browser refuses `fetch` called with any receiver other than the global
+ * object, so the default is a wrapper and not the bare function.
+ */
+const globalFetch: FetchLike = (input, init) => fetch(input, init);
+
+/** Largest delay setTimeout honors. A larger one fires at once. */
+const MAX_TIMER_MS = 2_147_483_647;
+
+/**
+ * Client-side ceiling for one exchange, including the body read. It is twice
+ * the pinned gate request timeout, so a gate that answers inside its own limit
+ * is never cut off. A timeout is not a retry signal.
+ */
+export const INTEGRATION_HTTP_TIMEOUT_MS = OPENAPI_INTEGRATION_GATE_PIN.requestTimeoutSeconds * 2 * 1000;
+
+export interface HttpProtocolAdapterOptions {
+  /** Overrides INTEGRATION_HTTP_TIMEOUT_MS. Must be a positive integer. */
+  timeoutMs?: number;
+}
+
+/**
  * HTTP mode talks only to an explicit loopback base URL, and only with the
  * published local-call path. Desk methods stay not-bound when their arguments
  * are not a command body. invokeLocalCall posts that envelope to the
@@ -98,14 +119,23 @@ type FetchLike = typeof fetch;
  */
 export class HttpProtocolAdapter implements CommerceProtocol {
   private readonly baseUrl: string;
+  private readonly timeoutMs: number;
 
   constructor(
     baseUrl: string,
-    private readonly fetchImpl: FetchLike = fetch,
+    private readonly fetchImpl: FetchLike = globalFetch,
+    options: HttpProtocolAdapterOptions = {},
   ) {
     requireOpenApiContractPin();
     requireIntegrationGatePin();
     this.baseUrl = requireLoopbackBase(baseUrl);
+    const timeoutMs = options.timeoutMs ?? INTEGRATION_HTTP_TIMEOUT_MS;
+    if (!Number.isInteger(timeoutMs) || timeoutMs <= 0 || timeoutMs > MAX_TIMER_MS) {
+      throw new ProtocolError(
+        `Integration HTTP timeout must be a positive integer of milliseconds no larger than ${MAX_TIMER_MS}.`,
+      );
+    }
+    this.timeoutMs = timeoutMs;
   }
 
   describe(): AdapterMeta {
@@ -483,13 +513,21 @@ export class HttpProtocolAdapter implements CommerceProtocol {
       },
       body: JSON.stringify(envelope),
     });
-    enforceRemotePayloadGuards(parsed.body, {
-      action: envelope.action,
-      operationId: envelope.operationId,
-    });
-    if (!parsed.ok || (isRecord(parsed.body) && parsed.body.rejected === true)) {
-      const code = isRecord(parsed.body) && typeof parsed.body.error === "string" ? parsed.body.error : "GATE_REJECTED";
-      throw new ProtocolError(`Integration gate rejected the local call (${code}).`, code, parsed.trace);
+    try {
+      enforceRemotePayloadGuards(parsed.body);
+      if (!parsed.ok || (isRecord(parsed.body) && parsed.body.rejected === true)) {
+        const code = isRecord(parsed.body) && typeof parsed.body.error === "string" ? parsed.body.error : "GATE_REJECTED";
+        throw new ProtocolError(`Integration gate rejected the local call (${code}).`, code);
+      }
+      assertLocalCallReceipt(parsed.body, {
+        action: envelope.action,
+        operationId: envelope.operationId,
+      });
+    } catch (error) {
+      if (error instanceof ProtocolError) {
+        throw new ProtocolError(error.message, error.code, parsed.trace);
+      }
+      throw error;
     }
     return parsed.body;
   }
@@ -532,11 +570,49 @@ export class HttpProtocolAdapter implements CommerceProtocol {
     }
     headers.set("X-Request-Id", trace.requestId);
     headers.set("X-Correlation-Id", trace.correlationId);
+    const controller = new AbortController();
+    // The race also covers a fetch that ignores the abort signal.
+    const aborted = new Promise<never>((_resolve, reject) => {
+      controller.signal.addEventListener("abort", () => reject(controller.signal.reason));
+    });
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    try {
+      return await Promise.race([
+        this.exchangeOnce(url, { ...init, headers, redirect: "manual", signal: controller.signal }, trace),
+        aborted,
+      ]);
+    } catch (error) {
+      if (controller.signal.aborted) {
+        throw new ProtocolError(
+          `Integration gate did not answer within ${this.timeoutMs} ms. The client does not retry. The operationId may already have applied.`,
+          "REQUEST_TIMEOUT",
+          trace,
+        );
+      }
+      throw error;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  private async exchangeOnce(
+    url: string,
+    init: RequestInit,
+    trace: { requestId: string; correlationId: string },
+  ): Promise<{ ok: boolean; body: unknown; trace: { requestId: string; correlationId: string } }> {
     let response: Response;
     try {
-      response = await this.fetchImpl(url, { ...init, headers });
+      response = await this.fetchImpl(url, init);
     } catch {
       throw new ProtocolError("Integration gate is unavailable.", "GATE_UNAVAILABLE", trace);
+    }
+    if (
+      response.redirected ||
+      response.type === "opaqueredirect" ||
+      (response.status >= 300 && response.status < 400) ||
+      !sameLoopbackOrigin(response.url, this.baseUrl)
+    ) {
+      throw new ProtocolError("Integration gate answered with a redirect. The client only talks to the loopback origin.", "GATE_TRANSPORT", trace);
     }
     const echoedRequest = response.headers.get("x-request-id");
     const echoedCorrelation = response.headers.get("x-correlation-id");
@@ -557,7 +633,15 @@ export class HttpProtocolAdapter implements CommerceProtocol {
         trace,
       );
     }
-    const text = await response.text();
+    let text: string;
+    try {
+      text = await response.text();
+    } catch (error) {
+      if (init.signal?.aborted) {
+        throw error;
+      }
+      throw new ProtocolError("Integration gate response body was cut off.", "GATE_UNAVAILABLE", trace);
+    }
     if (!text) {
       return { ok: response.ok, body: undefined, trace };
     }
@@ -589,13 +673,31 @@ function requireLoopbackBase(baseUrl: string): string {
   }
   if (parsed.protocol !== "http:" || parsed.hostname !== INTEGRATION_GATE_LOOPBACK_HOST || !parsed.port) {
     throw new ProtocolError(
-      "KIX_PROTOCOL_API_BASE must be an explicit http://127.0.0.1 URL with a port. There is no default public host.",
+      "KIX_PROTOCOL_API_BASE must be an explicit http://127.0.0.1 URL with a non-default port. There is no default public host.",
     );
+  }
+  if (parsed.port === "0") {
+    throw new ProtocolError("KIX_PROTOCOL_API_BASE port 0 is not a listening gate. Use the port the gate printed.");
   }
   if (parsed.pathname !== "/" || parsed.search || parsed.hash) {
     throw new ProtocolError("KIX_PROTOCOL_API_BASE must be the loopback origin only. The client appends the published path.");
   }
   return `http://${INTEGRATION_GATE_LOOPBACK_HOST}:${parsed.port}`;
+}
+
+/**
+ * A mock Response has no url. A real one must still be the loopback origin
+ * this adapter was built with.
+ */
+function sameLoopbackOrigin(responseUrl: string, baseUrl: string): boolean {
+  if (!responseUrl) {
+    return true;
+  }
+  try {
+    return new URL(responseUrl).origin === baseUrl;
+  } catch {
+    return false;
+  }
 }
 
 function assertProbeBody(path: "/health" | "/ready", body: unknown): Record<string, unknown> {

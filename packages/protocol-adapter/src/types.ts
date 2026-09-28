@@ -80,7 +80,7 @@ export type SettlementPhase = (typeof SETTLEMENT_PHASES)[number];
 
 export const SETTLEMENT_PROVENANCE = "MOCK_SETTLEMENT_ONLY" as const;
 
-export const SETTLEMENT_REFERENCES = ["F01", "F02", "F03"] as const;
+export const SETTLEMENT_REFERENCES = Object.freeze(["F01", "F02", "F03"] as const);
 
 const SETTLEMENT_PHASE_SET: ReadonlySet<string> = new Set(SETTLEMENT_PHASES);
 
@@ -178,7 +178,7 @@ export type ReservationPhase = (typeof RESERVATION_PHASES)[number];
 
 export const RESERVATION_PROVENANCE = "MOCK_GATE_ONLY" as const;
 
-export const RESERVATION_REFERENCES = ["B01", "B02", "B03", "B04", "B05"] as const;
+export const RESERVATION_REFERENCES = Object.freeze(["B01", "B02", "B03", "B04", "B05"] as const);
 
 export const RESERVATION_ADMISSION_REFERENCE = "P03" as const;
 
@@ -564,7 +564,7 @@ export type ResaleEligibility = (typeof RESALE_ELIGIBILITY)[number];
 
 export const RESALE_PROVENANCE = "MOCK_GATE_ONLY" as const;
 
-export const RESALE_REFERENCES = ["R01", "R02", "R03", "R04", "R05"] as const;
+export const RESALE_REFERENCES = Object.freeze(["R01", "R02", "R03", "R04", "R05"] as const);
 
 export const RESALE_SETTLEMENT_GATES = ["UNBOUND", "BOUND", "MOCK_COMMIT_OBSERVED"] as const;
 
@@ -840,7 +840,7 @@ export type CreditPhase = (typeof CREDIT_PHASES)[number];
 
 export const CREDIT_PROVENANCE = "MOCK_CREDIT_F04_ONLY" as const;
 
-export const CREDIT_REFERENCES = ["F04"] as const;
+export const CREDIT_REFERENCES = Object.freeze(["F04"] as const);
 
 export const CREDIT_SETTLEMENT_GATES = ["UNBOUND", "BOUND", "MOCK_COMMIT_OBSERVED"] as const;
 

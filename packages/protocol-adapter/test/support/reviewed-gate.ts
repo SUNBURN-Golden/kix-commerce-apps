@@ -7,7 +7,7 @@ import { OPENAPI_INTEGRATION_GATE_PIN } from "../../src/index.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 
-export function protocolRoot(): string {
+export function findProtocolRoot(): string | null {
   const candidates = [
     process.env.KIX_PROTOCOL_ROOT,
     path.resolve(repoRoot, "../kix-protocol-prod-readiness"),
@@ -18,7 +18,44 @@ export function protocolRoot(): string {
       return candidate;
     }
   }
-  throw new Error("Set KIX_PROTOCOL_ROOT to the kix-protocol checkout that contains integration_gate.");
+  return null;
+}
+
+export function protocolRoot(): string {
+  const root = findProtocolRoot();
+  if (root === null) {
+    throw new Error("Set KIX_PROTOCOL_ROOT to the kix-protocol checkout that contains integration_gate.");
+  }
+  return root;
+}
+
+/**
+ * Whether a missing checkout fails the run. KIX_REQUIRE_GATE=1 or 0 decides
+ * outright. Otherwise an explicit KIX_PROTOCOL_ROOT, or a CI run, requires the
+ * gate, so a wrong path or a failed checkout step is not a silent skip.
+ */
+export function gateRequired(env: Record<string, string | undefined> = process.env): boolean {
+  if (env.KIX_REQUIRE_GATE === "1") {
+    return true;
+  }
+  if (env.KIX_REQUIRE_GATE === "0") {
+    return false;
+  }
+  return Boolean(env.KIX_PROTOCOL_ROOT) || env.CI === "true" || env.CI === "1";
+}
+
+/**
+ * The live gate suites need a reviewed kix-protocol checkout. On a local run
+ * without one they are skipped with a warning, so `npm test` still runs the
+ * rest of the adapter and the web suite. See gateRequired for when a missing
+ * checkout fails instead.
+ */
+export const REVIEWED_GATE_RUNS = findProtocolRoot() !== null || gateRequired();
+
+if (!REVIEWED_GATE_RUNS) {
+  console.warn(
+    "Skipping live integration-gate suites: no kix-protocol checkout. Set KIX_PROTOCOL_ROOT, or KIX_REQUIRE_GATE=1 to fail instead.",
+  );
 }
 
 /**

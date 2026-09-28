@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import type { Booking, Hold, Performance } from "@kix/protocol-adapter";
+import { ProtocolError, type Booking, type Hold, type Performance } from "@kix/protocol-adapter";
 import { formatWhen } from "../format";
 import { protocol } from "../protocol";
 import { useAdmissionDesk } from "../admission-desk";
@@ -44,6 +44,22 @@ export function BookingPage() {
     setPerformance(rows.find((item) => item.eventId === eventId) ?? null);
   }
 
+  /**
+   * An expired or already-ended hold cannot be confirmed or released again.
+   * The form goes back to Place hold and the capacity line is read again.
+   */
+  async function dropEndedHold(reason: unknown) {
+    if (!(reason instanceof ProtocolError) || !isEndedHold(reason.code)) {
+      return;
+    }
+    setHold(null);
+    try {
+      await refreshPerformance();
+    } catch {
+      // The hold error stays on the page.
+    }
+  }
+
   async function placeHold() {
     setPending(true);
     setError(null);
@@ -69,6 +85,7 @@ export function BookingPage() {
       await refreshPerformance();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not release the hold.");
+      await dropEndedHold(reason);
     } finally {
       setPending(false);
     }
@@ -84,6 +101,7 @@ export function BookingPage() {
       setBooking(await protocol.confirmBooking(hold.holdId));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not confirm the booking.");
+      await dropEndedHold(reason);
     } finally {
       setPending(false);
     }
@@ -227,4 +245,8 @@ export function BookingPage() {
       </p>
     </section>
   );
+}
+
+function isEndedHold(code: string | undefined): boolean {
+  return code === "HOLD_EXPIRED" || code === "HOLD_NOT_ACTIVE";
 }

@@ -104,6 +104,8 @@ const DEFAULT_SEED: Performance[] = [
 
 interface HoldRecord extends Hold {
   consumed: boolean;
+  /** Ended by expiry, not by confirm or release. */
+  expired: boolean;
 }
 
 /**
@@ -191,10 +193,12 @@ export class StubProtocolAdapter implements CommerceProtocol {
   }
 
   async listPerformances(): Promise<Performance[]> {
+    this.sweepExpiredHolds();
     return this.performances.map((item) => ({ ...item }));
   }
 
   async placeHold(input: { eventId: string; quantity: number }): Promise<Hold> {
+    this.sweepExpiredHolds();
     const performance = this.requirePerformance(input.eventId);
     const quantity = requireQuantity(input.quantity);
     if (quantity > performance.remainingCapacity) {
@@ -208,30 +212,64 @@ export class StubProtocolAdapter implements CommerceProtocol {
       expiresAt: new Date(this.now() + HOLD_MS).toISOString(),
       surface: SURFACES.booking,
       consumed: false,
+      expired: false,
     };
     this.holds.set(hold.holdId, hold);
-    return { ...hold };
+    return {
+      holdId: hold.holdId,
+      eventId: hold.eventId,
+      quantity: hold.quantity,
+      expiresAt: hold.expiresAt,
+      surface: hold.surface,
+    };
+  }
+
+  /**
+   * An abandoned hold gives its capacity back once it expires. The desk does
+   * not have to confirm or release it first.
+   */
+  private sweepExpiredHolds(): void {
+    const now = this.now();
+    for (const hold of this.holds.values()) {
+      if (!hold.consumed && Date.parse(hold.expiresAt) <= now) {
+        this.expireHold(hold);
+      }
+    }
+  }
+
+  private expireHold(hold: HoldRecord): void {
+    hold.consumed = true;
+    hold.expired = true;
+    this.requirePerformance(hold.eventId).remainingCapacity += hold.quantity;
+  }
+
+  /**
+   * A hold that expired answers HOLD_EXPIRED whether or not a sweep ended it
+   * first. A confirmed or released hold is HOLD_NOT_ACTIVE.
+   */
+  private requireActiveHold(holdId: string): HoldRecord {
+    const hold = this.holds.get(holdId);
+    if (hold?.expired) {
+      throw new ProtocolError("Hold has expired.", "HOLD_EXPIRED");
+    }
+    if (!hold || hold.consumed) {
+      throw new ProtocolError("Hold is not active.", "HOLD_NOT_ACTIVE");
+    }
+    if (Date.parse(hold.expiresAt) <= this.now()) {
+      this.expireHold(hold);
+      throw new ProtocolError("Hold has expired.", "HOLD_EXPIRED");
+    }
+    return hold;
   }
 
   async releaseHold(holdId: string): Promise<void> {
-    const hold = this.holds.get(holdId);
-    if (!hold || hold.consumed) {
-      throw new ProtocolError("Hold is not active.");
-    }
+    const hold = this.requireActiveHold(holdId);
     hold.consumed = true;
     this.requirePerformance(hold.eventId).remainingCapacity += hold.quantity;
   }
 
   async confirmBooking(holdId: string): Promise<Booking> {
-    const hold = this.holds.get(holdId);
-    if (!hold || hold.consumed) {
-      throw new ProtocolError("Hold is not active.");
-    }
-    if (Date.parse(hold.expiresAt) <= this.now()) {
-      hold.consumed = true;
-      this.requirePerformance(hold.eventId).remainingCapacity += hold.quantity;
-      throw new ProtocolError("Hold has expired.");
-    }
+    const hold = this.requireActiveHold(holdId);
     hold.consumed = true;
     const bookingId = this.nextId("bkg");
     const booking: Booking = {

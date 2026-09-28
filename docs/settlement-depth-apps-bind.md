@@ -10,7 +10,7 @@ The in-process case uses the protocol phase names:
 
 `FAILED` and `CANCELLED` are the terminal phases. A later mutation command is rejected and the phase stays put. `reconcile` and `view` still read a terminal case.
 
-The same idempotency key and the same arguments replay the first result (`duplicate: true`). The same key with a different body is `IDEMPOTENCY_CONFLICT`. Reconcile `matched: true` means this process replayed its own journal and the case still agreed. It is not a bank match, not exactly-once funds, and not chain finality.
+The same idempotency key and the same arguments replay the first result (`duplicate: true`). The same key with a different body is `IDEMPOTENCY_CONFLICT`. Reconcile `matched: true` means this process replayed its own journal and the case still agreed. It is not a bank match, not exactly-once funds, and not chain finality. The box office advances its key after a rejected command and after every reconcile, and keeps that counter for the browser tab. A mis-ordered click does not block the case, and a second reconcile checks the case again.
 
 Amounts, fee splits, and refund arithmetic stay in kix-protocol. This app does not compute them and does not put an amount on the case.
 
