@@ -161,6 +161,14 @@ export function useReservationDesk(eventId: string) {
           await protocol.reconcileReservation({ reservationId: ids.reservationId, idempotencyKey });
           break;
       }
+      if (command === "reconcile") {
+        // A second reconcile checks the case again instead of replaying this receipt.
+        setAttempt((value) => {
+          const next = value + 1;
+          writeAttempt(trimmed, next);
+          return next;
+        });
+      }
       await refresh();
     } catch (reason) {
       setAttempt((value) => {

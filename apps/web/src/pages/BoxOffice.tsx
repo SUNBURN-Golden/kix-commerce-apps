@@ -3,10 +3,8 @@ import { Link } from "react-router-dom";
 import { ProtocolError, type Performance, type SettlementCaseView } from "@kix/protocol-adapter";
 import { formatWhen } from "../format";
 import { protocol } from "../protocol";
+import { runSettlementCommand, settlementIdFor } from "../settlement-desk";
 import { SettlementPanel, type SettlementDeskCommand } from "./SettlementPanel";
-
-const FAIL_REASON = "FIXTURE_DECLINE";
-const CANCEL_REASON = "FIXTURE_WITHDRAW";
 
 export function BoxOfficePage() {
   const [performances, setPerformances] = useState<Performance[] | null>(null);
@@ -68,34 +66,10 @@ export function BoxOfficePage() {
       return;
     }
     const eventId = selectedEventId;
-    const settlementId = settlementIdFor(eventId);
-    const idempotencyKey = `desk-${command}:${settlementId}`;
     setPending(true);
     setSettlementError(null);
     try {
-      switch (command) {
-        case "initiate":
-          await protocol.initiateSettlement({ settlementId, eventId, idempotencyKey });
-          break;
-        case "authorize":
-          await protocol.authorizeSettlement({ settlementId, idempotencyKey });
-          break;
-        case "capture":
-          await protocol.captureSettlement({ settlementId, idempotencyKey });
-          break;
-        case "commit":
-          await protocol.commitSettlement({ settlementId, idempotencyKey });
-          break;
-        case "fail":
-          await protocol.failSettlement({ settlementId, idempotencyKey, reason: FAIL_REASON });
-          break;
-        case "cancel":
-          await protocol.cancelSettlement({ settlementId, idempotencyKey, reason: CANCEL_REASON });
-          break;
-        case "reconcile":
-          await protocol.reconcileSettlement({ settlementId, idempotencyKey });
-          break;
-      }
+      await runSettlementCommand(protocol, command, eventId);
       await refreshCase(eventId);
     } catch (reason) {
       setSettlementError(message(reason, "Mock settlement command was rejected."));
@@ -164,10 +138,6 @@ export function BoxOfficePage() {
       ) : null}
     </section>
   );
-}
-
-function settlementIdFor(eventId: string): string {
-  return `stl_${eventId}`;
 }
 
 function message(reason: unknown, fallback: string): string {

@@ -93,7 +93,8 @@ describe("settlement panel copy", () => {
   it("keeps settlement UI copy free of production-payment wording and on the adapter", () => {
     const panel = readFileSync(path.join(webRoot, "src/pages/SettlementPanel.tsx"), "utf8");
     const boxOffice = readFileSync(path.join(webRoot, "src/pages/BoxOffice.tsx"), "utf8");
-    const combined = `${panel}\n${boxOffice}`;
+    const desk = readFileSync(path.join(webRoot, "src/settlement-desk.ts"), "utf8");
+    const combined = `${panel}\n${boxOffice}\n${desk}`;
     for (const pattern of BANNED_COPY) {
       expect(combined).not.toMatch(pattern);
     }
@@ -110,7 +111,7 @@ describe("settlement panel copy", () => {
       "reconcileSettlement",
       "viewSettlement",
     ]) {
-      expect(boxOffice).toContain(`protocol.${method}`);
+      expect(`${boxOffice}\n${desk}`).toContain(`protocol.${method}`);
     }
   });
 });
