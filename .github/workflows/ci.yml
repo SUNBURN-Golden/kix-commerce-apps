@@ -1,0 +1,79 @@
+name: Commerce apps CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: commerce-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  desk:
+    name: Typecheck, build, and test (stub)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      # The live gate runs in its own job below. This job skips it on purpose.
+      - run: npm test
+        env:
+          KIX_REQUIRE_GATE: '0'
+
+  live-gate:
+    name: Adapter tests against the reviewed gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      # kix-protocol is private. A read-only token for it is needed to check out the gate.
+      HAS_PROTOCOL_TOKEN: ${{ secrets.KIX_PROTOCOL_READ_TOKEN != '' }}
+      # Must equal OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha. A test checks this.
+      KIX_PROTOCOL_GATE_SHA: 52a9b5cbf7777df55d2d2062cb8d99d862b423bb
+    steps:
+      - name: Report a missing protocol token
+        if: env.HAS_PROTOCOL_TOKEN != 'true'
+        run: |
+          echo "::warning title=Live gate not run::Set the KIX_PROTOCOL_READ_TOKEN secret (read-only contents on BeautifulMind-JT/kix-protocol) to run the adapter tests against the reviewed gate."
+          echo "Live gate not run: KIX_PROTOCOL_READ_TOKEN is not set." >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: env.HAS_PROTOCOL_TOKEN == 'true'
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: env.HAS_PROTOCOL_TOKEN == 'true'
+        with:
+          repository: BeautifulMind-JT/kix-protocol
+          ref: ${{ env.KIX_PROTOCOL_GATE_SHA }}
+          token: ${{ secrets.KIX_PROTOCOL_READ_TOKEN }}
+          path: .kix-protocol-gate
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        if: env.HAS_PROTOCOL_TOKEN == 'true'
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v5
+        if: env.HAS_PROTOCOL_TOKEN == 'true'
+        with:
+          node-version: '22'
+          cache: npm
+      - if: env.HAS_PROTOCOL_TOKEN == 'true'
+        run: npm ci
+      - if: env.HAS_PROTOCOL_TOKEN == 'true'
+        run: npm test -w @kix/protocol-adapter
+        env:
+          KIX_PROTOCOL_ROOT: ${{ github.workspace }}/.kix-protocol-gate
+          KIX_REQUIRE_GATE: '1'
