@@ -30,11 +30,27 @@ export function protocolRoot(): string {
 }
 
 /**
- * The live gate suites need a reviewed kix-protocol checkout. Without one they
- * are skipped, so `npm test` still runs the rest of the adapter and the web
- * suite. KIX_REQUIRE_GATE=1 turns a missing checkout back into a failure.
+ * Whether a missing checkout fails the run. KIX_REQUIRE_GATE=1 or 0 decides
+ * outright. Otherwise an explicit KIX_PROTOCOL_ROOT, or a CI run, requires the
+ * gate, so a wrong path or a failed checkout step is not a silent skip.
  */
-export const REVIEWED_GATE_RUNS = findProtocolRoot() !== null || process.env.KIX_REQUIRE_GATE === "1";
+export function gateRequired(env: Record<string, string | undefined> = process.env): boolean {
+  if (env.KIX_REQUIRE_GATE === "1") {
+    return true;
+  }
+  if (env.KIX_REQUIRE_GATE === "0") {
+    return false;
+  }
+  return Boolean(env.KIX_PROTOCOL_ROOT) || env.CI === "true" || env.CI === "1";
+}
+
+/**
+ * The live gate suites need a reviewed kix-protocol checkout. On a local run
+ * without one they are skipped with a warning, so `npm test` still runs the
+ * rest of the adapter and the web suite. See gateRequired for when a missing
+ * checkout fails instead.
+ */
+export const REVIEWED_GATE_RUNS = findProtocolRoot() !== null || gateRequired();
 
 if (!REVIEWED_GATE_RUNS) {
   console.warn(

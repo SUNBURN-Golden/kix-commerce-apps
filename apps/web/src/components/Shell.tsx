@@ -21,6 +21,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const onMarketing = location.pathname === "/marketing" || location.pathname.startsWith("/marketing/");
   const [held, setHeld] = useState<HeldObservation | null>(null);
   const generation = useRef(0);
+  const probing = useRef(false);
 
   useEffect(() => {
     document.title = onMarketing ? "KIX Marketing · 설계중" : "KIX Box Office";
@@ -29,8 +30,13 @@ export function Shell({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     // Each probe gets a newer generation than the last, so a late reply from an
-    // older probe cannot replace a newer state.
-    const probe = () => {
+    // older probe cannot replace a newer state. A timed probe waits while one
+    // is still in flight or the tab is hidden.
+    const probe = (timed: boolean) => {
+      if (timed && (probing.current || document.hidden)) {
+        return;
+      }
+      probing.current = true;
       const ticket = ++generation.current;
       protocol
         .observeTransport()
@@ -62,15 +68,22 @@ export function Shell({ children }: { children: ReactNode }) {
             detail: "Integration HTTP stayed selected. The desk did not fall back to the stub.",
           };
           setHeld((current) => preferFresh(current, { generation: ticket, observation }));
+        })
+        .finally(() => {
+          // Only the newest probe clears the flag. An older one finishing
+          // late must not open the way while a newer one is in flight.
+          if (generation.current === ticket) {
+            probing.current = false;
+          }
         });
     };
-    probe();
+    probe(false);
     if (meta.environment === "stub") {
       return () => {
         cancelled = true;
       };
     }
-    const timer = setInterval(probe, TRANSPORT_PROBE_MS);
+    const timer = setInterval(() => probe(true), TRANSPORT_PROBE_MS);
     return () => {
       cancelled = true;
       clearInterval(timer);

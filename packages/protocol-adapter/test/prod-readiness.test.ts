@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   HttpProtocolAdapter,
   INTEGRATION_HTTP_RETRY_POLICY,
@@ -231,13 +231,20 @@ describe("integration HTTP environment", () => {
 });
 
 describeGate("loopback readiness journal", () => {
-  const journalDir = mkdtempSync(path.join(tmpdir(), "kix-ig-journal-"));
+  // Made in beforeAll: a skipped suite still runs this body but not its hooks.
+  let journalDir = "";
   let baseUrl = "";
   let child: Awaited<ReturnType<typeof startGate>>["child"] | undefined;
 
+  beforeAll(() => {
+    journalDir = mkdtempSync(path.join(tmpdir(), "kix-ig-journal-"));
+  });
+
   afterAll(async () => {
     await stopGate(child);
-    rmSync(journalDir, { recursive: true, force: true });
+    if (journalDir) {
+      rmSync(journalDir, { recursive: true, force: true });
+    }
   });
 
   it("replays one committed local call after restart and still denies production conformance", async () => {

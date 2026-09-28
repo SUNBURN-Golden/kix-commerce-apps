@@ -72,7 +72,7 @@ describe("integration HTTP redirects", () => {
       res.end();
     });
     const adapter = new HttpProtocolAdapter(redirecting);
-    await expect(adapter.invokeLocalCall(CLOSE_SALES)).rejects.toMatchObject({ code: "GATE_UNAVAILABLE" });
+    await expect(adapter.invokeLocalCall(CLOSE_SALES)).rejects.toMatchObject({ code: "GATE_TRANSPORT" });
     expect(elsewhere).toBe(0);
   });
 
@@ -119,7 +119,7 @@ describe("integration HTTP redirects", () => {
     };
     await new HttpProtocolAdapter("http://127.0.0.1:8765", recording).invokeLocalCall(CLOSE_SALES);
     expect(seen).toHaveLength(1);
-    expect(seen[0]?.redirect).toBe("error");
+    expect(seen[0]?.redirect).toBe("manual");
     expect(seen[0]?.signal).toBeInstanceOf(AbortSignal);
   });
 });
@@ -127,7 +127,10 @@ describe("integration HTTP redirects", () => {
 describe("integration HTTP timeouts", () => {
   it("defaults to twice the pinned gate timeout", () => {
     expect(INTEGRATION_HTTP_TIMEOUT_MS).toBe(OPENAPI_INTEGRATION_GATE_PIN.requestTimeoutSeconds * 2000);
-    expect(() => new HttpProtocolAdapter("http://127.0.0.1:8765", fetch, { timeoutMs: 0 })).toThrow(/positive integer/);
+    for (const timeoutMs of [0, -1, 1.5, 2_147_483_648]) {
+      expect(() => new HttpProtocolAdapter("http://127.0.0.1:8765", fetch, { timeoutMs })).toThrow(/positive integer/);
+    }
+    expect(() => new HttpProtocolAdapter("http://127.0.0.1:8765", fetch, { timeoutMs: 2_147_483_647 })).not.toThrow();
   });
 
   it("times out a gate that accepts the connection and never answers, once", async () => {
@@ -177,6 +180,11 @@ describe("integration HTTP success receipts", () => {
       answering(localCallReceipt("op-other", "close_sales", {})),
     );
     await expect(otherOperation.invokeLocalCall(CLOSE_SALES)).rejects.toThrow(/does not match the local call/);
+    await expect(otherOperation.invokeLocalCall(CLOSE_SALES)).rejects.toMatchObject({
+      code: "GATE_STATUS",
+      requestId: expect.any(String),
+      correlationId: expect.any(String),
+    });
 
     const otherAction = new HttpProtocolAdapter(
       "http://127.0.0.1:8765",
@@ -220,6 +228,27 @@ describe("integration HTTP success receipts", () => {
       answering(localCallReceipt("op-close", "close_sales", deep)),
     );
     await expect(adapter.invokeLocalCall(CLOSE_SALES)).rejects.toThrow(/nested too deeply/);
+  });
+});
+
+describe("integration HTTP default fetch", () => {
+  it("calls the global fetch without the adapter as its receiver", async () => {
+    const original = globalThis.fetch;
+    let receiver: unknown = "unset";
+    globalThis.fetch = async function (this: unknown, _input: RequestInfo | URL, init?: RequestInit) {
+      receiver = this;
+      return new Response(JSON.stringify(localCallReceipt("op-close", "close_sales", {})), {
+        status: 200,
+        headers: echoIntegrationGateHeaders(init),
+      });
+    } as typeof fetch;
+    try {
+      const adapter = new HttpProtocolAdapter("http://127.0.0.1:8765");
+      await adapter.invokeLocalCall(CLOSE_SALES);
+      expect(receiver === undefined || receiver === globalThis).toBe(true);
+    } finally {
+      globalThis.fetch = original;
+    }
   });
 });
 

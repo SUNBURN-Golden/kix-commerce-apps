@@ -20,7 +20,7 @@ Desk methods stay not-bound. Their arguments are not those command bodies. The a
 
 Responses must carry `X-Kix-Transport: integration-gate`, `X-Kix-Production-Endpoint: false`, `X-Kix-Protocol-Truth: false`, and `X-Kix-Production-Conformance: false`. The client sends `X-Request-Id` and `X-Correlation-Id` and requires the response to echo them. A mismatch is `STALE_RESPONSE`. Any other transport marker is rejected. HTTP 422 and any body with `rejected: true` stay rejects. A closed port is `GATE_UNAVAILABLE`. The client does not retry and does not fall back to the stub.
 
-The client does not follow redirects. A 3xx status, a followed redirect, or a response from another origin is `GATE_TRANSPORT`, and nothing is sent to the redirect target. Each exchange, including the body read, has a client limit of twice the pinned gate `requestTimeoutSeconds` (10 seconds). Past that it is `REQUEST_TIMEOUT`. The client does not retry, and the `operationId` may already have applied. A body cut off mid-read is `GATE_UNAVAILABLE`.
+The client does not follow redirects. It asks fetch for `redirect: "manual"`, and a 3xx status, an opaque redirect, a followed redirect, or a response from another origin is `GATE_TRANSPORT`. Nothing is sent to the redirect target. Each exchange, including the body read, has a client limit of twice the pinned gate `requestTimeoutSeconds` (10 seconds). Past that it is `REQUEST_TIMEOUT`. The client does not retry, and the `operationId` may already have applied. A body cut off mid-read is `GATE_UNAVAILABLE`.
 
 A successful local call must answer with exactly one published receipt, `{ domain, operationId, sequence, action, result }`, for the same `operationId` and `action`. An empty body, a bare value, a receipt for another call, or a receipt with extra keys is `GATE_STATUS`. The payload guards check every nested object and array in the response, not only the top level and `result`. A payload nested deeper than 32 levels is refused.
 
@@ -67,7 +67,7 @@ The reviewed gate does not answer CORS. A preflight `OPTIONS` gets 405, and no r
 python3 -m integration_gate --port 0
 ```
 
-The working directory is `KIX_PROTOCOL_ROOT`, or `../kix-protocol-http-gate` when that checkout is present. The test requires that checkout's `HEAD` to be the merge SHA above, requires a clean worktree, and requires the OpenAPI file hashes to match the vendored pins. The process prints `integration-gate listening 127.0.0.1 <port>`. The test uses that port and stops the process when it finishes. When no checkout is found, the live gate suites are skipped with a warning and the rest of `npm test` still runs. `KIX_REQUIRE_GATE=1` turns a missing checkout back into a failure.
+The working directory is `KIX_PROTOCOL_ROOT`, or `../kix-protocol-http-gate` when that checkout is present. The test requires that checkout's `HEAD` to be the merge SHA above, requires a clean worktree, and requires the OpenAPI file hashes to match the vendored pins. The process prints `integration-gate listening 127.0.0.1 <port>`. The test uses that port and stops the process when it finishes. On a local run with no checkout found, the live gate suites are skipped with a warning and the rest of `npm test` still runs. A set `KIX_PROTOCOL_ROOT`, `CI=true`, or `KIX_REQUIRE_GATE=1` makes a missing checkout a failure, so a wrong path or a failed checkout step does not pass quietly. `KIX_REQUIRE_GATE=0` allows the skip.
 
 Against that process the test calls:
 

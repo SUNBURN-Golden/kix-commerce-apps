@@ -1003,7 +1003,8 @@ export class ResaleCaseStore {
       idempotencyKey: entry.idempotencyKey,
       subjectId: entry.subjectId,
       body: { ...entry.body },
-      observed: structuredClone(entry.observed),
+      // The rebuilt store only lives for one reconcile and never writes these.
+      observed: entry.observed,
     });
   }
 

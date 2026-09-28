@@ -3,6 +3,7 @@ import { ProtocolError, type ResaleCaseView, type ResaleRightView } from "@kix/p
 import { protocol } from "./protocol";
 import type { ResaleDeskCommand } from "./pages/ResalePanel";
 import { DESK_EXPIRES_AT, reservationIds } from "./reservation-desk";
+import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 
 const SALE_EXPIRES_AT = "2099-06-01T00:00:00.000Z";
 const SELLER = "desk-buyer";
@@ -200,21 +201,10 @@ function message(reason: unknown): string {
   return reason instanceof Error ? reason.message : "Mock resale command was rejected.";
 }
 
-function attemptKey(eventId: string): string {
-  return `kix-resale-attempt:${eventId.trim()}`;
-}
-
 function readAttempt(eventId: string): number {
-  if (eventId.trim().length === 0 || typeof sessionStorage === "undefined") {
-    return 0;
-  }
-  const parsed = Number(sessionStorage.getItem(attemptKey(eventId)));
-  return Number.isInteger(parsed) && parsed >= 0 ? parsed : 0;
+  return readDeskAttempt("resale", eventId);
 }
 
 function writeAttempt(eventId: string, attempt: number): void {
-  if (typeof sessionStorage === "undefined") {
-    return;
-  }
-  sessionStorage.setItem(attemptKey(eventId), String(attempt));
+  writeDeskAttempt("resale", eventId, attempt);
 }

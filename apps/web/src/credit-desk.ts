@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ProtocolError, type CreditCaseView } from "@kix/protocol-adapter";
 import { protocol } from "./protocol";
 import type { CreditDeskCommand } from "./pages/CreditPanel";
+import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 
 const OPEN_FACE = 100_000;
 const OFFER_AMOUNT = 80_000;
@@ -177,21 +178,10 @@ function message(reason: unknown): string {
   return reason instanceof Error ? reason.message : "Mock credit command was rejected.";
 }
 
-function attemptKey(eventId: string): string {
-  return `kix-credit-attempt:${eventId.trim()}`;
-}
-
 function readAttempt(eventId: string): number {
-  if (eventId.trim().length === 0 || typeof sessionStorage === "undefined") {
-    return 0;
-  }
-  const parsed = Number(sessionStorage.getItem(attemptKey(eventId)));
-  return Number.isInteger(parsed) && parsed >= 0 ? parsed : 0;
+  return readDeskAttempt("credit", eventId);
 }
 
 function writeAttempt(eventId: string, attempt: number): void {
-  if (typeof sessionStorage === "undefined") {
-    return;
-  }
-  sessionStorage.setItem(attemptKey(eventId), String(attempt));
+  writeDeskAttempt("credit", eventId, attempt);
 }

@@ -190,12 +190,12 @@ export class ReservationCaseStore {
     if (!Array.isArray(input.slots)) {
       throw reservationError("MOCK_INVARIANT");
     }
-    // The journal body joins slots with commas, so a slot name must not carry one.
-    for (const slot of input.slots) {
-      ident(slot);
-    }
     const body = { eventId: input.eventId, slots: input.slots.join(",") };
     return this.call("register_show", input.showId, input.idempotencyKey, body, () => null, (key, request) => {
+      // The journal body joins slots with commas, so a slot name must not carry one.
+      for (const slot of input.slots) {
+        ident(slot);
+      }
       const showId = ident(input.showId);
       this.applyRegister(showId, body);
       return this.accept(key, request, "register_show", showId, body, null);

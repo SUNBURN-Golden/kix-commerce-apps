@@ -62,6 +62,16 @@ describe("booking holds", () => {
 
     now += 11 * 60 * 1000;
     expect((await protocol.listPerformances())[0]!.remainingCapacity).toBe(before);
+    await expect(protocol.confirmBooking(hold.holdId)).rejects.toMatchObject({ code: "HOLD_EXPIRED" });
+    await expect(protocol.releaseHold(hold.holdId)).rejects.toMatchObject({ code: "HOLD_EXPIRED" });
+    expect((await protocol.listPerformances())[0]!.remainingCapacity).toBe(before);
+  });
+
+  it("keeps a confirmed hold HOLD_NOT_ACTIVE", async () => {
+    const protocol = new StubProtocolAdapter();
+    const [first] = await protocol.listPerformances();
+    const hold = await protocol.placeHold({ eventId: first!.eventId, quantity: 1 });
+    await protocol.confirmBooking(hold.holdId);
     await expect(protocol.confirmBooking(hold.holdId)).rejects.toMatchObject({ code: "HOLD_NOT_ACTIVE" });
     await expect(protocol.releaseHold(hold.holdId)).rejects.toMatchObject({ code: "HOLD_NOT_ACTIVE" });
   });

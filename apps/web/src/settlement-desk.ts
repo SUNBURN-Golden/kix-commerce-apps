@@ -1,4 +1,5 @@
 import type { CommerceProtocol } from "@kix/protocol-adapter";
+import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 import type { SettlementDeskCommand } from "./pages/SettlementPanel";
 
 const FAIL_REASON = "FIXTURE_DECLINE";
@@ -65,40 +66,8 @@ export async function runSettlementCommand(
   }
 }
 
-const memoryAttempts = new Map<string, number>();
-
-/**
- * The stub case outlives a route change, so the attempt does too. It lives in
- * sessionStorage when the browser has it and in memory otherwise.
- */
+/** The box office counter, kept per settlement case for the tab. */
 export const sessionAttempts: AttemptStore = {
-  read(settlementId) {
-    const stored = readSession(settlementId);
-    return stored ?? memoryAttempts.get(settlementId) ?? 0;
-  },
-  write(settlementId, attempt) {
-    memoryAttempts.set(settlementId, attempt);
-    try {
-      sessionStorage.setItem(attemptKey(settlementId), String(attempt));
-    } catch {
-      // Memory keeps the attempt for this page load.
-    }
-  },
+  read: (settlementId) => readDeskAttempt("settlement", settlementId),
+  write: (settlementId, attempt) => writeDeskAttempt("settlement", settlementId, attempt),
 };
-
-function attemptKey(settlementId: string): string {
-  return `kix-settlement-attempt:${settlementId}`;
-}
-
-function readSession(settlementId: string): number | null {
-  try {
-    const raw = sessionStorage.getItem(attemptKey(settlementId));
-    if (raw === null) {
-      return null;
-    }
-    const parsed = Number(raw);
-    return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
-  } catch {
-    return null;
-  }
-}

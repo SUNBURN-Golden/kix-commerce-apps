@@ -186,7 +186,7 @@ The reviewed gate does not answer CORS, so from a browser at `:5173` the banner 
 - production and public mode names are refused and do not select the stub
 - a closed port, a stale response, and a degraded ready probe stay on the HTTP adapter and do not retry
 - the integration-gate pin rejects a wrong file sha256, a wrong status, a production flag, protocol truth, and production conformance
-- adapter tests start `python3 -m integration_gate --port 0` from the reviewed protocol checkout and send settlement, reservation, admission, resale, and credit-adjacent catalogue calls over that transport. Without a checkout those suites are skipped with a warning. `KIX_REQUIRE_GATE=1` makes a missing checkout fail
+- adapter tests start `python3 -m integration_gate --port 0` from the reviewed protocol checkout and send settlement, reservation, admission, resale, and credit-adjacent catalogue calls over that transport. On a local run without a checkout those suites are skipped with a warning. A set `KIX_PROTOCOL_ROOT`, `CI=true`, or `KIX_REQUIRE_GATE=1` makes a missing checkout fail. `KIX_REQUIRE_GATE=0` allows the skip
 - a redirect off the loopback origin is not followed, a gate that never answers is `REQUEST_TIMEOUT` after one attempt, and a body cut off mid-read is a `ProtocolError`
 - a success that is empty, a bare value, a receipt for another call, or a receipt with extra keys is rejected, and nested payment, mode, fee, and finality claims are rejected at any depth
 - a `["string", "null"]` schema field accepts null or a checked string, and body keys that only exist on the object prototype are rejected before a request

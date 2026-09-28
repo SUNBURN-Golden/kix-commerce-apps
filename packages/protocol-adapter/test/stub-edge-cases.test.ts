@@ -67,6 +67,9 @@ describe("stub reservation slots", () => {
       adapter.registerReservationShow({ showId: SHOW, eventId: EVENT, idempotencyKey: "show-1", slots: ["a,b"] }),
     ).rejects.toMatchObject({ code: "INVALID_ID" });
     await expect(adapter.viewReservationShow(SHOW)).rejects.toThrow();
+    await expect(
+      adapter.registerReservationShow({ showId: SHOW, eventId: EVENT, idempotencyKey: "show-1", slots: ["a"] }),
+    ).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
   });
 });
 

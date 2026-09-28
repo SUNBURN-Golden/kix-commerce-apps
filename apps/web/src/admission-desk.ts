@@ -3,6 +3,7 @@ import { type AdmissionPresentation } from "@kix/protocol-adapter";
 import { protocol } from "./protocol";
 import type { AdmissionDeskCommand } from "./pages/AdmissionCredentialPanel";
 import { reservationIds } from "./reservation-desk";
+import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 
 export const ADMISSION_CLOCK_AT = "2099-01-01T00:00:00.000Z";
 export const ADMISSION_EXPIRES_AT = "2099-06-01T00:00:00.000Z";
@@ -133,21 +134,10 @@ function message(reason: unknown): string {
   return reason instanceof Error ? reason.message : "Admission credential command was rejected.";
 }
 
-function attemptKey(eventId: string): string {
-  return `kix-admission-attempt:${eventId.trim()}`;
-}
-
 function readAttempt(eventId: string): number {
-  if (eventId.trim().length === 0 || typeof sessionStorage === "undefined") {
-    return 0;
-  }
-  const parsed = Number(sessionStorage.getItem(attemptKey(eventId)));
-  return Number.isInteger(parsed) && parsed >= 0 ? parsed : 0;
+  return readDeskAttempt("admission", eventId);
 }
 
 function writeAttempt(eventId: string, attempt: number): void {
-  if (typeof sessionStorage === "undefined") {
-    return;
-  }
-  sessionStorage.setItem(attemptKey(eventId), String(attempt));
+  writeDeskAttempt("admission", eventId, attempt);
 }

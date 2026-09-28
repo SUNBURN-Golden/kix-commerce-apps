@@ -56,18 +56,8 @@ const MAX_PAYLOAD_DEPTH = 32;
  * model result. It is not a desk FSM view and it is not a production claim.
  * Every nested object is checked, not only the top level and result.
  */
-export function enforceRemotePayloadGuards(
-  value: unknown,
-  expected?: { action: string; operationId: string },
-): void {
+export function enforceRemotePayloadGuards(value: unknown): void {
   rejectTransportProductionClaims(value, 0);
-  if (
-    expected &&
-    isCatalogueReceipt(value) &&
-    (value.action !== expected.action || value.operationId !== expected.operationId)
-  ) {
-    throw new ProtocolError("Integration gate receipt does not match the local call.", "GATE_STATUS");
-  }
   scanDeep(value, 0);
 }
 

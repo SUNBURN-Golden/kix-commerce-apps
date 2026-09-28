@@ -89,6 +89,15 @@ import {
 type FetchLike = typeof fetch;
 
 /**
+ * A browser refuses `fetch` called with any receiver other than the global
+ * object, so the default is a wrapper and not the bare function.
+ */
+const globalFetch: FetchLike = (input, init) => fetch(input, init);
+
+/** Largest delay setTimeout honors. A larger one fires at once. */
+const MAX_TIMER_MS = 2_147_483_647;
+
+/**
  * Client-side ceiling for one exchange, including the body read. It is twice
  * the pinned gate request timeout, so a gate that answers inside its own limit
  * is never cut off. A timeout is not a retry signal.
@@ -114,15 +123,17 @@ export class HttpProtocolAdapter implements CommerceProtocol {
 
   constructor(
     baseUrl: string,
-    private readonly fetchImpl: FetchLike = fetch,
+    private readonly fetchImpl: FetchLike = globalFetch,
     options: HttpProtocolAdapterOptions = {},
   ) {
     requireOpenApiContractPin();
     requireIntegrationGatePin();
     this.baseUrl = requireLoopbackBase(baseUrl);
     const timeoutMs = options.timeoutMs ?? INTEGRATION_HTTP_TIMEOUT_MS;
-    if (!Number.isInteger(timeoutMs) || timeoutMs <= 0) {
-      throw new ProtocolError("Integration HTTP timeout must be a positive integer of milliseconds.");
+    if (!Number.isInteger(timeoutMs) || timeoutMs <= 0 || timeoutMs > MAX_TIMER_MS) {
+      throw new ProtocolError(
+        `Integration HTTP timeout must be a positive integer of milliseconds no larger than ${MAX_TIMER_MS}.`,
+      );
     }
     this.timeoutMs = timeoutMs;
   }
@@ -502,15 +513,12 @@ export class HttpProtocolAdapter implements CommerceProtocol {
       },
       body: JSON.stringify(envelope),
     });
-    enforceRemotePayloadGuards(parsed.body, {
-      action: envelope.action,
-      operationId: envelope.operationId,
-    });
-    if (!parsed.ok || (isRecord(parsed.body) && parsed.body.rejected === true)) {
-      const code = isRecord(parsed.body) && typeof parsed.body.error === "string" ? parsed.body.error : "GATE_REJECTED";
-      throw new ProtocolError(`Integration gate rejected the local call (${code}).`, code, parsed.trace);
-    }
     try {
+      enforceRemotePayloadGuards(parsed.body);
+      if (!parsed.ok || (isRecord(parsed.body) && parsed.body.rejected === true)) {
+        const code = isRecord(parsed.body) && typeof parsed.body.error === "string" ? parsed.body.error : "GATE_REJECTED";
+        throw new ProtocolError(`Integration gate rejected the local call (${code}).`, code);
+      }
       assertLocalCallReceipt(parsed.body, {
         action: envelope.action,
         operationId: envelope.operationId,
@@ -570,7 +578,7 @@ export class HttpProtocolAdapter implements CommerceProtocol {
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
       return await Promise.race([
-        this.exchangeOnce(url, { ...init, headers, redirect: "error", signal: controller.signal }, trace),
+        this.exchangeOnce(url, { ...init, headers, redirect: "manual", signal: controller.signal }, trace),
         aborted,
       ]);
     } catch (error) {
