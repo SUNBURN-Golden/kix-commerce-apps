@@ -14,6 +14,7 @@ import {
   echoIntegrationGateHeaders,
   isPinnedAction,
 } from "../src/index.js";
+import { localCallReceipt } from "./support/receipt.js";
 
 const SHOW = "show_evt_lanterns";
 const EVENT = "evt_lanterns";
@@ -631,7 +632,7 @@ describe("reservation payload guards", () => {
         body: commandBody,
       });
 
-    responseBody = {
+    responseBody = localCallReceipt("op-res-ok", "close_sales", {
       reservationId: RES,
       mode: "mock",
       phase: "ISSUED",
@@ -644,11 +645,9 @@ describe("reservation payload guards", () => {
       externalPayment: "UNSUPPORTED",
       references: ["B01", "B02", "B03", "B04", "B05"],
       note: "Simulated mock phase. Not live admission.",
-    };
+    });
     await expect(call("op-res-ok")).resolves.toMatchObject({
-      phase: "ISSUED",
-      economicFinalityClaimed: false,
-      mode: "mock",
+      result: { phase: "ISSUED", economicFinalityClaimed: false, mode: "mock" },
     });
 
     responseBody = {
@@ -726,13 +725,13 @@ describe("reservation payload guards", () => {
     };
     await expect(call("op-adm-proof")).rejects.toThrow(/proof mode/);
 
-    responseBody = {
+    responseBody = localCallReceipt("op-adm-ok", "close_sales", {
       admitted: false,
       rightsRef: "right_1",
       gateId: "gate-main",
       proofMode: "stub",
       detail: "Stub: unknown right.",
-    };
-    await expect(call("op-adm-ok")).resolves.toMatchObject({ proofMode: "stub", admitted: false });
+    });
+    await expect(call("op-adm-ok")).resolves.toMatchObject({ result: { proofMode: "stub", admitted: false } });
   });
 });

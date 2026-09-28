@@ -11,6 +11,7 @@ import {
   echoIntegrationGateHeaders,
   isPinnedAction,
 } from "../src/index.js";
+import { localCallReceipt } from "./support/receipt.js";
 
 const FACE = 100_000;
 const OFFER = 80_000;
@@ -756,7 +757,7 @@ describe("http credit binding", () => {
       /does not disburse credit/,
     );
 
-    responseBody = {
+    responseBody = localCallReceipt("op-close-credit-6", "close_sales", {
       advanceId: ADVANCE,
       mode: "mock",
       provenance: "MOCK_CREDIT_F04_ONLY",
@@ -767,11 +768,9 @@ describe("http credit binding", () => {
       fundsExecuted: false,
       availableCredit: FACE,
       outstandingExposure: 0,
-    };
+    });
     await expect(http.invokeLocalCall({ ...command, operationId: "op-close-credit-6" })).resolves.toMatchObject({
-      mode: "mock",
-      phase: "DRAWN",
-      economicFinalityClaimed: false,
+      result: { mode: "mock", phase: "DRAWN", economicFinalityClaimed: false },
     });
   });
 });

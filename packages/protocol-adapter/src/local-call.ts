@@ -82,6 +82,28 @@ function validateSchema(schema: unknown, value: unknown, path: string): void {
     throw new ProtocolError(`Field ${path} is outside the schema enum.`);
   }
   const type = schema.type;
+  if (Array.isArray(type)) {
+    // A union such as ["string", "null"], read the way the gate reads it:
+    // null ends the check, any other value is checked against its own branch.
+    if (type.length === 0 || !type.every(isSchemaTypeName)) {
+      throw new ProtocolError(`Unsupported schema at ${path}.`);
+    }
+    if (value === null && type.includes("null")) {
+      return;
+    }
+    const branch = type.find((name) => name !== "null" && matchesSchemaType(name, value));
+    if (branch === undefined) {
+      throw new ProtocolError(`Field ${path} must be ${type.join(" or ")}.`);
+    }
+    validateSchema({ ...schema, type: branch }, value, path);
+    return;
+  }
+  if (type === "null") {
+    if (value !== null) {
+      throw new ProtocolError(`Field ${path} must be null.`);
+    }
+    return;
+  }
   if (type === "object") {
     if (!isRecord(value)) {
       throw new ProtocolError(`Field ${path} must be an object.`);
@@ -89,7 +111,7 @@ function validateSchema(schema: unknown, value: unknown, path: string): void {
     const properties = isRecord(schema.properties) ? schema.properties : {};
     if (schema.additionalProperties === false) {
       for (const key of Object.keys(value)) {
-        if (!(key in properties)) {
+        if (!Object.hasOwn(properties, key)) {
           throw new ProtocolError(`Unknown field ${path}.${key}.`);
         }
       }
@@ -98,12 +120,12 @@ function validateSchema(schema: unknown, value: unknown, path: string): void {
     }
     const required = Array.isArray(schema.required) ? schema.required : [];
     for (const key of required) {
-      if (typeof key !== "string" || !(key in value)) {
+      if (typeof key !== "string" || !Object.hasOwn(value, key)) {
         throw new ProtocolError(`Missing field ${path}.${String(key)}.`);
       }
     }
     for (const [key, child] of Object.entries(properties)) {
-      if (key in value) {
+      if (Object.hasOwn(value, key)) {
         validateSchema(child, value[key], `${path}.${key}`);
       }
     }
@@ -152,4 +174,27 @@ function validateSchema(schema: unknown, value: unknown, path: string): void {
     return;
   }
   throw new ProtocolError(`Unsupported schema at ${path}.`);
+}
+
+const SCHEMA_TYPE_NAMES = ["object", "array", "string", "integer", "boolean", "null"] as const;
+
+function isSchemaTypeName(value: unknown): value is (typeof SCHEMA_TYPE_NAMES)[number] {
+  return SCHEMA_TYPE_NAMES.includes(value as (typeof SCHEMA_TYPE_NAMES)[number]);
+}
+
+function matchesSchemaType(name: (typeof SCHEMA_TYPE_NAMES)[number], value: unknown): boolean {
+  switch (name) {
+    case "object":
+      return isRecord(value);
+    case "array":
+      return Array.isArray(value);
+    case "string":
+      return typeof value === "string";
+    case "integer":
+      return typeof value === "number" && Number.isInteger(value);
+    case "boolean":
+      return typeof value === "boolean";
+    case "null":
+      return value === null;
+  }
 }

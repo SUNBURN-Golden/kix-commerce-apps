@@ -1,6 +1,11 @@
 export { COMMERCE_COMMAND_BINDINGS, COMMERCE_METHODS, type CommerceMethod } from "./commerce-bindings.js";
 export { createProtocol, type ProtocolOptions } from "./create-protocol.js";
-export { echoIntegrationGateHeaders, HttpProtocolAdapter } from "./http-adapter.js";
+export {
+  echoIntegrationGateHeaders,
+  HttpProtocolAdapter,
+  INTEGRATION_HTTP_TIMEOUT_MS,
+  type HttpProtocolAdapterOptions,
+} from "./http-adapter.js";
 export {
   integrationHttpObservation,
   localStubObservation,
