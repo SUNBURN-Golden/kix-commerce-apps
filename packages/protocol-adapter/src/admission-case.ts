@@ -1,4 +1,5 @@
 import { isRecord } from "./record.js";
+import { sha256Hex } from "./sha256.js";
 import { SURFACES } from "./surfaces.js";
 import {
   ProtocolError,
@@ -364,7 +365,7 @@ export class AdmissionCaseStore {
           this.sources.authorizeReservation({
             admissionId,
             rightId,
-            idempotencyKey: `admission-delegate:${key}`,
+            idempotencyKey: delegateKey(key),
           });
         }
         credential.phase = "AUTHORIZED";
@@ -445,7 +446,7 @@ export class AdmissionCaseStore {
           this.sources.consumeReservation({
             consumeId,
             rightId,
-            idempotencyKey: `admission-delegate:${key}`,
+            idempotencyKey: delegateKey(key),
           });
         }
         credential.phase = "CONSUMED";
@@ -990,6 +991,17 @@ export class AdmissionCaseStore {
 
 function admissionError(code: string): ProtocolError {
   return new ProtocolError(`${code}: mock admission credential rejected.`, code);
+}
+
+/**
+ * The key this desk hands to the reservation store. The readable form is kept
+ * while it fits the 100-character id limit. A longer key is hashed under a
+ * separate prefix, so an admission key the desk accepted is never refused
+ * downstream for its length.
+ */
+function delegateKey(key: string): string {
+  const readable = `admission-delegate:${key}`;
+  return readable.length <= 100 ? readable : `admission-delegate-h:${sha256Hex(key)}`;
 }
 
 function ident(value: string): string {

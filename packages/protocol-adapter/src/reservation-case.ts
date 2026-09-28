@@ -190,6 +190,10 @@ export class ReservationCaseStore {
     if (!Array.isArray(input.slots)) {
       throw reservationError("MOCK_INVARIANT");
     }
+    // The journal body joins slots with commas, so a slot name must not carry one.
+    for (const slot of input.slots) {
+      ident(slot);
+    }
     const body = { eventId: input.eventId, slots: input.slots.join(",") };
     return this.call("register_show", input.showId, input.idempotencyKey, body, () => null, (key, request) => {
       const showId = ident(input.showId);
@@ -890,7 +894,7 @@ export class ReservationCaseStore {
       mode: "mock",
       surface: SURFACES.bookingFsm,
       admissionSurface: SURFACES.admissionFsm,
-      references: RESERVATION_REFERENCES,
+      references: [...RESERVATION_REFERENCES],
       admissionReference: RESERVATION_ADMISSION_REFERENCE,
       provenance: RESERVATION_PROVENANCE,
       lifecycleAuthority: "IN_MEMORY_FSM",
