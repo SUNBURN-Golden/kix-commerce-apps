@@ -154,7 +154,7 @@ The reviewed gate does not answer CORS, so from a browser at `:5173` the banner 
 `.github/workflows/ci.yml` runs on pushes to `main`, on pull requests, and on demand. It has two jobs:
 
 - `desk` runs `npm ci`, `npm run typecheck`, `npm run build`, and `npm test`. It sets `KIX_REQUIRE_GATE=0`, so the live gate suites are skipped there on purpose.
-- `live-gate` checks out kix-protocol at the pinned merge `52a9b5cbf7777df55d2d2062cb8d99d862b423bb` and runs the adapter suite with `KIX_REQUIRE_GATE=1` against that checkout. kix-protocol is private, so this job needs a `KIX_PROTOCOL_READ_TOKEN` repository secret with read-only contents access to it. Without the secret the job posts a warning and runs nothing. It does not report a gate pass.
+- `live-gate` checks out kix-protocol at the pinned merge `52a9b5cbf7777df55d2d2062cb8d99d862b423bb` and runs the adapter suite with `KIX_REQUIRE_GATE=1` against that checkout. kix-protocol is private, so this job needs a `KIX_PROTOCOL_READ_TOKEN` repository secret with read-only contents access to it. A small `gate-token` job checks for the secret first. Without it, `gate-token` posts a warning and `live-gate` shows as skipped, never as a pass.
 
 A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha`. Moving the pin means moving both.
 
