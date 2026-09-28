@@ -7,7 +7,7 @@ import { OPENAPI_INTEGRATION_GATE_PIN } from "../../src/index.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 
-export function protocolRoot(): string {
+export function findProtocolRoot(): string | null {
   const candidates = [
     process.env.KIX_PROTOCOL_ROOT,
     path.resolve(repoRoot, "../kix-protocol-prod-readiness"),
@@ -18,7 +18,28 @@ export function protocolRoot(): string {
       return candidate;
     }
   }
-  throw new Error("Set KIX_PROTOCOL_ROOT to the kix-protocol checkout that contains integration_gate.");
+  return null;
+}
+
+export function protocolRoot(): string {
+  const root = findProtocolRoot();
+  if (root === null) {
+    throw new Error("Set KIX_PROTOCOL_ROOT to the kix-protocol checkout that contains integration_gate.");
+  }
+  return root;
+}
+
+/**
+ * The live gate suites need a reviewed kix-protocol checkout. Without one they
+ * are skipped, so `npm test` still runs the rest of the adapter and the web
+ * suite. KIX_REQUIRE_GATE=1 turns a missing checkout back into a failure.
+ */
+export const REVIEWED_GATE_RUNS = findProtocolRoot() !== null || process.env.KIX_REQUIRE_GATE === "1";
+
+if (!REVIEWED_GATE_RUNS) {
+  console.warn(
+    "Skipping live integration-gate suites: no kix-protocol checkout. Set KIX_PROTOCOL_ROOT, or KIX_REQUIRE_GATE=1 to fail instead.",
+  );
 }
 
 /**

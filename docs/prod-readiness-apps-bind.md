@@ -24,13 +24,13 @@ Those two protocol commits share one tree. The gate document still has 40 comman
 
 `createProtocol()` with no mode builds the stub. HTTP mode still requires `http://127.0.0.1:<port>`. There is no default host.
 
-Each local call is one attempt. The client does not loop, does not retry a non-idempotent command, and does not send `Idempotency-Key`. The identity remains `envelope.operationId`. A different fingerprint for that id is still `OPERATION_ID_CONFLICT`.
+Each local call is one attempt. The client does not loop, does not retry a non-idempotent command, and does not send `Idempotency-Key`. It does not follow redirects. An exchange that runs past twice the pinned gate timeout is `REQUEST_TIMEOUT` and is unavailable on the banner. The identity remains `envelope.operationId`. A different fingerprint for that id is still `OPERATION_ID_CONFLICT`.
 
 The client sends `X-Request-Id` and `X-Correlation-Id`. The response must echo both. A mismatch is `STALE_RESPONSE` and is not applied. Those ids are transport correlation. They are not an authentication result and not client authority.
 
 Responses must also carry `X-Kix-Transport: integration-gate`, `X-Kix-Production-Endpoint: false`, `X-Kix-Protocol-Truth: false`, and `X-Kix-Production-Conformance: false`.
 
-`observeTransport` reads `GET /health` and then `GET /ready`. Health is liveness. Ready means the reference core is loaded. When `--readiness-dir` is set, ready also reports `localFileJournal: true` and a `journalRecords` count. `durable` stays false. `productionReadiness` stays false. `NOT_READY`, `OVERLOADED`, `CORE_BUSY`, and `JOURNAL_BUDGET` are degraded. A closed port, a stale response, a transport mismatch, and a production claim are unavailable. The desk banner prints that state. It does not switch the adapter to the stub.
+`observeTransport` reads `GET /health` and then `GET /ready`. Health is liveness. Ready means the reference core is loaded. When `--readiness-dir` is set, ready also reports `localFileJournal: true` and a `journalRecords` count. `durable` stays false. `productionReadiness` stays false. `NOT_READY`, `OVERLOADED`, `CORE_BUSY`, and `JOURNAL_BUDGET` are degraded. A closed port, a stale response, a transport mismatch, and a production claim are unavailable. The desk banner prints that state. It does not switch the adapter to the stub. In HTTP mode the banner reads the probes again on each route change and every 15 seconds. A late reply from an older probe does not replace a newer state. The stub banner is not polled.
 
 A reachable gate is still not venue entry. `presentAdmission` reads health only and does not post `admit`.
 

@@ -14,7 +14,9 @@ import {
   mapOperationalError,
   rejectRetryHeader,
 } from "../src/index.js";
-import { assertReviewedCheckout, protocolRoot, startGate, stopGate } from "./support/reviewed-gate.js";
+import { assertReviewedCheckout, protocolRoot, REVIEWED_GATE_RUNS, startGate, stopGate } from "./support/reviewed-gate.js";
+
+const describeGate = REVIEWED_GATE_RUNS ? describe : describe.skip;
 
 const TRACE_TOKEN = /^[A-Za-z0-9._:-]{1,64}$/;
 
@@ -228,7 +230,7 @@ describe("integration HTTP environment", () => {
   });
 });
 
-describe("loopback readiness journal", () => {
+describeGate("loopback readiness journal", () => {
   const journalDir = mkdtempSync(path.join(tmpdir(), "kix-ig-journal-"));
   let baseUrl = "";
   let child: Awaited<ReturnType<typeof startGate>>["child"] | undefined;
