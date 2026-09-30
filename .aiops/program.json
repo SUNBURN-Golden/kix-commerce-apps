@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "program": "kixc",
+  "repository": "BeautifulMind-JT/kix-commerce-apps",
+  "project": "KIX_COMMERCE",
+  "approval_pointer": "https://github.com/BeautifulMind-JT/kix-protocol/pull/73 (kix-protocol docs/decisions/PROGRAM_DECISIONS_20260928.md §3 Wave 6 open and §6 Wave 6-A, approved by the User's merge cfeb0d69561103302b6fdc3d10842768c3420151) ; Wave 6 gate record https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343",
+  "authoritative_doc_pointers": "README.md ; docs/http-integration-gate-apps-bind.md ; kix-protocol docs/decisions/PROGRAM_DECISIONS_20260928.md §3 and §6 ; kix-protocol docs/tasks/TASK_005_MEGA_COMMERCE_PROGRAM.md",
+  "nodes": [
+    {
+      "id": "wave6a",
+      "title": "Wave 6-A: booking and box-office screens consume the contract-only OpenAPI and the loopback gate (skeleton)",
+      "spec": "Objective: the booking (/booking/:eventId) and box-office (/) screens consume the contract-only OpenAPI catalogue and the loopback integration gate as a skeleton (kix-protocol PROGRAM_DECISIONS_20260928.md §6 line 125; Wave 6 gate §3 line 72). Today every desk method is status not-bound (packages/protocol-adapter/src/commerce-bindings.ts) and the screens call only desk methods.\nScope: contract consumption and mock backend only (Wave 6 scope). The PR body must cite the gate comment https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343.\nKeep the existing fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, production and truth flags false (README.md).\nOut of scope: real payment, public production deployment, real KYC (§3); credit disbursement (F04 stays mock); product SLOs; Wave 7 marketing changes; any change in kix-protocol.\nKnown limits: the catalogue has no list or read command; confirmBooking to capture needs amount, currency and paymentId; the browser path is blocked by CORS and needs a gate change in kix-protocol (docs/http-integration-gate-apps-bind.md). Do not add a proxy or map a desk method onto a different body; if the skeleton needs to cross one of these limits, stop with DECISION_REQUIRED.\nAcceptance: a mock end-to-end journey on at least one surface (for example booking) aligned with the contracts, verified by tests (the Node tests against the live gate are acceptable); Commerce apps CI green at the exact head, including Typecheck, build, and test (stub).",
+      "audit_floor": "A2"
+    }
+  ]
+}
