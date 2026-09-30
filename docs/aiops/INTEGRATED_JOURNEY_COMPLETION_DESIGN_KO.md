@@ -1,6 +1,6 @@
 # KIX Commerce 통합 여정·계약 소비·최종 완료 설계 후보
 
-공통 후속 규약: [중앙 #45](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/45), 후보 HEAD `112110c2c0a996e309abf2c62a57368a9a673126`. [고정 설계](https://github.com/BeautifulMind-JT/ai-ops-control-plane/blob/112110c2c0a996e309abf2c62a57368a9a673126/engineering/docs/PROGRAM_EXECUTION_EVOLUTION_DESIGN_KO.md)는 아직 운영·승인 evidence가 아니다.
+공통 후속 규약: [중앙 #46](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/46), 후보 HEAD `a8b7355712c58de8d27c85a535fb241a09a4037c`. [고정 설계](https://github.com/BeautifulMind-JT/ai-ops-control-plane/blob/a8b7355712c58de8d27c85a535fb241a09a4037c/engineering/docs/PROGRAM_EXECUTION_EVOLUTION_DESIGN_KO.md)는 아직 운영·승인 evidence가 아니다.
 
 상태: **설계·계획 개정 후보. 실제 앱 구현·서비스 qualification·출시가 아니다.**
 기준은 commerce #15 `a7c9d4467a9170ba4a062554562a4610c0b27573`와 protocol
@@ -33,10 +33,24 @@ shared vectors digest를 canonical manifest와 대조한다. 파일 핀 5종을 
 consumer 최종 HEAD와 producer manifest digest는 실제 exact-head CI/독립 리뷰/보호된
 completion evidence에서 결합한다. manifest 안에 자기 최종 HEAD를 넣지 않는다.
 
+초기 `consume-p-sdk-0`는 protocol `p-sdk-0`가 제공한 manifest-v1 형식과
+BOOTSTRAP profile·offline 최소 verifier·golden vectors를 원본 catalogue의 정확한
+tuple로 소비한다. profile kind/revision/digest와 schema/두 OpenAPI/generator/SDK/
+output/vector 결합을 확인하며, 초기 profile의 실제 비작성자 A3 검토·보호된 완료
+증거·병합을 확인하기 전에는 입력 artifact만으로 승인됐다고 하지 않는다.
+BOOTSTRAP은 초기 입력의 재현성과 결합에 한정하며 확대 catalogue의 의미 검증이나
+N/N−1 호환을 증명하지 않는다. protocol의 `p-sdk-0` floor는 이 형식/검증 경계에
+맞춰 A3/ARCHITECTURE로 올라간 후보이며 아직 실제 감사 PASS가 아니다.
+
 `consume-p-sdk-1`은 초기 `consume-p-sdk-0` 뒤에, protocol `p-sdk-1`과
 `contract-compatibility-profile` 완료 뒤에 새 catalogue SDK를 소비한다.
 `bind-list-read`는 초기 SDK만 기다리던 정의를 고쳐 이 소비와 protocol
 `read-model-reference`/`p-sdk-1`을 모두 기다린다.
+`consume-p-sdk-0` 이외 pending 앱 노드도 `contract-compatibility-profile` 완료의
+명시적 외부 선행을 둔다. 변경된 catalogue/gate/schema/receipt를 소비할 때는 초기
+BOOTSTRAP을 거부하고, 소비하는 정확한 새 source tuple의 SEMANTIC_CONFORMANCE
+profile/evidence를 검증한다. profile node가 완료됐다는 사실만으로 다른 tuple을
+수락하지 않는다. 기존 Wave 6-A active10의 최소 gate·선행은 그대로다.
 
 FSM/쿼리/Wave7 catalogue가 이후 바뀌면 소비 노드마다 그 변경의 새로운 manifest와
 SDK를 다시 확인한다. 첫 compatibility-profile이나 초기 SDK 소비의 PASS를 후속
@@ -141,7 +155,9 @@ pending/User decision/external input/qualification holds를 개별 집계한다.
 
 1. 원본 명세/잠금/User-only 권한을 유지하며 외부 의존성 및 전체 DAG가 acyclic.
 2. 같은 producer tuple의 generated SDK를 실제 소비하고 혼합 catalogue/gate/SDK와
-   wrong digest/domain/version/receipt를 쓰기 전에 거부.
+   wrong digest/domain/version/receipt를 쓰기 전에 거부. 초기 소비의 BOOTSTRAP과
+   후속 소비의 SEMANTIC_CONFORMANCE를 구분하고 unknown/wrong profile kind,
+   다른 revision/digest 또는 초기 profile로 확대 catalogue를 소비하는 입력을 거부.
 3. final closeout이 다른 원본 28개와 SDK 소비 1개의 완료 증거를 요구하고 missing,
    stub-only, skipped, NOT_BOUND, blocked-browser, 미승인 release를 정확히 분리.
 4. 단계별 partial-success/response-loss 시험이 no retry, UNKNOWN fencing과 UI 진실성을 확인.
@@ -149,3 +165,5 @@ pending/User decision/external input/qualification holds를 개별 집계한다.
 
 이 후속 PR은 설계와 candidate task definitions만 변경한다. 앱 코드·CI·credentials·
 settings·activation·독립 Fable 실행·제품 qualification·실배포는 실행하지 않는다.
+
+중앙 bootstrap의 현 채택 검토 후보는 #44/#45를 통합·보완한 [#46](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/46)이다. 기존 #44 감사의 DECISION_REQUIRED를 통과한 것으로 간주하지 않는다. PA-1 권한 예외는 PENDING이며, 보호된 reconcile과 실제 host qualification 전에는 전체 실행 NOT_READY다. 기존 중앙 포인터는 이전 체크포인트 기록이고 최종 승인 registration에는 실제 채택·qualification commit을 pin해야 한다.

@@ -11,10 +11,16 @@ candidate revises future read/E2E dependencies and adds SDK consumption and fina
 closeout in [INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md](INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md).
 Its active plan still has 10 nodes; all 20 cross-repository-dependent candidate
 nodes remain pending. This text does not record adoption or activation.
+The current continuity correction distinguishes consume-p-sdk-0's exact original
+BOOTSTRAP profile from later SEMANTIC_CONFORMANCE evidence. Every other pending
+consumer explicitly waits for protocol contract-compatibility-profile; existing
+dependencies are retained and no node is added. The active10 identities, grades,
+flags and dependencies remain unchanged. Earlier preservation claims describe
+the earlier registration, not this additional pending-dependency correction.
 `astra_auto_merge=true` delegates only the merge executor inside
 each non-User node's explicitly approved scope, through the protected bridge in
-[central #44](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/44),
-candidate HEAD `3c7dd38d69d2992ed25fe97f39f6ed4a37360ea3`.
+[central #46](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/46),
+candidate HEAD `a8b7355712c58de8d27c85a535fb241a09a4037c`.
 Existing independent reviews, current-head CI, required product gates and exact
 merge HEAD remain mandatory. A protected Fable PASS/PASS_WITH_NOTES plus
 WITHIN_APPROVED_PLAN is required whenever an Astra gate applies or review
@@ -29,7 +35,7 @@ service or hardware that is absent remains unqualified; fake tests do not make i
 complete. UNKNOWN model/task/job outcomes remain fenced.
 
 The existing central source ignores this new delegation field. Its gates still
-hold. The new path applies only after central #44 has an exact-HEAD independent
+hold. The new path applies only after replacement central #46 has an exact-HEAD independent
 A3 result, User adoption, root-owned host install, canary/qualification and updated
 runtime attestation. Product client pins and activation records are not altered
 by this candidate; actual runtime/source qualification must be established at
@@ -42,3 +48,7 @@ registered main plan commit, and let the central layer materialize canonical tas
 issues. Do not manufacture task envelopes, MACs, session receipts, audit verdicts
 or host state. The bootstrap PRs themselves are not program tasks and are not
 self-authorized for automatic merge.
+
+## 중앙 채택 후보 갱신 — 2026-09-30
+
+중앙 [#46](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/46), 후보 HEAD `a8b7355712c58de8d27c85a535fb241a09a4037c`가 #44/#45의 대체 검토 후보다. #44의 DECISION_REQUIRED 차단을 수정하는 새 후보이며 독립 PASS나 사용자 채택을 주장하지 않는다. RELEASE·contract_change=YES·User-only는 자동 병합에서 제외된다. 권한 예외 PA-1, 실제 서비스 authorization·reconcile·host qualification·activation은 아직 PENDING/NOT_READY다. approval pointer는 PENDING 상태로 비활성이며, 실제 등록 시 대체 후보의 최종 승인·qualification evidence로 갱신한다.
