@@ -9,12 +9,16 @@ The earlier delegation candidate preserved the parent specifications, dependency
 DAG, audit floors and milestone gates. This later, separately reviewed design
 candidate revises future read/E2E dependencies and adds SDK consumption and final
 closeout in [INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md](INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md).
-Its active plan still has 10 nodes; all 20 cross-repository-dependent candidate
-nodes remain pending. This text does not record adoption or activation.
+Its active plan still has 10 nodes; all 26 cross-repository-dependent candidate
+nodes remain pending. The six additional product scopes and all35 closeout
+predecessors are defined in COMMERCE_PRODUCT_EVOLUTION_KO.md; totalcommerce36.
+This later scope evolution keeps the existing active10 unchanged and requires
+its own adoption/current-head independent review before any pending admission. This text does not record adoption or activation.
 The current continuity correction distinguishes consume-p-sdk-0's exact original
 BOOTSTRAP profile from later SEMANTIC_CONFORMANCE evidence. Every other pending
 consumer explicitly waits for protocol contract-compatibility-profile; existing
-dependencies are retained and no node is added. The active10 identities, grades,
+dependencies were retained and no node was added at that checkpoint. The later
+COMMERCE_PRODUCT_EVOLUTION_KO.md scope adds six inactive candidate nodes. The active10 identities, grades,
 flags and dependencies remain unchanged. Earlier preservation claims describe
 the earlier registration, not this additional pending-dependency correction.
 `astra_auto_merge=true` delegates only the merge executor inside
@@ -52,3 +56,7 @@ self-authorized for automatic merge.
 ## 중앙 채택 후보 갱신 — 2026-09-30
 
 중앙 [#46](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/46), 후보 HEAD `a8b7355712c58de8d27c85a535fb241a09a4037c`가 #44/#45의 대체 검토 후보다. #44의 DECISION_REQUIRED 차단을 수정하는 새 후보이며 독립 PASS나 사용자 채택을 주장하지 않는다. RELEASE·contract_change=YES·User-only는 자동 병합에서 제외된다. 권한 예외 PA-1, 실제 서비스 authorization·reconcile·host qualification·activation은 아직 PENDING/NOT_READY다. approval pointer는 PENDING 상태로 비활성이며, 실제 등록 시 대체 후보의 최종 승인·qualification evidence로 갱신한다.
+
+## 제품 고도화 후속 — 2026-10-01
+
+[COMMERCE_PRODUCT_EVOLUTION_KO.md](COMMERCE_PRODUCT_EVOLUTION_KO.md)는 실제 source의 identity/session/UNKNOWN/읽기 출처·금융 대사·제품 수용 경계를 명세한다. pending26와 active10의 전체36개를 보존한 계획 후보이며 현 runtime에는 편입하지 않는다. 중앙 [#47](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/47), HEAD `94a768e19df12703ea0b9a49e49972feb2f6ef4f`는 #46 위의 개발 Fable 한도 복구 후보이며 설치·qualified 운영이나 사용자 채택 증거가 아니다. 원본 scope 및 새 scope의 실제 채택, 정확한 HEAD 독립 검토, 보호된 등록·service/host qualification 전에는 PENDING_APPROVAL_DO_NOT_DISPATCH가 유지된다.

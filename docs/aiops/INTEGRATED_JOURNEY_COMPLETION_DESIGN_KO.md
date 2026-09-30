@@ -3,6 +3,9 @@
 공통 후속 규약: [중앙 #46](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/46), 후보 HEAD `a8b7355712c58de8d27c85a535fb241a09a4037c`. [고정 설계](https://github.com/BeautifulMind-JT/ai-ops-control-plane/blob/a8b7355712c58de8d27c85a535fb241a09a4037c/engineering/docs/PROGRAM_EXECUTION_EVOLUTION_DESIGN_KO.md)는 아직 운영·승인 evidence가 아니다.
 
 상태: **설계·계획 개정 후보. 실제 앱 구현·서비스 qualification·출시가 아니다.**
+현재 제품 고도화의 세부 모듈·여정·session/UNKNOWN·금융 조회·새 화면 수용과
+확대 DAG는 [COMMERCE_PRODUCT_EVOLUTION_KO.md](COMMERCE_PRODUCT_EVOLUTION_KO.md)에 정의한다.
+기존 30개를 보존하며 새 pending 6개를 추가한 전체 commerce 분모는 36개다.
 기준은 commerce #15 `a7c9d4467a9170ba4a062554562a4610c0b27573`와 protocol
 #82 `1fc02920d93fe0fb1f272fa917f6e20ba26cc987`다. 원본 감사 대상 #14
 `e80c5d53989af35987aa0b8371b4220acd4e3808`와 protocol #81
@@ -65,7 +68,7 @@ Wave 6-A `w6a-evidence`는 기존 **최소 한 표면 mock 여정** 게이트로
 | 노드 | 선행/증거 역할 |
 |---|---|
 | `e2e-browser-journeys` | 기존 browser-gate-path, api-state-distinction, bind-list-read, organizer-admin-console에 bind-admission-fsm, bind-resale-fsm, bind-credit-fsm, gift-surface 추가 |
-| `commerce-integration-closeout` | 원본 active 10개+pending 18개와 새 consume-p-sdk-1 전부를 기다림. 자기 자신은 제외. 각 표면·모드·정확한 source tuple·오류 여정의 최종 evidence matrix |
+| `commerce-integration-closeout` | 원본 active10 + 원본 pending18 + 이전 consume-p-sdk-1 + 새 c-* 6개, 다른35개 전부를 기다림. 자기 자신은 제외. 각 표면·모드·정확한 source tuple·오류 여정의 최종 evidence matrix |
 
 E2E는 예매·box office·입장·리셀·여신(mock)·선물·운영자 7종의 실제 binding 상태를
 검증한다. 미결합 stub 표면이 있다는 사실을 숨기지 않는다. final closeout은 그 7종에
@@ -105,10 +108,10 @@ payment/admission/refund 완료 표시가 없어야 한다. 이미 충분한 기
 ## 5. 편입 대기는 계속 비활성
 
 현재 active program은 10개이며 unsupported `depends_on_external`을 넣지 않는다.
-pending은 원본 18개+`consume-p-sdk-1`+`commerce-integration-closeout` = 20개다.
+pending은 원본18개 + `consume-p-sdk-1` + `commerce-integration-closeout` + 새 c-* 6개 = 26개다. active10과 합한 전체 분모는 36개이며 실제 편입·dispatch는 하지 않았다.
 pending의 `astra_auto_merge=true`는 실행 가능한 승인 영수증이 아니다. 실제 승인
 범위와 중앙 기능 채택·qualification·attestation 뒤에만 적용하는 후보 위임이다.
-protocol pending 1개까지 포함하면 양쪽 pending은 21개다.
+이전 protocol pending1 + commerce pending20 = 21개는 이전 체크포인트 수치다. 현재 양쪽 분모는 protocol/Finance 후보 inventory와 함께 한 번만 재계산한다. Finance 노드는 protocol program kix에 포함되며 중복 집계하지 않는다.
 
 현재 런타임에서는 외부/내부 선행이 실제 병합된 뒤 비작성자 리뷰와 사용자 병합의
 계획 개정으로 편입한다. 미래 외부 의존성 기능을 쓰려면 중앙 기능 채택·host
@@ -158,7 +161,7 @@ pending/User decision/external input/qualification holds를 개별 집계한다.
    wrong digest/domain/version/receipt를 쓰기 전에 거부. 초기 소비의 BOOTSTRAP과
    후속 소비의 SEMANTIC_CONFORMANCE를 구분하고 unknown/wrong profile kind,
    다른 revision/digest 또는 초기 profile로 확대 catalogue를 소비하는 입력을 거부.
-3. final closeout이 다른 원본 28개와 SDK 소비 1개의 완료 증거를 요구하고 missing,
+3. final closeout이 다른 원본28개 + SDK 소비1개 + 제품 고도화6개, 총35개의 완료 증거를 요구하고 missing,
    stub-only, skipped, NOT_BOUND, blocked-browser, 미승인 release를 정확히 분리.
 4. 단계별 partial-success/response-loss 시험이 no retry, UNKNOWN fencing과 UI 진실성을 확인.
 5. 완료 통지는 현재 host-pinned exact delivery/plan/runtime binding 없이 합성되지 않음.
@@ -167,3 +170,5 @@ pending/User decision/external input/qualification holds를 개별 집계한다.
 settings·activation·독립 Fable 실행·제품 qualification·실배포는 실행하지 않는다.
 
 중앙 bootstrap의 현 채택 검토 후보는 #44/#45를 통합·보완한 [#46](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/46)이다. 기존 #44 감사의 DECISION_REQUIRED를 통과한 것으로 간주하지 않는다. PA-1 권한 예외는 PENDING이며, 보호된 reconcile과 실제 host qualification 전에는 전체 실행 NOT_READY다. 기존 중앙 포인터는 이전 체크포인트 기록이고 최종 승인 registration에는 실제 채택·qualification commit을 pin해야 한다.
+
+제품 설계 고도화 후속: [COMMERCE_PRODUCT_EVOLUTION_KO.md](COMMERCE_PRODUCT_EVOLUTION_KO.md) §§2–10이 실제 구현 범위·완료 분모를 확장한다. 중앙 #47 `94a768e19df12703ea0b9a49e49972feb2f6ef4f`는 #46 위의 개발 Fable 복구 구현 후보이며 설치·qualification되지 않았다. 그 재시도를 commerce write에 적용하지 않는다. 기존 중앙 채택/PA-1/독립 검토/host 경계는 PENDING이다.
