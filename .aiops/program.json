@@ -51,168 +51,6 @@
       "astra_gate": "MILESTONE"
     },
     {
-      "id": "consume-p-sdk-0",
-      "title": "Consume the generated TypeScript 0.x client from kix-protocol",
-      "depends_on_external": [
-        {
-          "repository": "BeautifulMind-JT/kix-protocol",
-          "program": "kix",
-          "node": "p-sdk-0"
-        }
-      ],
-      "spec": "Objective: replace the hand-kept action list and the local-call schema checks with the generated TypeScript 0.x client from kix-protocol (PROGRAM_DECISIONS_20260928.md §2.1 line 47), vendored with its pin and sha256, keeping every fail-closed rule.\nAcceptance: adapter tests pass on the generated client; the pin check covers it.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A2"
-    },
-    {
-      "id": "bind-settlement-fsm",
-      "title": "Bind the settlement desk methods to the promoted catalogue",
-      "depends_on": [
-        "consume-p-sdk-0"
-      ],
-      "depends_on_external": [
-        {
-          "repository": "BeautifulMind-JT/kix-protocol",
-          "program": "kix",
-          "node": "openapi-catalogue-promotion"
-        }
-      ],
-      "spec": "Objective: bind the 9 settlement desk methods in packages/protocol-adapter/src/commerce-bindings.ts to the catalogue commands kix-protocol promoted, following its approved source-of-truth decision, and move the pins. Money stays synthetic. The matching panel uses the bound path in HTTP mode and stays stub by default.\nAcceptance: stub and live-gate tests for every bound method; methods without a published command stay not-bound with the reason.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A3"
-    },
-    {
-      "id": "bind-reservation-fsm",
-      "title": "Bind the reservation desk methods to the promoted catalogue",
-      "depends_on": [
-        "consume-p-sdk-0"
-      ],
-      "depends_on_external": [
-        {
-          "repository": "BeautifulMind-JT/kix-protocol",
-          "program": "kix",
-          "node": "openapi-catalogue-promotion"
-        }
-      ],
-      "spec": "Objective: bind the 15 reservation desk methods in packages/protocol-adapter/src/commerce-bindings.ts to the catalogue commands kix-protocol promoted, following its approved source-of-truth decision, and move the pins. Bookings stay simulated-no-funds. The matching panel uses the bound path in HTTP mode and stays stub by default.\nAcceptance: stub and live-gate tests for every bound method; methods without a published command stay not-bound with the reason.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A3"
-    },
-    {
-      "id": "bind-admission-fsm",
-      "title": "Bind the admission desk methods (including authorize and consume)",
-      "depends_on": [
-        "consume-p-sdk-0"
-      ],
-      "depends_on_external": [
-        {
-          "repository": "BeautifulMind-JT/kix-protocol",
-          "program": "kix",
-          "node": "openapi-catalogue-promotion"
-        }
-      ],
-      "spec": "Objective: bind the 7 admission desk methods in packages/protocol-adapter/src/commerce-bindings.ts to the catalogue commands kix-protocol promoted, following its approved source-of-truth decision, and move the pins. authorize_admission and consume follow the resolved DECISION_REQUIRED rows of kix-protocol BOOKING_RESALE_ADMISSION_GATES.md; no venue scanning. The matching panel uses the bound path in HTTP mode and stays stub by default.\nAcceptance: stub and live-gate tests for every bound method; methods without a published command stay not-bound with the reason.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A3"
-    },
-    {
-      "id": "bind-resale-fsm",
-      "title": "Bind the resale desk methods to the promoted catalogue",
-      "depends_on": [
-        "consume-p-sdk-0"
-      ],
-      "depends_on_external": [
-        {
-          "repository": "BeautifulMind-JT/kix-protocol",
-          "program": "kix",
-          "node": "openapi-catalogue-promotion"
-        }
-      ],
-      "spec": "Objective: bind the 15 resale desk methods in packages/protocol-adapter/src/commerce-bindings.ts to the catalogue commands kix-protocol promoted, following its approved source-of-truth decision, and move the pins. No live marketplace or seller payout. The matching panel uses the bound path in HTTP mode and stays stub by default.\nAcceptance: stub and live-gate tests for every bound method; methods without a published command stay not-bound with the reason.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A3"
-    },
-    {
-      "id": "bind-credit-fsm",
-      "title": "Bind the credit desk methods (mock only)",
-      "depends_on": [
-        "consume-p-sdk-0"
-      ],
-      "depends_on_external": [
-        {
-          "repository": "BeautifulMind-JT/kix-protocol",
-          "program": "kix",
-          "node": "openapi-catalogue-promotion"
-        }
-      ],
-      "spec": "Objective: bind the 12 credit desk methods in packages/protocol-adapter/src/commerce-bindings.ts to the catalogue commands kix-protocol promoted, following its approved source-of-truth decision, and move the pins. Mock only: CREDIT_BOUNDARY.action stays none and nothing disburses (Task 005 decision 6). The matching panel uses the bound path in HTTP mode and stays stub by default.\nAcceptance: stub and live-gate tests for every bound method; methods without a published command stay not-bound with the reason.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A3"
-    },
-    {
-      "id": "bind-wave4-pointers",
-      "title": "Rebind the Wave 4 pointer methods onto published bodies",
-      "depends_on": [
-        "w6a-journey-map",
-        "bind-reservation-fsm",
-        "bind-resale-fsm"
-      ],
-      "spec": "Objective: rebind placeHold, releaseHold, confirmBooking, checkAdmission, openResale, acceptResale and settlementPreview onto published bodies through the desk argument redesign the journey map approved. If a body mismatch remains (capture needs amount, currency and paymentId; the resale guard forbids listingId plus amount), stop with DECISION_REQUIRED.\nAcceptance: stub and live-gate tests.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A3"
-    },
-    {
-      "id": "bind-list-read",
-      "title": "Bind the list and read methods to the read-model queries",
-      "depends_on": [
-        "consume-p-sdk-0"
-      ],
-      "depends_on_external": [
-        {
-          "repository": "BeautifulMind-JT/kix-protocol",
-          "program": "kix",
-          "node": "read-model-reference"
-        }
-      ],
-      "spec": "Objective: bind listPerformances, getBooking, listResale and the view* methods to the read-model queries kix-protocol added; the UI labels reads as non-authoritative (never proof of payment, issuance or admission).\nAcceptance: stub and live-gate tests.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A3"
-    },
-    {
-      "id": "browser-gate-path",
-      "title": "Browser HTTP path to the loopback gate, as kix-protocol decided",
-      "depends_on": [
-        "w6a-ui-skeleton"
-      ],
-      "depends_on_external": [
-        {
-          "repository": "BeautifulMind-JT/kix-protocol",
-          "program": "kix",
-          "node": "gate-browser-access"
-        }
-      ],
-      "spec": "Objective: enable the browser HTTP path within what kix-protocol's gate browser access decision allows (explicit loopback origin, opt-in). If that decision kept the gate closed, document that live journeys run from Node tests only and finish.\nAcceptance: browser run against the live gate, or the document.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A3"
-    },
-    {
-      "id": "primary-price-fee-ui",
-      "title": "Show the contracted primary price and fee",
-      "depends_on": [
-        "w6a-ui-skeleton"
-      ],
-      "depends_on_external": [
-        {
-          "repository": "BeautifulMind-JT/kix-protocol",
-          "program": "kix",
-          "node": "move-primary-price-fee"
-        }
-      ],
-      "spec": "Objective: show the primary issuance price and fee from kix-protocol's merged contract on booking and box office. No invented values.\nAcceptance: web tests and a browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A2"
-    },
-    {
-      "id": "api-state-distinction",
-      "title": "UI separates reservation, payment, issuance, return and refund states",
-      "depends_on": [
-        "bind-reservation-fsm",
-        "bind-settlement-fsm"
-      ],
-      "spec": "Objective: every surface distinguishes reservation, payment, rights issuance, return-required and real-refund-done (kix-protocol DEVELOPMENT_PLAN.md §8 line ~198) and never shows a reservation as a payment.\nAcceptance: web tests per state.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A2"
-    },
-    {
       "id": "organizer-admin-console",
       "title": "Organizer console for event lifecycle commands",
       "depends_on": [
@@ -222,38 +60,13 @@
       "audit_floor": "A2"
     },
     {
-      "id": "refund-surface",
-      "title": "Refund and cancel flows as synthetic mocks",
-      "depends_on": [
-        "bind-settlement-fsm"
-      ],
-      "spec": "Objective: refund_ticket, void_unissued, adjust_pg_cancel and observe_return (F03) as synthetic flows on the settlement and booking surfaces; the UI never claims a real refund.\nAcceptance: stub and live-gate tests; browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A3"
-    },
-    {
       "id": "gift-surface",
       "title": "Gift transfer surface (offer, accept, cancel)",
       "depends_on": [
-        "consume-p-sdk-0"
+        "w6a-journey-adapter"
       ],
       "spec": "Objective: offer_gift, accept_gift and cancel_gift (P02 transfer) through the adapter; offer_gift is not a credit draw (README).\nAcceptance: stub and live-gate tests; browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
       "audit_floor": "A2"
-    },
-    {
-      "id": "delegation-surface",
-      "title": "Delegation surface: query and propose only",
-      "depends_on": [
-        "consume-p-sdk-0"
-      ],
-      "depends_on_external": [
-        {
-          "repository": "BeautifulMind-JT/kix-protocol",
-          "program": "kix",
-          "node": "ai-delegation-contract-mock"
-        }
-      ],
-      "spec": "Objective: a read-and-propose surface for delegate and close_delegation and for the query and propose authority of kix-protocol's AI delegation contract. Execution stays disabled (kix-protocol DEVELOPMENT_PLAN.md §12); no AI tool can transfer, refund or sign.\nAcceptance: tests and a browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A3"
     },
     {
       "id": "doc-m05-label",
@@ -271,93 +84,14 @@
       "audit_floor": "A2"
     },
     {
-      "id": "w7-m01-membership",
-      "title": "Wave 7 M01: membership surface on the membership contract",
-      "depends_on": [
-        "w7-marketing-align"
-      ],
-      "depends_on_external": [
-        {
-          "repository": "BeautifulMind-JT/kix-protocol",
-          "program": "kix",
-          "node": "wave7-marketing-contracts"
-        }
-      ],
-      "spec": "Objective: fan qualification issue, revoke, consent and proof on kix-protocol's merged M01 contract; membership cards are not Wave 2 rights.\nAcceptance: tests; browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A2"
-    },
-    {
-      "id": "w7-m02-presale",
-      "title": "Wave 7 M02: presale surface on the presale contract",
-      "depends_on": [
-        "w7-marketing-align",
-        "bind-reservation-fsm"
-      ],
-      "depends_on_external": [
-        {
-          "repository": "BeautifulMind-JT/kix-protocol",
-          "program": "kix",
-          "node": "wave7-marketing-contracts"
-        }
-      ],
-      "spec": "Objective: presale eligibility, priority and purchase limit on kix-protocol's merged M02 contract, linked to the booking hold only as that contract allows.\nAcceptance: tests; browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A2"
-    },
-    {
-      "id": "w7-m03-coupon",
-      "title": "Wave 7 M03: coupon surface on the coupon contract",
-      "depends_on": [
-        "w7-marketing-align",
-        "bind-reservation-fsm"
-      ],
-      "depends_on_external": [
-        {
-          "repository": "BeautifulMind-JT/kix-protocol",
-          "program": "kix",
-          "node": "wave7-marketing-contracts"
-        }
-      ],
-      "spec": "Objective: coupon issue, use and revoke with the discount budget and order atomicity of kix-protocol's merged M03 contract.\nAcceptance: tests; browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A3"
-    },
-    {
-      "id": "w7-m04-referral",
-      "title": "Wave 7 M04: referral surface on the referral contract (no payout)",
-      "depends_on": [
-        "w7-marketing-align"
-      ],
-      "depends_on_external": [
-        {
-          "repository": "BeautifulMind-JT/kix-protocol",
-          "program": "kix",
-          "node": "wave7-marketing-contracts"
-        }
-      ],
-      "spec": "Objective: referral attribution and reward eligibility on kix-protocol's merged M04 contract; no payout.\nAcceptance: tests; browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A3"
-    },
-    {
       "id": "w7-m05-consent-bind",
       "title": "Wave 7 M05: bind consent to set_consent and authorize_marketing",
       "depends_on": [
         "w7-marketing-align",
-        "consume-p-sdk-0"
+        "w6a-journey-adapter"
       ],
       "spec": "Objective: bind the M05 consent flow to the published set_consent and authorize_marketing commands. CRM campaign editing stays out (a separate product).\nAcceptance: stub and live-gate tests; browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
       "audit_floor": "A3"
-    },
-    {
-      "id": "e2e-browser-journeys",
-      "title": "Browser end-to-end journeys across all surfaces",
-      "depends_on": [
-        "browser-gate-path",
-        "api-state-distinction",
-        "bind-list-read",
-        "organizer-admin-console"
-      ],
-      "spec": "Objective: browser end-to-end tests (Playwright or the repo's choice, added to CI without weakening existing checks) for booking, box office, admission, resale, credit, gift and organizer journeys in stub mode, and in HTTP mode when the gate allows browser access.\nAcceptance: the suite in CI; a run record.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.",
-      "audit_floor": "A2",
-      "astra_gate": "MILESTONE"
     }
   ]
 }
