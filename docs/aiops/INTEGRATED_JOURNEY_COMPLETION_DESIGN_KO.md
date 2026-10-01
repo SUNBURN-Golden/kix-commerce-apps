@@ -1,6 +1,6 @@
 # KIX Commerce 통합 여정·계약 소비·최종 완료 설계 후보
 
-공통 후속 규약: [중앙 #46](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/46), 후보 HEAD `a8b7355712c58de8d27c85a535fb241a09a4037c`. [고정 설계](https://github.com/BeautifulMind-JT/ai-ops-control-plane/blob/a8b7355712c58de8d27c85a535fb241a09a4037c/engineering/docs/PROGRAM_EXECUTION_EVOLUTION_DESIGN_KO.md)는 아직 운영·승인 evidence가 아니다.
+공통 후속 규약: [중앙 #47](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/47), 후보 HEAD `09e161caa652d75e9617caf632b3b9899be35740`. [고정 설계](https://github.com/BeautifulMind-JT/ai-ops-control-plane/blob/09e161caa652d75e9617caf632b3b9899be35740/engineering/docs/PROGRAM_EXECUTION_EVOLUTION_DESIGN_KO.md)는 아직 운영·승인 evidence가 아니다.
 
 상태: **설계·계획 개정 후보. 실제 앱 구현·서비스 qualification·출시가 아니다.**
 현재 제품 고도화의 세부 모듈·여정·session/UNKNOWN·금융 조회·새 화면 수용과
@@ -184,4 +184,4 @@ settings·activation·독립 Fable 실행·제품 qualification·실배포는 �
 
 중앙 bootstrap의 현 채택 검토 후보는 #44/#45를 통합·보완한 [#46](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/46)이다. 기존 #44 감사의 DECISION_REQUIRED를 통과한 것으로 간주하지 않는다. PA-1 권한 예외는 PENDING이며, 보호된 reconcile과 실제 host qualification 전에는 전체 실행 NOT_READY다. 기존 중앙 포인터는 이전 체크포인트 기록이고 최종 승인 registration에는 실제 채택·qualification commit을 pin해야 한다.
 
-제품 설계 고도화 후속: [COMMERCE_PRODUCT_EVOLUTION_KO.md](COMMERCE_PRODUCT_EVOLUTION_KO.md) §§2–10이 실제 구현 범위·완료 분모를 확장한다. 중앙 #47 `94a768e19df12703ea0b9a49e49972feb2f6ef4f`는 #46 위의 개발 Fable 복구 구현 후보이며 설치·qualification되지 않았다. 그 재시도를 commerce write에 적용하지 않는다. 기존 중앙 채택/PA-1/독립 검토/host 경계는 PENDING이다.
+중앙 채택 검토 대상은 [#47](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/47) 최종 source HEAD `09e161caa652d75e9617caf632b3b9899be35740` 하나다. 이전 checkpoint는 [승인 경계 문서](REGISTRATION_SCOPE_APPROVAL_KO.md)의 과거 기록이며 채택 대상이 아니다. 독립 exact-HEAD A3·대표님 채택·보호된 설치·authorization·host qualification·activation은 PENDING이다. source 검증은 새 독립 감사 PASS나 실제 설치 증거가 아니다.

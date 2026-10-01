@@ -6,15 +6,15 @@ pending 20개 및 [통합 설계](INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md)를
 이어받고 pending 6개를 추가한다. 앱 구현, 프로토콜 계약 채택, 서비스 qualification,
 독립 Fable PASS, 사용자 화면 수용 또는 실서비스 출시는 아직 수행하지 않았다.
 
-중앙 #46 후보 `a8b7355712c58de8d27c85a535fb241a09a4037c` 위의
+중앙 #47 후보 `09e161caa652d75e9617caf632b3b9899be35740` 위의
 [#47 복구 구현 후보](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/47),
-HEAD `94a768e19df12703ea0b9a49e49972feb2f6ef4f`는 개발용 Fable 기록·한도 복구다.
+HEAD `09e161caa652d75e9617caf632b3b9899be35740`는 개발용 Fable 기록·한도 복구다.
 설치·사용자 채택·실제 host qualification 전이며 commerce 명령의 재시도 권한이 아니다.
 현재 편입 대기/승인 경계와 금융·chain·공개 운영 잠금은 그대로 유지한다.
 
 ## 1. 실제 소스에서 확인한 확장 지점
 
-기준 HEAD의 README, `.aiops/program.json`, `PENDING_NODES.json`, adapter와 실제
+기준 HEAD의 README, `docs/aiops/KIX_COMMERCE_PROGRAM_DRAFT.json`, `PENDING_NODES.json`, adapter와 실제
 desk/UI 소스를 읽었다. 저장소 tree에 AGENTS.md는 없으며 상위 R-1/계약/README의
 권위·잠금 규칙을 적용한다. 현재 제품은 operator desk + 별도 marketing stub이다.
 

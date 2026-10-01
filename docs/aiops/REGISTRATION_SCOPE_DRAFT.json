@@ -5,28 +5,32 @@
   "program": "kixc",
   "encoding": "UTF8_JSON_SORTED_KEYS_COMPACT_ENSURE_ASCII_FALSE",
   "plan_definition": {
-    "path": ".aiops/program.json",
+    "path": "docs/aiops/KIX_COMMERCE_PROGRAM_DRAFT.json",
     "excluded_root_fields": [
       "approval_pointer",
       "registration_scope"
     ],
-    "definition_sha256": "2e146151716a228f100305f542dbc54df5a10836521390f5edec3fcfabb0dabf",
+    "definition_sha256": "13e0cb746daf45644e02f308792eeffe3fed0d83529b27d08cf5232c95bc1d34",
     "node_count": 10
   },
   "pending_catalogues": [
     {
       "path": "docs/aiops/PENDING_NODES.json",
-      "definition_sha256": "06f48d722590315de49a772f5d359e6730fc31d6c4a259f47571ca5655b4e1fd",
+      "definition_sha256": "f8fa046ed078a32c99ca0ae8873118a69c8005127a2591cbe97ff92e564ddfbf",
       "node_count": 26
     }
   ],
   "finance_subset": null,
   "candidate_node_count": 36,
-  "user_only_nodes": [],
+  "user_only_nodes": [
+    "w6a-journey-map",
+    "c-journey-identity",
+    "c-async-session-fence"
+  ],
   "node_definitions": [
     {
       "id": "w6a-journey-map",
-      "definition_sha256": "c616a57a450031aa94bcc9cadd74b96406c68ec3962b6e68f044f21686db9550"
+      "definition_sha256": "7d0cf69759eed7e1d60f586f939f7c61a66bdaa4893b6fa1dbde71261f75de40"
     },
     {
       "id": "w6a-journey-adapter",
@@ -142,11 +146,11 @@
     },
     {
       "id": "c-journey-identity",
-      "definition_sha256": "0a3ecb95dc09137ae63067cad034e04fb45ad5590c7ea16f701ca2a4c7727c58"
+      "definition_sha256": "3f2c611a24dff38c5b147127faf24b16eeacd8c126755cfa48646454e53431d0"
     },
     {
       "id": "c-async-session-fence",
-      "definition_sha256": "62177b5b15d300338da277241e2b9cbca1dd786159b4ce96bde86c58a84ab818"
+      "definition_sha256": "3d3fc82452b5554fcfbfeb8ac9a6e96865b6203492c0a52cd3c0e61f8f829e5d"
     },
     {
       "id": "c-cross-surface-journeys",
@@ -170,10 +174,10 @@
     }
   ],
   "definition_document_sha256": {
-    "docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md": "3adc97ceb40911f8fcc6aa539c3e8c2546e1f4f961d97f68a76b21e444838390",
-    "docs/aiops/REGISTRATION_SCOPE_APPROVAL_KO.md": "47266e564ee350ada9040ec2c3c2ebd7a55cb293f890792c2c04af19345d7656",
-    "docs/aiops/PROGRAM_ASTRA_DELEGATION.md": "3c92d37c59aba1b0dd6f9aa076cebaba6bf2bdf5163ce3d9a5a4c5b5fc602f67",
-    "docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md": "f7f17e03c5b0ee25bd1cbe6fc8e681a085ae5059c8b0a776c2bc166d91f01c99"
+    "docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md": "7f66df71a8c966cff0bb8695683ceb21554949a291a5e9b57e64777b4fd22f81",
+    "docs/aiops/REGISTRATION_SCOPE_APPROVAL_KO.md": "e022de68faae063d711de7641e62d9663f402de34ca64aa4308bf154deea5fa1",
+    "docs/aiops/PROGRAM_ASTRA_DELEGATION.md": "075ee51194a26856e67592f75ada425b315198ef399a5a17f4f4adf2e72e2977",
+    "docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md": "e0e0aff7e1e99717a23989d1c2199400d14858afbce7ea30298d11390f7761b1"
   },
   "approval_evidence": {
     "scope_decision_pointer": "PENDING_EXACT_WHOLE_SCOPE_USER_DECISION",
@@ -182,7 +186,7 @@
   },
   "central_source_candidate": {
     "pr": "BeautifulMind-JT/ai-ops-control-plane#47",
-    "head": "15f7fe67726c04efd5a6d289ef985041f40c511a",
+    "head": "09e161caa652d75e9617caf632b3b9899be35740",
     "authority": "SOURCE_ONLY_NOT_ADOPTED_INSTALLED_QUALIFIED_OR_ACTIVATED"
   },
   "rule": "Any changed definition needs a new manifest and exact-head review. Finance aliases are counted once. No inherited approval, edited status, partial selection, ordinary comment or source CI grants execution. The manifest digest and approval target commit are recorded externally to avoid hash self-reference."
