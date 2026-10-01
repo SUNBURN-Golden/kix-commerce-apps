@@ -16,7 +16,7 @@
   "pending_catalogues": [
     {
       "path": "docs/aiops/PENDING_NODES.json",
-      "definition_sha256": "683229335985643aa86ec11a5818d7b1111ad8b6534d9fff91f1afc98a05befd",
+      "definition_sha256": "06f48d722590315de49a772f5d359e6730fc31d6c4a259f47571ca5655b4e1fd",
       "node_count": 26
     }
   ],
@@ -172,7 +172,7 @@
   "definition_document_sha256": {
     "docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md": "3adc97ceb40911f8fcc6aa539c3e8c2546e1f4f961d97f68a76b21e444838390",
     "docs/aiops/REGISTRATION_SCOPE_APPROVAL_KO.md": "47266e564ee350ada9040ec2c3c2ebd7a55cb293f890792c2c04af19345d7656",
-    "docs/aiops/PROGRAM_ASTRA_DELEGATION.md": "969d32a1f2b21260eadda4909ceb32c9a6ce7f7f47cdabd7ccb4718ad72c87f8",
+    "docs/aiops/PROGRAM_ASTRA_DELEGATION.md": "3c92d37c59aba1b0dd6f9aa076cebaba6bf2bdf5163ce3d9a5a4c5b5fc602f67",
     "docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md": "f7f17e03c5b0ee25bd1cbe6fc8e681a085ae5059c8b0a776c2bc166d91f01c99"
   },
   "approval_evidence": {
@@ -182,7 +182,7 @@
   },
   "central_source_candidate": {
     "pr": "BeautifulMind-JT/ai-ops-control-plane#47",
-    "head": "e34868c6a12e5488224095b3248e59c8be9128f1",
+    "head": "15f7fe67726c04efd5a6d289ef985041f40c511a",
     "authority": "SOURCE_ONLY_NOT_ADOPTED_INSTALLED_QUALIFIED_OR_ACTIVATED"
   },
   "rule": "Any changed definition needs a new manifest and exact-head review. Finance aliases are counted once. No inherited approval, edited status, partial selection, ordinary comment or source CI grants execution. The manifest digest and approval target commit are recorded externally to avoid hash self-reference."
