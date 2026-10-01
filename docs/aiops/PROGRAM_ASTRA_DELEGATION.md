@@ -60,3 +60,17 @@ self-authorized for automatic merge.
 ## 제품 고도화 후속 — 2026-10-01
 
 [COMMERCE_PRODUCT_EVOLUTION_KO.md](COMMERCE_PRODUCT_EVOLUTION_KO.md)는 실제 source의 identity/session/UNKNOWN/읽기 출처·금융 대사·제품 수용 경계를 명세한다. pending26와 active10의 전체36개를 보존한 계획 후보이며 현 runtime에는 편입하지 않는다. 중앙 [#47](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/47), HEAD `94a768e19df12703ea0b9a49e49972feb2f6ef4f`는 #46 위의 개발 Fable 한도 복구 후보이며 설치·qualified 운영이나 사용자 채택 증거가 아니다. 원본 scope 및 새 scope의 실제 채택, 정확한 HEAD 독립 검토, 보호된 등록·service/host qualification 전에는 PENDING_APPROVAL_DO_NOT_DISPATCH가 유지된다.
+
+## 승인된 표적 수정 후보 — SDK 소비와 결정 분기
+
+FSM 결합 다섯 노드와 browser-gate-path에 `consume-p-sdk-1` 선행을 추가하고,
+기존 E2E에는 `bind-wave4-pointers` 선행을 추가한다. 이 변경은 이전 checkpoint의
+pending 선행 보존 설명과 구분하며, active10와 전체36 정의·감사 floor·flags는 그대로다.
+정확한 확대 SDK/manifest/profile 소비가 선행하고 개별 binding이 pin을 서로 다른
+중간 tuple로 옮기지 않는다. 후속 변경의 tuple은 그 실제 새 evidence로 다시 검증한다.
+
+producer 결정 문서 DONE만으로 finance/recovery 기능을 소비하지 않는다. DEFERRED나
+DECLINED의 구현·qualification은 승인된 적용 범위/계획 개정 전까지 HOLD다. User 병합의
+개정만 정확한 node 정의와 전후 catalogue·분모에 결합된 제외/비구현 scope를 승인할 수
+있으며, 중앙이 새 결정 parser나 자동 scope-edit 권한을 이미 제공한다고 하지 않는다.
+현재 후보 전체와 독립적인 승인 작업은 보존하고 note를 서비스 qualification으로 승격하지 않는다.

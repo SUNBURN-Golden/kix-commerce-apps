@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "state": "PENDING_FULL_SCOPE_ADOPTION",
+  "repository": "BeautifulMind-JT/kix-commerce-apps",
+  "program": "kixc",
+  "encoding": "UTF8_JSON_SORTED_KEYS_COMPACT_ENSURE_ASCII_FALSE",
+  "plan_definition": {
+    "path": ".aiops/program.json",
+    "excluded_root_fields": [
+      "approval_pointer",
+      "registration_scope"
+    ],
+    "definition_sha256": "2e146151716a228f100305f542dbc54df5a10836521390f5edec3fcfabb0dabf",
+    "node_count": 10
+  },
+  "pending_catalogues": [
+    {
+      "path": "docs/aiops/PENDING_NODES.json",
+      "definition_sha256": "683229335985643aa86ec11a5818d7b1111ad8b6534d9fff91f1afc98a05befd",
+      "node_count": 26
+    }
+  ],
+  "finance_subset": null,
+  "candidate_node_count": 36,
+  "user_only_nodes": [],
+  "node_definitions": [
+    {
+      "id": "w6a-journey-map",
+      "definition_sha256": "c616a57a450031aa94bcc9cadd74b96406c68ec3962b6e68f044f21686db9550"
+    },
+    {
+      "id": "w6a-journey-adapter",
+      "definition_sha256": "b137f0a67e2f6e186fc295a525a57f4457f9a35e7e72a466060bb82cbe1d42a2"
+    },
+    {
+      "id": "w6a-journey-test",
+      "definition_sha256": "4c5c22df428cbdf235430b8e9f5592b34b7e601be1538bd50699dfac9ef9ab4c"
+    },
+    {
+      "id": "w6a-ui-skeleton",
+      "definition_sha256": "7e88b56ee6fb073039bf366b809ab5f7b53c811aca23738cc6a7aaaf4acc12eb"
+    },
+    {
+      "id": "w6a-evidence",
+      "definition_sha256": "95836584089a3efce68acc68b18d2d892495eafa57ec42c39f156b930506e7d1"
+    },
+    {
+      "id": "organizer-admin-console",
+      "definition_sha256": "0d2348979fae5fe3832060e62c529a294fb1786db45cebe00f8cf95dd36422fb"
+    },
+    {
+      "id": "gift-surface",
+      "definition_sha256": "547539238e587dcc711afd3cbe501b4067faba2b6818e544216a796abb3a4f8b"
+    },
+    {
+      "id": "doc-m05-label",
+      "definition_sha256": "4c50550b35fcac632618b241c4f634cbca9d2ca24f54feb661a1033613b79c6b"
+    },
+    {
+      "id": "w7-marketing-align",
+      "definition_sha256": "e737f0aff74b6c995b29aa9ff9989f7d3ad0e95f8aeabf2079b3c4a1c59bbc97"
+    },
+    {
+      "id": "w7-m05-consent-bind",
+      "definition_sha256": "e71785d51a775c45ee5a0af362b43380a54683755f1f97432bbbdaeb291991f3"
+    },
+    {
+      "id": "consume-p-sdk-0",
+      "definition_sha256": "1c765183841aab940eaf52d57c6392ca6b1329dee345601be50702c5708ff5d7"
+    },
+    {
+      "id": "bind-settlement-fsm",
+      "definition_sha256": "557a4f7a82c17b051b8cd9a6e746375f8f183a7c699eb3a532451cf74d1d193a"
+    },
+    {
+      "id": "bind-reservation-fsm",
+      "definition_sha256": "219f5010a980a630d7e13fd1e80a295ad946204dee41af942d19695f82f1f714"
+    },
+    {
+      "id": "bind-admission-fsm",
+      "definition_sha256": "c26f991eeed5cb14a442c9acc64bc1de7242f0fe0f2fdcbe9f34f09801c19dbe"
+    },
+    {
+      "id": "bind-resale-fsm",
+      "definition_sha256": "f349e022356cd6066efc304af0024a1ee7cc88b17d5185f365c83daaa240993c"
+    },
+    {
+      "id": "bind-credit-fsm",
+      "definition_sha256": "2556c3a844667442c527938e8a99531c2a94ef3adfdea50c157a5b71745aeb06"
+    },
+    {
+      "id": "bind-wave4-pointers",
+      "definition_sha256": "a82eca1db32bfab36a168bffff8564c2f9b56ca1343f39284449f90dee41cb51"
+    },
+    {
+      "id": "bind-list-read",
+      "definition_sha256": "dd65bf8d606aca3addbdbfbd4b883ee250c0de73b0811e3fd0bcbdb9f2ab8a55"
+    },
+    {
+      "id": "browser-gate-path",
+      "definition_sha256": "fba78104289fd0ae2437105e2f112a124e9d394708bc6c87204e6fd1f55e58e7"
+    },
+    {
+      "id": "primary-price-fee-ui",
+      "definition_sha256": "1f5a96ae129d3875ebd04713707c4127294d8f743cbbff5b48884d1fbf02d2b3"
+    },
+    {
+      "id": "api-state-distinction",
+      "definition_sha256": "17153fb0c0f75087e251796b7ee00a96997a47a5094a6a8226d61012fb86263d"
+    },
+    {
+      "id": "refund-surface",
+      "definition_sha256": "eeac7d07a142c868aa515a37e7314499f3bd187a0155d411f1eb6ead7f9e1d21"
+    },
+    {
+      "id": "delegation-surface",
+      "definition_sha256": "43f793d320e66f07585b154e9efc4061fa179a7c6c007ca82aecc370cfe0df11"
+    },
+    {
+      "id": "w7-m01-membership",
+      "definition_sha256": "579354075d23783026bb59b4318df76801f207bee1f8fc8767ab7b21adc9b962"
+    },
+    {
+      "id": "w7-m02-presale",
+      "definition_sha256": "0a14edcea31ce4c9ea1caf8a385f4ff18926512058c132fb9bd33a3acd3efb8d"
+    },
+    {
+      "id": "w7-m03-coupon",
+      "definition_sha256": "9fe5140a58161121822d24fa28f95853d702b2778762ed110b4ebb1250dab274"
+    },
+    {
+      "id": "w7-m04-referral",
+      "definition_sha256": "def45732b1baef1effb9da5c1f94f36dc3afa356cb3b806b82e6a5b9ba58edd2"
+    },
+    {
+      "id": "e2e-browser-journeys",
+      "definition_sha256": "e5e968239c9aaa2b9c2cced714e16f8315873818c539657a8c17229f7d028226"
+    },
+    {
+      "id": "consume-p-sdk-1",
+      "definition_sha256": "4a9f141cf871f4c5e7c9181f56ae628898bf42fced7a87fac900f9165a7eaa10"
+    },
+    {
+      "id": "c-journey-identity",
+      "definition_sha256": "0a3ecb95dc09137ae63067cad034e04fb45ad5590c7ea16f701ca2a4c7727c58"
+    },
+    {
+      "id": "c-async-session-fence",
+      "definition_sha256": "62177b5b15d300338da277241e2b9cbca1dd786159b4ce96bde86c58a84ab818"
+    },
+    {
+      "id": "c-cross-surface-journeys",
+      "definition_sha256": "fdba4cd6aa0cf1db3f836cfe992f5c68f4d91203ab2d51f375d384cdde47422b"
+    },
+    {
+      "id": "c-finance-projection",
+      "definition_sha256": "7f8d1233bc00ba52b41f9ffa63bd105ed154e264aaa2463fa5ac14b7082dc36b"
+    },
+    {
+      "id": "c-accessibility-acceptance",
+      "definition_sha256": "9f9beb3b746fd8c3885acaa925d0916fa9236faba0f7381841b7850a495d5c57"
+    },
+    {
+      "id": "c-integrated-chaos-qualification",
+      "definition_sha256": "29c7c42ae3acfbb7952d0489e77eca20130131c7a76dcbad97e32feb4461e645"
+    },
+    {
+      "id": "commerce-integration-closeout",
+      "definition_sha256": "881e1332a03b8d8545e1244383922065c125b737b3e206a4e8b9710b3b56c94e"
+    }
+  ],
+  "definition_document_sha256": {
+    "docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md": "3adc97ceb40911f8fcc6aa539c3e8c2546e1f4f961d97f68a76b21e444838390",
+    "docs/aiops/REGISTRATION_SCOPE_APPROVAL_KO.md": "47266e564ee350ada9040ec2c3c2ebd7a55cb293f890792c2c04af19345d7656",
+    "docs/aiops/PROGRAM_ASTRA_DELEGATION.md": "969d32a1f2b21260eadda4909ceb32c9a6ce7f7f47cdabd7ccb4718ad72c87f8",
+    "docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md": "f7f17e03c5b0ee25bd1cbe6fc8e681a085ae5059c8b0a776c2bc166d91f01c99"
+  },
+  "approval_evidence": {
+    "scope_decision_pointer": "PENDING_EXACT_WHOLE_SCOPE_USER_DECISION",
+    "audit_pointer": "PENDING_NON_AUTHOR_EXACT_HEAD_A3",
+    "registration_revision_pointer": "PENDING_APPROVED_FULL_SCOPE_READER_AND_REVISION"
+  },
+  "central_source_candidate": {
+    "pr": "BeautifulMind-JT/ai-ops-control-plane#47",
+    "head": "e34868c6a12e5488224095b3248e59c8be9128f1",
+    "authority": "SOURCE_ONLY_NOT_ADOPTED_INSTALLED_QUALIFIED_OR_ACTIVATED"
+  },
+  "rule": "Any changed definition needs a new manifest and exact-head review. Finance aliases are counted once. No inherited approval, edited status, partial selection, ordinary comment or source CI grants execution. The manifest digest and approval target commit are recorded externally to avoid hash self-reference."
+}

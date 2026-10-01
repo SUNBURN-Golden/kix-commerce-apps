@@ -254,3 +254,11 @@ commerce36(active10+pending26) = **118**이며 pending 합계는 **41**이다. �
 실행한다는 뜻이다. 새로운 정책·외부 답변·금융/chain/public 권한·서비스 부재는 해당
 scope만 명시적으로 HOLD하고 다른 독립 work는 진행한다. UNKNOWN을 완료로 만들거나
 미정 계약을 앱에서 임시로 구현해 분모를 줄이는 것이 아니다.
+
+upstream 결정 문서의 DONE을 실제 기능 채택으로 추론하지 않는다. protocol의
+`ADOPT / DEFERRED / DECLINED` 적용 범위와 실제 producer tuple/evidence를 확인한다.
+DEFERRED는 finance/recovery 소비와 해당 qualification을 HOLD로 남긴다. DECLINED도
+비작성자 검토와 User 병합의 적용 범위/계획 개정 전에는 정상 구현을 풀지 않는다.
+승인된 비구현 산출물·제외는 정확한 영향 node 정의·digest와 전후 catalogue/분모에
+결합하고, note를 실제 서비스 qualification으로 세지 않는다. 새 backend·금융 대안을
+앱에서 발명하거나 독립적인 승인 작업까지 함께 지우지 않는다.

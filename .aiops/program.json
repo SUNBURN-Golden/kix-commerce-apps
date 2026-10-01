@@ -3,8 +3,8 @@
   "program": "kixc",
   "repository": "BeautifulMind-JT/kix-commerce-apps",
   "project": "KIX_COMMERCE",
-  "approval_pointer": "PENDING_APPROVAL_DO_NOT_DISPATCH; https://github.com/BeautifulMind-JT/kix-protocol/pull/81 (kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 and §4, approved by the User's merge; extends kix-protocol docs/decisions/PROGRAM_DECISIONS_20260928.md §3 and §6, approved by the User's merge of #73 cfeb0d69561103302b6fdc3d10842768c3420151) ; Wave 6 gate record https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; protected program Astra bridge requires adoption/qualification of BeautifulMind-JT/ai-ops-control-plane#46 replacement candidate at a8b7355712c58de8d27c85a535fb241a09a4037c (PA-1 adoption, exact-HEAD non-author audit and actual host qualification/activation remain PENDING; #44 DECISION_REQUIRED is not a grant); replace pending metadata with actual current-head audit, User approval/merge and host qualification evidence before start; integrated journey evolution remains a separately reviewed PENDING candidate: docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md; pending nodes stay inactive until approved revision/qualified central capability",
-  "authoritative_doc_pointers": "README.md ; docs/http-integration-gate-apps-bind.md ; kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md ; kix-protocol docs/decisions/PROGRAM_DECISIONS_20260928.md §3 and §6 ; kix-protocol docs/tasks/TASK_005_MEGA_COMMERCE_PROGRAM.md ; kix-protocol docs/contracts/openapi/README.md ; docs/aiops/PROGRAM_ASTRA_DELEGATION.md (immutable plan commit) ; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md (candidate scope/completion design at immutable plan commit)",
+  "approval_pointer": "PENDING_FULL_SCOPE_ADOPTION_DO_NOT_DISPATCH; docs/aiops/REGISTRATION_SCOPE_APPROVAL_KO.md; manifest .aiops/registration-scope.json binds the whole plan and every pending catalogue; inherited approvals do not adopt follow-up definitions; independent exact-HEAD A3 and actual User scope/start decision, adopted full-scope reader, approved registration revision and qualified central service are required; central #47 e34868c6a12e5488224095b3248e59c8be9128f1 is a source candidate, not an audit/adoption/install/activation grant; prior scope references: PENDING_APPROVAL_DO_NOT_DISPATCH; https://github.com/BeautifulMind-JT/kix-protocol/pull/81 (kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 and §4, approved by the User's merge; extends kix-protocol docs/decisions/PROGRAM_DECISIONS_20260928.md §3 and §6, approved by the User's merge of #73 cfeb0d69561103302b6fdc3d10842768c3420151) ; Wave 6 gate record https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; protected program Astra bridge requires adoption/qualification of BeautifulMind-JT/ai-ops-control-plane#46 replacement candidate at a8b7355712c58de8d27c85a535fb241a09a4037c (PA-1 adoption, exact-HEAD non-author audit and actual host qualification/activation remain PENDING; #44 DECISION_REQUIRED is not a grant); replace pending metadata with actual current-head audit, User approval/merge and host qualification evidence before start; integrated journey evolution remains a separately reviewed PENDING candidate: docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md; pending nodes stay inactive until approved revision/qualified central capability",
+  "authoritative_doc_pointers": "README.md ; docs/http-integration-gate-apps-bind.md ; kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md ; kix-protocol docs/decisions/PROGRAM_DECISIONS_20260928.md §3 and §6 ; kix-protocol docs/tasks/TASK_005_MEGA_COMMERCE_PROGRAM.md ; kix-protocol docs/contracts/openapi/README.md ; docs/aiops/PROGRAM_ASTRA_DELEGATION.md (immutable plan commit) ; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md (candidate scope/completion design at immutable plan commit) ; docs/aiops/REGISTRATION_SCOPE_APPROVAL_KO.md (full candidate scope; pending adoption)",
   "nodes": [
     {
       "id": "w6a-journey-map",
@@ -103,5 +103,10 @@
       "audit_floor": "A3",
       "astra_auto_merge": true
     }
-  ]
+  ],
+  "registration_scope": {
+    "state": "PENDING_FULL_SCOPE_ADOPTION",
+    "manifest_path": ".aiops/registration-scope.json",
+    "runtime_rule": "ANY_PRESENT_MARKER_REJECTED_UNTIL_FULL_SCOPE_READER_ADOPTION"
+  }
 }

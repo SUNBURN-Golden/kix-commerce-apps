@@ -47,6 +47,11 @@ N/N−1 호환을 증명하지 않는다. protocol의 `p-sdk-0` floor는 이 형
 
 `consume-p-sdk-1`은 초기 `consume-p-sdk-0` 뒤에, protocol `p-sdk-1`과
 `contract-compatibility-profile` 완료 뒤에 새 catalogue SDK를 소비한다.
+FSM 결합 다섯 노드와 `browser-gate-path`는 `consume-p-sdk-1`을 먼저 기다리며
+그 노드에서 소비한 정확한 확대 tuple을 사용한다. 각 결합 작업이 공유 pin을 서로
+다른 중간 tuple로 옮기지 않는다. 후속 producer가 다시 바뀌면 해당 변경의 실제
+새 SDK·manifest·profile evidence를 검증한 소비 갱신을 먼저 수행하며, 완료된 SDK
+소비 노드의 PASS를 새 source로 전이하지 않는다.
 `bind-list-read`는 초기 SDK만 기다리던 정의를 고쳐 이 소비와 protocol
 `read-model-reference`/`p-sdk-1`을 모두 기다린다.
 `consume-p-sdk-0` 이외 pending 앱 노드도 `contract-compatibility-profile` 완료의
@@ -67,7 +72,7 @@ Wave 6-A `w6a-evidence`는 기존 **최소 한 표면 mock 여정** 게이트로
 
 | 노드 | 선행/증거 역할 |
 |---|---|
-| `e2e-browser-journeys` | 기존 browser-gate-path, api-state-distinction, bind-list-read, organizer-admin-console에 bind-admission-fsm, bind-resale-fsm, bind-credit-fsm, gift-surface 추가 |
+| `e2e-browser-journeys` | 기존 browser-gate-path, api-state-distinction, bind-list-read, organizer-admin-console에 bind-admission-fsm, bind-resale-fsm, bind-credit-fsm, gift-surface와 bind-wave4-pointers를 추가. 실제 여정 method/pointer가 결합된 뒤 검사 |
 | `commerce-integration-closeout` | 원본 active10 + 원본 pending18 + 이전 consume-p-sdk-1 + 새 c-* 6개, 다른35개 전부를 기다림. 자기 자신은 제외. 각 표면·모드·정확한 source tuple·오류 여정의 최종 evidence matrix |
 
 E2E는 예매·box office·입장·리셀·여신(mock)·선물·운영자 7종의 실제 binding 상태를
@@ -117,6 +122,14 @@ pending의 `astra_auto_merge=true`는 실행 가능한 승인 영수증이 아�
 계획 개정으로 편입한다. 미래 외부 의존성 기능을 쓰려면 중앙 기능 채택·host
 qualification·attestation와 승인된 immutable pending catalogue, scope-preserving
 revision 규칙이 먼저 있어야 한다. adoption 전에는 event나 pin만으로 자동 편입하지 않는다.
+
+producer User 결정 문서의 `DONE`은 기능 채택이나 정상 구현의 선행 충족을 뜻하지
+않는다. protocol 설계 §5.1의 `ADOPT / DEFERRED / DECLINED` 적용 범위를 함께 확인한다.
+아직 backend가 없는 DEFERRED나 거절된 producer 분기를 소비할 때는 해당 앱 구현·
+qualification을 HOLD하고 원 catalogue를 보존한다. 거절 후 제외 또는 비구현 산출물은
+비작성자 검토와 User 병합의 적용 범위/계획 개정이 정확한 node 정의와 전후 분모를
+고정한 경우에만 반영한다. 미지원 backend를 대체하거나 note를 실제 금융·복구 기능의
+qualification으로 승격하지 않으며, 독립적인 승인 범위는 계속 진행할 수 있다.
 
 외부 완료는 `repository`, `program_id`, `node_key`, `approved_plan_commit`,
 `node_definition_sha256`, `task_issue`, `task_revision`, `writer_launch_id`,
