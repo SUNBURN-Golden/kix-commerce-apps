@@ -1,0 +1,647 @@
+{
+  "schema_version": 1,
+  "program": "kixc",
+  "repository": "BeautifulMind-JT/kix-commerce-apps",
+  "status": "PENDING_NOT_IN_PLAN",
+  "rule": "Approval boundary: inherited roadmap references describe original scope origins; they do not approve later SDK/closeout evolution or the 6 new commerce definitions. All such evolution remains PENDING until actual exact-HEAD scope adoption and an approved plan revision with real prerequisite completion evidence. Approved by kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §1. The active schema-v1 loader rejects every depends_on_external field, including an empty field. Candidate nodes cannot be copied unchanged or silently stripped into the active plan. Promotion requires authoritative completion proof for every external predecessor, bound to its exact repository/program/node, approved plan/definition, delivered HEAD, merge SHA and required post-merge evidence. A separately reviewed, User-merged plan revision must record those proof pointers, before/after definition digests and the explicit removal of only the settled external field; retain the original pending catalogue as history. Missing/UNKNOWN/wrong-revision predecessors HOLD. Keeping the field requires a separately adopted/audited/actually qualified external completion reader and consumer. Source-only recovery does not grant that capability. Evolution candidate: definitions below are inactive. A future central external-dependency bridge can settle/admit only after its independent exact-head audit, User adoption, protected host qualification/attestation, immutable catalogue approval and approved revision mechanism; no automatic admission from comments/pins. Use the full adopted central settlement binding and protected receipt digest; missing/wrong/UNKNOWN binding HOLDs. Product evolution candidate 2026-10-01 adds six inactive c-* nodes and expands the existing final closeout to every other35 local commerce nodes; total candidate commerce36=active10+pending26. See COMMERCE_PRODUCT_EVOLUTION_KO.md. The new Finance prerequisites are protocol-owned program kix; no Finance repository or authority is inferred. Root full cross-repository DAG validation and separate scope adoption/current-head independent review remain required.",
+  "nodes": [
+    {
+      "id": "consume-p-sdk-0",
+      "title": "Consume the generated TypeScript 0.x client from kix-protocol",
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "p-sdk-0"
+        }
+      ],
+      "spec": "Objective: replace the hand-kept action list and the local-call schema checks with the generated TypeScript 0.x client from kix-protocol (PROGRAM_DECISIONS_20260928.md §2.1 line 47), vendored with its pin and sha256, keeping every fail-closed rule.\nAcceptance: adapter tests pass on the generated client; the pin check covers it.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nBootstrap consumption correction (protocol design §2.1): consume only the exact original p-sdk-0 tuple with manifest-v1 BOOTSTRAP profile/revision/digest, minimum offline verifier and shared golden vectors. Verify the profile source and actual protected producer completion/independent A3/merge binding; do not manufacture approval. Reject unknown/wrong schema or kind, mixed source/OpenAPI/SDK/vector inputs and any enlarged catalogue presented as BOOTSTRAP. Later changed catalogue/gate/schema/receipt consumption requires the exact current SEMANTIC_CONFORMANCE profile/evidence; initial PASS does not authorize it.",
+      "audit_floor": "A2",
+      "astra_auto_merge": true
+    },
+    {
+      "id": "bind-settlement-fsm",
+      "title": "Bind the settlement desk methods to the promoted catalogue",
+      "depends_on": [
+        "consume-p-sdk-0",
+        "consume-p-sdk-1"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "openapi-catalogue-promotion"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Objective: bind the 9 settlement desk methods in packages/protocol-adapter/src/commerce-bindings.ts to the catalogue commands kix-protocol promoted, following its approved source-of-truth decision, and move the pins. Money stays synthetic. The matching panel uses the bound path in HTTP mode and stays stub by default.\nAcceptance: stub and live-gate tests for every bound method; methods without a published command stay not-bound with the reason.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.\nTargeted SDK consumption ordering correction (INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §§2–3): this binding follows consume-p-sdk-1, never the initial SDK alone. Use the exact current expanded SDK/manifest/SEMANTIC_CONFORMANCE tuple adopted and consumed there; do not independently move shared pins back to an intermediate tuple. If a later relevant producer changes the source, first carry out the reviewed current-tuple consumption update with all existing pins together before binding it; a predecessor DONE is not transferable qualification of that later tuple. Missing or mixed SDK/source/profile inputs HOLD before any write. The existing five-pin rule and all prior loopback/fail-closed restrictions remain.",
+      "audit_floor": "A3",
+      "astra_auto_merge": true
+    },
+    {
+      "id": "bind-reservation-fsm",
+      "title": "Bind the reservation desk methods to the promoted catalogue",
+      "depends_on": [
+        "consume-p-sdk-0",
+        "consume-p-sdk-1"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "openapi-catalogue-promotion"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Objective: bind the 15 reservation desk methods in packages/protocol-adapter/src/commerce-bindings.ts to the catalogue commands kix-protocol promoted, following its approved source-of-truth decision, and move the pins. Bookings stay simulated-no-funds. The matching panel uses the bound path in HTTP mode and stays stub by default.\nAcceptance: stub and live-gate tests for every bound method; methods without a published command stay not-bound with the reason.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.\nTargeted SDK consumption ordering correction (INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §§2–3): this binding follows consume-p-sdk-1, never the initial SDK alone. Use the exact current expanded SDK/manifest/SEMANTIC_CONFORMANCE tuple adopted and consumed there; do not independently move shared pins back to an intermediate tuple. If a later relevant producer changes the source, first carry out the reviewed current-tuple consumption update with all existing pins together before binding it; a predecessor DONE is not transferable qualification of that later tuple. Missing or mixed SDK/source/profile inputs HOLD before any write. The existing five-pin rule and all prior loopback/fail-closed restrictions remain.",
+      "audit_floor": "A3",
+      "astra_auto_merge": true
+    },
+    {
+      "id": "bind-admission-fsm",
+      "title": "Bind the admission desk methods (including authorize and consume)",
+      "depends_on": [
+        "consume-p-sdk-0",
+        "consume-p-sdk-1"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "openapi-catalogue-promotion"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Objective: bind the 7 admission desk methods in packages/protocol-adapter/src/commerce-bindings.ts to the catalogue commands kix-protocol promoted, following its approved source-of-truth decision, and move the pins. authorize_admission and consume follow the resolved DECISION_REQUIRED rows of kix-protocol BOOKING_RESALE_ADMISSION_GATES.md; no venue scanning. The matching panel uses the bound path in HTTP mode and stays stub by default.\nAcceptance: stub and live-gate tests for every bound method; methods without a published command stay not-bound with the reason.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.\nTargeted SDK consumption ordering correction (INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §§2–3): this binding follows consume-p-sdk-1, never the initial SDK alone. Use the exact current expanded SDK/manifest/SEMANTIC_CONFORMANCE tuple adopted and consumed there; do not independently move shared pins back to an intermediate tuple. If a later relevant producer changes the source, first carry out the reviewed current-tuple consumption update with all existing pins together before binding it; a predecessor DONE is not transferable qualification of that later tuple. Missing or mixed SDK/source/profile inputs HOLD before any write. The existing five-pin rule and all prior loopback/fail-closed restrictions remain.",
+      "audit_floor": "A3",
+      "astra_auto_merge": true
+    },
+    {
+      "id": "bind-resale-fsm",
+      "title": "Bind the resale desk methods to the promoted catalogue",
+      "depends_on": [
+        "consume-p-sdk-0",
+        "consume-p-sdk-1"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "openapi-catalogue-promotion"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Objective: bind the 15 resale desk methods in packages/protocol-adapter/src/commerce-bindings.ts to the catalogue commands kix-protocol promoted, following its approved source-of-truth decision, and move the pins. No live marketplace or seller payout. The matching panel uses the bound path in HTTP mode and stays stub by default.\nAcceptance: stub and live-gate tests for every bound method; methods without a published command stay not-bound with the reason.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.\nTargeted SDK consumption ordering correction (INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §§2–3): this binding follows consume-p-sdk-1, never the initial SDK alone. Use the exact current expanded SDK/manifest/SEMANTIC_CONFORMANCE tuple adopted and consumed there; do not independently move shared pins back to an intermediate tuple. If a later relevant producer changes the source, first carry out the reviewed current-tuple consumption update with all existing pins together before binding it; a predecessor DONE is not transferable qualification of that later tuple. Missing or mixed SDK/source/profile inputs HOLD before any write. The existing five-pin rule and all prior loopback/fail-closed restrictions remain.",
+      "audit_floor": "A3",
+      "astra_auto_merge": true
+    },
+    {
+      "id": "bind-credit-fsm",
+      "title": "Bind the credit desk methods (mock only)",
+      "depends_on": [
+        "consume-p-sdk-0",
+        "consume-p-sdk-1"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "openapi-catalogue-promotion"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Objective: bind the 12 credit desk methods in packages/protocol-adapter/src/commerce-bindings.ts to the catalogue commands kix-protocol promoted, following its approved source-of-truth decision, and move the pins. Mock only: CREDIT_BOUNDARY.action stays none and nothing disburses (Task 005 decision 6). The matching panel uses the bound path in HTTP mode and stays stub by default.\nAcceptance: stub and live-gate tests for every bound method; methods without a published command stay not-bound with the reason.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.\nTargeted SDK consumption ordering correction (INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §§2–3): this binding follows consume-p-sdk-1, never the initial SDK alone. Use the exact current expanded SDK/manifest/SEMANTIC_CONFORMANCE tuple adopted and consumed there; do not independently move shared pins back to an intermediate tuple. If a later relevant producer changes the source, first carry out the reviewed current-tuple consumption update with all existing pins together before binding it; a predecessor DONE is not transferable qualification of that later tuple. Missing or mixed SDK/source/profile inputs HOLD before any write. The existing five-pin rule and all prior loopback/fail-closed restrictions remain.",
+      "audit_floor": "A3",
+      "astra_auto_merge": true
+    },
+    {
+      "id": "bind-wave4-pointers",
+      "title": "Rebind the Wave 4 pointer methods onto published bodies",
+      "depends_on": [
+        "w6a-journey-map",
+        "bind-reservation-fsm",
+        "bind-resale-fsm"
+      ],
+      "spec": "Objective: rebind placeHold, releaseHold, confirmBooking, checkAdmission, openResale, acceptResale and settlementPreview onto published bodies through the desk argument redesign the journey map approved. If a body mismatch remains (capture needs amount, currency and paymentId; the resale guard forbids listingId plus amount), stop with DECISION_REQUIRED.\nAcceptance: stub and live-gate tests.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.",
+      "audit_floor": "A3",
+      "astra_auto_merge": true,
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ]
+    },
+    {
+      "id": "bind-list-read",
+      "title": "Bind the list and read methods to the read-model queries",
+      "depends_on": [
+        "consume-p-sdk-1"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "read-model-reference"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "p-sdk-1"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Objective: bind listPerformances, getBooking, listResale and the view* methods to the read-model queries kix-protocol added; the UI labels reads as non-authoritative (never proof of payment, issuance or admission).\nAcceptance: stub and live-gate tests.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nExplicit SDK prerequisite: consume the regenerated p-sdk-1 output containing these exact read-query bodies/receipts and validate the same new producer compatibility tuple; the earlier p-sdk-0 consumption alone is insufficient.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.",
+      "audit_floor": "A3",
+      "astra_auto_merge": true
+    },
+    {
+      "id": "browser-gate-path",
+      "title": "Browser HTTP path to the loopback gate, as kix-protocol decided",
+      "depends_on": [
+        "w6a-ui-skeleton",
+        "consume-p-sdk-1"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "gate-browser-access"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Objective: enable the browser HTTP path within what kix-protocol's gate browser access decision allows (explicit loopback origin, opt-in). If that decision kept the gate closed, document that live journeys run from Node tests only and finish.\nAcceptance: browser run against the live gate, or the document.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.\nTargeted SDK consumption ordering correction (INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §§2–3): this binding follows consume-p-sdk-1, never the initial SDK alone. Use the exact current expanded SDK/manifest/SEMANTIC_CONFORMANCE tuple adopted and consumed there; do not independently move shared pins back to an intermediate tuple. If a later relevant producer changes the source, first carry out the reviewed current-tuple consumption update with all existing pins together before binding it; a predecessor DONE is not transferable qualification of that later tuple. Missing or mixed SDK/source/profile inputs HOLD before any write. The existing five-pin rule and all prior loopback/fail-closed restrictions remain.",
+      "audit_floor": "A3",
+      "astra_auto_merge": true
+    },
+    {
+      "id": "primary-price-fee-ui",
+      "title": "Show the contracted primary price and fee",
+      "depends_on": [
+        "w6a-ui-skeleton"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "move-primary-price-fee"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Objective: show the primary issuance price and fee from kix-protocol's merged contract on booking and box office. No invented values.\nAcceptance: web tests and a browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.",
+      "audit_floor": "A2",
+      "astra_auto_merge": true
+    },
+    {
+      "id": "api-state-distinction",
+      "title": "UI separates reservation, payment, issuance, return and refund states",
+      "depends_on": [
+        "bind-reservation-fsm",
+        "bind-settlement-fsm"
+      ],
+      "spec": "Objective: every surface distinguishes reservation, payment, rights issuance, return-required and real-refund-done (kix-protocol DEVELOPMENT_PLAN.md §8 line ~198) and never shows a reservation as a payment.\nAcceptance: web tests per state.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.",
+      "audit_floor": "A2",
+      "astra_auto_merge": true,
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ]
+    },
+    {
+      "id": "refund-surface",
+      "title": "Refund and cancel flows as synthetic mocks",
+      "depends_on": [
+        "bind-settlement-fsm"
+      ],
+      "spec": "Objective: refund_ticket, void_unissued, adjust_pg_cancel and observe_return (F03) as synthetic flows on the settlement and booking surfaces; the UI never claims a real refund.\nAcceptance: stub and live-gate tests; browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.",
+      "audit_floor": "A3",
+      "astra_auto_merge": true,
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ]
+    },
+    {
+      "id": "delegation-surface",
+      "title": "Delegation surface: query and propose only",
+      "depends_on": [
+        "consume-p-sdk-0"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "ai-delegation-contract-mock"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Objective: a read-and-propose surface for delegate and close_delegation and for the query and propose authority of kix-protocol's AI delegation contract. Execution stays disabled (kix-protocol DEVELOPMENT_PLAN.md §12); no AI tool can transfer, refund or sign.\nAcceptance: tests and a browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.",
+      "audit_floor": "A3",
+      "astra_auto_merge": true
+    },
+    {
+      "id": "w7-m01-membership",
+      "title": "Wave 7 M01: membership surface on the membership contract",
+      "depends_on": [
+        "w7-marketing-align"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "wave7-marketing-contracts"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Objective: fan qualification issue, revoke, consent and proof on kix-protocol's merged M01 contract; membership cards are not Wave 2 rights.\nAcceptance: tests; browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.",
+      "audit_floor": "A2",
+      "astra_auto_merge": true
+    },
+    {
+      "id": "w7-m02-presale",
+      "title": "Wave 7 M02: presale surface on the presale contract",
+      "depends_on": [
+        "w7-marketing-align",
+        "bind-reservation-fsm"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "wave7-marketing-contracts"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Objective: presale eligibility, priority and purchase limit on kix-protocol's merged M02 contract, linked to the booking hold only as that contract allows.\nAcceptance: tests; browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.",
+      "audit_floor": "A2",
+      "astra_auto_merge": true
+    },
+    {
+      "id": "w7-m03-coupon",
+      "title": "Wave 7 M03: coupon surface on the coupon contract",
+      "depends_on": [
+        "w7-marketing-align",
+        "bind-reservation-fsm"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "wave7-marketing-contracts"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Objective: coupon issue, use and revoke with the discount budget and order atomicity of kix-protocol's merged M03 contract.\nAcceptance: tests; browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.",
+      "audit_floor": "A3",
+      "astra_auto_merge": true
+    },
+    {
+      "id": "w7-m04-referral",
+      "title": "Wave 7 M04: referral surface on the referral contract (no payout)",
+      "depends_on": [
+        "w7-marketing-align"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "wave7-marketing-contracts"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Objective: referral attribution and reward eligibility on kix-protocol's merged M04 contract; no payout.\nAcceptance: tests; browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.",
+      "audit_floor": "A3",
+      "astra_auto_merge": true
+    },
+    {
+      "id": "e2e-browser-journeys",
+      "title": "Browser end-to-end journeys across all surfaces",
+      "depends_on": [
+        "browser-gate-path",
+        "api-state-distinction",
+        "bind-list-read",
+        "organizer-admin-console",
+        "bind-admission-fsm",
+        "bind-resale-fsm",
+        "bind-credit-fsm",
+        "gift-surface",
+        "bind-wave4-pointers"
+      ],
+      "spec": "Objective: browser end-to-end tests (Playwright or the repo's choice, added to CI without weakening existing checks) for booking, box office, admission, resale, credit, gift and organizer journeys in stub mode, and in HTTP mode when the gate allows browser access.\nAcceptance: the suite in CI; a run record.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nEvolution evidence: cover all seven declared journeys with the actual bound paths and per-step success/rejection/UNKNOWN boundary tests, source compatibility tuple and exact app head. Stub-only, NOT_BOUND, skipped live-gate and a deliberately closed browser path are distinguished from live-browser qualification. This is not final release or the all-surface closeout.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.\nTargeted E2E ordering correction (INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §3): wait for bind-wave4-pointers as well as the existing SDK/read/FSM/gift/browser predecessors before asserting the seven journeys are integrated. Tests bind the current producer tuple and real pointer methods; an earlier unbound/stub pass is not final integration evidence.",
+      "audit_floor": "A2",
+      "astra_gate": "MILESTONE",
+      "astra_auto_merge": true,
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ]
+    },
+    {
+      "id": "consume-p-sdk-1",
+      "title": "Consume the regenerated SDK and immutable compatibility tuple for reads/FSMs",
+      "depends_on": [
+        "consume-p-sdk-0"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "p-sdk-1"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Objective: vendor and use the generated TypeScript 0.x SDK containing the enlarged approved FSM/read catalogue from the exact compatible producer manifest, rather than retaining the earlier p-sdk-0 command set. Record generator/source/output and both OpenAPI hashes and move the five pins together. Subsequent changed catalogue consumption repeats this verification for its actual new tuple; this node is not a perpetual qualification.\nAcceptance: adapter/conformance tests use the generated methods for all intended command/query bodies and receipts; malformed/mixed/wrong domain/source tuples fail before a write; byte-identical regenerated SDK source/input evidence and exact-head checks. No stable 1.0, registry publish, auth/retry invention or production permission.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.",
+      "audit_floor": "A2",
+      "astra_auto_merge": true
+    },
+    {
+      "id": "c-journey-identity",
+      "title": "Define and implement context-bound journey identity and read observation adapters",
+      "depends_on": [
+        "consume-p-sdk-1",
+        "bind-list-read",
+        "api-state-distinction"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "protocol-runtime-boundary-register"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "protocol-canonical-identity-conformance"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "protocol-read-projection-evidence"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Product evolution candidate: docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md at the immutable candidate plan commit; PENDING_NOT_IN_PLAN. This does not grant new endpoints, retry/auth, real finance/chain/public access or release. Objective: implement the module/authority and immutable context/identity boundaries in COMMERCE_PRODUCT_EVOLUTION_KO.md §§2–3 and the read envelope consumer in §7. Create an actual field-path binding registry from published upstream command/receipt fields to downstream bodies; journey IDs, protocol operation IDs, request/correlation IDs, actor display references and aggregate business IDs remain distinct. Context includes adapter mode, exact producer manifest/domain, actor reference, browser-session incarnation and resource scope. No desk body is remapped to an unrelated command. Decode only adopted ReadObservationV1 or the actual reviewed equivalent, with typed source cut/watermark/snapshot digest/query/subject/mode/profile; candidate schema fields must not be added to existing receipts.\nAcceptance: wrong tuple/profile/body/version/mode/context/subject or mixed pagination snapshot rejected before a write; stale callbacks cannot overwrite current projections or clear an earlier UNKNOWN fence. Use actual producer canonical identity/monetary codec, not a new JS JSON hash law. Tests prove command-to-receipt mapping, no direct UI fetch and no copied protocol truth/math; record current exact source/manifest/SDK/vector provenance and tests. Actor is not authentication, read snapshots and health probes are not effect/admission authority. Missing adopted wire fields stay NOT_BOUND, not fabricated. Current-head CI, independent A3 ARCHITECTURE review and protected completion evidence remain required.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.",
+      "audit_floor": "A3",
+      "astra_auto_merge": false,
+      "astra_gate": "ARCHITECTURE",
+      "user_merge": true
+    },
+    {
+      "id": "c-async-session-fence",
+      "title": "Implement one-attempt outcome fencing and honest session recovery",
+      "depends_on": [
+        "c-journey-identity",
+        "bind-reservation-fsm",
+        "bind-settlement-fsm",
+        "bind-admission-fsm",
+        "bind-resale-fsm"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "protocol-local-recovery-conformance"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "protocol-read-projection-evidence"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Product evolution candidate: docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md at the immutable candidate plan commit; PENDING_NOT_IN_PLAN. This does not grant new endpoints, retry/auth, real finance/chain/public access or release. Objective: implement the outcome reducer/session-intent boundaries in COMMERCE_PRODUCT_EVOLUTION_KO.md §§4–5. Separate business DRAFT/IN_FLIGHT/CONFIRMED/REJECTED/UNKNOWN from CURRENT/STALE/UNAVAILABLE observations. Pre-save intent/fence before a single send; storage failure before send refuses it, storage failure after send fences UNKNOWN. Definite rejection requires the adopted exact same-bound rejection/effect contract; transport/generic error labels cannot certify no effect. Scope single-flight conflicting reservation/right/listing actions, including gift/resale/admit/cancel/issue interactions. Abort, unmount, timeout or a lost body does not cancel a server effect. Preserve original identifiers and fingerprints across reload, actor/mode/manifest changes, schema migration and stub restarts.\nAcceptance: tests inject pre-send and post-effect failures, late response, duplicate click, failed persistence, wrong context, unsupported/corrupt journal, tab reload and lost session evidence; command count is one attempt and new equivalent-operation, dependent write, retry or compensation after UNKNOWN is zero. Old stub attempt increments are confined to stub semantics and never used to reopen a future HTTP UNKNOWN. Browser/session storage or UI locks do not claim durable global exactly-once; lack of qualified resolution remains HOLD/SESSION_EVIDENCE_LOST. Do not add authoritative resolution or retry APIs; producer read/reconcile and central Fable quota retry cannot authorize business replay. Legal retention remains UNDETERMINED; never expiry-delete unresolved fences. Record actual module paths and source-mode-specific recovery evidence; current-head CI and independent A3 ARCHITECTURE review.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.\nUpstream decision applicability boundary: require the actual producer capability and approved current tuple, not merely a User decision-document merge. A DEFERRED or DECLINED producer branch keeps affected finance/recovery consumers and their qualification facets HOLD unless a separately reviewed, User-merged applicability/plan revision authorizes a precise alternative or nonimplementation scope. Preserve the full catalogue, original IDs and independent runnable scopes; do not invent a replacement backend, drop descendants, treat notes as service qualification or silently lower the closeout denominator. Follow producer CONTRACT_RELEASE_AND_COMPLETION_DESIGN_KO.md §5.1 through the adopted revision mechanism; this adds no runtime decision parser or automatic scope-editing authority.",
+      "audit_floor": "A3",
+      "astra_auto_merge": false,
+      "astra_gate": "ARCHITECTURE",
+      "user_merge": true
+    },
+    {
+      "id": "c-cross-surface-journeys",
+      "title": "Compose complete non-production commerce and marketing journeys with adverse branches",
+      "depends_on": [
+        "c-async-session-fence",
+        "bind-wave4-pointers",
+        "bind-credit-fsm",
+        "gift-surface",
+        "refund-surface",
+        "delegation-surface",
+        "organizer-admin-console",
+        "w7-m01-membership",
+        "w7-m02-presale",
+        "w7-m03-coupon",
+        "w7-m04-referral",
+        "w7-m05-consent-bind"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Product evolution candidate: docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md at the immutable candidate plan commit; PENDING_NOT_IN_PLAN. This does not grant new endpoints, retry/auth, real finance/chain/public access or release. Objective: implement the complete composition matrix in COMMERCE_PRODUCT_EVOLUTION_KO.md §6 using the existing approved producer bodies/receipt field paths: booking and issuance, box office/event management, resale and gift transfer, authorization/consume admission, synthetic cancellation/refund, mock credit, M01–M05, and AI query/propose. Use context-bound controller guards and current owner/version; not independent copied business math. Connect confirmed source receipt references to the exact next command; distinguish partial success, not-bound and unavailable. Split cancel versus refund and mock settlement observation versus issued ownership; preserve compensationDefined false/COMPENSATION_UNDEFINED where no contract exists. No automatic compensating saga or AI execute/sign/transfer/refund.\nAcceptance: real app browser and adapter tests cover each mapped success/definite reject/UNKNOWN branch, hold expiry, old holder version, concurrent resale/gift/admit, issue or refund response loss, cancelled/transferred credentials, repayment sequence/partial exposure and coupon/order/consent-revoke conflicts. No late old read restores a transferred right, no health/presentation result marks admission completed, no consent or referral enables channel send/payout/token benefits. CRM channelSend remains none; exposure is mock, never disbursement. If any intended command/read is absent or policy undefined, show NOT_BOUND/HOLD/DECISION_REQUIRED with owner instead of inventing an endpoint. Browser HTTP remains unavailable when the approved gate is closed, no proxy/fallback. Actual current tuple/SDK/profile and app head evidence plus independent A3 ARCHITECTURE review.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.",
+      "audit_floor": "A3",
+      "astra_auto_merge": true,
+      "astra_gate": "ARCHITECTURE"
+    },
+    {
+      "id": "c-finance-projection",
+      "title": "Consume the current Finance read contract for truthful reconciliation and export views",
+      "depends_on": [
+        "c-journey-identity",
+        "bind-list-read",
+        "bind-settlement-fsm",
+        "bind-credit-fsm",
+        "primary-price-fee-ui"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "fin-catalogue-read-model"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Product evolution candidate: docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md at the immutable candidate plan commit; PENDING_NOT_IN_PLAN. This does not grant new endpoints, retry/auth, real finance/chain/public access or release. Objective: implement only the read-only Finance projection in COMMERCE_PRODUCT_EVOLUTION_KO.md §7 from kix-protocol program kix/fin-catalogue-read-model. Finance stays producer-owned, not a new repository/program or copied app ledger. Consume newly generated current finance query SDK and immutable producer manifest with SEMANTIC_CONFORMANCE profile/evidence for that exact tuple; prior p-sdk-1/profile node completion cannot qualify later finance additions. Display source-bound synthetic capture/claim/settlement, multi-payee/refund rows, mock credit exposure, reconciliation exceptions and consistent export references. Only protocol codecs/amount units and upstream-defined rounding/distribution are displayed; do not recalculate ledger/fees/interest or infer bank posting.\nAcceptance: exact cut/query/subject/mode/profile/source release checked; mismatch, missing rows, lag, UNKNOWN, duplicated/late observation, partial export and mixed pagination cut remain visible and never produce a forged paid/refunded/matched label. No reconciliation read clears a business UNKNOWN. Export count/digest and source refs verified without copying accounting math; finance UI provenance ties exact consumer app head to actual upstream manifest/profile. No currency symbol without an approved unit, no real PG/bank/KYC/lending/tax audit claim. Browser evidence and current-head CI; independent A3 ARCHITECTURE review. Publish this consuming app evidence for fin-finance-closeout; do not depend on that upstream final closeout or on commerce-integration-closeout, avoiding a cycle.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.\nUpstream decision applicability boundary: require the actual producer capability and approved current tuple, not merely a User decision-document merge. A DEFERRED or DECLINED producer branch keeps affected finance/recovery consumers and their qualification facets HOLD unless a separately reviewed, User-merged applicability/plan revision authorizes a precise alternative or nonimplementation scope. Preserve the full catalogue, original IDs and independent runnable scopes; do not invent a replacement backend, drop descendants, treat notes as service qualification or silently lower the closeout denominator. Follow producer CONTRACT_RELEASE_AND_COMPLETION_DESIGN_KO.md §5.1 through the adopted revision mechanism; this adds no runtime decision parser or automatic scope-editing authority.",
+      "audit_floor": "A3",
+      "astra_auto_merge": true,
+      "astra_gate": "ARCHITECTURE"
+    },
+    {
+      "id": "c-accessibility-acceptance",
+      "title": "Verify accessible full journeys and prepare current-UI User acceptance evidence",
+      "depends_on": [
+        "c-cross-surface-journeys",
+        "c-finance-projection",
+        "browser-gate-path"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Product evolution candidate: docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md at the immutable candidate plan commit; PENDING_NOT_IN_PLAN. This does not grant new endpoints, retry/auth, real finance/chain/public access or release. Objective: make the actually implemented current UI journeys accessible and provide the acceptance matrix in COMMERCE_PRODUCT_EVOLUTION_KO.md §8. Cover keyboard-only route/dialog/form flows, input labels/errors, focus return/trap/escape, table headers and textual state, live-region duplicate announcements, zoom/narrow viewport and state indications beyond color. Exact tools/version/target standard are recorded after official-source confirmation; automated accessibility results do not replace actual keyboard/assistive-technology observations. Unavailable/UNKNOWN actions explain their blocked reason and the permitted next action in product language.\nAcceptance: browser artifacts for current app head and exact producer tuple show all required success/reject/UNKNOWN states and accessibility observations. User acceptance target/owner/evidence is explicit; when the actual new-UI User decision/baseline is absent leave acceptance PENDING. Do not reuse past stub or another product's screen approval; keep CI, accessibility evidence, User acceptance and release permission separate. Source node can deliver the honest acceptance package with PENDING facet, never manufacture ACCEPTED. Redacted diagnostic records contain only mode/source/trace/outcome references and no credentials/real KYC/payment data. Exact-head CI and independent non-author review; no public deployment.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.",
+      "audit_floor": "A2",
+      "astra_auto_merge": true
+    },
+    {
+      "id": "c-integrated-chaos-qualification",
+      "title": "Qualify exact-mode commerce journeys under fault and restart boundaries",
+      "depends_on": [
+        "c-async-session-fence",
+        "c-cross-surface-journeys",
+        "c-finance-projection",
+        "c-accessibility-acceptance",
+        "e2e-browser-journeys"
+      ],
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "protocol-local-recovery-conformance"
+        },
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ],
+      "spec": "Product evolution candidate: docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md at the immutable candidate plan commit; PENDING_NOT_IN_PLAN. This does not grant new endpoints, retry/auth, real finance/chain/public access or release. Objective: consolidate actual non-production, exact-current mode/source journey qualification with the adverse suite in COMMERCE_PRODUCT_EVOLUTION_KO.md §10. Reuse existing sufficient tests with source/test/path mapping; add only missing end-to-end evidence across reload/storage failure, response loss/late duplicate, actor/manifest/mode switching, projection lag/mixed cut, conflicting ownership actions, partial refunds and Finance export/exposure exceptions. Keep all required original surfaces and pending-definition inventory, including marketing and read/propose delegation.\nAcceptance: current app head, actual producer SDK/manifest/profile, mode, supported browser/Node execution, source recovery generation and outcome evidence are bound in every required matrix row. Assert single-send and zero dependent writes/compensations after UNKNOWN. Stub-only, NOT_BOUND, deliberate blocked browser, skipped secret-dependent CI and actual unavailable service are separate holds/facets, never qualified by copied tests. Qualification scope is synthetic/loopback/reference only. Actual User acceptance may be PENDING and release NOT_AUTHORIZED; protected central node DONE uses the adopted host-pinned exact delivery target-merge predicate without inventing a new DONE law. Required task evidence and post-merge service qualification stay separate; independent A3 ARCHITECTURE review (the product evidence closeout is a milestone in scope, not a lower effective audit gate), exact-head CI and truthful qualification evidence. No host/account/permission changes or live finance/chain/public activation.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.\nUpstream decision applicability boundary: require the actual producer capability and approved current tuple, not merely a User decision-document merge. A DEFERRED or DECLINED producer branch keeps affected finance/recovery consumers and their qualification facets HOLD unless a separately reviewed, User-merged applicability/plan revision authorizes a precise alternative or nonimplementation scope. Preserve the full catalogue, original IDs and independent runnable scopes; do not invent a replacement backend, drop descendants, treat notes as service qualification or silently lower the closeout denominator. Follow producer CONTRACT_RELEASE_AND_COMPLETION_DESIGN_KO.md §5.1 through the adopted revision mechanism; this adds no runtime decision parser or automatic scope-editing authority.",
+      "audit_floor": "A3",
+      "astra_auto_merge": true,
+      "astra_gate": "ARCHITECTURE"
+    },
+    {
+      "id": "commerce-integration-closeout",
+      "title": "Close the complete approved non-production commerce integration evidence",
+      "depends_on": [
+        "w6a-journey-map",
+        "w6a-journey-adapter",
+        "w6a-journey-test",
+        "w6a-ui-skeleton",
+        "w6a-evidence",
+        "organizer-admin-console",
+        "gift-surface",
+        "doc-m05-label",
+        "w7-marketing-align",
+        "w7-m05-consent-bind",
+        "consume-p-sdk-0",
+        "bind-settlement-fsm",
+        "bind-reservation-fsm",
+        "bind-admission-fsm",
+        "bind-resale-fsm",
+        "bind-credit-fsm",
+        "bind-wave4-pointers",
+        "bind-list-read",
+        "browser-gate-path",
+        "primary-price-fee-ui",
+        "api-state-distinction",
+        "refund-surface",
+        "delegation-surface",
+        "w7-m01-membership",
+        "w7-m02-presale",
+        "w7-m03-coupon",
+        "w7-m04-referral",
+        "e2e-browser-journeys",
+        "consume-p-sdk-1",
+        "c-journey-identity",
+        "c-async-session-fence",
+        "c-cross-surface-journeys",
+        "c-finance-projection",
+        "c-accessibility-acceptance",
+        "c-integrated-chaos-qualification"
+      ],
+      "spec": "Objective: after all other 35 commerce nodes in the expanded candidate inventory complete, build the final evidence matrix in docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §§3–7 across booking, box office, admission, resale, credit(mock), gift, organizer, primary price/fee, synthetic refunds/cancels, read/propose delegation and M01–M05. Bind exact producer compatibility manifests and app delivery/source evidence, successful and adverse journeys, actual browser/Node modes and any deliberate unavailable/NOT_BOUND/skip branches. Verify existing evidence rather than inflate copied tests.\nAcceptance: every required row has truthful evidence or an explicit hold; seven-journey E2E and later surfaces are included; no active/pending definition is omitted from the whole-program inventory. node_state is the prospective NOT_STARTED/WAITING/IN_PROGRESS/DONE normalized central query; DONE uses the existing core host-pinned exact delivered HEAD valid target-merge predicate, without an independent extra DONE condition. Required task evidence checks and post-merge service qualification/acceptance remain their own facets; qualification_state NOT_REQUIRED/UNQUALIFIED/PARTIAL/QUALIFIED, acceptance_state NOT_REQUIRED/PENDING/ACCEPTED/REJECTED and release_state NOT_AUTHORIZED/NOT_RELEASED/RELEASED are separately reported with target/source/owner/evidence. Stub/loopback qualification is not production; no skip becomes PASS, no User/billing/chain/public/release lock is lifted. Any unresolved required predicate HOLDs the relevant facet, rather than fabricating completion.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.\nSemantic profile sequencing correction (protocol design §2.1): wait for the actual contract-compatibility-profile completion; when this task consumes a changed catalogue/gate/schema/receipt, verify the SEMANTIC_CONFORMANCE profile kind/revision/digest and evidence for the same exact current producer tuple. BOOTSTRAP is not valid for enlarged catalogue. The prerequisite alone cannot qualify a later changed source; missing/wrong tuple evidence HOLDs. Preserve existing declared prerequisites and all fail-closed rules.\nProduct evolution closeout expansion: wait for all 35 other commerce nodes (prior 29 plus six c-* nodes). docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md §§9–10 is the complete candidate inventory, total 36 = active10 + pending26. Preserve prior surface/source/outcome evidence requirements; include new identity/session/failure/finance/current-UI accessibility/qualification matrix. Finance belongs program kix and is counted there once; this final closeout never gates fin-catalogue-read-model or c-finance-projection. Legacy counts are earlier checkpoints, not current denominators. Missing required evidence or actual User acceptance/qualification remains the corresponding HOLD/PENDING facet; release remains unauthorized.\nUpstream decision applicability boundary: require the actual producer capability and approved current tuple, not merely a User decision-document merge. A DEFERRED or DECLINED producer branch keeps affected finance/recovery consumers and their qualification facets HOLD unless a separately reviewed, User-merged applicability/plan revision authorizes a precise alternative or nonimplementation scope. Preserve the full catalogue, original IDs and independent runnable scopes; do not invent a replacement backend, drop descendants, treat notes as service qualification or silently lower the closeout denominator. Follow producer CONTRACT_RELEASE_AND_COMPLETION_DESIGN_KO.md §5.1 through the adopted revision mechanism; this adds no runtime decision parser or automatic scope-editing authority.",
+      "audit_floor": "A2",
+      "astra_gate": "MILESTONE",
+      "astra_auto_merge": true,
+      "depends_on_external": [
+        {
+          "repository": "BeautifulMind-JT/kix-protocol",
+          "program": "kix",
+          "node": "contract-compatibility-profile"
+        }
+      ]
+    }
+  ]
+}
