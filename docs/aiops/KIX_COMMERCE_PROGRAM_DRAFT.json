@@ -3,8 +3,8 @@
   "program": "kixc",
   "repository": "BeautifulMind-JT/kix-commerce-apps",
   "project": "KIX_COMMERCE",
-  "approval_pointer": "PENDING_APPROVAL_DO_NOT_DISPATCH",
-  "authoritative_doc_pointers": "README.md ; docs/http-integration-gate-apps-bind.md ; kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md ; kix-protocol docs/decisions/PROGRAM_DECISIONS_20260928.md §3 and §6 ; kix-protocol docs/tasks/TASK_005_MEGA_COMMERCE_PROGRAM.md ; kix-protocol docs/contracts/openapi/README.md ; docs/aiops/PROGRAM_ASTRA_DELEGATION.md (immutable plan commit) ; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md (candidate scope/completion design at immutable plan commit) ; docs/aiops/REGISTRATION_SCOPE_APPROVAL_KO.md (full candidate scope; pending adoption) ; NON_EXECUTABLE_DRAFT: docs/aiops/KIX_COMMERCE_PROGRAM_DRAFT.json",
+  "approval_pointer": "PENDING_EXPANDED_SCOPE_REVIEW_DO_NOT_DISPATCH",
+  "authoritative_doc_pointers": "README.md ; docs/http-integration-gate-apps-bind.md ; kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md ; kix-protocol docs/decisions/PROGRAM_DECISIONS_20260928.md §3 and §6 ; kix-protocol docs/tasks/TASK_005_MEGA_COMMERCE_PROGRAM.md ; kix-protocol docs/contracts/openapi/README.md ; docs/aiops/PROGRAM_ASTRA_DELEGATION.md (immutable plan commit) ; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md (candidate scope/completion design at immutable plan commit) ; docs/aiops/REGISTRATION_SCOPE_APPROVAL_KO.md (full candidate scope; pending adoption) ; NON_EXECUTABLE_DRAFT: docs/aiops/KIX_COMMERCE_PROGRAM_DRAFT.json ; docs/aiops/PROGRAM_EXPANSION_20261002_KO.md (expanded candidate; source and acceptance scope, not execution approval) ; docs/aiops/PENDING_NODES.json (NON_EXECUTABLE pending catalogue; do not erase cross-repository prerequisites)",
   "nodes": [
     {
       "id": "w6a-journey-map",
@@ -104,6 +104,120 @@
       "spec": "Objective: bind the M05 consent flow to the published set_consent and authorize_marketing commands. CRM campaign editing stays out (a separate product).\nAcceptance: stub and live-gate tests; browser run.\nCommon rules: keep the README.md fail-closed rules: stub is the default, loopback http://127.0.0.1 only, one attempt, no stub fallback, no retry or Idempotency-Key, no redirect following, production and truth flags false, no proxy around the gate, no fetch from UI components, no desk-method remap onto a different body. No real payment, public deployment, real KYC, credit disbursement, venue scanning, bank rail or live marketplace; no SLOs; no copied Move, kernel or settlement math. Nothing changes inside kix-protocol. When a kix-protocol catalogue or gate change is consumed, move both OpenAPI pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha together. Stop with DECISION_REQUIRED when a step would cross one of these rules or needs a contract kix-protocol has not merged. The PR body cites the gate record (Wave 6: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343; Wave 7: kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md §2 R-7) and kix-protocol docs/decisions/PROGRAM_ROADMAP_20260930.md. Acceptance always includes Commerce apps CI green at the exact head, including 'Typecheck, build, and test (stub)'. For UI work, run the real app in a browser and record success and main error states.\nEvolution consumption rule (docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §2): when consuming any catalogue/gate/schema/receipt change, use the SDK generated from that exact producer source and verify its new immutable compatibility manifest, both OpenAPI hashes, SDK generator/output, domain/schema/profile and vectors. Move the existing five pins together. A completed initial SDK/profile/CI is not evidence for later changed versions; mismatched tuples fail before a write. Do not manufacture protected receipts or infer User approval/release from a manifest.",
       "audit_floor": "A3",
       "astra_auto_merge": true
+    },
+    {
+      "id": "c-workspace-design",
+      "title": "구매자·주최자·운영자의 전체 제품 흐름 설계",
+      "spec": "목표: 개별 stub 화면을 사용자가 이해할 수 있는 역할별 작업 공간으로 묶는다.\n\n작업 묶음: 통합 제품 UX\n\n설계 근거: README.md; docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md\n\n구현 범위:\n1. 발견→선택→예약→결제 상태→권리→입장→환불 흐름을 매핑한다\n2. 주최자의 공연/재고/판매/정산과 운영자의 예외 처리를 연결한다\n3. 기존 command-bound UI와 미연결 기능의 표시 규칙을 설계한다\n\n필수 산출물:\n- 전체 information architecture와 상태별 화면 계약\n- 기능/프로토콜 command/작업 ID 대응표\n\n완료 판정/실패 검증:\n1. 예약·결제·발행·입장이 한 개의 완료 배지로 합쳐지지 않는다\n2. 존재하지 않는 producer 기능을 실제로 동작한다고 표시하지 않는다\n3. 승인된 명세 내 보통 UX 선택은 사용자 재질문 없이 결정한다\n\n공통 경계: 프로토콜 계산을 UI에 복제하지 않는다. 기본 stub, 명시적 loopback, 1회 요청, UNKNOWN/NOT_BOUND/STALE 분리를 유지한다. 미채택 retry·Idempotency-Key·공개 proxy·UI 직접 fetch를 추가하지 않는다. producer 변경을 소비할 때 두 OpenAPI pin·PINNED_ACTIONS·KIX_PROTOCOL_GATE_SHA·protocolMergeSha와 SDK/manifest/vector tuple을 함께 검증한다. 실결제·여신 지급·현장 검표·공개 서비스는 별도 권한이다.\n\n증거/인계: 실제 변경 파일·실행 명령·성공 및 실패 사례·정확한 소스 SHA를 PR에 남긴다. 기존 충분한 coverage는 재사용하고 새 gap만 검증한다. UI 변경은 실제 브라우저의 정상/빈 값/오류/진행 중 화면과 키보드 동작을 확인한다. 실환경 부재는 미검증으로 남긴다. 독립 검토 지적과 CI 실패는 같은 소유자가 수정하고 변경 HEAD를 다시 검토한다. 일반 구현 선택은 자율 결정하며 계정·중요 계약·실사용 승인만 구체적인 결정을 요청한다.",
+      "depends_on": [
+        "w6a-evidence",
+        "organizer-admin-console"
+      ],
+      "audit_floor": "A3",
+      "astra_gate": "ARCHITECTURE",
+      "deliverable_mode": "PR",
+      "astra_auto_merge": false,
+      "user_merge": true
+    },
+    {
+      "id": "c-buyer-workspace",
+      "title": "예매·보유 권리·리셀·선물의 구매자 작업실",
+      "spec": "목표: 현재 지원 계약과 receipt 안에서 다음에 할 수 있는 행동을 보여준다.\n\n작업 묶음: 통합 제품 UX\n\n설계 근거: README.md; docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md\n\n구현 범위:\n1. 선택/예약/주문/권리의 진행과 각 만료·거절 이유를 표시한다\n2. 내가 가진 ticket/선물/거래의 실제 근거를 연결한다\n3. blank/error/loading/unsupported 상태의 복귀 동작을 제공한다\n\n필수 산출물:\n- 구매자 화면과 모바일 navigation\n- 성공·거절·UNKNOWN·NOT_BOUND stub 여정\n\n완료 판정/실패 검증:\n1. stub 상태는 모든 핵심 화면에서 식별된다\n2. UI 성공 애니메이션이 receipt보다 먼저 확정을 알리지 않는다\n3. 새로고침 후 미확정 작업을 자동 재실행하지 않는다\n\n공통 경계: 프로토콜 계산을 UI에 복제하지 않는다. 기본 stub, 명시적 loopback, 1회 요청, UNKNOWN/NOT_BOUND/STALE 분리를 유지한다. 미채택 retry·Idempotency-Key·공개 proxy·UI 직접 fetch를 추가하지 않는다. producer 변경을 소비할 때 두 OpenAPI pin·PINNED_ACTIONS·KIX_PROTOCOL_GATE_SHA·protocolMergeSha와 SDK/manifest/vector tuple을 함께 검증한다. 실결제·여신 지급·현장 검표·공개 서비스는 별도 권한이다.\n\n증거/인계: 실제 변경 파일·실행 명령·성공 및 실패 사례·정확한 소스 SHA를 PR에 남긴다. 기존 충분한 coverage는 재사용하고 새 gap만 검증한다. UI 변경은 실제 브라우저의 정상/빈 값/오류/진행 중 화면과 키보드 동작을 확인한다. 실환경 부재는 미검증으로 남긴다. 독립 검토 지적과 CI 실패는 같은 소유자가 수정하고 변경 HEAD를 다시 검토한다. 일반 구현 선택은 자율 결정하며 계정·중요 계약·실사용 승인만 구체적인 결정을 요청한다.",
+      "depends_on": [
+        "c-workspace-design",
+        "w6a-ui-skeleton",
+        "gift-surface"
+      ],
+      "audit_floor": "A2",
+      "astra_gate": "NONE",
+      "deliverable_mode": "PR",
+      "astra_auto_merge": true,
+      "user_merge": false
+    },
+    {
+      "id": "c-organizer-workspace",
+      "title": "주최자 공연·재고·판매의 명확한 관리 흐름",
+      "spec": "목표: 기존 명령으로 행사 준비와 판매 상태를 쉽게 점검한다.\n\n작업 묶음: 통합 제품 UX\n\n설계 근거: README.md; docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md\n\n구현 범위:\n1. 공연 lifecycle·수량·일정·권한의 현재 지원 필드를 편집한다\n2. 대량 변경은 지원 명령별 미리보기와 개별 결과로 표시한다\n3. 아직 없는 read/정산/실자금 기능은 미연결로 남긴다\n\n필수 산출물:\n- 주최자 편집·변경 미리보기 UI\n- 부분 거절·stale selection·권한 부족 시나리오\n\n완료 판정/실패 검증:\n1. 여러 명령을 원자 거래라고 표시하지 않는다\n2. 같은 제출을 더블클릭으로 중복 송신하지 않는다\n3. client 계산 재고가 protocol 권위를 대신하지 않는다\n\n공통 경계: 프로토콜 계산을 UI에 복제하지 않는다. 기본 stub, 명시적 loopback, 1회 요청, UNKNOWN/NOT_BOUND/STALE 분리를 유지한다. 미채택 retry·Idempotency-Key·공개 proxy·UI 직접 fetch를 추가하지 않는다. producer 변경을 소비할 때 두 OpenAPI pin·PINNED_ACTIONS·KIX_PROTOCOL_GATE_SHA·protocolMergeSha와 SDK/manifest/vector tuple을 함께 검증한다. 실결제·여신 지급·현장 검표·공개 서비스는 별도 권한이다.\n\n증거/인계: 실제 변경 파일·실행 명령·성공 및 실패 사례·정확한 소스 SHA를 PR에 남긴다. 기존 충분한 coverage는 재사용하고 새 gap만 검증한다. UI 변경은 실제 브라우저의 정상/빈 값/오류/진행 중 화면과 키보드 동작을 확인한다. 실환경 부재는 미검증으로 남긴다. 독립 검토 지적과 CI 실패는 같은 소유자가 수정하고 변경 HEAD를 다시 검토한다. 일반 구현 선택은 자율 결정하며 계정·중요 계약·실사용 승인만 구체적인 결정을 요청한다.",
+      "depends_on": [
+        "c-workspace-design",
+        "organizer-admin-console"
+      ],
+      "audit_floor": "A2",
+      "astra_gate": "NONE",
+      "deliverable_mode": "PR",
+      "astra_auto_merge": true,
+      "user_merge": false
+    },
+    {
+      "id": "c-receipt-explorer",
+      "title": "receipt·원인·다음 행동의 설명 가능한 조회",
+      "spec": "목표: 사용자와 지원 담당자가 작업이 멈춘 이유를 같은 근거로 이해한다.\n\n작업 묶음: 통합 제품 UX\n\n설계 근거: README.md; docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md\n\n구현 범위:\n1. 이미 받은 receipt의 operation/상태/source/profile을 역할에 맞춰 표시한다\n2. 오류 code를 정확한 행동·미확인 이유와 연결한다\n3. 민감정보를 가린 문의용 진단 패키지를 만든다\n\n필수 산출물:\n- receipt 상세·흐름 연표·지원용 export\n- malformed receipt/다른 actor/context 거절 tests\n\n완료 판정/실패 검증:\n1. 설명용 read가 UNKNOWN을 확정으로 바꾸지 않는다\n2. 토큰·개인정보·계좌 원문이 진단에 무단 포함되지 않는다\n3. 한 사용자 receipt가 다른 session 화면에 섞이지 않는다\n\n공통 경계: 프로토콜 계산을 UI에 복제하지 않는다. 기본 stub, 명시적 loopback, 1회 요청, UNKNOWN/NOT_BOUND/STALE 분리를 유지한다. 미채택 retry·Idempotency-Key·공개 proxy·UI 직접 fetch를 추가하지 않는다. producer 변경을 소비할 때 두 OpenAPI pin·PINNED_ACTIONS·KIX_PROTOCOL_GATE_SHA·protocolMergeSha와 SDK/manifest/vector tuple을 함께 검증한다. 실결제·여신 지급·현장 검표·공개 서비스는 별도 권한이다.\n\n증거/인계: 실제 변경 파일·실행 명령·성공 및 실패 사례·정확한 소스 SHA를 PR에 남긴다. 기존 충분한 coverage는 재사용하고 새 gap만 검증한다. UI 변경은 실제 브라우저의 정상/빈 값/오류/진행 중 화면과 키보드 동작을 확인한다. 실환경 부재는 미검증으로 남긴다. 독립 검토 지적과 CI 실패는 같은 소유자가 수정하고 변경 HEAD를 다시 검토한다. 일반 구현 선택은 자율 결정하며 계정·중요 계약·실사용 승인만 구체적인 결정을 요청한다.",
+      "depends_on": [
+        "c-buyer-workspace",
+        "c-organizer-workspace"
+      ],
+      "audit_floor": "A2",
+      "astra_gate": "NONE",
+      "deliverable_mode": "PR",
+      "astra_auto_merge": true,
+      "user_merge": false
+    },
+    {
+      "id": "c-discovery-prototype",
+      "title": "공연·매물 발견과 검색의 대규모 UI fixture",
+      "spec": "목표: 조회 API가 준비되기 전에 제품 탐색 UX를 합성 자료로 구체화한다.\n\n작업 묶음: 통합 제품 UX\n\n설계 근거: README.md; docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md\n\n구현 범위:\n1. 검색/필터/정렬/페이지/가상화의 화면 모델을 기존 stub에 둔다\n2. 행사 상세·좌석/GA·매물의 표시 차이를 드러낸다\n3. 빈 결과·필터 충돌·stale 가격·취소된 행사를 포함한다\n\n필수 산출물:\n- 합성 발견/검색 화면과 fixture\n- 검색→상세→지원된 구매 흐름 연결\n\n완료 판정/실패 검증:\n1. 합성 수량·가격·리셀 매물이 실제 데이터처럼 표시되지 않는다\n2. 프런트 페이지 전체에 백만 항목을 적재하지 않는다\n3. 새 producer query를 UI 내부 fetch로 몰래 만들지 않는다\n\n공통 경계: 프로토콜 계산을 UI에 복제하지 않는다. 기본 stub, 명시적 loopback, 1회 요청, UNKNOWN/NOT_BOUND/STALE 분리를 유지한다. 미채택 retry·Idempotency-Key·공개 proxy·UI 직접 fetch를 추가하지 않는다. producer 변경을 소비할 때 두 OpenAPI pin·PINNED_ACTIONS·KIX_PROTOCOL_GATE_SHA·protocolMergeSha와 SDK/manifest/vector tuple을 함께 검증한다. 실결제·여신 지급·현장 검표·공개 서비스는 별도 권한이다.\n\n증거/인계: 실제 변경 파일·실행 명령·성공 및 실패 사례·정확한 소스 SHA를 PR에 남긴다. 기존 충분한 coverage는 재사용하고 새 gap만 검증한다. UI 변경은 실제 브라우저의 정상/빈 값/오류/진행 중 화면과 키보드 동작을 확인한다. 실환경 부재는 미검증으로 남긴다. 독립 검토 지적과 CI 실패는 같은 소유자가 수정하고 변경 HEAD를 다시 검토한다. 일반 구현 선택은 자율 결정하며 계정·중요 계약·실사용 승인만 구체적인 결정을 요청한다.",
+      "depends_on": [
+        "c-workspace-design"
+      ],
+      "audit_floor": "A2",
+      "astra_gate": "NONE",
+      "deliverable_mode": "PR",
+      "astra_auto_merge": true,
+      "user_merge": false
+    },
+    {
+      "id": "c-accessibility-baseline",
+      "title": "키보드·모바일·금액·시간 표현 품질",
+      "spec": "목표: 누구나 오류를 이해하고 핵심 거래 화면을 조작할 수 있다.\n\n작업 묶음: 제품 품질\n\n설계 근거: README.md; docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md\n\n구현 범위:\n1. 금액/수량/시간대/기한 표시를 계약 의미와 일치시킨다\n2. 키보드·터치·focus·스크린리더·확대 경로를 점검한다\n3. 로딩/차단/선택/검수 상태를 색상 외 의미로 제공한다\n\n필수 산출물:\n- 공통 UI 구성과 접근성 수정\n- 실제 브라우저 keyboard/mobile journey 증거\n\n완료 판정/실패 검증:\n1. 금액을 JS 부동소수점으로 새로 계산하지 않는다\n2. 시간 표시 locale 변경이 예약 만료 권위를 바꾸지 않는다\n3. 오류 후 입력·선택·focus가 복귀한다\n\n공통 경계: 프로토콜 계산을 UI에 복제하지 않는다. 기본 stub, 명시적 loopback, 1회 요청, UNKNOWN/NOT_BOUND/STALE 분리를 유지한다. 미채택 retry·Idempotency-Key·공개 proxy·UI 직접 fetch를 추가하지 않는다. producer 변경을 소비할 때 두 OpenAPI pin·PINNED_ACTIONS·KIX_PROTOCOL_GATE_SHA·protocolMergeSha와 SDK/manifest/vector tuple을 함께 검증한다. 실결제·여신 지급·현장 검표·공개 서비스는 별도 권한이다.\n\n증거/인계: 실제 변경 파일·실행 명령·성공 및 실패 사례·정확한 소스 SHA를 PR에 남긴다. 기존 충분한 coverage는 재사용하고 새 gap만 검증한다. UI 변경은 실제 브라우저의 정상/빈 값/오류/진행 중 화면과 키보드 동작을 확인한다. 실환경 부재는 미검증으로 남긴다. 독립 검토 지적과 CI 실패는 같은 소유자가 수정하고 변경 HEAD를 다시 검토한다. 일반 구현 선택은 자율 결정하며 계정·중요 계약·실사용 승인만 구체적인 결정을 요청한다.",
+      "depends_on": [
+        "c-buyer-workspace",
+        "c-organizer-workspace",
+        "c-discovery-prototype"
+      ],
+      "audit_floor": "A2",
+      "astra_gate": "NONE",
+      "deliverable_mode": "PR",
+      "astra_auto_merge": true,
+      "user_merge": false
+    },
+    {
+      "id": "c-contract-fixture-library",
+      "title": "지원 화면별 정상·거절·미확정 fixture 라이브러리",
+      "spec": "목표: 화면과 adapter가 계약 변화에 함께 실패하도록 검증 자료를 유지한다.\n\n작업 묶음: 제품 품질\n\n설계 근거: README.md; docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md\n\n구현 범위:\n1. 현재 tuple의 성공/reject/UNKNOWN/NOT_BOUND/STALE 사례를 분류한다\n2. UI·adapter 테스트가 같은 fixture 출처를 참조한다\n3. invalid/새 enum/누락 필드·다른 identity를 거절한다\n\n필수 산출물:\n- versioned fixture catalogue와 매핑 표\n- adapter/UI 계약 회귀\n\n완료 판정/실패 검증:\n1. 실패한 live 호출을 stub 성공으로 대체하지 않는다\n2. 이전 fixture PASS를 다른 tuple 검증으로 쓰지 않는다\n3. finance/권리 계산을 fixture generator가 운영 구현처럼 제공하지 않는다\n\n공통 경계: 프로토콜 계산을 UI에 복제하지 않는다. 기본 stub, 명시적 loopback, 1회 요청, UNKNOWN/NOT_BOUND/STALE 분리를 유지한다. 미채택 retry·Idempotency-Key·공개 proxy·UI 직접 fetch를 추가하지 않는다. producer 변경을 소비할 때 두 OpenAPI pin·PINNED_ACTIONS·KIX_PROTOCOL_GATE_SHA·protocolMergeSha와 SDK/manifest/vector tuple을 함께 검증한다. 실결제·여신 지급·현장 검표·공개 서비스는 별도 권한이다.\n\n증거/인계: 실제 변경 파일·실행 명령·성공 및 실패 사례·정확한 소스 SHA를 PR에 남긴다. 기존 충분한 coverage는 재사용하고 새 gap만 검증한다. UI 변경은 실제 브라우저의 정상/빈 값/오류/진행 중 화면과 키보드 동작을 확인한다. 실환경 부재는 미검증으로 남긴다. 독립 검토 지적과 CI 실패는 같은 소유자가 수정하고 변경 HEAD를 다시 검토한다. 일반 구현 선택은 자율 결정하며 계정·중요 계약·실사용 승인만 구체적인 결정을 요청한다.",
+      "depends_on": [
+        "c-receipt-explorer",
+        "c-accessibility-baseline"
+      ],
+      "audit_floor": "A2",
+      "astra_gate": "NONE",
+      "deliverable_mode": "PR",
+      "astra_auto_merge": true,
+      "user_merge": false
+    },
+    {
+      "id": "c-local-workspace-closeout",
+      "title": "통합 작업실 로컬 인계와 설치 안내",
+      "spec": "목표: 현재 사용 가능한 로컬 경험과 실제 연결이 필요한 범위를 정확히 전달한다.\n\n작업 묶음: 제품 품질\n\n설계 근거: README.md; docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md\n\n구현 범위:\n1. first run·stub mode·loopback 연결·오류 진단을 문서화한다\n2. 지원 command와 미연결 화면·pending producer를 표로 만든다\n3. 전체 역할 여정과 브라우저 evidence를 제공한다\n\n필수 산출물:\n- 로컬 제품 인계 packet\n- 기능별 실제 연결/합성/미지원 현황\n\n완료 판정/실패 검증:\n1. 화면이 존재한다는 이유만으로 protocol integration을 완료 처리하지 않는다\n2. 기존 original10 노드의 증거를 보존한다\n3. 공개 서비스·실결제·실제 검표 완료를 주장하지 않는다\n\n공통 경계: 프로토콜 계산을 UI에 복제하지 않는다. 기본 stub, 명시적 loopback, 1회 요청, UNKNOWN/NOT_BOUND/STALE 분리를 유지한다. 미채택 retry·Idempotency-Key·공개 proxy·UI 직접 fetch를 추가하지 않는다. producer 변경을 소비할 때 두 OpenAPI pin·PINNED_ACTIONS·KIX_PROTOCOL_GATE_SHA·protocolMergeSha와 SDK/manifest/vector tuple을 함께 검증한다. 실결제·여신 지급·현장 검표·공개 서비스는 별도 권한이다.\n\n증거/인계: 실제 변경 파일·실행 명령·성공 및 실패 사례·정확한 소스 SHA를 PR에 남긴다. 기존 충분한 coverage는 재사용하고 새 gap만 검증한다. UI 변경은 실제 브라우저의 정상/빈 값/오류/진행 중 화면과 키보드 동작을 확인한다. 실환경 부재는 미검증으로 남긴다. 독립 검토 지적과 CI 실패는 같은 소유자가 수정하고 변경 HEAD를 다시 검토한다. 일반 구현 선택은 자율 결정하며 계정·중요 계약·실사용 승인만 구체적인 결정을 요청한다.",
+      "depends_on": [
+        "c-contract-fixture-library",
+        "c-organizer-workspace",
+        "c-discovery-prototype"
+      ],
+      "audit_floor": "A2",
+      "astra_gate": "NONE",
+      "deliverable_mode": "PR",
+      "astra_auto_merge": true,
+      "user_merge": false
     }
   ]
 }

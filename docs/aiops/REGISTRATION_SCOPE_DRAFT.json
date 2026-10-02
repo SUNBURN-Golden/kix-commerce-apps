@@ -10,22 +10,28 @@
       "approval_pointer",
       "registration_scope"
     ],
-    "definition_sha256": "13e0cb746daf45644e02f308792eeffe3fed0d83529b27d08cf5232c95bc1d34",
-    "node_count": 10
+    "definition_sha256": "19466e9deb683c9763edb65f514921f1a1a6917c8badefd1fb34134f48f72bf7",
+    "node_count": 18
   },
   "pending_catalogues": [
     {
       "path": "docs/aiops/PENDING_NODES.json",
-      "definition_sha256": "f8fa046ed078a32c99ca0ae8873118a69c8005127a2591cbe97ff92e564ddfbf",
-      "node_count": 26
+      "definition_sha256": "cab74c18e0b172846cf2caec0d4139ebc1eb21436b9766f0c34f97bf08f115fc",
+      "node_count": 42
     }
   ],
   "finance_subset": null,
-  "candidate_node_count": 36,
+  "candidate_node_count": 60,
   "user_only_nodes": [
     "w6a-journey-map",
+    "c-workspace-design",
     "c-journey-identity",
-    "c-async-session-fence"
+    "c-async-session-fence",
+    "c-delegated-assistant",
+    "c-tenant-permissions",
+    "c-notification-inbox",
+    "c-installable-mobile",
+    "c-platform-release"
   ],
   "node_definitions": [
     {
@@ -67,6 +73,38 @@
     {
       "id": "w7-m05-consent-bind",
       "definition_sha256": "e71785d51a775c45ee5a0af362b43380a54683755f1f97432bbbdaeb291991f3"
+    },
+    {
+      "id": "c-workspace-design",
+      "definition_sha256": "55a25bdfb1d1f86012ef20c8c6d2d3435896fc865e7f504b92c7987a1cc0de0b"
+    },
+    {
+      "id": "c-buyer-workspace",
+      "definition_sha256": "f2f39c9db4839822025b5f0bda28e83ac96a33e09cb56fb006141d0672aa7af6"
+    },
+    {
+      "id": "c-organizer-workspace",
+      "definition_sha256": "1b1a9b8a8f5c4636b05f4fd84d4a5bc9062a002f97a51d575d010916a2c74e44"
+    },
+    {
+      "id": "c-receipt-explorer",
+      "definition_sha256": "0aa64799bea69fade992b80c0e5bc58b4c474fc6c39b9eedfc7622eb02417ea0"
+    },
+    {
+      "id": "c-discovery-prototype",
+      "definition_sha256": "9d779d8f9597127e1289fff41d451a12981756e09f4c11001b62b9b74c50a3f0"
+    },
+    {
+      "id": "c-accessibility-baseline",
+      "definition_sha256": "eb0f9e0f1fa2ebfaea66786fa1850a2e9f313e4dae68225a352ff0eb428154e3"
+    },
+    {
+      "id": "c-contract-fixture-library",
+      "definition_sha256": "c4c2938e36d620316fc8defaea4029762996c0724a8d1c968a7f60404afb54c9"
+    },
+    {
+      "id": "c-local-workspace-closeout",
+      "definition_sha256": "0485ef670eb0f22125669653bab5200c64764c68dac5a807863dab9fb191d9b3"
     },
     {
       "id": "consume-p-sdk-0",
@@ -171,13 +209,78 @@
     {
       "id": "commerce-integration-closeout",
       "definition_sha256": "881e1332a03b8d8545e1244383922065c125b737b3e206a4e8b9710b3b56c94e"
+    },
+    {
+      "id": "c-discovery-live",
+      "definition_sha256": "194a8eddf905b928b4d15ec36837ca8aab600c197d57edec3bea5a290956e74a"
+    },
+    {
+      "id": "c-inventory-venue",
+      "definition_sha256": "b9e9522490b1f31d165cddbef394a3ccdf89c1d8460601d60438f8e46536d8cb"
+    },
+    {
+      "id": "c-platform-journey",
+      "definition_sha256": "bc1efb102ce154a8f6cc8936e0bd0f7cd999b48d43eed2bd3653900c5c6afeef"
+    },
+    {
+      "id": "c-merchant-operations",
+      "definition_sha256": "b2550ca38562a87ed80fc9df3166d807e4aec2c4cc4cd6b14f6846da209559be"
+    },
+    {
+      "id": "c-credit-origination",
+      "definition_sha256": "667270c1c33d65f105c1d1b3b4134d3ae038a1c332d68fcae2e9e7d3770abece"
+    },
+    {
+      "id": "c-credit-servicing-journey",
+      "definition_sha256": "0725aaed31c7f451ce89d02c6da7a8db5a691123a81d30c74f79a67ed2defc32"
+    },
+    {
+      "id": "c-finance-operations",
+      "definition_sha256": "53a7264205317b977ce9682c8fc96b9d1696bff2d00ab1ee800ba6ae4395d045"
+    },
+    {
+      "id": "c-marketing-journey",
+      "definition_sha256": "462fe6c6b4452a7a9cc4cfd51f68eefb1f24c54e0d245db8503116af52b06d0f"
+    },
+    {
+      "id": "c-delegated-assistant",
+      "definition_sha256": "dcc876a303add11acff55de8ce492816b89dabee2e701f545daa7210496c2bd5"
+    },
+    {
+      "id": "c-tenant-permissions",
+      "definition_sha256": "ea316d0b9d33d7a3737e648583901e3e4bbe60cd967b26eed473a32045044c93"
+    },
+    {
+      "id": "c-notification-inbox",
+      "definition_sha256": "99ac961d03ff8b77e6bfabf9b6e0987cc7d14c606d0cc8c6e62323684540ab5c"
+    },
+    {
+      "id": "c-marketplace-performance",
+      "definition_sha256": "9d4106b5a0daed7c8e321f35eaf89a0e6d5175a6c12bf88e98db500e8b40dde1"
+    },
+    {
+      "id": "c-provider-connected-journey",
+      "definition_sha256": "5e875ad0ea41f2fb7e16a693232481cd9e17f8fe13907af9d5cf677c21962cb0"
+    },
+    {
+      "id": "c-installable-mobile",
+      "definition_sha256": "ab96e182ce498c1fd67689a93c40ce54f1bf7cf446d58c6a9a9a3ac33e51f50b"
+    },
+    {
+      "id": "c-platform-operational-qualification",
+      "definition_sha256": "f07f5e8d90f923b76eb8f3d1e4eb089a4404a7fa02b8d862480a8ec21d17c693"
+    },
+    {
+      "id": "c-platform-release",
+      "definition_sha256": "c9100fdde5adccf2aa5eb111b2cdc1fea61e8e4e894c4b42151f726343009c27"
     }
   ],
   "definition_document_sha256": {
     "docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md": "7f66df71a8c966cff0bb8695683ceb21554949a291a5e9b57e64777b4fd22f81",
-    "docs/aiops/REGISTRATION_SCOPE_APPROVAL_KO.md": "e022de68faae063d711de7641e62d9663f402de34ca64aa4308bf154deea5fa1",
+    "docs/aiops/REGISTRATION_SCOPE_APPROVAL_KO.md": "e248d0b0cf58349346657e37c232fe4658c521cf2acc5e2ef1d6e0f696a97053",
     "docs/aiops/PROGRAM_ASTRA_DELEGATION.md": "075ee51194a26856e67592f75ada425b315198ef399a5a17f4f4adf2e72e2977",
-    "docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md": "e0e0aff7e1e99717a23989d1c2199400d14858afbce7ea30298d11390f7761b1"
+    "docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md": "e0e0aff7e1e99717a23989d1c2199400d14858afbce7ea30298d11390f7761b1",
+    "docs/aiops/PROGRAM_EXPANSION_20261002_KO.md": "89a3baec62a062e8ccb667e37a69d1e3c0b3022d071e52b223bee233f87641ee"
   },
   "approval_evidence": {
     "scope_decision_pointer": "PENDING_EXACT_WHOLE_SCOPE_USER_DECISION",
@@ -189,5 +292,20 @@
     "head": "09e161caa652d75e9617caf632b3b9899be35740",
     "authority": "SOURCE_ONLY_NOT_ADOPTED_INSTALLED_QUALIFIED_OR_ACTIVATED"
   },
-  "rule": "Any changed definition needs a new manifest and exact-head review. Finance aliases are counted once. No inherited approval, edited status, partial selection, ordinary comment or source CI grants execution. The manifest digest and approval target commit are recorded externally to avoid hash self-reference."
+  "rule": "Any changed definition needs a new manifest and exact-head review. Finance aliases are counted once. No inherited approval, edited status, partial selection, ordinary comment or source CI grants execution. The manifest digest and approval target commit are recorded externally to avoid hash self-reference.",
+  "authoring_request": {
+    "date_kst": "2026-10-02",
+    "instruction": "네 제품의 .aiops/program.json을 원대하고 자세히 작성",
+    "prior_start_decision": "https://github.com/BeautifulMind-JT/ai-ops-control-plane/issues/57",
+    "existing_start_pr": "https://github.com/BeautifulMind-JT/kix-commerce-apps/pull/17",
+    "existing_start_head": "17e7938b7a6b260453754b96e16af6ae5bd095d1",
+    "observed_main": "b0217cc9e92cc87813f6ce6724632699d400eb3a",
+    "authority": "PLAN_AUTHORING_ONLY_NOT_EXPANDED_START_OR_RELEASE_APPROVAL"
+  },
+  "validation_reader": {
+    "repository": "BeautifulMind-JT/ai-ops-control-plane",
+    "source_sha": "a34a38b73f096c9f6597b38a111d95ca12ecd159",
+    "path": "engineering/scripts/control_plane_program.py",
+    "authority": "SOURCE_FORMAT_CHECK_ONLY"
+  }
 }
