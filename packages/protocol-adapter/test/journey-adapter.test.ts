@@ -1,0 +1,346 @@
+import { describe, expect, it } from "vitest";
+import {
+  COMMERCE_COMMAND_BINDINGS,
+  composePrimarySeatJourney,
+  JOURNEY_COMPOSED_ACTIONS,
+  JOURNEY_NOT_BOUND,
+  JOURNEY_UNCOMPOSED,
+  PINNED_PROTOCOL_DOMAIN,
+  type JourneyLocalCaller,
+  type PrimarySeatJourneyInput,
+} from "../src/index.js";
+import { assertLocalCallReceipt, enforceRemotePayloadGuards } from "../src/payload-guards.js";
+import { ProtocolError } from "../src/types.js";
+import { localCallReceipt } from "./support/receipt.js";
+
+const SHOW_POLICY = {
+  primaryPrice: 100000,
+  resaleCap: 150000,
+  primaryFeeBps: 500,
+  resaleFeeBps: 300,
+  resaleOrganizerBps: 200,
+  resaleAllowed: true,
+  refundProfile: "FULL_CHAIN_UNWIND_FIXTURE",
+};
+
+const INPUT: PrimarySeatJourneyInput = {
+  operationIds: {
+    createEvent: "op-create",
+    prepareTrade: "op-prepare",
+    acceptTrade: "op-accept",
+  },
+  eventId: "show-w6a",
+  organizer: "organizer",
+  buyer: "buyer",
+  tradeId: "trade-w6a",
+  seats: ["A1"],
+  policy: SHOW_POLICY,
+};
+
+const CREATE_RESULT = {
+  eventId: "show-w6a",
+  policyHash: "a".repeat(64),
+  inventoryIds: ["inv-seat-a", "inv-seat-b"],
+  reservationSeconds: 900,
+};
+
+const PREPARE_RESULT = {
+  tradeId: "trade-w6a",
+  ticketId: "right-seat-a",
+  externalOrderId: "kix_order",
+  status: "PREPARED",
+  termsHash: "b".repeat(64),
+};
+
+const ACCEPT_RESULT = { accepted: true };
+
+function receipt(operationId: string, action: string, result: Record<string, unknown>) {
+  return localCallReceipt(operationId, action, result);
+}
+
+function scripted(steps: Record<string, () => unknown>): { caller: JourneyLocalCaller; calls: Array<{ action: string; operationId: string; body: Record<string, unknown> }> } {
+  const calls: Array<{ action: string; operationId: string; body: Record<string, unknown> }> = [];
+  const caller: JourneyLocalCaller = {
+    invokeLocalCall(input) {
+      calls.push({
+        action: input.action,
+        operationId: input.operationId,
+        body: input.body as Record<string, unknown>,
+      });
+      const step = steps[input.action];
+      if (!step) {
+        throw new Error(`unexpected action ${input.action}`);
+      }
+      return Promise.resolve(step());
+    },
+  };
+  return { caller, calls };
+}
+
+describe("primary seat journey helper", () => {
+  it("composes create, prepare, and accept from the prior receipt and stops before capture", async () => {
+    const createReceipt = receipt("op-create", "create_event", CREATE_RESULT);
+    const prepareReceipt = receipt("op-prepare", "prepare_trade", PREPARE_RESULT);
+    const acceptReceipt = receipt("op-accept", "accept_trade", ACCEPT_RESULT);
+    const { caller, calls } = scripted({
+      create_event: () => createReceipt,
+      prepare_trade: () => prepareReceipt,
+      accept_trade: () => acceptReceipt,
+    });
+
+    const journey = await composePrimarySeatJourney(caller, INPUT);
+
+    expect(calls.map((call) => call.action)).toEqual([...JOURNEY_COMPOSED_ACTIONS]);
+    expect(calls.map((call) => call.operationId)).toEqual(["op-create", "op-prepare", "op-accept"]);
+    expect(calls[0]).toMatchObject({
+      action: "create_event",
+      body: {
+        domain: PINNED_PROTOCOL_DOMAIN,
+        eventId: "show-w6a",
+        organizer: "organizer",
+        policy: SHOW_POLICY,
+        seats: ["A1"],
+      },
+    });
+    expect(calls[0]?.body).not.toHaveProperty("ticketId");
+    expect(calls[1]).toMatchObject({
+      action: "prepare_trade",
+      body: {
+        domain: PINNED_PROTOCOL_DOMAIN,
+        tradeId: "trade-w6a",
+        inventoryId: "inv-seat-a",
+        buyer: "buyer",
+        amount: 100000,
+        expectedInventoryVersion: 0,
+        expectedVersion: 0,
+      },
+    });
+    expect(calls[1]?.body).not.toHaveProperty("ticketId");
+    expect(calls[1]?.body).not.toHaveProperty("listingId");
+    expect(calls[1]?.body).not.toHaveProperty("expiresAt");
+    expect(calls[2]).toMatchObject({
+      action: "accept_trade",
+      body: {
+        domain: PINNED_PROTOCOL_DOMAIN,
+        tradeId: "trade-w6a",
+        termsHash: PREPARE_RESULT.termsHash,
+      },
+    });
+    expect(journey.fence).toBeNull();
+    expect(journey.composed.map((step) => step.receipt)).toEqual([createReceipt, prepareReceipt, acceptReceipt]);
+    expect(journey.composed[0]?.receipt).toBe(createReceipt);
+    expect(journey.composed[1]?.receipt).toBe(prepareReceipt);
+    expect(journey.composed[2]?.receipt).toBe(acceptReceipt);
+    expect(journey.notBound).toBe(JOURNEY_NOT_BOUND);
+    expect(journey.uncomposed).toBe(JOURNEY_UNCOMPOSED);
+    expect(journey.uncomposed.map((step) => step.action)).toEqual([
+      "capture",
+      "settle_capture",
+      "commit_trade",
+      "open_admission",
+      "admit",
+      "reserve_listing",
+    ]);
+    expect(calls.some((call) => call.action === "capture" || call.action === "settle_capture")).toBe(false);
+  });
+
+  it("records the main bindings and does not map placeHold onto a new action", () => {
+    expect(JOURNEY_NOT_BOUND).toEqual([
+      {
+        deskMethod: "placeHold",
+        status: "not-bound",
+        consideredAction: "reserve_listing",
+        reason: COMMERCE_COMMAND_BINDINGS.placeHold.reason,
+        sends: false,
+      },
+      {
+        deskMethod: "confirmBooking",
+        status: "not-bound",
+        consideredAction: "capture",
+        reason: COMMERCE_COMMAND_BINDINGS.confirmBooking.reason,
+        sends: false,
+      },
+      {
+        deskMethod: "settlementPreview",
+        status: "not-bound",
+        consideredAction: "settle_capture",
+        reason: COMMERCE_COMMAND_BINDINGS.settlementPreview.reason,
+        sends: false,
+      },
+    ]);
+    expect(COMMERCE_COMMAND_BINDINGS.placeHold.consideredAction).toBe("reserve_listing");
+    expect(COMMERCE_COMMAND_BINDINGS.placeHold.status).toBe("not-bound");
+    expect(JOURNEY_NOT_BOUND[0]?.sends).toBe(false);
+    expect(JOURNEY_NOT_BOUND[1]?.reason).toContain("does not send capture");
+    expect(JOURNEY_NOT_BOUND[2]?.reason).toContain("does not send it");
+  });
+
+  it("fences the next write when the server effect is followed by a lost response", async () => {
+    const createReceipt = receipt("op-create", "create_event", CREATE_RESULT);
+    const applied: string[] = [];
+    const caller: JourneyLocalCaller = {
+      invokeLocalCall(input) {
+        applied.push(`${input.action}:${input.operationId}`);
+        if (input.action === "create_event") {
+          return Promise.resolve(createReceipt);
+        }
+        if (input.action === "prepare_trade") {
+          throw new ProtocolError("Integration gate response body was cut off.", "GATE_UNAVAILABLE");
+        }
+        throw new Error(`replacement or next write ${input.action}:${input.operationId}`);
+      },
+    };
+
+    const journey = await composePrimarySeatJourney(caller, INPUT);
+
+    expect(applied).toEqual(["create_event:op-create", "prepare_trade:op-prepare"]);
+    expect(journey.composed).toEqual([
+      { action: "create_event", operationId: "op-create", receipt: createReceipt },
+    ]);
+    expect(journey.composed[0]?.receipt).toBe(createReceipt);
+    expect(journey.fence).toEqual({
+      outcome: "UNKNOWN",
+      action: "prepare_trade",
+      operationId: "op-prepare",
+      code: "GATE_UNAVAILABLE",
+      receipt: null,
+    });
+  });
+
+  it("treats a timeout after the request as UNKNOWN and does not mint another id", async () => {
+    const caller: JourneyLocalCaller = {
+      invokeLocalCall(input) {
+        if (input.action === "create_event") {
+          throw new ProtocolError("Integration gate did not answer.", "REQUEST_TIMEOUT");
+        }
+        throw new Error(`next write ${input.operationId}`);
+      },
+    };
+
+    const journey = await composePrimarySeatJourney(caller, INPUT);
+
+    expect(journey.composed).toEqual([]);
+    expect(journey.fence).toMatchObject({
+      outcome: "UNKNOWN",
+      action: "create_event",
+      operationId: "op-create",
+      code: "REQUEST_TIMEOUT",
+    });
+  });
+
+  it("does not continue after a rejection or an invalid success receipt", async () => {
+    const rejected: JourneyLocalCaller = {
+      invokeLocalCall(input) {
+        if (input.action === "create_event") {
+          return Promise.resolve(receipt("op-create", "create_event", CREATE_RESULT));
+        }
+        if (input.action === "prepare_trade") {
+          throw new ProtocolError("Integration gate rejected the local call (PRIMARY_PRICE_MISMATCH).", "PRIMARY_PRICE_MISMATCH");
+        }
+        throw new Error(`continued after reject ${input.action}`);
+      },
+    };
+    const rejectedJourney = await composePrimarySeatJourney(rejected, INPUT);
+    expect(rejectedJourney.fence).toMatchObject({
+      outcome: "REJECTED",
+      action: "prepare_trade",
+      operationId: "op-prepare",
+      code: "PRIMARY_PRICE_MISMATCH",
+      receipt: null,
+    });
+    expect(rejectedJourney.composed).toHaveLength(1);
+
+    let prepares = 0;
+    const invalid: JourneyLocalCaller = {
+      invokeLocalCall(input) {
+        if (input.action === "prepare_trade") {
+          prepares += 1;
+        }
+        return Promise.resolve(receipt("op-create", "create_event", { eventId: "show-w6a", policyHash: "a" }));
+      },
+    };
+    const invalidJourney = await composePrimarySeatJourney(invalid, INPUT);
+    expect(prepares).toBe(0);
+    expect(invalidJourney.fence).toMatchObject({
+      outcome: "INVALID_RECEIPT",
+      action: "create_event",
+      operationId: "op-create",
+      code: "GATE_STATUS",
+    });
+    expect(invalidJourney.fence?.receipt?.operationId).toBe("op-create");
+    expect(invalidJourney.composed).toEqual([]);
+  });
+
+  it("keeps a stale correlation response off the success path", async () => {
+    const caller: JourneyLocalCaller = {
+      invokeLocalCall() {
+        throw new ProtocolError("Integration gate response does not match this request.", "STALE_RESPONSE");
+      },
+    };
+    const journey = await composePrimarySeatJourney(caller, INPUT);
+    expect(journey.fence).toMatchObject({ outcome: "STALE_RESPONSE", code: "STALE_RESPONSE", action: "create_event" });
+    expect(journey.composed).toEqual([]);
+  });
+
+  it("does not send the next body when a success receipt fails the payload guard", async () => {
+    let prepares = 0;
+    const caller: JourneyLocalCaller = {
+      invokeLocalCall(input) {
+        if (input.action === "prepare_trade") {
+          prepares += 1;
+        }
+        return Promise.resolve(
+          receipt("op-create", "create_event", {
+            ...CREATE_RESULT,
+            nested: { production: true },
+          }),
+        );
+      },
+    };
+    const journey = await composePrimarySeatJourney(caller, INPUT);
+    expect(prepares).toBe(0);
+    expect(journey.fence).toMatchObject({
+      outcome: "INVALID_RECEIPT",
+      code: "PRODUCTION_ENDPOINT",
+      action: "create_event",
+      operationId: "op-create",
+    });
+    expect(journey.fence?.receipt?.operationId).toBe("op-create");
+  });
+});
+
+describe("payload guards on published success receipts", () => {
+  const successes: Array<[string, Record<string, unknown>]> = [
+    ["create_event", CREATE_RESULT],
+    ["prepare_trade", PREPARE_RESULT],
+    ["accept_trade", ACCEPT_RESULT],
+    ["open_admission", { admissionStatus: "OPEN" }],
+    ["close_sales", { salesStatus: "CLOSED" }],
+    ["capture", { captured: true, cashAvailable: false }],
+    ["capture", { duplicate: true }],
+    ["settle_capture", { settled: 100000, grossAccounted: 100000, feeBearer: "platform" }],
+    ["settle_capture", { duplicate: true }],
+    ["commit_trade", { ticketId: "right-seat-a", owner: "buyer", rightsVersion: 1, admissionEpoch: 1 }],
+    ["admit", { admissionId: "op-admit", decision: "ADMITTED_ONCE" }],
+  ];
+
+  it("accepts catalogue success results and still rejects a desk claim inside one", () => {
+    for (const [action, result] of successes) {
+      const body = receipt(`op-${action}`, action, result);
+      expect(() => enforceRemotePayloadGuards(body)).not.toThrow();
+      expect(() => assertLocalCallReceipt(body, { action, operationId: `op-${action}` })).not.toThrow();
+    }
+
+    const claimed = receipt("op-create", "create_event", {
+      ...CREATE_RESULT,
+      booking: { bookingId: "b", payment: "card-captured" },
+    });
+    expect(() => enforceRemotePayloadGuards(claimed)).toThrow(/simulated-no-funds/);
+
+    const rejection = { error: "TRADE_NOT_FOUND", rejected: true };
+    expect(() => enforceRemotePayloadGuards(rejection)).not.toThrow();
+    expect(() => assertLocalCallReceipt(rejection, { action: "prepare_trade", operationId: "op-prepare" })).toThrow(
+      /not a published local-call receipt/,
+    );
+  });
+});
