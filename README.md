@@ -1,7 +1,7 @@
 # kix-commerce-apps
 
 Wave 6 commerce desk for KIX: box office, booking, admission, and resale.
-Wave 7 adds marketing screens for ORIGINAL_32 labels M01–M05. Those screens are stub demos and stay 설계중.
+Wave 7 adds marketing screens for ORIGINAL_32 labels M01–M05. Those screens are stub demos. M01–M04 stay 설계중. M05 stays 미착수. Labels are not promoted above the ORIGINAL_32 source.
 This repository is the BeautifulMind-JT app host JunTae selected for product frontends.
 Protocol, Move, and settlement contracts stay in [BeautifulMind-JT/kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol).
 
@@ -10,7 +10,7 @@ The UI is an operator desk over a protocol adapter, plus a separate marketing st
 ## Non-goals
 
 - Product frontend trees do not belong in `kix-protocol`. This repo does not copy Move, the kernel, or settlement math.
-- Wave 7 marketing (M01–M05) is a browser-session stub. Labels stay 설계중. Limits are in [docs/wave7-marketing-m01-m05.md](docs/wave7-marketing-m01-m05.md). The contract-only OpenAPI pin is the command catalogue. The integration-gate pin is a loopback transport only. Neither pin is production deployment, a public endpoint, or a contract-conformance claim. Local HTTP success is not approval for chain, payment, production, or launch.
+- Wave 7 marketing (M01–M05) is a browser-session stub. M01–M04 stay 설계중. M05 stays 미착수. Limits are in [docs/wave7-marketing-m01-m05.md](docs/wave7-marketing-m01-m05.md). The contract-only OpenAPI pin is the command catalogue. The integration-gate pin is a loopback transport only. Neither pin is production deployment, a public endpoint, or a contract-conformance claim. Local HTTP success is not approval for chain, payment, production, or launch.
 - No real money, no card capture, and no credit disbursement. The credit desk is a mock case. F04 and E06 stay 설계중 in kix-protocol. This app has no disburse action (`CREDIT_BOUNDARY.action` is `none`).
 - No product TPS, p99, or fail-rate SLOs.
 - ZARI, film-unit, maeum-gyeol, SOULBOUND, ai-ops-control-plane, and beautiful-mind are out of this wave.
@@ -32,12 +32,12 @@ Wave 7 marketing routes use the local stub in `apps/web/src/marketing`. They are
 
 | Marketing | Route | ORIGINAL_32 | Write target |
 | --- | --- | --- | --- |
-| Hub | `/marketing` | M01–M05, status 설계중 | marketing session stub |
-| Fan qualification / membership | `/marketing/m01` | M01 팬 자격 / 멤버십 | marketing session stub |
-| Presale | `/marketing/m02` | M02 선예매 | marketing session stub |
-| Coupon / promotion | `/marketing/m03` | M03 쿠폰 / 프로모션 | marketing session stub |
-| Referral / rewards | `/marketing/m04` | M04 추천 / 리워드 | marketing session stub |
-| CRM / data use | `/marketing/m05` | M05 CRM / 데이터 활용 | marketing session stub |
+| Hub | `/marketing` | M01–M04 설계중, M05 미착수 | marketing session stub |
+| Fan qualification / membership | `/marketing/m01` | M01 팬 자격 / 멤버십, 설계중 | marketing session stub |
+| Presale | `/marketing/m02` | M02 선예매, 설계중 | marketing session stub |
+| Coupon / promotion | `/marketing/m03` | M03 쿠폰 / 프로모션, 설계중 | marketing session stub |
+| Referral / rewards | `/marketing/m04` | M04 추천 / 리워드, 설계중 | marketing session stub |
+| CRM / data use | `/marketing/m05` | M05 CRM / 데이터 활용, 미착수 | marketing session stub |
 
 `confirmBooking` and `acceptResale` record `payment: "simulated-no-funds"`. The settlement panel renders a mock FSM case from the stub. It lists F01, F02, and F03 and does not compute shares. Limits are in [docs/settlement-depth-apps-bind.md](docs/settlement-depth-apps-bind.md).
 
@@ -189,7 +189,7 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - HTTP desk methods stay not-bound and do not call `/v1/commerce` or a credit route
 - the vendored OpenAPI pin rejects a wrong file sha256, `info.version`, or contract status
 - a local-call with an unknown `action` is rejected before any request
-- marketing labels stay 설계중, with session-only cards, presale notes, coupon markers, referral markers, and consent flags
+- marketing labels follow ORIGINAL_32: M01–M04 stay 설계중 and M05 stays 미착수, with session-only cards, presale notes, coupon markers, referral markers, and consent flags
 - marketing routes render, and the box office route still mounts
 - HTTP mode rejects a missing base URL, a public host, `localhost`, and a non-loopback scheme
 - production and public mode names are refused and do not select the stub

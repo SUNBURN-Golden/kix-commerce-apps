@@ -8,7 +8,12 @@ import {
   PARTNER_REFERRAL_CODES,
   presaleWindowFor,
 } from "../src/marketing/desk";
-import { MARKETING_SURFACES } from "../src/marketing/labels";
+import {
+  MARKETING_SURFACES,
+  ORIGINAL_32_LABEL_RANK,
+  ORIGINAL_32_MARKETING_STATUS,
+  marketingChromeLabel,
+} from "../src/marketing/labels";
 
 function clock() {
   let tick = 0;
@@ -29,7 +34,7 @@ function keysOf(value: unknown, found = new Set<string>()): Set<string> {
 }
 
 describe("marketing labels", () => {
-  it("keeps M01–M05 on the 설계중 charter names", () => {
+  it("keeps each charter label at the ORIGINAL_32 source and does not promote M05", () => {
     expect(MARKETING_SURFACES.map((item) => item.id)).toEqual(["M01", "M02", "M03", "M04", "M05"]);
     expect(MARKETING_SURFACES.map((item) => item.titleKo)).toEqual([
       "팬 자격 / 멤버십",
@@ -38,6 +43,31 @@ describe("marketing labels", () => {
       "추천 / 리워드",
       "CRM / 데이터 활용",
     ]);
+    expect(MARKETING_SURFACES.map((item) => item.status)).toEqual([
+      "설계중",
+      "설계중",
+      "설계중",
+      "설계중",
+      "미착수",
+    ]);
+    for (const item of MARKETING_SURFACES) {
+      const source = ORIGINAL_32_MARKETING_STATUS[item.id];
+      expect(item.status).toBe(source);
+      expect(ORIGINAL_32_LABEL_RANK.indexOf(item.status)).toBeLessThanOrEqual(
+        ORIGINAL_32_LABEL_RANK.indexOf(source),
+      );
+    }
+    expect(ORIGINAL_32_MARKETING_STATUS.M05).toBe("미착수");
+    expect(marketingChromeLabel("/marketing/m05")).toEqual({
+      title: "KIX Marketing · M05 · 미착수",
+      eyebrow: "M05 · 미착수",
+    });
+    expect(marketingChromeLabel("/marketing/m01")?.eyebrow).toBe("M01 · 설계중");
+    expect(marketingChromeLabel("/marketing")).toEqual({
+      title: "KIX Marketing",
+      eyebrow: "Marketing desk",
+    });
+    expect(marketingChromeLabel("/")).toBeNull();
     expect(MARKETING_BOUNDARY.status).toBe("설계중");
     expect(MARKETING_BOUNDARY.protocolBinding).toBe("none");
     expect(MARKETING_BOUNDARY.openApiBound).toBe(false);

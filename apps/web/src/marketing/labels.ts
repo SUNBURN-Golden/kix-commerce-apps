@@ -1,11 +1,31 @@
 /**
  * ORIGINAL_32 marketing labels for Wave 7.
- * Status stays 설계중. These ids are charter names, not protocol types.
+ * Status is the label in kix-protocol docs/status/ORIGINAL_32_STATUS.md.
+ * Labels are never promoted above that source. M05 stays 미착수.
+ * These ids are charter names, not protocol types.
  */
+
+/** Source order, weakest first. A stronger app label is a promotion. */
+export const ORIGINAL_32_LABEL_RANK = ["미착수", "설계중", "설계확정", "구현됨", "검증됨"] as const;
+
+export type Original32Label = (typeof ORIGINAL_32_LABEL_RANK)[number];
+
+/**
+ * Charter labels copied from ORIGINAL_32. M01–M04 are 설계중.
+ * M05 is 미착수: the name exists, and a stub screen does not raise it.
+ */
+export const ORIGINAL_32_MARKETING_STATUS = {
+  M01: "설계중",
+  M02: "설계중",
+  M03: "설계중",
+  M04: "설계중",
+  M05: "미착수",
+} as const satisfies Record<string, Original32Label>;
 
 export const MARKETING_SURFACES = [
   {
     id: "M01",
+    status: ORIGINAL_32_MARKETING_STATUS.M01,
     path: "/marketing/m01",
     titleKo: "팬 자격 / 멤버십",
     titleEn: "Fan qualification / membership",
@@ -14,6 +34,7 @@ export const MARKETING_SURFACES = [
   },
   {
     id: "M02",
+    status: ORIGINAL_32_MARKETING_STATUS.M02,
     path: "/marketing/m02",
     titleKo: "선예매",
     titleEn: "Presale",
@@ -22,6 +43,7 @@ export const MARKETING_SURFACES = [
   },
   {
     id: "M03",
+    status: ORIGINAL_32_MARKETING_STATUS.M03,
     path: "/marketing/m03",
     titleKo: "쿠폰 / 프로모션",
     titleEn: "Coupon / promotion",
@@ -30,6 +52,7 @@ export const MARKETING_SURFACES = [
   },
   {
     id: "M04",
+    status: ORIGINAL_32_MARKETING_STATUS.M04,
     path: "/marketing/m04",
     titleKo: "추천 / 리워드",
     titleEn: "Referral / rewards",
@@ -38,6 +61,7 @@ export const MARKETING_SURFACES = [
   },
   {
     id: "M05",
+    status: ORIGINAL_32_MARKETING_STATUS.M05,
     path: "/marketing/m05",
     titleKo: "CRM / 데이터 활용",
     titleEn: "CRM / data use",
@@ -54,4 +78,19 @@ export function marketingSurface(id: MarketingId) {
     throw new Error(`Unknown marketing label ${id}.`);
   }
   return surface;
+}
+
+/** Shell title and eyebrow for a marketing route. The hub has no single charter label. */
+export function marketingChromeLabel(pathname: string): { title: string; eyebrow: string } | null {
+  if (pathname !== "/marketing" && !pathname.startsWith("/marketing/")) {
+    return null;
+  }
+  const surface = MARKETING_SURFACES.find((item) => item.path === pathname);
+  if (!surface) {
+    return { title: "KIX Marketing", eyebrow: "Marketing desk" };
+  }
+  return {
+    title: `KIX Marketing · ${surface.id} · ${surface.status}`,
+    eyebrow: `${surface.id} · ${surface.status}`,
+  };
 }

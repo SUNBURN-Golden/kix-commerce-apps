@@ -5,7 +5,11 @@
  * The protocol-adapter contract pin is not read here.
  */
 
-/** Marketing session boundary. The protocol-adapter OpenAPI pin does not flip these flags. */
+/**
+ * Marketing session boundary. The protocol-adapter OpenAPI pin does not flip these flags.
+ * `status` is the session posture for the M01–M04 stub. It is not the M05 charter label.
+ * M05 stays 미착수 on MARKETING_SURFACES. Labels are never promoted.
+ */
 export const MARKETING_BOUNDARY = {
   status: "설계중",
   protocolBinding: "none",

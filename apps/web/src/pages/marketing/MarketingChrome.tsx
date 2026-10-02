@@ -14,7 +14,7 @@ export function MarketingChrome({
   return (
     <section>
       <p className="banner" role="status">
-        Stub demo · 설계중 · not protocol law. The adapter pin is not this desk. No live chain, no funds, and no outbound message.
+        {`Stub demo${surface ? ` · ${surface.status}` : ""} · not protocol law. The adapter pin is not this desk. No live chain, no funds, and no outbound message.`}
       </p>
       <nav className="tabs" aria-label="Marketing labels">
         <NavLink to="/marketing" end>
@@ -29,7 +29,7 @@ export function MarketingChrome({
       {surface ? (
         <header className="section-head">
           <p className="eyebrow">
-            {surface.id} · <span lang="ko">{surface.titleKo}</span> · 설계중
+            {surface.id} · <span lang="ko">{surface.titleKo}</span> · {surface.status}
           </p>
           <h2>{surface.titleEn}</h2>
           <p lang="ko">{surface.blurbKo}</p>
