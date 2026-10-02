@@ -12,12 +12,13 @@ export function MarketingHubPage() {
   return (
     <MarketingChrome>
       <header className="section-head">
-        <p className="eyebrow">Wave 7 · ORIGINAL_32 · 설계중</p>
+        <p className="eyebrow">Wave 7 · ORIGINAL_32</p>
         <h2>Marketing desk</h2>
         <p lang="ko">팬 자격, 선예매, 쿠폰, 추천, 데이터 동의의 스텁 데모입니다.</p>
         <p className="muted">
           Fixtures stay in this browser session. They are not kix-protocol types. This desk stays on the marketing
-          stub and makes no contract claim.
+          stub and makes no contract claim. Each card keeps its ORIGINAL_32 label. M01–M04 stay 설계중. M05 stays
+          미착수.
         </p>
       </header>
       <article className="ticket" aria-label="Marketing session">
@@ -25,7 +26,7 @@ export function MarketingHubPage() {
         <h3>This page load</h3>
         <dl>
           <div>
-            <dt>Status</dt>
+            <dt>Stub boundary</dt>
             <dd>{boundary.status}</dd>
           </div>
           <div>
@@ -83,7 +84,7 @@ export function MarketingHubPage() {
           <li key={item.id}>
             <Link className="panel hub-card" to={item.path}>
               <p className="eyebrow">
-                {item.id} · {boundary.status}
+                {item.id} · {item.status}
               </p>
               <h3 lang="ko">{item.titleKo}</h3>
               <p>{item.titleEn}</p>

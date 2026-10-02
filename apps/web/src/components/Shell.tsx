@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { CREDIT_BOUNDARY, ProtocolError, type TransportObservation } from "@kix/protocol-adapter";
+import { marketingChromeLabel } from "../marketing/labels";
 import { protocol } from "../protocol";
 import { preferFresh, transportBannerText, type HeldObservation } from "../transport-status";
 
@@ -19,13 +20,15 @@ export function Shell({ children }: { children: ReactNode }) {
   const meta = protocol.describe();
   const location = useLocation();
   const onMarketing = location.pathname === "/marketing" || location.pathname.startsWith("/marketing/");
+  const marketingLabel = marketingChromeLabel(location.pathname);
   const [held, setHeld] = useState<HeldObservation | null>(null);
   const generation = useRef(0);
   const probing = useRef(false);
 
+  const documentTitle = marketingLabel?.title ?? "KIX Box Office";
   useEffect(() => {
-    document.title = onMarketing ? "KIX Marketing · 설계중" : "KIX Box Office";
-  }, [onMarketing]);
+    document.title = documentTitle;
+  }, [documentTitle]);
 
   useEffect(() => {
     let cancelled = false;
@@ -98,7 +101,7 @@ export function Shell({ children }: { children: ReactNode }) {
         <div className="brand">
           <span className="mark">KIX</span>
           <div>
-            <p className="eyebrow">{onMarketing ? "Marketing desk · 설계중" : "Commerce desk"}</p>
+            <p className="eyebrow">{marketingLabel?.eyebrow ?? "Commerce desk"}</p>
             <h1>{onMarketing ? "Marketing" : "Box office"}</h1>
           </div>
         </div>
