@@ -77,3 +77,20 @@ Wave 6 gate: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecom
 
 Wave 7 gate and roadmap: kix-protocol
 `docs/decisions/PROGRAM_ROADMAP_20260930.md` §2 R-7.
+
+
+## Continuation evidence
+
+The composer snapshots the caller's event, buyer, operation IDs, seats and policy
+before awaiting the first receipt. A regression test reproduced the previous
+input-mutation failure and passes with the snapshot. An additional reviewed-gate
+test advances the fixture clock after prepare and verifies that expired accept is
+rejected without further composition. This adds no session schema, recovery API,
+producer command or new journey step.
+
+See [CI access diagnosis](ci-access-diagnosis.md) for the credential metadata and
+minimum recovery boundary, and [remaining decision check](journey-decision-check.md)
+for the single M1/M2 architecture ruling. Both documents distinguish observations
+from unresolved hypotheses and proposed approvals.
+
+Continuation validation: adapter 110/110, web 47/47, Chromium 6/6; typecheck and build passed.

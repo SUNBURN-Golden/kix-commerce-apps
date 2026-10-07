@@ -179,4 +179,28 @@ describeGate("primary seat journey against the reviewed gate", () => {
     }, 20000,
   );
 
+  it("fences an accept whose prepared trade expired at the reviewed gate", async () => {
+    const http = new HttpProtocolAdapter(baseUrl);
+    const input = journeyDemoInput("show-expiry");
+    const calls: string[] = [];
+    const caller: JourneyLocalCaller = {
+      async invokeLocalCall(call) {
+        calls.push(call.action);
+        const receipt = await http.invokeLocalCall(call);
+        if (call.action === "prepare_trade") {
+          await http.invokeLocalCall({ operationId: "expire-clock", actor: "operator", action: "advance_clock",
+            body: { domain: PINNED_PROTOCOL_DOMAIN, now: 1000000 } });
+        }
+        return receipt;
+      },
+    };
+    const result = await composePrimarySeatJourney(caller, {
+      ...input, tradeId: "trade-expiry",
+      operationIds: { createEvent: "expiry-create", prepareTrade: "expiry-prepare", acceptTrade: "expiry-accept" },
+    });
+    expect(calls).toEqual([...JOURNEY_COMPOSED_ACTIONS]);
+    expect(result.composed.map((step) => step.action)).toEqual(["create_event", "prepare_trade"]);
+    expect(result.fence).toMatchObject({ outcome: "REJECTED", action: "accept_trade", code: "TRADE_NOT_ACCEPTABLE" });
+  }, 20000);
+
 });

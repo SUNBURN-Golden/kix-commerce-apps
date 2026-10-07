@@ -58,12 +58,13 @@ function receipt(operationId: string, action: string, result: Record<string, unk
   return localCallReceipt(operationId, action, result);
 }
 
-function scripted(steps: Record<string, () => unknown>): { caller: JourneyLocalCaller; calls: Array<{ action: string; operationId: string; body: Record<string, unknown> }> } {
-  const calls: Array<{ action: string; operationId: string; body: Record<string, unknown> }> = [];
+function scripted(steps: Record<string, () => unknown>): { caller: JourneyLocalCaller; calls: Array<{ action: string; actor: string; operationId: string; body: Record<string, unknown> }> } {
+  const calls: Array<{ action: string; actor: string; operationId: string; body: Record<string, unknown> }> = [];
   const caller: JourneyLocalCaller = {
     invokeLocalCall(input) {
       calls.push({
         action: input.action,
+        actor: input.actor,
         operationId: input.operationId,
         body: input.body as Record<string, unknown>,
       });
@@ -142,6 +143,41 @@ describe("primary seat journey helper", () => {
       "reserve_listing",
     ]);
     expect(calls.some((call) => call.action === "capture" || call.action === "settle_capture")).toBe(false);
+  });
+
+  it("keeps the original intent when the caller mutates input during an awaited receipt", async () => {
+    const mutable = {
+      ...INPUT,
+      operationIds: { ...INPUT.operationIds },
+      seats: [...INPUT.seats],
+      policy: { ...INPUT.policy },
+    };
+    const { caller: fixture, calls } = scripted({
+      create_event: () => receipt("op-create", "create_event", CREATE_RESULT),
+      prepare_trade: () => receipt("op-prepare", "prepare_trade", PREPARE_RESULT),
+      accept_trade: () => receipt("op-accept", "accept_trade", ACCEPT_RESULT),
+    });
+    const caller: JourneyLocalCaller = {
+      async invokeLocalCall(call) {
+        const response = await fixture.invokeLocalCall(call);
+        mutable.buyer = "another-buyer";
+        mutable.eventId = "another-event";
+        mutable.tradeId = "another-trade";
+        mutable.operationIds.createEvent = "replacement-create";
+        mutable.operationIds.prepareTrade = "replacement-prepare";
+        mutable.operationIds.acceptTrade = "replacement-accept";
+        mutable.policy.primaryPrice = 1;
+        mutable.seats[0] = "B1";
+        return response;
+      },
+    };
+    const journey = await composePrimarySeatJourney(caller, mutable);
+    expect(journey.fence).toBeNull();
+    expect(calls.map((call) => call.operationId)).toEqual(["op-create", "op-prepare", "op-accept"]);
+    expect(calls.slice(1).map((call) => call.actor)).toEqual(["buyer", "buyer"]);
+    expect(calls[1]?.body).toMatchObject({ buyer: "buyer", tradeId: "trade-w6a", amount: 100000 });
+    expect(calls[2]?.body).toMatchObject({ tradeId: "trade-w6a", termsHash: PREPARE_RESULT.termsHash });
+    expect(journey.composed.map((step) => step.operationId)).toEqual(["op-create", "op-prepare", "op-accept"]);
   });
 
   it("records the main bindings and does not map placeHold onto a new action", () => {

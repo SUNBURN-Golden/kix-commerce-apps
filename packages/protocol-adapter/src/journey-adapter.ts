@@ -151,43 +151,51 @@ export async function composePrimarySeatJourney(
   caller: JourneyLocalCaller,
   input: PrimarySeatJourneyInput,
 ): Promise<PrimarySeatJourneyResult> {
+  // Snapshot this invocation before the first await. A caller may reuse its form
+  // object while a transport is pending; later steps must keep this intent.
+  const intent: PrimarySeatJourneyInput = {
+    ...input,
+    operationIds: { ...input.operationIds },
+    seats: [...input.seats],
+    policy: showPolicy(input.policy),
+  };
   const composed: JourneyComposedStep[] = [];
-  const policy = showPolicy(input.policy);
+  const policy = intent.policy;
 
   const created = await takeStep(caller, {
-    operationId: input.operationIds.createEvent,
+    operationId: intent.operationIds.createEvent,
     actor: "operator",
     action: "create_event",
     body: {
       domain: PINNED_PROTOCOL_DOMAIN,
-      eventId: input.eventId,
-      organizer: input.organizer,
-      policy,
-      seats: [...input.seats],
+      eventId: intent.eventId,
+      organizer: intent.organizer,
+      policy: { ...policy },
+      seats: [...intent.seats],
     },
   });
   if (created.fence) {
     return result(composed, created.fence);
   }
-  const inventoryId = causalInventoryId(created.receipt, input.eventId);
+  const inventoryId = causalInventoryId(created.receipt, intent.eventId);
   if (typeof inventoryId !== "string") {
     return result(composed, inventoryId);
   }
   composed.push({
     action: "create_event",
-    operationId: input.operationIds.createEvent,
+    operationId: intent.operationIds.createEvent,
     receipt: created.receipt,
   });
 
   const prepared = await takeStep(caller, {
-    operationId: input.operationIds.prepareTrade,
-    actor: input.buyer,
+    operationId: intent.operationIds.prepareTrade,
+    actor: intent.buyer,
     action: "prepare_trade",
     body: {
       domain: PINNED_PROTOCOL_DOMAIN,
-      tradeId: input.tradeId,
+      tradeId: intent.tradeId,
       inventoryId,
-      buyer: input.buyer,
+      buyer: intent.buyer,
       amount: policy.primaryPrice,
       expectedInventoryVersion: 0,
       expectedVersion: 0,
@@ -196,36 +204,36 @@ export async function composePrimarySeatJourney(
   if (prepared.fence) {
     return result(composed, prepared.fence);
   }
-  const termsHash = causalTermsHash(prepared.receipt, input.tradeId);
+  const termsHash = causalTermsHash(prepared.receipt, intent.tradeId);
   if (typeof termsHash !== "string") {
     return result(composed, termsHash);
   }
   composed.push({
     action: "prepare_trade",
-    operationId: input.operationIds.prepareTrade,
+    operationId: intent.operationIds.prepareTrade,
     receipt: prepared.receipt,
   });
 
   const accepted = await takeStep(caller, {
-    operationId: input.operationIds.acceptTrade,
-    actor: input.buyer,
+    operationId: intent.operationIds.acceptTrade,
+    actor: intent.buyer,
     action: "accept_trade",
     body: {
       domain: PINNED_PROTOCOL_DOMAIN,
-      tradeId: input.tradeId,
+      tradeId: intent.tradeId,
       termsHash,
     },
   });
   if (accepted.fence) {
     return result(composed, accepted.fence);
   }
-  const acceptedFence = causalAccepted(accepted.receipt, input.operationIds.acceptTrade);
+  const acceptedFence = causalAccepted(accepted.receipt, intent.operationIds.acceptTrade);
   if (acceptedFence) {
     return result(composed, acceptedFence);
   }
   composed.push({
     action: "accept_trade",
-    operationId: input.operationIds.acceptTrade,
+    operationId: intent.operationIds.acceptTrade,
     receipt: accepted.receipt,
   });
   return result(composed, null);
