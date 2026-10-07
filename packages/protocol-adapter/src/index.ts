@@ -1,4 +1,19 @@
 export { COMMERCE_COMMAND_BINDINGS, COMMERCE_METHODS, type CommerceMethod } from "./commerce-bindings.js";
+export {
+  composePrimarySeatJourney,
+  JOURNEY_COMPOSED_ACTIONS,
+  JOURNEY_NOT_BOUND,
+  JOURNEY_UNCOMPOSED,
+  type CatalogueReceipt,
+  type JourneyComposedAction,
+  type JourneyComposedStep,
+  type JourneyFence,
+  type JourneyFenceOutcome,
+  type JourneyLocalCaller,
+  type JourneyShowPolicy,
+  type PrimarySeatJourneyInput,
+  type PrimarySeatJourneyResult,
+} from "./journey-adapter.js";
 export { createProtocol, type ProtocolOptions } from "./create-protocol.js";
 export {
   echoIntegrationGateHeaders,
@@ -170,3 +185,4 @@ export {
   type CreditSettlementGate,
   type CreditStep,
 } from "./types.js";
+export { createJourneyDemoCaller, journeyDemoInput, JOURNEY_DEMO_SCENARIOS, type JourneyDemoScenario } from "./journey-demo.js";

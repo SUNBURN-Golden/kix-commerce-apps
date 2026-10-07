@@ -501,7 +501,11 @@ export class HttpProtocolAdapter implements CommerceProtocol {
   /**
    * Sends one local-call envelope to the published integration-gate path.
    * action must be one of the pinned commands. Unknown actions fail closed
-   * before a request. A non-success HTTP status stays a reject.
+   * before a request. A non-success HTTP status, or rejected: true, throws.
+   * The thrown code is the gate's error only when it is a non-empty string.
+   * Callers still classify that code; it is not always an explicit rejection.
+   * Without one, the failure is GATE_STATUS, because the operationId may
+   * already have applied.
    */
   async invokeLocalCall(input: LocalCallInput): Promise<unknown> {
     const envelope = buildLocalCallEnvelope(input);
@@ -516,7 +520,13 @@ export class HttpProtocolAdapter implements CommerceProtocol {
     try {
       enforceRemotePayloadGuards(parsed.body);
       if (!parsed.ok || (isRecord(parsed.body) && parsed.body.rejected === true)) {
-        const code = isRecord(parsed.body) && typeof parsed.body.error === "string" ? parsed.body.error : "GATE_REJECTED";
+        const code = isRecord(parsed.body) ? parsed.body.error : undefined;
+        if (typeof code !== "string" || !code.trim()) {
+          throw new ProtocolError(
+            "Integration gate failure carried no error code. The operationId may already have applied.",
+            "GATE_STATUS",
+          );
+        }
         throw new ProtocolError(`Integration gate rejected the local call (${code}).`, code);
       }
       assertLocalCallReceipt(parsed.body, {

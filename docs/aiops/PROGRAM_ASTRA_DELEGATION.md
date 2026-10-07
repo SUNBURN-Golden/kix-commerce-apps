@@ -56,3 +56,13 @@
 채택 검토 source는 [중앙 #47](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/47) `09e161caa652d75e9617caf632b3b9899be35740` 하나다. source 후보로 구현됐으며 설치·독립 A3·User 채택·실제 host qualification·activation은 PENDING이다. runtime/client pin이나 host record는 이 변경으로 바꾸지 않는다. 과거 checkpoint 목록과 별도 시작 PR 절차는 [REGISTRATION_SCOPE_APPROVAL_KO.md](REGISTRATION_SCOPE_APPROVAL_KO.md)를 따른다.
 
 외부 선행은 pending catalogue에 둔다. 실제 저장소/program/node·plan/definition·delivery HEAD·merge SHA·필요한 post-merge 검증의 보호된 완료를 확인한 뒤, 별도 대표님 병합 plan revision에서 변환 전/후 digest와 근거를 기록해 승격한다. 현 schema v1은 빈 `depends_on_external`도 거부한다. 미완료·UNKNOWN·wrong-revision을 삭제해서 실행하지 않는다. bootstrap/범위/시작 PR은 자동 병합할 program delivery가 아니다.
+
+
+## Commerce PR26에 한정된 2026-10-07 사용자 예외
+
+[직접 승인 출처와 범위](../decisions/2026-10-07-commerce-journey-and-a3.md)에 따라
+PR26의 합성 결제·발권·입장 조합을 채택하고, 작성자가 아닌 새 내부 Astra 세션의
+exact-HEAD ARCHITECTURE/A3를 이 PR의 source 감사로 수용한다. 기존 홀드/desk API는
+미연결이다. 이 좁은 예외는 위 Fable 기본 규칙의 source 감사자 지정을 대체하며,
+보호된 Fable 영수증·중앙 자동 병합 gate·원장·다른 제품의 권한을 변경하지 않는다.
+CI·UNKNOWN·독립성·사용자 병합 경계는 유지한다. 감사 결과와 차단은 별도로 기록한다.

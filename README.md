@@ -198,6 +198,7 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - adapter tests start `python3 -m integration_gate --port 0` from the reviewed protocol checkout and send settlement, reservation, admission, resale, and credit-adjacent catalogue calls over that transport. On a local run without a checkout those suites are skipped with a warning. A set `KIX_PROTOCOL_ROOT`, `CI=true`, or `KIX_REQUIRE_GATE=1` makes a missing checkout fail. `KIX_REQUIRE_GATE=0` allows the skip
 - a redirect off the loopback origin is not followed, a gate that never answers is `REQUEST_TIMEOUT` after one attempt, and a body cut off mid-read is a `ProtocolError`
 - a success that is empty, a bare value, a receipt for another call, or a receipt with extra keys is rejected, and nested payment, mode, fee, and finality claims are rejected at any depth
+- the Wave 6-A journey helper composes `create_event → prepare_trade → accept_trade → capture → commit_trade → open_admission → admit` through `invokeLocalCall`, with synthetic fixture provenance and validated causal receipt fields. Optional `settle_capture` is omitted; capture is not available cash. The [2026-10-07 User decision](docs/decisions/2026-10-07-commerce-journey-and-a3.md) authorizes this composition and a fresh independent Astra source A3 for PR26. `placeHold` stays not-bound to `reserve_listing`. `confirmBooking` does not send `capture`. Settlement does not send `settle_capture`. A lost response, an invalid receipt, or UNKNOWN fences the next write and does not mint a replacement operation id
 - a `["string", "null"]` schema field accepts null or a checked string, and body keys that only exist on the object prototype are rejected before a request
 - resale reconcile stays matched after the reservation is later admitted or consumed
 - the box office reaches `COMMITTED` after a mis-ordered click, and each reconcile click checks the case again
@@ -205,3 +206,5 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - with `--readiness-dir`, one committed local call replays after restart and a second id does not apply it again. `durable` stays false
 - those desk methods stay not-bound against the live process, unknown actions never leave the client, and a closed port is `GATE_UNAVAILABLE`
 - stub replay and HTTP `operationId` replay both avoid a second apply inside their own process, and they do not share a phase journal
+
+The cumulative local product candidate adds a [receipt journey workspace](docs/product-journey-workspace.md) on box office and booking. Use `npm run test:browser` to verify the stub and HTTP-unavailable browser paths.

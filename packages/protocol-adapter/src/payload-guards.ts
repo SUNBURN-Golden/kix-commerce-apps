@@ -57,8 +57,17 @@ const MAX_PAYLOAD_DEPTH = 32;
  * Every nested object is checked, not only the top level and result.
  */
 export function enforceRemotePayloadGuards(value: unknown): void {
-  rejectTransportProductionClaims(value, 0);
-  scanDeep(value, 0);
+  try {
+    rejectTransportProductionClaims(value, 0);
+    scanDeep(value, 0);
+  } catch (error) {
+    // A received body that fails a desk guard is invalid evidence, not an
+    // explicit business rejection. Keep that distinction through HTTP callers.
+    if (error instanceof ProtocolError && error.code === undefined) {
+      throw new ProtocolError(error.message, "GATE_STATUS");
+    }
+    throw error;
+  }
 }
 
 /**

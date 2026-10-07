@@ -231,6 +231,49 @@ describe("integration HTTP success receipts", () => {
   });
 });
 
+describe("integration HTTP failure statuses", () => {
+  function failing(status: number, body: string): { fetchImpl: typeof fetch; calls: () => number } {
+    let calls = 0;
+    const fetchImpl: typeof fetch = async (_input, init) => {
+      calls += 1;
+      return new Response(body, { status, headers: echoIntegrationGateHeaders(init) });
+    };
+    return { fetchImpl, calls: () => calls };
+  }
+
+  // Only the gate's error code is an explicit rejection. A failure status or a
+  // rejected flag without one may follow an applied effect.
+  it.each([
+    [500, "{}"], [500, ""], [500, "null"], [500, "[]"], [500, '"failed"'],
+    [500, '{"rejected":true}'], [500, '{"rejected":false}'],
+    [500, '{"error":"","rejected":true}'], [500, '{"error":"   ","rejected":true}'],
+    [500, '{"error":42,"rejected":true}'], [500, '{"error":null,"rejected":true}'],
+    [400, "{}"], [422, "{}"], [503, "{}"], [200, '{"rejected":true}'],
+  ] as const)("does not invent a rejection code for a %i body %s", async (status, body) => {
+    const { fetchImpl, calls } = failing(status, body);
+    const adapter = new HttpProtocolAdapter("http://127.0.0.1:8765", fetchImpl);
+    await expect(adapter.invokeLocalCall(CLOSE_SALES)).rejects.toMatchObject({
+      code: "GATE_STATUS",
+      requestId: expect.any(String),
+      correlationId: expect.any(String),
+    });
+    expect(calls()).toBe(1);
+  });
+
+  it.each([
+    [422, { error: "TRADE_NOT_FOUND", rejected: true }, "TRADE_NOT_FOUND"],
+    [422, { error: "TRADE_NOT_FOUND" }, "TRADE_NOT_FOUND"],
+    [503, { error: "CORE_BUSY", rejected: true }, "CORE_BUSY"],
+    [500, { error: "INTERNAL_ERROR", rejected: true }, "INTERNAL_ERROR"],
+    [200, { error: "HIDDEN", rejected: true }, "HIDDEN"],
+  ] as const)("keeps the gate code on a %i body %j", async (status, body, code) => {
+    const { fetchImpl, calls } = failing(status, JSON.stringify(body));
+    const adapter = new HttpProtocolAdapter("http://127.0.0.1:8765", fetchImpl);
+    await expect(adapter.invokeLocalCall(CLOSE_SALES)).rejects.toMatchObject({ code });
+    expect(calls()).toBe(1);
+  });
+});
+
 describe("integration HTTP default fetch", () => {
   it("calls the global fetch without the adapter as its receiver", async () => {
     const original = globalThis.fetch;

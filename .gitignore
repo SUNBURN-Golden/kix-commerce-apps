@@ -5,3 +5,6 @@ dist/
 .DS_Store
 coverage/
 .kix-protocol-gate/
+
+/test-results/
+/playwright-report/
