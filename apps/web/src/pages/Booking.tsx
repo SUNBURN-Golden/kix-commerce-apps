@@ -8,8 +8,15 @@ import { useReservationDesk } from "../reservation-desk";
 import { AdmissionCredentialPanel } from "./AdmissionCredentialPanel";
 import { ReservationPanel } from "./ReservationPanel";
 
+import { JourneyPanel } from "./JourneyPanel";
+
 export function BookingPage() {
   const { eventId = "" } = useParams();
+  return <BookingForEvent key={eventId} eventId={eventId} />;
+}
+
+function BookingForEvent({ eventId }: { eventId: string }) {
+  const [loading, setLoading] = useState(true);
   const [performance, setPerformance] = useState<Performance | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [hold, setHold] = useState<Hold | null>(null);
@@ -33,7 +40,8 @@ export function BookingPage() {
         if (!cancelled) {
           setError(reason instanceof Error ? reason.message : "Could not load the performance.");
         }
-      });
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
     return () => {
       cancelled = true;
     };
@@ -107,7 +115,7 @@ export function BookingPage() {
     }
   }
 
-  if (!performance && !error) {
+  if (loading) {
     return <p className="muted">Loading the performance.</p>;
   }
 
@@ -117,6 +125,7 @@ export function BookingPage() {
         <p className="alert" role="alert">
           {error ?? "That performance is not on this adapter."}
         </p>
+        <JourneyPanel eventId={eventId} environment={protocol.describe().environment} key={eventId} />
         <Link to="/">Back to the window</Link>
       </section>
     );
@@ -135,6 +144,7 @@ export function BookingPage() {
           B01–B05 stay 설계중.
         </p>
       </header>
+      <JourneyPanel eventId={eventId} environment={protocol.describe().environment} key={eventId} />
       {error ? (
         <p className="alert" role="alert">
           {error}

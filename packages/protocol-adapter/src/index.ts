@@ -185,3 +185,4 @@ export {
   type CreditSettlementGate,
   type CreditStep,
 } from "./types.js";
+export { createJourneyDemoCaller, journeyDemoInput, JOURNEY_DEMO_SCENARIOS, type JourneyDemoScenario } from "./journey-demo.js";

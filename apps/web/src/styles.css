@@ -352,3 +352,13 @@ a.panel {
     gap: 0.8rem;
   }
 }
+
+.journey-panel { margin-block: 1.5rem; }
+.journey-panel select { display: block; max-width: 100%; padding: .6rem; margin-block: .4rem 1rem; font: inherit; }
+.journey-steps { padding-left: 1.5rem; }
+.journey-steps li { padding-block: .65rem; border-bottom: 1px solid var(--line); }
+.journey-panel pre { overflow-x: auto; max-width: 100%; padding: .75rem; background: var(--paper); font-size: .8rem; }
+.journey-panel code { overflow-wrap: anywhere; }
+.journey-panel summary { cursor: pointer; padding-block: .5rem; }
+.journey-panel { min-width: 0; }
+.journey-panel > *, .journey-steps li, .journey-steps details { min-width: 0; overflow-wrap: anywhere; }

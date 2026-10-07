@@ -151,7 +151,7 @@ export function ResalePage() {
               <dd>{transfer.rightsRef}</dd>
             </div>
           </dl>
-          <Link className="button" to={`/admission?rightsRef=${encodeURIComponent(transfer.rightsRef)}`}>
+          <Link className="button" to={`/admission?rightsRef=${encodeURIComponent(transfer.rightsRef)}&eventId=${encodeURIComponent(transfer.eventId)}`}>
             Check the new right
           </Link>
         </article>

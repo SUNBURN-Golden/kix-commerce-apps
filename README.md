@@ -206,3 +206,5 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - with `--readiness-dir`, one committed local call replays after restart and a second id does not apply it again. `durable` stays false
 - those desk methods stay not-bound against the live process, unknown actions never leave the client, and a closed port is `GATE_UNAVAILABLE`
 - stub replay and HTTP `operationId` replay both avoid a second apply inside their own process, and they do not share a phase journal
+
+The cumulative local product candidate adds a [receipt journey workspace](docs/product-journey-workspace.md) on box office and booking. Use `npm run test:browser` to verify the stub and HTTP-unavailable browser paths.

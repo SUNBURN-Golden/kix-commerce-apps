@@ -2,6 +2,9 @@ import { type ChildProcess } from "node:child_process";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   composePrimarySeatJourney,
+  createJourneyDemoCaller,
+  journeyDemoInput,
+  ProtocolError,
   HttpProtocolAdapter,
   JOURNEY_COMPOSED_ACTIONS,
   PINNED_PROTOCOL_DOMAIN,
@@ -133,4 +136,47 @@ describeGate("primary seat journey against the reviewed gate", () => {
       code: "EVENT_EXISTS",
     });
   }, 20000);
+
+  it("uses the same supported sequence in the UI fixture and reviewed gate", async () => {
+    const input = journeyDemoInput("show-parity");
+    const { caller } = createJourneyDemoCaller("success");
+    const fixture = await composePrimarySeatJourney(caller, input);
+    const gate = await composePrimarySeatJourney(new HttpProtocolAdapter(baseUrl), input);
+    expect(gate.fence).toBeNull();
+    expect(fixture.fence).toBeNull();
+    expect(gate.composed.map((step) => [step.action, step.operationId])).toEqual(
+      fixture.composed.map((step) => [step.action, step.operationId]),
+    );
+    expect(gate.notBound).toEqual(fixture.notBound);
+    expect(gate.uncomposed).toEqual(fixture.uncomposed);
+  }, 20000);
+
+  it.each(["create_event", "prepare_trade", "accept_trade"])(
+    "fences after an actual %s effect whose response is lost", async (lostAction) => {
+      const input = journeyDemoInput(`show-lost-${lostAction}`);
+      const unique = {
+        ...input, tradeId: `trade-lost-${lostAction}`,
+        operationIds: { createEvent: `lost-${lostAction}-create`, prepareTrade: `lost-${lostAction}-prepare`, acceptTrade: `lost-${lostAction}-accept` },
+      };
+      const calls: string[] = [];
+      const applied: string[] = [];
+      const http = new HttpProtocolAdapter(baseUrl);
+      const caller: JourneyLocalCaller = {
+        async invokeLocalCall(call) {
+          calls.push(call.action);
+          const receipt = await http.invokeLocalCall(call);
+          applied.push(call.action);
+          if (call.action === lostAction) throw new ProtocolError("Receipt lost after actual gate success", "GATE_UNAVAILABLE");
+          return receipt;
+        },
+      };
+      const result = await composePrimarySeatJourney(caller, unique);
+      const lostIndex = JOURNEY_COMPOSED_ACTIONS.indexOf(lostAction as typeof JOURNEY_COMPOSED_ACTIONS[number]);
+      expect(applied).toEqual(JOURNEY_COMPOSED_ACTIONS.slice(0, lostIndex + 1));
+      expect(calls).toEqual(applied);
+      expect(result.composed.map((step) => step.action)).toEqual(JOURNEY_COMPOSED_ACTIONS.slice(0, lostIndex));
+      expect(result.fence).toMatchObject({ outcome: "UNKNOWN", action: lostAction, receipt: null });
+    }, 20000,
+  );
+
 });

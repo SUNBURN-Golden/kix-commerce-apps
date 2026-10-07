@@ -29,6 +29,8 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
       # The live gate runs in its own job below. This job skips it on purpose.
       - run: npm test
         env:

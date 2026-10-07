@@ -6,6 +6,8 @@ import { protocol } from "../protocol";
 import { runSettlementCommand, settlementIdFor } from "../settlement-desk";
 import { SettlementPanel, type SettlementDeskCommand } from "./SettlementPanel";
 
+import { JourneyPanel } from "./JourneyPanel";
+
 export function BoxOfficePage() {
   const [performances, setPerformances] = useState<Performance[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -92,12 +94,13 @@ export function BoxOfficePage() {
           Booking and admission can open a simulated reservation phase on the adapter stub. Not live admission.
         </p>
       </header>
+      <JourneyPanel eventId={selectedEventId ?? "demo-box-office"} environment={protocol.describe().environment} key={selectedEventId ?? "demo-box-office"} />
       {loadError ? (
         <p className="alert" role="alert">
           {loadError}
         </p>
       ) : null}
-      {performances === null ? <p className="muted">Loading performances.</p> : null}
+      {performances === null && !loadError ? <p className="muted">Loading performances.</p> : null}
       {performances?.length === 0 ? <p className="empty">No performances on this adapter.</p> : null}
       <ul className="program">
         {performances?.map((item) => (
