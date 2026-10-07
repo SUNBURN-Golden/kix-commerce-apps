@@ -25,7 +25,7 @@ attempt. No retry, Idempotency-Key, redirect following or fallback.
 | prepare_trade | buyer | First returned inventory ID; caller trade/buyer/primaryPrice, initial versions 0. Require matching trade, PREPARED, nonempty ticketId, externalOrderId and termsHash |
 | accept_trade | buyer | Validated tradeId and copied termsHash; accepted must be true |
 | capture | pg-adapter | prepare.externalOrderId → orderId; original paymentId/buyer/price, KRW, synthetic provenance and fixed fixture scope. Require captured=true AND cashAvailable=false |
-| commit_trade | operator | Validated tradeId after capture; require the prepared ticketId, original buyer, positive safe-integer rightsVersion and admissionEpoch |
+| commit_trade | operator | Validated tradeId after capture; require the prepared ticketId, original buyer, rightsVersion=1 and admissionEpoch=1 for this pinned fresh-primary path (initial 0/0, first commit +1/+1) |
 | open_admission | operator | Original validated eventId, after commit; admissionStatus must be OPEN |
 | admit | venue | Commit ticketId/owner/rightsVersion/admissionEpoch copied into ticketId/holder/expectedVersion/admissionEpoch; require ADMITTED_ONCE and admissionId equal to the submitted operation ID |
 

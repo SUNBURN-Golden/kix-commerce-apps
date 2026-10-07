@@ -197,6 +197,25 @@ describeGate("primary seat journey against the reviewed gate", () => {
     }, 20000,
   );
 
+  it.each(["rightsVersion", "admissionEpoch", "both"])("fences an impossible first-issuance %s before opening admission", async (field) => {
+    const http = new HttpProtocolAdapter(baseUrl);
+    const calls: string[] = [];
+    const caller: JourneyLocalCaller = {
+      async invokeLocalCall(call) {
+        calls.push(call.action);
+        const receipt = await http.invokeLocalCall(call) as { result: Record<string, unknown> };
+        return call.action === "commit_trade"
+          ? { ...receipt, result: { ...receipt.result,
+            ...(field === "both" ? { rightsVersion: 2, admissionEpoch: 2 } : { [field]: 2 }) } }
+          : receipt;
+      },
+    };
+    const result = await composePrimarySeatJourney(caller, gateInput(`show-invalid-${field}`));
+    expect(result.fence).toMatchObject({ action: "commit_trade", outcome: "INVALID_RECEIPT", code: "GATE_STATUS" });
+    expect(calls).toEqual(JOURNEY_COMPOSED_ACTIONS.slice(0, 5));
+    expect(result.composed.map((step) => step.action)).toEqual(JOURNEY_COMPOSED_ACTIONS.slice(0, 4));
+  }, 20000);
+
   it("rejects an old presentation after an actual gift transfer", async () => {
     const http = new HttpProtocolAdapter(baseUrl);
     const input = gateInput("show-transferred");

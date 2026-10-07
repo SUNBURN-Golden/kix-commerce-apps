@@ -121,3 +121,26 @@ after every actual gate effect, invalid causal receipts, reservation expiry afte
 capture, transferred-right stale admission and prevention of a second admission.
 The final exact-HEAD independent Astra A3 result and GitHub CI status are recorded
 in the PR handoff rather than committing their own HEAD and causing a hash loop.
+
+## Independent A3 finding and follow-up checkpoint
+
+The fresh non-author source A3 reviewed exact HEAD
+`a92dec19efbcfd000f763aaa04fcb41b21e1e982` and returned **FAIL**, one F1/P2:
+positive but impossible first-issuance versions allowed downstream writes.
+The complete unaltered report is preserved in
+[pr26-a3-a92dec1.md](reviews/pr26-a3-a92dec1.md), including configured model/session,
+missing provider telemetry, independently executed tests and authority boundaries.
+
+The writer reproduced four failing unit/real-gate regressions before the fix.
+The composer now requires the pinned fresh-primary `rightsVersion=1` and
+`admissionEpoch=1` before opening admission. Six regression cases cover each wrong
+positive value and both together in direct and actual-gate response injection.
+Post-fix author verification: adapter 134/134, web 51/51, typecheck and build pass.
+The failed A3 is not relabelled PASS; the changed HEAD requires independent re-audit.
+
+User instruction `Sentinel_bda72b431f708191b09cbd82e79337f5` stops highspeed/Fast/
+priority while retaining Astra/high. The current cloud/collaboration tools expose
+no service-tier setter; the running audit was allowed to finish without duplicate
+execution. No further model invocation is issued at this checkpoint. Independent
+re-audit awaits a supported standard/default session. This does not change central
+model settings, credentials or audit/merge gates.

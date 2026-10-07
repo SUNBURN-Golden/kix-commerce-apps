@@ -255,8 +255,11 @@ export async function composePrimarySeatJourney(
   });
   if (committed.fence) return result(composed, committed.fence);
   const presentation = { ...committed.receipt.result };
+  // This pinned primary path creates versions 0/0, prepares at version 0,
+  // then commits once (+1/+1). Other positive versions are invalid evidence
+  // for this operation and must fence before even opening admission.
   if (presentation.ticketId !== ticketId || presentation.owner !== intent.buyer ||
-      !positiveVersion(presentation.rightsVersion) || !positiveVersion(presentation.admissionEpoch)) {
+      presentation.rightsVersion !== 1 || presentation.admissionEpoch !== 1) {
     return result(composed, invalidReceipt(committed.receipt));
   }
   composed.push({ action: "commit_trade", operationId: intent.operationIds.commitTrade, receipt: committed.receipt });
@@ -281,10 +284,6 @@ export async function composePrimarySeatJourney(
   }
   composed.push({ action: "admit", operationId: intent.operationIds.admit, receipt: admitted.receipt });
   return result(composed, null);
-}
-
-function positiveVersion(value: unknown): value is number {
-  return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
 }
 
 function invalidReceipt(receipt: CatalogueReceipt): JourneyFence {
