@@ -128,7 +128,12 @@ export interface PrimarySeatJourneyResult {
   readonly uncomposed: typeof JOURNEY_UNCOMPOSED;
 }
 
-const UNKNOWN_CODES = new Set(["REQUEST_TIMEOUT", "GATE_UNAVAILABLE", "GATE_TRANSPORT"]);
+// The pinned gate can send CORE_BUSY, INTERNAL_ERROR and DURABILITY_DIVERGENCE
+// after Core.execute has applied the command, so they are not explicit rejections.
+const UNKNOWN_CODES = new Set([
+  "REQUEST_TIMEOUT", "GATE_UNAVAILABLE", "GATE_TRANSPORT",
+  "CORE_BUSY", "INTERNAL_ERROR", "DURABILITY_DIVERGENCE",
+]);
 
 /**
  * Composes the approved synthetic primary-seat journey through invokeLocalCall.

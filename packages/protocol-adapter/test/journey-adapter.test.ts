@@ -91,6 +91,31 @@ function scripted(steps: Record<string, () => unknown>): { caller: JourneyLocalC
   return { caller, calls };
 }
 
+// Error bodies as the pinned gate sends them: _error() and _not_ready() in integration_gate/server.py.
+const gateError = (code: string) => ({ error: code, rejected: true });
+const GATE_NOT_READY = {
+  error: "NOT_READY", production: false, productionReadiness: false, productionConformance: false,
+  protocolTruth: false, rejected: true, role: "integration-gate",
+};
+
+function gateFailingAt(action: string, status: number, failure: Record<string, unknown>) {
+  const { caller: scriptedCaller, calls } = scripted({
+    create_event: () => receipt("op-create", "create_event", CREATE_RESULT),
+    prepare_trade: () => receipt("op-prepare", "prepare_trade", PREPARE_RESULT),
+    accept_trade: () => receipt("op-accept", "accept_trade", ACCEPT_RESULT),
+  });
+  const caller = new HttpProtocolAdapter("http://127.0.0.1:8765", async (_url, init) => {
+    const input = JSON.parse(String(init?.body)) as LocalCallInput;
+    const body = await scriptedCaller.invokeLocalCall(input);
+    return input.action === action
+      ? new Response(JSON.stringify(failure), { status, headers: echoIntegrationGateHeaders(init) })
+      : new Response(JSON.stringify(body), { status: 200, headers: echoIntegrationGateHeaders(init) });
+  });
+  return { caller, calls };
+}
+
+const GATE_FAILURE_STEPS = ["capture", "commit_trade"] as const;
+
 describe("primary seat journey helper", () => {
   it.each([
     ["capture", { duplicate: true }],
@@ -261,6 +286,36 @@ describe("primary seat journey helper", () => {
     expect(calls.map((call) => call.action)).toEqual(["create_event", "prepare_trade"]);
     expect(journey.composed.map((step) => step.action)).toEqual(["create_event"]);
     expect(journey.fence).toMatchObject({ outcome: "INVALID_RECEIPT", code: "GATE_STATUS", action: "prepare_trade" });
+  });
+
+  // The gate can send these after Core.execute has applied the command.
+  it.each(GATE_FAILURE_STEPS.flatMap((action) => ([
+    [503, "CORE_BUSY"], [500, "INTERNAL_ERROR"], [503, "DURABILITY_DIVERGENCE"],
+  ] as const).map(([status, code]) => [action, status, code] as const)))(
+    "keeps %s unconfirmed after a gate %i %s", async (action, status, code) => {
+      const { caller, calls } = gateFailingAt(action, status, gateError(code));
+      const journey = await composePrimarySeatJourney(caller, INPUT);
+      const index = JOURNEY_COMPOSED_ACTIONS.indexOf(action);
+      expect(calls.map((call) => call.action)).toEqual(JOURNEY_COMPOSED_ACTIONS.slice(0, index + 1));
+      expect(journey.composed.map((step) => step.action)).toEqual(JOURNEY_COMPOSED_ACTIONS.slice(0, index));
+      expect(journey.fence).toEqual({ outcome: "UNKNOWN", action, operationId: OPERATION_IDS[index], code, receipt: null });
+    },
+  );
+
+  it.each([
+    ...GATE_FAILURE_STEPS.flatMap((action) => [
+      [action, 503, "NOT_READY", GATE_NOT_READY],
+      [action, 503, "OVERLOADED", gateError("OVERLOADED")],
+      [action, 503, "JOURNAL_BUDGET", gateError("JOURNAL_BUDGET")],
+    ] as const),
+    ["commit_trade", 422, "TRADE_NOT_COMMITTABLE", gateError("TRADE_NOT_COMMITTABLE")] as const,
+  ])("keeps a %s gate %i %s rejected", async (action, status, code, failure) => {
+    const { caller, calls } = gateFailingAt(action, status, failure);
+    const journey = await composePrimarySeatJourney(caller, INPUT);
+    const index = JOURNEY_COMPOSED_ACTIONS.indexOf(action);
+    expect(calls.map((call) => call.action)).toEqual(JOURNEY_COMPOSED_ACTIONS.slice(0, index + 1));
+    expect(journey.composed.map((step) => step.action)).toEqual(JOURNEY_COMPOSED_ACTIONS.slice(0, index));
+    expect(journey.fence).toEqual({ outcome: "REJECTED", action, operationId: OPERATION_IDS[index], code, receipt: null });
   });
 
   it("records the main bindings and does not map placeHold onto a new action", () => {

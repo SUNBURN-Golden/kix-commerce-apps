@@ -38,8 +38,10 @@ with INVALID_RECEIPT; the helper does not add recovery or replay semantics.
 
 Every generic envelope must also pass payload guards and action/operation/domain
 receipt validation. Unconfirmed, malformed or stale responses fence later writes.
-Response loss is UNKNOWN even if the server applied the command. Explicit server
-rejection remains REJECTED. An earlier confirmed synthetic capture can coexist
+Response loss is UNKNOWN even if the server applied the command. Gate
+CORE_BUSY, INTERNAL_ERROR and DURABILITY_DIVERGENCE can follow an applied Core
+effect, so they are UNKNOWN too, with no retry or replacement operation ID.
+Explicit server rejection remains REJECTED. An earlier confirmed synthetic capture can coexist
 with a failed commit; neither the UI nor helper asserts refund or issuance.
 
 ## Desk boundary
