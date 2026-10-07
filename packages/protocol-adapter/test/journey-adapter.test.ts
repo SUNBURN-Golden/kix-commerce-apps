@@ -98,7 +98,8 @@ const GATE_NOT_READY = {
   protocolTruth: false, rejected: true, role: "integration-gate",
 };
 
-function gateFailingAt(action: string, status: number, failure: Record<string, unknown>) {
+// A string failure is sent as raw response text.
+function gateFailingAt(action: string, status: number, failure: Record<string, unknown> | string) {
   const { caller: scriptedCaller, calls } = scripted({
     create_event: () => receipt("op-create", "create_event", CREATE_RESULT),
     prepare_trade: () => receipt("op-prepare", "prepare_trade", PREPARE_RESULT),
@@ -108,13 +109,23 @@ function gateFailingAt(action: string, status: number, failure: Record<string, u
     const input = JSON.parse(String(init?.body)) as LocalCallInput;
     const body = await scriptedCaller.invokeLocalCall(input);
     return input.action === action
-      ? new Response(JSON.stringify(failure), { status, headers: echoIntegrationGateHeaders(init) })
+      ? new Response(typeof failure === "string" ? failure : JSON.stringify(failure), { status, headers: echoIntegrationGateHeaders(init) })
       : new Response(JSON.stringify(body), { status: 200, headers: echoIntegrationGateHeaders(init) });
   });
   return { caller, calls };
 }
 
 const GATE_FAILURE_STEPS = ["capture", "commit_trade"] as const;
+
+// Readable bodies with no gate rejection code. The scripted caller has already
+// produced the effect, so none of these may become an explicit rejection.
+const CODELESS_FAILURES = [
+  [500, "{}"], [500, ""], [500, "null"], [500, "[]"], [500, '"failed"'],
+  [500, '{"rejected":true}'], [500, '{"rejected":false}'],
+  [500, '{"error":"","rejected":true}'], [500, '{"error":"   ","rejected":true}'],
+  [500, '{"error":42,"rejected":true}'], [500, '{"error":null,"rejected":true}'],
+  [422, "{}"], [503, "{}"], [200, '{"rejected":true}'],
+] as const;
 
 describe("primary seat journey helper", () => {
   it.each([
@@ -302,13 +313,39 @@ describe("primary seat journey helper", () => {
     },
   );
 
+  it.each(GATE_FAILURE_STEPS.flatMap((action) => CODELESS_FAILURES.map(([status, body]) => [action, status, body] as const)))(
+    "keeps %s unconfirmed after a gate %i with no rejection code %s", async (action, status, body) => {
+      const { caller, calls } = gateFailingAt(action, status, body);
+      const journey = await composePrimarySeatJourney(caller, INPUT);
+      const index = JOURNEY_COMPOSED_ACTIONS.indexOf(action);
+      expect(calls.map((call) => call.operationId)).toEqual(OPERATION_IDS.slice(0, index + 1));
+      expect(journey.composed.map((step) => step.operationId)).toEqual(OPERATION_IDS.slice(0, index));
+      expect(journey.fence).toEqual({
+        outcome: "INVALID_RECEIPT", action, operationId: OPERATION_IDS[index], code: "GATE_STATUS", receipt: null,
+      });
+    },
+  );
+
+  it.each(GATE_FAILURE_STEPS)("keeps %s unconfirmed after a non-JSON gate 500", async (action) => {
+    const { caller, calls } = gateFailingAt(action, 500, "Internal Server Error");
+    const journey = await composePrimarySeatJourney(caller, INPUT);
+    const index = JOURNEY_COMPOSED_ACTIONS.indexOf(action);
+    expect(calls.map((call) => call.operationId)).toEqual(OPERATION_IDS.slice(0, index + 1));
+    expect(journey.fence).toEqual({
+      outcome: "INVALID_RECEIPT", action, operationId: OPERATION_IDS[index], code: "GATE_STATUS", receipt: null,
+    });
+  });
+
   it.each([
     ...GATE_FAILURE_STEPS.flatMap((action) => [
       [action, 503, "NOT_READY", GATE_NOT_READY],
       [action, 503, "OVERLOADED", gateError("OVERLOADED")],
       [action, 503, "JOURNAL_BUDGET", gateError("JOURNAL_BUDGET")],
     ] as const),
+    ["capture", 422, "TRADE_NOT_FOUND", gateError("TRADE_NOT_FOUND")] as const,
     ["commit_trade", 422, "TRADE_NOT_COMMITTABLE", gateError("TRADE_NOT_COMMITTABLE")] as const,
+    // The published 422 names only error as the reject code.
+    ["commit_trade", 422, "TRADE_NOT_COMMITTABLE", { error: "TRADE_NOT_COMMITTABLE" }] as const,
   ])("keeps a %s gate %i %s rejected", async (action, status, code, failure) => {
     const { caller, calls } = gateFailingAt(action, status, failure);
     const journey = await composePrimarySeatJourney(caller, INPUT);

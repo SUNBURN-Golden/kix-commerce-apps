@@ -41,6 +41,10 @@ receipt validation. Unconfirmed, malformed or stale responses fence later writes
 Response loss is UNKNOWN even if the server applied the command. Gate
 CORE_BUSY, INTERNAL_ERROR and DURABILITY_DIVERGENCE can follow an applied Core
 effect, so they are UNKNOWN too, with no retry or replacement operation ID.
+A failure status or `rejected: true` without a non-empty string `error` code is
+`GATE_STATUS` (INVALID_RECEIPT), not a rejection: the effect may have applied.
+A supplied code is necessary for any other classification but is not itself a
+rejection; the three codes above stay UNKNOWN.
 Explicit server rejection remains REJECTED. An earlier confirmed synthetic capture can coexist
 with a failed commit; neither the UI nor helper asserts refund or issuance.
 

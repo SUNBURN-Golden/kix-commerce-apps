@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   composePrimarySeatJourney,
   createJourneyDemoCaller,
+  echoIntegrationGateHeaders,
   journeyDemoInput,
   ProtocolError,
   HttpProtocolAdapter,
@@ -194,6 +195,37 @@ describeGate("primary seat journey against the reviewed gate", () => {
       expect(calls).toEqual(applied);
       expect(result.composed.map((step) => step.action)).toEqual(JOURNEY_COMPOSED_ACTIONS.slice(0, lostIndex));
       expect(result.fence).toMatchObject({ outcome: "UNKNOWN", action: lostAction, receipt: null });
+    }, 20000,
+  );
+
+  it.each((["capture", "commit_trade"] as const).flatMap((action) => ([
+    ["empty-object", "{}"], ["empty-body", ""], ["blank-code", JSON.stringify({ error: "   ", rejected: true })],
+  ] as const).map(([label, body]) => [action, label, body] as const)))(
+    "keeps an actual %s effect unconfirmed when a 500 %s replaces its receipt", async (failAction, label, failure) => {
+      const input = gateInput(`show-nocode-${failAction}-${label}`);
+      const ids = [input.operationIds.createEvent, input.operationIds.prepareTrade, input.operationIds.acceptTrade,
+        input.operationIds.capture, input.operationIds.commitTrade, input.operationIds.openAdmission, input.operationIds.admit];
+      const real = new HttpProtocolAdapter(baseUrl);
+      const sent: string[] = [];
+      const applied: string[] = [];
+      const http = new HttpProtocolAdapter(baseUrl, async (_url, init) => {
+        const call = JSON.parse(String(init?.body)) as LocalCallInput;
+        sent.push(`${call.action}:${call.operationId}`);
+        const receipt = await real.invokeLocalCall(call);
+        applied.push(`${call.action}:${call.operationId}`);
+        return call.action === failAction
+          ? new Response(failure, { status: 500, headers: echoIntegrationGateHeaders(init) })
+          : new Response(JSON.stringify(receipt), { status: 200, headers: echoIntegrationGateHeaders(init) });
+      });
+      const result = await composePrimarySeatJourney(http, input);
+      const index = JOURNEY_COMPOSED_ACTIONS.indexOf(failAction);
+      const expected = JOURNEY_COMPOSED_ACTIONS.slice(0, index + 1).map((action, i) => `${action}:${ids[i]}`);
+      expect(applied).toEqual(expected);
+      expect(sent).toEqual(expected);
+      expect(result.composed.map((step) => step.operationId)).toEqual(ids.slice(0, index));
+      expect(result.fence).toEqual({
+        outcome: "INVALID_RECEIPT", action: failAction, operationId: ids[index], code: "GATE_STATUS", receipt: null,
+      });
     }, 20000,
   );
 
