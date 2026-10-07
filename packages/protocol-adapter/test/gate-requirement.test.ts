@@ -22,7 +22,7 @@ describe("CI workflow", () => {
     const workflow = readFileSync(path.join(repoRoot, ".github/workflows/ci.yml"), "utf8");
     const pinned = workflow.match(/KIX_PROTOCOL_GATE_SHA: ([0-9a-f]{40})/);
     expect(pinned?.[1]).toBe(OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha);
-    expect(workflow).toContain("repository: BeautifulMind-JT/kix-protocol");
+    expect(workflow).toContain("repository: SUNBURN-Golden/kix-protocol");
     expect(workflow).toContain("KIX_REQUIRE_GATE: '1'");
     expect(workflow).toContain("KIX_REQUIRE_GATE: '0'");
   });

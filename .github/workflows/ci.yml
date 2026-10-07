@@ -50,7 +50,7 @@ jobs:
         run: |
           echo "present=$HAS_PROTOCOL_TOKEN" >> "$GITHUB_OUTPUT"
           if [ "$HAS_PROTOCOL_TOKEN" != "true" ]; then
-            echo "::warning title=Live gate not run::Set the KIX_PROTOCOL_READ_TOKEN secret (read-only contents on BeautifulMind-JT/kix-protocol) to run the adapter tests against the reviewed gate."
+            echo "::warning title=Live gate not run::Set the KIX_PROTOCOL_READ_TOKEN secret (read-only contents on SUNBURN-Golden/kix-protocol) to run the adapter tests against the reviewed gate."
             echo "Live gate not run: KIX_PROTOCOL_READ_TOKEN is not set. The live-gate job is skipped, not passed." >> "$GITHUB_STEP_SUMMARY"
           fi
 
@@ -70,7 +70,7 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          repository: BeautifulMind-JT/kix-protocol
+          repository: SUNBURN-Golden/kix-protocol
           ref: ${{ env.KIX_PROTOCOL_GATE_SHA }}
           token: ${{ secrets.KIX_PROTOCOL_READ_TOKEN }}
           path: .kix-protocol-gate

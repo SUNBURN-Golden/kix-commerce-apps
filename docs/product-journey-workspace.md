@@ -50,6 +50,12 @@ keyboard activation, mobile overflow, HTTP no-write behavior, missing events,
 booking-to-resale-to-admission route continuity and event-state isolation.
 The browser suite writes a mobile screenshot under ignored `test-results/`.
 
+The existing development dependency audit initially reported four vulnerabilities.
+Vitest is updated to the Node-20-compatible 4.1.11 and source-map-js is patched;
+`npm audit` then reports zero vulnerabilities. Web test Node types are explicit.
+The workflow checkout uses the current `SUNBURN-Golden/kix-protocol` name (same
+repository ID 1365416872); the pinned gate commit and credentials are unchanged.
+
 ## Review and audit handoff
 
 The author supplies implementation and test evidence only. An independent reviewer
