@@ -19,6 +19,7 @@ describe("catalogue journey surface", () => {
       expect(html).toContain("later writes blocked");
       expect(html).not.toContain("Supported prefix accepted");
       expect(html).toContain(outcome === "REJECTED" ? "Explicit rejection" : "Outcome unconfirmed");
+      if (outcome !== "REJECTED") expect(html).not.toContain("Explicit rejection");
     } else {
       expect(html).toContain("Payment, issuance and admission remain unavailable");
     }

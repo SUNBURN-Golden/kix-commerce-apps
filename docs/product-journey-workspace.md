@@ -94,3 +94,14 @@ for the single M1/M2 architecture ruling. Both documents distinguish observation
 from unresolved hypotheses and proposed approvals.
 
 Continuation validation: adapter 110/110, web 47/47, Chromium 6/6; typecheck and build passed.
+
+
+Independent review of `563c89bd8ac0e15b65e473caa1aa4aa5bdd33da5` identified a
+nested payload guard error being classified as an explicit rejection when its
+ProtocolError had no code. Both direct and HTTP reproductions failed before the
+fix. The payload guard now assigns the existing `GATE_STATUS` code to those
+validation failures so the journey reports `INVALID_RECEIPT` and keeps the effect
+unconfirmed. It does not change a server's explicit business rejection or add a
+new protocol code. Final-HEAD re-review is required after this correction.
+
+Post-fix author validation: adapter 112/112, web 47/47, Chromium 6/6; typecheck and build passed.

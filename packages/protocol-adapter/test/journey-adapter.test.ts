@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   COMMERCE_COMMAND_BINDINGS,
   composePrimarySeatJourney,
+  HttpProtocolAdapter,
+  echoIntegrationGateHeaders,
+  type LocalCallInput,
   JOURNEY_COMPOSED_ACTIONS,
   JOURNEY_NOT_BOUND,
   JOURNEY_UNCOMPOSED,
@@ -178,6 +181,28 @@ describe("primary seat journey helper", () => {
     expect(calls[1]?.body).toMatchObject({ buyer: "buyer", tradeId: "trade-w6a", amount: 100000 });
     expect(calls[2]?.body).toMatchObject({ tradeId: "trade-w6a", termsHash: PREPARE_RESULT.termsHash });
     expect(journey.composed.map((step) => step.operationId)).toEqual(["op-create", "op-prepare", "op-accept"]);
+  });
+
+  it.each(["direct", "http"])("keeps a nested guard failure unconfirmed through %s", async (transport) => {
+    const { caller: scriptedCaller, calls } = scripted({
+      create_event: () => receipt("op-create", "create_event", CREATE_RESULT),
+      prepare_trade: () => receipt("op-prepare", "prepare_trade", {
+        ...PREPARE_RESULT, extra: { payment: "card-captured" },
+      }),
+      accept_trade: () => receipt("op-accept", "accept_trade", ACCEPT_RESULT),
+    });
+    const caller = transport === "direct" ? scriptedCaller : new HttpProtocolAdapter(
+      "http://127.0.0.1:8765",
+      async (_url, init) => {
+        const input = JSON.parse(String(init?.body)) as LocalCallInput;
+        const body = await scriptedCaller.invokeLocalCall(input);
+        return new Response(JSON.stringify(body), { status: 200, headers: echoIntegrationGateHeaders(init) });
+      },
+    );
+    const journey = await composePrimarySeatJourney(caller, INPUT);
+    expect(calls.map((call) => call.action)).toEqual(["create_event", "prepare_trade"]);
+    expect(journey.composed.map((step) => step.action)).toEqual(["create_event"]);
+    expect(journey.fence).toMatchObject({ outcome: "INVALID_RECEIPT", code: "GATE_STATUS", action: "prepare_trade" });
   });
 
   it("records the main bindings and does not map placeHold onto a new action", () => {
