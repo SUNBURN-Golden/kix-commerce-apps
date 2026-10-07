@@ -1,4 +1,11 @@
-# Remaining journey decision check
+# Journey decision history and current approval
+
+Current status: the User approved synthetic capture through issuance/admission and
+unchanged not-bound hold behavior on 2026-10-07. The same decision designates a fresh
+non-author internal Astra source A3 auditor for PR26. See the exact
+[approval and bounded exception](decisions/2026-10-07-commerce-journey-and-a3.md).
+This settles the two composition choices; it does not assert an audit PASS or CI success.
+The analysis below is the preserved **pre-approval** history.
 
 Checked against protocol main `7481b0e16ce9b903abbffa62249bb91cd9e63cfe` on
 2026-10-07. Runtime consumption remains at the original reviewed gate

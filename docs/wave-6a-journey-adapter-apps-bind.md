@@ -1,33 +1,76 @@
-# Wave 6-A journey adapter apps bind
+# Wave 6-A synthetic journey adapter apps bind
 
-This helper composes one primary-seat mock booking through `invokeLocalCall`. The order is the prefix fixed by the journey map in [pull request 23](https://github.com/BeautifulMind-JT/kix-commerce-apps/pull/23): `create_event`, then `prepare_trade`, then `accept_trade`. Stub mode stays the default. HTTP mode stays the loopback in [http-integration-gate-apps-bind.md](http-integration-gate-apps-bind.md).
+The [2026-10-07 User decision](decisions/2026-10-07-commerce-journey-and-a3.md)
+selects M1 and H1 from [PR23](https://github.com/SUNBURN-Golden/kix-commerce-apps/pull/23).
+It supersedes the earlier prefix-only interpretation in PR25: existing desk
+not-bound reasons were not themselves a ruling against explicit catalogue
+composition. Original PR23/25 source and historical task records remain intact.
 
-`packages/protocol-adapter/src/commerce-bindings.ts` already decides the two map rulings. This helper records those not-bound reasons and does not rewrite them.
+`composePrimarySeatJourney` composes one primary seat through `invokeLocalCall`:
+`create_event → prepare_trade → accept_trade → capture → commit_trade →
+open_admission → admit`. Stub mode remains the default. The browser runs only an
+isolated labelled script; real contract tests use Node and the reviewed loopback
+gate. No new Protocol body, pin, desk API or browser transport is introduced.
 
-| Desk method | Binding already on main | What this helper does |
-| --- | --- | --- |
-| `placeHold` | `not-bound`, nearest name `reserve_listing` | Does not send `reserve_listing` and does not change the mapping. `prepare_trade` is a separate `invokeLocalCall` body. |
-| `confirmBooking` | `not-bound`. The desk does not send `capture`. | Does not send `capture`. |
-| `settlementPreview` | `not-bound`. `settle_capture` is a monetary posting the desk does not send. | Does not send `settle_capture`. |
+## Receipt-to-body links
 
-The helper does not compose a `capture` plus `settle_capture` sequence. `commit_trade` needs a capture receipt, so `commit_trade` and `admit` stay uncomposed. `open_admission` stays in its map position after that uncomposed capture step, and this helper does not send it ahead of that step.
+The caller supplies seven distinct operation IDs and a payment ID; missing or
+reused operation IDs are rejected locally before the first write. This helper
+snapshots the invocation and never mints a replacement ID. Each step gets one
+attempt. No retry, Idempotency-Key, redirect following or fallback.
 
-## Receipt links that are composed
+| Step | Actor | Validated causal inputs / success condition |
+|---|---|---|
+| create_event | operator | Caller event, organizer, policy, seats; event must match and inventory IDs must be nonempty strings |
+| prepare_trade | buyer | First returned inventory ID; caller trade/buyer/primaryPrice, initial versions 0. Require matching trade, PREPARED, nonempty ticketId, externalOrderId and termsHash |
+| accept_trade | buyer | Validated tradeId and copied termsHash; accepted must be true |
+| capture | pg-adapter | prepare.externalOrderId → orderId; original paymentId/buyer/price, KRW, synthetic provenance and fixed fixture scope. Require captured=true AND cashAvailable=false |
+| commit_trade | operator | Validated tradeId after capture; require the prepared ticketId, original buyer, positive safe-integer rightsVersion and admissionEpoch |
+| open_admission | operator | Original validated eventId, after commit; admissionStatus must be OPEN |
+| admit | venue | Commit ticketId/owner/rightsVersion/admissionEpoch copied into ticketId/holder/expectedVersion/admissionEpoch; require ADMITTED_ONCE and admissionId equal to the submitted operation ID |
 
-The caller supplies each `operationId`. The helper does not mint a replacement. One attempt per step. No `Idempotency-Key`, no retry, no stub fallback.
+Fixture scope is exactly provider=toss, environment=test, merchant=kix-fixture,
+channel=card. This labels synthetic evidence; it does not call Toss or an account.
+Optional settle_capture is omitted. The pinned reference's commit_trade does not
+require settlement, and capture is not spendable cash. A duplicate-only capture
+receipt does not establish this invocation's complete causal success and stops
+with INVALID_RECEIPT; the helper does not add recovery or replay semantics.
 
-| Step | Actor | Copied from the previous success receipt | Kept from the caller's own request |
-| --- | --- | --- | --- |
-| `create_event` | `operator` | none | `eventId`, `organizer`, `policy`, `seats` |
-| `prepare_trade` | the buyer | the first `inventoryIds` entry, in seat order, as `inventoryId` | `tradeId`, `buyer`, `amount` equal to the `primaryPrice` on the create policy, `expectedInventoryVersion` `0`, `expectedVersion` `0` |
-| `accept_trade` | the buyer | `tradeId`, `termsHash` | none |
+Every generic envelope must also pass payload guards and action/operation/domain
+receipt validation. Unconfirmed, malformed or stale responses fence later writes.
+Response loss is UNKNOWN even if the server applied the command. Explicit server
+rejection remains REJECTED. An earlier confirmed synthetic capture can coexist
+with a failed commit; neither the UI nor helper asserts refund or issuance.
 
-`prepare_trade` omits `ticketId`, `listingId`, and `expiresAt`. The helper copies `termsHash`. It does not recompute it.
+## Desk boundary
 
-A lost response (`REQUEST_TIMEOUT`, `GATE_UNAVAILABLE`, or `GATE_TRANSPORT`), a receipt that is not the published success for that call, `STALE_RESPONSE`, or a rejection fences the next write. The operation id on that step stays the one the caller supplied.
+| Desk method | Retained binding | Separate composer behavior |
+|---|---|---|
+| placeHold | not-bound; consideredAction reserve_listing | Primary prepare_trade uses its explicit body, never eventId/quantity remapping |
+| confirmBooking | not-bound | Separate synthetic capture does not bind confirmBooking(holdId) |
+| settlementPreview | not-bound | No settle_capture call in this journey |
+| commitSettlement / checkAdmission | not-bound | No remapping into commit_trade or admit |
 
-## Hold
+The helper's uncomposed list contains optional settle_capture and reserve_listing.
+Resale, credit and desk FSM behavior are unchanged.
 
-No production deploy, no public host, no real payment, no KYC, no credit disbursement, no venue scan, no bank rail, and no live marketplace. Catalogue pins stay on the reviewed gate. Nothing in this change is inside kix-protocol. The web UI does not call `fetch`. Wave 7 stays shut until `w6a-evidence` merges (`docs/decisions/PROGRAM_ROADMAP_20260930.md` §2 R-7).
+## Evidence boundaries
 
-Wave 6 gate record: https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343
+Unit tests cover receipt identity/versions, synthetic scope, immutable intent and
+one-attempt fences. Reviewed-gate tests cover all seven successful effects followed
+by injected response loss, one-time admission, actual gift transfer invalidating
+an old presentation, and expiry both before accept and after capture. Gift/clock
+calls are test fault injection, not new product features. Fixture parity verifies
+sequence and operation identity, not a second implementation of protocol math.
+
+Browser tests cover success, prepare faults, capture/commit response loss, invalid
+commit and stale presentation, state reset, mobile overflow and HTTP no-write.
+No real payment, KYC, credit disbursement, venue scan, bank rail, live marketplace
+or deployment. No database is required. Five pins remain at
+`52a9b5cbf7777df55d2d2062cb8d99d862b423bb`.
+
+Wave6 gate: https://github.com/SUNBURN-Golden/kix-protocol/issues/56#issuecomment-5868307343
+
+Wave7 remains closed until w6a-evidence merges (Protocol roadmap §2 R-7).
+Required exact-head CI and the explicitly designated fresh independent Astra
+ARCHITECTURE/A3 audit are separate from the User's composition decision.

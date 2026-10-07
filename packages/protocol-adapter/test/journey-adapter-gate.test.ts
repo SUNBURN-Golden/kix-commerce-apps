@@ -10,6 +10,7 @@ import {
   PINNED_PROTOCOL_DOMAIN,
   type JourneyLocalCaller,
   type LocalCallInput,
+  type PrimarySeatJourneyInput,
 } from "../src/index.js";
 import { assertReviewedCheckout, protocolRoot, REVIEWED_GATE_RUNS, startGate, stopGate } from "./support/reviewed-gate.js";
 
@@ -24,6 +25,12 @@ const SHOW_POLICY = {
   resaleAllowed: true,
   refundProfile: "FULL_CHAIN_UNWIND_FIXTURE",
 };
+
+function gateInput(eventId: string): PrimarySeatJourneyInput {
+  const input = journeyDemoInput(eventId);
+  return { ...input, tradeId: `trade-${eventId}`, paymentId: `payment-${eventId}`,
+    operationIds: Object.fromEntries(Object.keys(input.operationIds).map((key) => [key, `${eventId}-${key}`])) as unknown as PrimarySeatJourneyInput["operationIds"] };
+}
 
 describeGate("primary seat journey against the reviewed gate", () => {
   let baseUrl = "";
@@ -41,7 +48,7 @@ describeGate("primary seat journey against the reviewed gate", () => {
     await stopGate(child);
   });
 
-  it("chains the published receipts and does not post capture or settle_capture", async () => {
+  it("chains synthetic capture through one-time admission without settlement", async () => {
     const calls: LocalCallInput[] = [];
     const http = new HttpProtocolAdapter(baseUrl);
     const caller: JourneyLocalCaller = {
@@ -56,8 +63,10 @@ describeGate("primary seat journey against the reviewed gate", () => {
         createEvent: "op-w6a-create",
         prepareTrade: "op-w6a-prepare",
         acceptTrade: "op-w6a-accept",
+        capture: "op-w6a-capture", commitTrade: "op-w6a-commit", openAdmission: "op-w6a-open", admit: "op-w6a-admit",
       },
       eventId: "show-w6a",
+      paymentId: "payment-w6a",
       organizer: "organizer",
       buyer: "buyer",
       tradeId: "trade-w6a",
@@ -94,9 +103,16 @@ describeGate("primary seat journey against the reviewed gate", () => {
       termsHash: journey.composed[1]?.receipt.result.termsHash,
     });
     expect(journey.composed[2]?.receipt.result).toEqual({ accepted: true });
+    expect(journey.composed[3]?.receipt.result).toEqual({ captured: true, cashAvailable: false });
+    expect(journey.composed[6]?.receipt.result).toEqual({ admissionId: "op-w6a-admit", decision: "ADMITTED_ONCE" });
+    expect(calls[3]?.body).toMatchObject({ orderId: journey.composed[1]?.receipt.result.externalOrderId, provenance: "synthetic" });
+    expect(calls[6]?.body).toMatchObject({ ticketId: journey.composed[4]?.receipt.result.ticketId,
+      holder: "buyer", expectedVersion: journey.composed[4]?.receipt.result.rightsVersion,
+      admissionEpoch: journey.composed[4]?.receipt.result.admissionEpoch });
+    await expect(http.invokeLocalCall({ ...calls[6]!, operationId: "separate-second-admission" })).rejects.toMatchObject({ code: "RIGHT_NOT_ADMISSIBLE" });
     expect(
       calls.some(
-        (call) => call.action === "capture" || call.action === "settle_capture" || call.action === "reserve_listing",
+        (call) => call.action === "settle_capture" || call.action === "reserve_listing",
       ),
     ).toBe(false);
     expect(journey.notBound.map((row) => row.deskMethod)).toEqual(["placeHold", "confirmBooking", "settlementPreview"]);
@@ -118,8 +134,10 @@ describeGate("primary seat journey against the reviewed gate", () => {
         createEvent: "op-w6a-dup",
         prepareTrade: "op-w6a-prepare-dup",
         acceptTrade: "op-w6a-accept-dup",
+        capture: "op-dup-capture", commitTrade: "op-dup-commit", openAdmission: "op-dup-open", admit: "op-dup-admit",
       },
       eventId: "show-w6a",
+      paymentId: "payment-w6a",
       organizer: "organizer",
       buyer: "buyer",
       tradeId: "trade-w6a-dup",
@@ -138,7 +156,7 @@ describeGate("primary seat journey against the reviewed gate", () => {
   }, 20000);
 
   it("uses the same supported sequence in the UI fixture and reviewed gate", async () => {
-    const input = journeyDemoInput("show-parity");
+    const input = gateInput("show-parity");
     const { caller } = createJourneyDemoCaller("success");
     const fixture = await composePrimarySeatJourney(caller, input);
     const gate = await composePrimarySeatJourney(new HttpProtocolAdapter(baseUrl), input);
@@ -151,12 +169,12 @@ describeGate("primary seat journey against the reviewed gate", () => {
     expect(gate.uncomposed).toEqual(fixture.uncomposed);
   }, 20000);
 
-  it.each(["create_event", "prepare_trade", "accept_trade"])(
+  it.each(JOURNEY_COMPOSED_ACTIONS)(
     "fences after an actual %s effect whose response is lost", async (lostAction) => {
-      const input = journeyDemoInput(`show-lost-${lostAction}`);
+      const input = gateInput(`show-lost-${lostAction}`);
       const unique = {
         ...input, tradeId: `trade-lost-${lostAction}`,
-        operationIds: { createEvent: `lost-${lostAction}-create`, prepareTrade: `lost-${lostAction}-prepare`, acceptTrade: `lost-${lostAction}-accept` },
+        operationIds: { ...input.operationIds, createEvent: `lost-${lostAction}-create`, prepareTrade: `lost-${lostAction}-prepare`, acceptTrade: `lost-${lostAction}-accept` },
       };
       const calls: string[] = [];
       const applied: string[] = [];
@@ -179,9 +197,52 @@ describeGate("primary seat journey against the reviewed gate", () => {
     }, 20000,
   );
 
+  it("rejects an old presentation after an actual gift transfer", async () => {
+    const http = new HttpProtocolAdapter(baseUrl);
+    const input = gateInput("show-transferred");
+    const calls: string[] = [];
+    const caller: JourneyLocalCaller = {
+      async invokeLocalCall(call) {
+        calls.push(call.action);
+        const receipt = await http.invokeLocalCall(call) as { result: Record<string, unknown> };
+        if (call.action === "commit_trade") {
+          const offered = await http.invokeLocalCall({ operationId: "transfer-offer", actor: input.buyer,
+            action: "offer_gift", body: { domain: PINNED_PROTOCOL_DOMAIN, giftId: "gift-stale",
+              ticketId: receipt.result.ticketId, expectedVersion: receipt.result.rightsVersion,
+              recipient: "new-holder", expiresAt: 86400 } }) as { result: Record<string, unknown> };
+          await http.invokeLocalCall({ operationId: "transfer-accept", actor: "new-holder", action: "accept_gift",
+            body: { domain: PINNED_PROTOCOL_DOMAIN, giftId: "gift-stale", termsHash: offered.result.termsHash } });
+        }
+        return receipt;
+      },
+    };
+    const result = await composePrimarySeatJourney(caller, input);
+    expect(calls).toEqual([...JOURNEY_COMPOSED_ACTIONS]);
+    expect(result.composed.map((step) => step.action)).toEqual(JOURNEY_COMPOSED_ACTIONS.slice(0, -1));
+    expect(result.fence).toMatchObject({ action: "admit", outcome: "REJECTED", code: "STALE_OR_WRONG_PRESENTATION" });
+  }, 20000);
+
+  it("blocks issuance after synthetic capture when the reservation expires", async () => {
+    const http = new HttpProtocolAdapter(baseUrl);
+    const calls: string[] = [];
+    const caller: JourneyLocalCaller = {
+      async invokeLocalCall(call) {
+        calls.push(call.action);
+        const receipt = await http.invokeLocalCall(call);
+        if (call.action === "capture") await http.invokeLocalCall({ operationId: "capture-expire-clock",
+          actor: "operator", action: "advance_clock", body: { domain: PINNED_PROTOCOL_DOMAIN, now: 1000000 } });
+        return receipt;
+      },
+    };
+    const result = await composePrimarySeatJourney(caller, gateInput("show-capture-expiry"));
+    expect(calls).toEqual(JOURNEY_COMPOSED_ACTIONS.slice(0, 5));
+    expect(result.composed.map((step) => step.action)).toEqual(JOURNEY_COMPOSED_ACTIONS.slice(0, 4));
+    expect(result.fence).toMatchObject({ action: "commit_trade", outcome: "REJECTED", code: "TRADE_NOT_COMMITTABLE" });
+  }, 20000);
+
   it("fences an accept whose prepared trade expired at the reviewed gate", async () => {
     const http = new HttpProtocolAdapter(baseUrl);
-    const input = journeyDemoInput("show-expiry");
+    const input = gateInput("show-expiry");
     const calls: string[] = [];
     const caller: JourneyLocalCaller = {
       async invokeLocalCall(call) {
@@ -189,16 +250,16 @@ describeGate("primary seat journey against the reviewed gate", () => {
         const receipt = await http.invokeLocalCall(call);
         if (call.action === "prepare_trade") {
           await http.invokeLocalCall({ operationId: "expire-clock", actor: "operator", action: "advance_clock",
-            body: { domain: PINNED_PROTOCOL_DOMAIN, now: 1000000 } });
+            body: { domain: PINNED_PROTOCOL_DOMAIN, now: 2000000 } });
         }
         return receipt;
       },
     };
     const result = await composePrimarySeatJourney(caller, {
       ...input, tradeId: "trade-expiry",
-      operationIds: { createEvent: "expiry-create", prepareTrade: "expiry-prepare", acceptTrade: "expiry-accept" },
+      operationIds: { ...input.operationIds, createEvent: "expiry-create", prepareTrade: "expiry-prepare", acceptTrade: "expiry-accept" },
     });
-    expect(calls).toEqual([...JOURNEY_COMPOSED_ACTIONS]);
+    expect(calls).toEqual(["create_event", "prepare_trade", "accept_trade"]);
     expect(result.composed.map((step) => step.action)).toEqual(["create_event", "prepare_trade"]);
     expect(result.fence).toMatchObject({ outcome: "REJECTED", action: "accept_trade", code: "TRADE_NOT_ACCEPTABLE" });
   }, 20000);

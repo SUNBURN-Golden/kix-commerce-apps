@@ -7,8 +7,10 @@ import {
 } from "@kix/protocol-adapter";
 
 const scenarios: Record<JourneyDemoScenario, string> = {
-  success: "Accepted prefix", "response-loss": "Response lost after prepare",
+  success: "Synthetic issuance and admission", "response-loss": "Response lost after prepare",
   rejected: "Prepare rejected", stale: "Stale response", malformed: "Malformed receipt",
+  "capture-loss": "Response lost after synthetic capture", "commit-loss": "Response lost after issuance",
+  "stale-presentation": "Stale admission presentation", "malformed-commit": "Invalid issuance receipt",
 };
 
 export function JourneyReceipts({ result }: { result: PrimarySeatJourneyResult | null }) {
@@ -29,7 +31,7 @@ export function JourneyReceipts({ result }: { result: PrimarySeatJourneyResult |
     </ol>
     <p role="status">{result?.fence
       ? `Last confirmed step: ${result.composed.at(-1)?.action ?? "none"}. The journey is stopped.`
-      : result ? "Supported prefix accepted. Payment, issuance and admission remain unavailable."
+      : result ? "Synthetic journey complete through issuance and admission. No real funds, ticket or entry."
       : "No journey has been run. Choose a scenario to inspect synthetic receipts."}</p>
   </>;
 }

@@ -31,11 +31,16 @@ export interface PrimarySeatJourneyInput {
     readonly createEvent: string;
     readonly prepareTrade: string;
     readonly acceptTrade: string;
+    readonly capture: string;
+    readonly commitTrade: string;
+    readonly openAdmission: string;
+    readonly admit: string;
   };
   readonly eventId: string;
   readonly organizer: string;
   readonly buyer: string;
   readonly tradeId: string;
+  readonly paymentId: string;
   readonly seats: readonly string[];
   readonly policy: JourneyShowPolicy;
 }
@@ -48,7 +53,9 @@ export interface CatalogueReceipt {
   readonly result: Record<string, unknown>;
 }
 
-export const JOURNEY_COMPOSED_ACTIONS = ["create_event", "prepare_trade", "accept_trade"] as const;
+export const JOURNEY_COMPOSED_ACTIONS = [
+  "create_event", "prepare_trade", "accept_trade", "capture", "commit_trade", "open_admission", "admit",
+] as const;
 
 export type JourneyComposedAction = (typeof JOURNEY_COMPOSED_ACTIONS)[number];
 
@@ -100,32 +107,13 @@ export const JOURNEY_NOT_BOUND = [
 ] as const;
 
 /**
- * Steps the journey map lists after accept_trade. commit_trade needs a
- * capture receipt, and this helper does not send capture or settle_capture.
- * Later steps stay uncomposed so the helper does not reorder the map.
+ * Optional settlement is not required for reference issuance. Desk hold and
+ * resale remain separate. See the 2026-10-07 PR26 User decision.
  */
 export const JOURNEY_UNCOMPOSED = [
   {
-    action: "capture",
-    reason: COMMERCE_COMMAND_BINDINGS.confirmBooking.reason,
-  },
-  {
     action: "settle_capture",
-    reason: COMMERCE_COMMAND_BINDINGS.settlementPreview.reason,
-  },
-  {
-    action: "commit_trade",
-    reason:
-      "commit_trade requires a capture receipt. confirmBooking does not send capture, so this helper does not compose commit_trade.",
-  },
-  {
-    action: "open_admission",
-    reason:
-      "open_admission follows the uncomposed capture step in the journey map. This helper does not send it ahead of that step.",
-  },
-  {
-    action: "admit",
-    reason: "admit copies the commit_trade receipt. This helper does not compose commit_trade.",
+    reason: "Optional synthetic settlement is omitted. Reference issuance does not require it; capture is not available cash.",
   },
   {
     action: "reserve_listing",
@@ -143,9 +131,9 @@ export interface PrimarySeatJourneyResult {
 const UNKNOWN_CODES = new Set(["REQUEST_TIMEOUT", "GATE_UNAVAILABLE", "GATE_TRANSPORT"]);
 
 /**
- * Composes create_event, prepare_trade, and accept_trade through invokeLocalCall.
+ * Composes the approved synthetic primary-seat journey through invokeLocalCall.
  * Each call is one attempt. A lost response, an invalid receipt, UNKNOWN, or a
- * rejection fences the next write. capture and settle_capture are not sent.
+ * rejection fences the next write. No desk API is bound and no real funds move.
  */
 export async function composePrimarySeatJourney(
   caller: JourneyLocalCaller,
@@ -161,6 +149,13 @@ export async function composePrimarySeatJourney(
   };
   const composed: JourneyComposedStep[] = [];
   const policy = intent.policy;
+  const ids = [intent.operationIds.createEvent, intent.operationIds.prepareTrade, intent.operationIds.acceptTrade,
+    intent.operationIds.capture, intent.operationIds.commitTrade, intent.operationIds.openAdmission, intent.operationIds.admit];
+  if (ids.some((id) => typeof id !== "string" || !id.trim()) || new Set(ids).size !== ids.length ||
+      typeof intent.paymentId !== "string" || !intent.paymentId.trim()) {
+    return result(composed, { outcome: "REJECTED", action: "create_event",
+      operationId: intent.operationIds.createEvent, code: "INVALID_JOURNEY_INPUT", receipt: null });
+  }
 
   const created = await takeStep(caller, {
     operationId: intent.operationIds.createEvent,
@@ -208,6 +203,10 @@ export async function composePrimarySeatJourney(
   if (typeof termsHash !== "string") {
     return result(composed, termsHash);
   }
+  // Snapshot causal identity before awaiting later calls; never derive an order
+  // from a trade ID or use a caller-mutated receipt as a new authority.
+  const externalOrderId = prepared.receipt.result.externalOrderId as string;
+  const ticketId = prepared.receipt.result.ticketId as string;
   composed.push({
     action: "prepare_trade",
     operationId: intent.operationIds.prepareTrade,
@@ -236,7 +235,61 @@ export async function composePrimarySeatJourney(
     operationId: intent.operationIds.acceptTrade,
     receipt: accepted.receipt,
   });
+
+  const captured = await takeStep(caller, {
+    operationId: intent.operationIds.capture, actor: "pg-adapter", action: "capture",
+    body: { domain: PINNED_PROTOCOL_DOMAIN, tradeId: intent.tradeId, orderId: externalOrderId,
+      buyer: intent.buyer, amount: policy.primaryPrice, currency: "KRW", paymentId: intent.paymentId,
+      provenance: "synthetic",
+      scope: { provider: "toss", environment: "test", merchant: "kix-fixture", channel: "card" } },
+  });
+  if (captured.fence) return result(composed, captured.fence);
+  if (captured.receipt.result.captured !== true || captured.receipt.result.cashAvailable !== false) {
+    return result(composed, invalidReceipt(captured.receipt));
+  }
+  composed.push({ action: "capture", operationId: intent.operationIds.capture, receipt: captured.receipt });
+
+  const committed = await takeStep(caller, {
+    operationId: intent.operationIds.commitTrade, actor: "operator", action: "commit_trade",
+    body: { domain: PINNED_PROTOCOL_DOMAIN, tradeId: intent.tradeId },
+  });
+  if (committed.fence) return result(composed, committed.fence);
+  const presentation = { ...committed.receipt.result };
+  if (presentation.ticketId !== ticketId || presentation.owner !== intent.buyer ||
+      !positiveVersion(presentation.rightsVersion) || !positiveVersion(presentation.admissionEpoch)) {
+    return result(composed, invalidReceipt(committed.receipt));
+  }
+  composed.push({ action: "commit_trade", operationId: intent.operationIds.commitTrade, receipt: committed.receipt });
+
+  const opened = await takeStep(caller, {
+    operationId: intent.operationIds.openAdmission, actor: "operator", action: "open_admission",
+    body: { domain: PINNED_PROTOCOL_DOMAIN, eventId: intent.eventId },
+  });
+  if (opened.fence) return result(composed, opened.fence);
+  if (opened.receipt.result.admissionStatus !== "OPEN") return result(composed, invalidReceipt(opened.receipt));
+  composed.push({ action: "open_admission", operationId: intent.operationIds.openAdmission, receipt: opened.receipt });
+
+  const admitted = await takeStep(caller, {
+    operationId: intent.operationIds.admit, actor: "venue", action: "admit",
+    body: { domain: PINNED_PROTOCOL_DOMAIN, ticketId: presentation.ticketId, holder: presentation.owner,
+      expectedVersion: presentation.rightsVersion, admissionEpoch: presentation.admissionEpoch },
+  });
+  if (admitted.fence) return result(composed, admitted.fence);
+  if (admitted.receipt.result.decision !== "ADMITTED_ONCE" ||
+      admitted.receipt.result.admissionId !== intent.operationIds.admit) {
+    return result(composed, invalidReceipt(admitted.receipt));
+  }
+  composed.push({ action: "admit", operationId: intent.operationIds.admit, receipt: admitted.receipt });
   return result(composed, null);
+}
+
+function positiveVersion(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
+}
+
+function invalidReceipt(receipt: CatalogueReceipt): JourneyFence {
+  return { outcome: "INVALID_RECEIPT", action: receipt.action as JourneyComposedAction,
+    operationId: receipt.operationId, code: "GATE_STATUS", receipt };
 }
 
 function result(composed: readonly JourneyComposedStep[], fence: JourneyFence | null): PrimarySeatJourneyResult {

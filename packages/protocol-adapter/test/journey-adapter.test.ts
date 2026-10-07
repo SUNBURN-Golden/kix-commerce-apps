@@ -31,11 +31,13 @@ const INPUT: PrimarySeatJourneyInput = {
     createEvent: "op-create",
     prepareTrade: "op-prepare",
     acceptTrade: "op-accept",
+    capture: "op-capture", commitTrade: "op-commit", openAdmission: "op-open", admit: "op-admit",
   },
   eventId: "show-w6a",
   organizer: "organizer",
   buyer: "buyer",
   tradeId: "trade-w6a",
+  paymentId: "payment-w6a",
   seats: ["A1"],
   policy: SHOW_POLICY,
 };
@@ -56,6 +58,13 @@ const PREPARE_RESULT = {
 };
 
 const ACCEPT_RESULT = { accepted: true };
+const LATER_RESULTS: Record<string, Record<string, unknown>> = {
+  capture: { captured: true, cashAvailable: false },
+  commit_trade: { ticketId: "right-seat-a", owner: "buyer", rightsVersion: 1, admissionEpoch: 1 },
+  open_admission: { admissionStatus: "OPEN" },
+  admit: { admissionId: "op-admit", decision: "ADMITTED_ONCE" },
+};
+const OPERATION_IDS = ["op-create", "op-prepare", "op-accept", "op-capture", "op-commit", "op-open", "op-admit"];
 
 function receipt(operationId: string, action: string, result: Record<string, unknown>) {
   return localCallReceipt(operationId, action, result);
@@ -71,7 +80,8 @@ function scripted(steps: Record<string, () => unknown>): { caller: JourneyLocalC
         operationId: input.operationId,
         body: input.body as Record<string, unknown>,
       });
-      const step = steps[input.action];
+      const step = steps[input.action] ?? (LATER_RESULTS[input.action]
+        ? () => receipt(input.operationId, input.action, LATER_RESULTS[input.action]!) : undefined);
       if (!step) {
         throw new Error(`unexpected action ${input.action}`);
       }
@@ -82,7 +92,43 @@ function scripted(steps: Record<string, () => unknown>): { caller: JourneyLocalC
 }
 
 describe("primary seat journey helper", () => {
-  it("composes create, prepare, and accept from the prior receipt and stops before capture", async () => {
+  it.each([
+    ["capture", { duplicate: true }],
+    ["capture", { captured: true, cashAvailable: true }],
+    ["commit_trade", { ...LATER_RESULTS.commit_trade, ticketId: "another-ticket" }],
+    ["commit_trade", { ...LATER_RESULTS.commit_trade, owner: "another-buyer" }],
+    ["commit_trade", { ...LATER_RESULTS.commit_trade, rightsVersion: "1" }],
+    ["commit_trade", { ...LATER_RESULTS.commit_trade, admissionEpoch: 0 }],
+    ["open_admission", { admissionStatus: "CLOSED" }],
+    ["admit", { admissionId: "another-request", decision: "ADMITTED_ONCE" }],
+    ["admit", { admissionId: "op-admit", decision: "DENIED" }],
+  ] as const)("fences a non-causal %s receipt", async (action, malformed) => {
+    const { caller, calls } = scripted({
+      create_event: () => receipt("op-create", "create_event", CREATE_RESULT),
+      prepare_trade: () => receipt("op-prepare", "prepare_trade", PREPARE_RESULT),
+      accept_trade: () => receipt("op-accept", "accept_trade", ACCEPT_RESULT),
+      [action]: () => receipt(OPERATION_IDS[JOURNEY_COMPOSED_ACTIONS.indexOf(action)]!, action, malformed),
+    });
+    const result = await composePrimarySeatJourney(caller, INPUT);
+    const index = JOURNEY_COMPOSED_ACTIONS.indexOf(action);
+    expect(result.fence).toMatchObject({ action, outcome: "INVALID_RECEIPT" });
+    expect(calls.map((call) => call.action)).toEqual(JOURNEY_COMPOSED_ACTIONS.slice(0, index + 1));
+    expect(result.composed.map((step) => step.action)).toEqual(JOURNEY_COMPOSED_ACTIONS.slice(0, index));
+  });
+
+  it("rejects reused or missing operation identity before creating an event", async () => {
+    const { caller, calls } = scripted({});
+    for (const operationIds of [
+      { ...INPUT.operationIds, capture: INPUT.operationIds.prepareTrade },
+      { ...INPUT.operationIds, admit: "" },
+    ]) {
+      const result = await composePrimarySeatJourney(caller, { ...INPUT, operationIds });
+      expect(result.fence).toMatchObject({ code: "INVALID_JOURNEY_INPUT", action: "create_event" });
+    }
+    expect(calls).toEqual([]);
+  });
+
+  it("chains synthetic capture, issuance and admission from the validated causal receipts", async () => {
     const createReceipt = receipt("op-create", "create_event", CREATE_RESULT);
     const prepareReceipt = receipt("op-prepare", "prepare_trade", PREPARE_RESULT);
     const acceptReceipt = receipt("op-accept", "accept_trade", ACCEPT_RESULT);
@@ -95,7 +141,7 @@ describe("primary seat journey helper", () => {
     const journey = await composePrimarySeatJourney(caller, INPUT);
 
     expect(calls.map((call) => call.action)).toEqual([...JOURNEY_COMPOSED_ACTIONS]);
-    expect(calls.map((call) => call.operationId)).toEqual(["op-create", "op-prepare", "op-accept"]);
+    expect(calls.map((call) => call.operationId)).toEqual(OPERATION_IDS);
     expect(calls[0]).toMatchObject({
       action: "create_event",
       body: {
@@ -131,21 +177,27 @@ describe("primary seat journey helper", () => {
       },
     });
     expect(journey.fence).toBeNull();
-    expect(journey.composed.map((step) => step.receipt)).toEqual([createReceipt, prepareReceipt, acceptReceipt]);
+    expect(journey.composed.slice(0, 3).map((step) => step.receipt)).toEqual([createReceipt, prepareReceipt, acceptReceipt]);
     expect(journey.composed[0]?.receipt).toBe(createReceipt);
     expect(journey.composed[1]?.receipt).toBe(prepareReceipt);
     expect(journey.composed[2]?.receipt).toBe(acceptReceipt);
     expect(journey.notBound).toBe(JOURNEY_NOT_BOUND);
     expect(journey.uncomposed).toBe(JOURNEY_UNCOMPOSED);
     expect(journey.uncomposed.map((step) => step.action)).toEqual([
-      "capture",
       "settle_capture",
-      "commit_trade",
-      "open_admission",
-      "admit",
       "reserve_listing",
     ]);
-    expect(calls.some((call) => call.action === "capture" || call.action === "settle_capture")).toBe(false);
+    expect(calls.some((call) => call.action === "settle_capture" || call.action === "reserve_listing")).toBe(false);
+    expect(calls[3]).toMatchObject({ actor: "pg-adapter", body: {
+      orderId: PREPARE_RESULT.externalOrderId, tradeId: INPUT.tradeId, paymentId: INPUT.paymentId,
+      buyer: INPUT.buyer, amount: SHOW_POLICY.primaryPrice, currency: "KRW", provenance: "synthetic",
+      scope: { provider: "toss", environment: "test", merchant: "kix-fixture", channel: "card" },
+    } });
+    expect(calls[4]).toMatchObject({ actor: "operator", body: { tradeId: INPUT.tradeId } });
+    expect(calls[5]).toMatchObject({ actor: "operator", body: { eventId: INPUT.eventId } });
+    expect(calls[6]).toMatchObject({ actor: "venue", body: {
+      ticketId: PREPARE_RESULT.ticketId, holder: INPUT.buyer, expectedVersion: 1, admissionEpoch: 1,
+    } });
   });
 
   it("keeps the original intent when the caller mutates input during an awaited receipt", async () => {
@@ -169,6 +221,8 @@ describe("primary seat journey helper", () => {
         mutable.operationIds.createEvent = "replacement-create";
         mutable.operationIds.prepareTrade = "replacement-prepare";
         mutable.operationIds.acceptTrade = "replacement-accept";
+        mutable.paymentId = "replacement-payment";
+        mutable.operationIds.capture = "replacement-capture";
         mutable.policy.primaryPrice = 1;
         mutable.seats[0] = "B1";
         return response;
@@ -176,11 +230,12 @@ describe("primary seat journey helper", () => {
     };
     const journey = await composePrimarySeatJourney(caller, mutable);
     expect(journey.fence).toBeNull();
-    expect(calls.map((call) => call.operationId)).toEqual(["op-create", "op-prepare", "op-accept"]);
-    expect(calls.slice(1).map((call) => call.actor)).toEqual(["buyer", "buyer"]);
+    expect(calls.map((call) => call.operationId)).toEqual(OPERATION_IDS);
+    expect(calls.slice(1, 3).map((call) => call.actor)).toEqual(["buyer", "buyer"]);
     expect(calls[1]?.body).toMatchObject({ buyer: "buyer", tradeId: "trade-w6a", amount: 100000 });
     expect(calls[2]?.body).toMatchObject({ tradeId: "trade-w6a", termsHash: PREPARE_RESULT.termsHash });
-    expect(journey.composed.map((step) => step.operationId)).toEqual(["op-create", "op-prepare", "op-accept"]);
+    expect(journey.composed.map((step) => step.operationId)).toEqual(OPERATION_IDS);
+    expect(calls[3]?.body).toMatchObject({ paymentId: "payment-w6a", amount: 100000, buyer: "buyer" });
   });
 
   it.each(["direct", "http"])("keeps a nested guard failure unconfirmed through %s", async (transport) => {

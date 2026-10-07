@@ -6,9 +6,11 @@ test("box office and booking expose receipts and isolate scenarios", async ({ pa
   await expect(panel.getByRole("status")).toContainText("No journey has been run");
   await panel.getByRole("button", { name: "Run selected simulation" }).focus();
   await page.keyboard.press("Enter");
-  await expect(panel.getByRole("status")).toContainText("Supported prefix accepted");
+  await expect(panel.getByRole("status")).toContainText("Synthetic journey complete");
   await panel.getByText("Receipt · demo-prepare").click();
   await expect(panel.locator("pre").filter({ hasText: '"status": "PREPARED"' })).toBeVisible();
+  await panel.getByText("Receipt · demo-admit").click();
+  await expect(panel.locator("pre").filter({ hasText: '"decision": "ADMITTED_ONCE"' })).toBeVisible();
 
   for (const [scenario, outcome] of [["response-loss", "UNKNOWN"], ["rejected", "REJECTED"], ["stale", "STALE_RESPONSE"], ["malformed", "INVALID_RECEIPT"]]) {
     await panel.getByLabel("Simulation scenario").selectOption(scenario!);
@@ -16,14 +18,24 @@ test("box office and booking expose receipts and isolate scenarios", async ({ pa
     await panel.getByRole("button", { name: "Run selected simulation" }).click();
     await expect(panel.getByRole("status")).toContainText("Last confirmed step: create_event");
     await expect(panel.locator("ol")).toContainText(outcome!);
-    await expect(panel.locator("ol li").last()).toHaveText("accept_trade — Not attempted");
+    await expect(panel.locator("ol li").last()).toHaveText("admit — Not attempted");
+  }
+  for (const [scenario, last, outcome] of [
+    ["capture-loss", "accept_trade", "UNKNOWN"], ["commit-loss", "capture", "UNKNOWN"],
+    ["stale-presentation", "open_admission", "REJECTED"], ["malformed-commit", "capture", "INVALID_RECEIPT"],
+  ]) {
+    await panel.getByLabel("Simulation scenario").selectOption(scenario!);
+    await panel.getByRole("button", { name: "Run selected simulation" }).click();
+    await expect(panel.getByRole("status")).toContainText(`Last confirmed step: ${last}`);
+    await expect(panel.locator("ol")).toContainText(outcome!);
+    await expect(panel.getByRole("status")).not.toContainText("Synthetic journey complete");
   }
   await page.reload();
   await expect(panel.getByRole("status")).toContainText("No journey has been run");
   await page.getByRole("link", { name: "Book", exact: true }).first().click();
   await expect(panel).toBeVisible();
   await panel.getByRole("button", { name: "Run selected simulation" }).click();
-  await expect(panel.getByRole("status")).toContainText("Payment, issuance and admission remain unavailable");
+  await expect(panel.getByRole("status")).toContainText("No real funds, ticket or entry");
 });
 
 test("mobile fixture has no horizontal page overflow", async ({ page }, testInfo) => {
@@ -32,7 +44,7 @@ test("mobile fixture has no horizontal page overflow", async ({ page }, testInfo
   const panel = page.getByRole("region", { name: "Inspect the booking journey" });
   await panel.getByRole("button", { name: "Run selected simulation" }).click();
   await panel.getByText("Receipt · demo-create").click();
-  await expect(panel.getByRole("status")).toContainText("Supported prefix accepted");
+  await expect(panel.getByRole("status")).toContainText("Synthetic journey complete");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await panel.screenshot({ path: testInfo.outputPath("mobile-journey.png") });
 });

@@ -7,7 +7,7 @@ Neither existing branch, PR nor protected completion record is changed.
 
 ## Acceptance scope
 
-- Box office and booking show the supported catalogue prefix, validated receipts,
+- Box office and booking show the approved synthetic catalogue journey, validated receipts,
   the last confirmed step and the unconfirmed request separately.
 - Stub-default, explicitly labelled scripted scenarios cover acceptance, rejection,
   response loss, stale correlation and malformed receipt. They exercise the same
@@ -21,7 +21,7 @@ Neither existing branch, PR nor protected completion record is changed.
 - The existing stub desk links booking through resale to admission with the correct
   event id. This route continuity is distinct from catalogue admission qualification.
 - Actual gate success followed by response loss is injected at each of create,
-  prepare and accept. No next write, retry or replacement id is observed.
+  prepare, accept, capture, commit, open admission and admit. No next write, retry or replacement id is observed.
 - Fixture/gate parity covers sequence, operation identity and blocked steps, not
   identical generated IDs or protocol arithmetic.
 
@@ -42,7 +42,7 @@ The protocol checkout must be clean and pinned to
 servers (5173 stub, 5174 HTTP-unavailable). No database is used. CI runs both
 browser modes alongside the existing stub and reviewed-gate jobs.
 
-## Local evidence (2026-10-07)
+## Historical validation before the approved full-chain extension (2026-10-07)
 
 Typecheck and build passed. With the clean reviewed gate checkout, adapter tests
 passed 108/108 and web tests 47/47. Chromium browser tests passed 6/6, including
@@ -66,10 +66,12 @@ have A2 floors; the inherited adapter has A3. A cumulative candidate must retain
 that inherited A3 boundary. No protected PASS or DONE is manufactured here, and
 no source has been submitted to a new external audit provider.
 
-Full product closeout is still blocked by unmerged predecessors and the unresolved
-capture/settlement ruling in PR #23. Only the supported prefix is implemented;
-`capture`, `settle_capture`, `commit_trade`, `open_admission`, and `admit` remain
-uncomposed. Session persistence/recovery, producer SDK/manifest upgrades and later
+The [2026-10-07 User decision](decisions/2026-10-07-commerce-journey-and-a3.md)
+settles the map choice: synthetic capture, issuance and admission are now composed;
+optional settlement and all desk remappings remain out. It also explicitly accepts
+a fresh internal non-author Astra source A3 for PR26, without changing central
+protected receipt consumers. Full closeout still needs required CI, that audit,
+and predecessor/completion evidence. Session persistence/recovery, producer SDK/manifest upgrades and later
 workspace nodes are not completed by this fixture. Wave 7 remains closed until
 `w6a-evidence` merges. Central AIOPS state is unchanged.
 
@@ -90,8 +92,8 @@ producer command or new journey step.
 
 See [CI access diagnosis](ci-access-diagnosis.md) for the credential metadata and
 minimum recovery boundary, and [remaining decision check](journey-decision-check.md)
-for the single M1/M2 architecture ruling. Both documents distinguish observations
-from unresolved hypotheses and proposed approvals.
+for the original ruling analysis and the later User approval. The CI credential
+recovery remains separate and awaits GitHub web login.
 
 Continuation validation: adapter 110/110, web 47/47, Chromium 6/6; typecheck and build passed.
 
@@ -105,3 +107,17 @@ unconfirmed. It does not change a server's explicit business rejection or add a
 new protocol code. Final-HEAD re-review is required after this correction.
 
 Post-fix author validation: adapter 112/112, web 47/47, Chromium 6/6; typecheck and build passed.
+
+## Approved full-chain extension
+
+The User's explicit PR26 decision is recorded with its original question/answer
+and message IDs in `docs/decisions/2026-10-07-commerce-journey-and-a3.md`.
+The composer now confirms synthetic capture, issuance and admission in order;
+optional settlement is omitted and hold/desk bindings remain unchanged.
+
+Author validation of this extension: typecheck/build passed; clean pinned gate
+adapter tests 128/128, web tests 51/51, Chromium 6/6. The suite covers lost responses
+after every actual gate effect, invalid causal receipts, reservation expiry after
+capture, transferred-right stale admission and prevention of a second admission.
+The final exact-HEAD independent Astra A3 result and GitHub CI status are recorded
+in the PR handoff rather than committing their own HEAD and causing a hash loop.
