@@ -28,6 +28,10 @@ Charter labels are from Task 005. The app names those surfaces and calls an adap
 | Resale | `/resale` | R01–R05 (Wave 4) and charter label `wave4.resale.R01-R05.fsm` | `openResale`, `listResale`, `acceptResale`, plus stub resale commands (`adoptResaleIssued` through `viewResaleCase`) |
 | Credit | `/credit` | F04 (Wave 5, mock FSM, 설계중) and charter label `wave5.credit.F04.fsm` | stub credit commands (`offerCredit` through `viewCredit`) |
 | Gift | `/gift` | P02 transfer | `offer_gift`, `accept_gift`, `cancel_gift` |
+| Booking journey (Wave 6-A) | `/booking/:eventId` | Wave 6-A, mock, 설계중 | `BookingJourney` over `invokeLocalCall`: `create_event`, `prepare_trade`, `accept_trade`. This is not a desk method. |
+| Box office journey view | `/` | Wave 6-A | read-only view of journeys opened on this page load. |
+
+The Wave 6-A rows are catalogue calls, not desk bindings, and every `COMMERCE_METHODS` entry is still `not-bound`.
 
 Wave 7 marketing routes use the local stub in `apps/web/src/marketing`. They are not protocol calls, except a display-only `listPerformances` read on M02.
 
@@ -122,6 +126,18 @@ The credit desk reads and commands a mock credit case through `@kix/protocol-ada
 The authoritative machine remains `reference/credit_advance_f04/credit_fsm.py` in kix-protocol. The charter surface `wave5.credit.F04.fsm` is a label for the desk case. F04 and E06 stay 설계중. Provenance on the case is `MOCK_CREDIT_F04_ONLY`. Amounts are mock units. This client does not port MockCredit arithmetic and does not disburse to a bank.
 
 `HttpProtocolAdapter` leaves the credit commands not-bound. The published catalogue has no credit command, so HTTP mode does not invent a lending endpoint. `offer_gift` is not a credit draw. Live underwriting, KYC-AML, interest, PG or bank rails, and real lending stay on HOLD. The credit desk does not mutate booking or resale ownership. See [docs/credit-depth-apps-bind.md](docs/credit-depth-apps-bind.md).
+
+## Wave 6-A
+
+One mock surface. The booking screen (`/booking/:eventId`) sends the M2-bounded mock journey. The box office (`/`) only reads journeys opened on this page load. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+
+`BookingJourney` composes `create_event`, then `prepare_trade`, then `accept_trade`, through `invokeLocalCall`. The journey ends at `accept_trade`. Nothing past `accept_trade` is composed. `capture` and `settle_capture` are never composed and never sent. `commit_trade`, `open_admission`, and `admit` stay uncomposed. `placeHold` stays not-bound with `consideredAction` `reserve_listing`. `prepare_trade` is only an `invokeLocalCall` body. `placeHold({ eventId, quantity })` is not mapped onto it.
+
+A step ends as `RECEIPT`, `REJECTED`, `UNKNOWN`, `NOT_SENT`, or `FENCED`. There is no retry, no `Idempotency-Key`, and no minted `operationId`. A rejected call, an unknown outcome, or an invalid receipt fences the next write.
+
+Browser HTTP reads unavailable because the reviewed gate answers no CORS preflight. There is no proxy and no stub fallback. The desk stays on integration HTTP. A browser path needs a gate change in kix-protocol.
+
+Evidence: [docs/wave-6a-evidence-apps-bind.md](docs/wave-6a-evidence-apps-bind.md). Merging `w6a-evidence` opens Wave 7 (R-7 in kix-protocol `docs/decisions/PROGRAM_ROADMAP_20260930.md` §2). Wave 7 does not start from this text alone. The pins stay in the Protocol pin section above.
 
 ## Run locally
 
@@ -220,3 +236,4 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - the journey's live-gate tests run when `KIX_REQUIRE_GATE` requires a checkout; without one they are skipped
 - a shape-only journey invoker reports the same step sequence as the live gate (`create_event`, `prepare_trade`, `accept_trade`), and the shipped stub has no `invokeLocalCall`, so a closed port stays unknown
 - a live refresh after a discarded `create_event` stays incomplete and does not send the next step, and an expired reservation rejects `accept_trade` once on its own gate
+- the Wave 6-A evidence matrix, the commands it lists, and the runs it links are in [docs/wave-6a-evidence-apps-bind.md](docs/wave-6a-evidence-apps-bind.md)
