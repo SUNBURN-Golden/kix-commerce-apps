@@ -53,8 +53,7 @@ export const MARKETING_CONTRACT_ALIGNMENT = {
   },
   M05: {
     published: ["set_consent", "authorize_marketing"],
-    state: "published-not-bound",
-    boundBy: "w7-m05-consent-bind",
+    state: "published-bound",
     stubFieldsNotTheBody: ["performanceNotes", "membershipNotes"],
     missingFromStub: [...SET_CONSENT_FIELDS, "subject"],
     commandFields: {
@@ -74,7 +73,7 @@ export const MARKETING_CONTRACT_ALIGNMENT = {
  * Desk methods and catalogue writes this stub must not call.
  * `listPerformances` is omitted: M02 may use it as a display read.
  * `set_consent` and `authorize_marketing` are omitted here because the pages
- * print those names. The stub still does not call them.
+ * print those names. This module still does not build those bodies.
  * The two catalogue names the web tree must not spell are asserted from the test.
  */
 export const MARKETING_FORBIDDEN_CALLS = [
@@ -165,5 +164,5 @@ export function marketingPublishedLine(id: MarketingContractId): string {
   }
   const fields = row.missingFromStub.join(", ");
   const stubFields = row.stubFieldsNotTheBody.join(", ");
-  return `Published contract: ${row.published.join(", ")}. Recorded state: published, not called. Later node: ${row.boundBy}. Stub fields ${stubFields} are not the set_consent body. Missing field names: ${fields}.`;
+  return `Published contract: ${row.published.join(", ")}. Recorded state: published-bound. Stub fields ${stubFields} are not the set_consent body. Missing field names: ${fields}.`;
 }

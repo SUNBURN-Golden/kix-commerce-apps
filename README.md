@@ -43,7 +43,7 @@ Wave 7 marketing routes use the local stub in `apps/web/src/marketing`. They are
 | Presale | `/marketing/m02` | M02 선예매, 설계중 | marketing session stub |
 | Coupon / promotion | `/marketing/m03` | M03 쿠폰 / 프로모션, 설계중 | marketing session stub |
 | Referral / rewards | `/marketing/m04` | M04 추천 / 리워드, 설계중 | marketing session stub |
-| CRM / data use | `/marketing/m05` | M05 CRM / 데이터 활용, 미착수 | marketing session stub |
+| CRM / data use | `/marketing/m05` | M05 CRM / 데이터 활용, 미착수 | session flags, plus `set_consent` and `authorize_marketing` |
 
 `confirmBooking` and `acceptResale` record `payment: "simulated-no-funds"`. The settlement panel renders a mock FSM case from the stub. It lists F01, F02, and F03 and does not compute shares. Limits are in [docs/settlement-depth-apps-bind.md](docs/settlement-depth-apps-bind.md).
 
@@ -58,7 +58,7 @@ Admission also renders a mock credential label from that adapter: `valid`, `inva
 
 View-model field names (`eventId`, `rightsRef`, and the rest) stay local. They are not Move struct layouts and they are not command bodies.
 
-Marketing fixtures are not added to `CommerceProtocol`. Runtime marketing code does not read the OpenAPI pin. `apps/web/test/marketing-contracts.test.ts` reads the vendored pin at test time and checks the alignment table in `apps/web/src/marketing/contracts.ts`. M02’s catalog list is a display-only `listPerformances` read, not a catalogue command. A recorded presale interest does not place a hold. M05 consent flags keep `channelSend: "none"`. Those flags are not the `set_consent` body. `set_consent` and `authorize_marketing` are published and are not called. Calling them is `w7-m05-consent-bind`. M01–M04 have no published command. The alignment record is [docs/wave7-marketing-align-apps-bind.md](docs/wave7-marketing-align-apps-bind.md).
+Marketing fixtures are not added to `CommerceProtocol`. Runtime marketing code does not read the OpenAPI pin. `apps/web/test/marketing-contracts.test.ts` reads the vendored pin at test time and checks the alignment table in `apps/web/src/marketing/contracts.ts`. M02’s catalog list is a display-only `listPerformances` read, not a catalogue command. A recorded presale interest does not place a hold. M05 consent flags keep `channelSend: "none"`. Those flags are not the `set_consent` body. `ConsentBind` posts `set_consent`, then `authorize_marketing`, through an existing local-call invoker. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. It does not compose `capture` or `settle_capture`. `placeHold` stays not-bound with `consideredAction` `reserve_listing`. A rejected call, an unknown outcome, or a not-sent outcome fences the next write. The helper does not retry and does not mint an `operationId`. M01–M04 have no published command. The alignment record is [docs/wave7-marketing-align-apps-bind.md](docs/wave7-marketing-align-apps-bind.md). The consent bind is [docs/m05-consent-bind-apps-bind.md](docs/m05-consent-bind-apps-bind.md).
 
 `BookingJourney` composes `create_event`, then `prepare_trade`, then `accept_trade`, through `invokeLocalCall` only. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. It does not compose `capture`, `settle_capture`, `commit_trade`, `open_admission`, or `admit`. `placeHold` stays not-bound with `consideredAction` `reserve_listing`. A rejected call, an unknown outcome, or an invalid receipt fences the next write. The helper does not retry and does not mint an `operationId`. Limits are in [docs/wave-6a-journey-adapter-apps-bind.md](docs/wave-6a-journey-adapter-apps-bind.md).
 
@@ -214,7 +214,12 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - the vendored OpenAPI pin rejects a wrong file sha256, `info.version`, or contract status
 - a local-call with an unknown `action` is rejected before any request
 - marketing labels follow ORIGINAL_32: M01–M04 stay 설계중 and M05 stays 미착수, with session-only cards, presale notes, coupon markers, referral markers, and consent flags
-- the marketing alignment table matches the pinned `set_consent` and `authorize_marketing` field names and required sets, M01–M04 name no pinned action, and marketing sources do not call booking, resale, admission, settlement, or credit writes
+- the marketing alignment table matches the pinned `set_consent` and `authorize_marketing` field names and required sets, M05 is `published-bound`, M01–M04 name no pinned action, and marketing sources do not call booking, resale, admission, settlement, or credit writes
+- the consent bind posts `set_consent`, then `authorize_marketing`, checks the observed result keys, and does not send `capture` or `settle_capture`
+- a lost response, an invalid receipt, or a rejection fences the next consent write and does not retry or mint an `operationId`
+- the consent live-gate tests run when `KIX_REQUIRE_GATE` requires a checkout; without one they are skipped
+- a shape-only consent invoker returns fixed literals for those two commands and refuses any other action
+- the M05 page keeps session flags at `channelSend: "none"` and labels the actor as not an authentication result
 - marketing routes render, and the box office route still mounts
 - HTTP mode rejects a missing base URL, a public host, `localhost`, and a non-loopback scheme
 - production and public mode names are refused and do not select the stub
