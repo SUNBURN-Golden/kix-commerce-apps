@@ -30,6 +30,27 @@ export {
   type JourneySource,
 } from "./journey-invoker.js";
 export {
+  GiftTransfer,
+  GIFT_COMPOSED,
+  GIFT_DESK_NOT_BOUND,
+  GIFT_NOT_COMPOSED,
+  type GiftDeskNotBound,
+  type GiftFenceReason,
+  type GiftHalt,
+  type GiftNotComposed,
+  type GiftOfferInput,
+  type GiftResolution,
+  type GiftState,
+  type GiftStep,
+  type GiftStepOutcome,
+} from "./gift-transfer.js";
+export {
+  createStubGiftInvoker,
+  giftInvokerFor,
+  type GiftInvokerSource,
+  type GiftSource,
+} from "./gift-invoker.js";
+export {
   integrationHttpObservation,
   localStubObservation,
   mapOperationalError,

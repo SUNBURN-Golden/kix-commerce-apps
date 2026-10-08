@@ -10,6 +10,7 @@ import { M04Page } from "./pages/marketing/M04Rewards";
 import { M05Page } from "./pages/marketing/M05Consent";
 import { MarketingHubPage } from "./pages/marketing/Hub";
 import { CreditPage } from "./pages/Credit";
+import { GiftPage } from "./pages/Gift";
 import { ResalePage } from "./pages/Resale";
 
 export function App() {
@@ -20,6 +21,7 @@ export function App() {
         <Route path="/booking/:eventId" element={<BookingPage />} />
         <Route path="/admission" element={<AdmissionPage />} />
         <Route path="/resale" element={<ResalePage />} />
+        <Route path="/gift" element={<GiftPage />} />
         <Route path="/credit" element={<CreditPage />} />
         <Route path="/marketing" element={<MarketingHubPage />} />
         <Route path="/marketing/m01" element={<M01Page />} />

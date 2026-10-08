@@ -12,6 +12,7 @@ const links = [
   { to: "/", label: "Box office", end: true },
   { to: "/admission", label: "Admission", end: false },
   { to: "/resale", label: "Resale", end: false },
+  { to: "/gift", label: "Gift", end: false },
   { to: "/credit", label: "Credit", end: false },
   { to: "/marketing", label: "Marketing", end: false },
 ];
