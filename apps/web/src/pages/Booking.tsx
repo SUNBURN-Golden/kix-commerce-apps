@@ -4,8 +4,10 @@ import { ProtocolError, type Booking, type Hold, type Performance } from "@kix/p
 import { formatWhen } from "../format";
 import { protocol } from "../protocol";
 import { useAdmissionDesk } from "../admission-desk";
+import { useJourneyDesk } from "../journey-desk";
 import { useReservationDesk } from "../reservation-desk";
 import { AdmissionCredentialPanel } from "./AdmissionCredentialPanel";
+import { JourneyPanel } from "./JourneyPanel";
 import { ReservationPanel } from "./ReservationPanel";
 
 export function BookingPage() {
@@ -16,11 +18,14 @@ export function BookingPage() {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [resolved, setResolved] = useState(false);
   const reservation = useReservationDesk(eventId);
   const admission = useAdmissionDesk(eventId, "gate-main");
+  const journey = useJourneyDesk(eventId);
 
   useEffect(() => {
     let cancelled = false;
+    setResolved(false);
     protocol
       .listPerformances()
       .then((rows) => {
@@ -28,9 +33,12 @@ export function BookingPage() {
           return;
         }
         setPerformance(rows.find((item) => item.eventId === eventId) ?? null);
+        setResolved(true);
       })
       .catch((reason: unknown) => {
         if (!cancelled) {
+          setPerformance(null);
+          setResolved(true);
           setError(reason instanceof Error ? reason.message : "Could not load the performance.");
         }
       });
@@ -107,8 +115,13 @@ export function BookingPage() {
     }
   }
 
-  if (!performance && !error) {
-    return <p className="muted">Loading the performance.</p>;
+  if (!performance && !error && !resolved) {
+    return (
+      <section>
+        <p className="muted">Loading the performance.</p>
+        <JourneyPanel variant="booking" model={journey} />
+      </section>
+    );
   }
 
   if (!performance) {
@@ -117,6 +130,7 @@ export function BookingPage() {
         <p className="alert" role="alert">
           {error ?? "That performance is not on this adapter."}
         </p>
+        <JourneyPanel variant="booking" model={journey} />
         <Link to="/">Back to the window</Link>
       </section>
     );
@@ -223,6 +237,7 @@ export function BookingPage() {
           </div>
         </form>
       )}
+      <JourneyPanel variant="booking" model={journey} />
       <ReservationPanel
         variant="booking"
         eventTitle={performance.title}
