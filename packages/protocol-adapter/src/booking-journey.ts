@@ -436,7 +436,7 @@ function readAcceptReceipt(receipt: Record<string, unknown>): boolean {
   return result !== null && result.accepted === true;
 }
 
-function closedResult(
+export function closedResult(
   receipt: Record<string, unknown>,
   keys: readonly string[],
 ): Record<string, unknown> | null {
@@ -446,12 +446,12 @@ function closedResult(
   return receipt.result;
 }
 
-function sameKeys(value: Record<string, unknown>, expected: readonly string[]): boolean {
+export function sameKeys(value: Record<string, unknown>, expected: readonly string[]): boolean {
   const keys = Object.keys(value);
   return keys.length === expected.length && expected.every((key) => Object.hasOwn(value, key));
 }
 
-function snapshot(body: Record<string, unknown>): Record<string, unknown> {
+export function snapshot(body: Record<string, unknown>): Record<string, unknown> {
   return structuredClone(body);
 }
 
@@ -462,7 +462,7 @@ interface ThrownClass {
   correlationId?: string;
 }
 
-function classifyThrown(error: unknown): ThrownClass {
+export function classifyThrown(error: unknown): ThrownClass {
   if (error instanceof GateRejectedError) {
     return {
       disposition: "rejected",
@@ -483,7 +483,7 @@ function classifyThrown(error: unknown): ThrownClass {
   };
 }
 
-function traceIdentity(base: CallIdentity, error: unknown): CallIdentity {
+export function traceIdentity(base: CallIdentity, error: unknown): CallIdentity {
   if (error instanceof ProtocolError) {
     return withTrace(base, {
       code: error.code,
@@ -494,7 +494,7 @@ function traceIdentity(base: CallIdentity, error: unknown): CallIdentity {
   return base;
 }
 
-function withTrace(
+export function withTrace(
   base: CallIdentity,
   trace: { code?: string; requestId?: string; correlationId?: string },
 ): CallIdentity {

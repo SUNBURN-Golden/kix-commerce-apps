@@ -27,6 +27,7 @@ Charter labels are from Task 005. The app names those surfaces and calls an adap
 | Admission | `/admission` | P03 admission gate (설계중), referencing Wave 2 `zk_gate`, and charter label `wave4.admission.P03.fsm` | `checkAdmission`, plus `authorizeReservationAdmission` and `consumeReservation` |
 | Resale | `/resale` | R01–R05 (Wave 4) and charter label `wave4.resale.R01-R05.fsm` | `openResale`, `listResale`, `acceptResale`, plus stub resale commands (`adoptResaleIssued` through `viewResaleCase`) |
 | Credit | `/credit` | F04 (Wave 5, mock FSM, 설계중) and charter label `wave5.credit.F04.fsm` | stub credit commands (`offerCredit` through `viewCredit`) |
+| Gift | `/gift` | P02 transfer | `offer_gift`, `accept_gift`, `cancel_gift` |
 
 Wave 7 marketing routes use the local stub in `apps/web/src/marketing`. They are not protocol calls, except a display-only `listPerformances` read on M02.
 
@@ -55,6 +56,8 @@ View-model field names (`eventId`, `rightsRef`, and the rest) stay local. They a
 Marketing fixtures are not added to `CommerceProtocol` and do not read the OpenAPI pin. M02’s catalog list is display-only. A recorded presale interest does not place a hold. M05 consent flags keep `channelSend: "none"`.
 
 `BookingJourney` composes `create_event`, then `prepare_trade`, then `accept_trade`, through `invokeLocalCall` only. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. It does not compose `capture`, `settle_capture`, `commit_trade`, `open_admission`, or `admit`. `placeHold` stays not-bound with `consideredAction` `reserve_listing`. A rejected call, an unknown outcome, or an invalid receipt fences the next write. The helper does not retry and does not mint an `operationId`. Limits are in [docs/wave-6a-journey-adapter-apps-bind.md](docs/wave-6a-journey-adapter-apps-bind.md).
+
+`GiftTransfer` posts `offer_gift`, then `accept_gift` or `cancel_gift`, through `invokeLocalCall`. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. `offer_gift` is not a credit draw. The helper does not send `capture`, `settle_capture`, `commit_trade`, or `issue_invitation`. The booking journey does not produce a giftable right, so `ticketId` and `expectedVersion` are caller input. `expiresAt` is caller-supplied. The helper does not default it. A rejected call, an unknown outcome, or an invalid receipt fences the next write, including `cancel_gift`. The helper does not retry and does not mint an `operationId`. Donor and recipient strings are not an authentication result. Limits are in [docs/gift-surface-apps-bind.md](docs/gift-surface-apps-bind.md).
 
 ## Protocol pin
 
@@ -128,7 +131,7 @@ npm test
 npm run dev
 ```
 
-The desk listens on port 5173. Booking state, the marketing session, the mock settlement case, the mock reservation case, the mock resale case, and the mock credit case stay in the browser for that page load. A reload clears them.
+The desk listens on port 5173. Booking state, the gift transfer, the marketing session, the mock settlement case, the mock reservation case, the mock resale case, and the mock credit case stay in the browser for that page load. A reload clears them.
 
 The desk uses the stub. Setting `VITE_KIX_PROTOCOL_MODE=http` or `integration-http` without `VITE_KIX_PROTOCOL_API_BASE` throws at startup. It does not fall back to the stub. With `VITE_KIX_PROTOCOL_API_BASE=http://127.0.0.1:8765`, desk calls still throw `not-bound`. Catalogue calls go through `invokeLocalCall` on the adapter. This repo does not start the protocol server and does not ship a production base URL.
 
@@ -208,6 +211,11 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - those desk methods stay not-bound against the live process, unknown actions never leave the client, and a closed port is `GATE_UNAVAILABLE`
 - stub replay and HTTP `operationId` replay both avoid a second apply inside their own process, and they do not share a phase journal
 - the booking journey composes only `create_event`, `prepare_trade`, and `accept_trade`, copies `inventoryId`, `primaryPrice`, and `termsHash`, and does not send `capture` or `settle_capture`
+- the gift transfer posts `offer_gift`, then `accept_gift` or `cancel_gift`, copies `giftId`, `ticketId`, and `termsHash`, and does not send `capture` or `settle_capture`
+- `offer_gift` is not a credit draw: an accept receipt keeps `financialEntries` at 0, and a gift receipt carrying `disburseCredit` is rejected
+- a lost response, an invalid receipt, or a rejection fences the next gift write, including `cancel_gift`, and does not retry or mint an `operationId`
+- the gift live-gate tests run when `KIX_REQUIRE_GATE` requires a checkout; without one they are skipped
+- a shape-only gift invoker copies `giftId` and `ticketId` and refuses any other action
 - a lost response, an invalid receipt, or a rejection fences the next journey step and does not retry or mint an `operationId`
 - the journey's live-gate tests run when `KIX_REQUIRE_GATE` requires a checkout; without one they are skipped
 - a shape-only journey invoker reports the same step sequence as the live gate (`create_event`, `prepare_trade`, `accept_trade`), and the shipped stub has no `invokeLocalCall`, so a closed port stays unknown
