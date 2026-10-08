@@ -89,6 +89,26 @@ import {
 type FetchLike = typeof fetch;
 
 /**
+ * A parsed integration-gate rejection. Thrown only when the HTTP status is 422
+ * or the body has `rejected: true`. Other failures stay a plain ProtocolError,
+ * so a gate-supplied `error` string cannot be mistaken for a transport code.
+ */
+export class GateRejectedError extends ProtocolError {
+  readonly status: number;
+
+  constructor(
+    message: string,
+    code: string | undefined,
+    trace: { requestId: string; correlationId: string },
+    status: number,
+  ) {
+    super(message, code, trace);
+    this.name = "GateRejectedError";
+    this.status = status;
+  }
+}
+
+/**
  * A browser refuses `fetch` called with any receiver other than the global
  * object, so the default is a wrapper and not the bare function.
  */
@@ -513,10 +533,21 @@ export class HttpProtocolAdapter implements CommerceProtocol {
       },
       body: JSON.stringify(envelope),
     });
+    const businessRejection =
+      parsed.status === 422 || (isRecord(parsed.body) && parsed.body.rejected === true);
     try {
       enforceRemotePayloadGuards(parsed.body);
-      if (!parsed.ok || (isRecord(parsed.body) && parsed.body.rejected === true)) {
-        const code = isRecord(parsed.body) && typeof parsed.body.error === "string" ? parsed.body.error : "GATE_REJECTED";
+      if (businessRejection) {
+        const code = rejectionCode(parsed.body);
+        throw new GateRejectedError(
+          `Integration gate rejected the local call (${code}).`,
+          code,
+          parsed.trace,
+          parsed.status,
+        );
+      }
+      if (!parsed.ok) {
+        const code = rejectionCode(parsed.body);
         throw new ProtocolError(`Integration gate rejected the local call (${code}).`, code);
       }
       assertLocalCallReceipt(parsed.body, {
@@ -524,6 +555,9 @@ export class HttpProtocolAdapter implements CommerceProtocol {
         operationId: envelope.operationId,
       });
     } catch (error) {
+      if (error instanceof GateRejectedError) {
+        throw error;
+      }
       if (error instanceof ProtocolError) {
         throw new ProtocolError(error.message, error.code, parsed.trace);
       }
@@ -556,7 +590,7 @@ export class HttpProtocolAdapter implements CommerceProtocol {
   private async exchange(
     url: string,
     init: RequestInit,
-  ): Promise<{ ok: boolean; body: unknown; trace: { requestId: string; correlationId: string } }> {
+  ): Promise<{ ok: boolean; status: number; body: unknown; trace: { requestId: string; correlationId: string } }> {
     assertSingleAttempt(1);
     const trace = { requestId: newTraceId(), correlationId: newTraceId() };
     const headers = new Headers(init.headers);
@@ -599,7 +633,7 @@ export class HttpProtocolAdapter implements CommerceProtocol {
     url: string,
     init: RequestInit,
     trace: { requestId: string; correlationId: string },
-  ): Promise<{ ok: boolean; body: unknown; trace: { requestId: string; correlationId: string } }> {
+  ): Promise<{ ok: boolean; status: number; body: unknown; trace: { requestId: string; correlationId: string } }> {
     let response: Response;
     try {
       response = await this.fetchImpl(url, init);
@@ -643,10 +677,10 @@ export class HttpProtocolAdapter implements CommerceProtocol {
       throw new ProtocolError("Integration gate response body was cut off.", "GATE_UNAVAILABLE", trace);
     }
     if (!text) {
-      return { ok: response.ok, body: undefined, trace };
+      return { ok: response.ok, status: response.status, body: undefined, trace };
     }
     try {
-      return { ok: response.ok, body: JSON.parse(text) as unknown, trace };
+      return { ok: response.ok, status: response.status, body: JSON.parse(text) as unknown, trace };
     } catch {
       throw new ProtocolError("Integration gate returned non-JSON.", "GATE_STATUS", trace);
     }
@@ -793,6 +827,10 @@ export function echoIntegrationGateHeaders(
     "x-correlation-id": sent.get("x-correlation-id") ?? "",
     ...overrides,
   };
+}
+
+function rejectionCode(body: unknown): string {
+  return isRecord(body) && typeof body.error === "string" ? body.error : "GATE_REJECTED";
 }
 
 function unbound(method: CommerceMethod): ProtocolError {

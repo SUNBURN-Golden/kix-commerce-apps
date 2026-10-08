@@ -2,10 +2,27 @@ export { COMMERCE_COMMAND_BINDINGS, COMMERCE_METHODS, type CommerceMethod } from
 export { createProtocol, type ProtocolOptions } from "./create-protocol.js";
 export {
   echoIntegrationGateHeaders,
+  GateRejectedError,
   HttpProtocolAdapter,
   INTEGRATION_HTTP_TIMEOUT_MS,
   type HttpProtocolAdapterOptions,
 } from "./http-adapter.js";
+export {
+  BookingJourney,
+  JOURNEY_COMPOSED,
+  JOURNEY_DESK_NOT_BOUND,
+  JOURNEY_NOT_COMPOSED,
+  JOURNEY_RULING,
+  type CallIdentity,
+  type JourneyDeskNotBound,
+  type JourneyFenceReason,
+  type JourneyHalt,
+  type JourneyNotComposed,
+  type JourneyState,
+  type JourneyStep,
+  type JourneyStepOutcome,
+  type LocalCallInvoker,
+} from "./booking-journey.js";
 export {
   integrationHttpObservation,
   localStubObservation,
