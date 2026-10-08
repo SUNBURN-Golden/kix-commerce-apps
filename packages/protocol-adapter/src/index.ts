@@ -51,6 +51,29 @@ export {
   type GiftSource,
 } from "./gift-invoker.js";
 export {
+  OrganizerConsole,
+  ORGANIZER_COMPOSED,
+  ORGANIZER_DESK_NOT_BOUND,
+  ORGANIZER_NOT_COMPOSED,
+  type OrganizerCreateInput,
+  type OrganizerDeskNotBound,
+  type OrganizerEventInput,
+  type OrganizerFenceReason,
+  type OrganizerHalt,
+  type OrganizerInvitationInput,
+  type OrganizerNotComposed,
+  type OrganizerPolicy,
+  type OrganizerState,
+  type OrganizerStep,
+  type OrganizerStepOutcome,
+} from "./organizer-console.js";
+export {
+  createStubOrganizerInvoker,
+  organizerInvokerFor,
+  type OrganizerInvokerSource,
+  type OrganizerSource,
+} from "./organizer-invoker.js";
+export {
   integrationHttpObservation,
   localStubObservation,
   mapOperationalError,
