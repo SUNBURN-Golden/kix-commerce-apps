@@ -58,7 +58,7 @@ Admission also renders a mock credential label from that adapter: `valid`, `inva
 
 View-model field names (`eventId`, `rightsRef`, and the rest) stay local. They are not Move struct layouts and they are not command bodies.
 
-Marketing fixtures are not added to `CommerceProtocol` and do not read the OpenAPI pin. M02’s catalog list is display-only. A recorded presale interest does not place a hold. M05 consent flags keep `channelSend: "none"`.
+Marketing fixtures are not added to `CommerceProtocol`. Runtime marketing code does not read the OpenAPI pin. `apps/web/test/marketing-contracts.test.ts` reads the vendored pin at test time and checks the alignment table in `apps/web/src/marketing/contracts.ts`. M02’s catalog list is a display-only `listPerformances` read, not a catalogue command. A recorded presale interest does not place a hold. M05 consent flags keep `channelSend: "none"`. Those flags are not the `set_consent` body. `set_consent` and `authorize_marketing` are published and are not called. Calling them is `w7-m05-consent-bind`. M01–M04 have no published command. The alignment record is [docs/wave7-marketing-align-apps-bind.md](docs/wave7-marketing-align-apps-bind.md).
 
 `BookingJourney` composes `create_event`, then `prepare_trade`, then `accept_trade`, through `invokeLocalCall` only. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. It does not compose `capture`, `settle_capture`, `commit_trade`, `open_admission`, or `admit`. `placeHold` stays not-bound with `consideredAction` `reserve_listing`. A rejected call, an unknown outcome, or an invalid receipt fences the next write. The helper does not retry and does not mint an `operationId`. Limits are in [docs/wave-6a-journey-adapter-apps-bind.md](docs/wave-6a-journey-adapter-apps-bind.md).
 
@@ -214,6 +214,7 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - the vendored OpenAPI pin rejects a wrong file sha256, `info.version`, or contract status
 - a local-call with an unknown `action` is rejected before any request
 - marketing labels follow ORIGINAL_32: M01–M04 stay 설계중 and M05 stays 미착수, with session-only cards, presale notes, coupon markers, referral markers, and consent flags
+- the marketing alignment table matches the pinned `set_consent` and `authorize_marketing` field names and required sets, M01–M04 name no pinned action, and marketing sources do not call booking, resale, admission, settlement, or credit writes
 - marketing routes render, and the box office route still mounts
 - HTTP mode rejects a missing base URL, a public host, `localhost`, and a non-loopback scheme
 - production and public mode names are refused and do not select the stub

@@ -2,13 +2,18 @@
  * In-memory marketing fixtures for Wave 7 M01–M05.
  * Data lives for one page load of the demo. It is not a kix-protocol type,
  * not an OpenAPI schema, and not a Move layout.
- * The protocol-adapter contract pin is not read here.
+ * Runtime code in this folder does not read the OpenAPI pin.
+ * MARKETING_CONTRACT_ALIGNMENT records the catalogue state.
+ * M01–M04 have no published command. M05 names set_consent and
+ * authorize_marketing and does not call either one.
+ * Calling them belongs to w7-m05-consent-bind, which is not this desk.
  */
 
 /**
  * Marketing session boundary. The protocol-adapter OpenAPI pin does not flip these flags.
  * `status` is the session posture for the M01–M04 stub. It is not the M05 charter label.
  * M05 stays 미착수 on MARKETING_SURFACES. Labels are never promoted.
+ * openApiBound stays false. This boundary is not a command body.
  */
 export const MARKETING_BOUNDARY = {
   status: "설계중",

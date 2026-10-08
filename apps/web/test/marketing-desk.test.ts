@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MARKETING_FORBIDDEN_CALLS } from "../src/marketing/contracts";
 import {
   COUPON_FIXTURES,
   MARKETING_BOUNDARY,
@@ -156,9 +157,17 @@ describe("marketing stub desk", () => {
     expect(withdrawn.performanceNotes).toBe(false);
     expect(withdrawn.membershipNotes).toBe(false);
     expect(withdrawn.channelSend).toBe("none");
-    expect(Object.getOwnPropertyNames(MarketingStubDesk.prototype)).not.toContain("send");
-    expect(Object.getOwnPropertyNames(MarketingStubDesk.prototype)).not.toContain("disburse");
-    expect(Object.getOwnPropertyNames(MarketingStubDesk.prototype)).not.toContain("confirmBooking");
+    const names = Object.getOwnPropertyNames(MarketingStubDesk.prototype);
+    expect(names).not.toContain("send");
+    expect(names).not.toContain("disburse");
+    expect(names).not.toContain("confirmBooking");
+    for (const call of MARKETING_FORBIDDEN_CALLS) {
+      expect(names).not.toContain(call);
+    }
+    expect(MARKETING_BOUNDARY.protocolBinding).toBe("none");
+    expect(MARKETING_BOUNDARY.openApiBound).toBe(false);
+    expect(MARKETING_BOUNDARY.outboundSend).toBe("none");
+    expect(MARKETING_BOUNDARY.creditDisbursement).toBe("none");
   });
 
   it("resets the session stub without leaving markers behind", () => {

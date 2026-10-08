@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
+import { marketingPublishedLine } from "../../marketing/contracts";
 import { MARKETING_SURFACES, marketingSurface, type MarketingId } from "../../marketing/labels";
 
 export function MarketingChrome({
@@ -34,6 +35,7 @@ export function MarketingChrome({
           <h2>{surface.titleEn}</h2>
           <p lang="ko">{surface.blurbKo}</p>
           <p className="muted">{surface.blurbEn}</p>
+          <p className="muted">{marketingPublishedLine(surface.id)}</p>
         </header>
       ) : null}
       {children}
