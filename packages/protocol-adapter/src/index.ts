@@ -24,6 +24,12 @@ export {
   type LocalCallInvoker,
 } from "./booking-journey.js";
 export {
+  createStubJourneyInvoker,
+  journeyInvokerFor,
+  type JourneyInvokerSource,
+  type JourneySource,
+} from "./journey-invoker.js";
+export {
   integrationHttpObservation,
   localStubObservation,
   mapOperationalError,

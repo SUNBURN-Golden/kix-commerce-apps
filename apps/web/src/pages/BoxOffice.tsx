@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 import { ProtocolError, type Performance, type SettlementCaseView } from "@kix/protocol-adapter";
 import { formatWhen } from "../format";
 import { protocol } from "../protocol";
+import { useJourneyDesk } from "../journey-desk";
 import { runSettlementCommand, settlementIdFor } from "../settlement-desk";
+import { JourneyPanel } from "./JourneyPanel";
 import { SettlementPanel, type SettlementDeskCommand } from "./SettlementPanel";
 
 export function BoxOfficePage() {
@@ -13,6 +15,7 @@ export function BoxOfficePage() {
   const [settlement, setSettlement] = useState<SettlementCaseView | null>(null);
   const [settlementError, setSettlementError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const journey = useJourneyDesk("");
 
   useEffect(() => {
     let cancelled = false;
@@ -92,6 +95,7 @@ export function BoxOfficePage() {
           Booking and admission can open a simulated reservation phase on the adapter stub. Not live admission.
         </p>
       </header>
+      <JourneyPanel variant="box-office" model={journey} />
       {loadError ? (
         <p className="alert" role="alert">
           {loadError}
