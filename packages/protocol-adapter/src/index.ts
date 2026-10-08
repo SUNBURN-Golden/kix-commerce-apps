@@ -74,6 +74,28 @@ export {
   type OrganizerSource,
 } from "./organizer-invoker.js";
 export {
+  ConsentBind,
+  CONSENT_AUTHORIZE_ACTOR,
+  CONSENT_COMPOSED,
+  CONSENT_DESK_NOT_BOUND,
+  CONSENT_NOT_COMPOSED,
+  type ConsentAuthorizeInput,
+  type ConsentDeskNotBound,
+  type ConsentFenceReason,
+  type ConsentHalt,
+  type ConsentNotComposed,
+  type ConsentSetInput,
+  type ConsentState,
+  type ConsentStep,
+  type ConsentStepOutcome,
+} from "./consent-bind.js";
+export {
+  consentInvokerFor,
+  createStubConsentInvoker,
+  type ConsentInvokerSource,
+  type ConsentSource,
+} from "./consent-invoker.js";
+export {
   integrationHttpObservation,
   localStubObservation,
   mapOperationalError,

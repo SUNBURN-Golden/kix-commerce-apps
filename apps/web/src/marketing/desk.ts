@@ -5,8 +5,8 @@
  * Runtime code in this folder does not read the OpenAPI pin.
  * MARKETING_CONTRACT_ALIGNMENT records the catalogue state.
  * M01–M04 have no published command. M05 names set_consent and
- * authorize_marketing and does not call either one.
- * Calling them belongs to w7-m05-consent-bind, which is not this desk.
+ * authorize_marketing. This session desk does not call either one.
+ * The bind lives outside this folder.
  */
 
 /**

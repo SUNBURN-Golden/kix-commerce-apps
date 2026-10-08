@@ -73,8 +73,8 @@ function commandSchema(name: string): {
 describe("marketing contract alignment", () => {
   it("aligns M05 to the pinned set_consent and authorize_marketing schemas", () => {
     const row = MARKETING_CONTRACT_ALIGNMENT.M05;
-    expect(row.state).toBe("published-not-bound");
-    expect(row.boundBy).toBe("w7-m05-consent-bind");
+    expect(row.state).toBe("published-bound");
+    expect(row).not.toHaveProperty("boundBy");
     expect(OPENAPI_CONTRACT_PIN.contractStatus).toBe("contract-only");
     expect(OPENAPI_CONTRACT_PIN.productionEndpoint).toBe(false);
     expect(OPENAPI_CONTRACT_PIN.liveHttpServer).toBe(false);
