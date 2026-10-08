@@ -28,6 +28,7 @@ Charter labels are from Task 005. The app names those surfaces and calls an adap
 | Resale | `/resale` | R01–R05 (Wave 4) and charter label `wave4.resale.R01-R05.fsm` | `openResale`, `listResale`, `acceptResale`, plus stub resale commands (`adoptResaleIssued` through `viewResaleCase`) |
 | Credit | `/credit` | F04 (Wave 5, mock FSM, 설계중) and charter label `wave5.credit.F04.fsm` | stub credit commands (`offerCredit` through `viewCredit`) |
 | Gift | `/gift` | P02 transfer | `offer_gift`, `accept_gift`, `cancel_gift` |
+| Organizer | `/organizer` | event lifecycle | `create_event`, `close_sales`, `open_admission`, `complete_event`, `cancel_event`, `issue_invitation` |
 | Booking journey (Wave 6-A) | `/booking/:eventId` | Wave 6-A, mock, 설계중 | `BookingJourney` over `invokeLocalCall`: `create_event`, `prepare_trade`, `accept_trade`. This is not a desk method. |
 | Box office journey view | `/` | Wave 6-A | read-only view of journeys opened on this page load. |
 
@@ -62,6 +63,8 @@ Marketing fixtures are not added to `CommerceProtocol` and do not read the OpenA
 `BookingJourney` composes `create_event`, then `prepare_trade`, then `accept_trade`, through `invokeLocalCall` only. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. It does not compose `capture`, `settle_capture`, `commit_trade`, `open_admission`, or `admit`. `placeHold` stays not-bound with `consideredAction` `reserve_listing`. A rejected call, an unknown outcome, or an invalid receipt fences the next write. The helper does not retry and does not mint an `operationId`. Limits are in [docs/wave-6a-journey-adapter-apps-bind.md](docs/wave-6a-journey-adapter-apps-bind.md).
 
 `GiftTransfer` posts `offer_gift`, then `accept_gift` or `cancel_gift`, through `invokeLocalCall`. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. `offer_gift` is not a credit draw. The helper does not send `capture`, `settle_capture`, `commit_trade`, or `issue_invitation`. The booking journey does not produce a giftable right, so `ticketId` and `expectedVersion` are caller input. `expiresAt` is caller-supplied. The helper does not default it. A rejected call, an unknown outcome, or an invalid receipt fences the next write, including `cancel_gift`. The helper does not retry and does not mint an `operationId`. Donor and recipient strings are not an authentication result. Limits are in [docs/gift-surface-apps-bind.md](docs/gift-surface-apps-bind.md).
+
+`OrganizerConsole` posts `create_event`, `close_sales`, `open_admission`, `complete_event`, `cancel_event`, and `issue_invitation` through `invokeLocalCall`. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. This console is a separate surface. The booking journey still does not compose `open_admission`. `capture`, `settle_capture`, `commit_trade`, and `admit` are recorded and not sent. `placeHold` stays not-bound. The operator actor is a local-call string, not an authentication result. A rejected call, an unknown outcome, or a not-sent outcome fences the next write. The helper does not retry and does not mint an `operationId`. Limits are in [docs/organizer-admin-console-apps-bind.md](docs/organizer-admin-console-apps-bind.md).
 
 ## Protocol pin
 
@@ -232,6 +235,11 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - a lost response, an invalid receipt, or a rejection fences the next gift write, including `cancel_gift`, and does not retry or mint an `operationId`
 - the gift live-gate tests run when `KIX_REQUIRE_GATE` requires a checkout; without one they are skipped
 - a shape-only gift invoker copies `giftId` and `ticketId` and refuses any other action
+- the organizer console posts `create_event`, `close_sales`, `open_admission`, `complete_event`, `cancel_event`, and `issue_invitation`, and does not send `capture`, `settle_capture`, `commit_trade`, or `admit`
+- a lost response, an invalid receipt, or a rejection fences the next organizer write and does not retry or mint an `operationId`
+- the organizer live-gate tests run when `KIX_REQUIRE_GATE` requires a checkout; without one they are skipped
+- a shape-only organizer invoker returns fixed literals for those six commands and refuses any other action
+- the organizer page labels the operator as not an authentication result and does not call `fetch`
 - a lost response, an invalid receipt, or a rejection fences the next journey step and does not retry or mint an `operationId`
 - the journey's live-gate tests run when `KIX_REQUIRE_GATE` requires a checkout; without one they are skipped
 - a shape-only journey invoker reports the same step sequence as the live gate (`create_event`, `prepare_trade`, `accept_trade`), and the shipped stub has no `invokeLocalCall`, so a closed port stays unknown
