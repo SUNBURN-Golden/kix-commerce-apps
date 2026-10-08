@@ -54,6 +54,8 @@ View-model field names (`eventId`, `rightsRef`, and the rest) stay local. They a
 
 Marketing fixtures are not added to `CommerceProtocol` and do not read the OpenAPI pin. M02’s catalog list is display-only. A recorded presale interest does not place a hold. M05 consent flags keep `channelSend: "none"`.
 
+`BookingJourney` composes `create_event`, then `prepare_trade`, then `accept_trade`, through `invokeLocalCall` only. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. It does not compose `capture`, `settle_capture`, `commit_trade`, `open_admission`, or `admit`. `placeHold` stays not-bound with `consideredAction` `reserve_listing`. A rejected call, an unknown outcome, or an invalid receipt fences the next write. The helper does not retry and does not mint an `operationId`. Limits are in [docs/wave-6a-journey-adapter-apps-bind.md](docs/wave-6a-journey-adapter-apps-bind.md).
+
 ## Protocol pin
 
 The adapter vendors two OpenAPI files from [kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol). The command catalogue is unchanged. The integration-gate file is the loopback transport description from feature `c7238bc24a399a6cabbab87ac23dbfd7e9c252dd`, merged as `52a9b5cbf7777df55d2d2062cb8d99d862b423bb`. Those two commits share one tree. Apps tests start that process from either checkout. The contract-only bytes are unchanged.
@@ -205,3 +207,6 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - with `--readiness-dir`, one committed local call replays after restart and a second id does not apply it again. `durable` stays false
 - those desk methods stay not-bound against the live process, unknown actions never leave the client, and a closed port is `GATE_UNAVAILABLE`
 - stub replay and HTTP `operationId` replay both avoid a second apply inside their own process, and they do not share a phase journal
+- the booking journey composes only `create_event`, `prepare_trade`, and `accept_trade`, copies `inventoryId`, `primaryPrice`, and `termsHash`, and does not send `capture` or `settle_capture`
+- a lost response, an invalid receipt, or a rejection fences the next journey step and does not retry or mint an `operationId`
+- the journey's live-gate tests run when `KIX_REQUIRE_GATE` requires a checkout; without one they are skipped
