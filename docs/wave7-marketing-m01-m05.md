@@ -22,7 +22,25 @@ Fixtures and session writes live in `apps/web/src/marketing`. A reload clears th
 - M04 markers are a count. The desk has no disburse action. F04 stays outside this UI.
 - M05 stores boolean flags on the stub. `channelSend` is `none`. The form has no address field and no sender.
 
-Marketing code does not read the protocol-adapter OpenAPI pin and does not add methods to `CommerceProtocol`. `openApiBound` stays false. View-model fields already used by the box office (`eventId`, title, venue, start time, remaining capacity) stay local names. The pin is adapter-level. It is not marketing protocol truth, and M01–M05 do not call `authorize_marketing` or `set_consent`.
+Marketing runtime code does not read the protocol-adapter OpenAPI pin and does not add methods to `CommerceProtocol`. `apps/web/test/marketing-contracts.test.ts` reads that pin at test time only, to check `MARKETING_CONTRACT_ALIGNMENT`. No file under `apps/web/src/marketing` imports the pin. `openApiBound` stays false. View-model fields already used by the box office (`eventId`, title, venue, start time, remaining capacity) stay local names. The pin is adapter-level. It is not marketing protocol truth. M01–M05 do not call `authorize_marketing` or `set_consent`.
+
+## Published contract alignment
+
+The vendored contract-only catalogue publishes two commands whose names refer to marketing consent: `set_consent` and `authorize_marketing`. Nothing in that catalogue is a membership, presale, coupon, or referral command. M01–M04 therefore stay `no-published-command`. The pending contract name recorded on those rows is `wave7-marketing-contracts`. This repository does not merge that contract and does not invent its fields.
+
+M05 is `published-not-bound`. The stub stores `performanceNotes` and `membershipNotes`. Those names are not the `set_consent` body. The body field names, with no values, are `allowed`, `business`, `channel`, `domain`, `eventId`, `expectedConsentVersion`, and `purpose`. `authorize_marketing` adds `subject`. Calling either command is `w7-m05-consent-bind`, which is a later node. This desk does not build a body.
+
+M02 may call `listPerformances` so the presale demo can show catalog titles. That method is an adapter read. It is not a catalogue command. Recording interest does not place a hold.
+
+| Surface | Published command | Recorded state | Why the stub does not use it |
+| --- | --- | --- | --- |
+| M01 | none | `no-published-command` | No catalogue command. Pending `wave7-marketing-contracts`. |
+| M02 | none | `no-published-command` | Same. `listPerformances` is a display read, not a catalogue command. |
+| M03 | none | `no-published-command` | No catalogue command. Markers have no price. |
+| M04 | none | `no-published-command` | No catalogue command. No disburse. |
+| M05 | `set_consent`, `authorize_marketing` | `published-not-bound` | Not called. Binding is `w7-m05-consent-bind`. Stub flags are not the body. |
+
+kix-protocol `TASK_005` was not readable from this worktree. This section does not cite `TASK_005` line contents. The gate citation for opening Wave 7 is in [wave7-marketing-align-apps-bind.md](wave7-marketing-align-apps-bind.md).
 
 ## Required gate
 

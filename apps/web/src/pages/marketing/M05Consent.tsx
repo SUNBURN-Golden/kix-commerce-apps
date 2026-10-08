@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { formatWhen } from "../../format";
+import { MARKETING_CONTRACT_ALIGNMENT } from "../../marketing/contracts";
 import { marketingSession } from "../../marketing/session";
 import { useMarketingSnapshot } from "../../marketing/useMarketingSnapshot";
 import { MarketingChrome } from "./MarketingChrome";
@@ -50,6 +51,8 @@ export function M05Page() {
         </label>
         <p className="muted">
           Saving writes flags on this stub. Channel send stays {consent.channelSend}. Storage is {consent.storage}.
+          These flags are not the set_consent body. Missing field names:{" "}
+          {MARKETING_CONTRACT_ALIGNMENT.M05.missingFromStub.join(", ")}. channelSend: {consent.channelSend}.
         </p>
         <div className="row-actions">
           <button type="submit">Save consent flags</button>

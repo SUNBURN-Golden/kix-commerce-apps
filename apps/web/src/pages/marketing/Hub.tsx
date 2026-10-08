@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { MARKETING_CONTRACT_IDS, marketingPublishedLine } from "../../marketing/contracts";
 import { MARKETING_SURFACES } from "../../marketing/labels";
 import { marketingSession } from "../../marketing/session";
 import { useMarketingSnapshot } from "../../marketing/useMarketingSnapshot";
@@ -78,6 +79,23 @@ export function MarketingHubPage() {
             Reset marketing session
           </button>
         </div>
+      </article>
+      <article className="panel" aria-label="Published contract">
+        <p className="eyebrow">Published contract</p>
+        <h3>Catalogue alignment</h3>
+        <p className="muted">
+          Field names only. This page does not build a command body. Runtime marketing code does not read the OpenAPI
+          pin.
+        </p>
+        <ul className="program">
+          {MARKETING_CONTRACT_IDS.map((id) => (
+            <li key={id}>
+              <p>
+                <strong>{id}</strong> {marketingPublishedLine(id)}
+              </p>
+            </li>
+          ))}
+        </ul>
       </article>
       <ul className="hub">
         {MARKETING_SURFACES.map((item) => (
