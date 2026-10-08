@@ -54,7 +54,7 @@ describeGate("organizer console live gate", () => {
     await stopGate(child);
   });
 
-  it("creates, closes sales, opens admission, then issues one invitation", async () => {
+  it("creates, issues one invitation while sales are open, then closes sales and opens admission", async () => {
     const seen: LocalCallInput[] = [];
     const http = watchLocalCalls(baseUrl, seen);
     const eventId = freshId("show");
@@ -81,18 +81,6 @@ describeGate("organizer console live gate", () => {
     if (typeof inventoryId !== "string" || inventoryId.length === 0) {
       throw new Error("create_event did not return an inventory id");
     }
-    const closed = await console.closeSales({ operationId: freshId("op-close"), eventId });
-    expect(closed).toMatchObject({
-      kind: "RECEIPT",
-      step: "close_sales",
-      receipt: { result: { salesStatus: "CLOSED" } },
-    });
-    const opened = await console.openAdmission({ operationId: freshId("op-open"), eventId });
-    expect(opened).toMatchObject({ kind: "RECEIPT", step: "open_admission" });
-    if (opened.kind !== "RECEIPT" || !isRecord(opened.receipt.result)) {
-      throw new Error("open_admission did not return a receipt");
-    }
-    expect(opened.receipt.result).toEqual({ admissionStatus: "OPEN" });
     const issued = await console.issueInvitation({
       operationId: freshId("op-invite"),
       eventId,
@@ -108,16 +96,64 @@ describeGate("organizer console live gate", () => {
     expect(typeof issued.receipt.result.ticketId).toBe("string");
     expect(issued.receipt.result.ticketId).not.toBe("");
     expect(issued.receipt.result.financialEntries).toBe(0);
+    const closed = await console.closeSales({ operationId: freshId("op-close"), eventId });
+    expect(closed).toMatchObject({
+      kind: "RECEIPT",
+      step: "close_sales",
+      receipt: { result: { salesStatus: "CLOSED" } },
+    });
+    const opened = await console.openAdmission({ operationId: freshId("op-open"), eventId });
+    expect(opened).toMatchObject({ kind: "RECEIPT", step: "open_admission" });
+    if (opened.kind !== "RECEIPT" || !isRecord(opened.receipt.result)) {
+      throw new Error("open_admission did not return a receipt");
+    }
+    expect(opened.receipt.result).toEqual({ admissionStatus: "OPEN" });
     expect(console.state().halted).toBeNull();
     expect(seen.map((call) => call.action)).toEqual([
       "create_event",
+      "issue_invitation",
       "close_sales",
       "open_admission",
-      "issue_invitation",
     ]);
-    expect(seen.slice(0, 3).every((call) => call.actor === "operator")).toBe(true);
-    expect(seen[3]?.actor).toBe("organizer");
+    expect(seen[0]?.actor).toBe("operator");
+    expect(seen[1]?.actor).toBe("organizer");
+    expect(seen.slice(2).every((call) => call.actor === "operator")).toBe(true);
     expect(seen.some((call) => call.action === "capture" || call.action === "settle_capture" || call.action === "commit_trade" || call.action === "admit")).toBe(false);
     expect(seen.every((call) => isRecord(call.body) && call.body.domain === PINNED_PROTOCOL_DOMAIN)).toBe(true);
+  }, 20000);
+
+  it("reports the gate rejection when an invitation is issued after sales are closed", async () => {
+    const http = new HttpProtocolAdapter(baseUrl);
+    const eventId = freshId("show");
+    const console = new OrganizerConsole(http);
+    const created = await console.createEvent({
+      operationId: freshId("op-create"),
+      eventId,
+      organizer: "organizer",
+      policy: SHOW_POLICY,
+      seats: ["A1"],
+      invitationQuota: 1,
+    });
+    if (created.kind !== "RECEIPT" || !isRecord(created.receipt.result) || !Array.isArray(created.receipt.result.inventoryIds)) {
+      throw new Error("create_event did not return inventoryIds");
+    }
+    const inventoryId = created.receipt.result.inventoryIds[0];
+    if (typeof inventoryId !== "string" || inventoryId.length === 0) {
+      throw new Error("create_event did not return an inventory id");
+    }
+    const closed = await console.closeSales({ operationId: freshId("op-close"), eventId });
+    expect(closed).toMatchObject({ kind: "RECEIPT", step: "close_sales" });
+    const issued = await console.issueInvitation({
+      operationId: freshId("op-invite"),
+      eventId,
+      inventoryId,
+      expectedInventoryVersion: 0,
+      recipient: freshId("guest"),
+      organizer: "organizer",
+    });
+    expect(issued).toMatchObject({ kind: "REJECTED", step: "issue_invitation", code: "EVENT_NOT_OPEN" });
+    expect(console.state().halted).toMatchObject({ step: "issue_invitation", kind: "REJECTED" });
+    const later = await console.openAdmission({ operationId: freshId("op-open"), eventId });
+    expect(later).toMatchObject({ kind: "FENCED", step: "open_admission", blockedBy: { reason: "halted" } });
   }, 20000);
 });

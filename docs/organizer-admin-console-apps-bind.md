@@ -31,6 +31,8 @@ The domain on every body is `kix:fixture:lifecycle:0.3`. The helper checks each 
 
 `issue_invitation` does not put `eventId` in the body. The actor is the organizer id the caller supplies. The gift live test sends that actor as `organizer`. The reference role rule for `operator` on `complete_event` and `cancel_event` is not readable in this repo. Those two commands are not part of the live-gate test here.
 
+The live gate test creates the event, issues one invitation while sales are still open, then closes sales and opens admission. On the pinned gate, `issue_invitation` after `close_sales` is `REJECTED` with code `EVENT_NOT_OPEN`, and the next write is `FENCED`. The helper still sends the invitation the caller asked for. It does not refuse that order itself.
+
 The actor string is that local-call argument. It is not an authentication result. This client defines no auth scheme.
 
 ## Receipt checks
@@ -86,7 +88,21 @@ Each non-invitation step is sent at most once (`already-sent`). `issue_invitatio
 
 ## Desk
 
-The `/organizer` page keeps one `OrganizerConsole` per event id for that page load. Operation ids are `org:<eventId>:<attempt>:<step>`. `issue_invitation` suffixes the inventory id. An id longer than 100 characters fails before the call and the row is not sent. The operator label is `operator`. The organizer id on the desk is `desk-organizer`. Seats are a comma-separated caller string. A blank invitation quota is omitted. A non-canonical integer is not sent. Stub-shape receipts are literals. They are not gate receipts. In the browser, integration HTTP shows unavailable because the reviewed gate answers no CORS preflight. The desk does not fall back to the stub and does not proxy the gate. The browser success path is the stub-shape invoker. The live success path is the Node gate test.
+The `/organizer` page keeps one `OrganizerConsole` per event id for that page load. Operation ids are `org:<eventId>:<attempt>:<step>`. `issue_invitation` suffixes the inventory id. An id longer than 100 characters fails before the call and the row is not sent. The operator label is `operator`. The organizer id on the desk is `desk-organizer`. Seats are a comma-separated caller string. A blank invitation quota is omitted. A non-canonical integer is not sent. Stub-shape receipts are literals. They are not gate receipts. In the browser, integration HTTP shows unavailable because the reviewed gate answers no CORS preflight. The desk does not fall back to the stub and does not proxy the gate. The browser success path is the stub-shape invoker. The live success path is the Node gate test. The observed browser run is below.
+
+## Browser run
+
+Observed in headless Chrome 154.0.8037.57 on 2026-10-09. The stub desk was Vite at `http://127.0.0.1:5177`. The HTTP desk was a second Vite at `http://127.0.0.1:5180` with `VITE_KIX_PROTOCOL_MODE=http` and `VITE_KIX_PROTOCOL_API_BASE` set to the reviewed gate, which was listening on `http://127.0.0.1:40125`. No page error. The page text did not include a loopback URL, a policy number, or a payment claim. `capture`, `settle_capture`, `commit_trade`, and `admit` appeared only in the not-composed list.
+
+| State | Observed |
+| --- | --- |
+| Empty event id, after clicking Organizer from Box office | Path `available-stub-shape`. All six Send buttons disabled. Each row said "Enter an event id. The desk does not mint one." The ruling, the stub-shape label, the not-authentication line, and "No funds." were on the page. |
+| Stub success for event id `show-browser-ok`, seat `A1`, quota `1`, inventory `inv-0`, version `0`, recipient `guest-a` | All six rows Confirmed, each noting "Confirmed stub-shape receipt. Not from the gate." Last confirmed receipt: `issue_invitation · org:show-browser-ok:1:issue_invitation:inv-0`. Unconfirmed request: none. `create_event` showed `eventId` `show-browser-ok`, `inventoryIds` `["inv-0"]`, `policyHash` `policy-hash`, `reservationSeconds` `900`, actor `operator`. `close_sales` showed `salesStatus` `CLOSED`. `open_admission` showed `admissionStatus` `OPEN`. `issue_invitation` showed `financialEntries` `0` and `ticketId` `ticket-1`, actor `desk-organizer`. `complete_event` and `cancel_event` showed no result fields. After each send that button was disabled. |
+| Reload after that success | Page-load rows cleared. Sends were disabled until an event id is typed again. |
+| Non-canonical quota `1.5` on `show-browser-bad` | `create_event` was not-sent: "Not sent. Field body.invitationQuota must be an integer." The other five rows were Blocked. All six sends were disabled. |
+| Integration HTTP against the reviewed loopback gate | Path `unavailable`. The alert said the organizer path is unavailable, the desk does not fall back to the stub, and the code is `GATE_UNAVAILABLE`. There was no stub-shape label. All six rows said "Unavailable. No write is sent." Typing an event id left the sends disabled. The browser health probe failed (`net::ERR_FAILED` on `/health`). The desk sent no command. |
+
+The live invitation receipt, and the `EVENT_NOT_OPEN` rejection after `close_sales`, are the Node gate test. The browser does not reach that call.
 
 ## Hold
 
