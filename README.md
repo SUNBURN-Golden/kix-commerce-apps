@@ -142,6 +142,10 @@ Browser HTTP reads unavailable because the reviewed gate answers no CORS preflig
 
 Evidence: [docs/wave-6a-evidence-apps-bind.md](docs/wave-6a-evidence-apps-bind.md). Merging `w6a-evidence` opens Wave 7 (R-7 in kix-protocol `docs/decisions/PROGRAM_ROADMAP_20260930.md` §2). Wave 7 does not start from this text alone. The pins stay in the Protocol pin section above.
 
+## Workspace design
+
+Buyer, organizer, and operator workspaces, the seven-stage buyer flow, and the per-track screen contract are in [docs/workspace-design-apps-bind.md](docs/workspace-design-apps-bind.md). Reservation, payment, issuance, and admission each keep their own badge. Stub desks, not-bound methods, and planned routes stay labeled that way. The machine-readable table is `apps/web/src/workspace/registry.ts`, checked by `apps/web/test/workspace-registry.test.ts`. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+
 ## Run locally
 
 ```bash
