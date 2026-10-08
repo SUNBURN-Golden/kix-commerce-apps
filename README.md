@@ -210,3 +210,5 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - the booking journey composes only `create_event`, `prepare_trade`, and `accept_trade`, copies `inventoryId`, `primaryPrice`, and `termsHash`, and does not send `capture` or `settle_capture`
 - a lost response, an invalid receipt, or a rejection fences the next journey step and does not retry or mint an `operationId`
 - the journey's live-gate tests run when `KIX_REQUIRE_GATE` requires a checkout; without one they are skipped
+- a shape-only journey invoker reports the same step sequence as the live gate (`create_event`, `prepare_trade`, `accept_trade`), and the shipped stub has no `invokeLocalCall`, so a closed port stays unknown
+- a live refresh after a discarded `create_event` stays incomplete and does not send the next step, and an expired reservation rejects `accept_trade` once on its own gate
