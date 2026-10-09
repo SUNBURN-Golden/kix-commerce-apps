@@ -32,6 +32,7 @@ Charter labels are from Task 005. The app names those surfaces and calls an adap
 | Booking journey (Wave 6-A) | `/booking/:eventId` | Wave 6-A, mock, 설계중 | `BookingJourney` over `invokeLocalCall`: `create_event`, `prepare_trade`, `accept_trade`. This is not a desk method. |
 | Box office journey view | `/` | Wave 6-A | read-only view of journeys opened on this page load. |
 | Buyer workspace | `/buyer` | page-load receipts for selection, reservation, order, and issuance | no write. `listPerformances` stays a stub read. |
+| Discovery | `/discovery` | synthetic search fixture for events, seats, GA, and resale labels | no write. `listPerformances` stays one stub read. |
 
 The Wave 6-A rows are catalogue calls, not desk bindings, and every `COMMERCE_METHODS` entry is still `not-bound`.
 
@@ -149,6 +150,8 @@ Buyer, organizer, and operator workspaces, the seven-stage buyer flow, and the p
 
 The buyer workspace at `/buyer` is a read-only page over receipts already opened on this page load. It shows selection, reservation, order, and issuance as separate rows, including an expiry or a rejection reason the adapter already returned. It links a journey receipt to `/booking/:eventId`, a gift receipt to `/gift`, and a mock resale right to `/resale`. It does not post, and a reload does not post again. There is no catalogue read of a held ticket, so that row stays not-bound. Stub-shape receipts are not from the gate. Limits are in [docs/c-buyer-workspace-apps-bind.md](docs/c-buyer-workspace-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
+The discovery page at `/discovery` is a synthetic fixture for search, filters, sort, paging, and a scale window. Event, seat, GA, and resale rows stay visibly different. Empty results, filter conflicts, a stale tier, and a cancelled event stay on the fixture. Counts and tiers are synthetic labels. A supported purchase link appears only for an on-sale event whose id is on the one `listPerformances` read. Seat and GA selection stay on `c-inventory-venue`. Limits are in [docs/c-discovery-prototype-apps-bind.md](docs/c-discovery-prototype-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+
 ## Run locally
 
 ```bash
@@ -258,3 +261,6 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - a shape-only journey invoker reports the same step sequence as the live gate (`create_event`, `prepare_trade`, `accept_trade`), and the shipped stub has no `invokeLocalCall`, so a closed port stays unknown
 - a live refresh after a discarded `create_event` stays incomplete and does not send the next step, and an expired reservation rejects `accept_trade` once on its own gate
 - the Wave 6-A evidence matrix, the commands it lists, and the runs it links are in [docs/wave-6a-evidence-apps-bind.md](docs/wave-6a-evidence-apps-bind.md)
+- the discovery fixture filters, sorts, and pages a synthetic sample, keeps each rendered page inside a window, and does not mount a million rows
+- a discovery purchase link appears only for an on-sale event id on the catalogue read, and a not-bound `listPerformances` read stays not-bound with no stub switch
+- discovery copy stays synthetic and does not use currency marks or stock claims
