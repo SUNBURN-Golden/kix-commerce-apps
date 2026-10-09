@@ -31,6 +31,7 @@ Charter labels are from Task 005. The app names those surfaces and calls an adap
 | Organizer | `/organizer` | event lifecycle | `create_event`, `close_sales`, `open_admission`, `complete_event`, `cancel_event`, `issue_invitation` |
 | Booking journey (Wave 6-A) | `/booking/:eventId` | Wave 6-A, mock, 설계중 | `BookingJourney` over `invokeLocalCall`: `create_event`, `prepare_trade`, `accept_trade`. This is not a desk method. |
 | Box office journey view | `/` | Wave 6-A | read-only view of journeys opened on this page load. |
+| Buyer workspace | `/buyer` | page-load receipts for selection, reservation, order, and issuance | no write. `listPerformances` stays a stub read. |
 
 The Wave 6-A rows are catalogue calls, not desk bindings, and every `COMMERCE_METHODS` entry is still `not-bound`.
 
@@ -145,6 +146,8 @@ Evidence: [docs/wave-6a-evidence-apps-bind.md](docs/wave-6a-evidence-apps-bind.m
 ## Workspace design
 
 Buyer, organizer, and operator workspaces, the seven-stage buyer flow, and the per-track screen contract are in [docs/workspace-design-apps-bind.md](docs/workspace-design-apps-bind.md). Reservation, payment, issuance, and admission each keep their own badge. Stub desks, not-bound methods, and planned routes stay labeled that way. The machine-readable table is `apps/web/src/workspace/registry.ts`, checked by `apps/web/test/workspace-registry.test.ts`. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+
+The buyer workspace at `/buyer` is a read-only page over receipts already opened on this page load. It shows selection, reservation, order, and issuance as separate rows, including an expiry or a rejection reason the adapter already returned. It links a journey receipt to `/booking/:eventId`, a gift receipt to `/gift`, and a mock resale right to `/resale`. It does not post, and a reload does not post again. There is no catalogue read of a held ticket, so that row stays not-bound. Stub-shape receipts are not from the gate. Limits are in [docs/c-buyer-workspace-apps-bind.md](docs/c-buyer-workspace-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
 ## Run locally
 
