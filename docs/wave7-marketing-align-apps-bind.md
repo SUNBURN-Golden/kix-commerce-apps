@@ -4,6 +4,8 @@ This bind records how the M01–M05 stub sits against the published contract-onl
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
+Superseded in part by #34 (`w7-m05-consent-bind`): the M05 row and the sentence that M05 does not send `set_consent` or `authorize_marketing` describe the state at this node. Current record: [m05-consent-bind-apps-bind.md](m05-consent-bind-apps-bind.md).
+
 ## Status and gate
 
 The Wave 6 gate record is [kix-protocol issue 56, comment 5868307343](https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343).
@@ -28,7 +30,7 @@ The live-gate job (`KIX_REQUIRE_GATE=1`) was not run locally. It needs a kix-pro
 | M02 | none | `no-published-command` | No catalogue command for presale. `listPerformances` is an adapter display read, not a catalogue command. Recording interest does not place a hold. |
 | M03 | none | `no-published-command` | No catalogue command for a coupon. Markers have no price and no tender. |
 | M04 | none | `no-published-command` | No catalogue command for a referral. The desk has no disburse action. |
-| M05 | `set_consent`, `authorize_marketing` | `published-not-bound` | Both names are in the vendored catalogue. This stub does not call them. Binding is the later node `w7-m05-consent-bind`. |
+| M05 | `set_consent`, `authorize_marketing` | `published-not-bound` at this node. **Superseded by #34: now `published-bound`.** | Binding landed as `w7-m05-consent-bind` (#34); see the M05 bind doc. |
 
 `set_consent` field names: `allowed`, `business`, `channel`, `domain`, `eventId`, `expectedConsentVersion`, `purpose`. All of those are required. `additionalProperties` is false.
 
@@ -40,7 +42,7 @@ M01–M04 stay 설계중. M05 stays 미착수. Labels are not promoted.
 
 ## Not bound / not called
 
-Marketing sends no booking, resale, admission, settlement, or credit write. It also sends no `capture`, `settle_capture`, `prepare_trade`, or `reserve_listing`. It does not send `set_consent` or `authorize_marketing`. It does not send `commit_trade`, `open_admission`, or `admit`.
+For M01–M04 and the stub flags, marketing sends no booking, resale, admission, settlement, or credit write. It also sends no `capture`, `settle_capture`, `prepare_trade`, or `reserve_listing`. The stub flags do not send `set_consent` or `authorize_marketing`. `ConsentBind` is the exception and posts those two commands. Marketing does not send `commit_trade`, `open_admission`, or `admit`.
 
 `placeHold` stays not-bound with `consideredAction` `reserve_listing`. Marketing does not map any desk method onto a different body.
 
@@ -54,7 +56,7 @@ Observed in headless Chrome 154.0.8037.57 on 2026-10-09. The stub desk was Vite 
 
 | State | Observed |
 | --- | --- |
-| Stub hub | Published contract section for M01–M05. M05 label `M05 · 미착수`. M05 line names `set_consent` and `authorize_marketing` as published, not called. Tier `guest`, consent `unset`. OpenAPI bound `no`. |
+| Stub hub | (before #34) Published contract section for M01–M05. M05 label `M05 · 미착수`. M05 line names `set_consent` and `authorize_marketing` as published, not called. Tier `guest`, consent `unset`. OpenAPI bound `no`. |
 | M02 as guest | `데모 창 닫힘 · Closed`. Catalog titles loaded. North Station Lanterns still showed `40 still open`. All three Record demo interest buttons were disabled. |
 | M01 blank name | Alert: `Enter a display name of 1–40 characters.` No card. |
 | M01 card | Display name Mira. Local ref `mbr_stub_1`. Status `설계중`. |
