@@ -1,6 +1,6 @@
 # Workspace design apps bind
 
-This bind is the information architecture for the buyer, organizer, and operator desks. It maps the current routes onto 발견 → 선택 → 예약 → 결제 상태 → 권리 → 입장 → 환불, and it records which protocol commands those screens send. The read-only buyer workspace route is `/buyer`. Limits for that page are in [docs/c-buyer-workspace-apps-bind.md](docs/c-buyer-workspace-apps-bind.md). The synthetic discovery route is `/discovery`. Limits for that page are in [docs/c-discovery-prototype-apps-bind.md](docs/c-discovery-prototype-apps-bind.md).
+This bind is the information architecture for the buyer, organizer, and operator desks. It maps the current routes onto 발견 → 선택 → 예약 → 결제 상태 → 권리 → 입장 → 환불, and it records which protocol commands those screens send. The read-only buyer workspace route is `/buyer`. Limits for that page are in [c-buyer-workspace-apps-bind.md](c-buyer-workspace-apps-bind.md). The synthetic discovery route is `/discovery`. Limits for that page are in [c-discovery-prototype-apps-bind.md](c-discovery-prototype-apps-bind.md).
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
@@ -12,11 +12,11 @@ No catalogue, gate, or SDK change is consumed. Both OpenAPI pins, `PINNED_ACTION
 
 M2 is selected. The booking journey composes nothing past `accept_trade`: `create_event`, then `prepare_trade`, then `accept_trade`, through the existing local-call invoker with the published bodies. `capture` and `settle_capture` are never composed and never sent. `commit_trade`, `open_admission`, and `admit` stay uncomposed on that journey. `JOURNEY_NOT_COMPOSED` is unchanged.
 
-`open_admission` stays uncomposed on the journey and is posted only by `OrganizerConsole`. That split is already recorded in [docs/organizer-admin-console-apps-bind.md](docs/organizer-admin-console-apps-bind.md). This design does not merge those two posts into one admission badge.
+`open_admission` stays uncomposed on the journey and is posted only by `OrganizerConsole`. That split is already recorded in [organizer-admin-console-apps-bind.md](organizer-admin-console-apps-bind.md). This design does not merge those two posts into one admission badge.
 
 H1 is selected. `placeHold.consideredAction` stays `reserve_listing`. `placeHold` stays not-bound. `prepare_trade` is only a `BookingJourney` body. `placeHold({ eventId, quantity })` is not mapped onto it. The registry quotes that locked reason and sets `mappedOntoPrepareTrade` to false.
 
-`NEVER_SENT_ACTIONS` in the registry is `capture`, `commit_trade`, `admit`, and `refund_ticket`. `UNSENT_MONETARY_POSTING_METHOD` is `settlementPreview`. The locked `consideredAction` on that method is `settle_capture`, and the workspace test treats that action as never sent. The registry file does not spell `settle_capture`: `packages/protocol-adapter/test/no-bypass.test.ts` rejects that token anywhere under `apps/web/src`. `open_admission` is not in the never-sent list because the organizer console sends it. `refund_ticket` is pinned and no surface sends it. `JOURNEY_NOT_COMPOSED` has no row for it. [docs/wave-6a-journey-map-apps-bind.md](docs/wave-6a-journey-map-apps-bind.md) already says the journey does not map `refund_ticket`.
+`NEVER_SENT_ACTIONS` in the registry is `capture`, `commit_trade`, `admit`, and `refund_ticket`. `UNSENT_MONETARY_POSTING_METHOD` is `settlementPreview`. The locked `consideredAction` on that method is `settle_capture`, and the workspace test treats that action as never sent. The registry file does not spell `settle_capture`: `packages/protocol-adapter/test/no-bypass.test.ts` rejects that token anywhere under `apps/web/src`. `open_admission` is not in the never-sent list because the organizer console sends it. `refund_ticket` is pinned and no surface sends it. `JOURNEY_NOT_COMPOSED` has no row for it. [wave-6a-journey-map-apps-bind.md](wave-6a-journey-map-apps-bind.md) already says the journey does not map `refund_ticket`.
 
 ## Information architecture
 
@@ -177,7 +177,7 @@ This node adds `apps/web/test/workspace-registry.test.ts` only. The behavioral c
 | `apps/web/test/settlement-panel.test.tsx` | `keeps settlement UI copy free of production-payment wording and on the adapter` | Mock settlement copy |
 | `apps/web/test/marketing-contracts.test.ts` | `M01–M04 name no pinned action` | M01–M04 stay unpublished |
 
-The design pass added no screen. `c-buyer-workspace` later added `/buyer`. Browser notes for that page are in [docs/c-buyer-workspace-apps-bind.md](docs/c-buyer-workspace-apps-bind.md). Live-gate suites stay on the CI `live-gate` job. A local run with `KIX_REQUIRE_GATE=0` skips them. That skip is not a pass.
+The design pass added no screen. `c-buyer-workspace` later added `/buyer`. Browser runs for `/buyer` and `/discovery` are in the `Browser run` sections of [c-buyer-workspace-apps-bind.md](c-buyer-workspace-apps-bind.md) and [c-discovery-prototype-apps-bind.md](c-discovery-prototype-apps-bind.md). Live-gate suites stay on the CI `live-gate` job. A local run with `KIX_REQUIRE_GATE=0` skips them. That skip is not a pass.
 
 ## Hold
 

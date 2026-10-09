@@ -1,7 +1,7 @@
 # kix-commerce-apps
 
 Wave 6 commerce desk for KIX: box office, booking, admission, and resale.
-Wave 7 adds marketing screens for ORIGINAL_32 labels M01–M05. Those screens are stub demos. M01–M04 stay 설계중. M05 stays 미착수. Labels are not promoted above the ORIGINAL_32 source.
+Wave 7 adds marketing screens for ORIGINAL_32 labels M01–M05. M01–M04 are browser-session stub demos and stay 설계중. M05 is published-bound through `ConsentBind` (`set_consent`, then `authorize_marketing`), and its label stays 미착수. Labels are not promoted above the ORIGINAL_32 source.
 This repository is the BeautifulMind-JT app host JunTae selected for product frontends.
 Protocol, Move, and settlement contracts stay in [BeautifulMind-JT/kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol).
 
@@ -10,7 +10,7 @@ The UI is an operator desk over a protocol adapter, plus a separate marketing st
 ## Non-goals
 
 - Product frontend trees do not belong in `kix-protocol`. This repo does not copy Move, the kernel, or settlement math.
-- Wave 7 marketing (M01–M05) is a browser-session stub. M01–M04 stay 설계중. M05 stays 미착수. Limits are in [docs/wave7-marketing-m01-m05.md](docs/wave7-marketing-m01-m05.md). The contract-only OpenAPI pin is the command catalogue. The integration-gate pin is a loopback transport only. Neither pin is production deployment, a public endpoint, or a contract-conformance claim. Local HTTP success is not approval for chain, payment, production, or launch.
+- Wave 7 marketing: M01–M04 are browser-session stubs and stay 설계중. M05 is published-bound through `ConsentBind` and stays 미착수. Limits are in [docs/wave7-marketing-m01-m05.md](docs/wave7-marketing-m01-m05.md). The contract-only OpenAPI pin is the command catalogue. The integration-gate pin is a loopback transport only. Neither pin is production deployment, a public endpoint, or a contract-conformance claim. Local HTTP success is not approval for chain, payment, production, or launch.
 - No real money, no card capture, and no credit disbursement. The credit desk is a mock case. F04 and E06 stay 설계중 in kix-protocol. This app has no disburse action (`CREDIT_BOUNDARY.action` is `none`).
 - No product TPS, p99, or fail-rate SLOs.
 - ZARI, film-unit, maeum-gyeol, SOULBOUND, ai-ops-control-plane, and beautiful-mind are out of this wave.
@@ -36,7 +36,7 @@ Charter labels are from Task 005. The app names those surfaces and calls an adap
 
 The Wave 6-A rows are catalogue calls, not desk bindings, and every `COMMERCE_METHODS` entry is still `not-bound`.
 
-Wave 7 marketing routes use the local stub in `apps/web/src/marketing`. They are not protocol calls, except a display-only `listPerformances` read on M02.
+Wave 7 marketing routes M01–M04 use the local stub in `apps/web/src/marketing`. They make no protocol call, except a display-only `listPerformances` read on M02. M05 keeps session flags there too, and posts `set_consent` then `authorize_marketing` through `ConsentBind` ([docs/m05-consent-bind-apps-bind.md](docs/m05-consent-bind-apps-bind.md)). The default invoker returns stub-shape literals. HTTP mode uses the loopback gate and does not fall back to the stub.
 
 | Marketing | Route | ORIGINAL_32 | Write target |
 | --- | --- | --- | --- |
