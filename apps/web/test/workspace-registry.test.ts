@@ -39,7 +39,6 @@ const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const repoRoot = path.resolve(webRoot, "../..");
 
 const PLANNED_TASKS = [
-  "c-discovery-prototype",
   "c-organizer-workspace",
   "c-receipt-explorer",
   "c-accessibility-baseline",
@@ -225,8 +224,26 @@ describe("workspace registry", () => {
     expect(surfaceBindingLine("buyer-workspace")).toContain("Current route.");
     expect(surfaceBindingLine("buyer-workspace")).toContain("stub-only");
 
+    const discovery = WORKSPACE_SURFACES.find((surface) => surface.id === "discovery-prototype");
+    expect(discovery?.route).toBe("/discovery");
+    expect(discovery?.binding).toBe("stub-only");
+    expect(discovery?.sender).toBeNull();
+    expect(discovery?.actions).toEqual([]);
+    expect(discovery?.deskMethods).toEqual([]);
+    expect(discovery?.implemented).toBe(true);
+    expect(discovery?.pageControl).toBe(true);
+    expect(discovery?.taskId).toBe("c-discovery-prototype");
+    expect(discovery?.provenanceNote).not.toMatch(CLAIM);
+    expect(surfaceBindingLine("discovery-prototype")).toContain("Current route.");
+    expect(surfaceBindingLine("discovery-prototype")).toContain("stub-only");
+    expect(BUYER_FLOW_STAGES.find((stage) => stage.id === "discovery")?.surfaces).toEqual([
+      "box-office-catalog",
+      "discovery-prototype",
+    ]);
+
     const source = readFileSync(path.join(webRoot, "src/workspace/registry.ts"), "utf8");
     expect(source).not.toContain("planned-buyer-workspace");
+    expect(source).not.toContain("planned-discovery");
     expect(source).not.toContain("invokeLocalCall");
     expect(source).not.toContain("fetch(");
     expect(source).not.toContain("@kix/protocol-adapter");
