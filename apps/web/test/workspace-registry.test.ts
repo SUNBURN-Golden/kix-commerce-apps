@@ -40,7 +40,6 @@ const repoRoot = path.resolve(webRoot, "../..");
 
 const PLANNED_TASKS = [
   "c-discovery-prototype",
-  "c-buyer-workspace",
   "c-organizer-workspace",
   "c-receipt-explorer",
   "c-accessibility-baseline",
@@ -213,7 +212,21 @@ describe("workspace registry", () => {
       }
     }
 
+    const buyer = WORKSPACE_SURFACES.find((surface) => surface.id === "buyer-workspace");
+    expect(buyer?.route).toBe("/buyer");
+    expect(buyer?.binding).toBe("stub-only");
+    expect(buyer?.sender).toBeNull();
+    expect(buyer?.actions).toEqual([]);
+    expect(buyer?.deskMethods).toEqual([]);
+    expect(buyer?.implemented).toBe(true);
+    expect(buyer?.pageControl).toBe(true);
+    expect(buyer?.taskId).toBe("c-buyer-workspace");
+    expect(buyer?.provenanceNote).not.toMatch(CLAIM);
+    expect(surfaceBindingLine("buyer-workspace")).toContain("Current route.");
+    expect(surfaceBindingLine("buyer-workspace")).toContain("stub-only");
+
     const source = readFileSync(path.join(webRoot, "src/workspace/registry.ts"), "utf8");
+    expect(source).not.toContain("planned-buyer-workspace");
     expect(source).not.toContain("invokeLocalCall");
     expect(source).not.toContain("fetch(");
     expect(source).not.toContain("@kix/protocol-adapter");
