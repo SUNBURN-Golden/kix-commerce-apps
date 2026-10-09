@@ -126,6 +126,16 @@ export interface OrganizerCreateInput {
   policy: OrganizerPolicy;
   seats: string[];
   invitationQuota?: number;
+  /** Included only when the caller typed one. The helper does not default it. */
+  reservationSeconds?: number;
+}
+
+/** Exact action, actor, and body a later send would post. Preview does no I/O. */
+export interface OrganizerPreview {
+  step: OrganizerStep;
+  action: OrganizerStep;
+  actor: string;
+  body: Record<string, unknown>;
 }
 
 export interface OrganizerEventInput {
@@ -362,7 +372,66 @@ function createEventBody(input: OrganizerCreateInput): Record<string, unknown> {
   if (input.invitationQuota !== undefined) {
     body.invitationQuota = input.invitationQuota;
   }
+  if (input.reservationSeconds !== undefined) {
+    body.reservationSeconds = input.reservationSeconds;
+  }
   return body;
+}
+
+/**
+ * Builds the envelope a send would post and returns the body the invoker would see.
+ * It does not call the invoker and does not change console state.
+ */
+export function previewOrganizerStep(
+  step: OrganizerStep,
+  input: OrganizerCreateInput | OrganizerEventInput | OrganizerInvitationInput,
+): OrganizerPreview {
+  if (step === "create_event") {
+    if (!isCreateInput(input)) {
+      throw new ProtocolError("create_event preview needs organizer, policy, and seats.");
+    }
+    return sealPreview(step, input.operationId, OPERATOR, createEventBody(input));
+  }
+  if (step === "issue_invitation") {
+    if (!isInvitationInput(input)) {
+      throw new ProtocolError(
+        "issue_invitation preview needs inventoryId, expectedInventoryVersion, recipient, and organizer.",
+      );
+    }
+    return sealPreview(step, input.operationId, input.organizer, invitationBody(input));
+  }
+  if (!isEventInput(input)) {
+    throw new ProtocolError("Event preview needs an eventId.");
+  }
+  return sealPreview(step, input.operationId, OPERATOR, eventBody(input.eventId));
+}
+
+function sealPreview(
+  step: OrganizerStep,
+  operationId: string,
+  actor: string,
+  body: Record<string, unknown>,
+): OrganizerPreview {
+  const envelope = buildLocalCallEnvelope({ operationId, actor, action: step, body });
+  return { step, action: step, actor: envelope.actor, body: snapshot(envelope.body) };
+}
+
+function isCreateInput(
+  input: OrganizerCreateInput | OrganizerEventInput | OrganizerInvitationInput,
+): input is OrganizerCreateInput {
+  return "seats" in input && "policy" in input;
+}
+
+function isInvitationInput(
+  input: OrganizerCreateInput | OrganizerEventInput | OrganizerInvitationInput,
+): input is OrganizerInvitationInput {
+  return "inventoryId" in input && "recipient" in input && "expectedInventoryVersion" in input;
+}
+
+function isEventInput(
+  input: OrganizerCreateInput | OrganizerEventInput | OrganizerInvitationInput,
+): input is OrganizerEventInput {
+  return "eventId" in input && "operationId" in input;
 }
 
 function eventBody(eventId: string): Record<string, unknown> {
