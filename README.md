@@ -1,7 +1,7 @@
 # kix-commerce-apps
 
 Wave 6 commerce desk for KIX: box office, booking, admission, and resale.
-Wave 7 adds marketing screens for ORIGINAL_32 labels M01–M05. Those screens are stub demos. M01–M04 stay 설계중. M05 stays 미착수. Labels are not promoted above the ORIGINAL_32 source.
+Wave 7 adds marketing screens for ORIGINAL_32 labels M01–M05. M01–M04 are browser-session stub demos and stay 설계중. M05 is published-bound through `ConsentBind` (`set_consent`, then `authorize_marketing`), and its label stays 미착수. Labels are not promoted above the ORIGINAL_32 source.
 This repository is the BeautifulMind-JT app host JunTae selected for product frontends.
 Protocol, Move, and settlement contracts stay in [BeautifulMind-JT/kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol).
 
@@ -10,7 +10,7 @@ The UI is an operator desk over a protocol adapter, plus a separate marketing st
 ## Non-goals
 
 - Product frontend trees do not belong in `kix-protocol`. This repo does not copy Move, the kernel, or settlement math.
-- Wave 7 marketing (M01–M05) is a browser-session stub. M01–M04 stay 설계중. M05 stays 미착수. Limits are in [docs/wave7-marketing-m01-m05.md](docs/wave7-marketing-m01-m05.md). The contract-only OpenAPI pin is the command catalogue. The integration-gate pin is a loopback transport only. Neither pin is production deployment, a public endpoint, or a contract-conformance claim. Local HTTP success is not approval for chain, payment, production, or launch.
+- Wave 7 marketing: M01–M04 are browser-session stubs and stay 설계중. M05 is published-bound through `ConsentBind` and stays 미착수. Limits are in [docs/wave7-marketing-m01-m05.md](docs/wave7-marketing-m01-m05.md). The contract-only OpenAPI pin is the command catalogue. The integration-gate pin is a loopback transport only. Neither pin is production deployment, a public endpoint, or a contract-conformance claim. Local HTTP success is not approval for chain, payment, production, or launch.
 - No real money, no card capture, and no credit disbursement. The credit desk is a mock case. F04 and E06 stay 설계중 in kix-protocol. This app has no disburse action (`CREDIT_BOUNDARY.action` is `none`).
 - No product TPS, p99, or fail-rate SLOs.
 - ZARI, film-unit, maeum-gyeol, SOULBOUND, ai-ops-control-plane, and beautiful-mind are out of this wave.
@@ -33,10 +33,11 @@ Charter labels are from Task 005. The app names those surfaces and calls an adap
 | Booking journey (Wave 6-A) | `/booking/:eventId` | Wave 6-A, mock, 설계중 | `BookingJourney` over `invokeLocalCall`: `create_event`, `prepare_trade`, `accept_trade`. This is not a desk method. |
 | Box office journey view | `/` | Wave 6-A | read-only view of journeys opened on this page load. |
 | Buyer workspace | `/buyer` | page-load receipts for selection, reservation, order, and issuance | no write. `listPerformances` stays a stub read. |
+| Discovery | `/discovery` | synthetic search fixture for events, seats, GA, and resale labels | no write. `listPerformances` stays one stub read. |
 
 The Wave 6-A rows are catalogue calls, not desk bindings, and every `COMMERCE_METHODS` entry is still `not-bound`.
 
-Wave 7 marketing routes use the local stub in `apps/web/src/marketing`. They are not protocol calls, except a display-only `listPerformances` read on M02.
+Wave 7 marketing routes M01–M04 use the local stub in `apps/web/src/marketing`. They make no protocol call, except a display-only `listPerformances` read on M02. M05 keeps session flags there too, and posts `set_consent` then `authorize_marketing` through `ConsentBind` ([docs/m05-consent-bind-apps-bind.md](docs/m05-consent-bind-apps-bind.md)). The default invoker returns stub-shape literals. HTTP mode uses the loopback gate and does not fall back to the stub.
 
 | Marketing | Route | ORIGINAL_32 | Write target |
 | --- | --- | --- | --- |
@@ -152,7 +153,9 @@ Buyer, organizer, and operator workspaces, the seven-stage buyer flow, and the p
 
 The buyer workspace at `/buyer` is a read-only page over receipts already opened on this page load. It shows selection, reservation, order, and issuance as separate rows, including an expiry or a rejection reason the adapter already returned. It links a journey receipt to `/booking/:eventId`, a gift receipt to `/gift`, and a mock resale right to `/resale`. It does not post, and a reload does not post again. There is no catalogue read of a held ticket, so that row stays not-bound. Stub-shape receipts are not from the gate. Limits are in [docs/c-buyer-workspace-apps-bind.md](docs/c-buyer-workspace-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
-The organizer workspace at `/organizer/workspace` is the edit and preview page for the six organizer commands. It does not add a command. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+The discovery page at `/discovery` is a synthetic fixture for search, filters, sort, paging, and a scale window. Event, seat, GA, and resale rows stay visibly different. Empty results, filter conflicts, a stale tier, and a cancelled event stay on the fixture. Counts and tiers are synthetic labels. A supported purchase link appears only for an on-sale event whose id is on the one `listPerformances` read. Seat and GA selection stay on `c-inventory-venue`. Limits are in [docs/c-discovery-prototype-apps-bind.md](docs/c-discovery-prototype-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+
+The organizer workspace at `/organizer/workspace` is the edit and preview page for the six organizer commands. It does not add a command. Limits are in [docs/c-organizer-workspace-apps-bind.md](docs/c-organizer-workspace-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
 ## Run locally
 
@@ -265,3 +268,6 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - a shape-only journey invoker reports the same step sequence as the live gate (`create_event`, `prepare_trade`, `accept_trade`), and the shipped stub has no `invokeLocalCall`, so a closed port stays unknown
 - a live refresh after a discarded `create_event` stays incomplete and does not send the next step, and an expired reservation rejects `accept_trade` once on its own gate
 - the Wave 6-A evidence matrix, the commands it lists, and the runs it links are in [docs/wave-6a-evidence-apps-bind.md](docs/wave-6a-evidence-apps-bind.md)
+- the discovery fixture filters, sorts, and pages a synthetic sample, keeps each rendered page inside a window, and does not mount a million rows
+- a discovery purchase link appears only for an on-sale event id on the catalogue read, and a not-bound `listPerformances` read stays not-bound with no stub switch
+- discovery copy stays synthetic and does not use currency marks or stock claims

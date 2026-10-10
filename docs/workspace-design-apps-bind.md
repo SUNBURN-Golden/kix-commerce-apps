@@ -1,6 +1,6 @@
 # Workspace design apps bind
 
-This bind is the information architecture for the buyer, organizer, and operator desks. It maps the current routes onto 발견 → 선택 → 예약 → 결제 상태 → 권리 → 입장 → 환불, and it records which protocol commands those screens send. The read-only buyer workspace route is `/buyer`. Limits for that page are in [docs/c-buyer-workspace-apps-bind.md](docs/c-buyer-workspace-apps-bind.md). The organizer workspace route is `/organizer/workspace`. Limits for that page are in [docs/c-organizer-workspace-apps-bind.md](docs/c-organizer-workspace-apps-bind.md).
+This bind is the information architecture for the buyer, organizer, and operator desks. It maps the current routes onto 발견 → 선택 → 예약 → 결제 상태 → 권리 → 입장 → 환불, and it records which protocol commands those screens send. The read-only buyer workspace route is `/buyer`. Limits for that page are in [c-buyer-workspace-apps-bind.md](c-buyer-workspace-apps-bind.md). The synthetic discovery route is `/discovery`. Limits for that page are in [c-discovery-prototype-apps-bind.md](c-discovery-prototype-apps-bind.md). The organizer workspace route is `/organizer/workspace`. Limits for that page are in [c-organizer-workspace-apps-bind.md](c-organizer-workspace-apps-bind.md).
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
@@ -12,19 +12,19 @@ No catalogue, gate, or SDK change is consumed. Both OpenAPI pins, `PINNED_ACTION
 
 M2 is selected. The booking journey composes nothing past `accept_trade`: `create_event`, then `prepare_trade`, then `accept_trade`, through the existing local-call invoker with the published bodies. `capture` and `settle_capture` are never composed and never sent. `commit_trade`, `open_admission`, and `admit` stay uncomposed on that journey. `JOURNEY_NOT_COMPOSED` is unchanged.
 
-`open_admission` stays uncomposed on the journey and is posted only by `OrganizerConsole`. That split is already recorded in [docs/organizer-admin-console-apps-bind.md](docs/organizer-admin-console-apps-bind.md). This design does not merge those two posts into one admission badge.
+`open_admission` stays uncomposed on the journey and is posted only by `OrganizerConsole`. That split is already recorded in [organizer-admin-console-apps-bind.md](organizer-admin-console-apps-bind.md). This design does not merge those two posts into one admission badge.
 
 H1 is selected. `placeHold.consideredAction` stays `reserve_listing`. `placeHold` stays not-bound. `prepare_trade` is only a `BookingJourney` body. `placeHold({ eventId, quantity })` is not mapped onto it. The registry quotes that locked reason and sets `mappedOntoPrepareTrade` to false.
 
-`NEVER_SENT_ACTIONS` in the registry is `capture`, `commit_trade`, `admit`, and `refund_ticket`. `UNSENT_MONETARY_POSTING_METHOD` is `settlementPreview`. The locked `consideredAction` on that method is `settle_capture`, and the workspace test treats that action as never sent. The registry file does not spell `settle_capture`: `packages/protocol-adapter/test/no-bypass.test.ts` rejects that token anywhere under `apps/web/src`. `open_admission` is not in the never-sent list because the organizer console sends it. `refund_ticket` is pinned and no surface sends it. `JOURNEY_NOT_COMPOSED` has no row for it. [docs/wave-6a-journey-map-apps-bind.md](docs/wave-6a-journey-map-apps-bind.md) already says the journey does not map `refund_ticket`.
+`NEVER_SENT_ACTIONS` in the registry is `capture`, `commit_trade`, `admit`, and `refund_ticket`. `UNSENT_MONETARY_POSTING_METHOD` is `settlementPreview`. The locked `consideredAction` on that method is `settle_capture`, and the workspace test treats that action as never sent. The registry file does not spell `settle_capture`: `packages/protocol-adapter/test/no-bypass.test.ts` rejects that token anywhere under `apps/web/src`. `open_admission` is not in the never-sent list because the organizer console sends it. `refund_ticket` is pinned and no surface sends it. `JOURNEY_NOT_COMPOSED` has no row for it. [wave-6a-journey-map-apps-bind.md](wave-6a-journey-map-apps-bind.md) already says the journey does not map `refund_ticket`.
 
 ## Information architecture
 
-Three roles over the current routes. Planned routes stay `NOT_IMPLEMENTED` and carry the successor task id. They are not navigation items. `/buyer` is a navigation item.
+Three roles over the current routes. Planned routes stay `NOT_IMPLEMENTED` and carry the successor task id. They are not navigation items. `/buyer` and `/discovery` are navigation items.
 
 | Role | What the person does here | Current routes | Planned, not built |
 | --- | --- | --- | --- |
-| Buyer | Find a show, reserve, read payment status, hold a right, enter, ask about a refund | `/`, `/buyer`, `/booking/:eventId`, `/admission`, `/resale`, `/gift`, `/marketing`, `/marketing/m01`–`m05` | `/discovery` (`c-discovery-prototype`) |
+| Buyer | Find a show, reserve, read payment status, hold a right, enter, ask about a refund | `/`, `/buyer`, `/discovery`, `/booking/:eventId`, `/admission`, `/resale`, `/gift`, `/marketing`, `/marketing/m01`–`m05` | none |
 | Organizer | Open a show, close sales, open admission, invite, preview each command, read the mock settlement case | `/organizer`, `/organizer/workspace`, settlement case on `/` | none |
 | Operator | Read the transport banner, see refusals, leave unshown desk methods unlabeled as working | Shell on every route | `/receipts` (`c-receipt-explorer`). Keyboard and amount presentation across all three roles waits on `c-accessibility-baseline` and adds no route |
 
@@ -38,7 +38,7 @@ Each stage has at most one outcome track. The four tracks are `reservation`, `pa
 
 | Stage | Id | Track | Current support |
 | --- | --- | --- | --- |
-| 발견 | `discovery` | none | Stub `listPerformances` on `/`. The catalogue has no list command. Search is `NOT_IMPLEMENTED` |
+| 발견 | `discovery` | none | Stub `listPerformances` on `/` and one read on `/discovery`. `/discovery` is a synthetic fixture. The catalogue has no list command. |
 | 선택 | `selection` | none | Choosing a row opens `/booking/:eventId`. Selection is not a reservation |
 | 예약 | `reservation` | `reservation` | `BookingJourney` posts `prepare_trade` inside the three-step chain. `placeHold` stays not-bound. The B01–B05 case is stub-only |
 | 결제 상태 | `payment` | `payment` | `confirmBooking` does not send `capture`. The F01–F03 case is stub-only. Price and fee copy is `UNDETERMINED` |
@@ -102,7 +102,7 @@ Copy that already ships uses the sentence "Stub-shape receipts are not from the 
 | `stub-only` | stub-only, plus the mock provenance (`MOCK_GATE_ONLY`, `MOCK_SETTLEMENT_ONLY`, `MOCK_CREDIT_F04_ONLY`) | That the mock phase is a catalogue command or a live fund movement |
 | `not-bound` | not-bound, and the locked `COMMERCE_COMMAND_BINDINGS` reason | That the `consideredAction` was sent |
 | `no-published-command` | no published command. M01–M04 stay 설계중. M05’s ORIGINAL_32 label stays 미착수 even though consent posts two commands | That a session marker is a published command |
-| `planned` | `NOT_IMPLEMENTED` and the task id | That the route exists or that search or the receipt explorer works |
+| `planned` | `NOT_IMPLEMENTED` and the task id | That the route exists, or that the receipt explorer or the accessibility row is already a current page |
 
 Unknown, rejected, and confirmed stay three labels. A stale response does not replace the current track. A transport probe does not change a track. One badge per track. There is no combined completion badge.
 
@@ -134,7 +134,8 @@ Desk methods are names only. Every one of them is `status: "not-bound"` in `COMM
 | Transport | none | none | stub-only observation | `http-integration-gate` | `apps/web/test/transport-status.test.tsx` |
 | Refund | none | `refund_ticket` pinned, not sent | not-bound | none. Policy is `UNDETERMINED` | workspace registry test |
 | Buyer workspace | none | none | stub-only, read-only page `/buyer` | `c-buyer-workspace` | `apps/web/test/buyer-workspace.test.tsx` |
-| Discovery, receipt explorer, accessibility | none | none | planned, `NOT_IMPLEMENTED` | the three remaining `c-*` task ids | workspace registry test |
+| Discovery fixture | none | none | stub-only synthetic fixture `/discovery` | `c-discovery-prototype` | `apps/web/test/discovery-page.test.tsx` |
+| Receipt explorer, accessibility | none | none | planned, `NOT_IMPLEMENTED` | the two remaining `c-*` task ids | workspace registry test |
 
 Quoted reasons, unchanged from the locked bindings:
 
@@ -177,7 +178,7 @@ This node adds `apps/web/test/workspace-registry.test.ts` only. The behavioral c
 | `apps/web/test/settlement-panel.test.tsx` | `keeps settlement UI copy free of production-payment wording and on the adapter` | Mock settlement copy |
 | `apps/web/test/marketing-contracts.test.ts` | `M01–M04 name no pinned action` | M01–M04 stay unpublished |
 
-The design pass added no screen. `c-buyer-workspace` later added `/buyer`. Browser notes for that page are in [docs/c-buyer-workspace-apps-bind.md](docs/c-buyer-workspace-apps-bind.md). `c-organizer-workspace` later added `/organizer/workspace`. Browser notes for that page are in [docs/c-organizer-workspace-apps-bind.md](docs/c-organizer-workspace-apps-bind.md). Live-gate suites stay on the CI `live-gate` job. A local run with `KIX_REQUIRE_GATE=0` skips them. That skip is not a pass.
+The design pass added no screen. `c-buyer-workspace` later added `/buyer`. `c-discovery-prototype` later added `/discovery`. `c-organizer-workspace` later added `/organizer/workspace`. Browser runs for `/buyer` and `/discovery` are in the `Browser run` sections of [c-buyer-workspace-apps-bind.md](c-buyer-workspace-apps-bind.md) and [c-discovery-prototype-apps-bind.md](c-discovery-prototype-apps-bind.md). Browser notes for `/organizer/workspace` are in [c-organizer-workspace-apps-bind.md](c-organizer-workspace-apps-bind.md). Live-gate suites stay on the CI `live-gate` job. A local run with `KIX_REQUIRE_GATE=0` skips them. That skip is not a pass.
 
 ## Hold
 

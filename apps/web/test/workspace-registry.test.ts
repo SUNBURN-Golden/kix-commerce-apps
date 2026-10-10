@@ -38,7 +38,7 @@ import {
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = path.resolve(webRoot, "../..");
 
-const PLANNED_TASKS = ["c-discovery-prototype", "c-receipt-explorer", "c-accessibility-baseline"] as const;
+const PLANNED_TASKS = ["c-receipt-explorer", "c-accessibility-baseline"] as const;
 
 const CLAIM = /\bworks\b|live payment|funds moved|disbursed|payment complete|admission complete|refund complete/i;
 
@@ -220,6 +220,23 @@ describe("workspace registry", () => {
     expect(surfaceBindingLine("buyer-workspace")).toContain("Current route.");
     expect(surfaceBindingLine("buyer-workspace")).toContain("stub-only");
 
+    const discovery = WORKSPACE_SURFACES.find((surface) => surface.id === "discovery-prototype");
+    expect(discovery?.route).toBe("/discovery");
+    expect(discovery?.binding).toBe("stub-only");
+    expect(discovery?.sender).toBeNull();
+    expect(discovery?.actions).toEqual([]);
+    expect(discovery?.deskMethods).toEqual([]);
+    expect(discovery?.implemented).toBe(true);
+    expect(discovery?.pageControl).toBe(true);
+    expect(discovery?.taskId).toBe("c-discovery-prototype");
+    expect(discovery?.provenanceNote).not.toMatch(CLAIM);
+    expect(surfaceBindingLine("discovery-prototype")).toContain("Current route.");
+    expect(surfaceBindingLine("discovery-prototype")).toContain("stub-only");
+    expect(BUYER_FLOW_STAGES.find((stage) => stage.id === "discovery")?.surfaces).toEqual([
+      "box-office-catalog",
+      "discovery-prototype",
+    ]);
+
     const organizer = WORKSPACE_SURFACES.find((surface) => surface.id === "organizer-workspace");
     expect(organizer?.route).toBe("/organizer/workspace");
     expect(organizer?.binding).toBe("published-bound");
@@ -235,6 +252,7 @@ describe("workspace registry", () => {
 
     const source = readFileSync(path.join(webRoot, "src/workspace/registry.ts"), "utf8");
     expect(source).not.toContain("planned-buyer-workspace");
+    expect(source).not.toContain("planned-discovery");
     expect(source).not.toContain("planned-organizer-workspace");
     expect(source).not.toContain("invokeLocalCall");
     expect(source).not.toContain("fetch(");

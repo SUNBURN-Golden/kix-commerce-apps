@@ -10,7 +10,10 @@
 
 이전 위임에서 계약 변경도 자동 병합하도록 둔 flag를 아래 표의 대표님 경계로 바꿨다. DAG나 과거 전달/승인 증거를 새 승인으로 전이하지 않는다. 개발 DONE·실환경 qualification·화면/작품 acceptance·release는 각각 독립 증거가 필요하다. UNKNOWN fencing·단일 writer·금융/chain/외부 전송/과금/공개 운영 잠금은 유지한다.
 
-## 노드별 spec 판정 (36개)
+## 노드별 spec 판정 (44개)
+
+
+대표님 결정 2026-10-09 21:36 KST: 위 `c-*` 8개 노드는 contract_change=NO로 추가하고, 이미 병합된 #35·#36·#38은 사후 확인한다. 진행 중 계약 변경이 필요해지면 YES/A3/대표님 경계로 다시 분류한다.
 
 | Node | contract_change | 병합 | audit_floor | spec 근거 |
 |---|---|---|---|---|
@@ -50,6 +53,14 @@
 | `c-accessibility-acceptance` | NO | 정책 C 위임 | A2 | 기존 승인 계약의 시험·측정·증거/수용 인계; 새 계약 정의 없음 |
 | `c-integrated-chaos-qualification` | NO | 정책 C 위임 | A3 | 선행에서 채택한 계약의 구현·소비; 새로운 공개 의미/형식 변경은 제외 |
 | `commerce-integration-closeout` | NO | 정책 C 위임 | A2 | 기존 승인 계약의 시험·측정·증거/수용 인계; 새 계약 정의 없음 |
+| `c-workspace-design` | NO | 대표님 (user_merge) | A2 | 로컬 워크스페이스 설계; 잠긴 바인딩만 사용, 새 공개 계약 없음 (사후 확인, 대표님이 PR #35 병합) |
+| `c-buyer-workspace` | NO | 정책 C 위임 | A2 | 선행에서 채택한 계약의 구현·소비; 새로운 공개 의미/형식 변경은 제외 (사후 확인) |
+| `c-organizer-workspace` | NO | 정책 C 위임 | A2 | 선행에서 채택한 계약의 구현·소비; 새로운 공개 의미/형식 변경은 제외 (사후 확인) |
+| `c-discovery-prototype` | NO | 정책 C 위임 | A2 | 선행에서 채택한 계약의 구현·소비; 새로운 공개 의미/형식 변경은 제외 (사후 확인) |
+| `c-receipt-explorer` | NO | 정책 C 위임 | A2 | 선행에서 채택한 계약의 구현·소비; 새로운 공개 의미/형식 변경은 제외 (사후 확인) |
+| `c-accessibility-baseline` | NO | 정책 C 위임 | A1 | 기존 승인 계약의 시험·접근성 기준; 새 계약 정의 없음 (사후 확인) |
+| `c-contract-fixture-library` | NO | 정책 C 위임 | A2 | 기존 승인 계약의 fixture 정리; 계약 형식 변경 없음 (사후 확인) |
+| `c-local-workspace-closeout` | NO | 정책 C 위임 | A1 | 로컬 워크스페이스 마감·증거 인계; 새 계약 정의 없음 (사후 확인) |
 
 ## 중앙 및 시작 경계
 

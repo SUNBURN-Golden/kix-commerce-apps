@@ -500,17 +500,18 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
-    id: "planned-discovery",
+    id: "discovery-prototype",
     role: "buyer",
     route: "/discovery",
-    binding: "planned",
+    binding: "stub-only",
     sender: null,
     actions: [],
     deskMethods: [],
-    provenanceNote: "NOT_IMPLEMENTED. Search and filters wait for c-discovery-prototype. No list command is published. This row is not a working search.",
+    provenanceNote:
+      "Synthetic fixture for search, filters, sort, paging, and a scale window. Counts and tiers are synthetic labels. The one catalogue read is listPerformances. Stub-shape receipts are not from the gate.",
     taskId: "c-discovery-prototype",
-    implemented: false,
-    pageControl: false,
+    implemented: true,
+    pageControl: true,
   },
   {
     id: "buyer-workspace",
@@ -590,9 +591,9 @@ export const BUYER_FLOW_STAGE_IDS = [
 export const BUYER_FLOW_STAGES = [
   {
     id: "discovery",
-    surfaces: ["box-office-catalog", "planned-discovery"],
+    surfaces: ["box-office-catalog", "discovery-prototype"],
     tracks: [],
-    note: "발견. The stub catalog is the current list. Planned search is NOT_IMPLEMENTED. No outcome badge.",
+    note: "발견. The stub catalog stays on /. Discovery is a synthetic fixture on /discovery. Search reads no list command. No outcome badge.",
   },
   {
     id: "selection",

@@ -4,6 +4,7 @@ import { AdmissionPage } from "./pages/Admission";
 import { BookingPage } from "./pages/Booking";
 import { BoxOfficePage } from "./pages/BoxOffice";
 import { BuyerPage } from "./pages/Buyer";
+import { DiscoveryPage } from "./pages/Discovery";
 import { M01Page } from "./pages/marketing/M01Membership";
 import { M02Page } from "./pages/marketing/M02Presale";
 import { M03Page } from "./pages/marketing/M03Coupons";
@@ -22,6 +23,8 @@ export function App() {
       <Routes>
         <Route path="/" element={<BoxOfficePage />} />
         <Route path="/buyer" element={<BuyerPage />} />
+        <Route path="/discovery" element={<DiscoveryPage />} />
+        <Route path="/discovery/:rowId" element={<DiscoveryPage />} />
         <Route path="/booking/:eventId" element={<BookingPage />} />
         <Route path="/admission" element={<AdmissionPage />} />
         <Route path="/resale" element={<ResalePage />} />
