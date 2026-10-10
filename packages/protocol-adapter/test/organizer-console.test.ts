@@ -12,6 +12,7 @@ import {
   PINNED_PROTOCOL_DOMAIN,
   ProtocolError,
   createStubOrganizerInvoker,
+  previewOrganizerStep,
   type LocalCallInvoker,
   type OrganizerCreateInput,
   type OrganizerInvitationInput,
@@ -341,5 +342,42 @@ describe("organizer console composition", () => {
       },
     });
     expect((await broke.issueInvitation(invite())).kind).toBe("UNKNOWN");
+  });
+
+  it("previews the body that is sent and leaves the console unchanged", async () => {
+    const seen: LocalCallInput[] = [];
+    const invoker = recordingStub(seen);
+    const console = new OrganizerConsole(invoker);
+    const withSeconds = { ...CREATE, reservationSeconds: 30, operationId: "op-preview" };
+    const preview = previewOrganizerStep("create_event", withSeconds);
+    expect(seen).toEqual([]);
+    expect(console.state().sent).toEqual([]);
+    expect(console.state().halted).toBeNull();
+    expect(preview).toMatchObject({ step: "create_event", action: "create_event", actor: "operator" });
+    expect(preview.body.reservationSeconds).toBe(30);
+    const omitted = previewOrganizerStep("create_event", { ...CREATE, operationId: "op-omit" });
+    expect(omitted.body).not.toHaveProperty("reservationSeconds");
+    expect(omitted.body).not.toHaveProperty("invitationQuota");
+    await console.createEvent(withSeconds);
+    expect(seen[0]?.body).toEqual(preview.body);
+    expect(seen[0]?.actor).toBe(preview.actor);
+    expect(seen[0]?.action).toBe(preview.action);
+    const closePreview = previewOrganizerStep("close_sales", { operationId: "op-close", eventId: "show-1" });
+    await console.closeSales({ operationId: "op-close", eventId: "show-1" });
+    expect(seen[1]?.body).toEqual(closePreview.body);
+    const issued = invite({ operationId: "op-invite-preview" });
+    const invitePreview = previewOrganizerStep("issue_invitation", issued);
+    await console.issueInvitation(issued);
+    expect(seen[2]?.body).toEqual(invitePreview.body);
+    expect(seen[2]?.actor).toBe("organizer");
+    expect(
+      seen.some(
+        (call) =>
+          call.action === "capture" ||
+          call.action === "settle_capture" ||
+          call.action === "commit_trade" ||
+          call.action === "admit",
+      ),
+    ).toBe(false);
   });
 });

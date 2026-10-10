@@ -29,6 +29,7 @@ Charter labels are from Task 005. The app names those surfaces and calls an adap
 | Credit | `/credit` | F04 (Wave 5, mock FSM, 설계중) and charter label `wave5.credit.F04.fsm` | stub credit commands (`offerCredit` through `viewCredit`) |
 | Gift | `/gift` | P02 transfer | `offer_gift`, `accept_gift`, `cancel_gift` |
 | Organizer | `/organizer` | event lifecycle | `create_event`, `close_sales`, `open_admission`, `complete_event`, `cancel_event`, `issue_invitation` |
+| Organizer workspace | `/organizer/workspace` | edit caller fields, preview each command, send one at a time | the same six commands through the shared `OrganizerConsole` |
 | Booking journey (Wave 6-A) | `/booking/:eventId` | Wave 6-A, mock, 설계중 | `BookingJourney` over `invokeLocalCall`: `create_event`, `prepare_trade`, `accept_trade`. This is not a desk method. |
 | Box office journey view | `/` | Wave 6-A | read-only view of journeys opened on this page load. |
 | Buyer workspace | `/buyer` | page-load receipts for selection, reservation, order, and issuance | no write. `listPerformances` stays a stub read. |
@@ -67,6 +68,8 @@ Marketing fixtures are not added to `CommerceProtocol`. Runtime marketing code d
 `GiftTransfer` posts `offer_gift`, then `accept_gift` or `cancel_gift`, through `invokeLocalCall`. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. `offer_gift` is not a credit draw. The helper does not send `capture`, `settle_capture`, `commit_trade`, or `issue_invitation`. The booking journey does not produce a giftable right, so `ticketId` and `expectedVersion` are caller input. `expiresAt` is caller-supplied. The helper does not default it. A rejected call, an unknown outcome, or an invalid receipt fences the next write, including `cancel_gift`. The helper does not retry and does not mint an `operationId`. Donor and recipient strings are not an authentication result. Limits are in [docs/gift-surface-apps-bind.md](docs/gift-surface-apps-bind.md).
 
 `OrganizerConsole` posts `create_event`, `close_sales`, `open_admission`, `complete_event`, `cancel_event`, and `issue_invitation` through `invokeLocalCall`. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. This console is a separate surface. The booking journey still does not compose `open_admission`. `capture`, `settle_capture`, `commit_trade`, and `admit` are recorded and not sent. `placeHold` stays not-bound. The operator actor is a local-call string, not an authentication result. A rejected call, an unknown outcome, or a not-sent outcome fences the next write. The helper does not retry and does not mint an `operationId`. Limits are in [docs/organizer-admin-console-apps-bind.md](docs/organizer-admin-console-apps-bind.md).
+
+The organizer workspace at `/organizer/workspace` edits the caller fields those six commands already accept and previews each command before sending. It uses the same page-load `OrganizerConsole` as `/organizer`. Each command is its own request. A blank `reservationSeconds` stays omitted. There is no published update, date, capacity read, or settlement command on this page, so those stay not connected. Limits are in [docs/c-organizer-workspace-apps-bind.md](docs/c-organizer-workspace-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
 ## Protocol pin
 
@@ -151,6 +154,8 @@ Buyer, organizer, and operator workspaces, the seven-stage buyer flow, and the p
 The buyer workspace at `/buyer` is a read-only page over receipts already opened on this page load. It shows selection, reservation, order, and issuance as separate rows, including an expiry or a rejection reason the adapter already returned. It links a journey receipt to `/booking/:eventId`, a gift receipt to `/gift`, and a mock resale right to `/resale`. It does not post, and a reload does not post again. There is no catalogue read of a held ticket, so that row stays not-bound. Stub-shape receipts are not from the gate. Limits are in [docs/c-buyer-workspace-apps-bind.md](docs/c-buyer-workspace-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
 The discovery page at `/discovery` is a synthetic fixture for search, filters, sort, paging, and a scale window. Event, seat, GA, and resale rows stay visibly different. Empty results, filter conflicts, a stale tier, and a cancelled event stay on the fixture. Counts and tiers are synthetic labels. A supported purchase link appears only for an on-sale event whose id is on the one `listPerformances` read. Seat and GA selection stay on `c-inventory-venue`. Limits are in [docs/c-discovery-prototype-apps-bind.md](docs/c-discovery-prototype-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+
+The organizer workspace at `/organizer/workspace` is the edit and preview page for the six organizer commands. It does not add a command. Limits are in [docs/c-organizer-workspace-apps-bind.md](docs/c-organizer-workspace-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
 ## Run locally
 
@@ -256,6 +261,8 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - the organizer live-gate tests run when `KIX_REQUIRE_GATE` requires a checkout; without one they are skipped
 - a shape-only organizer invoker returns fixed literals for those six commands and refuses any other action
 - the organizer page labels the operator as not an authentication result and does not call `fetch`
+- the organizer workspace previews each command, sends one at a time, and does not present the list as one atomic transaction
+- a second submit of the same workspace plan does not send again, a changed selection is stale, and a typed inventory version is not rewritten after a receipt
 - a lost response, an invalid receipt, or a rejection fences the next journey step and does not retry or mint an `operationId`
 - the journey's live-gate tests run when `KIX_REQUIRE_GATE` requires a checkout; without one they are skipped
 - a shape-only journey invoker reports the same step sequence as the live gate (`create_event`, `prepare_trade`, `accept_trade`), and the shipped stub has no `invokeLocalCall`, so a closed port stays unknown
