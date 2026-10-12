@@ -542,18 +542,18 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
-    id: "planned-receipt-explorer",
+    id: "receipt-explorer",
     role: "operator",
     route: "/receipts",
-    binding: "planned",
+    binding: "stub-only",
     sender: null,
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "NOT_IMPLEMENTED. Receipt explanation for the buyer and the operator waits for c-receipt-explorer. A read does not turn unknown into confirmed.",
+      "Read-only explanation of receipts already on this page load. Operation, status, source, and profile stay with the receipt. An unknown outcome stays unknown. The support export redacts tokens, personal data, and account numbers. A receipt from another session is not shown. This page does not send. Stub-shape receipts are not from the gate.",
     taskId: "c-receipt-explorer",
-    implemented: false,
-    pageControl: false,
+    implemented: true,
+    pageControl: true,
   },
   {
     id: "planned-accessibility",

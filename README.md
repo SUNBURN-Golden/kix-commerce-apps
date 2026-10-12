@@ -30,6 +30,7 @@ Charter labels are from Task 005. The app names those surfaces and calls an adap
 | Gift | `/gift` | P02 transfer | `offer_gift`, `accept_gift`, `cancel_gift` |
 | Organizer | `/organizer` | event lifecycle | `create_event`, `close_sales`, `open_admission`, `complete_event`, `cancel_event`, `issue_invitation` |
 | Organizer workspace | `/organizer/workspace` | edit caller fields, preview each command, send one at a time | the same six commands through the shared `OrganizerConsole` |
+| Receipt explorer | `/receipts` | page-load receipt detail, timeline, and a redacted support export | no write |
 | Booking journey (Wave 6-A) | `/booking/:eventId` | Wave 6-A, mock, 설계중 | `BookingJourney` over `invokeLocalCall`: `create_event`, `prepare_trade`, `accept_trade`. This is not a desk method. |
 | Box office journey view | `/` | Wave 6-A | read-only view of journeys opened on this page load. |
 | Buyer workspace | `/buyer` | page-load receipts for selection, reservation, order, and issuance | no write. `listPerformances` stays a stub read. |
@@ -157,6 +158,8 @@ The discovery page at `/discovery` is a synthetic fixture for search, filters, s
 
 The organizer workspace at `/organizer/workspace` is the edit and preview page for the six organizer commands. It does not add a command. Limits are in [docs/c-organizer-workspace-apps-bind.md](docs/c-organizer-workspace-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
+The receipt explorer at `/receipts` explains receipts already on this page load. It shows the operation, status, source, and profile for the role on screen, and it connects an error code to that action and to the unconfirmed reason. An unknown outcome stays unknown. The support export is the same text the page shows. Tokens, personal data, and account numbers are redacted. A receipt from another session is not shown. The page does not post. Stub-shape receipts are not from the gate. Limits are in [docs/c-receipt-explorer-apps-bind.md](docs/c-receipt-explorer-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+
 ## Run locally
 
 ```bash
@@ -271,3 +274,6 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - the discovery fixture filters, sorts, and pages a synthetic sample, keeps each rendered page inside a window, and does not mount a million rows
 - a discovery purchase link appears only for an on-sale event id on the catalogue read, and a not-bound `listPerformances` read stays not-bound with no stub switch
 - discovery copy stays synthetic and does not use currency marks or stock claims
+- the receipt explorer shows operation, status, source, and profile for receipts already on this page load, and an explanatory read keeps an unknown outcome unknown
+- a malformed receipt, a different actor, and a different context are rejected, and a receipt from another session is not shown
+- the support export redacts a token, an email, and an account number, and the receipt page does not post
