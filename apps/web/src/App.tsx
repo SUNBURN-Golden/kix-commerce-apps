@@ -15,6 +15,7 @@ import { CreditPage } from "./pages/Credit";
 import { GiftPage } from "./pages/Gift";
 import { OrganizerPage } from "./pages/Organizer";
 import { OrganizerWorkspacePage } from "./pages/OrganizerWorkspace";
+import { ReceiptsPage } from "./pages/Receipts";
 import { ResalePage } from "./pages/Resale";
 
 export function App() {
@@ -31,6 +32,7 @@ export function App() {
         <Route path="/gift" element={<GiftPage />} />
         <Route path="/organizer/workspace" element={<OrganizerWorkspacePage />} />
         <Route path="/organizer" element={<OrganizerPage />} />
+        <Route path="/receipts" element={<ReceiptsPage />} />
         <Route path="/credit" element={<CreditPage />} />
         <Route path="/marketing" element={<MarketingHubPage />} />
         <Route path="/marketing/m01" element={<M01Page />} />

@@ -38,7 +38,7 @@ import {
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = path.resolve(webRoot, "../..");
 
-const PLANNED_TASKS = ["c-receipt-explorer", "c-accessibility-baseline"] as const;
+const PLANNED_TASKS = ["c-accessibility-baseline"] as const;
 
 const CLAIM = /\bworks\b|live payment|funds moved|disbursed|payment complete|admission complete|refund complete/i;
 
@@ -250,10 +250,24 @@ describe("workspace registry", () => {
     expect(surfaceBindingLine("organizer-workspace")).toContain("Current route.");
     expect(surfaceBindingLine("organizer-workspace")).toContain("published-bound");
 
+    const receipts = WORKSPACE_SURFACES.find((surface) => surface.id === "receipt-explorer");
+    expect(receipts?.route).toBe("/receipts");
+    expect(receipts?.binding).toBe("stub-only");
+    expect(receipts?.sender).toBeNull();
+    expect(receipts?.actions).toEqual([]);
+    expect(receipts?.deskMethods).toEqual([]);
+    expect(receipts?.implemented).toBe(true);
+    expect(receipts?.pageControl).toBe(true);
+    expect(receipts?.taskId).toBe("c-receipt-explorer");
+    expect(receipts?.provenanceNote).not.toMatch(CLAIM);
+    expect(surfaceBindingLine("receipt-explorer")).toContain("Current route.");
+    expect(surfaceBindingLine("receipt-explorer")).toContain("stub-only");
+
     const source = readFileSync(path.join(webRoot, "src/workspace/registry.ts"), "utf8");
     expect(source).not.toContain("planned-buyer-workspace");
     expect(source).not.toContain("planned-discovery");
     expect(source).not.toContain("planned-organizer-workspace");
+    expect(source).not.toContain("planned-receipt-explorer");
     expect(source).not.toContain("invokeLocalCall");
     expect(source).not.toContain("fetch(");
     expect(source).not.toContain("@kix/protocol-adapter");
