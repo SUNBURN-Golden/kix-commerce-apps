@@ -18,11 +18,11 @@ H1 is selected. `placeHold.consideredAction` stays `reserve_listing`. `placeHold
 
 `OrganizerConsole` calls an existing `invokeLocalCall`. `create_event` is optional. The other commands take a caller-typed `eventId`. The gate decides whether that order is legal. This client does not copy a lifecycle order. Each call uses a caller-chosen `operationId`.
 
-The domain on every body is `kix:fixture:lifecycle:0.3`. The helper checks each body with the vendored command schema before the call. It does not add `admissionStatus`, `issuerId`, `reservationSeconds`, or `sessionId` on `create_event`. It does not default `policy`, `invitationQuota`, `seats`, or a price. The desk reuses the existing synthetic show fixture as the only policy source and does not render it.
+The domain on every body is `kix:fixture:lifecycle:0.3`. The helper checks each body with the vendored command schema before the call. It does not add `admissionStatus`, `issuerId`, or `sessionId` on `create_event`. `reservationSeconds` is included only when the caller typed one, and a blank value stays omitted. The helper does not default it. It does not default `policy`, `invitationQuota`, `seats`, or a price. The desk reuses the existing synthetic show fixture as the only policy source and does not render it.
 
 | Step | Actor | Body |
 | --- | --- | --- |
-| `create_event` | `operator` | `domain`, `eventId`, `organizer`, `policy`, `seats`, plus `invitationQuota` only when the caller typed one |
+| `create_event` | `operator` | `domain`, `eventId`, `organizer`, `policy`, `seats`, plus `invitationQuota` or `reservationSeconds` only when the caller typed one |
 | `close_sales` | `operator` | `domain`, `eventId` |
 | `open_admission` | `operator` | `domain`, `eventId` |
 | `complete_event` | `operator` | `domain`, `eventId` |

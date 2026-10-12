@@ -3,6 +3,9 @@ import {
   OrganizerConsole,
   ORGANIZER_COMPOSED,
   ProtocolError,
+  type OrganizerCreateInput,
+  type OrganizerEventInput,
+  type OrganizerInvitationInput,
   type OrganizerStep,
   type OrganizerStepOutcome,
   type TransportObservation,
@@ -58,6 +61,19 @@ export interface OrganizerDraft {
   inventoryId: string;
   expectedInventoryVersion: string;
   recipient: string;
+  /** Blank or omitted uses the desk default. Never invented. */
+  organizer?: string;
+  /** Blank or omitted stays off the body. Never defaulted. */
+  reservationSeconds?: string;
+}
+
+export interface OrganizerSendItemResult {
+  status: "RECEIPT" | "REJECTED" | "UNKNOWN" | "NOT_SENT" | "FENCED";
+  code: string | null;
+  operationId: string | null;
+  requestId: string | null;
+  correlationId: string | null;
+  note: string;
 }
 
 export interface OrganizerRow {
@@ -97,6 +113,7 @@ export interface OrganizerDeskSnapshot {
   template: OrganizerRow[];
   events: Array<{
     eventId: string;
+    attempt: number;
     pending: boolean;
     halted: boolean;
     issuedInventoryIds: string[];
@@ -271,33 +288,45 @@ export class OrganizerDesk {
   }
 
   async send(eventId: string, step: OrganizerStep, draft: OrganizerDraft): Promise<void> {
+    await this.sendItem(eventId, step, draft);
+  }
+
+  async sendItem(eventId: string, step: OrganizerStep, draft: OrganizerDraft): Promise<OrganizerSendItemResult> {
     if (eventId.length === 0) {
-      return;
+      return fencedResult("empty-event-id", "Enter an event id. The desk does not mint one.");
     }
     this.retain(eventId);
     const record = this.records.get(eventId);
-    if (!record || record.pending || record.localHalt || record.console?.state().halted) {
-      return;
+    if (!record) {
+      return fencedResult("empty-event-id", "Enter an event id. The desk does not mint one.");
+    }
+    if (record.pending) {
+      return fencedResult("in-flight", "In flight. One attempt.");
+    }
+    if (record.localHalt || record.console?.state().halted) {
+      return fencedResult("halted", "Blocked. The next write stays blocked.");
     }
     if (!writesOpen(this.path)) {
-      return;
+      return fencedResult("path-not-open", "Path not open. No write is sent.");
     }
     const current = record.steps.find((item) => item.step === step);
     if (!current || !stepSendable(record, step, draft)) {
-      return;
+      return fencedResult("already-sent", "Already sent.");
     }
     const operationId = organizerOperationId(eventId, record.attempt, step, draft.inventoryId);
     current.phase = "in-flight";
     current.operationId = operationId;
-    current.actor = actorFor(step);
+    current.actor = actorFor(step, draft);
     current.note = "In flight. One attempt.";
     record.pending = true;
     this.publish();
     try {
       const outcome = await this.dispatch(record, step, operationId, draft);
       this.applyOutcome(record, step, outcome, draft);
+      return outcomeResult(outcome, operationId, current.note);
     } catch (error) {
       this.applyThrown(record, step, error);
+      return thrownResult(record, step, operationId);
     } finally {
       record.pending = false;
       const stepRecord = record.steps.find((item) => item.step === step);
@@ -340,37 +369,23 @@ export class OrganizerDesk {
     if (this.deps.source === null || record.console === null) {
       throw new ProtocolError("Organizer invoker is not selected.");
     }
+    const input = organizerCallInput(record.eventId, step, operationId, draft);
     if (step === "create_event") {
-      const quota = typedInteger(draft.invitationQuota);
-      return record.console.createEvent({
-        operationId,
-        eventId: record.eventId,
-        organizer: ORGANIZER_DEFAULT_ID,
-        policy: SYNTHETIC_SHOW_POLICY,
-        seats: callerSeats(draft.seats),
-        ...(quota === undefined ? {} : { invitationQuota: quota }),
-      });
+      return record.console.createEvent(input as OrganizerCreateInput);
     }
     if (step === "close_sales") {
-      return record.console.closeSales({ operationId, eventId: record.eventId });
+      return record.console.closeSales(input as OrganizerEventInput);
     }
     if (step === "open_admission") {
-      return record.console.openAdmission({ operationId, eventId: record.eventId });
+      return record.console.openAdmission(input as OrganizerEventInput);
     }
     if (step === "complete_event") {
-      return record.console.completeEvent({ operationId, eventId: record.eventId });
+      return record.console.completeEvent(input as OrganizerEventInput);
     }
     if (step === "cancel_event") {
-      return record.console.cancelEvent({ operationId, eventId: record.eventId });
+      return record.console.cancelEvent(input as OrganizerEventInput);
     }
-    return record.console.issueInvitation({
-      operationId,
-      eventId: record.eventId,
-      inventoryId: draft.inventoryId,
-      expectedInventoryVersion: callerInteger(draft.expectedInventoryVersion),
-      recipient: draft.recipient,
-      organizer: ORGANIZER_DEFAULT_ID,
-    });
+    return record.console.issueInvitation(input as OrganizerInvitationInput);
   }
 
   private applyOutcome(
@@ -385,7 +400,7 @@ export class OrganizerDesk {
     }
     if (outcome.kind === "RECEIPT") {
       current.phase = "confirmed";
-      current.actor = actorFor(step);
+      current.actor = actorFor(step, draft);
       current.code = null;
       current.requestId = null;
       current.correlationId = null;
@@ -466,6 +481,7 @@ export class OrganizerDesk {
       const rows = deriveRows(record, this.path);
       return {
         eventId: record.eventId,
+        attempt: record.attempt,
         pending: record.pending,
         halted: halted(record),
         issuedInventoryIds: [...record.issued],
@@ -517,10 +533,17 @@ export function emptyDraft(): OrganizerDraft {
     inventoryId: "",
     expectedInventoryVersion: "",
     recipient: "",
+    organizer: "",
+    reservationSeconds: "",
   };
 }
 
-function organizerOperationId(eventId: string, attempt: number, step: OrganizerStep, inventoryId: string): string {
+export function organizerOperationId(
+  eventId: string,
+  attempt: number,
+  step: OrganizerStep,
+  inventoryId: string,
+): string {
   if (step === "issue_invitation") {
     return `org:${eventId}:${attempt}:${step}:${inventoryId}`;
   }
@@ -571,8 +594,125 @@ function writesOpen(path: OrganizerPathStatus): boolean {
   return path.kind === "available" || path.kind === "available-stub-shape";
 }
 
-function actorFor(step: OrganizerStep): string {
-  return step === "issue_invitation" ? ORGANIZER_DEFAULT_ID : ORGANIZER_OPERATOR;
+function actorFor(step: OrganizerStep, draft: OrganizerDraft): string {
+  if (step === "issue_invitation") {
+    return organizerId(draft);
+  }
+  return ORGANIZER_OPERATOR;
+}
+
+export function organizerCallInput(
+  eventId: string,
+  step: OrganizerStep,
+  operationId: string,
+  draft: OrganizerDraft,
+): OrganizerCreateInput | OrganizerEventInput | OrganizerInvitationInput {
+  if (step === "create_event") {
+    const quota = typedInteger(draft.invitationQuota);
+    const seconds = typedInteger(draft.reservationSeconds ?? "");
+    const input: OrganizerCreateInput = {
+      operationId,
+      eventId,
+      organizer: organizerId(draft),
+      policy: SYNTHETIC_SHOW_POLICY,
+      seats: callerSeats(draft.seats),
+    };
+    if (quota !== undefined) {
+      input.invitationQuota = quota;
+    }
+    if (seconds !== undefined) {
+      input.reservationSeconds = seconds;
+    }
+    return input;
+  }
+  if (step === "issue_invitation") {
+    const input: OrganizerInvitationInput = {
+      operationId,
+      eventId,
+      inventoryId: draft.inventoryId,
+      expectedInventoryVersion: callerInteger(draft.expectedInventoryVersion),
+      recipient: draft.recipient,
+      organizer: organizerId(draft),
+    };
+    return input;
+  }
+  return { operationId, eventId };
+}
+
+function organizerId(draft: OrganizerDraft): string {
+  if (draft.organizer === undefined || draft.organizer.length === 0) {
+    return ORGANIZER_DEFAULT_ID;
+  }
+  return draft.organizer;
+}
+
+function fencedResult(code: string, note: string): OrganizerSendItemResult {
+  return {
+    status: "FENCED",
+    code,
+    operationId: null,
+    requestId: null,
+    correlationId: null,
+    note,
+  };
+}
+
+function outcomeResult(
+  outcome: OrganizerStepOutcome,
+  operationId: string,
+  note: string,
+): OrganizerSendItemResult {
+  if (outcome.kind === "RECEIPT") {
+    return {
+      status: "RECEIPT",
+      code: null,
+      operationId,
+      requestId: null,
+      correlationId: null,
+      note,
+    };
+  }
+  if (outcome.kind === "REJECTED" || outcome.kind === "UNKNOWN") {
+    return {
+      status: outcome.kind,
+      code: outcome.code,
+      operationId: outcome.identity.operationId,
+      requestId: outcome.identity.requestId ?? null,
+      correlationId: outcome.identity.correlationId ?? null,
+      note,
+    };
+  }
+  return {
+    status: "FENCED",
+    code: outcome.blockedBy.reason,
+    operationId: outcome.identity.operationId,
+    requestId: outcome.identity.requestId ?? null,
+    correlationId: outcome.identity.correlationId ?? null,
+    note,
+  };
+}
+
+function thrownResult(record: OrganizerRecord, step: OrganizerStep, operationId: string): OrganizerSendItemResult {
+  const current = record.steps.find((item) => item.step === step);
+  const halted = record.console?.state().halted ?? null;
+  if (halted?.kind === "UNKNOWN" && halted.step === step) {
+    return {
+      status: "UNKNOWN",
+      code: halted.identity.code ?? "UNKNOWN",
+      operationId: halted.identity.operationId || operationId,
+      requestId: halted.identity.requestId ?? null,
+      correlationId: halted.identity.correlationId ?? null,
+      note: current?.note ?? "Unconfirmed: sent, no authoritative receipt. May have applied. Not a rejection.",
+    };
+  }
+  return {
+    status: "NOT_SENT",
+    code: halted?.identity.code ?? null,
+    operationId: current?.operationId ?? operationId,
+    requestId: halted?.identity.requestId ?? null,
+    correlationId: halted?.identity.correlationId ?? null,
+    note: current?.note ?? "Not sent.",
+  };
 }
 
 function lastRow(rows: OrganizerRow[], status: OrganizerRowStatus): OrganizerRow | undefined {

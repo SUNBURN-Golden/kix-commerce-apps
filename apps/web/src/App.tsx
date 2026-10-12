@@ -14,6 +14,7 @@ import { MarketingHubPage } from "./pages/marketing/Hub";
 import { CreditPage } from "./pages/Credit";
 import { GiftPage } from "./pages/Gift";
 import { OrganizerPage } from "./pages/Organizer";
+import { OrganizerWorkspacePage } from "./pages/OrganizerWorkspace";
 import { ResalePage } from "./pages/Resale";
 
 export function App() {
@@ -28,6 +29,7 @@ export function App() {
         <Route path="/admission" element={<AdmissionPage />} />
         <Route path="/resale" element={<ResalePage />} />
         <Route path="/gift" element={<GiftPage />} />
+        <Route path="/organizer/workspace" element={<OrganizerWorkspacePage />} />
         <Route path="/organizer" element={<OrganizerPage />} />
         <Route path="/credit" element={<CreditPage />} />
         <Route path="/marketing" element={<MarketingHubPage />} />
