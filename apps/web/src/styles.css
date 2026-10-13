@@ -813,6 +813,64 @@ main:focus-visible {
   outline-offset: 3px;
 }
 
+.handoff {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.handoff table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.handoff th,
+.handoff td {
+  border: 1px solid var(--line);
+  padding: 0.45rem;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.handoff-scroll {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.handoff input,
+.handoff button,
+.handoff a,
+.handoff-tab {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.handoff a {
+  display: inline-flex;
+  align-items: center;
+}
+
+.handoff a:focus-visible,
+.handoff button:focus-visible,
+.handoff input:focus-visible {
+  outline: 2px solid var(--line);
+  outline-offset: 3px;
+}
+
+.handoff [data-integration="not-complete"] {
+  border-color: var(--line);
+}
+
+@media (max-width: 720px) {
+  .handoff-scroll {
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 390px) {
   .shell {
     padding-left: 0.75rem;
