@@ -81,10 +81,10 @@ These are the actions the existing senders post through `invokeLocalCall`. Each 
 | Status | Surfaces |
 | --- | --- |
 | `local-command` | `booking-journey`, `gift-transfer`, `organizer-console`, `organizer-workspace`, `marketing-m05` |
-| `synthetic` | `box-office-catalog`, `box-office-journey-view`, `box-office-settlement`, `reservation-case`, `admission-credential`, `resale-desk`, `credit-desk`, `marketing-hub`, `marketing-m01`, `marketing-m02`, `marketing-m03`, `marketing-m04`, `discovery-prototype`, `buyer-workspace`, `receipt-explorer` |
+| `synthetic` | `box-office-catalog`, `box-office-journey-view`, `box-office-settlement`, `reservation-case`, `admission-credential`, `resale-desk`, `credit-desk`, `marketing-hub`, `marketing-m01`, `marketing-m02`, `marketing-m03`, `marketing-m04`, `discovery-prototype`, `discovery-live-read`, `buyer-workspace`, `receipt-explorer` |
 | `unsupported` | `operator-transport`, `operator-unshown-desk`, `accessibility-baseline` |
 
-Unconnected screens are the synthetic and unsupported rows that have a page control. The admission page is one of them. Its credential label is not `admit`. The discovery page is one of them. Its rows are a fixture. The settlement panel is synthetic. Its mock phases are not funds.
+Unconnected screens are the synthetic and unsupported rows that have a page control. The admission page is one of them. Its credential label is not `admit`. The discovery page is one of them. Its rows are a fixture, and its projection read is a bounded synthetic stream. The settlement panel is synthetic. Its mock phases are not funds.
 
 ## Pending producers
 
@@ -132,7 +132,7 @@ The packet cites these documents and does not replace them.
 | `w7-marketing-align` | `docs/wave7-marketing-align-apps-bind.md` |
 | `w7-m05-consent-bind` | `docs/m05-consent-bind-apps-bind.md` |
 
-Later local surfaces stay in their own binds: `docs/workspace-design-apps-bind.md`, `docs/c-buyer-workspace-apps-bind.md`, `docs/c-organizer-workspace-apps-bind.md`, `docs/c-receipt-explorer-apps-bind.md`, `docs/c-discovery-prototype-apps-bind.md`, `docs/c-accessibility-baseline-apps-bind.md`, and `docs/c-contract-fixture-library-apps-bind.md`.
+Later local surfaces stay in their own binds: `docs/workspace-design-apps-bind.md`, `docs/c-buyer-workspace-apps-bind.md`, `docs/c-organizer-workspace-apps-bind.md`, `docs/c-receipt-explorer-apps-bind.md`, `docs/c-discovery-prototype-apps-bind.md`, `docs/c-discovery-live-stub-apps-bind.md`, `docs/c-accessibility-baseline-apps-bind.md`, and `docs/c-contract-fixture-library-apps-bind.md`.
 
 ## Hold
 

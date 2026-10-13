@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
-import { COMMERCE_COMMAND_BINDINGS, type Performance } from "@kix/protocol-adapter";
+import { COMMERCE_COMMAND_BINDINGS, EMPTY_DISCOVERY_FILTER, type Performance } from "@kix/protocol-adapter";
 import { App } from "../src/App";
 import { FIXTURE_IDS, STALE_PRICE_AS_OF } from "../src/discovery/fixture";
 import { DEFAULT_DISCOVERY_QUERY, type DiscoveryQuery } from "../src/discovery/model";
@@ -16,6 +16,7 @@ import {
 } from "../src/discovery-workspace";
 import type { CatalogState } from "../src/buyer-workspace";
 import { WORKSPACE_RULING } from "../src/workspace/registry";
+import { buildLiveDetailModel, buildLiveListModel } from "../src/discovery-live";
 import { DiscoveryDetail, DiscoveryScreen } from "../src/pages/Discovery";
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -232,6 +233,7 @@ describe("discovery page", () => {
     const files = [
       "src/discovery/fixture.ts",
       "src/discovery/model.ts",
+      "src/discovery-live.ts",
       "src/discovery-workspace.ts",
       "src/pages/Discovery.tsx",
       "src/pages/DiscoveryPanels.tsx",
@@ -281,6 +283,7 @@ function renderScreen(model: DiscoveryModel): string {
         onQuery={() => undefined}
         onOpen={() => undefined}
         onReadAgain={() => undefined}
+        live={liveListStub()}
       />
     </MemoryRouter>,
   );
@@ -310,7 +313,12 @@ function detailHtml(rowId: string, catalog: CatalogState): string {
 function renderDetail(model: DiscoveryModel, search = ""): string {
   return renderToStaticMarkup(
     <MemoryRouter>
-      <DiscoveryDetail model={model} onReadAgain={() => undefined} backSearch={search} />
+      <DiscoveryDetail
+        model={model}
+        onReadAgain={() => undefined}
+        backSearch={search}
+        live={liveDetailStub()}
+      />
     </MemoryRouter>,
   );
 }
@@ -321,6 +329,32 @@ function renderAt(pathname: string): string {
       <App />
     </MemoryRouter>,
   );
+}
+
+function liveListStub() {
+  return {
+    model: buildLiveListModel({
+      stream: "clean",
+      revision: "syn-1",
+      filter: EMPTY_DISCOVERY_FILTER,
+      outcome: { kind: "empty", watermark: null, totalEstimate: 0, revision: "syn-1" },
+      canNext: false,
+    }),
+    handlers: {
+      nextPage() {},
+      runReturn() {},
+      setStream() {},
+      setFilter() {},
+      rebuildProjection() {},
+    },
+  };
+}
+
+function liveDetailStub() {
+  return {
+    model: buildLiveDetailModel({ outcome: { kind: "loading" } }),
+    handlers: { readAgain() {} },
+  };
 }
 
 function liCount(html: string): number {

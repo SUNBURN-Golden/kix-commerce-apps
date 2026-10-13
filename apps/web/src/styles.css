@@ -500,6 +500,19 @@ a.panel {
   margin-bottom: 1rem;
 }
 
+.discovery-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+  margin: 0.75rem 0;
+}
+
+.discovery-controls label {
+  display: grid;
+  gap: 0.35rem;
+}
+
 .discovery-form fieldset {
   border: 1px solid var(--line);
   background: var(--card);

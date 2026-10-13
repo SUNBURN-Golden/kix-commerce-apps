@@ -238,6 +238,7 @@ describe("workspace registry", () => {
     expect(BUYER_FLOW_STAGES.find((stage) => stage.id === "discovery")?.surfaces).toEqual([
       "box-office-catalog",
       "discovery-prototype",
+      "discovery-live-read",
     ]);
 
     const organizer = WORKSPACE_SURFACES.find((surface) => surface.id === "organizer-workspace");
