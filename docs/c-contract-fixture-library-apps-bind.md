@@ -66,6 +66,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `platform-journey-trade` | `/platform` | the eight synthetic multi-channel trade rows below. No fixture pass |
 | `merchant-operations` | `/merchant` | the eight synthetic merchant read and export rows below. No fixture pass |
 | `credit-origination` | `/credit/origination` | the nine synthetic credit origination rows below. No fixture pass |
+| `credit-servicing` | `/credit/servicing` | the eight synthetic credit servicing rows below. No fixture pass |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -128,6 +129,14 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `credit-origination.claim-refused` | `REJECT` | none. A payload that calls a submission an approval or a request a disbursement; the whole payload is refused | `CLAIM` |
 | `credit-origination.write-lost` | `UNKNOWN` | none. The request answer never arrived or arrived untrusted; it may have applied and fences every later request | none |
 | `credit-origination.read-lost` | `UNKNOWN` | none. The read answer never arrived; not an application with no claim basis | none |
+| `credit-servicing.stale-read` | `STALE` | none. Synthetic watermark older than the page floor; not an obligation with no servicing rows | none |
+| `credit-servicing.stale-schedule` | `STALE` | none. Schedule rows built under an older schedule revision stay flagged with both revisions, never shown as current | none |
+| `credit-servicing.partial-repayment` | `UNKNOWN` | none. A partly allocated payment keeps its unallocated remainder as the source's own label and restores no commitment limit | none |
+| `credit-servicing.post-charge-off-payment` | `UNKNOWN` | none. A payment observed after a charged-off closure stays a fact of its own; the closure extinguishes no debt | none |
+| `credit-servicing.scope-denied` | `REJECT` | none. No synthetic grant for that obligation, or a withdrawn grant, not a gate rejection | `SCOPE_DENIED` |
+| `credit-servicing.claim-refused` | `REJECT` | none. A payload that omits or asserts the eight lane non-claims; the whole payload is refused | `CLAIM` |
+| `credit-servicing.write-lost` | `UNKNOWN` | none. The request answer never arrived or arrived untrusted; it may have applied and fences every later request | none |
+| `credit-servicing.read-lost` | `UNKNOWN` | none. The read answer never arrived; not an obligation with no servicing rows | none |
 | `admission-credential.label-stale` | `STALE` | none. Adapter label, not `admit` | `CREDENTIAL_STALE` |
 | `resale-desk.version-stale` | `STALE` | none. Mock case, not economic finality | `STALE_VERSION` |
 | `operator-transport.unavailable` | `UNKNOWN` | none | `GATE_UNAVAILABLE` |

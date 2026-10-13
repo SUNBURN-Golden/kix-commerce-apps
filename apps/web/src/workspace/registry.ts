@@ -584,6 +584,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "credit-servicing",
+    role: "operator",
+    route: "/credit/servicing",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic credit servicing on one page: the draw instruction, the disbursement observation, the reservation, and the exposure stay four facts, the repayment schedule, payments, allocations, unapplied remainders, reversals, adjustments, and the case history stay linked to the same obligation, and every payload states its eight lane non-claims as false or is refused whole. A partial repayment keeps its unapplied remainder and restores no commitment limit, a charge-off or recovery-case closure extinguishes no debt, and a payment observed after the case closed reopens nothing by itself. View, proposal, and approval stay three capabilities and an actor may not approve its own proposal. On integration-http the read and the requests stay not-bound because no current producer tuple exists and the contract-only catalogue has no credit command. Synthetic rows are not a producer receipt.",
+    taskId: "c-credit-servicing-journey-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",

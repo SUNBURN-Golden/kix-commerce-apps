@@ -412,6 +412,14 @@ export const PENDING_PRODUCERS = [
     note: "The origination desk is synthetic. A real claim basis, policy revision, consent, document, review, commitment, and drawdown permission read model and a real producer connection stay on that pending node.",
   },
   {
+    id: "c-credit-servicing-journey",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "credit-servicing",
+    note: "The servicing desk is synthetic. A real draw, observation, reservation, exposure, schedule, payment, allocation, reversal, adjustment, and case read model and a real producer connection stay on that pending node.",
+  },
+  {
     id: "consume-p-sdk-0",
     catalogue: "pending",
     connected: false,
@@ -601,6 +609,12 @@ export const ROLE_JOURNEYS = {
       "Mock credit case. No disbursement and no catalogue credit command.",
     ),
     stepFromSurfaces(
+      "credit-servicing",
+      "operator",
+      ["credit-servicing"],
+      "Synthetic credit servicing. A draw instruction is not a disbursement, a partial repayment restores no limit, and a case closure extinguishes no debt.",
+    ),
+    stepFromSurfaces(
       "accessibility-baseline",
       "operator",
       ["accessibility-baseline"],
@@ -739,6 +753,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-credit-origination-stub",
     doc: "docs/c-credit-origination-stub-apps-bind.md",
     anchor: "an approval is not a commitment",
+  },
+  {
+    id: "c-credit-servicing-journey-stub",
+    doc: "docs/c-credit-servicing-journey-stub-apps-bind.md",
+    anchor: "a case closure is not an extinguished debt",
   },
 ] as const satisfies readonly PreservedEvidence[];
 

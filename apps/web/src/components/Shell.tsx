@@ -25,6 +25,7 @@ const links = [
   { to: "/handoff", label: "Local handoff", end: true },
   { to: "/credit", label: "Credit", end: true },
   { to: "/credit/origination", label: "Credit origination", end: true },
+  { to: "/credit/servicing", label: "Credit servicing", end: true },
   { to: "/marketing", label: "Marketing", end: false },
 ];
 
