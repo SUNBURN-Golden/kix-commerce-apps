@@ -13,6 +13,7 @@ const links = [
   { to: "/", label: "Box office", end: true },
   { to: "/buyer", label: "Buyer", end: false },
   { to: "/discovery", label: "Discover", end: false },
+  { to: "/inventory", label: "Seats and GA", end: false },
   { to: "/admission", label: "Admission", end: false },
   { to: "/resale", label: "Resale", end: false },
   { to: "/gift", label: "Gift", end: false },

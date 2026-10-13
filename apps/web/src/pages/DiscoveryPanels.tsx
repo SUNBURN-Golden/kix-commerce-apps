@@ -641,7 +641,19 @@ export function PurchasePathView({ purchase }: { purchase: PurchaseDecision }) {
   if (purchase.kind === "unavailable") {
     return <p data-purchase="unavailable">{purchase.message}</p>;
   }
-  return <p data-purchase="unsupported">{purchase.message}</p>;
+  return (
+    <p data-purchase="unsupported">
+      {purchase.message}
+      {purchase.inventoryRoute ? (
+        <>
+          {" "}
+          <Link className="button discovery-action" to={purchase.inventoryRoute}>
+            Open synthetic seat and GA selection
+          </Link>
+        </>
+      ) : null}
+    </p>
+  );
 }
 
 export function ResultSection({

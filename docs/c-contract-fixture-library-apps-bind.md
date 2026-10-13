@@ -62,6 +62,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `marketing-m05` | `/marketing/m05` | the three consent rows below |
 | `discovery-prototype` | `/discovery` | `discovery-prototype.price-stale` |
 | `discovery-live-read` | `/discovery` | the four synthetic projection read rows below |
+| `inventory-venue-select` | `/inventory` | the five synthetic seat and GA selection rows below. No fixture pass |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -94,6 +95,11 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `discovery-live-read.stream-gap` | `REJECT` | none. Adapter-detected stream gap, not a gate rejection | `PROJECTION_GAP` |
 | `discovery-live-read.tenant-mix` | `REJECT` | none. Adapter-detected foreign tenant row | `PROJECTION_TENANT` |
 | `discovery-live-read.cursor-invalid` | `REJECT` | none. Adapter-refused stale or foreign cursor | `PROJECTION_CURSOR` |
+| `inventory-venue-select.hold-stale` | `STALE` | none. Synthetic observed hold that expired or belongs to an earlier generation | none |
+| `inventory-venue-select.generation-changed` | `REJECT` | none. Adapter-refused read under an earlier inventory generation, not a gate rejection | `INVENTORY_GENERATION` |
+| `inventory-venue-select.mode-mismatch` | `REJECT` | none. Adapter-refused seat/GA mismatch, converts nothing | `INVENTORY_MODE` |
+| `inventory-venue-select.queue-blocked` | `REJECT` | none. Synthetic queue waiting or lapsed, selection pages closed | `INVENTORY_QUEUE` |
+| `inventory-venue-select.unsupported-mode` | `REJECT` | none. Accessible seating, policy undetermined | `INVENTORY_UNSUPPORTED` |
 | `admission-credential.label-stale` | `STALE` | none. Adapter label, not `admit` | `CREDENTIAL_STALE` |
 | `resale-desk.version-stale` | `STALE` | none. Mock case, not economic finality | `STALE_VERSION` |
 | `operator-transport.unavailable` | `UNKNOWN` | none | `GATE_UNAVAILABLE` |

@@ -35,6 +35,7 @@ Charter labels are from Task 005. The app names those surfaces and calls an adap
 | Box office journey view | `/` | Wave 6-A | read-only view of journeys opened on this page load. |
 | Buyer workspace | `/buyer` | page-load receipts for selection, reservation, order, and issuance | no write. `listPerformances` stays a stub read. |
 | Discovery | `/discovery` | synthetic search fixture for events, seats, GA, and resale labels | no write. `listPerformances` stays one stub read. |
+| Seats and GA | `/inventory` | synthetic seat and GA selection: summary, one bounded page, selection detail | no write. A selection is local and sends nothing. |
 | Local handoff | `/handoff` | install guide for the local desk | no write. The packet records local-command, synthetic, and unsupported. A screen is not protocol integration. |
 
 The Wave 6-A rows are catalogue calls, not desk bindings, and every `COMMERCE_METHODS` entry is still `not-bound`.
@@ -158,6 +159,8 @@ The buyer workspace at `/buyer` is a read-only page over receipts already opened
 The discovery page at `/discovery` is a synthetic fixture for search, filters, sort, paging, and a scale window. Event, seat, GA, and resale rows stay visibly different. Empty results, filter conflicts, a stale tier, and a cancelled event stay on the fixture. Counts and tiers are synthetic labels. A supported purchase link appears only for an on-sale event whose id is on the one `listPerformances` read. Seat and GA selection stay on `c-inventory-venue`. Limits are in [docs/c-discovery-prototype-apps-bind.md](docs/c-discovery-prototype-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
 The same `/discovery` page also carries a bounded synthetic projection read. The adapter validates the cursor, filter, watermark floor, and access scope before a row returns, and it checks the pin tuple before the first row. Duplicate, out-of-order, skipped, stale, foreign-tenant, and rebuilt-cursor outcomes each map to one user return action on the screen. A projection row confirms no sale, no ownership, and no payment. On `integration-http` the read stays not-bound because the contract-only catalogue has no read command. Limits are in [docs/c-discovery-live-stub-apps-bind.md](docs/c-discovery-live-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+
+The seat and GA page at `/inventory` is a synthetic selection flow: a summary, one bounded page of at most 25 seats, and a selection detail, with explicit refresh and nothing that polls. The adapter checks the pin tuple before the first row, and it refuses a read under another inventory generation or a different mode, so a seat read against a GA section converts nothing. GA is a quantity in a pool and is never shown as a seat. An observed hold shows its expiry from the adapter flag, and an expired hold or a hold from an earlier generation is not shown as free. Queue admission is access to the pages only. It is not a hold, a payment, an issued right, or entry at the door. Accessible seating stays unsupported because its policy is undetermined. A free seat is an observation: a selection there reserves, sells, and pays nothing, `placeHold` stays not-bound with `consideredAction` `reserve_listing`, and the page sends no command. On `integration-http` the read stays not-bound because the contract-only catalogue has no inventory read command. Limits are in [docs/c-inventory-venue-stub-apps-bind.md](docs/c-inventory-venue-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
 The organizer workspace at `/organizer/workspace` is the edit and preview page for the six organizer commands. It does not add a command. Limits are in [docs/c-organizer-workspace-apps-bind.md](docs/c-organizer-workspace-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
@@ -286,6 +289,11 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - the Wave 6-A evidence matrix, the commands it lists, and the runs it links are in [docs/wave-6a-evidence-apps-bind.md](docs/wave-6a-evidence-apps-bind.md)
 - the discovery fixture filters, sorts, and pages a synthetic sample, keeps each rendered page inside a window, and does not mount a million rows
 - a discovery purchase link appears only for an on-sale event id on the catalogue read, and a not-bound `listPerformances` read stays not-bound with no stub switch
+- the inventory read checks the pin tuple before any row, bounds a page to 25 rows over a million-seat section, and refuses a cursor from another version, generation, section, filter, or tenant
+- a read under another inventory generation or another mode is refused and converts nothing, and GA stays a quantity with no seat label
+- a hot page that sells a seat between two reads shows the change, an expired or earlier-generation hold is never shown as free, and a local selection confirms no reservation, ownership, or payment
+- queue admission opens or closes the selection pages and is never shown as a hold, a payment, an issued right, or entry
+- accessible seating stays unsupported, and the inventory read stays not-bound on integration-http with no stub switch
 - discovery copy stays synthetic and does not use currency marks or stock claims
 - the receipt explorer shows operation, status, source, and profile for receipts already on this page load, and an explanatory read keeps an unknown outcome unknown
 - a malformed receipt, a different actor, and a different context are rejected, and a receipt from another session is not shown
