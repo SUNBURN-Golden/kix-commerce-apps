@@ -380,6 +380,22 @@ export const PENDING_PRODUCERS = [
     note: "Seat and GA selection is a synthetic page. A real inventory and queue read stays on that pending node.",
   },
   {
+    id: "c-platform-journey",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "platform-journey-trade",
+    note: "The multi-channel trade page is synthetic. A real listing, trade, payment, transfer, and refund connection stays on that pending node.",
+  },
+  {
+    id: "c-async-session-fence",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "platform-journey-trade",
+    note: "The write fence and the unknown handling on the trade page live in this page load only. Durable session recovery stays on that pending node.",
+  },
+  {
     id: "consume-p-sdk-0",
     catalogue: "pending",
     connected: false,

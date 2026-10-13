@@ -63,6 +63,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `discovery-prototype` | `/discovery` | `discovery-prototype.price-stale` |
 | `discovery-live-read` | `/discovery` | the four synthetic projection read rows below |
 | `inventory-venue-select` | `/inventory` | the five synthetic seat and GA selection rows below. No fixture pass |
+| `platform-journey-trade` | `/platform` | the eight synthetic multi-channel trade rows below. No fixture pass |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -100,6 +101,14 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `inventory-venue-select.mode-mismatch` | `REJECT` | none. Adapter-refused seat/GA mismatch, converts nothing | `INVENTORY_MODE` |
 | `inventory-venue-select.queue-blocked` | `REJECT` | none. Synthetic queue waiting or lapsed, selection pages closed | `INVENTORY_QUEUE` |
 | `inventory-venue-select.unsupported-mode` | `REJECT` | none. Accessible seating, policy undetermined | `INVENTORY_UNSUPPORTED` |
+| `platform-journey-trade.version-stale` | `REJECT` | none. Synthetic source refused a transfer on a right version that moved, not a gate rejection | `PLATFORM_VERSION_STALE` |
+| `platform-journey-trade.terms-changed` | `REJECT` | none. Synthetic source refused a transfer on terms a price change superseded, not a gate rejection | `PLATFORM_TERMS_CHANGED` |
+| `platform-journey-trade.payment-unobserved` | `REJECT` | none. Synthetic source refused a transfer with no payment observation, not a gate rejection | `PLATFORM_PAYMENT_UNOBSERVED` |
+| `platform-journey-trade.write-fenced` | `REJECT` | none. Client fence refused the write before the port, nothing sent | `PLATFORM_FENCED` |
+| `platform-journey-trade.response-lost` | `UNKNOWN` | none. Synthetic write whose answer was lost, may have applied | none |
+| `platform-journey-trade.late-result` | `UNKNOWN` | none. A late result is evidence only, the write stays unknown | none |
+| `platform-journey-trade.stale-read` | `STALE` | none. The last read is behind, read again before the next write | none |
+| `platform-journey-trade.stale-session` | `STALE` | none. Result quarantined after a session context change | none |
 | `admission-credential.label-stale` | `STALE` | none. Adapter label, not `admit` | `CREDENTIAL_STALE` |
 | `resale-desk.version-stale` | `STALE` | none. Mock case, not economic finality | `STALE_VERSION` |
 | `operator-transport.unavailable` | `UNKNOWN` | none | `GATE_UNAVAILABLE` |

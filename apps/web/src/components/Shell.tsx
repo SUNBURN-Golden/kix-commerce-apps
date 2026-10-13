@@ -14,6 +14,7 @@ const links = [
   { to: "/buyer", label: "Buyer", end: false },
   { to: "/discovery", label: "Discover", end: false },
   { to: "/inventory", label: "Seats and GA", end: false },
+  { to: "/platform", label: "Trading platform", end: false },
   { to: "/admission", label: "Admission", end: false },
   { to: "/resale", label: "Resale", end: false },
   { to: "/gift", label: "Gift", end: false },

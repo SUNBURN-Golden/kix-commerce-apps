@@ -504,6 +504,50 @@ a.panel {
   padding-left: 0.5rem;
 }
 
+.platform [aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.platform .discovery-row[data-status="superseded"] {
+  border-style: dashed;
+}
+
+.platform [data-stranded="true"],
+.platform [data-integrity="fault"],
+.platform [data-blocked-reason="true"] {
+  border-left: 4px solid var(--stamp);
+  padding-left: 0.5rem;
+}
+
+.platform-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.platform table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+}
+
+.platform table.platform-register {
+  min-width: 40rem;
+}
+
+.platform th,
+.platform td {
+  border: 1px solid var(--line);
+  padding: 0.25rem 0.4rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.platform #platform-status:focus {
+  outline: 2px solid var(--stamp);
+  outline-offset: 2px;
+}
+
 .discovery-nav {
   display: flex;
   flex-wrap: wrap;
