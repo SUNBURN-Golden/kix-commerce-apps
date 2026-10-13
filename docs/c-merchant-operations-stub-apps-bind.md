@@ -10,7 +10,7 @@ No catalogue, gate, or SDK change is consumed. Both OpenAPI pins, `PINNED_ACTION
 
 Nothing goes to a protocol. The page sends no local call, no `create_event`, `prepare_trade`, or `accept_trade`, and no money posting. Its one read and its one export call land on an in-process synthetic source, which is a stand-in for the producer. `capture` and `settle_capture` are never composed or sent, `commit_trade`, `open_admission`, `admit`, and `refund_ticket` are recorded and not sent (`MERCHANT_NOT_COMPOSED`), and `placeHold` stays not-bound with `consideredAction` `reserve_listing` (`MERCHANT_HOLD_NOT_BOUND` quotes the locked binding and the page prints its reason). `prepare_trade` is not mapped onto it.
 
-On `integration-http` the read and the export are `not-bound`: "The contract-only catalogue has no read command for an event, listing, trade, or settlement-obligation projection and no export command, and the finance read model and query projections are not merged in kix-protocol." There is no stub fallback, no third adapter, and no request.
+On `integration-http` the read and the export are `not-bound`: "The contract-only catalogue has no read command for an event, listing, trade, or settlement-obligation projection and no export command, and the Finance catalogue read model and query projections are not merged in kix-protocol. The merchant workroom stays not-bound on integration-http." There is no stub fallback, no third adapter, and no request.
 
 ## Scope and acceptance
 
@@ -32,7 +32,7 @@ The spec asks for a producer read model and a producer export. No finance read m
 
 A read returns a snapshot: events, listings, trades, money lines, the source's own per-kind-per-cut figures, the cuts used, the pin tuple, and a watermark. Every money line names its kind (`sales-observed`, `unpaid`, `held`, `refund-burden`), its state (`observed`, `pending`, `exception`, `unknown`), its trade, its source cut, and three claims that are always `false`: `settled`, `fundsAvailable`, `lendable`. Validation happens before a row is returned: a malformed reference, a non-whole-unit or wrong-unit amount, an unknown kind or state, a row from another merchant, a line on an unknown cut, or any affirmative claim refuses the whole payload. Amounts are opaque strings in `mock-unit`; nothing parses, sums, scales, or compares them.
 
-The assessment reports which cuts the read used (`cut-merchant-1` on the merchant ledger, `cut-hold-1` on the hold register), whether they form one cut or several, whether the source's figures match the generation and the line count of the cut they name (`current`, `stale`, or `mismatch`), and which rows name a link the read does not list. A cut is a source position, not a balance; rows on different cuts are shown side by side and never added together.
+The assessment reports which cuts the read used (`cut-0001` on the merchant ledger, `cut-0002` on the hold register), whether they form one cut or several, whether the source's figures match the generation and the line count of the cut they name (`current`, `stale`, or `mismatch`), and which rows name a link the read does not list. A cut is a source position, not a balance; rows on different cuts are shown side by side and never added together.
 
 | Scenario | What the source does |
 | --- | --- |
@@ -41,7 +41,7 @@ The assessment reports which cuts the read used (`cut-merchant-1` on the merchan
 | `stale` | Serves a watermark older than the floor the page holds. The read is `stale`. |
 | `stale-aggregate` | The source figures were built at an older generation than the cut they name. The assessment is `stale`. |
 | `aggregate-mismatch` | One source figure counts lines the read does not list. The assessment is `mismatch`. |
-| `mixed-cut` | The lines span `cut-merchant-1` and `cut-hold-1`, so no single export is current. |
+| `mixed-cut` | The lines span `cut-0001` and `cut-0002`, so no single export is current. |
 | `dangling-link` | One line names a trade the read does not list. The assessment names it and the page attaches it nowhere. |
 | `exceptions` | Lines carry `exception` and `unknown` states as the source names them. |
 | `claims-settled` | Sends a line that claims `settled: true`. The whole payload is refused as `MERCHANT_CLAIM`. |
@@ -91,24 +91,27 @@ The real connection is `c-merchant-operations`. This node consumes no SDK, manif
 
 ## Browser run
 
-Observed in headless Google Chrome 154.0.8037.97 on 2026-10-16, driven by a Playwright script kept outside the repo. The stub desk was the default production build and the HTTP desk was a second build with mode `http` and base `http://127.0.0.1:8765`; both were served from `127.0.0.1` and nothing was listening on port 8765. There was no page exception on either desk. The stub desk logged no console error beyond Chrome's automatic `/favicon.ico` probe, and the HTTP desk logged only the shell's failed probe to port 8765.
+Observed in headless Google Chrome 154.0.8037.97 on 2026-10-14 (KST), driven by a Playwright script kept outside the repo. This table is from a re-run on the merged tree: the first record of it carried a date after the merge, so it was not kept. The stub desk was the default production build and the HTTP desk was a second build with mode `http` and base `http://127.0.0.1:8765`; the script served both from `127.0.0.1` with its own static server. Nothing was listening on port 8765. There was no page exception on either desk. The only console error on the stub desk was Chrome's automatic `/favicon.ico` probe, and the HTTP desk added only the shell's failed probe to port 8765.
 
 | State | Observed |
 | --- | --- |
-| Normal | `data-merchant-state="ready"`. Two events, three listings, three trades, and seven money lines — `sales-observed`, `unpaid`, `held`, and `refund-burden` — each on `cut-merchant-1` with `settled false · fundsAvailable false · lendable false` on every row. "Every row is on one source cut." and `data-aggregate-state="current"` |
-| Export | "Load the export" was `data-enabled="true"` only after the ready read; before it, it showed its reason. Enter loaded the export: `data-verdict="current"`, seven export rows, "Current export for the last read." |
+| Normal | `data-merchant-state="ready"`, "Merchant read." Two events, three listings, three trades, and seven money lines — `sales-observed`, `unpaid`, `held`, and `refund-burden` — each on `cut-0001`, with `settled false · fundsAvailable false · lendable false` on every row. "Every row is on one source cut." with `data-cut-state="single"` and `data-aggregate-state="current"` |
+| Export | Right after a ready read, "Load the export" was `data-enabled="true"`. Enter loaded the export: `data-verdict="current"`, seven export rows, "Export loaded and current for the last read." The verdict line "Current export for the last read." carried no Withheld word |
+| Export blocked | With the read stale, the control had `data-enabled="false"` and `aria-disabled="true"`, named `merchant-export-reason` through `aria-describedby`, and the reason read "An export is judged against the last read. Read the ledger first." |
+| Export withheld | Advance source cut, Read again: the loaded export turned `data-verdict="withheld"` with `STALE_CUT`. `export-partial` gave `PARTIAL`, `COUNT`, and `LINES_DIFFER` on five rows. `export-stale` gave `STALE_CUT` on seven. `export-lines-differ` gave `LINES_DIFFER`. `export-denied` gave "The source refused the export (`EXPORT_DENIED`)" with no export rows |
 | Empty | `empty` scenario: "No rows for this merchant in this read." with no obligation rows |
-| Stale | `stale` scenario: "Stale merchant read." with no obligation rows |
+| Stale | `stale` scenario: "Stale merchant read. Watermark 2026-10-10T00:00:00.000Z is older than the floor 2026-10-12T00:00:00.000Z." with no obligation rows |
 | Scope denied | Switch merchant scope to `mrc-0002`, Read again: `denied` with `(SCOPE_DENIED)` and no rows |
-| Revoked grant | Revoke grant, Read again: `denied` with `(GRANT_REVOKED)` |
-| Claim refused | `claims-settled` scenario: `refused` with `(CLAIM)` and no rows |
-| Mixed cut | `mixed-cut` scenario: `data-cut-state="mixed"`, "Rows are on more than one source cut," no merged figure, and the loaded export was withheld with `SNAPSHOT_MIXED` |
-| Stale aggregate | `stale-aggregate` scenario: `data-aggregate-state="stale"` with `STALE_GENERATION` flagged on the figure |
+| Revoked grant | Revoke grant, Read again: `denied` with `(GRANT_REVOKED)` and no rows. The `denied` scenario read the same |
+| Claim refused | `claims-settled` scenario: `refused` with `(CLAIM)`, "Line obl-0001 does not state settled as false," and no rows. `scope-leak`: `refused` with `(SCOPE_LEAK)` and no rows |
+| Mixed cut | `mixed-cut` scenario: `data-cut-state="mixed"`, rows on `cut-0001` and `cut-0002`, "Rows are on more than one source cut. They are not merged, and no single export is current." and no merged figure. The export that loaded was withheld with `SNAPSHOT_MIXED` |
+| Stale aggregate | `stale-aggregate` scenario: `data-aggregate-state="stale"` with `STALE_GENERATION` flagged on the figures ("built at generation 4, and cut cut-0001 is at generation 5"). `aggregate-mismatch`: `COUNT_DIFFERS` ("counts 3 unpaid lines on cut cut-0001, and the read lists 2") |
+| Link and states | `dangling-link` scenario: obl-0007 "names trade trd-0099, which the read does not list. It is not attached elsewhere." `exceptions` scenario: line states `observed`, `unknown`, and `exception` |
 | Read lost | `read-lost` scenario: `unavailable`, "The source did not answer. This is not an empty ledger." |
 | In progress | Not separately observable: the stub port answers within a microtask, so the loading frame was not caught. The server-rendered test covers the loading markup |
-| Keyboard | Tab reached "Load the export" on the 34th press (shell links and the controls come first). The `aria-disabled` export control stayed in the tab order and named its reason. Enter on the enabled control loaded the export |
-| Narrow | At 360 px the page had no horizontal scroll (`scrollWidth` 360); the tables scroll inside their own labelled regions |
-| HTTP desk | `data-merchant-state="not-bound"` with the not-bound reason, `data-enabled="false"` on the export control, zero rows, `data-adapter-environment="integration-http"`. The only request outside the page assets was the shell's `GET /health` probe to port 8765 |
+| Keyboard | Tab reached "Load the export" on the 27th press from the start of the page (shell links and the earlier controls come first), with the control enabled or blocked. The `aria-disabled` control stayed in the tab order and named its reason. Enter on the enabled control loaded the export |
+| Narrow | At 360 px the page had no horizontal scroll (`scrollWidth` 360, the same as the `/inventory` baseline); two labelled regions hold the wide tables |
+| HTTP desk | `data-merchant-state="not-bound"` with the not-bound reason, `data-enabled="false"` on the export control with the same reason, zero rows, `data-adapter-environment="integration-http"`. The only request outside the page assets was the shell's `GET /health` probe to port 8765, which failed |
 | Requests | On the stub desk every request was a page `GET`. No `POST`, and no request to port 8765 |
 
 Not observed in the browser: a screen reader pass, and a real producer, which stays unverified by design for this stub scope.

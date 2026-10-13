@@ -102,7 +102,7 @@ These ids live in the non-executable pending catalogue. `connected` is false. Th
 | `bind-wave4-pointers` | `booking-journey` | H1 keeps `placeHold` not-bound. This packet does not remap it. |
 | `primary-price-fee-ui` | `booking-journey` | Price and fee display stays `UNDETERMINED`. |
 | `refund-surface` | `operator-unshown-desk` | `refund_ticket` is not sent. `COMPENSATION_UNDEFINED` stays visible. |
-| `c-discovery-live` | `discovery-prototype` | Synthetic rows are not a live query projection. |
+| `c-discovery-live` | `discovery-live-read` | Synthetic rows are not a live query projection. |
 | `c-inventory-venue` | `inventory-venue-select` | Seat and GA selection is a synthetic page. A real inventory and queue read stays on that pending node. |
 | `c-platform-journey` | `platform-journey-trade` | The multi-channel trade page is synthetic. A real listing, trade, payment, transfer, and refund connection stays on that pending node. |
 | `c-async-session-fence` | `platform-journey-trade` | The write fence and the unknown handling on the trade page live in this page load only. Durable session recovery stays on that pending node. |
@@ -143,7 +143,7 @@ No production deploy, no public host, no real payment, no KYC, no credit disburs
 
 ## Tests
 
-`apps/web/test/handoff-packet.test.tsx` checks the three statuses, the sender command list, the diagnosis split, the pending catalogue ids, the original ten anchors, and the loading, ready, empty, and error markup. `packages/protocol-adapter/src/commerce-bindings.ts` is hashed and must stay the recorded digest.
+`apps/web/test/handoff-packet.test.tsx` checks the three statuses, the sender command list, the diagnosis split, the pending catalogue ids, the surface each pending row waits on against the table above, the original ten anchors, the evidence anchors for the later local surfaces including the four stub nodes, and the loading, ready, empty, and error markup. `packages/protocol-adapter/src/commerce-bindings.ts` is hashed and must stay the recorded digest.
 
 ## Browser run
 
