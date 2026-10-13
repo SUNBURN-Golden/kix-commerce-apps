@@ -64,6 +64,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `discovery-live-read` | `/discovery` | the four synthetic projection read rows below |
 | `inventory-venue-select` | `/inventory` | the five synthetic seat and GA selection rows below. No fixture pass |
 | `platform-journey-trade` | `/platform` | the eight synthetic multi-channel trade rows below. No fixture pass |
+| `merchant-operations` | `/merchant` | the eight synthetic merchant read and export rows below. No fixture pass |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -109,6 +110,14 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `platform-journey-trade.late-result` | `UNKNOWN` | none. A late result is evidence only, the write stays unknown | none |
 | `platform-journey-trade.stale-read` | `STALE` | none. The last read is behind, read again before the next write | none |
 | `platform-journey-trade.stale-session` | `STALE` | none. Result quarantined after a session context change | none |
+| `merchant-operations.stale-read` | `STALE` | none. Synthetic watermark older than the page floor | none |
+| `merchant-operations.stale-aggregate` | `STALE` | none. Source figure built at an older generation, shown flagged and not recomputed | none |
+| `merchant-operations.cut-mismatch` | `REJECT` | none. Source figure count differs, unknown cut, or rows on more than one cut, never merged | none. The assessment flags it |
+| `merchant-operations.scope-denied` | `REJECT` | none. No synthetic grant for that merchant, or a withdrawn grant, not a gate rejection | `SCOPE_DENIED` |
+| `merchant-operations.export-denied` | `REJECT` | none. Read granted, export refused, not rebuilt on the page | `EXPORT_DENIED` |
+| `merchant-operations.claim-refused` | `REJECT` | none. A line that claims settled, funds, or lendable; the whole payload is refused | `CLAIM` |
+| `merchant-operations.export-withheld` | `REJECT` | none. An export that is partial, stale, off-scope, or off-read is withheld with every reason | none. The verdict names every reason |
+| `merchant-operations.read-lost` | `UNKNOWN` | none. The read answer never arrived; not an empty ledger | none |
 | `admission-credential.label-stale` | `STALE` | none. Adapter label, not `admit` | `CREDENTIAL_STALE` |
 | `resale-desk.version-stale` | `STALE` | none. Mock case, not economic finality | `STALE_VERSION` |
 | `operator-transport.unavailable` | `UNKNOWN` | none | `GATE_UNAVAILABLE` |
@@ -132,7 +141,7 @@ The receipt explorer still rejects a candidate with a missing key or a status ou
 
 ## Hold
 
-No route was added. Screen components do not import this catalogue and do not call `fetch`. Price and fee display stay `UNDETERMINED`. The generator does not supply them.
+This library adds no route; the `merchant-operations` screen it now lists is delivered by `docs/c-merchant-operations-stub-apps-bind.md`. Screen components do not import this catalogue and do not call `fetch`. Price and fee display stay `UNDETERMINED`. The generator does not supply them.
 
 No production deploy, no public host, no real payment, no KYC, no credit disbursement, no venue scan, no bank rail, and no live marketplace. No SLO. No Move, kernel, or settlement math is copied. Nothing in this change is inside kix-protocol. The five pins stay where the gate bind put them.
 

@@ -556,6 +556,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "merchant-operations",
+    role: "organizer",
+    route: "/merchant",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic merchant read and export on one page: events, listings, trades, and settlement-obligation lines stay four lenses on their own source cuts, an unpaid, a held, and a refund-burden line keeps its own kind and state, and every line states settled, fundsAvailable, and lendable as false. A payload that breaks that stays refused before a row shows. Figures on different cuts are never merged into one balance, and the export is the producer's own file, shown only while it is one complete export of the cut the last read saw. On integration-http the read and the export stay not-bound because the contract-only catalogue has no merchant read or export command. Synthetic rows are not a producer receipt.",
+    taskId: "c-merchant-operations-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",

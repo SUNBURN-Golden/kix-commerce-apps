@@ -81,10 +81,10 @@ These are the actions the existing senders post through `invokeLocalCall`. Each 
 | Status | Surfaces |
 | --- | --- |
 | `local-command` | `booking-journey`, `gift-transfer`, `organizer-console`, `organizer-workspace`, `marketing-m05` |
-| `synthetic` | `box-office-catalog`, `box-office-journey-view`, `box-office-settlement`, `reservation-case`, `admission-credential`, `resale-desk`, `credit-desk`, `marketing-hub`, `marketing-m01`, `marketing-m02`, `marketing-m03`, `marketing-m04`, `discovery-prototype`, `discovery-live-read`, `inventory-venue-select`, `platform-journey-trade`, `buyer-workspace`, `receipt-explorer` |
+| `synthetic` | `box-office-catalog`, `box-office-journey-view`, `box-office-settlement`, `reservation-case`, `admission-credential`, `resale-desk`, `credit-desk`, `marketing-hub`, `marketing-m01`, `marketing-m02`, `marketing-m03`, `marketing-m04`, `discovery-prototype`, `discovery-live-read`, `inventory-venue-select`, `platform-journey-trade`, `merchant-operations`, `buyer-workspace`, `receipt-explorer` |
 | `unsupported` | `operator-transport`, `operator-unshown-desk`, `accessibility-baseline` |
 
-Unconnected screens are the synthetic and unsupported rows that have a page control. The admission page is one of them. Its credential label is not `admit`. The discovery page is one of them. Its rows are a fixture, and its projection read is a bounded synthetic stream. The seat and GA page is one of them. Its rows are a synthetic inventory, and a selection there sends nothing. The trading platform page is one of them. Its listings, trades, and facets are a synthetic source, and its writes land on that source and send nothing to a protocol. The settlement panel is synthetic. Its mock phases are not funds.
+Unconnected screens are the synthetic and unsupported rows that have a page control. The admission page is one of them. Its credential label is not `admit`. The discovery page is one of them. Its rows are a fixture, and its projection read is a bounded synthetic stream. The seat and GA page is one of them. Its rows are a synthetic inventory, and a selection there sends nothing. The trading platform page is one of them. Its listings, trades, and facets are a synthetic source, and its writes land on that source and send nothing to a protocol. The merchant workroom is one of them. Its events, listings, trades, and money lines are a synthetic source, its sales figure is never settled funds or lendable, and its export is the producer's own file judged against the last read. The settlement panel is synthetic. Its mock phases are not funds.
 
 ## Pending producers
 
@@ -106,6 +106,7 @@ These ids live in the non-executable pending catalogue. `connected` is false. Th
 | `c-inventory-venue` | `inventory-venue-select` | Seat and GA selection is a synthetic page. A real inventory and queue read stays on that pending node. |
 | `c-platform-journey` | `platform-journey-trade` | The multi-channel trade page is synthetic. A real listing, trade, payment, transfer, and refund connection stays on that pending node. |
 | `c-async-session-fence` | `platform-journey-trade` | The write fence and the unknown handling on the trade page live in this page load only. Durable session recovery stays on that pending node. |
+| `c-merchant-operations` | `merchant-operations` | The merchant workroom is synthetic. A real event, listing, trade, and settlement-obligation read model and a real producer export stay on that pending node. |
 | `consume-p-sdk-0` | none | No SDK is consumed. Digests stay null. |
 | `delegation-surface` | none | No delegation screen. Nothing here transfers, refunds, or signs. |
 
@@ -113,7 +114,7 @@ These ids live in the non-executable pending catalogue. `connected` is false. Th
 
 Buyer: discovery, selection, reservation, payment, issuance, admission, refund, then marketing. Reservation, payment, issuance, and admission stay separate. `placeHold` is not a reservation receipt. Payment does not send `capture`. Refund stays `COMPENSATION_UNDEFINED`. Marketing M01–M04 are session stubs. M05 posts `set_consent` then `authorize_marketing`, and the label stays 미착수.
 
-Organizer: `/organizer` posts the six lifecycle commands one at a time. `/organizer/workspace` previews, then sends one. The list is not one atomic transaction. The settlement case on `/` is synthetic.
+Organizer: `/organizer` posts the six lifecycle commands one at a time. `/organizer/workspace` previews, then sends one. The list is not one atomic transaction. `/merchant` is a synthetic workroom whose sales figure stays an observation and whose export is judged against the last read. The settlement case on `/` is synthetic.
 
 Operator: the transport banner is a probe, not payment or admission. `/receipts` explains receipts already on the page and does not post. `/credit` is a mock case. The accessibility baseline adds no route. `/handoff` is this packet.
 
@@ -134,7 +135,7 @@ The packet cites these documents and does not replace them.
 | `w7-marketing-align` | `docs/wave7-marketing-align-apps-bind.md` |
 | `w7-m05-consent-bind` | `docs/m05-consent-bind-apps-bind.md` |
 
-Later local surfaces stay in their own binds: `docs/workspace-design-apps-bind.md`, `docs/c-buyer-workspace-apps-bind.md`, `docs/c-organizer-workspace-apps-bind.md`, `docs/c-receipt-explorer-apps-bind.md`, `docs/c-discovery-prototype-apps-bind.md`, `docs/c-discovery-live-stub-apps-bind.md`, `docs/c-inventory-venue-stub-apps-bind.md`, `docs/c-platform-journey-stub-apps-bind.md`, `docs/c-accessibility-baseline-apps-bind.md`, and `docs/c-contract-fixture-library-apps-bind.md`.
+Later local surfaces stay in their own binds: `docs/workspace-design-apps-bind.md`, `docs/c-buyer-workspace-apps-bind.md`, `docs/c-organizer-workspace-apps-bind.md`, `docs/c-receipt-explorer-apps-bind.md`, `docs/c-discovery-prototype-apps-bind.md`, `docs/c-discovery-live-stub-apps-bind.md`, `docs/c-inventory-venue-stub-apps-bind.md`, `docs/c-platform-journey-stub-apps-bind.md`, `docs/c-merchant-operations-stub-apps-bind.md`, `docs/c-accessibility-baseline-apps-bind.md`, and `docs/c-contract-fixture-library-apps-bind.md`.
 
 ## Hold
 

@@ -20,6 +20,7 @@ const links = [
   { to: "/gift", label: "Gift", end: false },
   { to: "/organizer", label: "Organizer", end: true },
   { to: "/organizer/workspace", label: "Organizer workspace", end: true },
+  { to: "/merchant", label: "Merchant", end: true },
   { to: "/receipts", label: "Receipts", end: true },
   { to: "/handoff", label: "Local handoff", end: true },
   { to: "/credit", label: "Credit", end: false },

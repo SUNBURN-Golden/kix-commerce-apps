@@ -396,6 +396,14 @@ export const PENDING_PRODUCERS = [
     note: "The write fence and the unknown handling on the trade page live in this page load only. Durable session recovery stays on that pending node.",
   },
   {
+    id: "c-merchant-operations",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "merchant-operations",
+    note: "The merchant workroom is synthetic. A real event, listing, trade, and settlement-obligation read model and a real producer export stay on that pending node.",
+  },
+  {
     id: "consume-p-sdk-0",
     catalogue: "pending",
     connected: false,
@@ -552,6 +560,12 @@ export const ROLE_JOURNEYS = {
       ["box-office-settlement"],
       "Mock settlement case. Shares are not computed. This is not funds.",
     ),
+    stepFromSurfaces(
+      "merchant-operations",
+      "organizer",
+      ["merchant-operations"],
+      "Synthetic merchant read and export. A sales figure stays an observation, never a settled or lendable figure.",
+    ),
   ],
   operator: [
     stepFromSurfaces(
@@ -686,6 +700,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-contract-fixture-library",
     doc: "docs/c-contract-fixture-library-apps-bind.md",
     anchor: "A failed live call is not replaced with a stub success.",
+  },
+  {
+    id: "c-merchant-operations-stub",
+    doc: "docs/c-merchant-operations-stub-apps-bind.md",
+    anchor: "no client-side sum is the financial truth",
   },
 ] as const satisfies readonly PreservedEvidence[];
 
