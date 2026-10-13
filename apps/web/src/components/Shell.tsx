@@ -26,6 +26,7 @@ const links = [
   { to: "/credit", label: "Credit", end: true },
   { to: "/credit/origination", label: "Credit origination", end: true },
   { to: "/credit/servicing", label: "Credit servicing", end: true },
+  { to: "/finance", label: "Finance", end: true },
   { to: "/marketing", label: "Marketing", end: false },
 ];
 

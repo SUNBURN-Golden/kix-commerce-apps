@@ -598,6 +598,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "finance-operations",
+    role: "operator",
+    route: "/finance",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic finance operations on one page: a reconciliation queue of unmatched, duplicate, late, several-payee, residual, and balance cases, each linked to its original trade, with facts, payee allocations, and unapplied remainders kept as the source's own rows. Totals, differences, and shares are the source's own text and are never computed here. A case whose two sides sit on source cuts at different positions is flagged timing-uncertain, and the export is the producer's own synthetic file, shown as current only when it is one complete export of the cut set the last read saw. A correction is a proposal, an approval is a record that changes no economic state, no actor holds the authority to change economic state, and nothing forces a ledger to match. On integration-http the read, the export, and the requests stay not-bound because no current producer tuple exists and the contract-only catalogue has no finance command. Synthetic rows are not a producer receipt.",
+    taskId: "c-finance-operations-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",
