@@ -17,6 +17,7 @@ import { HandoffPage } from "./pages/Handoff";
 import { InventoryPage } from "./pages/Inventory";
 import { OrganizerPage } from "./pages/Organizer";
 import { OrganizerWorkspacePage } from "./pages/OrganizerWorkspace";
+import { PlatformPage } from "./pages/Platform";
 import { ReceiptsPage } from "./pages/Receipts";
 import { ResalePage } from "./pages/Resale";
 
@@ -29,6 +30,7 @@ export function App() {
         <Route path="/discovery" element={<DiscoveryPage />} />
         <Route path="/discovery/:rowId" element={<DiscoveryPage />} />
         <Route path="/inventory" element={<InventoryPage />} />
+        <Route path="/platform" element={<PlatformPage />} />
         <Route path="/booking/:eventId" element={<BookingPage />} />
         <Route path="/admission" element={<AdmissionPage />} />
         <Route path="/resale" element={<ResalePage />} />

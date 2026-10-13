@@ -1,6 +1,6 @@
 # Workspace design apps bind
 
-This bind is the information architecture for the buyer, organizer, and operator desks. It maps the current routes onto 발견 → 선택 → 예약 → 결제 상태 → 권리 → 입장 → 환불, and it records which protocol commands those screens send. The read-only buyer workspace route is `/buyer`. Limits for that page are in [c-buyer-workspace-apps-bind.md](c-buyer-workspace-apps-bind.md). The synthetic discovery route is `/discovery`. Limits for that page are in [c-discovery-prototype-apps-bind.md](c-discovery-prototype-apps-bind.md). The synthetic projection read on the same route is in [c-discovery-live-stub-apps-bind.md](c-discovery-live-stub-apps-bind.md). The synthetic seat and GA selection route is `/inventory`. Limits for that page are in [c-inventory-venue-stub-apps-bind.md](c-inventory-venue-stub-apps-bind.md). The organizer workspace route is `/organizer/workspace`. Limits for that page are in [c-organizer-workspace-apps-bind.md](c-organizer-workspace-apps-bind.md). The read-only receipt explorer route is `/receipts`. Limits for that page are in [c-receipt-explorer-apps-bind.md](c-receipt-explorer-apps-bind.md).
+This bind is the information architecture for the buyer, organizer, and operator desks. It maps the current routes onto 발견 → 선택 → 예약 → 결제 상태 → 권리 → 입장 → 환불, and it records which protocol commands those screens send. The read-only buyer workspace route is `/buyer`. Limits for that page are in [c-buyer-workspace-apps-bind.md](c-buyer-workspace-apps-bind.md). The synthetic discovery route is `/discovery`. Limits for that page are in [c-discovery-prototype-apps-bind.md](c-discovery-prototype-apps-bind.md). The synthetic projection read on the same route is in [c-discovery-live-stub-apps-bind.md](c-discovery-live-stub-apps-bind.md). The synthetic seat and GA selection route is `/inventory`. Limits for that page are in [c-inventory-venue-stub-apps-bind.md](c-inventory-venue-stub-apps-bind.md). The synthetic multi-channel trade route is `/platform`. Limits for that page are in [c-platform-journey-stub-apps-bind.md](c-platform-journey-stub-apps-bind.md). The organizer workspace route is `/organizer/workspace`. Limits for that page are in [c-organizer-workspace-apps-bind.md](c-organizer-workspace-apps-bind.md). The read-only receipt explorer route is `/receipts`. Limits for that page are in [c-receipt-explorer-apps-bind.md](c-receipt-explorer-apps-bind.md).
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
@@ -40,11 +40,11 @@ Each stage has at most one outcome track. The four tracks are `reservation`, `pa
 | --- | --- | --- | --- |
 | 발견 | `discovery` | none | Stub `listPerformances` on `/` and one read on `/discovery`. `/discovery` is a synthetic fixture. The projection read on the same page is a bounded synthetic stream. The catalogue has no list command. |
 | 선택 | `selection` | none | Choosing a row opens `/booking/:eventId`. Seat and GA selection is a synthetic page on `/inventory` and stays local. Selection is not a reservation |
-| 예약 | `reservation` | `reservation` | `BookingJourney` posts `prepare_trade` inside the three-step chain. `placeHold` stays not-bound. The B01–B05 case is stub-only |
-| 결제 상태 | `payment` | `payment` | `confirmBooking` does not send `capture`. The F01–F03 case is stub-only. Price and fee copy is `UNDETERMINED` |
-| 권리 | `issuance` | `issuance` | `issueReservation` is stub-only. `issue_invitation` is the organizer post. Gift moves a caller-supplied `ticketId` and does not mint a right |
+| 예약 | `reservation` | `reservation` | `BookingJourney` posts `prepare_trade` inside the three-step chain. `placeHold` stays not-bound. The B01–B05 case is stub-only. The synthetic trade page `/platform` shows a booking line of its own |
+| 결제 상태 | `payment` | `payment` | `confirmBooking` does not send `capture`. The F01–F03 case is stub-only. Price and fee copy is `UNDETERMINED`. The synthetic trade page `/platform` shows a payment observation line that no write feeds |
+| 권리 | `issuance` | `issuance` | `issueReservation` is stub-only. `issue_invitation` is the organizer post. Gift moves a caller-supplied `ticketId` and does not mint a right. The synthetic trade page `/platform` shows a right transfer line of its own |
 | 입장 | `admission` | `admission` | Credential labels from the adapter. `checkAdmission` is not a page control. `open_admission` is the organizer post, on its own receipt |
-| 환불 | `refund` | `payment` | `refund_ticket` is pinned and no surface sends it. The status stays not-bound. `COMPENSATION_UNDEFINED` stays visible. Refund and cancel policy values are `UNDETERMINED` |
+| 환불 | `refund` | `payment` | `refund_ticket` is pinned and no surface sends it. The status stays not-bound. `COMPENSATION_UNDEFINED` stays visible. Refund and cancel policy values are `UNDETERMINED`. The synthetic trade page `/platform` shows the refund line as `COMPENSATION_UNDEFINED` with no control |
 
 Refund uses the payment track so a refund does not become a fifth badge and does not mark payment confirmed. The refund stage and the payment stage still render as two rows.
 
@@ -137,6 +137,7 @@ Desk methods are names only. Every one of them is `status: "not-bound"` in `COMM
 | Discovery fixture | none | none | stub-only synthetic fixture `/discovery` | `c-discovery-prototype` | `apps/web/test/discovery-page.test.tsx` |
 | Discovery projection read | none | none | stub-only synthetic projection stream on `/discovery` | `c-discovery-live-stub` | `apps/web/test/discovery-live.test.tsx` |
 | Seat and GA selection | none | none | stub-only synthetic selection page `/inventory` | `c-inventory-venue-stub` | `apps/web/test/inventory-venue.test.tsx` |
+| Multi-channel trade | none | none | stub-only synthetic trade page `/platform` | `c-platform-journey-stub` | `apps/web/test/platform-journey.test.tsx` |
 | Receipt explorer | none | none | stub-only, read-only page `/receipts` | `c-receipt-explorer` | `apps/web/test/receipt-explorer.test.tsx` |
 | Accessibility | none | none | no-published-command. No added route | `c-accessibility-baseline` | `apps/web/test/a11y-baseline.test.tsx` |
 

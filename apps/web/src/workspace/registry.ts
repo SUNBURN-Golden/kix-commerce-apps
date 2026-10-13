@@ -542,6 +542,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "platform-journey-trade",
+    role: "buyer",
+    route: "/platform",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic multi-channel trade on one page: two channels list one right, a price change supersedes a listing, and a booking, a payment observation, a right transfer, and a refund explanation each keep their own state. One write is sent at a time per right. A lost or late result keeps that right blocked, a result from an earlier session is quarantined, and a read never resolves an unknown write. On integration-http the read and the writes stay not-bound because the contract-only catalogue has no listing, trade, payment, transfer, or refund command. Synthetic rows are not a producer receipt.",
+    taskId: "c-platform-journey-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",
@@ -631,19 +645,19 @@ export const BUYER_FLOW_STAGES = [
   },
   {
     id: "reservation",
-    surfaces: ["booking-journey", "reservation-case", "buyer-workspace"],
+    surfaces: ["booking-journey", "reservation-case", "platform-journey-trade", "buyer-workspace"],
     tracks: ["reservation"],
     note: "예약. placeHold stays not-bound. prepare_trade is a BookingJourney body. The mock reservation case stays stub-only.",
   },
   {
     id: "payment",
-    surfaces: ["booking-journey", "box-office-settlement", "buyer-workspace"],
+    surfaces: ["booking-journey", "box-office-settlement", "platform-journey-trade", "buyer-workspace"],
     tracks: ["payment"],
     note: "결제 상태. confirmBooking does not send capture. The mock settlement case stays stub-only. Price and fee display policy is UNDETERMINED.",
   },
   {
     id: "issuance",
-    surfaces: ["reservation-case", "organizer-console", "organizer-workspace", "gift-transfer", "buyer-workspace"],
+    surfaces: ["reservation-case", "organizer-console", "organizer-workspace", "gift-transfer", "platform-journey-trade", "buyer-workspace"],
     tracks: ["issuance"],
     note: "권리. issueReservation is stub-only. issue_invitation is the organizer post. A gift transfers a caller-supplied right and does not mint one.",
   },
@@ -655,7 +669,7 @@ export const BUYER_FLOW_STAGES = [
   },
   {
     id: "refund",
-    surfaces: ["operator-unshown-desk"],
+    surfaces: ["operator-unshown-desk", "platform-journey-trade"],
     tracks: ["payment"],
     note: "환불. refund_ticket is pinned and no surface sends it. Status stays not-bound. COMPENSATION_UNDEFINED stays visible. Refund policy values are UNDETERMINED.",
   },
