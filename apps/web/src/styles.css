@@ -732,3 +732,98 @@ a.panel {
     grid-template-columns: 1fr;
   }
 }
+
+.skip {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  transform: translateY(-150%);
+  background: var(--ink);
+  color: var(--paper);
+  min-height: 44px;
+  z-index: 3;
+}
+
+.skip:focus {
+  transform: none;
+}
+
+nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+button,
+.button {
+  min-height: 44px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--line);
+  outline-offset: 3px;
+}
+
+.status-mark {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: baseline;
+  border: 1px solid var(--line);
+  padding: 0.15rem 0.45rem;
+  background: var(--card);
+  color: var(--ink);
+}
+
+.status-mark[data-status-mark="loading"] {
+  border-style: dashed;
+}
+
+.status-mark[data-status-mark="blocked"] {
+  border-style: double;
+  border-width: 3px;
+}
+
+.status-mark[data-status-mark="selected"] {
+  border-style: solid;
+  font-weight: 700;
+}
+
+.status-mark[data-status-mark="review"] {
+  border-style: dotted;
+}
+
+.status-word {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.75rem;
+}
+
+.amount-notice,
+.deadline-authority {
+  overflow-wrap: anywhere;
+}
+
+main:focus {
+  outline: none;
+}
+
+main:focus-visible {
+  outline: 2px solid var(--line);
+  outline-offset: 3px;
+}
+
+@media (max-width: 390px) {
+  .shell {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  input,
+  select,
+  textarea,
+  button,
+  .button {
+    max-width: 100%;
+  }
+}

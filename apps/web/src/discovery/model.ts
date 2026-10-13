@@ -20,6 +20,7 @@ import {
   type DiscoveryStatus,
   type SyntheticTier,
 } from "./fixture";
+import { syntheticCountLine, syntheticTierLine } from "../a11y/present";
 
 export { SCALE_TOTAL, SCALE_VIEWPORT_HEIGHT, SCALE_ROW_HEIGHT, SCALE_OVERSCAN };
 
@@ -122,9 +123,9 @@ export function isPriceStale(priceAsOf: string, now = FIXTURE_NOW): boolean {
 }
 
 export function describeRow(row: DiscoveryRow, now = FIXTURE_NOW): RowFacts {
-  const tierLine = row.syntheticTier === null ? null : `synthetic tier ${row.syntheticTier}`;
+  const tierLine = syntheticTierLine(row.syntheticTier);
   const countLine =
-    row.kind === "event" || row.syntheticCount === null ? null : `synthetic count ${row.syntheticCount}`;
+    row.kind === "event" || row.syntheticCount === null ? null : syntheticCountLine(row.syntheticCount);
   let inventoryLine: string | null = null;
   if (row.kind === "seat") {
     inventoryLine = `section ${row.section ?? ""}`;

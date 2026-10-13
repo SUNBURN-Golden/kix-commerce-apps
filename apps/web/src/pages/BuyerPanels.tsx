@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { StatusMark } from "../a11y/marks";
 import type { BuyerEvidenceRow, BuyerProgressRow, BuyerReturnAction, BuyerWorkspaceModel } from "../buyer-workspace";
 import { TRACK_STATE_CONTRACT } from "../workspace/registry";
 
@@ -6,21 +7,21 @@ export function StateNotice({ model }: { model: BuyerWorkspaceModel }) {
   if (model.catalog.kind === "error") {
     return (
       <p className="alert" role="alert">
-        {model.catalog.message}
+        <StatusMark kind="blocked" /> {model.catalog.message}
       </p>
     );
   }
   if (model.catalog.kind === "not-bound") {
     return (
       <p className="alert" role="alert">
-        {model.catalog.reason}
+        <StatusMark kind="blocked" /> {model.catalog.reason}
       </p>
     );
   }
   if (model.catalog.kind === "loading") {
     return (
       <p className="muted" role="status">
-        Loading performances.
+        <StatusMark kind="loading" /> Loading performances.
       </p>
     );
   }

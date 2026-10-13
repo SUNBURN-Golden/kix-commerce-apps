@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { Link } from "react-router-dom";
+import { StatusMark } from "../a11y/marks";
 import {
   useReceiptExplorer,
   type ReceiptEntry,
@@ -307,6 +308,7 @@ function EntryButton({
       data-profile={entry.profile}
       data-confirmed={entry.confirmed ? "true" : "false"}
     >
+      {selected ? <StatusMark kind="selected" /> : null}
       <button type="button" data-entry-id={entry.id} aria-current={selected ? "true" : undefined} onClick={() => onSelect(entry.id)}>
         {entry.action} {entry.status}
         {entry.operationId ? ` ${entry.operationId}` : ""}

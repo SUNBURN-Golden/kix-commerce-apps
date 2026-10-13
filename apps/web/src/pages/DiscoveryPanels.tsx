@@ -24,6 +24,7 @@ import {
   type DiscoveryQuery,
   type RowFacts,
 } from "../discovery/model";
+import { AmountNotice, StatusMark } from "../a11y/marks";
 import type { DiscoveryModel, PurchaseDecision } from "../discovery-workspace";
 import { formatWhen } from "../format";
 
@@ -35,6 +36,8 @@ export function DiscoveryBanner({ model }: { model: DiscoveryModel }) {
       <p className="discovery-banner" data-provenance="synthetic" data-source="synthetic-fixture">
         SYNTHETIC fixture. Rows come from a synthetic-fixture. They are not a catalogue receipt.
       </p>
+      <AmountNotice />
+      <p>Tiers and counts are synthetic labels. A tier is not an amount.</p>
       <p>{model.ruling}</p>
       <p>{model.stubSentence}</p>
       <p>{model.reloadNote}</p>
@@ -47,7 +50,7 @@ export function CatalogNotice({ model, onReadAgain }: { model: DiscoveryModel; o
   if (model.catalog.kind === "loading") {
     return (
       <p className="muted" role="status">
-        Loading performances.
+        <StatusMark kind="loading" /> Loading performances.
       </p>
     );
   }
@@ -55,7 +58,7 @@ export function CatalogNotice({ model, onReadAgain }: { model: DiscoveryModel; o
     return (
       <div>
         <p className="alert" role="alert">
-          {model.catalog.message}
+          <StatusMark kind="blocked" /> {model.catalog.message}
         </p>
         <button type="button" className="discovery-action" onClick={() => onReadAgain()}>
           Read again
@@ -66,7 +69,7 @@ export function CatalogNotice({ model, onReadAgain }: { model: DiscoveryModel; o
   if (model.catalog.kind === "not-bound") {
     return (
       <p className="alert" role="alert" data-state="not-bound" data-source="none">
-        {model.catalog.reason}
+        <StatusMark kind="blocked" /> {model.catalog.reason}
       </p>
     );
   }
@@ -76,7 +79,16 @@ export function CatalogNotice({ model, onReadAgain }: { model: DiscoveryModel; o
   return <p>source {model.catalogSource}</p>;
 }
 
-export function DiscoveryForm({ query, onQuery }: { query: DiscoveryQuery; onQuery: (next: DiscoveryQuery) => void }) {
+export function DiscoveryForm({
+  query,
+  onQuery,
+  invalidControlId,
+}: {
+  query: DiscoveryQuery;
+  onQuery: (next: DiscoveryQuery) => void;
+  invalidControlId?: string | null;
+}) {
+  const invalid = invalidControlId ?? null;
   return (
     <form
       id="discovery-filters"
@@ -90,6 +102,7 @@ export function DiscoveryForm({ query, onQuery }: { query: DiscoveryQuery; onQue
           id="discovery-q"
           type="search"
           value={query.text}
+          aria-invalid={invalid === "discovery-q"}
           onChange={(event) => onQuery(withFilter(query, { text: event.target.value }))}
         />
       </label>
@@ -145,6 +158,8 @@ export function DiscoveryForm({ query, onQuery }: { query: DiscoveryQuery; onQue
         <input
           id="discovery-section"
           value={query.section}
+          aria-invalid={invalid === "discovery-section"}
+          aria-describedby={invalid === "discovery-section" ? "discovery-conflict" : undefined}
           onChange={(event) => onQuery(withFilter(query, { section: event.target.value }))}
         />
       </label>
@@ -154,6 +169,8 @@ export function DiscoveryForm({ query, onQuery }: { query: DiscoveryQuery; onQue
           id="discovery-from"
           type="date"
           value={query.from}
+          aria-invalid={invalid === "discovery-from"}
+          aria-describedby={invalid === "discovery-from" ? "discovery-conflict" : undefined}
           onChange={(event) => onQuery(withFilter(query, { from: event.target.value }))}
         />
       </label>
@@ -166,10 +183,13 @@ export function DiscoveryForm({ query, onQuery }: { query: DiscoveryQuery; onQue
           onChange={(event) => onQuery(withFilter(query, { to: event.target.value }))}
         />
       </label>
-      <label>
+      <label htmlFor="discovery-purchasable">
         <input
+          id="discovery-purchasable"
           type="checkbox"
           checked={query.purchasableOnly}
+          aria-invalid={invalid === "discovery-purchasable"}
+          aria-describedby={invalid === "discovery-purchasable" ? "discovery-conflict" : undefined}
           onChange={(event) => onQuery(withFilter(query, { purchasableOnly: event.target.checked }))}
         />
         Purchasable only
@@ -251,7 +271,10 @@ export function DiscoveryRowCard({
           SYNTHETIC
         </span>
       </p>
-      <p className="when">{formatWhen(row.startsAt)}</p>
+      <p className="when">
+        <time dateTime={row.startsAt}>{formatWhen(row.startsAt)}</time>
+      </p>
+      {active ? <StatusMark kind="selected" /> : null}
       <h3>{row.title}</h3>
       <p className="muted">{row.venueLabel}</p>
       <p>{facts.kindLine}</p>
@@ -427,7 +450,9 @@ export function ResultSection({
       </p>
       {model.result.state === "filter-conflict" ? (
         <div>
-          <p role="status">Filter conflict. The query was not run.</p>
+          <p id="discovery-conflict" role="status">
+            <StatusMark kind="blocked" /> Filter conflict. The query was not run.
+          </p>
           <ul className="discovery-list">
             {model.result.conflicts.map((conflict) => (
               <li key={conflict.code}>

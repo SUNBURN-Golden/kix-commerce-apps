@@ -26,7 +26,7 @@ Three roles over the current routes. Planned routes stay `NOT_IMPLEMENTED` and c
 | --- | --- | --- | --- |
 | Buyer | Find a show, reserve, read payment status, hold a right, enter, ask about a refund | `/`, `/buyer`, `/discovery`, `/booking/:eventId`, `/admission`, `/resale`, `/gift`, `/marketing`, `/marketing/m01`–`m05` | none |
 | Organizer | Open a show, close sales, open admission, invite, preview each command, read the mock settlement case | `/organizer`, `/organizer/workspace`, settlement case on `/` | none |
-| Operator | Read the transport banner, see refusals, read why a receipt stopped, leave unshown desk methods unlabeled as working | Shell on every route, `/receipts` | Keyboard and amount presentation across all three roles waits on `c-accessibility-baseline` and adds no route |
+| Operator | Read the transport banner, see refusals, read why a receipt stopped, leave unshown desk methods unlabeled as working | Shell on every route, `/receipts` | Keyboard, amount, and deadline presentation is the accessibility baseline on the existing screens. It adds no route. Limits are in [c-accessibility-baseline-apps-bind.md](c-accessibility-baseline-apps-bind.md) |
 
 `/credit` stays on the operator desk as a mock F04 case. It is not a buyer right and not a disbursement.
 
@@ -102,7 +102,7 @@ Copy that already ships uses the sentence "Stub-shape receipts are not from the 
 | `stub-only` | stub-only, plus the mock provenance (`MOCK_GATE_ONLY`, `MOCK_SETTLEMENT_ONLY`, `MOCK_CREDIT_F04_ONLY`) | That the mock phase is a catalogue command or a live fund movement |
 | `not-bound` | not-bound, and the locked `COMMERCE_COMMAND_BINDINGS` reason | That the `consideredAction` was sent |
 | `no-published-command` | no published command. M01–M04 stay 설계중. M05’s ORIGINAL_32 label stays 미착수 even though consent posts two commands | That a session marker is a published command |
-| `planned` | `NOT_IMPLEMENTED` and the task id | That the accessibility row is already a current page. `/receipts` is a current stub-only route |
+| `planned` | `NOT_IMPLEMENTED` and the task id | That a planned row is already a current page. The accessibility baseline adds no route. `/receipts` is a current stub-only route |
 
 Unknown, rejected, and confirmed stay three labels. A stale response does not replace the current track. A transport probe does not change a track. One badge per track. There is no combined completion badge.
 
@@ -136,7 +136,7 @@ Desk methods are names only. Every one of them is `status: "not-bound"` in `COMM
 | Buyer workspace | none | none | stub-only, read-only page `/buyer` | `c-buyer-workspace` | `apps/web/test/buyer-workspace.test.tsx` |
 | Discovery fixture | none | none | stub-only synthetic fixture `/discovery` | `c-discovery-prototype` | `apps/web/test/discovery-page.test.tsx` |
 | Receipt explorer | none | none | stub-only, read-only page `/receipts` | `c-receipt-explorer` | `apps/web/test/receipt-explorer.test.tsx` |
-| Accessibility | none | none | planned, `NOT_IMPLEMENTED` | `c-accessibility-baseline` | workspace registry test |
+| Accessibility | none | none | no-published-command. No added route | `c-accessibility-baseline` | `apps/web/test/a11y-baseline.test.tsx` |
 
 Quoted reasons, unchanged from the locked bindings:
 

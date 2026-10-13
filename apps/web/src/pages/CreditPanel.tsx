@@ -1,4 +1,6 @@
 import type { CreditCaseView } from "@kix/protocol-adapter";
+import { AmountNotice, StatusMark } from "../a11y/marks";
+import { presentIntegerUnits } from "../a11y/present";
 
 export const CREDIT_DESK_COMMANDS = [
   "offer",
@@ -54,6 +56,12 @@ export function CreditPanel({
         Simulated exposure on the adapter stub. Not live credit. F04 and E06 stay 설계중. Protocol truth remains in
         kix-protocol. Commands on this panel call the adapter stub only.
       </p>
+      <AmountNotice />
+      {pending ? (
+        <p className="muted" role="status">
+          <StatusMark kind="loading" /> One attempt. No retry.
+        </p>
+      ) : null}
       <p className="muted">
         Available credit, a pending draw, outstanding exposure, and repayment are mock phase amounts. Economic finality
         claimed stays false. Funds executed stays false. A bound draw waits for a mock COMMITTED settlement view. A
@@ -62,7 +70,7 @@ export function CreditPanel({
       </p>
       {error ? (
         <p className="alert" role="alert">
-          {error}
+          <StatusMark kind="blocked" /> {error}
         </p>
       ) : null}
       <dl className="facts">
@@ -192,7 +200,7 @@ function units(value: number | undefined): string {
   if (value === undefined) {
     return "None";
   }
-  return `${value} mock units`;
+  return presentIntegerUnits(value, "mock units");
 }
 
 function disabled(needs: "always" | "case" | "no-case", opened: boolean): boolean {

@@ -33,12 +33,14 @@ import {
   WORKSPACE_SURFACES,
   stageLine,
   surfaceBindingLine,
+  type WorkspaceSurface,
 } from "../src/workspace/registry";
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = path.resolve(webRoot, "../..");
 
-const PLANNED_TASKS = ["c-accessibility-baseline"] as const;
+/** No planned surface remains. The accessibility baseline adds no route. */
+const PLANNED_TASKS = [] as const;
 
 const CLAIM = /\bworks\b|live payment|funds moved|disbursed|payment complete|admission complete|refund complete/i;
 
@@ -181,7 +183,8 @@ describe("workspace registry", () => {
       "planned",
     ]);
 
-    const planned = WORKSPACE_SURFACES.filter((surface) => surface.binding === "planned");
+    const surfaces: readonly WorkspaceSurface[] = WORKSPACE_SURFACES;
+    const planned = surfaces.filter((surface) => surface.binding === "planned");
     expect(planned.map((surface) => surface.taskId)).toEqual([...PLANNED_TASKS]);
     for (const surface of planned) {
       expect(surface.implemented).toBe(false);
@@ -268,6 +271,24 @@ describe("workspace registry", () => {
     expect(source).not.toContain("planned-discovery");
     expect(source).not.toContain("planned-organizer-workspace");
     expect(source).not.toContain("planned-receipt-explorer");
+    expect(source).not.toContain("planned-accessibility");
+
+    const access = WORKSPACE_SURFACES.find((surface) => surface.id === "accessibility-baseline");
+    expect(access?.route).toBe("(none)");
+    expect(access?.binding).toBe("no-published-command");
+    expect(access?.role).toBe("operator");
+    expect(access?.sender).toBeNull();
+    expect(access?.actions).toEqual([]);
+    expect(access?.deskMethods).toEqual([]);
+    expect(access?.implemented).toBe(true);
+    expect(access?.pageControl).toBe(false);
+    expect(access?.taskId).toBe("c-accessibility-baseline");
+    expect(access?.provenanceNote).not.toMatch(CLAIM);
+    expect(access?.provenanceNote).not.toContain("NOT_IMPLEMENTED");
+    expect(surfaceBindingLine("accessibility-baseline")).toContain("No added route.");
+    expect(surfaceBindingLine("accessibility-baseline")).toContain("no-published-command");
+    expect(surfaceBindingLine("accessibility-baseline")).not.toContain("NOT_IMPLEMENTED");
+    expect(surfaceBindingLine("accessibility-baseline")).not.toContain("Current route.");
     expect(source).not.toContain("invokeLocalCall");
     expect(source).not.toContain("fetch(");
     expect(source).not.toContain("@kix/protocol-adapter");

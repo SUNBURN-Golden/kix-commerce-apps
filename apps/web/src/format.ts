@@ -1,13 +1,6 @@
-const time = new Intl.DateTimeFormat("en-GB", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "UTC",
-});
+import { presentInstant } from "./a11y/present";
 
+/** Desk clock. Locale is the default display locale. It does not decide expiry. */
 export function formatWhen(iso: string): string {
-  const parsed = Date.parse(iso);
-  if (Number.isNaN(parsed)) {
-    return iso;
-  }
-  return `${time.format(parsed)} UTC`;
+  return presentInstant(iso, "en-GB");
 }

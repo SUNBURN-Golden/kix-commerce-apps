@@ -1,4 +1,5 @@
 import { GIFT_DESK_NOT_BOUND, GIFT_NOT_COMPOSED, JOURNEY_RULING } from "@kix/protocol-adapter";
+import { StatusMark } from "../a11y/marks";
 import type { GiftPanelModel, GiftRowStatus } from "../gift-desk";
 
 const STATUS_TEXT: Record<GiftRowStatus, string> = {
@@ -49,7 +50,21 @@ export function GiftPanel({ model }: { model: GiftPanelModel }) {
             <dl className="facts">
               <div>
                 <dt>Status</dt>
-                <dd>{STATUS_TEXT[row.status]}</dd>
+                <dd>
+                  {STATUS_TEXT[row.status]}
+                  {row.status === "blocked" ? (
+                    <>
+                      {" "}
+                      <StatusMark kind="blocked" />
+                    </>
+                  ) : null}
+                  {row.status === "in-flight" ? (
+                    <>
+                      {" "}
+                      <StatusMark kind="loading" />
+                    </>
+                  ) : null}
+                </dd>
               </div>
               <div>
                 <dt>Operation</dt>

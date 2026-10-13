@@ -160,6 +160,8 @@ The organizer workspace at `/organizer/workspace` is the edit and preview page f
 
 The receipt explorer at `/receipts` explains receipts already on this page load. It shows the operation, status, source, and profile for the role on screen, and it connects an error code to that action and to the unconfirmed reason. An unknown outcome stays unknown. The support export is the same text the page shows. Tokens, personal data, and account numbers are redacted. A receipt from another session is not shown. The page does not post. Stub-shape receipts are not from the gate. Limits are in [docs/c-receipt-explorer-apps-bind.md](docs/c-receipt-explorer-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
+The accessibility baseline adds no route. Amounts on screen are copied whole-unit strings or the undetermined price notice. A display clock can change with locale, and the reservation expiry authority stays the adapter instant and the adapter `expired` flag. After an error, the typed value and the selection stay, and focus returns to that control. Loading, blocked, selected, and review each have a word, not only a color. Limits are in [docs/c-accessibility-baseline-apps-bind.md](docs/c-accessibility-baseline-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+
 ## Run locally
 
 ```bash
