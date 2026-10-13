@@ -610,6 +610,46 @@ a.panel {
   outline-offset: 2px;
 }
 
+.servicing-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.servicing table {
+  min-width: 40rem;
+  border-collapse: collapse;
+}
+
+.servicing th,
+.servicing td {
+  border: 1px solid var(--line);
+  padding: 0.25rem 0.4rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.servicing [data-stale-lane],
+.servicing [data-stale-lane-flag="true"],
+.servicing [data-withheld-line],
+.servicing [data-contradiction="true"],
+.servicing [data-unlinked="true"],
+.servicing [data-blocked-reason="true"],
+.servicing [data-fence="true"],
+.servicing [data-behind="true"] {
+  border-left: 4px solid var(--stamp);
+  padding-left: 0.5rem;
+}
+
+.servicing [aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.servicing #servicing-status:focus {
+  outline: 2px solid var(--stamp);
+  outline-offset: 2px;
+}
+
 .discovery-nav {
   display: flex;
   flex-wrap: wrap;

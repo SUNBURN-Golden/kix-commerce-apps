@@ -13,6 +13,7 @@ import { M05Page } from "./pages/marketing/M05Consent";
 import { MarketingHubPage } from "./pages/marketing/Hub";
 import { CreditPage } from "./pages/Credit";
 import { CreditOriginationPage } from "./pages/CreditOrigination";
+import { CreditServicingPage } from "./pages/CreditServicing";
 import { GiftPage } from "./pages/Gift";
 import { HandoffPage } from "./pages/Handoff";
 import { InventoryPage } from "./pages/Inventory";
@@ -43,6 +44,7 @@ export function App() {
         <Route path="/receipts" element={<ReceiptsPage />} />
         <Route path="/handoff" element={<HandoffPage />} />
         <Route path="/credit/origination" element={<CreditOriginationPage />} />
+        <Route path="/credit/servicing" element={<CreditServicingPage />} />
         <Route path="/credit" element={<CreditPage />} />
         <Route path="/marketing" element={<MarketingHubPage />} />
         <Route path="/marketing/m01" element={<M01Page />} />
