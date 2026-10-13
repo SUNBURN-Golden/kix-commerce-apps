@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { AmountNotice, StatusMark } from "../a11y/marks";
 import { formatWhen } from "../format";
 import { useBuyerWorkspace, type BuyerWorkspaceModel } from "../buyer-workspace";
 import { EvidenceRow, ProgressRow, ReturnAction, StateNotice } from "./BuyerPanels";
@@ -33,6 +34,7 @@ export function BuyerScreen({
           <p>{model.ruling}</p>
           <p>{model.stubSentence}</p>
           <p>{model.reloadNote}</p>
+          <AmountNotice />
         </header>
         <section
           id="buyer-shows"
@@ -44,12 +46,19 @@ export function BuyerScreen({
           <h3>Shows</h3>
           <p>source {model.catalogSource}</p>
           <StateNotice model={model} />
+          {model.selectedEventId ? (
+            <p>
+              <StatusMark kind="selected" /> Show {model.selectedEventId}.
+            </p>
+          ) : null}
           {model.catalogAction ? <ReturnAction action={model.catalogAction} onReadAgain={onReadAgain} /> : null}
           {model.catalog.kind === "ready" ? (
             <ul className="buyer-list">
               {model.catalog.performances.map((item) => (
                 <li key={item.eventId} className="buyer-show-row">
-                  <p className="when">{formatWhen(item.startsAt)}</p>
+                  <p className="when">
+                    <time dateTime={item.startsAt}>{formatWhen(item.startsAt)}</time>
+                  </p>
                   <h3>{item.title}</h3>
                   <p className="muted">{item.venue}</p>
                   <button

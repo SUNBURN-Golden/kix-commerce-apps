@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ProtocolError, type Performance, type SettlementCaseView } from "@kix/protocol-adapter";
+import { capacityLine } from "../a11y/present";
+import { StatusMark } from "../a11y/marks";
 import { formatWhen } from "../format";
 import { protocol } from "../protocol";
 import { useJourneyDesk } from "../journey-desk";
@@ -98,20 +100,26 @@ export function BoxOfficePage() {
       <JourneyPanel variant="box-office" model={journey} />
       {loadError ? (
         <p className="alert" role="alert">
-          {loadError}
+          <StatusMark kind="blocked" /> {loadError}
         </p>
       ) : null}
-      {performances === null ? <p className="muted">Loading performances.</p> : null}
+      {performances === null ? (
+        <p className="muted" role="status">
+          <StatusMark kind="loading" /> Loading performances.
+        </p>
+      ) : null}
       {performances?.length === 0 ? <p className="empty">No performances on this adapter.</p> : null}
       <ul className="program">
         {performances?.map((item) => (
           <li key={item.eventId}>
             <article className="row">
               <div>
-                <p className="when">{formatWhen(item.startsAt)}</p>
+                <p className="when">
+                  <time dateTime={item.startsAt}>{formatWhen(item.startsAt)}</time>
+                </p>
                 <h3>{item.title}</h3>
                 <p className="muted">
-                  {item.venue} · {item.remainingCapacity} still open
+                  {item.venue} · {capacityLine(item.remainingCapacity)}
                 </p>
               </div>
               <div className="row-actions">

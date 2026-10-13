@@ -556,17 +556,17 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
-    id: "planned-accessibility",
-    role: "buyer",
-    route: "/",
-    binding: "planned",
+    id: "accessibility-baseline",
+    role: "operator",
+    route: "(none)",
+    binding: "no-published-command",
     sender: null,
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "NOT_IMPLEMENTED. Keyboard, mobile, amount, and time presentation across buyer, organizer, and operator screens waits for c-accessibility-baseline. This row adds no route.",
+      "Presentation baseline for amount, quantity, deadline, keyboard, and non-color status on the existing buyer, organizer, and operator screens. This row adds no route and no command. Price and fee display stays UNDETERMINED. Display locale does not decide expiry.",
     taskId: "c-accessibility-baseline",
-    implemented: false,
+    implemented: true,
     pageControl: false,
   },
 ] as const satisfies readonly WorkspaceSurface[];
@@ -649,7 +649,7 @@ export function surfaceBindingLine(id: string): string {
     surface.deskMethods.length > 0
       ? ` Desk methods stay not-bound: ${surface.deskMethods.join(", ")}.`
       : "";
-  const presence = surface.implemented ? "Current route." : "NOT_IMPLEMENTED.";
+  const presence = !surface.implemented ? "NOT_IMPLEMENTED." : surface.pageControl ? "Current route." : "No added route.";
   const control = surface.pageControl ? "Page control." : "No page control.";
   return `${surface.id} role ${surface.role} route ${surface.route}. Binding ${surface.binding}. Sender ${sender}. Actions ${actions}.${desk} ${presence} ${control} ${surface.provenanceNote}`;
 }

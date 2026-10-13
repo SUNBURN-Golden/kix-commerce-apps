@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { CREDIT_BOUNDARY, ProtocolError, type TransportObservation } from "@kix/protocol-adapter";
+import { transportStatusWord } from "../a11y/marks";
 import { marketingChromeLabel } from "../marketing/labels";
 import { protocol } from "../protocol";
 import { preferFresh, transportBannerText, type HeldObservation } from "../transport-status";
@@ -101,8 +102,13 @@ export function Shell({ children }: { children: ReactNode }) {
 
   const transport = transportBannerText(meta.environment, held?.observation ?? null);
 
+  const transportWord = transportStatusWord(transport.state);
+
   return (
     <div className="shell">
+      <a className="skip" href="#desk-main">
+        Skip to content
+      </a>
       <header className="top">
         <div className="brand">
           <span className="mark">KIX</span>
@@ -123,10 +129,12 @@ export function Shell({ children }: { children: ReactNode }) {
         Adapter <strong>{meta.adapter}</strong>. Environment <strong>{meta.environment}</strong>. No live chain and no
         funds movement. Public production deployment is not selected. {CREDIT_BOUNDARY.note}
       </p>
-      <p className="banner transport" role="status" data-transport-state={transport.state}>
-        {transport.text}
+      <p className="banner transport" role="status" data-transport-state={transport.state} data-status-mark={transport.state}>
+        <span className="status-word">{transportWord}</span> {transport.text}
       </p>
-      <main>{children}</main>
+      <main id="desk-main" tabIndex={-1}>
+        {children}
+      </main>
     </div>
   );
 }

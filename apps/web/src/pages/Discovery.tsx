@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { conflictControlId, focusControl } from "../a11y/focus";
 import { formatWhen } from "../format";
 import { paramsFromQuery, queryFromParams, searchSuffix, type DiscoveryQuery } from "../discovery/model";
 import { useDiscoveryWorkspace, type DiscoveryModel } from "../discovery-workspace";
@@ -55,6 +56,16 @@ export function DiscoveryScreen({
   }
   const count = model.result.rows.length;
   const safeFocus = count === 0 ? 0 : Math.min(focus, count - 1);
+  const conflict = model.result.state === "filter-conflict" ? model.result.conflicts[0] : null;
+  const invalidControlId = conflict ? conflictControlId(conflict.code) : null;
+  const conflictToken = conflict ? `${conflict.code}:${query.section}:${query.from}:${query.to}:${String(query.purchasableOnly)}` : null;
+
+  useEffect(() => {
+    if (!conflictToken || !invalidControlId) {
+      return;
+    }
+    focusControl(invalidControlId);
+  }, [conflictToken, invalidControlId]);
 
   return (
     <div className="discovery" data-adapter-environment={model.environment}>
@@ -69,7 +80,7 @@ export function DiscoveryScreen({
           <h3>Catalogue read</h3>
           <CatalogNotice model={model} onReadAgain={onReadAgain} />
         </section>
-        <DiscoveryForm query={query} onQuery={onQuery} />
+        <DiscoveryForm query={query} onQuery={onQuery} invalidControlId={invalidControlId} />
         <ResultSection
           model={model}
           query={query}
@@ -125,7 +136,9 @@ export function DiscoveryDetail({
                 SYNTHETIC
               </span>
             </p>
-            <p className="when">{formatWhen(detail.row.startsAt)}</p>
+            <p className="when">
+              <time dateTime={detail.row.startsAt}>{formatWhen(detail.row.startsAt)}</time>
+            </p>
             <h3>{detail.row.title}</h3>
             <p className="muted">{detail.row.venueLabel}</p>
             <p>{detail.facts.kindLine}</p>

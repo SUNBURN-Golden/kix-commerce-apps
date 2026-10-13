@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 import { ORGANIZER_COMPOSED, type OrganizerStep } from "@kix/protocol-adapter";
+import { focusControl } from "../a11y/focus";
+import { AmountNotice, StatusMark } from "../a11y/marks";
 import {
   ORGANIZER_DESK_NOT_BOUND,
   ORGANIZER_NOT_COMPOSED,
@@ -17,11 +19,24 @@ export function OrganizerWorkspacePage() {
 
 export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceModel }) {
   const resultsRef = useRef<HTMLHeadingElement>(null);
+  const previewFault = model.plan?.items.find((item) => item.state !== "ready") ?? null;
   useEffect(() => {
-    if (model.results && !model.submitting) {
-      resultsRef.current?.focus();
+    if (model.submitting || !model.results) {
+      return;
     }
+    const failed = model.results.items.some((item) => item.status !== "RECEIPT");
+    if (failed) {
+      focusControl("organizer-ws-event-id");
+      return;
+    }
+    resultsRef.current?.focus();
   }, [model.results, model.submitting]);
+  useEffect(() => {
+    if (!previewFault) {
+      return;
+    }
+    focusControl("organizer-ws-event-id");
+  }, [previewFault]);
 
   const closed = !model.pathOpen;
   const createFields = model.editor.step === "create_event";
@@ -38,16 +53,18 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
         <p>{model.fundsNote}</p>
         <p>{model.reloadNote}</p>
         <p>{model.batchNote}</p>
+        <AmountNotice />
       </header>
       {closed ? (
         <p className="alert" role="alert">
-          Organizer path unavailable. The reviewed gate answers no CORS preflight. The desk stays on integration HTTP
+          <StatusMark kind="blocked" /> Organizer path unavailable. The reviewed gate answers no CORS preflight. The desk stays on integration HTTP
           and does not fall back to the stub. Node tests exercise the live gate. A browser path needs a kix-protocol
           gate change.
           {model.path.kind === "unavailable" && model.path.code ? ` Code ${model.path.code}.` : ""}
         </p>
       ) : null}
       <p className="organizer-ws-status" role="status">
+        {model.submitting ? <StatusMark kind="loading" /> : null}{" "}
         {model.submitting ? "Submitting. One attempt each." : model.results ? model.results.summary : "No results yet."}
       </p>
       <form
@@ -75,11 +92,14 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
                 ))}
               </select>
             </label>
-            <label>
+            <label htmlFor="organizer-ws-event-id">
               Event id
               <input
+                id="organizer-ws-event-id"
                 value={model.editor.eventId}
                 autoComplete="off"
+                aria-invalid={previewFault !== null}
+                aria-describedby={previewFault ? "organizer-ws-preview-error" : undefined}
                 onChange={(event) => model.setEditor({ eventId: event.target.value })}
               />
             </label>
@@ -196,6 +216,12 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
           {model.plan ? (
             <div className="panel organizer-ws-preview">
               <h3>Preview</h3>
+              {model.results ? null : <StatusMark kind="review" />}
+              {previewFault ? (
+                <p id="organizer-ws-preview-error" className="alert" role="alert">
+                  <StatusMark kind="blocked" /> {previewFault.reason}
+                </p>
+              ) : null}
               <table>
                 <caption>One row per command. The body is the body a send would post.</caption>
                 <thead>

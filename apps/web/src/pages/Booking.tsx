@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ProtocolError, type Booking, type Hold, type Performance } from "@kix/protocol-adapter";
+import { focusControl, heldAfterError } from "../a11y/focus";
+import { AmountNotice, DeadlineLine, StatusMark } from "../a11y/marks";
+import { bookingQuantityNumber, capacityLine, presentQuantityLine } from "../a11y/present";
 import { formatWhen } from "../format";
 import { protocol } from "../protocol";
 import { useAdmissionDesk } from "../admission-desk";
@@ -13,7 +16,7 @@ import { ReservationPanel } from "./ReservationPanel";
 export function BookingPage() {
   const { eventId = "" } = useParams();
   const [performance, setPerformance] = useState<Performance | null>(null);
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState("1");
   const [hold, setHold] = useState<Hold | null>(null);
   const [booking, setBooking] = useState<Booking | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +50,13 @@ export function BookingPage() {
     };
   }, [eventId]);
 
+  useEffect(() => {
+    if (!error || hold) {
+      return;
+    }
+    focusControl("booking-quantity");
+  }, [error, hold]);
+
   async function refreshPerformance() {
     const rows = await protocol.listPerformances();
     setPerformance(rows.find((item) => item.eventId === eventId) ?? null);
@@ -68,14 +78,26 @@ export function BookingPage() {
     }
   }
 
+  function keepQuantity(message: string) {
+    const held = heldAfterError({ controlId: "booking-quantity", value: quantity, selection: eventId }, true);
+    setQuantity(held?.value ?? quantity);
+    setError(message);
+    focusControl("booking-quantity");
+  }
+
   async function placeHold() {
+    const count = bookingQuantityNumber(quantity);
+    if (count === null) {
+      keepQuantity("Quantity must be a whole number from 1 to 6. The typed value was kept.");
+      return;
+    }
     setPending(true);
     setError(null);
     try {
-      setHold(await protocol.placeHold({ eventId, quantity }));
+      setHold(await protocol.placeHold({ eventId, quantity: count }));
       await refreshPerformance();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Could not place the hold.");
+      keepQuantity(reason instanceof Error ? reason.message : "Could not place the hold.");
     } finally {
       setPending(false);
     }
@@ -93,6 +115,7 @@ export function BookingPage() {
       await refreshPerformance();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not release the hold.");
+      focusControl("booking-release");
       await dropEndedHold(reason);
     } finally {
       setPending(false);
@@ -109,6 +132,7 @@ export function BookingPage() {
       setBooking(await protocol.confirmBooking(hold.holdId));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not confirm the booking.");
+      focusControl("booking-confirm");
       await dropEndedHold(reason);
     } finally {
       setPending(false);
@@ -118,7 +142,9 @@ export function BookingPage() {
   if (!performance && !error && !resolved) {
     return (
       <section>
-        <p className="muted">Loading the performance.</p>
+        <p className="muted" role="status">
+          <StatusMark kind="loading" /> Loading the performance.
+        </p>
         <JourneyPanel variant="booking" model={journey} />
       </section>
     );
@@ -128,7 +154,7 @@ export function BookingPage() {
     return (
       <section>
         <p className="alert" role="alert">
-          {error ?? "That performance is not on this adapter."}
+          <StatusMark kind="blocked" /> {error ?? "That performance is not on this adapter."}
         </p>
         <JourneyPanel variant="booking" model={journey} />
         <Link to="/">Back to the window</Link>
@@ -142,16 +168,23 @@ export function BookingPage() {
         <p className="eyebrow">Booking · B01–B05 · mock FSM phase · rights issued as a reference</p>
         <h2>{performance.title}</h2>
         <p className="muted">
-          {performance.venue} · {formatWhen(performance.startsAt)} · {performance.remainingCapacity} still open
+          {performance.venue} · <time dateTime={performance.startsAt}>{formatWhen(performance.startsAt)}</time> ·{" "}
+          {capacityLine(performance.remainingCapacity)}
         </p>
+        <AmountNotice />
         <p className="muted">
           The hold form is the Wave 4 pointer. The reservation case is a simulated mock phase. Not live admission.
           B01–B05 stay 설계중.
         </p>
       </header>
+      {pending ? (
+        <p className="muted" role="status">
+          <StatusMark kind="loading" /> One attempt. No retry.
+        </p>
+      ) : null}
       {error ? (
-        <p className="alert" role="alert">
-          {error}
+        <p id="booking-error" className="alert" role="alert">
+          <StatusMark kind="blocked" /> {error}
         </p>
       ) : null}
       {booking ? (
@@ -169,7 +202,7 @@ export function BookingPage() {
             </div>
             <div>
               <dt>Quantity</dt>
-              <dd>{booking.quantity}</dd>
+              <dd>{presentQuantityLine(booking.quantity)}</dd>
             </div>
             <div>
               <dt>Payment</dt>
@@ -201,20 +234,23 @@ export function BookingPage() {
             }
           }}
         >
-          <label>
+          <label htmlFor="booking-quantity">
             Quantity
             <input
-              type="number"
-              min={1}
-              max={6}
+              id="booking-quantity"
+              inputMode="numeric"
+              autoComplete="off"
               value={quantity}
               disabled={Boolean(hold) || pending}
-              onChange={(event) => setQuantity(Number(event.target.value))}
+              aria-invalid={error !== null}
+              aria-describedby={error ? "booking-error" : undefined}
+              onChange={(event) => setQuantity(event.target.value)}
             />
           </label>
           {hold ? (
             <p>
-              Hold <strong>{hold.holdId}</strong> until {formatWhen(hold.expiresAt)}. Surface {hold.surface}.
+              Hold <strong>{hold.holdId}</strong> until <DeadlineLine expiresAt={hold.expiresAt} expired={null} />. Surface{" "}
+              {hold.surface}. Quantity {presentQuantityLine(hold.quantity)}.
             </p>
           ) : (
             <p className="muted">A hold reserves capacity in the adapter. Confirming does not take payment.</p>
@@ -222,15 +258,21 @@ export function BookingPage() {
           <div className="row-actions">
             {hold ? (
               <>
-                <button type="button" className="ghost" disabled={pending} onClick={() => void releaseHold()}>
+                <button
+                  id="booking-release"
+                  type="button"
+                  className="ghost"
+                  disabled={pending}
+                  onClick={() => void releaseHold()}
+                >
                   Release hold
                 </button>
-                <button type="submit" disabled={pending}>
+                <button id="booking-confirm" type="submit" disabled={pending}>
                   Confirm booking
                 </button>
               </>
             ) : (
-              <button type="submit" disabled={pending}>
+              <button id="booking-place" type="submit" disabled={pending}>
                 Place hold
               </button>
             )}

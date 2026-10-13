@@ -1,4 +1,5 @@
 import type { ReservationCaseView } from "@kix/protocol-adapter";
+import { DeadlineLine, StatusMark } from "../a11y/marks";
 import { formatWhen } from "../format";
 
 export const RESERVATION_DESK_COMMANDS = [
@@ -74,9 +75,14 @@ export function ReservationPanel({
         An expired mock hold stays in its phase until release. Economic finality claimed stays false. A bound issue
         waits for a mock COMMITTED settlement view. Reconcile matched is process-local.
       </p>
+      {pending ? (
+        <p className="muted" role="status">
+          <StatusMark kind="loading" /> One attempt. No retry.
+        </p>
+      ) : null}
       {error ? (
         <p className="alert" role="alert">
-          {error}
+          <StatusMark kind="blocked" /> {error}
         </p>
       ) : null}
       <dl className="facts">
@@ -102,7 +108,13 @@ export function ReservationPanel({
         </div>
         <div>
           <dt>Expired</dt>
-          <dd>{view?.expired ? "Yes" : "No"}</dd>
+          <dd data-expiry-authority={view ? (view.expired ? "true" : "false") : "unspecified"}>
+            {view?.expired ? "Yes" : "No"}
+          </dd>
+        </div>
+        <div>
+          <dt>Deadline</dt>
+          <dd>{view ? <DeadlineLine expiresAt={view.expiresAt} expired={view.expired} /> : "None"}</dd>
         </div>
         <div>
           <dt>Issue status</dt>
@@ -134,7 +146,15 @@ export function ReservationPanel({
         </div>
         <div>
           <dt>Mock clock</dt>
-          <dd>{view && view.logicalTimeMs > 0 ? formatWhen(new Date(view.logicalTimeMs).toISOString()) : "Not advanced"}</dd>
+          <dd>
+            {view && view.logicalTimeMs > 0 ? (
+              <time dateTime={new Date(view.logicalTimeMs).toISOString()}>
+                {formatWhen(new Date(view.logicalTimeMs).toISOString())}
+              </time>
+            ) : (
+              "Not advanced"
+            )}
+          </dd>
         </div>
         <div>
           <dt>Provenance</dt>
