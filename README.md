@@ -162,6 +162,10 @@ The receipt explorer at `/receipts` explains receipts already on this page load.
 
 The accessibility baseline adds no route. Amounts on screen are copied whole-unit strings or the undetermined price notice. A display clock can change with locale, and the reservation expiry authority stays the adapter instant and the adapter `expired` flag. After an error, the typed value and the selection stay, and focus returns to that control. Loading, blocked, selected, and review each have a word, not only a color. Limits are in [docs/c-accessibility-baseline-apps-bind.md](docs/c-accessibility-baseline-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
+## Contract fixture catalogue
+
+Catalogue version `1` classifies the current pin tuple into `SUCCESS`, `REJECT`, `UNKNOWN`, `NOT_BOUND`, and `STALE`. Adapter tests and UI tests both import `packages/protocol-adapter/src/contract-fixtures.ts`. A recorded pass names one case on this tuple. It does not verify a different case or a different tuple. A failed live call is not replaced with a stub success. The generator copies result key names and does not compute finance or rights. `placeHold` stays not-bound with `consideredAction` `reserve_listing`. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. The mapping table is [docs/c-contract-fixture-library-apps-bind.md](docs/c-contract-fixture-library-apps-bind.md). No catalogue, gate, or SDK change is consumed.
+
 ## Run locally
 
 ```bash
