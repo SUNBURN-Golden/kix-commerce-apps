@@ -514,6 +514,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "discovery-live-read",
+    role: "buyer",
+    route: "/discovery",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic projection read on the same page. The adapter validates a bounded cursor, filter, watermark, and access scope before a row returns, and checks the pin tuple before the first row. A row confirms no sale, no ownership, and no payment. On integration-http the read stays not-bound because the contract-only catalogue has no read command. Synthetic rows are not a producer receipt.",
+    taskId: "c-discovery-live-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",
@@ -591,9 +605,9 @@ export const BUYER_FLOW_STAGE_IDS = [
 export const BUYER_FLOW_STAGES = [
   {
     id: "discovery",
-    surfaces: ["box-office-catalog", "discovery-prototype"],
+    surfaces: ["box-office-catalog", "discovery-prototype", "discovery-live-read"],
     tracks: [],
-    note: "발견. The stub catalog stays on /. Discovery is a synthetic fixture on /discovery. Search reads no list command. No outcome badge.",
+    note: "발견. The stub catalog stays on /. Discovery is a synthetic fixture on /discovery, and the projection read on the same page stays synthetic. Search reads no list command. No outcome badge.",
   },
   {
     id: "selection",

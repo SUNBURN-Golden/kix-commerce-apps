@@ -61,6 +61,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `marketing-m04` | `/marketing/m04` | no fixture pass. Markers are not a payout |
 | `marketing-m05` | `/marketing/m05` | the three consent rows below |
 | `discovery-prototype` | `/discovery` | `discovery-prototype.price-stale` |
+| `discovery-live-read` | `/discovery` | the four synthetic projection read rows below |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -89,6 +90,10 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `receipt-explorer.unknown` | `UNKNOWN` | `op-fix-receipt-unknown` / `operator` / `create_event` | none. The read does not confirm it |
 | `receipt-explorer.stale` | `STALE` | `op-fix-receipt-stale` / `operator` / `create_event` | `STALE_RESPONSE` |
 | `discovery-prototype.price-stale` | `STALE` | none. Synthetic label | none |
+| `discovery-live-read.stream-stale` | `STALE` | none. Synthetic watermark | none |
+| `discovery-live-read.stream-gap` | `REJECT` | none. Adapter-detected stream gap, not a gate rejection | `PROJECTION_GAP` |
+| `discovery-live-read.tenant-mix` | `REJECT` | none. Adapter-detected foreign tenant row | `PROJECTION_TENANT` |
+| `discovery-live-read.cursor-invalid` | `REJECT` | none. Adapter-refused stale or foreign cursor | `PROJECTION_CURSOR` |
 | `admission-credential.label-stale` | `STALE` | none. Adapter label, not `admit` | `CREDENTIAL_STALE` |
 | `resale-desk.version-stale` | `STALE` | none. Mock case, not economic finality | `STALE_VERSION` |
 | `operator-transport.unavailable` | `UNKNOWN` | none | `GATE_UNAVAILABLE` |

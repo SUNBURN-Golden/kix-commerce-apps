@@ -1,6 +1,24 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  DISCOVERY_ROW_KINDS,
+  DISCOVERY_STREAMS,
+  type DiscoveryRowKind,
+  type DiscoveryStreamKind,
+} from "@kix/protocol-adapter";
+import {
+  LIVE_READ_BOUNDARY,
+  LIVE_READ_PAGE_NOTE,
+  LIVE_READ_REBUILD_LABEL,
+  LIVE_READ_SCOPE_NOTE,
+  LIVE_READ_SOURCE_LINE,
+  LIVE_READ_TITLE,
+  type LiveDetailHandlers,
+  type LiveDetailModel,
+  type LiveListHandlers,
+  type LiveListModel,
+} from "../discovery-live";
+import {
   DISCOVERY_KINDS,
   DISCOVERY_STATUSES,
   SYNTHETIC_TIERS,
@@ -401,6 +419,205 @@ export function ScaleList({ onOpen, scaleTotal }: { onOpen: (rowId: string) => v
         })}
       </ul>
     </section>
+  );
+}
+
+export function LiveReadSection({
+  model,
+  handlers,
+  onOpen,
+}: {
+  model: LiveListModel;
+  handlers: LiveListHandlers;
+  onOpen: (rowId: string) => void;
+}) {
+  const [focus, setFocus] = useState(0);
+  const rows = model.rows;
+  const safeFocus = rows.length === 0 ? 0 : Math.min(focus, rows.length - 1);
+  const active = rows[safeFocus];
+  return (
+    <section id="discovery-live" className="discovery-section" data-live-state={model.state}>
+      <h3>{LIVE_READ_TITLE}</h3>
+      <p className="discovery-banner" data-provenance="synthetic" data-source="synthetic-projection">
+        {LIVE_READ_SOURCE_LINE}
+      </p>
+      <p>{LIVE_READ_BOUNDARY}</p>
+      <p>{LIVE_READ_SCOPE_NOTE}</p>
+      <p className="muted">{LIVE_READ_PAGE_NOTE}</p>
+      <p className="muted">{model.metaLine}</p>
+      <p role="status" data-live-status={model.state}>
+        {model.statusLine}
+        {model.detailLine ? ` ${model.detailLine}` : ""}
+      </p>
+      <div className="discovery-controls">
+        <label htmlFor="discovery-live-stream">
+          Synthetic stream
+          <select
+            id="discovery-live-stream"
+            value={model.stream}
+            onChange={(event) => handlers.setStream(event.target.value as DiscoveryStreamKind)}
+          >
+            {DISCOVERY_STREAMS.map((stream) => (
+              <option key={stream} value={stream}>
+                {stream}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label htmlFor="discovery-live-text">
+          Text
+          <input
+            id="discovery-live-text"
+            type="search"
+            maxLength={64}
+            value={model.filter.text}
+            onChange={(event) => handlers.setFilter({ ...model.filter, text: event.target.value })}
+          />
+        </label>
+        <label htmlFor="discovery-live-kind">
+          Kind
+          <select
+            id="discovery-live-kind"
+            value={model.filter.kinds[0] ?? ""}
+            onChange={(event) =>
+              handlers.setFilter({
+                ...model.filter,
+                kinds: event.target.value === "" ? [] : [event.target.value as DiscoveryRowKind],
+              })
+            }
+          >
+            <option value="">all</option>
+            {DISCOVERY_ROW_KINDS.map((kind) => (
+              <option key={kind} value={kind}>
+                {kind}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="button" className="discovery-action" onClick={() => handlers.rebuildProjection()}>
+          {LIVE_READ_REBUILD_LABEL}
+        </button>
+        {model.actionLabel ? (
+          <button type="button" className="discovery-action" onClick={() => handlers.runReturn()}>
+            {model.actionLabel}
+          </button>
+        ) : null}
+        <button
+          type="button"
+          className="discovery-action"
+          disabled={!model.canNext}
+          onClick={() => handlers.nextPage()}
+        >
+          Next page
+        </button>
+      </div>
+      {rows.length > 0 ? (
+        <ul
+          className="discovery-list discovery-live-list"
+          role="listbox"
+          tabIndex={0}
+          aria-label="Synthetic projection rows"
+          aria-activedescendant={active ? `discovery-live-row-${active.rowId}` : undefined}
+          onKeyDown={(event) => {
+            if (!isListKey(event.key)) {
+              return;
+            }
+            const next = applyPageKey(safeFocus, event.key, rows.length);
+            event.preventDefault();
+            setFocus(next.index);
+            const row = rows[next.index];
+            if (next.open && row) {
+              onOpen(row.rowId);
+            }
+          }}
+        >
+          {rows.map((row, index) => (
+            <li
+              key={row.rowId}
+              id={`discovery-live-row-${row.rowId}`}
+              role="option"
+              aria-selected={index === safeFocus}
+              data-kind={row.kind}
+              data-status={row.statusLabel}
+              data-provenance="synthetic"
+              data-source="synthetic-projection"
+              className="discovery-row"
+            >
+              <p>
+                <span className="discovery-badge" data-provenance="synthetic">
+                  SYNTHETIC
+                </span>
+              </p>
+              {index === safeFocus ? <StatusMark kind="selected" /> : null}
+              <h3>{row.title}</h3>
+              <p>
+                {row.kind} · {row.statusLabel} · sequence {row.sequence}
+              </p>
+              <p className="muted">{row.venueLabel}</p>
+              <p className="when">
+                <time dateTime={row.watermark}>{formatWhen(row.watermark)}</time>
+              </p>
+              <button type="button" className="discovery-action" onClick={() => onOpen(row.rowId)}>
+                Open detail
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  );
+}
+
+export function LiveReadDetail({
+  model,
+  handlers,
+}: {
+  model: LiveDetailModel;
+  handlers: LiveDetailHandlers;
+}) {
+  const row = model.row;
+  return (
+    <article
+      className="discovery-detail"
+      data-live-detail={model.state}
+      data-source={row ? "synthetic-projection" : "none"}
+    >
+      {row ? (
+        <>
+          <p>
+            <span className="discovery-badge" data-provenance="synthetic">
+              SYNTHETIC PROJECTION
+            </span>
+          </p>
+          <p className="muted">This id lives in the projection space, not the fixture space.</p>
+          <h3>{row.title}</h3>
+          <p>
+            {row.kind} · {row.statusLabel} · sequence {row.sequence}
+          </p>
+          <p className="muted">{row.venueLabel}</p>
+          <p className="when">
+            <time dateTime={row.startsAt}>{formatWhen(row.startsAt)}</time>
+          </p>
+          <p className="when">
+            watermark <time dateTime={row.watermark}>{formatWhen(row.watermark)}</time>
+          </p>
+          <p>{LIVE_READ_BOUNDARY}</p>
+          <p className="muted">No purchase path runs from a projection row.</p>
+        </>
+      ) : (
+        <>
+          <p role="status" data-live-status={model.state}>
+            {model.statusLine}
+            {model.detailLine ? ` ${model.detailLine}` : ""}
+          </p>
+          {model.actionLabel ? (
+            <button type="button" className="discovery-action" onClick={() => handlers.readAgain()}>
+              {model.actionLabel}
+            </button>
+          ) : null}
+        </>
+      )}
+    </article>
   );
 }
 

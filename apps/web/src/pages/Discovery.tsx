@@ -3,11 +3,20 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { conflictControlId, focusControl } from "../a11y/focus";
 import { formatWhen } from "../format";
 import { paramsFromQuery, queryFromParams, searchSuffix, type DiscoveryQuery } from "../discovery/model";
+import {
+  useDiscoveryLiveRead,
+  type LiveDetailHandlers,
+  type LiveDetailModel,
+  type LiveListHandlers,
+  type LiveListModel,
+} from "../discovery-live";
 import { useDiscoveryWorkspace, type DiscoveryModel } from "../discovery-workspace";
 import {
   CatalogNotice,
   DiscoveryBanner,
   DiscoveryForm,
+  LiveReadDetail,
+  LiveReadSection,
   PurchasePathView,
   ResultSection,
   ScaleList,
@@ -20,6 +29,10 @@ export function DiscoveryPage() {
   const query = queryFromParams(params);
   const selected = rowId ?? null;
   const { model, readAgain } = useDiscoveryWorkspace(query, selected);
+  const live = useDiscoveryLiveRead({
+    rowId: selected,
+    detailEnabled: selected !== null && model.missingRow,
+  });
   const onQuery = (next: DiscoveryQuery) => {
     setParams(paramsFromQuery(next));
   };
@@ -27,10 +40,24 @@ export function DiscoveryPage() {
     navigate({ pathname: `/discovery/${encodeURIComponent(id)}`, search: searchSuffix(params) });
   };
   if (selected) {
-    return <DiscoveryDetail model={model} onReadAgain={readAgain} backSearch={searchSuffix(params)} />;
+    return (
+      <DiscoveryDetail
+        model={model}
+        onReadAgain={readAgain}
+        backSearch={searchSuffix(params)}
+        live={{ model: live.detailModel, handlers: live.detailHandlers }}
+      />
+    );
   }
   return (
-    <DiscoveryScreen model={model} query={query} onQuery={onQuery} onOpen={onOpen} onReadAgain={readAgain} />
+    <DiscoveryScreen
+      model={model}
+      query={query}
+      onQuery={onQuery}
+      onOpen={onOpen}
+      onReadAgain={readAgain}
+      live={{ model: live.listModel, handlers: live.listHandlers }}
+    />
   );
 }
 
@@ -40,12 +67,14 @@ export function DiscoveryScreen({
   onQuery,
   onOpen,
   onReadAgain,
+  live,
 }: {
   model: DiscoveryModel;
   query: DiscoveryQuery;
   onQuery: (next: DiscoveryQuery) => void;
   onOpen: (rowId: string) => void;
   onReadAgain: () => void;
+  live: { model: LiveListModel; handlers: LiveListHandlers };
 }) {
   const [focus, setFocus] = useState(0);
   const signature = `${model.result.state}:${model.result.page}:${model.result.rows.length}:${query.sort}:${query.pageSize}`;
@@ -73,6 +102,7 @@ export function DiscoveryScreen({
         <a href="#discovery-filters">Filters</a>
         <a href="#discovery-results">Results</a>
         <a href="#discovery-scale">Scale</a>
+        <a href="#discovery-live">Projection</a>
       </nav>
       <div className="discovery-body">
         <DiscoveryBanner model={model} />
@@ -90,6 +120,7 @@ export function DiscoveryScreen({
           onOpen={onOpen}
         />
         <ScaleList scaleTotal={model.scaleTotal} onOpen={onOpen} />
+        <LiveReadSection model={live.model} handlers={live.handlers} onOpen={onOpen} />
       </div>
     </div>
   );
@@ -99,10 +130,12 @@ export function DiscoveryDetail({
   model,
   onReadAgain,
   backSearch,
+  live,
 }: {
   model: DiscoveryModel;
   onReadAgain: () => void;
   backSearch: string;
+  live: { model: LiveDetailModel; handlers: LiveDetailHandlers };
 }) {
   const detail = model.detail;
   return (
@@ -119,9 +152,12 @@ export function DiscoveryDetail({
           <CatalogNotice model={model} onReadAgain={onReadAgain} />
         </section>
         {model.missingRow || !detail ? (
-          <p className="empty" data-state="empty">
-            No synthetic row for this id.
-          </p>
+          <>
+            <p className="empty" data-state="empty">
+              No synthetic row for this id.
+            </p>
+            <LiveReadDetail model={live.model} handlers={live.handlers} />
+          </>
         ) : (
           <article
             className="discovery-detail"
