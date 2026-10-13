@@ -548,6 +548,28 @@ a.panel {
   outline-offset: 2px;
 }
 
+.merchant-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.merchant table {
+  min-width: 40rem;
+}
+
+.merchant [data-flag="true"],
+.merchant [data-unlinked="true"],
+.merchant [data-verdict-reason="true"],
+.merchant [data-blocked-reason="true"] {
+  border-left: 4px solid var(--stamp);
+  padding-left: 0.5rem;
+}
+
+.merchant #merchant-status:focus {
+  outline: 2px solid var(--stamp);
+  outline-offset: 2px;
+}
+
 .discovery-nav {
   display: flex;
   flex-wrap: wrap;
