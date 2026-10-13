@@ -14,6 +14,7 @@ import { MarketingHubPage } from "./pages/marketing/Hub";
 import { CreditPage } from "./pages/Credit";
 import { GiftPage } from "./pages/Gift";
 import { HandoffPage } from "./pages/Handoff";
+import { InventoryPage } from "./pages/Inventory";
 import { OrganizerPage } from "./pages/Organizer";
 import { OrganizerWorkspacePage } from "./pages/OrganizerWorkspace";
 import { ReceiptsPage } from "./pages/Receipts";
@@ -27,6 +28,7 @@ export function App() {
         <Route path="/buyer" element={<BuyerPage />} />
         <Route path="/discovery" element={<DiscoveryPage />} />
         <Route path="/discovery/:rowId" element={<DiscoveryPage />} />
+        <Route path="/inventory" element={<InventoryPage />} />
         <Route path="/booking/:eventId" element={<BookingPage />} />
         <Route path="/admission" element={<AdmissionPage />} />
         <Route path="/resale" element={<ResalePage />} />

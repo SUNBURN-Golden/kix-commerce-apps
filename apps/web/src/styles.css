@@ -493,6 +493,17 @@ a.panel {
   border-color: var(--stamp);
 }
 
+.inventory .discovery-row[data-observed="taken"],
+.inventory .discovery-row[data-observed="hold-expired"],
+.inventory .discovery-row[data-observed="hold-other-generation"] {
+  border-style: dashed;
+}
+
+.inventory [data-generation="behind"] {
+  border-left: 4px solid var(--stamp);
+  padding-left: 0.5rem;
+}
+
 .discovery-nav {
   display: flex;
   flex-wrap: wrap;

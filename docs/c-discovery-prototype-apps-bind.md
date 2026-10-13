@@ -46,7 +46,7 @@ The browser does not reach a live gate. The page posted nothing. `placeHold` was
 
 ## Hold
 
-`UNDETERMINED` until a product owner sets them: price, fee, and currency display. Tiers stay opaque labels. Real seat or GA selection belongs to `c-inventory-venue`. A live list read belongs to `c-discovery-live`. This page invents neither.
+`UNDETERMINED` until a product owner sets them: price, fee, and currency display. Tiers stay opaque labels. A synthetic seat and GA selection page is on `/inventory` ([c-inventory-venue-stub-apps-bind.md](c-inventory-venue-stub-apps-bind.md)); a real inventory read belongs to `c-inventory-venue`. A live list read belongs to `c-discovery-live`. This page invents neither.
 
 No production deploy, no public host, no real payment, no KYC, no credit disbursement, no venue scan, no bank rail, and no live marketplace. No SLO. No Move, kernel, or settlement math is copied. Nothing in this change is inside kix-protocol. The web UI does not call `fetch`. The five pins stay where the gate bind put them.
 

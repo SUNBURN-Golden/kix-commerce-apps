@@ -29,12 +29,14 @@ import { WORKSPACE_RULING } from "./workspace/registry";
 export const DISCOVERY_SAMPLE_NOTE =
   "Search and filters apply to the materialized sample only. The scale view is date order and is count-only.";
 
-export const SEAT_GA_NOTE = "no supported purchase path here; seat/GA selection is c-inventory-venue";
+export const SEAT_GA_NOTE = "no supported purchase path here; seat and GA selection is a synthetic page and sends nothing";
+
+export const INVENTORY_ROUTE = "/inventory";
 
 export type PurchaseDecision =
   | { kind: "booking"; eventId: string }
   | { kind: "not-bound"; reason: string; source: "none" }
-  | { kind: "unsupported"; message: string }
+  | { kind: "unsupported"; message: string; inventoryRoute?: string }
   | { kind: "unavailable"; message: string };
 
 export interface DiscoveryDetailModel {
@@ -60,7 +62,7 @@ export interface DiscoveryModel {
 
 export function resolvePurchase(row: DiscoveryRow, catalog: CatalogState): PurchaseDecision {
   if (row.kind === "seat" || row.kind === "ga") {
-    return { kind: "unsupported", message: SEAT_GA_NOTE };
+    return { kind: "unsupported", message: SEAT_GA_NOTE, inventoryRoute: INVENTORY_ROUTE };
   }
   if (row.kind === "resale") {
     return {

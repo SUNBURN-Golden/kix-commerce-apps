@@ -376,8 +376,8 @@ export const PENDING_PRODUCERS = [
     catalogue: "pending",
     connected: false,
     implementedHere: false,
-    waitingSurface: "discovery-prototype",
-    note: "Seat and GA selection stay on that pending node.",
+    waitingSurface: "inventory-venue-select",
+    note: "Seat and GA selection is a synthetic page. A real inventory and queue read stays on that pending node.",
   },
   {
     id: "consume-p-sdk-0",

@@ -81,10 +81,10 @@ These are the actions the existing senders post through `invokeLocalCall`. Each 
 | Status | Surfaces |
 | --- | --- |
 | `local-command` | `booking-journey`, `gift-transfer`, `organizer-console`, `organizer-workspace`, `marketing-m05` |
-| `synthetic` | `box-office-catalog`, `box-office-journey-view`, `box-office-settlement`, `reservation-case`, `admission-credential`, `resale-desk`, `credit-desk`, `marketing-hub`, `marketing-m01`, `marketing-m02`, `marketing-m03`, `marketing-m04`, `discovery-prototype`, `discovery-live-read`, `buyer-workspace`, `receipt-explorer` |
+| `synthetic` | `box-office-catalog`, `box-office-journey-view`, `box-office-settlement`, `reservation-case`, `admission-credential`, `resale-desk`, `credit-desk`, `marketing-hub`, `marketing-m01`, `marketing-m02`, `marketing-m03`, `marketing-m04`, `discovery-prototype`, `discovery-live-read`, `inventory-venue-select`, `buyer-workspace`, `receipt-explorer` |
 | `unsupported` | `operator-transport`, `operator-unshown-desk`, `accessibility-baseline` |
 
-Unconnected screens are the synthetic and unsupported rows that have a page control. The admission page is one of them. Its credential label is not `admit`. The discovery page is one of them. Its rows are a fixture, and its projection read is a bounded synthetic stream. The settlement panel is synthetic. Its mock phases are not funds.
+Unconnected screens are the synthetic and unsupported rows that have a page control. The admission page is one of them. Its credential label is not `admit`. The discovery page is one of them. Its rows are a fixture, and its projection read is a bounded synthetic stream. The seat and GA page is one of them. Its rows are a synthetic inventory, and a selection there sends nothing. The settlement panel is synthetic. Its mock phases are not funds.
 
 ## Pending producers
 
@@ -103,7 +103,7 @@ These ids live in the non-executable pending catalogue. `connected` is false. Th
 | `primary-price-fee-ui` | `booking-journey` | Price and fee display stays `UNDETERMINED`. |
 | `refund-surface` | `operator-unshown-desk` | `refund_ticket` is not sent. `COMPENSATION_UNDEFINED` stays visible. |
 | `c-discovery-live` | `discovery-prototype` | Synthetic rows are not a live query projection. |
-| `c-inventory-venue` | `discovery-prototype` | Seat and GA selection stay on that pending node. |
+| `c-inventory-venue` | `inventory-venue-select` | Seat and GA selection is a synthetic page. A real inventory and queue read stays on that pending node. |
 | `consume-p-sdk-0` | none | No SDK is consumed. Digests stay null. |
 | `delegation-surface` | none | No delegation screen. Nothing here transfers, refunds, or signs. |
 
@@ -132,7 +132,7 @@ The packet cites these documents and does not replace them.
 | `w7-marketing-align` | `docs/wave7-marketing-align-apps-bind.md` |
 | `w7-m05-consent-bind` | `docs/m05-consent-bind-apps-bind.md` |
 
-Later local surfaces stay in their own binds: `docs/workspace-design-apps-bind.md`, `docs/c-buyer-workspace-apps-bind.md`, `docs/c-organizer-workspace-apps-bind.md`, `docs/c-receipt-explorer-apps-bind.md`, `docs/c-discovery-prototype-apps-bind.md`, `docs/c-discovery-live-stub-apps-bind.md`, `docs/c-accessibility-baseline-apps-bind.md`, and `docs/c-contract-fixture-library-apps-bind.md`.
+Later local surfaces stay in their own binds: `docs/workspace-design-apps-bind.md`, `docs/c-buyer-workspace-apps-bind.md`, `docs/c-organizer-workspace-apps-bind.md`, `docs/c-receipt-explorer-apps-bind.md`, `docs/c-discovery-prototype-apps-bind.md`, `docs/c-discovery-live-stub-apps-bind.md`, `docs/c-inventory-venue-stub-apps-bind.md`, `docs/c-accessibility-baseline-apps-bind.md`, and `docs/c-contract-fixture-library-apps-bind.md`.
 
 ## Hold
 

@@ -528,6 +528,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "inventory-venue-select",
+    role: "buyer",
+    route: "/inventory",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic seat and GA selection on one page: summary, one bounded page, then a selection detail, with explicit refresh. The adapter checks the pin tuple before the first row and refuses a read under another generation or a different mode. An observed hold shows its expiry from the adapter flag. Queue admission is selection access only. Accessible seating stays unsupported. A selection is local: it reserves, sells, and pays nothing, and the hold desk method stays not-bound. On integration-http the read stays not-bound because the contract-only catalogue has no inventory read command. Synthetic rows are not a producer receipt.",
+    taskId: "c-inventory-venue-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",
@@ -611,9 +625,9 @@ export const BUYER_FLOW_STAGES = [
   },
   {
     id: "selection",
-    surfaces: ["box-office-catalog", "booking-journey", "buyer-workspace"],
+    surfaces: ["box-office-catalog", "inventory-venue-select", "booking-journey", "buyer-workspace"],
     tracks: [],
-    note: "선택. Choosing a show opens /booking/:eventId. Selection has no outcome badge.",
+    note: "선택. Choosing a show opens /booking/:eventId. Seat and GA selection is a synthetic page on /inventory and stays local. Selection has no outcome badge.",
   },
   {
     id: "reservation",
