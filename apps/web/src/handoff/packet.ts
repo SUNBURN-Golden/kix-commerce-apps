@@ -368,7 +368,7 @@ export const PENDING_PRODUCERS = [
     catalogue: "pending",
     connected: false,
     implementedHere: false,
-    waitingSurface: "discovery-prototype",
+    waitingSurface: "discovery-live-read",
     note: "Synthetic rows are not a live query projection.",
   },
   {
@@ -714,6 +714,21 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-contract-fixture-library",
     doc: "docs/c-contract-fixture-library-apps-bind.md",
     anchor: "A failed live call is not replaced with a stub success.",
+  },
+  {
+    id: "c-discovery-live-stub",
+    doc: "docs/c-discovery-live-stub-apps-bind.md",
+    anchor: "A projection row confirms no sale, no ownership, and no payment.",
+  },
+  {
+    id: "c-inventory-venue-stub",
+    doc: "docs/c-inventory-venue-stub-apps-bind.md",
+    anchor: "the page shows counts, never amounts.",
+  },
+  {
+    id: "c-platform-journey-stub",
+    doc: "docs/c-platform-journey-stub-apps-bind.md",
+    anchor: "Its writes land on an in-process synthetic source, which is a stand-in for the producer.",
   },
   {
     id: "c-merchant-operations-stub",

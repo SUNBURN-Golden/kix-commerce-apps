@@ -310,6 +310,12 @@ A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.
 - a result that arrives after a session context change is quarantined, the earlier unknown write still blocks its right, and a read from an older context is dropped
 - a trade with a payment observation and no right transfer shows the original right, the right now, and `COMPENSATION_UNDEFINED` together, with no refund control
 - the platform page stays not-bound on integration-http with no stub switch, sends no local call, and keeps its controls focusable with a reason
+- the merchant read returns events, listings, trades, and settlement-obligation lines for the granted merchant only, and another merchant's scope, an actor with no grant, and a withdrawn grant (`GRANT_REVOKED`) are denied with no row
+- a merchant payload is refused whole when any line claims `settled`, `fundsAvailable`, or `lendable` (a missing claim field counts as a claim) or belongs to another merchant, and amounts stay opaque whole-unit strings that nothing parses or sums
+- lines on different source cuts stay on their own cuts and are never merged into one balance: a mixed read withholds every single export, and a stale or mismatched source figure is flagged and never recomputed
+- the merchant export is judged against the last read and withheld with every reason that applies (no read, mixed read, other scope, unknown cut, mixed cut, stale, ahead, partial, count, differing lines), and `export-denied` leaves the read in place with no export
+- a merchant read whose answer never arrives is `unavailable`, not an empty ledger, and a read or export that lands for an older context or after a scope switch is dropped
+- the merchant page stays not-bound on integration-http with no stub switch, sends no local call, and keeps its controls focusable with a reason
 - discovery copy stays synthetic and does not use currency marks or stock claims
 - the receipt explorer shows operation, status, source, and profile for receipts already on this page load, and an explanatory read keeps an unknown outcome unknown
 - a malformed receipt, a different actor, and a different context are rejected, and a receipt from another session is not shown

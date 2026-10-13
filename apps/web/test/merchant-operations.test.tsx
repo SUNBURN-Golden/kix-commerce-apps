@@ -321,6 +321,8 @@ describe("the export", () => {
     expect(markup).toContain('data-export-phase="loaded"');
     expect(markup).toContain('data-verdict="current"');
     expect(markup).toContain("Current export for the last read.");
+    expect(markup).toMatch(/data-verdict-reason="true"> ?Current export for the last read\./);
+    expect(markup).not.toMatch(/data-verdict-reason="true"><span class="status-mark"/);
     expect(markup).toContain("data-export-row=");
     expect(markup).toContain('id="merchant-export"');
     expect(markup).toContain('data-enabled="true"');
