@@ -420,6 +420,14 @@ export const PENDING_PRODUCERS = [
     note: "The servicing desk is synthetic. A real draw, observation, reservation, exposure, schedule, payment, allocation, reversal, adjustment, and case read model and a real producer connection stay on that pending node.",
   },
   {
+    id: "c-finance-operations",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "finance-operations",
+    note: "The finance desk is synthetic. A real reconciliation case, source cut, payee allocation, unapplied remainder, and accounting export read model and a real producer connection stay on that pending node.",
+  },
+  {
     id: "consume-p-sdk-0",
     catalogue: "pending",
     connected: false,
@@ -615,6 +623,12 @@ export const ROLE_JOURNEYS = {
       "Synthetic credit servicing. A draw instruction is not a disbursement, a partial repayment restores no limit, and a case closure extinguishes no debt.",
     ),
     stepFromSurfaces(
+      "finance-operations",
+      "operator",
+      ["finance-operations"],
+      "Synthetic finance queue and export. A mismatch is reviewed against its original trade, a proposal and an approval change no economic state, and nothing forces a ledger to match.",
+    ),
+    stepFromSurfaces(
       "accessibility-baseline",
       "operator",
       ["accessibility-baseline"],
@@ -758,6 +772,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-credit-servicing-journey-stub",
     doc: "docs/c-credit-servicing-journey-stub-apps-bind.md",
     anchor: "a case closure is not an extinguished debt",
+  },
+  {
+    id: "c-finance-operations-stub",
+    doc: "docs/c-finance-operations-stub-apps-bind.md",
+    anchor: "no actor on this desk holds the authority to change economic state",
   },
 ] as const satisfies readonly PreservedEvidence[];
 

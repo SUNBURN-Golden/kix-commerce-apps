@@ -650,6 +650,51 @@ a.panel {
   outline-offset: 2px;
 }
 
+.finance-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.finance table {
+  min-width: 40rem;
+  border-collapse: collapse;
+}
+
+.finance th,
+.finance td {
+  border: 1px solid var(--line);
+  padding: 0.25rem 0.4rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.finance [data-flag="true"],
+.finance [data-unlinked="true"],
+.finance [data-verdict-reason="true"],
+.finance [data-blocked-reason="true"],
+.finance [data-contradiction="true"],
+.finance [data-timing-uncertain="true"],
+.finance [data-fence="true"],
+.finance [data-behind="true"] {
+  border-left: 4px solid var(--stamp);
+  padding-left: 0.5rem;
+}
+
+.finance [aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.finance #finance-status:focus {
+  outline: 2px solid var(--stamp);
+  outline-offset: 2px;
+}
+
+.finance .finance-facts,
+.finance .finance-proposals {
+  padding-left: 1.25rem;
+}
+
 .discovery-nav {
   display: flex;
   flex-wrap: wrap;

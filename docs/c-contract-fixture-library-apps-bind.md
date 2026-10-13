@@ -67,6 +67,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `merchant-operations` | `/merchant` | the eight synthetic merchant read and export rows below. No fixture pass |
 | `credit-origination` | `/credit/origination` | the nine synthetic credit origination rows below. No fixture pass |
 | `credit-servicing` | `/credit/servicing` | the eight synthetic credit servicing rows below. No fixture pass |
+| `finance-operations` | `/finance` | the eleven synthetic finance reconciliation and export rows below. No fixture pass |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -137,6 +138,17 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `credit-servicing.claim-refused` | `REJECT` | none. A payload that omits or asserts the eight lane non-claims; the whole payload is refused | `CLAIM` |
 | `credit-servicing.write-lost` | `UNKNOWN` | none. The request answer never arrived or arrived untrusted; it may have applied and fences every later request | none |
 | `credit-servicing.read-lost` | `UNKNOWN` | none. The read answer never arrived; not an obligation with no servicing rows | none |
+| `finance-operations.stale-read` | `STALE` | none. Synthetic watermark older than the page floor; not an empty queue and not a queue with nothing to reconcile | none |
+| `finance-operations.stale-totals` | `STALE` | none. A source total built at an older generation than its cut stays flagged and is not recomputed | none |
+| `finance-operations.balance-mismatch` | `UNKNOWN` | none. A balance stated matched while the source's own difference text is not zero, or stated mismatched while it is zero; neither is trusted and a confirmation does not make it match | none |
+| `finance-operations.source-cut-skew` | `UNKNOWN` | none. The two sides of a case sit on cuts of different sources at different positions; the case is flagged timing-uncertain, only a request to look again is offered, and no single export is consistent | none |
+| `finance-operations.scope-denied` | `REJECT` | none. No synthetic grant for that book, not a gate rejection | `SCOPE_DENIED` |
+| `finance-operations.export-denied` | `REJECT` | none. The actor reads the queue and holds no export capability, or the source grants the read and no export | `EXPORT_DENIED` |
+| `finance-operations.self-approval` | `REJECT` | none. The actor that proposed a correction asks to approve it; a different actor approves, and an approval changes no economic state | `SELF_APPROVAL` |
+| `finance-operations.claim-refused` | `REJECT` | none. A payload that omits or asserts the six non-claims, an export that does not declare itself synthetic with no real money, or an answer that says a recorded request changed economic state; refused before a row is shown | `CLAIM` |
+| `finance-operations.export-withheld` | `REJECT` | none. An export that is partial, on an older or newer cut set, on an unknown cut, whose rows differ from the read, or taken while the sources were skewed; withheld with every reason | none |
+| `finance-operations.write-lost` | `UNKNOWN` | none. The request answer never arrived or arrived untrusted; it may have been recorded and fences every later request | none |
+| `finance-operations.read-lost` | `UNKNOWN` | none. The read answer never arrived; not an empty queue | none |
 | `admission-credential.label-stale` | `STALE` | none. Adapter label, not `admit` | `CREDENTIAL_STALE` |
 | `resale-desk.version-stale` | `STALE` | none. Mock case, not economic finality | `STALE_VERSION` |
 | `operator-transport.unavailable` | `UNKNOWN` | none | `GATE_UNAVAILABLE` |

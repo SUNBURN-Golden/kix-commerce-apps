@@ -14,6 +14,7 @@ import { MarketingHubPage } from "./pages/marketing/Hub";
 import { CreditPage } from "./pages/Credit";
 import { CreditOriginationPage } from "./pages/CreditOrigination";
 import { CreditServicingPage } from "./pages/CreditServicing";
+import { FinancePage } from "./pages/Finance";
 import { GiftPage } from "./pages/Gift";
 import { HandoffPage } from "./pages/Handoff";
 import { InventoryPage } from "./pages/Inventory";
@@ -46,6 +47,7 @@ export function App() {
         <Route path="/credit/origination" element={<CreditOriginationPage />} />
         <Route path="/credit/servicing" element={<CreditServicingPage />} />
         <Route path="/credit" element={<CreditPage />} />
+        <Route path="/finance" element={<FinancePage />} />
         <Route path="/marketing" element={<MarketingHubPage />} />
         <Route path="/marketing/m01" element={<M01Page />} />
         <Route path="/marketing/m02" element={<M02Page />} />
