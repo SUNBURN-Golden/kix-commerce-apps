@@ -65,6 +65,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `inventory-venue-select` | `/inventory` | the five synthetic seat and GA selection rows below. No fixture pass |
 | `platform-journey-trade` | `/platform` | the eight synthetic multi-channel trade rows below. No fixture pass |
 | `merchant-operations` | `/merchant` | the eight synthetic merchant read and export rows below. No fixture pass |
+| `credit-origination` | `/credit/origination` | the nine synthetic credit origination rows below. No fixture pass |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -118,6 +119,15 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `merchant-operations.claim-refused` | `REJECT` | none. A line that claims settled, funds, or lendable; the whole payload is refused | `CLAIM` |
 | `merchant-operations.export-withheld` | `REJECT` | none. An export that is partial, stale, off-scope, or off-read is withheld with every reason | none. The verdict names every reason |
 | `merchant-operations.read-lost` | `UNKNOWN` | none. The read answer never arrived; not an empty ledger | none |
+| `credit-origination.stale-read` | `STALE` | none. Synthetic watermark older than the page floor; not an application with no claim basis | none |
+| `credit-origination.stale-policy` | `STALE` | none. A lane built under an older policy revision stays flagged with both revisions and withholds permission | none |
+| `credit-origination.consent-withdrawn` | `REJECT` | none. The credit-assessment consent is withdrawn at the synthetic source; the only path is renewing it, not a gate rejection | `CONSENT_WITHDRAWN` |
+| `credit-origination.document-expired` | `REJECT` | none. A claim evidence document is expired by the source's own flag; the only path is providing a current one | `DOCUMENT_EXPIRED` |
+| `credit-origination.limit-race` | `REJECT` | none. A rival request takes the shared limit before the drawdown request lands; the source keeps its own order | `LIMIT_TAKEN` |
+| `credit-origination.scope-denied` | `REJECT` | none. No synthetic grant for that applicant, or a withdrawn grant, not a gate rejection | `SCOPE_DENIED` |
+| `credit-origination.claim-refused` | `REJECT` | none. A payload that calls a submission an approval or a request a disbursement; the whole payload is refused | `CLAIM` |
+| `credit-origination.write-lost` | `UNKNOWN` | none. The request answer never arrived or arrived untrusted; it may have applied and fences every later request | none |
+| `credit-origination.read-lost` | `UNKNOWN` | none. The read answer never arrived; not an application with no claim basis | none |
 | `admission-credential.label-stale` | `STALE` | none. Adapter label, not `admit` | `CREDENTIAL_STALE` |
 | `resale-desk.version-stale` | `STALE` | none. Mock case, not economic finality | `STALE_VERSION` |
 | `operator-transport.unavailable` | `UNKNOWN` | none | `GATE_UNAVAILABLE` |
@@ -141,7 +151,7 @@ The receipt explorer still rejects a candidate with a missing key or a status ou
 
 ## Hold
 
-This library adds no route; the `merchant-operations` screen it now lists is delivered by `docs/c-merchant-operations-stub-apps-bind.md`. Screen components do not import this catalogue and do not call `fetch`. Price and fee display stay `UNDETERMINED`. The generator does not supply them.
+This library adds no route; the `merchant-operations` screen it now lists is delivered by `docs/c-merchant-operations-stub-apps-bind.md`, and the `credit-origination` screen is delivered by `docs/c-credit-origination-stub-apps-bind.md`. Screen components do not import this catalogue and do not call `fetch`. Price and fee display stay `UNDETERMINED`. The generator does not supply them.
 
 No production deploy, no public host, no real payment, no KYC, no credit disbursement, no venue scan, no bank rail, and no live marketplace. No SLO. No Move, kernel, or settlement math is copied. Nothing in this change is inside kix-protocol. The five pins stay where the gate bind put them.
 

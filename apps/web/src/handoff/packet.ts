@@ -404,6 +404,14 @@ export const PENDING_PRODUCERS = [
     note: "The merchant workroom is synthetic. A real event, listing, trade, and settlement-obligation read model and a real producer export stay on that pending node.",
   },
   {
+    id: "c-credit-origination",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "credit-origination",
+    note: "The origination desk is synthetic. A real claim basis, policy revision, consent, document, review, commitment, and drawdown permission read model and a real producer connection stay on that pending node.",
+  },
+  {
     id: "consume-p-sdk-0",
     catalogue: "pending",
     connected: false,
@@ -566,6 +574,12 @@ export const ROLE_JOURNEYS = {
       ["merchant-operations"],
       "Synthetic merchant read and export. A sales figure stays an observation, never a settled or lendable figure.",
     ),
+    stepFromSurfaces(
+      "credit-origination",
+      "organizer",
+      ["credit-origination"],
+      "Synthetic credit origination. A submission is not a decision, an approval is not a commitment, and a recorded request is not a disbursement.",
+    ),
   ],
   operator: [
     stepFromSurfaces(
@@ -705,6 +719,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-merchant-operations-stub",
     doc: "docs/c-merchant-operations-stub-apps-bind.md",
     anchor: "no client-side sum is the financial truth",
+  },
+  {
+    id: "c-credit-origination-stub",
+    doc: "docs/c-credit-origination-stub-apps-bind.md",
+    anchor: "an approval is not a commitment",
   },
 ] as const satisfies readonly PreservedEvidence[];
 

@@ -250,6 +250,7 @@ describe("local handoff packet", () => {
       "organizer-workspace",
       "box-office-settlement",
       "merchant-operations",
+      "credit-origination",
     ]);
     expect(ROLE_JOURNEYS.operator.map((step) => step.id)).toContain("local-handoff");
     expect(ROLE_JOURNEYS.operator.find((step) => step.id === "local-handoff")?.route).toBe(HANDOFF_ROUTE);
