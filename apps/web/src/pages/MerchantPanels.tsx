@@ -406,7 +406,7 @@ export function ExportSection({ model }: { model: MerchantModel }) {
       {exported.detailLine ? <p className="muted">{exported.detailLine}</p> : null}
       {exported.verdictLines.map((line) => (
         <p key={line} data-verdict-reason="true">
-          <WordMark word="Withheld." /> {line}
+          {exported.verdictWord === "withheld" ? <WordMark word="Withheld." /> : null} {line}
         </p>
       ))}
       {exported.exportRef ? <p>Export {exported.exportRef}.</p> : null}

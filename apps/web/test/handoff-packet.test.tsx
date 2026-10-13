@@ -217,6 +217,42 @@ describe("local handoff packet", () => {
     }
   });
 
+  it("cites each stub node as evidence and keeps its pending row on the stub surface", () => {
+    const program = JSON.parse(readFileSync(path.join(repoRoot, ".aiops/program.json"), "utf8")) as {
+      nodes: { id: string }[];
+    };
+    const programIds = program.nodes.map((node) => node.id);
+    const evidenceIds = LOCAL_SURFACE_EVIDENCE.map((item) => item.id);
+    expect(new Set(evidenceIds).size).toBe(evidenceIds.length);
+
+    for (const nodeId of [
+      "c-discovery-live-stub",
+      "c-inventory-venue-stub",
+      "c-platform-journey-stub",
+      "c-merchant-operations-stub",
+    ]) {
+      expect(programIds, nodeId).toContain(nodeId);
+      expect(LOCAL_SURFACE_EVIDENCE.find((item) => item.id === nodeId)?.doc, nodeId).toBe(`docs/${nodeId}-apps-bind.md`);
+      const surfaces = WORKSPACE_SURFACES.filter((surface) => surface.taskId === nodeId);
+      expect(surfaces, nodeId).toHaveLength(1);
+      const pending = PENDING_PRODUCERS.find((row) => row.id === nodeId.replace(/-stub$/, ""));
+      expect(pending?.waitingSurface, nodeId).toBe(surfaces[0]?.id);
+      expect(FEATURE_ROWS.find((row) => row.id === surfaces[0]?.id)?.pendingProducers, nodeId).toContain(pending?.id);
+    }
+    expect(FEATURE_ROWS.find((row) => row.id === "discovery-prototype")?.pendingProducers).not.toContain("c-discovery-live");
+  });
+
+  it("matches the closeout table to the pending rows and the evidence documents", () => {
+    const doc = readFileSync(path.join(repoRoot, "docs/c-local-workspace-closeout-apps-bind.md"), "utf8");
+    for (const row of PENDING_PRODUCERS) {
+      const surface = row.waitingSurface === null ? "none" : `\`${row.waitingSurface}\``;
+      expect(doc, row.id).toContain(`| \`${row.id}\` | ${surface} |`);
+    }
+    for (const item of LOCAL_SURFACE_EVIDENCE) {
+      expect(doc, item.id).toContain(item.doc);
+    }
+  });
+
   it("moves the role with the arrow keys and filters without promoting a claim", () => {
     expect(nextRole("buyer", "ArrowRight")).toBe("organizer");
     expect(nextRole("operator", "ArrowRight")).toBe("buyer");
