@@ -570,6 +570,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "credit-origination",
+    role: "organizer",
+    route: "/credit/origination",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic credit origination on one page: the application, the review decision, the commitment, and the drawdown permission stay four lanes, a submitted application and an assistant explanation are never a decision, and every payload states its five lane non-claims as false or is refused whole. Rate, limit, and schedule figures are the source's own text, shown as UNDETERMINED when the source sent none, and never computed here. A lane built under an older policy revision stays flagged, a withdrawn consent or an expired document suspends permission, and a shared limit keeps the source's own order. On integration-http the read and the requests stay not-bound because no current producer tuple exists and the contract-only catalogue has no credit command. Synthetic rows are not a producer receipt.",
+    taskId: "c-credit-origination-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",

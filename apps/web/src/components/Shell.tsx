@@ -23,7 +23,8 @@ const links = [
   { to: "/merchant", label: "Merchant", end: true },
   { to: "/receipts", label: "Receipts", end: true },
   { to: "/handoff", label: "Local handoff", end: true },
-  { to: "/credit", label: "Credit", end: false },
+  { to: "/credit", label: "Credit", end: true },
+  { to: "/credit/origination", label: "Credit origination", end: true },
   { to: "/marketing", label: "Marketing", end: false },
 ];
 
