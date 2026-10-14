@@ -467,6 +467,14 @@ export const PENDING_PRODUCERS = [
     waitingSurface: "tenant-permissions",
     note: "The permissions desk is synthetic. A real organization, role assignment, resource scope, maker/checker, revocation, account change, sensitive export, and audit read model and a real producer connection stay on that pending node, which waits on kix-protocol:k-operator-contract. A hidden control is never enforcement, and nothing here grants a real permission.",
   },
+  {
+    id: "c-notification-inbox",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "notification-inbox",
+    note: "The notification inbox is synthetic. A real contracted-event feed, dedupe, read state, offered-action resolve, and support-inquiry read model and a real producer connection stay on that pending node, which waits on kix-protocol:k-operator-contract. An arrival confirms no economic effect, and no external send or provider API is wired.",
+  },
 ] as const satisfies readonly PendingProducer[];
 
 const UNSUPPORTED_SURFACE_IDS = new Set(["operator-transport", "accessibility-baseline"]);
@@ -659,6 +667,12 @@ export const ROLE_JOURNEYS = {
       "Synthetic role workspaces. A hidden control is never enforcement, a proposal and an approval are records, and a role switch mixes no old session rows.",
     ),
     stepFromSurfaces(
+      "notification-inbox",
+      "operator",
+      ["notification-inbox"],
+      "Synthetic notification inbox and support material. An arrival confirms no economic effect, a stale-issued row's action resolves nothing, and dedupe drops a second delivery once.",
+    ),
+    stepFromSurfaces(
       "accessibility-baseline",
       "operator",
       ["accessibility-baseline"],
@@ -822,6 +836,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-tenant-permissions-stub",
     doc: "docs/c-tenant-permissions-stub-apps-bind.md",
     anchor: "a hidden control is never enforcement",
+  },
+  {
+    id: "c-notification-inbox-stub",
+    doc: "docs/c-notification-inbox-stub-apps-bind.md",
+    anchor: "an arrival confirms no economic effect",
   },
 ] as const satisfies readonly PreservedEvidence[];
 

@@ -71,6 +71,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `marketing-journey` | `/marketing/journey` | the twelve synthetic marketing benefit rows below. No fixture pass |
 | `delegated-assistant` | `/assistant` | the thirteen synthetic delegated assistant rows below. No fixture pass |
 | `tenant-permissions` | `/permissions` | the ten synthetic tenant permission rows below. No fixture pass |
+| `notification-inbox` | `/notifications` | the twelve synthetic notification inbox rows below. No fixture pass |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -187,6 +188,18 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `tenant-permissions.export-withheld` | `REJECT` | none. An export on another scope, taken before the read, partial, or whose rows differ — including a foreign row; withheld with every reason and shows no row | none |
 | `tenant-permissions.write-lost` | `UNKNOWN` | none. The request answer never arrived or arrived untrusted; it may have been recorded and fences every later request | none |
 | `tenant-permissions.read-lost` | `UNKNOWN` | none. The read answer never arrived; not an empty workspace | none |
+| `notification-inbox.stale-read` | `STALE` | none. A synthetic watermark older than the page floor; no row is returned, and the inbox is not treated as empty or denied | none |
+| `notification-inbox.tenant-mix` | `REJECT` | none. A read payload carries a notification of another tenant; the whole payload is refused before a row is shown | `SCOPE_LEAK` |
+| `notification-inbox.subject-mix` | `REJECT` | none. A read payload carries a notification addressed to another subject; the whole payload is refused before a row is shown | `SUBJECT_LEAK` |
+| `notification-inbox.duplicate-dropped` | `REJECT` | none. A second delivery of the same dedupe key is dropped and counted; the inbox lists one row and the duplicate confirms nothing more | none |
+| `notification-inbox.late-stale-issue` | `STALE` | none. A notification issued under an older grant generation keeps its row marked stale-issue; its offered action resolves nothing and the source rejects the resolve | `STALE_ISSUE` |
+| `notification-inbox.generation-stale` | `STALE` | none. The notification grant moved a generation after the read; a request under the older generation is rejected and a read under the older floor comes back generation-stale | `GENERATION_STALE` |
+| `notification-inbox.permission-revoked` | `REJECT` | none. A revoked notification grant denies the read, the inquiry, the mark-read, and the resolve; no hidden control was what denied it | `GRANT_REVOKED` |
+| `notification-inbox.uncontracted-kind` | `REJECT` | none. A feed delivers an event kind the producer contract does not name; the whole payload is refused | `UNCONTRACTED` |
+| `notification-inbox.sensitive-leak` | `REJECT` | none. A payload delivers a sensitive notification's detail to a role without read-sensitive, or support material carrying a sensitive token; refused whole | `SENSITIVE_LEAK` |
+| `notification-inbox.arrival-claim` | `REJECT` | none. A payload claims an arrival confirms an economic effect or that an external send is wired; refused whole | `CLAIM` |
+| `notification-inbox.write-lost` | `UNKNOWN` | none. The request answer never arrived or arrived untrusted; it may have been recorded and fences every later request | none |
+| `notification-inbox.read-lost` | `UNKNOWN` | none. The read answer never arrived; not an empty inbox | none |
 | `admission-credential.label-stale` | `STALE` | none. Adapter label, not `admit` | `CREDENTIAL_STALE` |
 | `resale-desk.version-stale` | `STALE` | none. Mock case, not economic finality | `STALE_VERSION` |
 | `operator-transport.unavailable` | `UNKNOWN` | none | `GATE_UNAVAILABLE` |
