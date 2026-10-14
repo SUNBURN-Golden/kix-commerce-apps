@@ -181,7 +181,7 @@ function countOf(markup: string, needle: string): number {
 }
 
 function buttonLabels(markup: string): string[] {
-  return [...markup.matchAll(/<button[^>]*>(.*?)<\/button>/gs)].map((match) => (match[1] ?? "").replace(/<[^>]+>/g, "").trim());
+  return [...markup.matchAll(/<button[^>]*>([^<]*)<\/button>/g)].map((match) => (match[1] ?? "").trim());
 }
 
 describe("marketing journey screen states", () => {
