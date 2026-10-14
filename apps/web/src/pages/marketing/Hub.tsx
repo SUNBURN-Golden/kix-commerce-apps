@@ -111,6 +111,10 @@ export function MarketingHubPage() {
           </li>
         ))}
       </ul>
+      <p className="muted">
+        <Link to="/marketing/journey">Benefit journey (synthetic)</Link>: discover, apply, rejected, and reclaim as four separate lines. It
+        reads consent and posts none, and it is not a CRM product.
+      </p>
     </MarketingChrome>
   );
 }

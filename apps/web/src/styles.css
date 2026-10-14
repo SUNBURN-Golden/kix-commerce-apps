@@ -548,6 +548,51 @@ a.panel {
   outline-offset: 2px;
 }
 
+.mkj [aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.mkj .discovery-row[data-state="reclaimed"] {
+  border-style: dashed;
+}
+
+.mkj [data-blocked-reason="true"],
+.mkj [data-rejection],
+.mkj [data-consent-withdrawn-since="true"] {
+  border-left: 4px solid var(--stamp);
+  padding-left: 0.5rem;
+}
+
+.mkj-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.mkj table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+}
+
+.mkj table.mkj-register,
+.mkj table.mkj-crm {
+  min-width: 40rem;
+}
+
+.mkj th,
+.mkj td {
+  border: 1px solid var(--line);
+  padding: 0.25rem 0.4rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.mkj #mkj-status:focus {
+  outline: 2px solid var(--stamp);
+  outline-offset: 2px;
+}
+
 .merchant-scroll {
   max-width: 100%;
   overflow-x: auto;
