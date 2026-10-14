@@ -30,6 +30,7 @@ const links = [
   { to: "/marketing", label: "Marketing", end: false },
   { to: "/marketing/journey", label: "Benefit journey", end: true },
   { to: "/assistant", label: "Assistant", end: true },
+  { to: "/permissions", label: "Permissions", end: true },
 ];
 
 export function Shell({ children }: { children: ReactNode }) {

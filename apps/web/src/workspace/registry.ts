@@ -640,6 +640,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "tenant-permissions",
+    role: "operator",
+    route: "/permissions",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic tenant permissions on one page: buyer, organizer, settler, and support workspaces on one source, each listing only the resource kinds its role may read. Read-own, read-tenant, read-audit, each proposal capability, the approval, and the sensitive export stay separate capabilities, a change is a proposal a different actor approves, and recorded is not applied — a membership or an account moves only when the source applies it. An assignment carries a generation: a role switch is a new session with cleared rows, a late answer is dropped, and a write under an older generation is rejected role-stale. A hidden control is never the enforcement: the source checks every call and the tests send requests straight to the port. A pasted reference is a direct open; a ref outside the role's kinds or outside the tenant is denied, never substituted. Every payload states six non-claims as false or is refused whole. On integration-http the read, the export, and the requests stay not-bound because kix-protocol:k-operator-contract is not merged, pending node c-tenant-permissions is not promoted, and the contract-only catalogue has no permission read or command. Synthetic rows are not a producer receipt.",
+    taskId: "c-tenant-permissions-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",
