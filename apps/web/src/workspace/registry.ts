@@ -640,6 +640,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "provider-connected-journey",
+    role: "buyer",
+    route: "/provider",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic provider checkout on one page: the checkout redirect, the buyer's return landing, the provider's own report, the issuance record, and the refund record stay five separate lines on each order. The environment and the account are checked on every read: the desk serves the sandbox only, a declared production environment refuses the read, a write that does not declare sandbox is refused, and an unqualified actor fences every write. A return landing is a source event and is never a payment observation; issuance and refund stay fenced until a provider report is recorded and observed. One write is sent at a time per order, a lost or late result keeps that order blocked, a result from an earlier session is quarantined, and a read never resolves an unknown write. Every payload states six non-claims as false or is refused whole, and a confirmed answer that breaks them leaves the write unknown. On integration-http the read and the writes stay not-bound because kix-protocol:k-provider-sandbox and kix-protocol:k-authority-qualification are not merged and the contract-only catalogue has no checkout, payment-observation read, issuance, or provider-refund command. Synthetic rows are not a provider receipt, a sandbox success is not a real payment, an issuance record is not a real right, and a refund record executes nothing.",
+    taskId: "c-provider-connected-journey-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "tenant-permissions",
     role: "operator",
     route: "/permissions",
@@ -749,15 +763,15 @@ export const BUYER_FLOW_STAGES = [
   },
   {
     id: "payment",
-    surfaces: ["booking-journey", "box-office-settlement", "platform-journey-trade", "buyer-workspace"],
+    surfaces: ["booking-journey", "box-office-settlement", "platform-journey-trade", "provider-connected-journey", "buyer-workspace"],
     tracks: ["payment"],
-    note: "결제 상태. confirmBooking does not send capture. The mock settlement case stays stub-only. Price and fee display policy is UNDETERMINED.",
+    note: "결제 상태. confirmBooking does not send capture. The mock settlement case stays stub-only. The provider journey records a synthetic redirect, return, and observation; a return landing is not a payment observation. Price and fee display policy is UNDETERMINED.",
   },
   {
     id: "issuance",
-    surfaces: ["reservation-case", "organizer-console", "organizer-workspace", "gift-transfer", "platform-journey-trade", "buyer-workspace"],
+    surfaces: ["reservation-case", "organizer-console", "organizer-workspace", "gift-transfer", "platform-journey-trade", "provider-connected-journey", "buyer-workspace"],
     tracks: ["issuance"],
-    note: "권리. issueReservation is stub-only. issue_invitation is the organizer post. A gift transfers a caller-supplied right and does not mint one.",
+    note: "권리. issueReservation is stub-only. issue_invitation is the organizer post. A gift transfers a caller-supplied right and does not mint one. A synthetic issuance record grants no admission authority.",
   },
   {
     id: "admission",
@@ -767,9 +781,9 @@ export const BUYER_FLOW_STAGES = [
   },
   {
     id: "refund",
-    surfaces: ["operator-unshown-desk", "platform-journey-trade"],
+    surfaces: ["operator-unshown-desk", "platform-journey-trade", "provider-connected-journey"],
     tracks: ["payment"],
-    note: "환불. refund_ticket is pinned and no surface sends it. Status stays not-bound. COMPENSATION_UNDEFINED stays visible. Refund policy values are UNDETERMINED.",
+    note: "환불. refund_ticket is pinned and no surface sends it. Status stays not-bound. COMPENSATION_UNDEFINED stays visible. The provider journey records a synthetic refund row that executes nothing. Refund policy values are UNDETERMINED.",
   },
 ] as const satisfies readonly BuyerFlowStage[];
 

@@ -467,6 +467,14 @@ export const PENDING_PRODUCERS = [
     waitingSurface: "tenant-permissions",
     note: "The permissions desk is synthetic. A real organization, role assignment, resource scope, maker/checker, revocation, account change, sensitive export, and audit read model and a real producer connection stay on that pending node, which waits on kix-protocol:k-operator-contract. A hidden control is never enforcement, and nothing here grants a real permission.",
   },
+  {
+    id: "c-provider-connected-journey",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "provider-connected-journey",
+    note: "The provider journey is synthetic. A real approved-provider checkout, payment observation, issuance, and refund connection stays on that pending node, which waits on kix-protocol:k-provider-sandbox and kix-protocol:k-authority-qualification. A return landing is not a payment observation, a sandbox success is not a real payment, and a refund record executes nothing.",
+  },
 ] as const satisfies readonly PendingProducer[];
 
 const UNSUPPORTED_SURFACE_IDS = new Set(["operator-transport", "accessibility-baseline"]);
@@ -822,6 +830,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-tenant-permissions-stub",
     doc: "docs/c-tenant-permissions-stub-apps-bind.md",
     anchor: "a hidden control is never enforcement",
+  },
+  {
+    id: "c-provider-connected-journey-stub",
+    doc: "docs/c-provider-connected-journey-stub-apps-bind.md",
+    anchor: "a return landing is never a payment observation",
   },
 ] as const satisfies readonly PreservedEvidence[];
 

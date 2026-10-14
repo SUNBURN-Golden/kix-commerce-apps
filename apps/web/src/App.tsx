@@ -24,6 +24,7 @@ import { MerchantPage } from "./pages/Merchant";
 import { OrganizerPage } from "./pages/Organizer";
 import { OrganizerWorkspacePage } from "./pages/OrganizerWorkspace";
 import { PlatformPage } from "./pages/Platform";
+import { ProviderJourneyPage } from "./pages/ProviderJourney";
 import { ReceiptsPage } from "./pages/Receipts";
 import { ResalePage } from "./pages/Resale";
 import { TenantPermissionsPage } from "./pages/TenantPermissions";
@@ -60,6 +61,7 @@ export function App() {
         <Route path="/marketing/m05" element={<M05Page />} />
         <Route path="/assistant" element={<AssistantPage />} />
         <Route path="/permissions" element={<TenantPermissionsPage />} />
+        <Route path="/provider" element={<ProviderJourneyPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>

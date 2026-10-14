@@ -548,6 +548,42 @@ a.panel {
   outline-offset: 2px;
 }
 
+.provider [aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.provider [data-blocked-reason="true"],
+.provider .discovery-row[data-shape="abandoned"],
+.provider .discovery-row[data-shape="payment-declined"],
+.provider .discovery-row[data-shape="unknown-effect"] {
+  border-left: 4px solid var(--stamp);
+  padding-left: 0.5rem;
+}
+
+.provider table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+}
+
+.provider table.platform-register {
+  min-width: 40rem;
+}
+
+.provider th,
+.provider td {
+  border: 1px solid var(--line);
+  padding: 0.25rem 0.4rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.provider #provider-status:focus {
+  outline: 2px solid var(--stamp);
+  outline-offset: 2px;
+}
+
 .mkj [aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.55;
