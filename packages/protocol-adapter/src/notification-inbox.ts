@@ -613,7 +613,7 @@ function isInstant(value: unknown): value is string {
  * material shape — is not support material, and the payload is refused.
  */
 const SENSITIVE_TOKEN =
-  /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|\b(?:sk|pk|tok|key|api|secret|pwd|bearer)[-_][A-Za-z0-9]{6,}|\b\d{12,19}\b|\beyJ[A-Za-z0-9_-]{10,}/;
+  /(?<![A-Za-z0-9._%+-])[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]{1,63}(?:\.[A-Za-z0-9-]{1,63}){0,8}\.[A-Za-z]{2,24}|\b(?:sk|pk|tok|key|api|secret|pwd|bearer)[-_][A-Za-z0-9]{6,}|\b\d{12,19}\b|\beyJ[A-Za-z0-9_-]{10,}/;
 
 export function notifyTextSafe(text: string): boolean {
   return !SENSITIVE_TOKEN.test(text);
