@@ -668,6 +668,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "notification-inbox",
+    role: "operator",
+    route: "/notifications",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic notification inbox on one page: only producer-contracted event kinds are projected, deliveries deduplicate on the source's own key, and a second delivery is dropped and counted. A notification confirms what the source recorded — never an economic effect, and an arrival is not a receipt. A notification carries the grant generation it was issued under: a stale-issued row keeps its place but its offered action resolves nothing, never skipping the current-generation check, and a request built under an older generation is rejected generation-stale. A sensitive detail is withheld at the source unless the role holds read-sensitive. A hidden control is never enforcement: the source checks every read, inquiry, and request, and the tests send requests straight to the port. An offered action is a move, not a send: open-authority moves to the receipts desk and open-support opens the source's own redacted support material. Every payload states seven non-claims as false or is refused whole. On integration-http the read, the inquiry, and the requests stay not-bound because kix-protocol:k-operator-contract is not merged, pending node c-notification-inbox is not promoted, and the contract-only catalogue has no notification read, dedupe, read-state, resolve, or inquiry command. Synthetic rows are not a producer receipt.",
+    taskId: "c-notification-inbox-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",

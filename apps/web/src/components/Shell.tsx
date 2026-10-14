@@ -31,6 +31,7 @@ const links = [
   { to: "/marketing/journey", label: "Benefit journey", end: true },
   { to: "/assistant", label: "Assistant", end: true },
   { to: "/permissions", label: "Permissions", end: true },
+  { to: "/notifications", label: "Notifications", end: true },
   { to: "/provider", label: "Provider journey", end: true },
 ];
 
