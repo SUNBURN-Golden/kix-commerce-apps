@@ -420,6 +420,45 @@ describe("a return landing is never a payment observation", () => {
     expectClean(markup);
   });
 
+  it("drops the report and abandon controls once the provider report lands, and vice versa", async () => {
+    const r = rig();
+    await r.controller.refresh();
+    const checkoutRef = checkoutRefOf(await step(r, { step: "begin", orderRef: "ord-0001" }));
+    r.port.deliverReturn(checkoutRef);
+    await r.controller.refresh();
+    // While the report is still pending the page offers both source events.
+    let view = modelOf(r).orders.find((order) => order.orderRef === "ord-0001");
+    expect(view?.events.map((item) => item.id)).toEqual(["callback", "abandon"]);
+    let markup = pageHtml(modelOf(r));
+    expect(markup).toContain('id="provider-event-callback-ord-0001"');
+    expect(markup).toContain('id="provider-event-abandon-ord-0001"');
+
+    // Once the report is recorded the checkout is decided: neither control shows
+    // and the source refuses a late abandonment.
+    r.port.deliverCallback(checkoutRef);
+    await r.controller.refresh();
+    view = modelOf(r).orders.find((order) => order.orderRef === "ord-0001");
+    expect(view?.events).toEqual([]);
+    markup = pageHtml(modelOf(r));
+    expect(markup).not.toContain("provider-event-callback");
+    expect(markup).not.toContain("provider-event-abandon");
+    expect(r.port.markAbandoned(checkoutRef)).toBeNull();
+    expectClean(markup);
+
+    // The other direction: abandoned while pending shows neither control and a
+    // report delivered afterwards applies nothing.
+    const left = rig();
+    await left.controller.refresh();
+    const leftRef = checkoutRefOf(await step(left, { step: "begin", orderRef: "ord-0001" }));
+    left.port.deliverReturn(leftRef);
+    left.port.markAbandoned(leftRef);
+    await left.controller.refresh();
+    view = modelOf(left).orders.find((order) => order.orderRef === "ord-0001");
+    expect(view?.shape).toBe("abandoned");
+    expect(view?.events).toEqual([]);
+    expect(left.port.deliverCallback(leftRef)).toBeNull();
+  });
+
   it("a declined provider report reads as a decline, never as success", async () => {
     const r = rig("declined");
     await r.controller.refresh();

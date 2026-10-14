@@ -344,6 +344,47 @@ describe("provider journey end to end", () => {
     expect(port.effects().observations).toBe(0);
   });
 
+  it("a late report does not land on a closed checkout, and a reported checkout cannot be abandoned", async () => {
+    // Abandoned while the report was still pending: a report delivered later
+    // applies nothing, and issue and refund stay fenced at the client.
+    const { port, controller } = controllerFor();
+    await controller.refresh();
+    const checkoutRef = await toReturned(controller);
+    port.deliverReturn(checkoutRef);
+    port.markAbandoned(checkoutRef);
+    expect(port.deliverCallback(checkoutRef)).toBeNull();
+    await controller.refresh();
+    let order = orderOf(controller, "ord-0001");
+    expect(order.shape).toBe("abandoned");
+    expect(order.facets.payment.observed?.state).toBe("pending");
+    expect(order.facets.payment.observed?.ref).toBeNull();
+    expect(await controller.run({ step: "observe", intentRef: "observe", checkoutRef })).toMatchObject({
+      kind: "REJECTED",
+      intent: { code: "CHECKOUT_ABANDONED" },
+    });
+    expect(await controller.run({ step: "issue", intentRef: "issue", checkoutRef })).toEqual({
+      kind: "FENCED",
+      fence: { reason: "payment-unobserved", orderRef: "ord-0001" },
+    });
+    expect(await controller.run({ step: "refund", intentRef: "refund", orderRef: "ord-0001" })).toEqual({
+      kind: "FENCED",
+      fence: { reason: "payment-unobserved", orderRef: "ord-0001" },
+    });
+    expect(port.effects()).toMatchObject({ callbacks: 0, observations: 0, issues: 0, refunds: 0 });
+
+    // The report landed first: the checkout is decided and cannot be abandoned.
+    const second = controllerFor();
+    await second.controller.refresh();
+    const secondRef = await toReturned(second.controller);
+    second.port.deliverReturn(secondRef);
+    second.port.deliverCallback(secondRef);
+    expect(second.port.markAbandoned(secondRef)).toBeNull();
+    await second.controller.refresh();
+    order = orderOf(second.controller, "ord-0001");
+    expect(order.shape).toBe("payment-observed");
+    expect(order.facets.redirect.observed?.state).toBe("returned");
+  });
+
   it("records a declined payment as a declined facet, and issuance and refund stay unfenced-free", async () => {
     const { port, controller } = controllerFor("declined");
     await controller.refresh();

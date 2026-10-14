@@ -848,7 +848,7 @@ export class StubProviderJourney implements ProviderJourneyPort {
       return null;
     }
     const order = this.orderOfCheckout(checkoutRef);
-    if (!order || order.paymentState !== "pending") {
+    if (!order || order.paymentState !== "pending" || order.checkoutState === "abandoned") {
       return null;
     }
     const callbackRef = providerRef("callback", this.callbackSerial);
@@ -870,6 +870,10 @@ export class StubProviderJourney implements ProviderJourneyPort {
   markAbandoned(checkoutRef: string): ProviderAbandonEvent | null {
     const order = this.orderOfCheckout(checkoutRef);
     if (!order || (order.checkoutState !== "open" && order.checkoutState !== "returned")) {
+      return null;
+    }
+    // Once a provider report is recorded the checkout is decided and cannot be abandoned.
+    if (order.paymentState !== "none" && order.paymentState !== "pending") {
       return null;
     }
     order.checkoutState = "abandoned";
@@ -1184,6 +1188,9 @@ export class StubProviderJourney implements ProviderJourneyPort {
     if (order.checkoutRef !== request.checkoutRef) {
       return this.rejected(request, "IDENTITY_MISMATCH", `Checkout ${request.checkoutRef} does not belong to ${order.orderRef}.`);
     }
+    if (order.checkoutState === "abandoned") {
+      return this.rejected(request, "CHECKOUT_ABANDONED", `The provider closed ${request.checkoutRef} after the buyer left. Nothing is issued.`);
+    }
     if (order.paymentState !== "observed") {
       return this.rejected(request, "PAYMENT_NOT_OBSERVED", `Order ${order.orderRef} has no recorded payment observation. Nothing is issued.`);
     }
@@ -1209,6 +1216,13 @@ export class StubProviderJourney implements ProviderJourneyPort {
       return gated;
     }
     const { order } = gated;
+    if (order.checkoutState === "abandoned") {
+      return this.rejected(
+        request,
+        "CHECKOUT_ABANDONED",
+        `The provider closed the checkout on ${order.orderRef} after the buyer left. Nothing is refunded and nothing is queued.`,
+      );
+    }
     if (order.paymentState !== "observed" || order.paymentRef !== request.paymentRef) {
       return this.rejected(
         request,

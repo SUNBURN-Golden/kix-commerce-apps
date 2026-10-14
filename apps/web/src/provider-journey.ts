@@ -373,7 +373,10 @@ function describeOrder(
       { id: "abandon", label: "Abandon the checkout", line: "The provider closes the checkout." },
     );
   }
-  if (order.facets.redirect.observed?.state === "returned") {
+  // A returned checkout still takes the provider's report or an abandonment
+  // only while no report is recorded. Once the report landed the checkout is
+  // decided and neither control applies.
+  if (order.facets.redirect.observed?.state === "returned" && order.facets.payment.observed?.state === "pending") {
     events.push(
       { id: "callback", label: "Deliver the provider report", line: "The provider's own report. Only this unlocks observation." },
       { id: "abandon", label: "Abandon the checkout", line: "The provider closes the checkout." },

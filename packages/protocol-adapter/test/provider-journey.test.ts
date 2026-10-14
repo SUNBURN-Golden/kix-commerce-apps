@@ -466,6 +466,47 @@ describe("provider fault scenarios", () => {
     expect(kind(await second.submit(observeRequest("observe", "cko-0001", "ord-0002", 5)))).toBe("rejected:CHECKOUT_ABANDONED");
   });
 
+  it("keeps a reported checkout decided, and a closed checkout takes no report, issuance, or refund", async () => {
+    // The provider report landed first, so the checkout stays decided. Even a
+    // fully recorded chain cannot be flipped to abandoned afterwards.
+    const port = createStubProviderJourney();
+    await port.submit(beginRequest("begin"));
+    port.deliverReturn("cko-0001");
+    port.deliverCallback("cko-0001");
+    await port.submit(observeRequest("observe", "cko-0001", "ord-0001", 7));
+    await port.submit(issueRequest("issue", "cko-0001", "ord-0001", 8));
+    await port.submit(refundRequest("refund", "psp-0001", "ord-0001", 9));
+    expect(port.markAbandoned("cko-0001")).toBeNull();
+    const after = await snapshotOf(port);
+    expect(after.orders[0]?.checkout?.state).toBe("returned");
+    expect(after.orders[0]?.payment.state).toBe("observed");
+    expect(port.effects().abandons).toBe(0);
+
+    // A decline is a recorded report too.
+    const declined = createStubProviderJourney({ scenario: "declined" });
+    await declined.submit(beginRequest("begin"));
+    declined.deliverReturn("cko-0001");
+    declined.deliverCallback("cko-0001");
+    expect(declined.markAbandoned("cko-0001")).toBeNull();
+    expect((await snapshotOf(declined)).orders[0]?.payment.state).toBe("declined");
+
+    // Abandoned while the report was still pending: no late report lands on it,
+    // and observe, issue, and refund each reject the closed checkout.
+    const left = createStubProviderJourney();
+    await left.submit(beginRequest("begin", "ord-0002", 2));
+    left.deliverReturn("cko-0001");
+    expect(left.markAbandoned("cko-0001")).toMatchObject({ orderRef: "ord-0002" });
+    expect(left.deliverCallback("cko-0001")).toBeNull();
+    expect(kind(await left.submit(observeRequest("observe", "cko-0001", "ord-0002", 5)))).toBe("rejected:CHECKOUT_ABANDONED");
+    expect(kind(await left.submit(issueRequest("issue", "cko-0001", "ord-0002", 5)))).toBe("rejected:CHECKOUT_ABANDONED");
+    expect(kind(await left.submit(refundRequest("refund", "psp-0001", "ord-0002", 5)))).toBe("rejected:CHECKOUT_ABANDONED");
+    const snapshot = await snapshotOf(left);
+    expect(snapshot.orders[1]?.payment).toMatchObject({ state: "pending", paymentRef: null });
+    expect(snapshot.orders[1]?.issuance.state).toBe("none");
+    expect(snapshot.orders[1]?.refund.state).toBe("none");
+    expect(left.effects()).toMatchObject({ callbacks: 0, observations: 0, issues: 0, refunds: 0 });
+  });
+
   it("unqualified reports the desk actor unqualified and rejects every write", async () => {
     const port = createStubProviderJourney({ scenario: "unqualified" });
     const snapshot = await snapshotOf(port);
