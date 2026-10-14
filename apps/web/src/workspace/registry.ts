@@ -626,6 +626,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "delegated-assistant",
+    role: "buyer",
+    route: "/assistant",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic delegation assistant on one page: a request, a proposal, an approval, and a command stay four separate lines. Request text is untrusted intent and is never authority: instruction-like text refuses the whole request, an ambiguous goal infers no grant, scope, action, or budget, and only the approve control on a recorded open proposal sends one synthetic command once under the caller's intent reference. A grant's scope, deadline, target, budget, allowed actions, and requested and adopted modes are the source's own fields, copied and never raised; an unadopted execution delegation stays in query/propose mode. A revoke, a stale grant version, or a lost answer keeps the grant's writes blocked, a late result after a context change is quarantined, and a read never resolves an unknown write. Every payload states seven non-claims as false or is refused whole. On integration-http the read and the writes stay not-bound because no current producer tuple exists, the delegation-surface node is not promoted, and the contract-only catalogue has no delegation read or command. Synthetic rows are not a producer receipt, and nothing here moves funds, transfers a right, or signs.",
+    taskId: "c-delegated-assistant-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",

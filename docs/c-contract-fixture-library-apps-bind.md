@@ -69,6 +69,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `credit-servicing` | `/credit/servicing` | the eight synthetic credit servicing rows below. No fixture pass |
 | `finance-operations` | `/finance` | the eleven synthetic finance reconciliation and export rows below. No fixture pass |
 | `marketing-journey` | `/marketing/journey` | the twelve synthetic marketing benefit rows below. No fixture pass |
+| `delegated-assistant` | `/assistant` | the thirteen synthetic delegated assistant rows below. No fixture pass |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -162,6 +163,19 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `marketing-journey.apply-lost` | `UNKNOWN` | none. The apply answer never arrived or arrived untrusted; it may have been recorded and fences every later write on that benefit | none |
 | `marketing-journey.reclaim-lost` | `UNKNOWN` | none. The reclaim answer never arrived; it may have been reclaimed and no usage count or budget is assumed restored | none |
 | `marketing-journey.read-lost` | `UNKNOWN` | none. The read answer never arrived; not an empty benefit list | none |
+| `delegated-assistant.stale-read` | `STALE` | none. Synthetic watermark older than the page floor; not an empty grant list and not a list with nothing to propose | none |
+| `delegated-assistant.grant-revoked` | `REJECT` | none. The grant was revoked at the source after the read; the approve is denied, not rejected and not recorded. A revocation here is a source event, not a command the page posts | `GRANT_REVOKED` |
+| `delegated-assistant.grant-stale` | `STALE` | none. The grant version moved after the read the command was built from; the write is rejected, the read is marked behind, and one read again is offered | `GRANT_STALE` |
+| `delegated-assistant.grant-expired` | `REJECT` | none. The grant passed its deadline at the source; no path is offered, a reported deadline is not extended | `GRANT_EXPIRED` |
+| `delegated-assistant.mode-capped` | `REJECT` | none. The grant was requested at command mode and adopted at propose; an unadopted execution delegation stays in query/propose mode and nothing raises it | `MODE_CAPPED` |
+| `delegated-assistant.action-not-granted` | `REJECT` | none. The proposal names a command the grant does not list; the page offers a revised request, not a second guess | `ACTION_NOT_GRANTED` |
+| `delegated-assistant.target-outside-scope` | `REJECT` | none. The proposal names a listing under an event the grant does not cover; the assistant does not search for a broader grant or infer one | `TARGET_OUTSIDE_SCOPE` |
+| `delegated-assistant.budget-exhausted` | `REJECT` | none. The command budget, a count of commands with no amount, is used at the source; a cancel restores no budget because that policy is not published | `BUDGET_EXHAUSTED` |
+| `delegated-assistant.duplicate-draft` | `REJECT` | none. The listing already has a staged draft, staged by this page or another channel; no second draft is added | `DUPLICATE_DRAFT` |
+| `delegated-assistant.claim-refused` | `REJECT` | none. A payload that omits or asserts a non-claim: assistant text as authority, a proposal as approval, an approval as a result, funds moved, a right transferred, an execution delegation bound, or a grant inferred from text; refused whole before a row is shown | `CLAIM` |
+| `delegated-assistant.draft-lost` | `UNKNOWN` | none. The draft order answer never arrived or arrived untrusted; it may have been recorded and fences every later write under that grant | none |
+| `delegated-assistant.cancel-lost` | `UNKNOWN` | none. The cancel answer never arrived; it may have been applied and no budget restoration is assumed | none |
+| `delegated-assistant.read-lost` | `UNKNOWN` | none. The read answer never arrived; not an empty grant list | none |
 | `admission-credential.label-stale` | `STALE` | none. Adapter label, not `admit` | `CREDENTIAL_STALE` |
 | `resale-desk.version-stale` | `STALE` | none. Mock case, not economic finality | `STALE_VERSION` |
 | `operator-transport.unavailable` | `UNKNOWN` | none | `GATE_UNAVAILABLE` |

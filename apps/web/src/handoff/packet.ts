@@ -444,12 +444,20 @@ export const PENDING_PRODUCERS = [
     note: "No SDK is consumed. SDK, manifest, and vector digests stay null.",
   },
   {
+    id: "c-delegated-assistant",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "delegated-assistant",
+    note: "The delegation assistant is synthetic. A real grant, proposal, approval, and command read model and a real producer connection stay on that pending node, which waits on kix-protocol:ai-delegation-execution-decision and kix-protocol:k-authority-qualification. Nothing here transfers, refunds, or signs.",
+  },
+  {
     id: "delegation-surface",
     catalogue: "pending",
     connected: false,
     implementedHere: false,
-    waitingSurface: null,
-    note: "No delegation screen. Nothing here transfers, refunds, or signs.",
+    waitingSurface: "delegated-assistant",
+    note: "The delegation screen on /assistant is synthetic query/propose scope. Execution delegation stays unadopted. Nothing here transfers, refunds, or signs.",
   },
 ] as const satisfies readonly PendingProducer[];
 
@@ -790,6 +798,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-marketing-journey-stub",
     doc: "docs/c-marketing-journey-stub-apps-bind.md",
     anchor: "an application confirms no purchase and pays no reward",
+  },
+  {
+    id: "c-delegated-assistant-stub",
+    doc: "docs/c-delegated-assistant-stub-apps-bind.md",
+    anchor: "a sentence is never authority",
   },
 ] as const satisfies readonly PreservedEvidence[];
 

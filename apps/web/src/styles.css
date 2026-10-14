@@ -593,6 +593,48 @@ a.panel {
   outline-offset: 2px;
 }
 
+.dlg [aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.dlg .discovery-detail[data-mode="capped"],
+.dlg [data-kind="blocked"],
+.dlg [data-kind="UNKNOWN"],
+.dlg [data-not-sent="true"] {
+  border-left: 4px solid var(--stamp);
+  padding-left: 0.5rem;
+}
+
+.dlg-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.dlg table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+}
+
+.dlg table.dlg-register,
+.dlg table.dlg-not-composed {
+  min-width: 40rem;
+}
+
+.dlg th,
+.dlg td {
+  border: 1px solid var(--line);
+  padding: 0.25rem 0.4rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.dlg #dlg-status:focus {
+  outline: 2px solid var(--stamp);
+  outline-offset: 2px;
+}
+
 .merchant-scroll {
   max-width: 100%;
   overflow-x: auto;
