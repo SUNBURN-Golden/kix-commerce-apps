@@ -73,6 +73,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `tenant-permissions` | `/permissions` | the ten synthetic tenant permission rows below. No fixture pass |
 | `notification-inbox` | `/notifications` | the twelve synthetic notification inbox rows below. No fixture pass |
 | `provider-connected-journey` | `/provider` | the ten synthetic provider checkout rows below. No fixture pass |
+| `marketplace-performance-bench` | `/marketplace-performance` | the eleven synthetic marketplace scale bench rows below. No fixture pass |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -211,6 +212,17 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `provider-connected-journey.late-callback` | `UNKNOWN` | none. A late result or a late provider callback recorded against an unknown write; evidence only, the write stays unknown | none |
 | `provider-connected-journey.stale-read` | `STALE` | none. The last read is behind; read again before the next write | none |
 | `provider-connected-journey.stale-session` | `STALE` | none. Result quarantined after a session context change | none |
+| `marketplace-performance-bench.stale-read` | `STALE` | none. A synthetic watermark older than the page floor; no row is returned, and the window is not empty or denied | none |
+| `marketplace-performance-bench.terms-moved` | `STALE` | none. The listing terms moved under the held window; the read is refused and every row clears — a fast page never confirms stale terms or rights | none |
+| `marketplace-performance-bench.late-answer` | `STALE` | none. An answer older than the newest read, or one landing after an actor, device, or incarnation change, is dropped and counted, never applied | none |
+| `marketplace-performance-bench.queue-blocked` | `REJECT` | none. The contended page is behind the queue; admission is browse access only, never a hold, a payment, a right, or entry | none |
+| `marketplace-performance-bench.queue-expired` | `REJECT` | none. The queue admission expired at the source; it grants nothing and the page does not revive it | none |
+| `marketplace-performance-bench.over-bound` | `REJECT` | none. A page size or filter text over the declared bound is refused, never clamped | `PAGE_SIZE` |
+| `marketplace-performance-bench.permission-revoked` | `REJECT` | none. The browse permission was revoked at the source; the read and the queue are denied | `PERMISSION_REVOKED` |
+| `marketplace-performance-bench.claim-refused` | `REJECT` | none. A payload claims a row confirms a price or a right; refused whole before a row is shown | `PRICE_CLAIM` |
+| `marketplace-performance-bench.device-claim` | `REJECT` | none. A payload claims real-device evidence; refused — an emulated device is never real mobile evidence | `DEVICE_CLAIM` |
+| `marketplace-performance-bench.gap` | `REJECT` | none. The stream broke its own sequence; no row from a gapped window is shown | `SEQUENCE` |
+| `marketplace-performance-bench.read-lost` | `UNKNOWN` | none. The read or queue answer never arrived; it stays in flight and unknown, not an empty market | none |
 | `admission-credential.label-stale` | `STALE` | none. Adapter label, not `admit` | `CREDENTIAL_STALE` |
 | `resale-desk.version-stale` | `STALE` | none. Mock case, not economic finality | `STALE_VERSION` |
 | `operator-transport.unavailable` | `UNKNOWN` | none | `GATE_UNAVAILABLE` |

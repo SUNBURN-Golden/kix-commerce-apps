@@ -682,6 +682,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "marketplace-performance-bench",
+    role: "operator",
+    route: "/marketplace-performance",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic marketplace scale bench on one page: a lazy 150000-row stream serves only a bounded window, a filter and a page size over the bound are refused rather than clamped, and a cancelled, older, or foreign-context answer is dropped and counted rather than applied. The contended page stays behind a synthetic queue whose admission is browse access only — never a hold, a payment, a right, or entry — and an expired admission grants nothing. A read that stops being ready clears every row: a fast page never confirms a stale price or a stale right. Every settled call is measured once at the browser boundary under its own workload and device labels, the source's offered latency stays a separate label, no producer load figure is mixed into the browser-boundary denominator, and an emulated device profile is never reported as real mobile evidence. On integration-http the read and the queue stay not-bound because kix-protocol:ps-07-scale-qualification is not merged and the contract-only catalogue has no marketplace read, queue, or search command. Synthetic rows are not a producer receipt.",
+    taskId: "c-marketplace-performance-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",
