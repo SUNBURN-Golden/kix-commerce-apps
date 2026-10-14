@@ -28,6 +28,7 @@ const links = [
   { to: "/credit/servicing", label: "Credit servicing", end: true },
   { to: "/finance", label: "Finance", end: true },
   { to: "/marketing", label: "Marketing", end: false },
+  { to: "/marketing/journey", label: "Benefit journey", end: true },
 ];
 
 export function Shell({ children }: { children: ReactNode }) {
@@ -126,7 +127,8 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
         <nav aria-label="Surfaces">
           {links.map((link) => (
-            <NavLink key={link.to} to={link.to} end={link.end}>
+            // The journey sits under /marketing. Only its own link is current there.
+            <NavLink key={link.to} to={link.to} end={link.to === "/marketing" && location.pathname === "/marketing/journey" ? true : link.end}>
               {link.label}
             </NavLink>
           ))}

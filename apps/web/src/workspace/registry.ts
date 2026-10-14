@@ -500,6 +500,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "marketing-journey",
+    role: "buyer",
+    route: "/marketing/journey",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic marketing benefit journey on one page: benefits discovered with the source's own eligibility verdict, priority rank, usage figures, coupon budget in redemptions, and referral attribution, applied to an order as a synthetic write, rejected by the source with a code and one return action, and reclaimed on request. Discover, apply, rejected, and reclaim are four separate lines. A benefit notice and an application confirm no purchase, pay no reward, and apply no discount. Consent is read as the source reports it and is set and authorized only on the consent page, where an earlier authorization is not reused after a withdrawal. CRM stays the independent M05 scope: this page selects no audience, sends no message, and completes no CRM product. Whether a reclaim restores a usage count or a budget is UNDETERMINED. On integration-http the read and the writes stay not-bound because no current producer tuple exists and the contract-only catalogue has no eligibility, usage, budget, attribution, apply, or reclaim command. Synthetic rows are not a producer receipt.",
+    taskId: "c-marketing-journey-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "discovery-prototype",
     role: "buyer",
     route: "/discovery",

@@ -68,6 +68,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `credit-origination` | `/credit/origination` | the nine synthetic credit origination rows below. No fixture pass |
 | `credit-servicing` | `/credit/servicing` | the eight synthetic credit servicing rows below. No fixture pass |
 | `finance-operations` | `/finance` | the eleven synthetic finance reconciliation and export rows below. No fixture pass |
+| `marketing-journey` | `/marketing/journey` | the twelve synthetic marketing benefit rows below. No fixture pass |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -149,6 +150,18 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `finance-operations.export-withheld` | `REJECT` | none. An export that is partial, on an older or newer cut set, on an unknown cut, whose rows differ from the read, or taken while the sources were skewed; withheld with every reason | none |
 | `finance-operations.write-lost` | `UNKNOWN` | none. The request answer never arrived or arrived untrusted; it may have been recorded and fences every later request | none |
 | `finance-operations.read-lost` | `UNKNOWN` | none. The read answer never arrived; not an empty queue | none |
+| `marketing-journey.stale-read` | `STALE` | none. Synthetic watermark older than the page floor; not an empty benefit list and not a list with nothing to apply | none |
+| `marketing-journey.eligibility-stale` | `STALE` | none. The membership basis moved after the read the apply was built from; the source rejects the apply, the read is marked behind, and one read again is offered | `ELIGIBILITY_STALE` |
+| `marketing-journey.consent-withdrawn` | `REJECT` | none. Consent was withdrawn at the source after the read; the earlier authorization is not reused and the only path offered is the consent page, where consent is set. A withdrawal here is a source event, not a command the journey posts | `CONSENT_WITHDRAWN` |
+| `marketing-journey.authorization-stale` | `REJECT` | none. Consent was granted again but the authorization was issued at an older consent version; a new authorization is needed and the older one is never reused | `AUTHORIZATION_STALE` |
+| `marketing-journey.duplicate-use` | `REJECT` | none. The same benefit is already applied to the same order by another channel or an earlier application; the usage count is the source's own | `DUPLICATE_USE` |
+| `marketing-journey.usage-limit` | `REJECT` | none. The source reports the benefit at the usage it allows; the recorded and allowed figures are copied and never added or subtracted | `USAGE_LIMIT_REACHED` |
+| `marketing-journey.budget-exhausted` | `REJECT` | none. The coupon budget, counted in redemptions with no amount, is exhausted; a reclaim does not restore it because that policy is not published and the source states UNDETERMINED | `BUDGET_EXHAUSTED` |
+| `marketing-journey.scope-denied` | `REJECT` | none. No synthetic grant for that subject, not a gate rejection | `SCOPE_DENIED` |
+| `marketing-journey.claim-refused` | `REJECT` | none. A payload that omits or asserts a non-claim: a notice or an application confirming a purchase, a reward paid, a discount applied, a message sent, a CRM product complete, or a withdrawn authorization reused; refused whole before a row is shown | `CLAIM` |
+| `marketing-journey.apply-lost` | `UNKNOWN` | none. The apply answer never arrived or arrived untrusted; it may have been recorded and fences every later write on that benefit | none |
+| `marketing-journey.reclaim-lost` | `UNKNOWN` | none. The reclaim answer never arrived; it may have been reclaimed and no usage count or budget is assumed restored | none |
+| `marketing-journey.read-lost` | `UNKNOWN` | none. The read answer never arrived; not an empty benefit list | none |
 | `admission-credential.label-stale` | `STALE` | none. Adapter label, not `admit` | `CREDENTIAL_STALE` |
 | `resale-desk.version-stale` | `STALE` | none. Mock case, not economic finality | `STALE_VERSION` |
 | `operator-transport.unavailable` | `UNKNOWN` | none | `GATE_UNAVAILABLE` |

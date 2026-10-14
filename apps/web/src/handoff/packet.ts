@@ -428,6 +428,14 @@ export const PENDING_PRODUCERS = [
     note: "The finance desk is synthetic. A real reconciliation case, source cut, payee allocation, unapplied remainder, and accounting export read model and a real producer connection stay on that pending node.",
   },
   {
+    id: "c-marketing-journey",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "marketing-journey",
+    note: "The benefit journey is synthetic. A real membership eligibility, presale priority, usage count, coupon budget, referral attribution, apply, and reclaim read model and a real producer connection stay on that pending node, which waits on kix-protocol:wave7-marketing-contracts. A full CRM product is not built here.",
+  },
+  {
     id: "consume-p-sdk-0",
     catalogue: "pending",
     connected: false,
@@ -561,8 +569,8 @@ export const ROLE_JOURNEYS = {
     stepFromSurfaces(
       "marketing",
       "buyer",
-      ["marketing-hub", "marketing-m01", "marketing-m02", "marketing-m03", "marketing-m04", "marketing-m05"],
-      "M01–M04 stay session stubs. M05 posts set_consent and authorize_marketing. The label stays 미착수. CRM send stays none.",
+      ["marketing-hub", "marketing-m01", "marketing-m02", "marketing-m03", "marketing-m04", "marketing-m05", "marketing-journey"],
+      "M01–M04 stay session stubs. M05 posts set_consent and authorize_marketing. The label stays 미착수. CRM send stays none. The benefit journey is synthetic: a notice or an application confirms no purchase and pays no reward, and it reads consent without posting it.",
     ),
   ],
   organizer: [
@@ -777,6 +785,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-finance-operations-stub",
     doc: "docs/c-finance-operations-stub-apps-bind.md",
     anchor: "no actor on this desk holds the authority to change economic state",
+  },
+  {
+    id: "c-marketing-journey-stub",
+    doc: "docs/c-marketing-journey-stub-apps-bind.md",
+    anchor: "an application confirms no purchase and pays no reward",
   },
 ] as const satisfies readonly PreservedEvidence[];
 
