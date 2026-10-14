@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Shell } from "./components/Shell";
 import { AdmissionPage } from "./pages/Admission";
+import { AssistantPage } from "./pages/Assistant";
 import { BookingPage } from "./pages/Booking";
 import { BoxOfficePage } from "./pages/BoxOffice";
 import { BuyerPage } from "./pages/Buyer";
@@ -56,6 +57,7 @@ export function App() {
         <Route path="/marketing/m03" element={<M03Page />} />
         <Route path="/marketing/m04" element={<M04Page />} />
         <Route path="/marketing/m05" element={<M05Page />} />
+        <Route path="/assistant" element={<AssistantPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>
