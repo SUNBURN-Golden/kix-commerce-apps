@@ -10,10 +10,12 @@
 
 이전 위임에서 계약 변경도 자동 병합하도록 둔 flag를 아래 표의 대표님 경계로 바꿨다. DAG나 과거 전달/승인 증거를 새 승인으로 전이하지 않는다. 개발 DONE·실환경 qualification·화면/작품 acceptance·release는 각각 독립 증거가 필요하다. UNKNOWN fencing·단일 writer·금융/chain/외부 전송/과금/공개 운영 잠금은 유지한다.
 
-## 노드별 spec 판정 (44개)
+## 노드별 spec 판정 (60개)
 
 
 대표님 결정 2026-10-09 21:36 KST: 위 `c-*` 8개 노드는 contract_change=NO로 추가하고, 이미 병합된 #35·#36·#38은 사후 확인한다. 진행 중 계약 변경이 필요해지면 YES/A3/대표님 경계로 다시 분류한다.
+
+대표님 결정 2026-10-14 20:24 KST: 위 `*-stub` 16개 노드는 contract_change=NO로 추가하고, 이미 병합된 #47·#48·#49·#50은 사후 확인한다. user_merge stub 4개(provider-connected-journey·installable-mobile·platform-operational-qualification·platform-release)는 대표님 병합 분류를 유지한다. 진행 중 계약 변경이 필요해지면 YES/A3/대표님 경계로 다시 분류한다.
 
 | Node | contract_change | 병합 | audit_floor | spec 근거 |
 |---|---|---|---|---|
@@ -61,6 +63,22 @@
 | `c-accessibility-baseline` | NO | 정책 C 위임 | A1 | 기존 승인 계약의 시험·접근성 기준; 새 계약 정의 없음 (사후 확인) |
 | `c-contract-fixture-library` | NO | 정책 C 위임 | A2 | 기존 승인 계약의 fixture 정리; 계약 형식 변경 없음 (사후 확인) |
 | `c-local-workspace-closeout` | NO | 정책 C 위임 | A1 | 로컬 워크스페이스 마감·증거 인계; 새 계약 정의 없음 (사후 확인) |
+| `c-discovery-live-stub` | NO | 정책 C 위임 | A2 | stub 범위의 선행 계약 구현·소비; 새로운 공개 의미/형식 변경은 제외 (사후 확인) |
+| `c-inventory-venue-stub` | NO | 정책 C 위임 | A2 | stub 범위의 선행 계약 구현·소비; 새로운 공개 의미/형식 변경은 제외 (사후 확인) |
+| `c-platform-journey-stub` | NO | 정책 C 위임 | A2 | stub 범위의 선행 계약 구현·소비; 새로운 공개 의미/형식 변경은 제외 (사후 확인) |
+| `c-merchant-operations-stub` | NO | 정책 C 위임 | A2 | stub 범위의 선행 계약 구현·소비; 새로운 공개 의미/형식 변경은 제외 (사후 확인) |
+| `c-credit-origination-stub` | NO | 정책 C 위임 | A2 | stub 범위의 선행 계약 구현·소비; 새로운 공개 의미/형식 변경은 제외 |
+| `c-credit-servicing-journey-stub` | NO | 정책 C 위임 | A2 | stub 범위의 선행 계약 구현·소비; 새로운 공개 의미/형식 변경은 제외 |
+| `c-finance-operations-stub` | NO | 정책 C 위임 | A2 | stub 범위의 선행 계약 구현·소비; 새로운 공개 의미/형식 변경은 제외 |
+| `c-marketing-journey-stub` | NO | 정책 C 위임 | A2 | stub 범위의 선행 계약 구현·소비; 새로운 공개 의미/형식 변경은 제외 |
+| `c-delegated-assistant-stub` | NO | 정책 C 위임 | A2 | stub 범위의 선행 계약 구현·소비; 새로운 공개 의미/형식 변경은 제외 |
+| `c-tenant-permissions-stub` | NO | 정책 C 위임 | A2 | stub 범위의 선행 계약 구현·소비; 새로운 공개 의미/형식 변경은 제외 |
+| `c-notification-inbox-stub` | NO | 정책 C 위임 | A2 | stub 범위의 선행 계약 구현·소비; 새로운 공개 의미/형식 변경은 제외 |
+| `c-marketplace-performance-stub` | NO | 정책 C 위임 | A2 | stub 범위의 시험·측정·증거; 새 계약 정의 없음 |
+| `c-provider-connected-journey-stub` | NO | 대표님 (user_merge) | A3 | stub 범위 sandbox 연결; 잠긴 바인딩만 사용, 새 공개 계약 없음 |
+| `c-installable-mobile-stub` | NO | 대표님 (user_merge) | A3 | stub 범위 모바일 UX; 잠긴 바인딩만 사용, 새 공개 계약 없음 |
+| `c-platform-operational-qualification-stub` | NO | 대표님 (user_merge) | A3 | stub 범위 실사용 준비 검증; 새 공개 계약 없음 |
+| `c-platform-release-stub` | NO | 대표님 (user_merge) | A3 | stub 범위 최종 검수·운영 인계; 새 공개 계약 없음 |
 
 ## 중앙 및 시작 경계
 

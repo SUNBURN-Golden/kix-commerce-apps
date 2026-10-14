@@ -475,6 +475,14 @@ export const PENDING_PRODUCERS = [
     waitingSurface: "notification-inbox",
     note: "The notification inbox is synthetic. A real contracted-event feed, dedupe, read state, offered-action resolve, and support-inquiry read model and a real producer connection stay on that pending node, which waits on kix-protocol:k-operator-contract. An arrival confirms no economic effect, and no external send or provider API is wired.",
   },
+  {
+    id: "c-provider-connected-journey",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "provider-connected-journey",
+    note: "The provider journey is synthetic. A real approved-provider checkout, payment observation, issuance, and refund connection stays on that pending node, which waits on kix-protocol:k-provider-sandbox and kix-protocol:k-authority-qualification. A return landing is not a payment observation, a sandbox success is not a real payment, and a refund record executes nothing.",
+  },
 ] as const satisfies readonly PendingProducer[];
 
 const UNSUPPORTED_SURFACE_IDS = new Set(["operator-transport", "accessibility-baseline"]);
@@ -841,6 +849,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-notification-inbox-stub",
     doc: "docs/c-notification-inbox-stub-apps-bind.md",
     anchor: "an arrival confirms no economic effect",
+  },
+  {
+    id: "c-provider-connected-journey-stub",
+    doc: "docs/c-provider-connected-journey-stub-apps-bind.md",
+    anchor: "a return landing is never a payment observation",
   },
 ] as const satisfies readonly PreservedEvidence[];
 

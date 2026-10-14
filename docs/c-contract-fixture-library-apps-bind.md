@@ -72,6 +72,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `delegated-assistant` | `/assistant` | the thirteen synthetic delegated assistant rows below. No fixture pass |
 | `tenant-permissions` | `/permissions` | the ten synthetic tenant permission rows below. No fixture pass |
 | `notification-inbox` | `/notifications` | the twelve synthetic notification inbox rows below. No fixture pass |
+| `provider-connected-journey` | `/provider` | the ten synthetic provider checkout rows below. No fixture pass |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -200,6 +201,16 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `notification-inbox.arrival-claim` | `REJECT` | none. A payload claims an arrival confirms an economic effect or that an external send is wired; refused whole | `CLAIM` |
 | `notification-inbox.write-lost` | `UNKNOWN` | none. The request answer never arrived or arrived untrusted; it may have been recorded and fences every later request | none |
 | `notification-inbox.read-lost` | `UNKNOWN` | none. The read answer never arrived; not an empty inbox | none |
+| `provider-connected-journey.provider-error` | `REJECT` | none. The synthetic provider refused the begin; nothing was opened and the page does not send it again, not a gate rejection | `PROVIDER_ERROR` |
+| `provider-connected-journey.account-unqualified` | `REJECT` | none. The actor is not sandbox-qualified; without a test account and provider qualification every write is synthetic and fenced | `ACCOUNT_UNQUALIFIED` |
+| `provider-connected-journey.return-not-observed` | `REJECT` | none. The buyer landed on the return URL and no provider report is recorded; a return landing alone is not a payment observation | `PAYMENT_PENDING` |
+| `provider-connected-journey.abandoned` | `REJECT` | none. The buyer never returned and the provider closed the checkout; an abandoned checkout pays, issues, and refunds nothing | `CHECKOUT_ABANDONED` |
+| `provider-connected-journey.environment-refused` | `REJECT` | none. A declared production environment refuses the read, and a write that does not declare sandbox is refused; the desk serves the sandbox only | `ENVIRONMENT` |
+| `provider-connected-journey.claim-refused` | `REJECT` | none. A payload that omits or asserts a non-claim — a real payment, funds moved, an admission grant, an executed refund, a completed provider integration, or a production environment; refused whole, and a confirmed answer that breaks them leaves the write unknown | `CLAIM` |
+| `provider-connected-journey.write-lost` | `UNKNOWN` | none. A synthetic begin, observe, issue, or refund whose answer never arrived; it may have applied and fences every later write on that order | none |
+| `provider-connected-journey.late-callback` | `UNKNOWN` | none. A late result or a late provider callback recorded against an unknown write; evidence only, the write stays unknown | none |
+| `provider-connected-journey.stale-read` | `STALE` | none. The last read is behind; read again before the next write | none |
+| `provider-connected-journey.stale-session` | `STALE` | none. Result quarantined after a session context change | none |
 | `admission-credential.label-stale` | `STALE` | none. Adapter label, not `admit` | `CREDENTIAL_STALE` |
 | `resale-desk.version-stale` | `STALE` | none. Mock case, not economic finality | `STALE_VERSION` |
 | `operator-transport.unavailable` | `UNKNOWN` | none | `GATE_UNAVAILABLE` |
