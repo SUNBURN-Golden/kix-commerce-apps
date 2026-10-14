@@ -26,6 +26,7 @@ import { OrganizerWorkspacePage } from "./pages/OrganizerWorkspace";
 import { PlatformPage } from "./pages/Platform";
 import { ReceiptsPage } from "./pages/Receipts";
 import { ResalePage } from "./pages/Resale";
+import { TenantPermissionsPage } from "./pages/TenantPermissions";
 
 export function App() {
   return (
@@ -58,6 +59,7 @@ export function App() {
         <Route path="/marketing/m04" element={<M04Page />} />
         <Route path="/marketing/m05" element={<M05Page />} />
         <Route path="/assistant" element={<AssistantPage />} />
+        <Route path="/permissions" element={<TenantPermissionsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>

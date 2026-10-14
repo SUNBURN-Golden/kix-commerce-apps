@@ -70,6 +70,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `finance-operations` | `/finance` | the eleven synthetic finance reconciliation and export rows below. No fixture pass |
 | `marketing-journey` | `/marketing/journey` | the twelve synthetic marketing benefit rows below. No fixture pass |
 | `delegated-assistant` | `/assistant` | the thirteen synthetic delegated assistant rows below. No fixture pass |
+| `tenant-permissions` | `/permissions` | the ten synthetic tenant permission rows below. No fixture pass |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -176,6 +177,16 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `delegated-assistant.draft-lost` | `UNKNOWN` | none. The draft order answer never arrived or arrived untrusted; it may have been recorded and fences every later write under that grant | none |
 | `delegated-assistant.cancel-lost` | `UNKNOWN` | none. The cancel answer never arrived; it may have been applied and no budget restoration is assumed | none |
 | `delegated-assistant.read-lost` | `UNKNOWN` | none. The read answer never arrived; not an empty grant list | none |
+| `tenant-permissions.stale-read` | `STALE` | none. Synthetic watermark older than the page floor; not an empty workspace and not a denied one | none |
+| `tenant-permissions.tenant-mix` | `REJECT` | none. A read payload carries a row of another tenant; the whole payload is refused before a row is shown | `SCOPE_LEAK` |
+| `tenant-permissions.role-stale` | `STALE` | none. The role assignment moved a generation at the source after the read; a write under the older generation is rejected and the two sessions are not mixed | `ROLE_STALE` |
+| `tenant-permissions.direct-open-denied` | `REJECT` | none. A direct open outside the role's kinds, another tenant's resource, or another subject's order is denied with no substitute row; a hidden control was not what denied it | `RESOURCE_DENIED` |
+| `tenant-permissions.self-approval` | `REJECT` | none. The actor that proposed a change asks to approve it, even under the same person's second role; a different actor approves, and an approval changes no resource | `SELF_APPROVAL` |
+| `tenant-permissions.privilege-escalation` | `REJECT` | none. A role asks for a request its capability does not cover; the source rejects it on its own check, not because a control was hidden | `NO_CAPABILITY` |
+| `tenant-permissions.export-denied` | `REJECT` | none. The role reads its workspace and holds no sensitive-export capability; the export stays absent | `EXPORT_DENIED` |
+| `tenant-permissions.export-withheld` | `REJECT` | none. An export on another scope, taken before the read, partial, or whose rows differ — including a foreign row; withheld with every reason and shows no row | none |
+| `tenant-permissions.write-lost` | `UNKNOWN` | none. The request answer never arrived or arrived untrusted; it may have been recorded and fences every later request | none |
+| `tenant-permissions.read-lost` | `UNKNOWN` | none. The read answer never arrived; not an empty workspace | none |
 | `admission-credential.label-stale` | `STALE` | none. Adapter label, not `admit` | `CREDENTIAL_STALE` |
 | `resale-desk.version-stale` | `STALE` | none. Mock case, not economic finality | `STALE_VERSION` |
 | `operator-transport.unavailable` | `UNKNOWN` | none | `GATE_UNAVAILABLE` |

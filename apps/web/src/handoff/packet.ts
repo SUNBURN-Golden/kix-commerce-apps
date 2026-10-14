@@ -459,6 +459,14 @@ export const PENDING_PRODUCERS = [
     waitingSurface: "delegated-assistant",
     note: "The delegation screen on /assistant is synthetic query/propose scope. Execution delegation stays unadopted. Nothing here transfers, refunds, or signs.",
   },
+  {
+    id: "c-tenant-permissions",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "tenant-permissions",
+    note: "The permissions desk is synthetic. A real organization, role assignment, resource scope, maker/checker, revocation, account change, sensitive export, and audit read model and a real producer connection stay on that pending node, which waits on kix-protocol:k-operator-contract. A hidden control is never enforcement, and nothing here grants a real permission.",
+  },
 ] as const satisfies readonly PendingProducer[];
 
 const UNSUPPORTED_SURFACE_IDS = new Set(["operator-transport", "accessibility-baseline"]);
@@ -645,6 +653,12 @@ export const ROLE_JOURNEYS = {
       "Synthetic finance queue and export. A mismatch is reviewed against its original trade, a proposal and an approval change no economic state, and nothing forces a ledger to match.",
     ),
     stepFromSurfaces(
+      "tenant-permissions",
+      "operator",
+      ["tenant-permissions"],
+      "Synthetic role workspaces. A hidden control is never enforcement, a proposal and an approval are records, and a role switch mixes no old session rows.",
+    ),
+    stepFromSurfaces(
       "accessibility-baseline",
       "operator",
       ["accessibility-baseline"],
@@ -803,6 +817,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-delegated-assistant-stub",
     doc: "docs/c-delegated-assistant-stub-apps-bind.md",
     anchor: "a sentence is never authority",
+  },
+  {
+    id: "c-tenant-permissions-stub",
+    doc: "docs/c-tenant-permissions-stub-apps-bind.md",
+    anchor: "a hidden control is never enforcement",
   },
 ] as const satisfies readonly PreservedEvidence[];
 
