@@ -507,6 +507,14 @@ export const PENDING_PRODUCERS = [
     waitingSurface: "platform-operational-qualification",
     note: "The qualification packet is a synthetic record of stub journeys. A real platform, finance, and marketing operational qualification stays on that pending node, which waits on kix-protocol:ps-07-scale-qualification, kix-protocol:cr-10-credit-qualification, and the unpromoted commerce-integration-closeout. A per-call confirmed is not a journey close, and the packet is never a public deployment, a real-money approval, or a service qualification.",
   },
+  {
+    id: "c-platform-release",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "platform-release",
+    note: "The release candidate packet is a synthetic record scoped to the live tuple. A real final review, user acceptance, RELEASE gate, and operations handoff stays on that pending node, which waits on kix-protocol:k-platform-release and the user RELEASE decision. Nothing is released, deployed, or operated.",
+  },
 ] as const satisfies readonly PendingProducer[];
 
 const UNSUPPORTED_SURFACE_IDS = new Set(["operator-transport", "accessibility-baseline"]);
@@ -723,6 +731,12 @@ export const ROLE_JOURNEYS = {
       "Synthetic qualification packet. A per-call confirmed is not a journey close, the five denominators never merge, and the packet is never promoted to a deployment or a real-money approval.",
     ),
     stepFromSurfaces(
+      "platform-release",
+      "operator",
+      ["platform-release"],
+      "Synthetic release candidate. The packet is scoped to the live tuple, decides nothing, and never starts a public deploy, real money, or real operations before the user RELEASE decision.",
+    ),
+    stepFromSurfaces(
       "accessibility-baseline",
       "operator",
       ["accessibility-baseline"],
@@ -911,6 +925,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-platform-operational-qualification-stub",
     doc: "docs/c-platform-operational-qualification-stub-apps-bind.md",
     anchor: "a per-call confirmed is never an end-to-end journey close",
+  },
+  {
+    id: "c-platform-release-stub",
+    doc: "docs/c-platform-release-stub-apps-bind.md",
+    anchor: "an approval under a different source or contract tuple is never reused",
   },
 ] as const satisfies readonly PreservedEvidence[];
 
