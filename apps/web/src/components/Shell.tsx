@@ -36,6 +36,7 @@ const links = [
   { to: "/marketplace-performance", label: "Marketplace bench", end: true },
   { to: "/mobile", label: "Mobile shell", end: true },
   { to: "/qualification", label: "Qualification", end: true },
+  { to: "/release", label: "Release", end: true },
 ];
 
 export function Shell({ children }: { children: ReactNode }) {

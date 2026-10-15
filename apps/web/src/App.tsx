@@ -25,6 +25,7 @@ import { MarketplacePerformancePage } from "./pages/MarketplacePerformance";
 import { MerchantPage } from "./pages/Merchant";
 import { NotificationsPage } from "./pages/Notifications";
 import { OperationalQualificationPage } from "./pages/OperationalQualification";
+import { PlatformReleasePage } from "./pages/PlatformRelease";
 import { OrganizerPage } from "./pages/Organizer";
 import { OrganizerWorkspacePage } from "./pages/OrganizerWorkspace";
 import { PlatformPage } from "./pages/Platform";
@@ -70,6 +71,7 @@ export function App() {
         <Route path="/marketplace-performance" element={<MarketplacePerformancePage />} />
         <Route path="/mobile" element={<InstallableMobilePage />} />
         <Route path="/qualification" element={<OperationalQualificationPage />} />
+        <Route path="/release" element={<PlatformReleasePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>

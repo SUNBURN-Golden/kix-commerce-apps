@@ -724,6 +724,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "platform-release",
+    role: "operator",
+    route: "/release",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic release candidate on one page: one run re-pins the producer and consumer source, the synthetic artifact, and the config tuple under the live tuple key, re-runs the sibling qualification record as technical evidence only, and presents install, publish, and operate as user decisions it never takes. A packet recorded under a different source or contract tuple is refused whole and an approval under another tuple is never reused; real user acceptance stays PENDING_USER_DECISION and distinct from the technical qualification. The support, incident, privacy, accessibility, and update/rollback lanes are handoff documents, not operating channels, and deferred scope and unresolved items stay on five separate denominators that never merge into one readiness figure. The packet only ever states STUB_CANDIDATE_RECORDED and every non-claim is a literal false. On integration-http the run stays not-bound because pending node c-platform-release is not promoted, kix-protocol:k-platform-release is not merged, the RELEASE gate has not run, and the contract-only catalogue has no release command. Synthetic rows are not a release receipt.",
+    taskId: "c-platform-release-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",

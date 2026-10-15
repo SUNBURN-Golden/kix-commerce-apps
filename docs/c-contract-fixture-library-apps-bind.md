@@ -76,6 +76,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `marketplace-performance-bench` | `/marketplace-performance` | the eleven synthetic marketplace scale bench rows below. No fixture pass |
 | `installable-mobile-shell` | `/mobile` | the sixteen synthetic installable mobile shell rows below. No fixture pass |
 | `platform-operational-qualification` | `/qualification` | the eight synthetic operational qualification rows below. No fixture pass |
+| `platform-release` | `/release` | the six synthetic platform release rows below. No fixture pass |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -253,6 +254,12 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `platform-operational-qualification.tuple-changed` | `STALE` | none. A pin tuple field moved under the run; nothing is applied and the packet stays unbuilt | `TUPLE_CHANGED` |
 | `platform-operational-qualification.permission-revoked` | `REJECT` | none. An exercised leg lost its synthetic browse permission between reads; a denial, not an empty market, and a restore is a fresh read | `PERMISSION_REVOKED` |
 | `platform-operational-qualification.denominator-unresolved` | `UNKNOWN` | none. The source, device, provider, rights, and finance areas keep their own denominators of unresolved items; a synthetic run resolves none | none |
+| `platform-release.decision-pending` | `UNKNOWN` | none. Install, publish, and operate are presented to the user and none is taken; the user RELEASE decision stays pending | none |
+| `platform-release.untrusted-packet` | `REJECT` | none. A packet that claims a release, a public deployment, a real-money approval, a real user acceptance, real operations, a production environment, a completed real integration, or a release promotion; refused whole | `CLAIM` |
+| `platform-release.approval-reused` | `REJECT` | none. A packet recorded under a different source or contract tuple is refused whole; an approval under another tuple is never reused | `TUPLE` |
+| `platform-release.run-lost` | `UNKNOWN` | none. The run answer never arrived; it may have recorded a packet, is never retried, and fences later runs | none |
+| `platform-release.context-switch` | `UNKNOWN` | none. A result arrived after the actor or session context changed; quarantined, it leaks nothing | `CONTEXT_SWITCHED` |
+| `platform-release.tuple-changed` | `STALE` | none. A pin tuple field moved under the run; nothing is applied and the candidate stays unbuilt | `TUPLE_CHANGED` |
 
 ## What the classifier refuses
 

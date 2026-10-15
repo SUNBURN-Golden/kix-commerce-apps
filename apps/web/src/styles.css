@@ -808,7 +808,8 @@ a.panel {
   opacity: 0.55;
 }
 
-.qualification [aria-disabled="true"] {
+.qualification [aria-disabled="true"],
+.release [aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.55;
 }
