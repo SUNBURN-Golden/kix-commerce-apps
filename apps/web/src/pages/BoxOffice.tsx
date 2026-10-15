@@ -6,8 +6,10 @@ import { StatusMark } from "../a11y/marks";
 import { formatWhen } from "../format";
 import { protocol } from "../protocol";
 import { useJourneyDesk } from "../journey-desk";
+import { useRefundReturnDesk } from "../refund-return";
 import { runSettlementCommand, settlementIdFor } from "../settlement-desk";
 import { JourneyPanel } from "./JourneyPanel";
+import { RefundReturnPanel } from "./RefundReturnPanel";
 import { SettlementPanel, type SettlementDeskCommand } from "./SettlementPanel";
 
 export function BoxOfficePage() {
@@ -18,6 +20,7 @@ export function BoxOfficePage() {
   const [settlementError, setSettlementError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const journey = useJourneyDesk("");
+  const refundDesk = useRefundReturnDesk(selectedEventId ?? "");
 
   useEffect(() => {
     let cancelled = false;
@@ -148,6 +151,7 @@ export function BoxOfficePage() {
           }}
         />
       ) : null}
+      {selectedEventId ? <RefundReturnPanel live={refundDesk} variant="settlement" /> : null}
     </section>
   );
 }

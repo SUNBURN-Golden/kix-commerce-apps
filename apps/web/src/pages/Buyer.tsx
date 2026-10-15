@@ -3,12 +3,20 @@ import { Link } from "react-router-dom";
 import { AmountNotice, StatusMark } from "../a11y/marks";
 import { formatWhen } from "../format";
 import { useBuyerWorkspace, type BuyerWorkspaceModel } from "../buyer-workspace";
+import { useRefundReturnDesk } from "../refund-return";
 import { EvidenceRow, ProgressRow, ReturnAction, StateNotice } from "./BuyerPanels";
+import { RefundReturnPanel } from "./RefundReturnPanel";
 
 export function BuyerPage() {
   const [eventId, setEventId] = useState("");
   const { model, readAgain } = useBuyerWorkspace(eventId);
-  return <BuyerScreen model={model} onReadAgain={readAgain} onSelectEvent={setEventId} />;
+  const refundDesk = useRefundReturnDesk(eventId);
+  return (
+    <>
+      <BuyerScreen model={model} onReadAgain={readAgain} onSelectEvent={setEventId} />
+      <RefundReturnPanel live={refundDesk} variant="buyer" />
+    </>
+  );
 }
 
 export function BuyerScreen({

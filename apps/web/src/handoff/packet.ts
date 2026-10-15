@@ -356,12 +356,20 @@ export const PENDING_PRODUCERS = [
     note: "Price and fee display stays UNDETERMINED. This packet does not calculate an amount.",
   },
   {
+    id: "api-state-distinction",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "refund-return-desk",
+    note: "The five order states are shown as separate synthetic cells. The real state distinction over a producer read stays on that pending node.",
+  },
+  {
     id: "refund-surface",
     catalogue: "pending",
     connected: false,
     implementedHere: false,
-    waitingSurface: "operator-unshown-desk",
-    note: "refund_ticket is not sent. COMPENSATION_UNDEFINED stays visible.",
+    waitingSurface: "refund-return-desk",
+    note: "refund_ticket, void_unissued, adjust_pg_cancel, and observe_return are pinned and not sent. The refund desk is a synthetic record. COMPENSATION_UNDEFINED stays visible.",
   },
   {
     id: "c-discovery-live",
@@ -936,6 +944,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-platform-release-stub",
     doc: "docs/c-platform-release-stub-apps-bind.md",
     anchor: "an approval under a different source or contract tuple is never reused",
+  },
+  {
+    id: "c-refund-return-states-stub",
+    doc: "docs/c-refund-return-states-stub-apps-bind.md",
+    anchor: "Return-required is its own state",
   },
 ] as const satisfies readonly PreservedEvidence[];
 

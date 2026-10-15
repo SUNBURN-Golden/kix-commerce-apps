@@ -1229,3 +1229,10 @@ main:focus-visible {
     max-width: 100%;
   }
 }
+
+.refund-states { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0.5rem; list-style: none; padding: 0; }
+.refund-cell, .refund-line { border: 1px solid var(--line, #ccc); border-radius: 0.4rem; padding: 0.5rem; }
+.refund-lines, .refund-session, .refund-not-sent { list-style: none; padding: 0; }
+.refund-lines li, .refund-session li, .refund-not-sent li { margin-block: 0.4rem; }
+.refund-guard { display: inline-flex; flex-direction: column; gap: 0.2rem; }
+.refund-guard button[aria-disabled="true"] { opacity: 0.55; }
