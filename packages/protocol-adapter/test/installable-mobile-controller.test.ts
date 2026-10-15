@@ -4,11 +4,14 @@ import {
   MOBILE_DESK_ACTOR,
   MOBILE_DEVICE_ID,
   MOBILE_GUEST_ACTOR,
+  MOBILE_STALE_FLOOR,
+  MOBILE_STALE_WATERMARK,
   MobileShellController,
   createStubMobileShell,
   mobileShellPortFor,
   projectMobile,
   type MobileScenario,
+  type MobileShellPort,
   type StubMobileShell,
 } from "../src/index.js";
 
@@ -30,6 +33,24 @@ async function readied(controller: MobileShellController) {
     throw new Error(`expected a settled read, received ${JSON.stringify(result)}`);
   }
   return controller.state();
+}
+
+/** A stub port whose read is replaced; writes and controls still land on the inner source. */
+function portWithRead(inner: StubMobileShell, read: MobileShellPort["read"]): MobileShellPort {
+  return {
+    environment: inner.environment,
+    source: inner.source,
+    scenario: inner.scenario,
+    link: () => inner.link(),
+    read,
+    submit: (request) => inner.submit(request),
+    dropConnection: () => inner.dropConnection(),
+    restoreConnection: () => inner.restoreConnection(),
+    offerUpdate: () => inner.offerUpdate(),
+    expireSession: () => inner.expireSession(),
+    deliverHeld: () => inner.deliverHeld(),
+    deliverLate: () => inner.deliverLate(),
+  };
 }
 
 describe("mobile shell controller reads", () => {
@@ -76,6 +97,86 @@ describe("mobile shell controller reads", () => {
     expect(state.cached).toBe(false);
     expect(state.freshness).toBe("CURRENT");
     expect(port.effects().submits).toBe(0);
+  });
+
+  it("fences every write on the held cached copy after the link returns, until an explicit read lands", async () => {
+    const { port, controller } = rig();
+    await readied(controller);
+    port.dropConnection();
+    await controller.refresh();
+    port.restoreConnection();
+    const unrestored = controller.state();
+    expect(unrestored.readState).toBe("offline");
+    expect(unrestored.cached).toBe(true);
+    expect(unrestored.refreshRequired).toBe("cached-read");
+    expect(unrestored.link).toBe("online");
+    const inputs = [
+      { step: "install" },
+      { step: "update" },
+      { step: "reconnect" },
+      { step: "present", vaultRef: "vlt-0001" },
+      { step: "confirm", orderRef: "ord-0001" },
+      { step: "withdraw", orderRef: "ord-0001" },
+    ] as const;
+    for (const [index, input] of inputs.entries()) {
+      const fenced = await controller.run({ ...input, intentRef: `i-${index}` });
+      expect(fenced).toMatchObject({
+        kind: "FENCED",
+        fence: { reason: "snapshot-stale", cause: "cached-read" },
+      });
+    }
+    expect(port.effects().submits).toBe(0);
+    await controller.refresh();
+    expect(controller.state().refreshRequired).toBeNull();
+    const confirmed = await controller.run({ step: "confirm", intentRef: "c-9", orderRef: "ord-0001" });
+    expect(confirmed).toMatchObject({ kind: "CONFIRMED" });
+  });
+
+  it("fences a held snapshot the same way after a stale read and after an unanswered read", async () => {
+    const staleInner = createStubMobileShell({ scenario: "clean" });
+    let staleReads = 0;
+    const stalePort = portWithRead(staleInner, (request) => {
+      staleReads += 1;
+      return staleReads === 1
+        ? staleInner.read(request)
+        : Promise.resolve({ kind: "stale", watermark: MOBILE_STALE_WATERMARK, floor: MOBILE_STALE_FLOOR });
+    });
+    const staleController = new MobileShellController(stalePort, {
+      actorRef: MOBILE_DESK_ACTOR,
+      deviceNow: () => MOBILE_AS_OF,
+    });
+    await readied(staleController);
+    await staleController.refresh();
+    const staleState = staleController.state();
+    expect(staleState.readState).toBe("stale");
+    expect(staleState.cached).toBe(true);
+    expect(staleState.refreshRequired).toBe("cached-read");
+    const staleFenced = await staleController.run({ step: "confirm", intentRef: "c-1", orderRef: "ord-0001" });
+    expect(staleFenced).toMatchObject({ kind: "FENCED", fence: { reason: "snapshot-stale", cause: "cached-read" } });
+    expect(staleInner.effects().submits).toBe(0);
+
+    const cutInner = createStubMobileShell({ scenario: "clean" });
+    let cutReads = 0;
+    const cutPort = portWithRead(cutInner, (request) => {
+      cutReads += 1;
+      if (cutReads === 1) {
+        return cutInner.read(request);
+      }
+      return Promise.reject(new Error("The answer was cut off."));
+    });
+    const cutController = new MobileShellController(cutPort, {
+      actorRef: MOBILE_DESK_ACTOR,
+      deviceNow: () => MOBILE_AS_OF,
+    });
+    await readied(cutController);
+    await cutController.refresh();
+    const cutState = cutController.state();
+    expect(cutState.readState).toBe("unavailable");
+    expect(cutState.cached).toBe(true);
+    expect(cutState.refreshRequired).toBe("cached-read");
+    const cutFenced = await cutController.run({ step: "withdraw", intentRef: "w-1", orderRef: "ord-0001" });
+    expect(cutFenced).toMatchObject({ kind: "FENCED", fence: { reason: "snapshot-stale", cause: "cached-read" } });
+    expect(cutInner.effects().submits).toBe(0);
   });
 
   it("keeps stored verdicts visible but stale-labelled when the source serves a stale watermark", async () => {

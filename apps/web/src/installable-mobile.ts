@@ -248,6 +248,8 @@ export function causeLine(cause: MobileRefreshCause): string {
       return "The session context changed.";
     case "resumed":
       return "The app resumed. A resume re-executes nothing; an explicit read must land first.";
+    case "cached-read":
+      return "The last read landed no current evidence; the held copy is cached only and the link coming back freshens nothing.";
     default: {
       const exhaustive: never = cause;
       return exhaustive;

@@ -283,6 +283,17 @@ describe("offline and reconnect flow", () => {
     expect(confirmed).toMatchObject({ kind: "FENCED", fence: { reason: "link-offline" } });
     expect(r.port.effects().submits).toBe(0);
     r.port.restoreConnection();
+    // The link is back but nothing re-read: the held copy stays cached and
+    // every write stays fenced until an explicit read lands.
+    const unrestored = modelOf(r);
+    expect(unrestored.device.linkWord).toBe("online");
+    expect(unrestored.cachedWord).toContain("cached copy");
+    expect(unrestored.order?.confirm.enabled).toBe(false);
+    expect(unrestored.order?.confirm.reason).toContain("The held read is not current");
+    expect(unrestored.order?.confirm.reason).toContain("Read again");
+    const stillFenced = await r.controller.run({ step: "withdraw", intentRef: "w-1", orderRef: "ord-0001" });
+    expect(stillFenced).toMatchObject({ kind: "FENCED", fence: { reason: "snapshot-stale", cause: "cached-read" } });
+    expect(r.port.effects().submits).toBe(0);
     await r.controller.refresh();
     const model = modelOf(r);
     expect(model.state).toBe("ready");
@@ -433,6 +444,7 @@ describe("fence and result wording", () => {
       { reason: "session-active", sessionRef: "ses-0001" },
       { reason: "no-update" },
       { reason: "not-bound" },
+      { reason: "snapshot-stale", cause: "cached-read" },
     ];
     const lines = fences.map(fenceLine);
     expect(new Set(lines).size).toBe(fences.length);
@@ -446,6 +458,7 @@ describe("fence and result wording", () => {
     expect(lines[8]).toContain("link is down");
     expect(lines[11]).toContain("not an update");
     expect(lines[14]).toBe(MOBILE_NOT_BOUND_REASON);
+    expect(lines[15]).toContain("cached only");
   });
 
   it("words every result kind and never calls a lost result a rejection or a success", async () => {

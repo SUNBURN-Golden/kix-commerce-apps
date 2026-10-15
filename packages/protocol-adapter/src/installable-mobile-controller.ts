@@ -37,8 +37,11 @@ import { PINNED_PROTOCOL_DOMAIN } from "./openapi-contract-pin.js";
  *    current evidence. The uncertain confirm or withdraw is not retried.
  *  - A result that arrives after the context changed (actor, session
  *    incarnation) is quarantined. It does not touch the current view.
- *  - A read while the link is down answers `offline`; the page keeps its
- *    cached copy and labels it cached, never current.
+ *  - A read while the link is down answers `offline`, a read behind the
+ *    floor answers `stale`, and a lost or thrown read is `unavailable`. Each
+ *    keeps the held snapshot as a cached copy, never current, and marks the
+ *    read required: a link restore freshens nothing, so every write stays
+ *    fenced `snapshot-stale` until an explicit read lands current evidence.
  *  - The device clock is report-only. A skewed or missing clock marks stored
  *    verdicts uncertain; it never decides validity.
  *  - A confirmed receipt that does not state every non-claim as literal false
@@ -58,7 +61,7 @@ export const MOBILE_FRESHNESS = ["CURRENT", "STALE", "UNAVAILABLE"] as const;
 
 export type MobileFreshness = (typeof MOBILE_FRESHNESS)[number];
 
-export type MobileRefreshCause = "own-write" | "stale-rejection" | "context-switch" | "resumed";
+export type MobileRefreshCause = "own-write" | "stale-rejection" | "context-switch" | "resumed" | "cached-read";
 
 export interface MobileContext {
   environment: "stub" | "integration-http";
@@ -374,10 +377,12 @@ export class MobileShellController {
         // read as current authority.
         this.readState = "stale";
         this.readDetail = `Watermark ${outcome.watermark} is older than the floor ${outcome.floor}. Stored items stay cached copies.`;
+        this.requireFreshReadForCachedCopy();
         break;
       case "offline":
         this.readState = "offline";
         this.readDetail = outcome.detail;
+        this.requireFreshReadForCachedCopy();
         break;
       case "refused":
         this.snapshot = null;
@@ -398,6 +403,7 @@ export class MobileShellController {
         // The read went unanswered. The held snapshot stays cached, never current.
         this.readState = "unavailable";
         this.readDetail = outcome.detail;
+        this.requireFreshReadForCachedCopy();
         break;
       default: {
         const exhaustive: never = outcome;
@@ -406,6 +412,17 @@ export class MobileShellController {
     }
     this.notify();
     return { kind: "APPLIED", readState: this.readState };
+  }
+
+  /**
+   * A cached read landed no current authority. While a snapshot is held it
+   * stays a cached copy and every write waits for an explicit read; the link
+   * coming back freshens nothing on its own.
+   */
+  private requireFreshReadForCachedCopy(): void {
+    if (this.snapshot !== null) {
+      this.refreshRequired = this.refreshRequired ?? "cached-read";
+    }
   }
 
   /** Why this write cannot go out now, or null. This is the single gate `run` uses. */
