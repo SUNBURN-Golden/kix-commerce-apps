@@ -696,6 +696,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "installable-mobile-shell",
+    role: "buyer",
+    route: "/mobile",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic installable mobile shell on one page: install, shell update, session reconnect, pass presentation, order confirm, and order withdraw stay six separate writes, each sent once per scope. A stored vault item is a copy that keeps the source's own verdict and verdict instant — shown while the link is down it mints no admission and is never sent as authority, and an expired verdict is never revived by a stored copy. The device clock is report-only: a skewed or missing clock marks stored verdicts clock-uncertain and decides nothing, because the source's own instant is the only expiry authority. An app resume re-executes nothing: it marks the held read resumed and fences every write until an explicit read lands, and an uncertain confirm or withdraw stays unknown and is never retried. A read while the link is down answers offline and the stored items stay labelled cached; a write while the link is down answers unknown and applies nothing. Re-login under another actor reuses no session and no stored copy, and a result from an earlier context is quarantined. Every payload states seven non-claims as false or is refused whole. On integration-http the read and the writes stay not-bound because pending node c-installable-mobile is not promoted and the contract-only catalogue has no install, session, vault, presentation, or device command. Synthetic rows are not a device attestation, an authentication result, a payment, or an admission grant, and a withdrawal record executes nothing.",
+    taskId: "c-installable-mobile-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",

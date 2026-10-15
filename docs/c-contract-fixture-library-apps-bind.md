@@ -74,6 +74,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `notification-inbox` | `/notifications` | the twelve synthetic notification inbox rows below. No fixture pass |
 | `provider-connected-journey` | `/provider` | the ten synthetic provider checkout rows below. No fixture pass |
 | `marketplace-performance-bench` | `/marketplace-performance` | the eleven synthetic marketplace scale bench rows below. No fixture pass |
+| `installable-mobile-shell` | `/mobile` | the sixteen synthetic installable mobile shell rows below. No fixture pass |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -223,6 +224,22 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `marketplace-performance-bench.device-claim` | `REJECT` | none. A payload claims real-device evidence; refused — an emulated device is never real mobile evidence | `DEVICE_CLAIM` |
 | `marketplace-performance-bench.gap` | `REJECT` | none. The stream broke its own sequence; no row from a gapped window is shown | `SEQUENCE` |
 | `marketplace-performance-bench.read-lost` | `UNKNOWN` | none. The read or queue answer never arrived; it stays in flight and unknown, not an empty market | none |
+| `installable-mobile-shell.offline-cached` | `STALE` | none. A read while the link is down answers offline; stored items stay cached copies, never current authority | none |
+| `installable-mobile-shell.offline-write-unknown` | `UNKNOWN` | none. A write while the link is down answers unknown and applies nothing; not retried, scope stays fenced | none |
+| `installable-mobile-shell.offline-presentation` | `REJECT` | none. A stored pass shown offline is a copy; it mints no admission and the present write stays fenced link-offline | `LINK_OFFLINE` |
+| `installable-mobile-shell.expired-pass` | `REJECT` | none. The source verdict on a stored pass is expired; a stored copy cannot revive an old right | `PASS_NOT_PRESENTABLE` |
+| `installable-mobile-shell.session-expired` | `REJECT` | none. The session verdict at the source is expired; writes stay fenced until reconnect opens a new session | `SESSION_EXPIRED` |
+| `installable-mobile-shell.relogin-mismatch` | `REJECT` | none. A session or stored copy belongs to another actor or device; re-login does not reuse it | `IDENTITY_MISMATCH` |
+| `installable-mobile-shell.resume-replay` | `STALE` | none. An app resume re-executes nothing; writes stay fenced until an explicit read lands | none |
+| `installable-mobile-shell.write-lost` | `UNKNOWN` | none. A confirm or withdraw whose answer never arrived; it may have applied and the order stays fenced | none |
+| `installable-mobile-shell.late-answer` | `UNKNOWN` | none. A late result recorded against an unknown write; evidence only, the write stays unknown | none |
+| `installable-mobile-shell.stale-session` | `STALE` | none. A result arrived after the session context changed; quarantined, it touches nothing | none |
+| `installable-mobile-shell.stale-read` | `STALE` | none. A synthetic watermark older than the page floor; stored items stay cached copies | none |
+| `installable-mobile-shell.clock-skew` | `UNKNOWN` | none. A skewed or unreported device clock marks stored verdicts clock-uncertain; it decides nothing | none |
+| `installable-mobile-shell.already-installed` | `REJECT` | none. An install write against a device that already carries a shell; installing again is not an update | `ALREADY_INSTALLED` |
+| `installable-mobile-shell.order-settled` | `REJECT` | none. A confirm or withdraw against an order no longer pending; a settled order takes no second write | `ORDER_NOT_PENDING` |
+| `installable-mobile-shell.claim-refused` | `REJECT` | none. A payload that omits or asserts a non-claim — a real payment, funds moved, an admission grant, a right, a verified install, a production environment, or a completed mobile integration; refused whole, and a tainted answer leaves the write unknown | `CLAIM` |
+| `installable-mobile-shell.read-lost` | `UNKNOWN` | none. The read answer never arrived; the shell is unavailable, not empty | none |
 | `admission-credential.label-stale` | `STALE` | none. Adapter label, not `admit` | `CREDENTIAL_STALE` |
 | `resale-desk.version-stale` | `STALE` | none. Mock case, not economic finality | `STALE_VERSION` |
 | `operator-transport.unavailable` | `UNKNOWN` | none | `GATE_UNAVAILABLE` |
