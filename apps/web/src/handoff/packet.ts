@@ -491,6 +491,14 @@ export const PENDING_PRODUCERS = [
     waitingSurface: "marketplace-performance-bench",
     note: "The marketplace scale bench is synthetic. A real large-marketplace read, queue, device measurement, and producer load qualification stays on that pending node, which waits on kix-protocol:ps-07-scale-qualification. Browser-boundary measurements are never a producer load figure, and an emulated device is never real mobile evidence.",
   },
+  {
+    id: "c-installable-mobile",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "installable-mobile-shell",
+    note: "The installable mobile shell is synthetic. A real packaging, install, update, session, vault, presentation, and device read model and a real producer connection stay on that pending node. A stored item is a copy that mints no admission, the device clock never decides validity, and an app resume re-executes no uncertain write.",
+  },
 ] as const satisfies readonly PendingProducer[];
 
 const UNSUPPORTED_SURFACE_IDS = new Set(["operator-transport", "accessibility-baseline"]);
@@ -695,6 +703,12 @@ export const ROLE_JOURNEYS = {
       "Synthetic scale bench. A bounded window over a lazy stream, queue admission as browse access only, dropped stale answers, and browser-boundary measurements that never claim a real device or a producer load share.",
     ),
     stepFromSurfaces(
+      "installable-mobile-shell",
+      "operator",
+      ["installable-mobile-shell"],
+      "Synthetic mobile shell. Stored items stay copies that mint no admission, the device clock never decides validity, and an app resume re-executes no uncertain write.",
+    ),
+    stepFromSurfaces(
       "accessibility-baseline",
       "operator",
       ["accessibility-baseline"],
@@ -873,6 +887,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-marketplace-performance-stub",
     doc: "docs/c-marketplace-performance-stub-apps-bind.md",
     anchor: "an emulated device is never real mobile evidence",
+  },
+  {
+    id: "c-installable-mobile-stub",
+    doc: "docs/c-installable-mobile-stub-apps-bind.md",
+    anchor: "an app resume re-executes nothing",
   },
 ] as const satisfies readonly PreservedEvidence[];
 

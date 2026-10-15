@@ -18,6 +18,7 @@ import { CreditServicingPage } from "./pages/CreditServicing";
 import { FinancePage } from "./pages/Finance";
 import { GiftPage } from "./pages/Gift";
 import { HandoffPage } from "./pages/Handoff";
+import { InstallableMobilePage } from "./pages/InstallableMobile";
 import { InventoryPage } from "./pages/Inventory";
 import { MarketingJourneyPage } from "./pages/MarketingJourney";
 import { MarketplacePerformancePage } from "./pages/MarketplacePerformance";
@@ -66,6 +67,7 @@ export function App() {
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/provider" element={<ProviderJourneyPage />} />
         <Route path="/marketplace-performance" element={<MarketplacePerformancePage />} />
+        <Route path="/mobile" element={<InstallableMobilePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>
