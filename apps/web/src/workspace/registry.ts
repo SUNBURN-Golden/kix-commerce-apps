@@ -24,8 +24,13 @@ export const SURFACE_BINDINGS = [
 
 export type SurfaceBinding = (typeof SURFACE_BINDINGS)[number];
 
-/** Reservation, payment, issuance, and admission stay four badges. */
-export const OUTCOME_TRACKS = ["reservation", "payment", "issuance", "admission"] as const;
+/**
+ * Reservation, payment, issuance, admission, return-required, and refund-done
+ * stay six separate badges. Return-required is its own state, not a pre-stage
+ * of refund-done; refund-done is a synthetic record on this app, never a real
+ * refund. There is no aggregate completion state.
+ */
+export const OUTCOME_TRACKS = ["reservation", "payment", "issuance", "admission", "return-required", "refund-done"] as const;
 
 export type OutcomeTrack = (typeof OUTCOME_TRACKS)[number];
 
@@ -738,6 +743,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "refund-return-desk",
+    role: "buyer",
+    route: "/booking/:eventId",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic refund-and-return desk on one in-process source, mounted on the booking page and the box-office settlement panel, and read-only on the buyer workspace. Reservation, payment observation, issuance, return-required, and refund-done stay five separate cells, and a return-required marker is not a refund pre-stage. Cancel, void, PG-cancel adjustment, return observation, and refund stay five separate lines: refund_ticket, void_unissued, adjust_pg_cancel, and observe_return are recorded and never sent, and the catalogue has no booking-cancel command. A recorded line executes nothing. On integration-http the read and the writes stay not-bound because the contract-only catalogue has no order read or refund command. Synthetic rows are not a producer receipt.",
+    taskId: "c-refund-return-states-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",
@@ -809,6 +828,7 @@ export const BUYER_FLOW_STAGE_IDS = [
   "payment",
   "issuance",
   "admission",
+  "return",
   "refund",
 ] as const;
 
@@ -850,10 +870,16 @@ export const BUYER_FLOW_STAGES = [
     note: "입장. The credential label is not admit. open_admission on the organizer console is a separate post. A health probe is not entry.",
   },
   {
+    id: "return",
+    surfaces: ["refund-return-desk"],
+    tracks: ["return-required"],
+    note: "반환. Return-required is its own state, not a step before a refund. observe_return is pinned and never sent. A synthetic return observation records a return and records no refund.",
+  },
+  {
     id: "refund",
-    surfaces: ["operator-unshown-desk", "platform-journey-trade", "provider-connected-journey"],
-    tracks: ["payment"],
-    note: "환불. refund_ticket is pinned and no surface sends it. Status stays not-bound. COMPENSATION_UNDEFINED stays visible. The provider journey records a synthetic refund row that executes nothing. Refund policy values are UNDETERMINED.",
+    surfaces: ["operator-unshown-desk", "platform-journey-trade", "provider-connected-journey", "refund-return-desk"],
+    tracks: ["refund-done"],
+    note: "환불. refund_ticket is pinned and no surface sends it. Status stays not-bound. COMPENSATION_UNDEFINED stays visible. The provider journey and the refund desk record a synthetic refund row that executes nothing. A refund-done cell does not clear a return-required cell. Refund policy values are UNDETERMINED.",
   },
 ] as const satisfies readonly BuyerFlowStage[];
 

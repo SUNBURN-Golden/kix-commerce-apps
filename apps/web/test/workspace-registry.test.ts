@@ -45,9 +45,9 @@ const PLANNED_TASKS = [] as const;
 const CLAIM = /\bworks\b|live payment|funds moved|disbursed|payment complete|admission complete|refund complete/i;
 
 describe("workspace registry", () => {
-  it("keeps reservation, payment, issuance, and admission as separate badges", () => {
-    expect([...OUTCOME_TRACKS]).toEqual(["reservation", "payment", "issuance", "admission"]);
-    expect(new Set(OUTCOME_TRACKS).size).toBe(4);
+  it("keeps reservation, payment, issuance, admission, return-required, and refund-done as separate badges", () => {
+    expect([...OUTCOME_TRACKS]).toEqual(["reservation", "payment", "issuance", "admission", "return-required", "refund-done"]);
+    expect(new Set(OUTCOME_TRACKS).size).toBe(6);
     expect(TRACK_STATES).not.toContain("completed");
     expect(TRACK_STATES).not.toContain("complete");
     expect(TRACK_STATES).not.toContain("done");
@@ -76,8 +76,12 @@ describe("workspace registry", () => {
       "payment",
       "issuance",
       "admission",
+      "return",
       "refund",
     ]);
+    expect(BUYER_FLOW_STAGES.find((stage) => stage.id === "return")?.tracks).toEqual(["return-required"]);
+    expect(BUYER_FLOW_STAGES.find((stage) => stage.id === "return")?.note).toContain("observe_return");
+    expect(BUYER_FLOW_STAGES.find((stage) => stage.id === "refund")?.tracks).toEqual(["refund-done"]);
     expect(BUYER_FLOW_STAGES.find((stage) => stage.id === "refund")?.note).toContain("COMPENSATION_UNDEFINED");
     expect(BUYER_FLOW_STAGES.find((stage) => stage.id === "refund")?.note).toContain("refund_ticket");
   });

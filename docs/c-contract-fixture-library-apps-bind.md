@@ -73,6 +73,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `tenant-permissions` | `/permissions` | the ten synthetic tenant permission rows below. No fixture pass |
 | `notification-inbox` | `/notifications` | the twelve synthetic notification inbox rows below. No fixture pass |
 | `provider-connected-journey` | `/provider` | the ten synthetic provider checkout rows below. No fixture pass |
+| `refund-return-desk` | `/booking/:eventId` | the six synthetic refund-and-return rows below. No fixture pass |
 | `marketplace-performance-bench` | `/marketplace-performance` | the eleven synthetic marketplace scale bench rows below. No fixture pass |
 | `installable-mobile-shell` | `/mobile` | the sixteen synthetic installable mobile shell rows below. No fixture pass |
 | `platform-operational-qualification` | `/qualification` | the eight synthetic operational qualification rows below. No fixture pass |
@@ -290,3 +291,9 @@ No production deploy, no public host, no real payment, no KYC, no credit disburs
 `apps/web/test/contract-fixture-library.test.tsx` imports that same file, checks it against the workspace registry and this mapping table, and runs the receipt explorer over the receipt-shaped rows. The file is not re-exported from the adapter barrel, and screen source does not import it, so the desk bundle does not ship the catalogue.
 
 No product screen changed, so this bind has no new browser run. The live-gate job is not a local pass: `KIX_REQUIRE_GATE=0` skips it.
+| `refund-return-desk.cancel-after-payment` | `REJECT` | none. A paid order takes no cancel record; a cancel is not the refund path | `CANCEL_AFTER_PAYMENT` |
+| `refund-return-desk.refund-unavailable` | `REJECT` | none. An order with no payment observation records no refund; `refund_ticket` is never sent | `REFUND_UNAVAILABLE` |
+| `refund-return-desk.return-not-required` | `REJECT` | none. A return observation on an order with no required return is refused | `RETURN_NOT_REQUIRED` |
+| `refund-return-desk.claim-refused` | `REJECT` | none. A payload that omits or asserts a non-claim is refused whole | `CLAIM` |
+| `refund-return-desk.write-lost` | `UNKNOWN` | none. A synthetic write whose answer never arrived; the order stays fenced | none |
+| `refund-return-desk.stale-read` | `STALE` | none. The last read is behind; read again before the next write | none |

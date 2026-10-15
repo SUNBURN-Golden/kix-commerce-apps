@@ -8,9 +8,11 @@ import { formatWhen } from "../format";
 import { protocol } from "../protocol";
 import { useAdmissionDesk } from "../admission-desk";
 import { useJourneyDesk } from "../journey-desk";
+import { useRefundReturnDesk } from "../refund-return";
 import { useReservationDesk } from "../reservation-desk";
 import { AdmissionCredentialPanel } from "./AdmissionCredentialPanel";
 import { JourneyPanel } from "./JourneyPanel";
+import { RefundReturnPanel } from "./RefundReturnPanel";
 import { ReservationPanel } from "./ReservationPanel";
 
 export function BookingPage() {
@@ -25,6 +27,7 @@ export function BookingPage() {
   const reservation = useReservationDesk(eventId);
   const admission = useAdmissionDesk(eventId, "gate-main");
   const journey = useJourneyDesk(eventId);
+  const refundDesk = useRefundReturnDesk(eventId);
 
   useEffect(() => {
     let cancelled = false;
@@ -146,6 +149,7 @@ export function BookingPage() {
           <StatusMark kind="loading" /> Loading the performance.
         </p>
         <JourneyPanel variant="booking" model={journey} />
+        <RefundReturnPanel live={refundDesk} variant="booking" />
       </section>
     );
   }
@@ -157,6 +161,7 @@ export function BookingPage() {
           <StatusMark kind="blocked" /> {error ?? "That performance is not on this adapter."}
         </p>
         <JourneyPanel variant="booking" model={journey} />
+        <RefundReturnPanel live={refundDesk} variant="booking" />
         <Link to="/">Back to the window</Link>
       </section>
     );
@@ -297,6 +302,7 @@ export function BookingPage() {
         pending={admission.pending}
         commands={false}
       />
+      <RefundReturnPanel live={refundDesk} variant="booking" />
       <p>
         <Link to={`/admission?eventId=${encodeURIComponent(eventId)}`}>Mock admission phase</Link>
       </p>
