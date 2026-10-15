@@ -499,6 +499,14 @@ export const PENDING_PRODUCERS = [
     waitingSurface: "installable-mobile-shell",
     note: "The installable mobile shell is synthetic. A real packaging, install, update, session, vault, presentation, and device read model and a real producer connection stay on that pending node. A stored item is a copy that mints no admission, the device clock never decides validity, and an app resume re-executes no uncertain write.",
   },
+  {
+    id: "c-platform-operational-qualification",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "platform-operational-qualification",
+    note: "The qualification packet is a synthetic record of stub journeys. A real platform, finance, and marketing operational qualification stays on that pending node, which waits on kix-protocol:ps-07-scale-qualification, kix-protocol:cr-10-credit-qualification, and the unpromoted commerce-integration-closeout. A per-call confirmed is not a journey close, and the packet is never a public deployment, a real-money approval, or a service qualification.",
+  },
 ] as const satisfies readonly PendingProducer[];
 
 const UNSUPPORTED_SURFACE_IDS = new Set(["operator-transport", "accessibility-baseline"]);
@@ -709,6 +717,12 @@ export const ROLE_JOURNEYS = {
       "Synthetic mobile shell. Stored items stay copies that mint no admission, the device clock never decides validity, and an app resume re-executes no uncertain write.",
     ),
     stepFromSurfaces(
+      "platform-operational-qualification",
+      "operator",
+      ["platform-operational-qualification"],
+      "Synthetic qualification packet. A per-call confirmed is not a journey close, the five denominators never merge, and the packet is never promoted to a deployment or a real-money approval.",
+    ),
+    stepFromSurfaces(
       "accessibility-baseline",
       "operator",
       ["accessibility-baseline"],
@@ -892,6 +906,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-installable-mobile-stub",
     doc: "docs/c-installable-mobile-stub-apps-bind.md",
     anchor: "an app resume re-executes nothing",
+  },
+  {
+    id: "c-platform-operational-qualification-stub",
+    doc: "docs/c-platform-operational-qualification-stub-apps-bind.md",
+    anchor: "a per-call confirmed is never an end-to-end journey close",
   },
 ] as const satisfies readonly PreservedEvidence[];
 

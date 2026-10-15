@@ -75,6 +75,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `provider-connected-journey` | `/provider` | the ten synthetic provider checkout rows below. No fixture pass |
 | `marketplace-performance-bench` | `/marketplace-performance` | the eleven synthetic marketplace scale bench rows below. No fixture pass |
 | `installable-mobile-shell` | `/mobile` | the sixteen synthetic installable mobile shell rows below. No fixture pass |
+| `platform-operational-qualification` | `/qualification` | the eight synthetic operational qualification rows below. No fixture pass |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -244,6 +245,14 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `resale-desk.version-stale` | `STALE` | none. Mock case, not economic finality | `STALE_VERSION` |
 | `operator-transport.unavailable` | `UNKNOWN` | none | `GATE_UNAVAILABLE` |
 | `operator-transport.stale` | `STALE` | none | `STALE_RESPONSE` |
+| `platform-operational-qualification.per-call-not-e2e` | `REJECT` | none. A synthetic booking confirmed and the transfer was rejected after a rival moved the right; the confirmed receipt does not close the journey | `VERSION_STALE` |
+| `platform-operational-qualification.untrusted-packet` | `REJECT` | none. A packet that claims a public deployment, a real-money approval, a real payment, a completed real-user review, a service qualification, a production environment, a completed real integration, or a qualification promotion; refused whole | `CLAIM` |
+| `platform-operational-qualification.run-lost` | `UNKNOWN` | none. The run answer never arrived; it may have recorded a packet, is never retried, and fences later runs | none |
+| `platform-operational-qualification.context-switch` | `UNKNOWN` | none. A result arrived after the actor or session context changed; quarantined, it leaks nothing | `CONTEXT_SWITCHED` |
+| `platform-operational-qualification.stale-read` | `STALE` | none. An exercised leg read a synthetic watermark older than the floor; not an empty board, no write goes out on it | none |
+| `platform-operational-qualification.tuple-changed` | `STALE` | none. A pin tuple field moved under the run; nothing is applied and the packet stays unbuilt | `TUPLE_CHANGED` |
+| `platform-operational-qualification.permission-revoked` | `REJECT` | none. An exercised leg lost its synthetic browse permission between reads; a denial, not an empty market, and a restore is a fresh read | `PERMISSION_REVOKED` |
+| `platform-operational-qualification.denominator-unresolved` | `UNKNOWN` | none. The source, device, provider, rights, and finance areas keep their own denominators of unresolved items; a synthetic run resolves none | none |
 
 ## What the classifier refuses
 

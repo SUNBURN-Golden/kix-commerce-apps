@@ -710,6 +710,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "platform-operational-qualification",
+    role: "operator",
+    route: "/qualification",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic operational qualification on one page: one run executes the whole matrix over the sibling stub surfaces — normal, decline, stale, unknown, cancel, refund, recovery, and permission-revocation each keep their own exercise record — and records one packet. A journey closes on the terminal state of its whole leg sequence, never on a per-call confirmed; source, device, provider, rights, and finance keep their own unresolved denominators and are never merged into one readiness figure; functional, performance, security, and environment evidence are reported per scope with unverified items marked unverified; and the operational support, incident handoff, and current UI review material are bundled without claiming a completed real-user review. A result that arrives after an actor transition is quarantined and no identity leaks into the new context, and a packet that claims a non-claim is refused whole and leaves the run unknown. The packet only ever states STUB_RUN_RECORDED: it is never promoted to a public deployment, a real-money approval, a service qualification, or real integration, and it states every non-claim as a literal false. On integration-http the run stays not-bound because pending node c-platform-operational-qualification is not promoted, kix-protocol:ps-07-scale-qualification and kix-protocol:cr-10-credit-qualification are not merged, commerce-integration-closeout is unpromoted, and the contract-only catalogue has no qualification command. Synthetic rows are not a producer qualification receipt.",
+    taskId: "c-platform-operational-qualification-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",
