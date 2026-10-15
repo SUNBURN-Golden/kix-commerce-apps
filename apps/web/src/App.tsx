@@ -18,10 +18,14 @@ import { CreditServicingPage } from "./pages/CreditServicing";
 import { FinancePage } from "./pages/Finance";
 import { GiftPage } from "./pages/Gift";
 import { HandoffPage } from "./pages/Handoff";
+import { InstallableMobilePage } from "./pages/InstallableMobile";
 import { InventoryPage } from "./pages/Inventory";
 import { MarketingJourneyPage } from "./pages/MarketingJourney";
+import { MarketplacePerformancePage } from "./pages/MarketplacePerformance";
 import { MerchantPage } from "./pages/Merchant";
 import { NotificationsPage } from "./pages/Notifications";
+import { OperationalQualificationPage } from "./pages/OperationalQualification";
+import { PlatformReleasePage } from "./pages/PlatformRelease";
 import { OrganizerPage } from "./pages/Organizer";
 import { OrganizerWorkspacePage } from "./pages/OrganizerWorkspace";
 import { PlatformPage } from "./pages/Platform";
@@ -64,6 +68,10 @@ export function App() {
         <Route path="/permissions" element={<TenantPermissionsPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/provider" element={<ProviderJourneyPage />} />
+        <Route path="/marketplace-performance" element={<MarketplacePerformancePage />} />
+        <Route path="/mobile" element={<InstallableMobilePage />} />
+        <Route path="/qualification" element={<OperationalQualificationPage />} />
+        <Route path="/release" element={<PlatformReleasePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>

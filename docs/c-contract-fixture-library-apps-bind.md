@@ -73,6 +73,10 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `tenant-permissions` | `/permissions` | the ten synthetic tenant permission rows below. No fixture pass |
 | `notification-inbox` | `/notifications` | the twelve synthetic notification inbox rows below. No fixture pass |
 | `provider-connected-journey` | `/provider` | the ten synthetic provider checkout rows below. No fixture pass |
+| `marketplace-performance-bench` | `/marketplace-performance` | the eleven synthetic marketplace scale bench rows below. No fixture pass |
+| `installable-mobile-shell` | `/mobile` | the sixteen synthetic installable mobile shell rows below. No fixture pass |
+| `platform-operational-qualification` | `/qualification` | the eight synthetic operational qualification rows below. No fixture pass |
+| `platform-release` | `/release` | the six synthetic platform release rows below. No fixture pass |
 | `buyer-workspace` | `/buyer` | `buyer-workspace.unknown` |
 | `organizer-workspace` | `/organizer/workspace` | no fixture pass. Sends are the organizer-console cases |
 | `receipt-explorer` | `/receipts` | `receipt-explorer.unknown`, `receipt-explorer.stale` |
@@ -211,10 +215,51 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `provider-connected-journey.late-callback` | `UNKNOWN` | none. A late result or a late provider callback recorded against an unknown write; evidence only, the write stays unknown | none |
 | `provider-connected-journey.stale-read` | `STALE` | none. The last read is behind; read again before the next write | none |
 | `provider-connected-journey.stale-session` | `STALE` | none. Result quarantined after a session context change | none |
+| `marketplace-performance-bench.stale-read` | `STALE` | none. A synthetic watermark older than the page floor; no row is returned, and the window is not empty or denied | none |
+| `marketplace-performance-bench.terms-moved` | `STALE` | none. The listing terms moved under the held window; the read is refused and every row clears — a fast page never confirms stale terms or rights | none |
+| `marketplace-performance-bench.late-answer` | `STALE` | none. An answer older than the newest read, or one landing after an actor, device, or incarnation change, is dropped and counted, never applied | none |
+| `marketplace-performance-bench.queue-blocked` | `REJECT` | none. The contended page is behind the queue; admission is browse access only, never a hold, a payment, a right, or entry | none |
+| `marketplace-performance-bench.queue-expired` | `REJECT` | none. The queue admission expired at the source; it grants nothing and the page does not revive it | none |
+| `marketplace-performance-bench.over-bound` | `REJECT` | none. A page size or filter text over the declared bound is refused, never clamped | `PAGE_SIZE` |
+| `marketplace-performance-bench.permission-revoked` | `REJECT` | none. The browse permission was revoked at the source; the read and the queue are denied | `PERMISSION_REVOKED` |
+| `marketplace-performance-bench.claim-refused` | `REJECT` | none. A payload claims a row confirms a price or a right; refused whole before a row is shown | `PRICE_CLAIM` |
+| `marketplace-performance-bench.device-claim` | `REJECT` | none. A payload claims real-device evidence; refused — an emulated device is never real mobile evidence | `DEVICE_CLAIM` |
+| `marketplace-performance-bench.gap` | `REJECT` | none. The stream broke its own sequence; no row from a gapped window is shown | `SEQUENCE` |
+| `marketplace-performance-bench.read-lost` | `UNKNOWN` | none. The read or queue answer never arrived; it stays in flight and unknown, not an empty market | none |
+| `installable-mobile-shell.offline-cached` | `STALE` | none. A read while the link is down answers offline; stored items stay cached copies, never current authority | none |
+| `installable-mobile-shell.offline-write-unknown` | `UNKNOWN` | none. A write while the link is down answers unknown and applies nothing; not retried, scope stays fenced | none |
+| `installable-mobile-shell.offline-presentation` | `REJECT` | none. A stored pass shown offline is a copy; it mints no admission and the present write stays fenced link-offline | `LINK_OFFLINE` |
+| `installable-mobile-shell.expired-pass` | `REJECT` | none. The source verdict on a stored pass is expired; a stored copy cannot revive an old right | `PASS_NOT_PRESENTABLE` |
+| `installable-mobile-shell.session-expired` | `REJECT` | none. The session verdict at the source is expired; writes stay fenced until reconnect opens a new session | `SESSION_EXPIRED` |
+| `installable-mobile-shell.relogin-mismatch` | `REJECT` | none. A session or stored copy belongs to another actor or device; re-login does not reuse it | `IDENTITY_MISMATCH` |
+| `installable-mobile-shell.resume-replay` | `STALE` | none. An app resume re-executes nothing; writes stay fenced until an explicit read lands | none |
+| `installable-mobile-shell.write-lost` | `UNKNOWN` | none. A confirm or withdraw whose answer never arrived; it may have applied and the order stays fenced | none |
+| `installable-mobile-shell.late-answer` | `UNKNOWN` | none. A late result recorded against an unknown write; evidence only, the write stays unknown | none |
+| `installable-mobile-shell.stale-session` | `STALE` | none. A result arrived after the session context changed; quarantined, it touches nothing | none |
+| `installable-mobile-shell.stale-read` | `STALE` | none. A synthetic watermark older than the page floor; stored items stay cached copies | none |
+| `installable-mobile-shell.clock-skew` | `UNKNOWN` | none. A skewed or unreported device clock marks stored verdicts clock-uncertain; it decides nothing | none |
+| `installable-mobile-shell.already-installed` | `REJECT` | none. An install write against a device that already carries a shell; installing again is not an update | `ALREADY_INSTALLED` |
+| `installable-mobile-shell.order-settled` | `REJECT` | none. A confirm or withdraw against an order no longer pending; a settled order takes no second write | `ORDER_NOT_PENDING` |
+| `installable-mobile-shell.claim-refused` | `REJECT` | none. A payload that omits or asserts a non-claim — a real payment, funds moved, an admission grant, a right, a verified install, a production environment, or a completed mobile integration; refused whole, and a tainted answer leaves the write unknown | `CLAIM` |
+| `installable-mobile-shell.read-lost` | `UNKNOWN` | none. The read answer never arrived; the shell is unavailable, not empty | none |
 | `admission-credential.label-stale` | `STALE` | none. Adapter label, not `admit` | `CREDENTIAL_STALE` |
 | `resale-desk.version-stale` | `STALE` | none. Mock case, not economic finality | `STALE_VERSION` |
 | `operator-transport.unavailable` | `UNKNOWN` | none | `GATE_UNAVAILABLE` |
 | `operator-transport.stale` | `STALE` | none | `STALE_RESPONSE` |
+| `platform-operational-qualification.per-call-not-e2e` | `REJECT` | none. A synthetic booking confirmed and the transfer was rejected after a rival moved the right; the confirmed receipt does not close the journey | `VERSION_STALE` |
+| `platform-operational-qualification.untrusted-packet` | `REJECT` | none. A packet that claims a public deployment, a real-money approval, a real payment, a completed real-user review, a service qualification, a production environment, a completed real integration, or a qualification promotion; refused whole | `CLAIM` |
+| `platform-operational-qualification.run-lost` | `UNKNOWN` | none. The run answer never arrived; it may have recorded a packet, is never retried, and fences later runs | none |
+| `platform-operational-qualification.context-switch` | `UNKNOWN` | none. A result arrived after the actor or session context changed; quarantined, it leaks nothing | `CONTEXT_SWITCHED` |
+| `platform-operational-qualification.stale-read` | `STALE` | none. An exercised leg read a synthetic watermark older than the floor; not an empty board, no write goes out on it | none |
+| `platform-operational-qualification.tuple-changed` | `STALE` | none. A pin tuple field moved under the run; nothing is applied and the packet stays unbuilt | `TUPLE_CHANGED` |
+| `platform-operational-qualification.permission-revoked` | `REJECT` | none. An exercised leg lost its synthetic browse permission between reads; a denial, not an empty market, and a restore is a fresh read | `PERMISSION_REVOKED` |
+| `platform-operational-qualification.denominator-unresolved` | `UNKNOWN` | none. The source, device, provider, rights, and finance areas keep their own denominators of unresolved items; a synthetic run resolves none | none |
+| `platform-release.decision-pending` | `UNKNOWN` | none. Install, publish, and operate are presented to the user and none is taken; the user RELEASE decision stays pending | none |
+| `platform-release.untrusted-packet` | `REJECT` | none. A packet that claims a release, a public deployment, a real-money approval, a real user acceptance, real operations, a production environment, a completed real integration, or a release promotion; refused whole | `CLAIM` |
+| `platform-release.approval-reused` | `REJECT` | none. A packet recorded under a different source or contract tuple is refused whole; an approval under another tuple is never reused | `TUPLE` |
+| `platform-release.run-lost` | `UNKNOWN` | none. The run answer never arrived; it may have recorded a packet, is never retried, and fences later runs | none |
+| `platform-release.context-switch` | `UNKNOWN` | none. A result arrived after the actor or session context changed; quarantined, it leaks nothing | `CONTEXT_SWITCHED` |
+| `platform-release.tuple-changed` | `STALE` | none. A pin tuple field moved under the run; nothing is applied and the candidate stays unbuilt | `TUPLE_CHANGED` |
 
 ## What the classifier refuses
 

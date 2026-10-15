@@ -483,6 +483,38 @@ export const PENDING_PRODUCERS = [
     waitingSurface: "provider-connected-journey",
     note: "The provider journey is synthetic. A real approved-provider checkout, payment observation, issuance, and refund connection stays on that pending node, which waits on kix-protocol:k-provider-sandbox and kix-protocol:k-authority-qualification. A return landing is not a payment observation, a sandbox success is not a real payment, and a refund record executes nothing.",
   },
+  {
+    id: "c-marketplace-performance",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "marketplace-performance-bench",
+    note: "The marketplace scale bench is synthetic. A real large-marketplace read, queue, device measurement, and producer load qualification stays on that pending node, which waits on kix-protocol:ps-07-scale-qualification. Browser-boundary measurements are never a producer load figure, and an emulated device is never real mobile evidence.",
+  },
+  {
+    id: "c-installable-mobile",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "installable-mobile-shell",
+    note: "The installable mobile shell is synthetic. A real packaging, install, update, session, vault, presentation, and device read model and a real producer connection stay on that pending node. A stored item is a copy that mints no admission, the device clock never decides validity, and an app resume re-executes no uncertain write.",
+  },
+  {
+    id: "c-platform-operational-qualification",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "platform-operational-qualification",
+    note: "The qualification packet is a synthetic record of stub journeys. A real platform, finance, and marketing operational qualification stays on that pending node, which waits on kix-protocol:ps-07-scale-qualification, kix-protocol:cr-10-credit-qualification, and the unpromoted commerce-integration-closeout. A per-call confirmed is not a journey close, and the packet is never a public deployment, a real-money approval, or a service qualification.",
+  },
+  {
+    id: "c-platform-release",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "platform-release",
+    note: "The release candidate packet is a synthetic record scoped to the live tuple. A real final review, user acceptance, RELEASE gate, and operations handoff stays on that pending node, which waits on kix-protocol:k-platform-release and the user RELEASE decision. Nothing is released, deployed, or operated.",
+  },
 ] as const satisfies readonly PendingProducer[];
 
 const UNSUPPORTED_SURFACE_IDS = new Set(["operator-transport", "accessibility-baseline"]);
@@ -687,6 +719,30 @@ export const ROLE_JOURNEYS = {
       "Synthetic notification inbox and support material. An arrival confirms no economic effect, a stale-issued row's action resolves nothing, and dedupe drops a second delivery once.",
     ),
     stepFromSurfaces(
+      "marketplace-performance-bench",
+      "operator",
+      ["marketplace-performance-bench"],
+      "Synthetic scale bench. A bounded window over a lazy stream, queue admission as browse access only, dropped stale answers, and browser-boundary measurements that never claim a real device or a producer load share.",
+    ),
+    stepFromSurfaces(
+      "installable-mobile-shell",
+      "operator",
+      ["installable-mobile-shell"],
+      "Synthetic mobile shell. Stored items stay copies that mint no admission, the device clock never decides validity, and an app resume re-executes no uncertain write.",
+    ),
+    stepFromSurfaces(
+      "platform-operational-qualification",
+      "operator",
+      ["platform-operational-qualification"],
+      "Synthetic qualification packet. A per-call confirmed is not a journey close, the five denominators never merge, and the packet is never promoted to a deployment or a real-money approval.",
+    ),
+    stepFromSurfaces(
+      "platform-release",
+      "operator",
+      ["platform-release"],
+      "Synthetic release candidate. The packet is scoped to the live tuple, decides nothing, and never starts a public deploy, real money, or real operations before the user RELEASE decision.",
+    ),
+    stepFromSurfaces(
       "accessibility-baseline",
       "operator",
       ["accessibility-baseline"],
@@ -860,6 +916,26 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-provider-connected-journey-stub",
     doc: "docs/c-provider-connected-journey-stub-apps-bind.md",
     anchor: "a return landing is never a payment observation",
+  },
+  {
+    id: "c-marketplace-performance-stub",
+    doc: "docs/c-marketplace-performance-stub-apps-bind.md",
+    anchor: "an emulated device is never real mobile evidence",
+  },
+  {
+    id: "c-installable-mobile-stub",
+    doc: "docs/c-installable-mobile-stub-apps-bind.md",
+    anchor: "an app resume re-executes nothing",
+  },
+  {
+    id: "c-platform-operational-qualification-stub",
+    doc: "docs/c-platform-operational-qualification-stub-apps-bind.md",
+    anchor: "a per-call confirmed is never an end-to-end journey close",
+  },
+  {
+    id: "c-platform-release-stub",
+    doc: "docs/c-platform-release-stub-apps-bind.md",
+    anchor: "an approval under a different source or contract tuple is never reused",
   },
 ] as const satisfies readonly PreservedEvidence[];
 
