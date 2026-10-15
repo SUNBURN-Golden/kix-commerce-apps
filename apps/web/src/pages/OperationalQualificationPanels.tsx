@@ -79,10 +79,10 @@ export function QualificationControls({
           type="button"
           id="oq-run"
           className="discovery-action"
-          disabled={!model.runControl.enabled}
           aria-disabled={model.runControl.enabled ? undefined : true}
           aria-describedby={model.runControl.reason ? "oq-run-reason" : undefined}
-          onClick={() => actions.run()}
+          data-enabled={model.runControl.enabled ? "true" : "false"}
+          onClick={model.runControl.enabled ? () => actions.run() : undefined}
         >
           Run the qualification once
         </button>
@@ -95,10 +95,10 @@ export function QualificationControls({
           type="button"
           id="oq-deliver-held"
           className="discovery-action"
-          disabled={!heldSupported}
           aria-disabled={heldSupported ? undefined : true}
           aria-describedby="oq-held-note"
-          onClick={() => actions.deliverHeld()}
+          data-enabled={heldSupported ? "true" : "false"}
+          onClick={heldSupported ? () => actions.deliverHeld() : undefined}
         >
           Deliver held answers
         </button>

@@ -7,7 +7,6 @@ import {
   JOURNEY_NOT_COMPOSED,
   QUALIFICATION_CLASSES,
   QUALIFICATION_DENOMINATOR_AREAS,
-  QUALIFICATION_DENOMINATORS,
   QUALIFICATION_EVIDENCE_SCOPES,
   QUALIFICATION_GUEST_ACTOR,
   QUALIFICATION_HOLD_NOT_BOUND,
@@ -84,8 +83,8 @@ describe("operational qualification packet", () => {
       }
     }
     const ops = qualificationOpsBundle();
-    const pending = QUALIFICATION_DENOMINATORS.flatMap((area) => area.items).length;
-    expect(ops.incidentHandoff.pendingProducers).toBe(pending);
+    expect(ops.incidentHandoff.packetModule).toBe("apps/web/src/handoff/packet.ts");
+    expect(ops.incidentHandoff.pendingProducerList).toBe("PENDING_PRODUCERS");
   });
 
   it("reports evidence per scope and keeps unverified items unverified", async () => {
@@ -117,6 +116,27 @@ describe("operational qualification packet", () => {
     const refusal = refuseQualificationPacket(packet);
     expect(refusal).not.toBeNull();
     expect(refusal?.field).toBe("publicDeploy");
+  });
+
+  it("refuses a malformed packet whole instead of throwing", async () => {
+    const packet = await packetOf();
+    const malformed: [string, unknown, string][] = [
+      ["a non-packet answer", null, "packet"],
+      ["a packet without nonClaims", { ...packet, nonClaims: undefined }, "nonClaims"],
+      ["a packet claiming a state word", { ...packet, qualificationState: "QUALIFIED" }, "qualificationState"],
+      ["a packet off the stub environment", { ...packet, environment: "production" }, "environment"],
+      ["a packet without an id", { ...packet, packetId: "" }, "packetId"],
+      ["a packet without a promotion record", { ...packet, promotion: undefined }, "promotion"],
+      ["a packet with a partial promotion record", { ...packet, promotion: { note: "x" } }, "promotion"],
+      ["a packet with string denominators", { ...packet, denominators: "five" }, "denominators"],
+      ["a packet without exercises", { ...packet, exercises: "done" }, "journeys"],
+      ["a packet with empty journeys", { ...packet, journeys: [] }, "journeys"],
+    ];
+    for (const [label, body, field] of malformed) {
+      const refusal = refuseQualificationPacket(body);
+      expect(refusal, label).not.toBeNull();
+      expect(refusal?.field, label).toBe(field);
+    }
   });
 
   it("records the locked bindings and the never-composed list without remapping them", async () => {

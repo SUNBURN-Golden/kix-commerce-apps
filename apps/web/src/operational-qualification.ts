@@ -35,6 +35,7 @@ import {
   type QualificationRunnerPort,
   type QualificationScenario,
 } from "@kix/protocol-adapter";
+import { PENDING_PRODUCERS } from "./handoff/packet";
 import { protocol } from "./protocol";
 
 export const QUALIFICATION_TITLE = "Platform operational qualification (synthetic)";
@@ -260,7 +261,7 @@ function packetModel(packet: QualificationPacket): PacketModel {
     })),
     opsLines: [
       `Operational support: ${packet.opsBundle.opsSupport.diagnosis} at ${packet.opsBundle.opsSupport.route}. Kept separate: ${packet.opsBundle.opsSupport.keptSeparate.join(", ")}. ${packet.opsBundle.opsSupport.note}`,
-      `Incident handoff: ${packet.opsBundle.incidentHandoff.packetModule} at ${packet.opsBundle.incidentHandoff.route}; ${packet.opsBundle.incidentHandoff.pendingProducers} pending producers listed. ${packet.opsBundle.incidentHandoff.note}`,
+      `Incident handoff: ${packet.opsBundle.incidentHandoff.packetModule} at ${packet.opsBundle.incidentHandoff.route}; ${PENDING_PRODUCERS.length} pending producers listed in ${packet.opsBundle.incidentHandoff.pendingProducerList}. ${packet.opsBundle.incidentHandoff.note}`,
       `UI review material: fixture catalogue v${packet.opsBundle.uiReviewMaterial.fixtureVersion}, ${packet.opsBundle.uiReviewMaterial.fixtureScreens} screens, ${packet.opsBundle.uiReviewMaterial.surfacesDocumented} documented surfaces. ${packet.opsBundle.uiReviewMaterial.note}`,
     ],
     boundaryNote: packet.boundaryNote,

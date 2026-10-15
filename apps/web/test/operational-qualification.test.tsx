@@ -147,6 +147,7 @@ describe("operational qualification screen", () => {
     expect(markup).toContain("stays a candidate");
     expect(markup).toContain("Operational support:");
     expect(markup).toContain("Incident handoff:");
+    expect(markup).toContain(`${PENDING_PRODUCERS.length} pending producers listed in PENDING_PRODUCERS`);
     expect(markup).toContain("UI review material:");
     expect(markup).toContain("Promoted false");
     expect(markup).toContain("publicDeploy false");
@@ -203,6 +204,8 @@ describe("operational qualification screen", () => {
     );
     expect(markup).toContain('aria-disabled="true"');
     expect(markup).toContain('aria-describedby="oq-run-reason"');
+    // An off control stays focusable: aria-disabled, never the disabled attribute.
+    expect(markup).not.toMatch(/<button[^>]* disabled/);
     expect(markup).toContain("unknown");
   });
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   OperationalQualificationController,
+  QUALIFICATION_NON_CLAIM_FIELDS,
+  QUALIFICATION_STATE,
   createNotBoundQualificationRunner,
   createStubQualificationRunner,
   qualificationFenceLine,
@@ -9,6 +11,34 @@ import {
 
 function controller(port?: QualificationRunnerPort, actorRef = "qualification-runner") {
   return new OperationalQualificationController(port ?? createStubQualificationRunner(), { actorRef });
+}
+
+/** A port whose ready packet is well-formed until the promotion record, which is missing. */
+function malformedPacketPort(): QualificationRunnerPort {
+  return {
+    environment: "stub",
+    source: "synthetic-qualification",
+    scenario: "clean",
+    run(request) {
+      return Promise.resolve({
+        kind: "ready" as const,
+        intentRef: request.intentRef,
+        contextKey: request.contextKey,
+        packet: {
+          packetId: "oq-bad",
+          environment: "stub",
+          qualificationState: QUALIFICATION_STATE,
+          nonClaims: Object.fromEntries(QUALIFICATION_NON_CLAIM_FIELDS.map((field) => [field, false])),
+          denominators: [],
+          journeys: [{ id: "j" }],
+          exercises: [{ id: "e" }],
+        } as never,
+      });
+    },
+    deliverHeld() {
+      return 0;
+    },
+  };
 }
 
 describe("operational qualification controller", () => {
@@ -114,6 +144,22 @@ describe("operational qualification controller", () => {
     expect(state.packet).toBeNull();
     expect(state.runState).toBe("unknown");
     expect(state.intents[0]?.code).toBe("UNTRUSTED_PACKET");
+  });
+
+  it("leaves a malformed packet unknown instead of rejecting the run", async () => {
+    const ctl = controller(malformedPacketPort());
+    const result = await ctl.run("oq-malformed");
+    expect(result.kind).toBe("UNKNOWN");
+    const state = ctl.state();
+    expect(state.packet).toBeNull();
+    expect(state.runState).toBe("unknown");
+    expect(state.intents.map((item) => item.outcome)).toEqual(["UNKNOWN"]);
+    expect(state.intents[0]?.code).toBe("UNTRUSTED_PACKET");
+    const second = await ctl.run("oq-after-malformed");
+    expect(second.kind).toBe("FENCED");
+    if (second.kind === "FENCED") {
+      expect(second.fence.reason).toBe("unknown-outcome");
+    }
   });
 
   it("answers not-bound on integration-http before sending anything", async () => {

@@ -37,6 +37,7 @@ import {
   type ProviderWriteRequest,
 } from "./provider-journey.js";
 import { ProviderJourneyController } from "./provider-controller.js";
+import { isRecord } from "./record.js";
 
 /**
  * Synthetic operational-qualification runner for the platform qualification
@@ -296,7 +297,8 @@ export interface QualificationOpsBundle {
   incidentHandoff: {
     route: string;
     packetModule: string;
-    pendingProducers: number;
+    /** The handoff module's own pending-producer list. Its count is rendered from that module, not re-counted here. */
+    pendingProducerList: string;
     note: string;
   };
   uiReviewMaterial: {
@@ -505,7 +507,6 @@ export const QUALIFICATION_REVIEW_CANDIDATES: readonly QualificationReviewCandid
 ];
 
 export function qualificationOpsBundle(): QualificationOpsBundle {
-  const pendingProducers = QUALIFICATION_DENOMINATORS.flatMap((area) => area.items.map((item) => item.id));
   return {
     opsSupport: {
       route: "/handoff",
@@ -516,8 +517,8 @@ export function qualificationOpsBundle(): QualificationOpsBundle {
     incidentHandoff: {
       route: "/handoff",
       packetModule: "apps/web/src/handoff/packet.ts",
-      pendingProducers: pendingProducers.length,
-      note: "The local product handoff lists every pending producer this packet reports as unresolved. The counts agree by construction: the denominators are the handoff's own pending list.",
+      pendingProducerList: "PENDING_PRODUCERS",
+      note: "The handoff packet's own pending-producer list is the operator-facing pending list. This packet names the module and the list; the screen renders the count from the module itself so the number can never drift from it.",
     },
     uiReviewMaterial: {
       fixtureVersion: "1",
@@ -657,12 +658,27 @@ export interface QualificationPacketRefusal {
 }
 
 /**
- * A packet is trusted only when every non-claim is a literal false, the state
- * word is STUB_RUN_RECORDED, promotion stays off, and the structure is whole.
- * Anything else is refused before it reaches the page.
+ * A packet is trusted only when its structure is whole, every non-claim is a
+ * literal false, the state word is STUB_RUN_RECORDED, the environment word is
+ * stub, and promotion stays off. Anything else — including a malformed body —
+ * is refused whole before it reaches the page. This check never throws on any
+ * input, so an untrusted answer always leaves the run unknown.
  */
-export function refuseQualificationPacket(packet: QualificationPacket): QualificationPacketRefusal | null {
-  const claimed = QUALIFICATION_NON_CLAIM_FIELDS.filter((field) => packet.nonClaims[field] !== false);
+export function refuseQualificationPacket(packet: unknown): QualificationPacketRefusal | null {
+  if (!isRecord(packet)) {
+    return {
+      field: "packet",
+      detail: "The run's answer is not a packet record. A malformed packet is refused whole. Nothing is applied.",
+    };
+  }
+  const nonClaims = packet.nonClaims;
+  if (!isRecord(nonClaims)) {
+    return {
+      field: "nonClaims",
+      detail: "The packet carries no non-claims record. A malformed packet is refused whole. Nothing is applied.",
+    };
+  }
+  const claimed = QUALIFICATION_NON_CLAIM_FIELDS.filter((field) => nonClaims[field] !== false);
   if (claimed.length > 0) {
     return {
       field: claimed[0] ?? "nonClaims",
@@ -675,16 +691,45 @@ export function refuseQualificationPacket(packet: QualificationPacket): Qualific
       detail: `The packet states ${String(packet.qualificationState)}. A stub packet only states ${QUALIFICATION_STATE}.`,
     };
   }
-  if (packet.promotion.promoted || packet.promotion.publicDeploy || packet.promotion.realMoneyApproval || packet.promotion.serviceQualification) {
+  if (packet.environment !== "stub") {
+    return {
+      field: "environment",
+      detail: `The packet states environment ${String(packet.environment)}. A stub packet only states stub.`,
+    };
+  }
+  if (typeof packet.packetId !== "string" || packet.packetId.length === 0) {
+    return {
+      field: "packetId",
+      detail: "The packet carries no packet id. A malformed packet is refused whole. Nothing is applied.",
+    };
+  }
+  const promotion = packet.promotion;
+  if (!isRecord(promotion)) {
+    return {
+      field: "promotion",
+      detail: "The packet carries no promotion record. A malformed packet is refused whole. Nothing is applied.",
+    };
+  }
+  if (
+    promotion.promoted !== false ||
+    promotion.publicDeploy !== false ||
+    promotion.realMoneyApproval !== false ||
+    promotion.serviceQualification !== false
+  ) {
     return {
       field: "promotion",
       detail: "The packet promotes to deployment, real money, or service qualification. A stub qualification is never promoted.",
     };
   }
-  if (packet.denominators.length !== QUALIFICATION_DENOMINATOR_AREAS.length) {
+  if (!Array.isArray(packet.denominators) || packet.denominators.length !== QUALIFICATION_DENOMINATOR_AREAS.length) {
     return { field: "denominators", detail: "The packet does not carry all five unresolved denominators." };
   }
-  if (packet.journeys.length === 0 || packet.exercises.length === 0) {
+  if (
+    !Array.isArray(packet.journeys) ||
+    !Array.isArray(packet.exercises) ||
+    packet.journeys.length === 0 ||
+    packet.exercises.length === 0
+  ) {
     return { field: "journeys", detail: "The packet carries no executed journey or exercise." };
   }
   return null;

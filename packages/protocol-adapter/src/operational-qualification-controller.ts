@@ -19,7 +19,9 @@ import {
  *    and a run while an earlier run's outcome is unknown are fenced and never
  *    reach the port.
  *  - A lost, cut-off, mis-correlated, thrown, or untrusted answer is UNKNOWN.
- *    UNKNOWN is not a rejection and not a success; nothing retries it.
+ *    UNKNOWN is not a rejection and not a success; nothing retries it. The
+ *    packet integrity check is total and the reducer is guarded, so a
+ *    malformed answer can never leave the intent in flight.
  *  - A result that arrives after the context changed (actor, session
  *    incarnation) is quarantined. It does not touch the held packet.
  *  - The caller supplies each intent reference. This class never mints one.
@@ -256,7 +258,22 @@ export class OperationalQualificationController {
         detail: error instanceof Error ? error.message : "The run failed after it was sent.",
       };
     }
-    return this.settle(intent, outcome);
+    try {
+      return this.settle(intent, outcome);
+    } catch (error) {
+      // The answer could not even be reduced — a malformed packet must not
+      // leave the intent in flight. It is untrusted: the run stays unknown.
+      intent.outcome = "UNKNOWN";
+      intent.code = intent.code ?? "UNTRUSTED_PACKET";
+      intent.message =
+        intent.message ??
+        `The run's answer could not be applied (${error instanceof Error ? error.message : "unknown error"}). It may or may not have recorded a packet.`;
+      this.packet = null;
+      this.runState = "unknown";
+      this.runDetail = intent.message;
+      this.notify();
+      return { kind: "UNKNOWN", intent: copyIntent(intent) };
+    }
   }
 
   private settle(intent: QualificationIntent, outcome: QualificationRunOutcome): QualificationRunResult {
