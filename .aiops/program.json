@@ -445,6 +445,127 @@
       "deliverable_mode": "PR",
       "astra_auto_merge": false,
       "user_merge": true
+    },
+    {
+      "id": "c-refund-return-states-stub",
+      "title": "[stub] 예약·결제·권리 발행·반환 필요·환불 완료 상태 분리와 합성 환불 흐름",
+      "spec": "[STUB SCOPE — plan revision 2026-10-16, 준태님 2026-10-15 14:44 KST 위임(비용·하드웨어·메인넷·시크릿키·프로덕션 배포·결제 변경 제외 나머지는 소유자 판단) 범위에서 KIX Commerce 결정] 원 pending 노드 api-state-distinction과 refund-surface의 합성/stub 범위 축소판이다. 원 노드는 docs/aiops/PENDING_NODES.json에 pending으로 그대로 남고, 외부 선행(kix-protocol)이 완료된 뒤 실제 연결은 별도 후속 노드로 승격한다. 이 노드에서는 기본 stub·합성 fixture·NOT_BOUND/UNKNOWN 표시만 사용하고, 실제 producer/SDK/provider 연결·실결제·여신 지급·배포·runtime_enabled·시크릿 변경·commerce-bindings.ts 변경·OpenAPI pin/PINNED_ACTIONS/CI KIX_PROTOCOL_GATE_SHA 변경을 하지 않는다. kix-protocol 변경이 필요하면 DECISION_REQUIRED로 멈춘다. 화면이 있어도 실제 통합 완료로 주장하지 않는다. M2+H1 판정(accept_trade까지, capture/settle_capture 없음, placeHold=reserve_listing·not-bound)을 유지한다. 계약 변경 판정: contract_change=NO. 새 상태·journal·registry 형식은 이 앱 내부 전용이며 외부 공개 schema·operation·capability·ID 형식으로 노출하지 않는다. 구현 중 공개 계약 변경이 필요해지면 즉시 멈추고 contract_change=YES/A3/user_merge로 재분류한다.\n\n목표: 구매자·예매·정산 화면이 예약, 결제 관측, 권리 발행, 반환 필요, 환불 완료를 서로 다른 다섯 상태로만 보여주고, 환불·취소 흐름을 합성 in-process source에서만 보여준다.\n\n작업 묶음: 제품 품질\n\n설계 근거: README.md; docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md §6; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §4\n\n구현 범위:\n1. 현재 OUTCOME_TRACKS(reservation·payment·issuance·admission)와 buyer·booking·settlement·platform·provider 화면이 쓰는 상태 어휘를 대조하고, 반환 필요(return-required)와 환불 완료(refund-done)를 별도 track으로 추가한다. 집계 완료 상태는 만들지 않는다\n2. booking·buyer·box office 화면에서 예약이 결제로 보이지 않음을 상태별 test로 고정한다\n3. 환불·취소·void·PG 취소 조정·반환 관측을 합성 source의 별도 줄로 표시한다. 실제 환불 실행과 refund_ticket 전송은 하지 않고 NOT_BOUND·not-sent로 남긴다\n4. 각 상태의 빈 값·오류·진행 중·UNKNOWN 화면과 키보드 동작을 실제 브라우저로 확인한다\n\n필수 산출물:\n- 다섯 상태 어휘와 화면별 매핑 표 (docs/c-refund-return-states-stub-apps-bind.md)\n- 상태별 web test와 브라우저 확인 기록\n\n완료 판정/실패 검증:\n1. 예약 화면이 결제·발행·환불 완료로 표시되지 않는다\n2. 반환 필요는 환불 완료의 전 단계가 아니라 별도 상태이며 환불 완료를 합성하지 않는다\n3. 실제 환불·결제 완료를 주장하지 않고 refund_ticket을 전송하지 않는다\n\n공통 경계: 프로토콜 계산을 UI에 복제하지 않는다. 기본 stub, 명시적 loopback, 1회 요청, UNKNOWN/NOT_BOUND/STALE 분리를 유지한다. 미채택 retry·Idempotency-Key·공개 proxy·UI 직접 fetch를 추가하지 않는다. producer 변경을 소비할 때 두 OpenAPI pin·PINNED_ACTIONS·KIX_PROTOCOL_GATE_SHA·protocolMergeSha와 SDK/manifest/vector tuple을 함께 검증한다. 실결제·여신 지급·현장 검표·공개 서비스는 별도 권한이다.\n\n증거/인계: 실제 변경 파일·실행 명령·성공 및 실패 사례·정확한 소스 SHA를 PR에 남긴다. 기존 충분한 coverage는 재사용하고 새 gap만 검증한다. UI 변경은 실제 브라우저의 정상/빈 값/오류/진행 중 화면과 키보드 동작을 확인한다. 실환경 부재는 미검증으로 남긴다. 독립 검토 지적과 CI 실패는 같은 소유자가 수정하고 변경 HEAD를 다시 검토한다. 일반 구현 선택은 자율 결정하며 계정·중요 계약·실사용 승인만 구체적인 결정을 요청한다.",
+      "depends_on": [
+        "c-buyer-workspace",
+        "c-platform-journey-stub",
+        "c-provider-connected-journey-stub"
+      ],
+      "audit_floor": "A2",
+      "astra_gate": "NONE",
+      "deliverable_mode": "PR",
+      "astra_auto_merge": true,
+      "user_merge": false
+    },
+    {
+      "id": "c-journey-identity-stub",
+      "title": "[stub] 문맥 결합 여정 정체성과 읽기 관측 판정",
+      "spec": "[STUB SCOPE — plan revision 2026-10-16, 준태님 2026-10-15 14:44 KST 위임(비용·하드웨어·메인넷·시크릿키·프로덕션 배포·결제 변경 제외 나머지는 소유자 판단) 범위에서 KIX Commerce 결정] 원 pending 노드 c-journey-identity의 합성/stub 범위 축소판이다. 원 노드는 docs/aiops/PENDING_NODES.json에 pending으로 그대로 남고, 외부 선행(kix-protocol)이 완료된 뒤 실제 연결은 별도 후속 노드로 승격한다. 이 노드에서는 기본 stub·합성 fixture·NOT_BOUND/UNKNOWN 표시만 사용하고, 실제 producer/SDK/provider 연결·실결제·여신 지급·배포·runtime_enabled·시크릿 변경·commerce-bindings.ts 변경·OpenAPI pin/PINNED_ACTIONS/CI KIX_PROTOCOL_GATE_SHA 변경을 하지 않는다. kix-protocol 변경이 필요하면 DECISION_REQUIRED로 멈춘다. 화면이 있어도 실제 통합 완료로 주장하지 않는다. M2+H1 판정(accept_trade까지, capture/settle_capture 없음, placeHold=reserve_listing·not-bound)을 유지한다. 계약 변경 판정: contract_change=NO. 새 상태·journal·registry 형식은 이 앱 내부 전용이며 외부 공개 schema·operation·capability·ID 형식으로 노출하지 않는다. 구현 중 공개 계약 변경이 필요해지면 즉시 멈추고 contract_change=YES/A3/user_merge로 재분류한다.\n\n목표: 여정 정체성을 mode·actor·role·source cut 세대·manifest tuple에 묶어, 문맥이 바뀌거나 오래된 읽기·receipt가 현재 여정으로 재사용되지 않게 한다.\n\n작업 묶음: 제품 품질\n\n설계 근거: README.md; docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md; COMMERCE_PRODUCT_EVOLUTION_KO.md §3·§7\n\n구현 범위:\n1. 앱 내부 여정 문맥 key(mode, actor, role, domain, source cut 세대, pin tuple)와 그 결합 규칙을 정의한다. 외부 공개 식별자 형식을 만들지 않는다\n2. 합성 source 읽기 결과를 non-authoritative 관측으로 판정하고, 문맥 불일치·세대 불일치·오래된 receipt를 쓰기 전에 거절하거나 STALE로 표시한다\n3. actor·mode·세대 변경 시 이전 session을 격리한다. stub 초기화가 이전 UNKNOWN을 지우지 않는다\n\n필수 산출물:\n- 문맥 key 모델과 읽기 관측 판정기\n- docs/c-journey-identity-stub-apps-bind.md 와 stale/mismatch fixture·test\n\n완료 판정/실패 검증:\n1. 다른 문맥의 receipt·읽기가 현재 여정의 증거로 쓰이지 않는다\n2. 읽기 관측이 결제·발행·입장의 증명으로 표시되지 않는다\n3. 프로토콜 계산·권위 판단을 UI에 복제하지 않는다\n\n공통 경계: 프로토콜 계산을 UI에 복제하지 않는다. 기본 stub, 명시적 loopback, 1회 요청, UNKNOWN/NOT_BOUND/STALE 분리를 유지한다. 미채택 retry·Idempotency-Key·공개 proxy·UI 직접 fetch를 추가하지 않는다. producer 변경을 소비할 때 두 OpenAPI pin·PINNED_ACTIONS·KIX_PROTOCOL_GATE_SHA·protocolMergeSha와 SDK/manifest/vector tuple을 함께 검증한다. 실결제·여신 지급·현장 검표·공개 서비스는 별도 권한이다.\n\n증거/인계: 실제 변경 파일·실행 명령·성공 및 실패 사례·정확한 소스 SHA를 PR에 남긴다. 기존 충분한 coverage는 재사용하고 새 gap만 검증한다. UI 변경은 실제 브라우저의 정상/빈 값/오류/진행 중 화면과 키보드 동작을 확인한다. 실환경 부재는 미검증으로 남긴다. 독립 검토 지적과 CI 실패는 같은 소유자가 수정하고 변경 HEAD를 다시 검토한다. 일반 구현 선택은 자율 결정하며 계정·중요 계약·실사용 승인만 구체적인 결정을 요청한다.",
+      "depends_on": [
+        "c-platform-journey-stub",
+        "c-contract-fixture-library",
+        "c-refund-return-states-stub"
+      ],
+      "audit_floor": "A3",
+      "astra_gate": "NONE",
+      "deliverable_mode": "PR",
+      "astra_auto_merge": true,
+      "user_merge": false
+    },
+    {
+      "id": "c-session-recovery-stub",
+      "title": "[stub] 새로고침·재접속 뒤 미확정 요청 UNKNOWN 복구와 session 증거 격리",
+      "spec": "[STUB SCOPE — plan revision 2026-10-16, 준태님 2026-10-15 14:44 KST 위임(비용·하드웨어·메인넷·시크릿키·프로덕션 배포·결제 변경 제외 나머지는 소유자 판단) 범위에서 KIX Commerce 결정] 원 pending 노드 c-async-session-fence의 합성/stub 범위 축소판이다. 원 노드는 docs/aiops/PENDING_NODES.json에 pending으로 그대로 남고, 외부 선행(kix-protocol)이 완료된 뒤 실제 연결은 별도 후속 노드로 승격한다. 이 노드에서는 기본 stub·합성 fixture·NOT_BOUND/UNKNOWN 표시만 사용하고, 실제 producer/SDK/provider 연결·실결제·여신 지급·배포·runtime_enabled·시크릿 변경·commerce-bindings.ts 변경·OpenAPI pin/PINNED_ACTIONS/CI KIX_PROTOCOL_GATE_SHA 변경을 하지 않는다. kix-protocol 변경이 필요하면 DECISION_REQUIRED로 멈춘다. 화면이 있어도 실제 통합 완료로 주장하지 않는다. M2+H1 판정(accept_trade까지, capture/settle_capture 없음, placeHold=reserve_listing·not-bound)을 유지한다. 계약 변경 판정: contract_change=NO. 새 상태·journal·registry 형식은 이 앱 내부 전용이며 외부 공개 schema·operation·capability·ID 형식으로 노출하지 않는다. 구현 중 공개 계약 변경이 필요해지면 즉시 멈추고 contract_change=YES/A3/user_merge로 재분류한다.\n\n목표: 전송 전 intent와 충돌 범위 fence를 tab session 안에만 기록하고, 새로고침·재접속에서 미확정 요청을 UNKNOWN으로 복구하며 자동 재전송하지 않는다.\n\n작업 묶음: 제품 품질\n\n설계 근거: README.md; docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md; COMMERCE_PRODUCT_EVOLUTION_KO.md §4·§5\n\n구현 범위:\n1. sessionStorage만 쓰는 versioned journal을 둔다(localStorage·서버·cookie 금지, 개인정보 최소). 저장 실패·quota는 쓰기 전 거절하고, 전송 뒤 저장 실패는 UNKNOWN으로 잠근다\n2. reload/tab resume에서 미해결 intent를 UNKNOWN으로 복구하고 확인 없이 다시 전송하지 않는다. cached CONFIRMED는 history로만 표시한다\n3. 손상·미지원 버전 journal은 quarantine하고 SESSION_EVIDENCE_LOST로 표시한다. 새 ID 발급으로 우회하지 않는다. 보존 기간(TTL) 정책은 UNDETERMINED로 남기고 TTL로 fence를 지우지 않는다\n4. record 수·bytes 예산을 정하고 overflow를 시험한다\n\n필수 산출물:\n- journal 모듈과 UNKNOWN 복구 UI\n- docs/c-session-recovery-stub-apps-bind.md 와 corrupt·unsupported·부분 write·quota·reload test\n\n완료 판정/실패 검증:\n1. reload 뒤 command 전송 수가 늘지 않는다\n2. UNKNOWN 다음 신규 write·보상이 0이다\n3. browser storage 손실을 exactly-once 보장으로 표시하지 않는다\n\n공통 경계: 프로토콜 계산을 UI에 복제하지 않는다. 기본 stub, 명시적 loopback, 1회 요청, UNKNOWN/NOT_BOUND/STALE 분리를 유지한다. 미채택 retry·Idempotency-Key·공개 proxy·UI 직접 fetch를 추가하지 않는다. producer 변경을 소비할 때 두 OpenAPI pin·PINNED_ACTIONS·KIX_PROTOCOL_GATE_SHA·protocolMergeSha와 SDK/manifest/vector tuple을 함께 검증한다. 실결제·여신 지급·현장 검표·공개 서비스는 별도 권한이다.\n\n증거/인계: 실제 변경 파일·실행 명령·성공 및 실패 사례·정확한 소스 SHA를 PR에 남긴다. 기존 충분한 coverage는 재사용하고 새 gap만 검증한다. UI 변경은 실제 브라우저의 정상/빈 값/오류/진행 중 화면과 키보드 동작을 확인한다. 실환경 부재는 미검증으로 남긴다. 독립 검토 지적과 CI 실패는 같은 소유자가 수정하고 변경 HEAD를 다시 검토한다. 일반 구현 선택은 자율 결정하며 계정·중요 계약·실사용 승인만 구체적인 결정을 요청한다.",
+      "depends_on": [
+        "c-journey-identity-stub",
+        "c-installable-mobile-stub"
+      ],
+      "audit_floor": "A3",
+      "astra_gate": "NONE",
+      "deliverable_mode": "PR",
+      "astra_auto_merge": true,
+      "user_merge": false
+    },
+    {
+      "id": "c-cross-surface-journeys-stub",
+      "title": "[stub] 전체 여정 부분 성공·보상 표와 실패 분기 합성",
+      "spec": "[STUB SCOPE — plan revision 2026-10-16, 준태님 2026-10-15 14:44 KST 위임(비용·하드웨어·메인넷·시크릿키·프로덕션 배포·결제 변경 제외 나머지는 소유자 판단) 범위에서 KIX Commerce 결정] 원 pending 노드 c-cross-surface-journeys의 합성/stub 범위 축소판이다. 원 노드는 docs/aiops/PENDING_NODES.json에 pending으로 그대로 남고, 외부 선행(kix-protocol)이 완료된 뒤 실제 연결은 별도 후속 노드로 승격한다. 이 노드에서는 기본 stub·합성 fixture·NOT_BOUND/UNKNOWN 표시만 사용하고, 실제 producer/SDK/provider 연결·실결제·여신 지급·배포·runtime_enabled·시크릿 변경·commerce-bindings.ts 변경·OpenAPI pin/PINNED_ACTIONS/CI KIX_PROTOCOL_GATE_SHA 변경을 하지 않는다. kix-protocol 변경이 필요하면 DECISION_REQUIRED로 멈춘다. 화면이 있어도 실제 통합 완료로 주장하지 않는다. M2+H1 판정(accept_trade까지, capture/settle_capture 없음, placeHold=reserve_listing·not-bound)을 유지한다. 계약 변경 판정: contract_change=NO. 새 상태·journal·registry 형식은 이 앱 내부 전용이며 외부 공개 schema·operation·capability·ID 형식으로 노출하지 않는다. 구현 중 공개 계약 변경이 필요해지면 즉시 멈추고 contract_change=YES/A3/user_merge로 재분류한다.\n\n목표: 구매·리셀·선물·환불·마케팅 혜택·위임·여신 여정을 합성 source 위에서 이어, 부분 성공과 보상 불가(COMPENSATION_UNDEFINED)를 숨기지 않고 보여준다.\n\n작업 묶음: 제품 품질\n\n설계 근거: README.md; docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md; COMMERCE_PRODUCT_EVOLUTION_KO.md §6; INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §4\n\n구현 범위:\n1. 여정별로 마지막 확정 단계, 확인되지 않은 요청, 막힌 다음 행동, 보상 경로를 한 표로 보여주는 읽기 화면을 만든다. 새 명령을 보내지 않는다\n2. 각 여정의 정상·명시적 거절·응답 유실·부분 성공 분기를 기존 합성 source로 재현하고, 승인되지 않은 보상·반대 명령을 만들지 않는다\n3. 기존 operational-qualification stub의 14개 여정과 중복되는 부분은 정확한 test 경로로 연결하고 새 분기만 추가한다\n\n필수 산출물:\n- 여정 합성 화면과 부분 성공·보상 표\n- docs/c-cross-surface-journeys-stub-apps-bind.md 와 분기별 test\n\n완료 판정/실패 검증:\n1. UNKNOWN을 완료·실패로 표시하지 않는다\n2. COMPENSATION_UNDEFINED를 숨기지 않는다\n3. 여정 합성이 새 계약 의미를 만들지 않는다\n\n공통 경계: 프로토콜 계산을 UI에 복제하지 않는다. 기본 stub, 명시적 loopback, 1회 요청, UNKNOWN/NOT_BOUND/STALE 분리를 유지한다. 미채택 retry·Idempotency-Key·공개 proxy·UI 직접 fetch를 추가하지 않는다. producer 변경을 소비할 때 두 OpenAPI pin·PINNED_ACTIONS·KIX_PROTOCOL_GATE_SHA·protocolMergeSha와 SDK/manifest/vector tuple을 함께 검증한다. 실결제·여신 지급·현장 검표·공개 서비스는 별도 권한이다.\n\n증거/인계: 실제 변경 파일·실행 명령·성공 및 실패 사례·정확한 소스 SHA를 PR에 남긴다. 기존 충분한 coverage는 재사용하고 새 gap만 검증한다. UI 변경은 실제 브라우저의 정상/빈 값/오류/진행 중 화면과 키보드 동작을 확인한다. 실환경 부재는 미검증으로 남긴다. 독립 검토 지적과 CI 실패는 같은 소유자가 수정하고 변경 HEAD를 다시 검토한다. 일반 구현 선택은 자율 결정하며 계정·중요 계약·실사용 승인만 구체적인 결정을 요청한다.",
+      "depends_on": [
+        "c-session-recovery-stub",
+        "gift-surface",
+        "organizer-admin-console",
+        "c-marketing-journey-stub",
+        "c-delegated-assistant-stub",
+        "c-credit-servicing-journey-stub",
+        "c-provider-connected-journey-stub",
+        "c-refund-return-states-stub"
+      ],
+      "audit_floor": "A3",
+      "astra_gate": "NONE",
+      "deliverable_mode": "PR",
+      "astra_auto_merge": true,
+      "user_merge": false
+    },
+    {
+      "id": "c-browser-e2e-stub",
+      "title": "[stub] 실제 브라우저 end-to-end 여정 시험과 CI 편입",
+      "spec": "[STUB SCOPE — plan revision 2026-10-16, 준태님 2026-10-15 14:44 KST 위임(비용·하드웨어·메인넷·시크릿키·프로덕션 배포·결제 변경 제외 나머지는 소유자 판단) 범위에서 KIX Commerce 결정] 원 pending 노드 e2e-browser-journeys의 합성/stub 범위 축소판이다. 원 노드는 docs/aiops/PENDING_NODES.json에 pending으로 그대로 남고, 외부 선행(kix-protocol)이 완료된 뒤 실제 연결은 별도 후속 노드로 승격한다. stub mode만 다루며 HTTP mode(gate 브라우저 접근)는 kix-protocol gate 변경이 필요하므로 범위 밖이다. 이 노드에서는 기본 stub·합성 fixture·NOT_BOUND/UNKNOWN 표시만 사용하고, 실제 producer/SDK/provider 연결·실결제·여신 지급·배포·runtime_enabled·시크릿 변경·commerce-bindings.ts 변경·OpenAPI pin/PINNED_ACTIONS/CI KIX_PROTOCOL_GATE_SHA 변경을 하지 않는다. kix-protocol 변경이 필요하면 DECISION_REQUIRED로 멈춘다. 화면이 있어도 실제 통합 완료로 주장하지 않는다. M2+H1 판정(accept_trade까지, capture/settle_capture 없음, placeHold=reserve_listing·not-bound)을 유지한다. 계약 변경 판정: contract_change=NO. 새 상태·journal·registry 형식은 이 앱 내부 전용이며 외부 공개 schema·operation·capability·ID 형식으로 노출하지 않는다. 구현 중 공개 계약 변경이 필요해지면 즉시 멈추고 contract_change=YES/A3/user_merge로 재분류한다.\n\n목표: stub 기본 모드의 주요 여정(box office, booking, admission, resale, credit, gift, organizer, receipts)을 실제 headless 브라우저로 처음부터 끝까지 시험하고 CI에 추가한다.\n\n작업 묶음: 제품 품질\n\n설계 근거: README.md; docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md §8; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §6\n\n구현 범위:\n1. Playwright(또는 레포가 택한 동등 도구, 버전 고정)로 production build를 127.0.0.1에서만 serve해 stub mode로 여정을 시험한다. 외부 네트워크·유료 서비스·secret 없음\n2. 기존 CI job 이름('Typecheck, build, and test (stub)')과 검사를 약화하지 않고 별도 job으로 추가한다. 로컬 실행 명령을 README에 적는다\n3. 여정마다 성공·거절·UNKNOWN·not-bound 화면과 요청 전송 횟수 1회를 확인하고 비밀·개인정보가 trace에 남지 않게 한다\n\n필수 산출물:\n- 브라우저 시험 suite와 CI job\n- 실행 기록과 docs/c-browser-e2e-stub-apps-bind.md\n\n완료 판정/실패 검증:\n1. 서버가 127.0.0.1 외 주소에 bind하지 않고 외부 fetch가 없다\n2. 기존 CI 검사가 그대로 유지된다\n3. stub만으로 HTTP mode·production qualification PASS를 주장하지 않는다\n\n공통 경계: 프로토콜 계산을 UI에 복제하지 않는다. 기본 stub, 명시적 loopback, 1회 요청, UNKNOWN/NOT_BOUND/STALE 분리를 유지한다. 미채택 retry·Idempotency-Key·공개 proxy·UI 직접 fetch를 추가하지 않는다. producer 변경을 소비할 때 두 OpenAPI pin·PINNED_ACTIONS·KIX_PROTOCOL_GATE_SHA·protocolMergeSha와 SDK/manifest/vector tuple을 함께 검증한다. 실결제·여신 지급·현장 검표·공개 서비스는 별도 권한이다.\n\n증거/인계: 실제 변경 파일·실행 명령·성공 및 실패 사례·정확한 소스 SHA를 PR에 남긴다. 기존 충분한 coverage는 재사용하고 새 gap만 검증한다. UI 변경은 실제 브라우저의 정상/빈 값/오류/진행 중 화면과 키보드 동작을 확인한다. 실환경 부재는 미검증으로 남긴다. 독립 검토 지적과 CI 실패는 같은 소유자가 수정하고 변경 HEAD를 다시 검토한다. 일반 구현 선택은 자율 결정하며 계정·중요 계약·실사용 승인만 구체적인 결정을 요청한다.",
+      "depends_on": [
+        "c-cross-surface-journeys-stub"
+      ],
+      "audit_floor": "A2",
+      "astra_gate": "NONE",
+      "deliverable_mode": "PR",
+      "astra_auto_merge": true,
+      "user_merge": false
+    },
+    {
+      "id": "c-a11y-acceptance-stub",
+      "title": "[stub] 키보드·보조기술 접근성 검증과 사용자 수용 PENDING 패키지",
+      "spec": "[STUB SCOPE — plan revision 2026-10-16, 준태님 2026-10-15 14:44 KST 위임(비용·하드웨어·메인넷·시크릿키·프로덕션 배포·결제 변경 제외 나머지는 소유자 판단) 범위에서 KIX Commerce 결정] 원 pending 노드 c-accessibility-acceptance의 합성/stub 범위 축소판이다. 원 노드는 docs/aiops/PENDING_NODES.json에 pending으로 그대로 남고, 외부 선행(kix-protocol)이 완료된 뒤 실제 연결은 별도 후속 노드로 승격한다. 이 노드에서는 기본 stub·합성 fixture·NOT_BOUND/UNKNOWN 표시만 사용하고, 실제 producer/SDK/provider 연결·실결제·여신 지급·배포·runtime_enabled·시크릿 변경·commerce-bindings.ts 변경·OpenAPI pin/PINNED_ACTIONS/CI KIX_PROTOCOL_GATE_SHA 변경을 하지 않는다. kix-protocol 변경이 필요하면 DECISION_REQUIRED로 멈춘다. 화면이 있어도 실제 통합 완료로 주장하지 않는다. M2+H1 판정(accept_trade까지, capture/settle_capture 없음, placeHold=reserve_listing·not-bound)을 유지한다. 계약 변경 판정: contract_change=NO. 새 상태·journal·registry 형식은 이 앱 내부 전용이며 외부 공개 schema·operation·capability·ID 형식으로 노출하지 않는다. 구현 중 공개 계약 변경이 필요해지면 즉시 멈추고 contract_change=YES/A3/user_merge로 재분류한다.\n\n목표: 현재 구현된 전체 화면을 키보드만으로 시험하고 접근성 관측과 사용자 수용 matrix를 정직하게 제공한다. 수용은 PENDING으로 남긴다.\n\n작업 묶음: 제품 품질\n\n설계 근거: README.md; docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md §8; docs/c-accessibility-baseline-apps-bind.md\n\n구현 범위:\n1. 브라우저 시험으로 route·form·dialog의 키보드 흐름, focus 복귀·trap·escape, label·오류 연결, 표 헤더, 색 외 상태 표식, 확대·좁은 viewport를 확인한다\n2. 자동 접근성 검사 도구와 버전을 기록하되 자동 검사만으로 수용을 대신하지 않는다. 기준 버전 변경은 소스 확인과 별도 기록을 둔다\n3. 화면별 사용자 수용 matrix를 PENDING으로 만들고 ACCEPTED를 만들지 않는다. 진단 record에는 mode·source·trace·outcome 참조만 남긴다\n\n필수 산출물:\n- 접근성 시험 결과와 사용자 수용 matrix(PENDING)\n- docs/c-a11y-acceptance-stub-apps-bind.md\n\n완료 판정/실패 검증:\n1. CI 통과·접근성 관측·사용자 수용·release 허가를 한 상태로 합치지 않는다\n2. 다른 제품이나 과거 stub 화면의 승인을 재사용하지 않는다\n3. ACCEPTED를 임의로 쓰지 않는다\n\n공통 경계: 프로토콜 계산을 UI에 복제하지 않는다. 기본 stub, 명시적 loopback, 1회 요청, UNKNOWN/NOT_BOUND/STALE 분리를 유지한다. 미채택 retry·Idempotency-Key·공개 proxy·UI 직접 fetch를 추가하지 않는다. producer 변경을 소비할 때 두 OpenAPI pin·PINNED_ACTIONS·KIX_PROTOCOL_GATE_SHA·protocolMergeSha와 SDK/manifest/vector tuple을 함께 검증한다. 실결제·여신 지급·현장 검표·공개 서비스는 별도 권한이다.\n\n증거/인계: 실제 변경 파일·실행 명령·성공 및 실패 사례·정확한 소스 SHA를 PR에 남긴다. 기존 충분한 coverage는 재사용하고 새 gap만 검증한다. UI 변경은 실제 브라우저의 정상/빈 값/오류/진행 중 화면과 키보드 동작을 확인한다. 실환경 부재는 미검증으로 남긴다. 독립 검토 지적과 CI 실패는 같은 소유자가 수정하고 변경 HEAD를 다시 검토한다. 일반 구현 선택은 자율 결정하며 계정·중요 계약·실사용 승인만 구체적인 결정을 요청한다.",
+      "depends_on": [
+        "c-browser-e2e-stub"
+      ],
+      "audit_floor": "A2",
+      "astra_gate": "NONE",
+      "deliverable_mode": "PR",
+      "astra_auto_merge": true,
+      "user_merge": false
+    },
+    {
+      "id": "c-fault-injection-stub",
+      "title": "[stub] 장애·재시작 경계 주입 시험과 one-attempt 확인",
+      "spec": "[STUB SCOPE — plan revision 2026-10-16, 준태님 2026-10-15 14:44 KST 위임(비용·하드웨어·메인넷·시크릿키·프로덕션 배포·결제 변경 제외 나머지는 소유자 판단) 범위에서 KIX Commerce 결정] 원 pending 노드 c-integrated-chaos-qualification의 합성/stub 범위 축소판이다. 원 노드는 docs/aiops/PENDING_NODES.json에 pending으로 그대로 남고, 외부 선행(kix-protocol)이 완료된 뒤 실제 연결은 별도 후속 노드로 승격한다. 이 노드에서는 기본 stub·합성 fixture·NOT_BOUND/UNKNOWN 표시만 사용하고, 실제 producer/SDK/provider 연결·실결제·여신 지급·배포·runtime_enabled·시크릿 변경·commerce-bindings.ts 변경·OpenAPI pin/PINNED_ACTIONS/CI KIX_PROTOCOL_GATE_SHA 변경을 하지 않는다. kix-protocol 변경이 필요하면 DECISION_REQUIRED로 멈춘다. 화면이 있어도 실제 통합 완료로 주장하지 않는다. M2+H1 판정(accept_trade까지, capture/settle_capture 없음, placeHold=reserve_listing·not-bound)을 유지한다. 계약 변경 판정: contract_change=NO. 새 상태·journal·registry 형식은 이 앱 내부 전용이며 외부 공개 schema·operation·capability·ID 형식으로 노출하지 않는다. 구현 중 공개 계약 변경이 필요해지면 즉시 멈추고 contract_change=YES/A3/user_merge로 재분류한다.\n\n목표: 전송 전후 실패, 응답 유실, 중복 클릭, 늦은 callback, actor·mode 전환, 오래된 읽기, storage 장애·손상, 새로고침, 동시 선물·리셀·입장을 주입해 one-attempt와 UNKNOWN fence를 확인한다.\n\n작업 묶음: 제품 품질\n\n설계 근거: README.md; docs/aiops/COMMERCE_PRODUCT_EVOLUTION_KO.md; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md; COMMERCE_PRODUCT_EVOLUTION_KO.md §10; INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §4\n\n구현 범위:\n1. 합성 transport/source에 결정론적 fault 주입기를 두고 각 주입마다 command 전송 수가 1이고 UNKNOWN 이후 신규 write·보상이 0임을 확인한다\n2. 브라우저 시험과 Node 시험의 결과를 같은 분모로 섞지 않고 app head·mode·source 별로 기록한다\n3. 실제 장애·실서버·실제 PG 데이터를 쓰지 않는다. 시험 데이터는 작은 결정론적 fixture다\n\n필수 산출물:\n- fault 주입기와 시험 suite\n- docs/c-fault-injection-stub-apps-bind.md 와 결과 표\n\n완료 판정/실패 검증:\n1. fault 주입이 중복 write·조기 단계 활성화·거짓 완료 표시를 만들지 않는다\n2. stub 결과를 실서비스 qualification으로 표시하지 않는다\n\n공통 경계: 프로토콜 계산을 UI에 복제하지 않는다. 기본 stub, 명시적 loopback, 1회 요청, UNKNOWN/NOT_BOUND/STALE 분리를 유지한다. 미채택 retry·Idempotency-Key·공개 proxy·UI 직접 fetch를 추가하지 않는다. producer 변경을 소비할 때 두 OpenAPI pin·PINNED_ACTIONS·KIX_PROTOCOL_GATE_SHA·protocolMergeSha와 SDK/manifest/vector tuple을 함께 검증한다. 실결제·여신 지급·현장 검표·공개 서비스는 별도 권한이다.\n\n증거/인계: 실제 변경 파일·실행 명령·성공 및 실패 사례·정확한 소스 SHA를 PR에 남긴다. 기존 충분한 coverage는 재사용하고 새 gap만 검증한다. UI 변경은 실제 브라우저의 정상/빈 값/오류/진행 중 화면과 키보드 동작을 확인한다. 실환경 부재는 미검증으로 남긴다. 독립 검토 지적과 CI 실패는 같은 소유자가 수정하고 변경 HEAD를 다시 검토한다. 일반 구현 선택은 자율 결정하며 계정·중요 계약·실사용 승인만 구체적인 결정을 요청한다.",
+      "depends_on": [
+        "c-session-recovery-stub",
+        "c-cross-surface-journeys-stub",
+        "c-browser-e2e-stub"
+      ],
+      "audit_floor": "A3",
+      "astra_gate": "NONE",
+      "deliverable_mode": "PR",
+      "astra_auto_merge": true,
+      "user_merge": false
+    },
+    {
+      "id": "c-local-evidence-matrix-stub",
+      "title": "[stub] 로컬 제품 완료 측면 evidence matrix와 최종 분모",
+      "spec": "[STUB SCOPE — plan revision 2026-10-16, 준태님 2026-10-15 14:44 KST 위임(비용·하드웨어·메인넷·시크릿키·프로덕션 배포·결제 변경 제외 나머지는 소유자 판단) 범위에서 KIX Commerce 결정] 원 pending 노드 commerce-integration-closeout의 합성/stub 범위 축소판이다. 원 노드는 docs/aiops/PENDING_NODES.json에 pending으로 그대로 남고, 외부 선행(kix-protocol)이 완료된 뒤 실제 연결은 별도 후속 노드로 승격한다. 이 노드에서는 기본 stub·합성 fixture·NOT_BOUND/UNKNOWN 표시만 사용하고, 실제 producer/SDK/provider 연결·실결제·여신 지급·배포·runtime_enabled·시크릿 변경·commerce-bindings.ts 변경·OpenAPI pin/PINNED_ACTIONS/CI KIX_PROTOCOL_GATE_SHA 변경을 하지 않는다. kix-protocol 변경이 필요하면 DECISION_REQUIRED로 멈춘다. 화면이 있어도 실제 통합 완료로 주장하지 않는다. M2+H1 판정(accept_trade까지, capture/settle_capture 없음, placeHold=reserve_listing·not-bound)을 유지한다. 계약 변경 판정: contract_change=NO. 새 상태·journal·registry 형식은 이 앱 내부 전용이며 외부 공개 schema·operation·capability·ID 형식으로 노출하지 않는다. 구현 중 공개 계약 변경이 필요해지면 즉시 멈추고 contract_change=YES/A3/user_merge로 재분류한다.\n\n목표: 로컬·stub 범위의 모든 표면에 대해 node_state, qualification_state, acceptance_state, release_state를 분리한 evidence matrix와 최종 분모를 제공한다.\n\n작업 묶음: 출시와 운영\n\n설계 근거: README.md; docs/aiops/INTEGRATED_JOURNEY_COMPLETION_DESIGN_KO.md §6·§7\n\n구현 범위:\n1. 표면·여정별 row에 mode, 계약 tuple, 앱 head, 성공·거절·UNKNOWN 시험, 브라우저/Node 증거, skipped·미결합 사유를 적는다\n2. live-gate skipped, NOT_BOUND, stub-only, 사용자 수용 PENDING, release NOT_AUTHORIZED를 각각 별도 집계한다. pending 노드와 외부 선행은 분모에서 빼지 않는다\n3. 기존 /handoff와 /release 기록을 대체하지 않고 연결한다. 완료·수용·출시 상태를 새로 승인하지 않는다\n\n필수 산출물:\n- evidence matrix 화면 또는 문서와 최종 분모 표\n- docs/c-local-evidence-matrix-stub-apps-bind.md\n\n완료 판정/실패 검증:\n1. stub만으로 PASS, 수용, release를 표시하지 않는다\n2. pending 외부 선행 노드를 완료로 세지 않는다\n3. 개발 완료와 실서비스 출시를 한 상태로 합치지 않는다\n\n공통 경계: 프로토콜 계산을 UI에 복제하지 않는다. 기본 stub, 명시적 loopback, 1회 요청, UNKNOWN/NOT_BOUND/STALE 분리를 유지한다. 미채택 retry·Idempotency-Key·공개 proxy·UI 직접 fetch를 추가하지 않는다. producer 변경을 소비할 때 두 OpenAPI pin·PINNED_ACTIONS·KIX_PROTOCOL_GATE_SHA·protocolMergeSha와 SDK/manifest/vector tuple을 함께 검증한다. 실결제·여신 지급·현장 검표·공개 서비스는 별도 권한이다.\n\n증거/인계: 실제 변경 파일·실행 명령·성공 및 실패 사례·정확한 소스 SHA를 PR에 남긴다. 기존 충분한 coverage는 재사용하고 새 gap만 검증한다. UI 변경은 실제 브라우저의 정상/빈 값/오류/진행 중 화면과 키보드 동작을 확인한다. 실환경 부재는 미검증으로 남긴다. 독립 검토 지적과 CI 실패는 같은 소유자가 수정하고 변경 HEAD를 다시 검토한다. 일반 구현 선택은 자율 결정하며 계정·중요 계약·실사용 승인만 구체적인 결정을 요청한다.",
+      "depends_on": [
+        "c-a11y-acceptance-stub",
+        "c-fault-injection-stub",
+        "c-platform-release-stub",
+        "c-local-workspace-closeout"
+      ],
+      "audit_floor": "A2",
+      "astra_gate": "NONE",
+      "deliverable_mode": "PR",
+      "astra_auto_merge": true,
+      "user_merge": false
     }
   ]
 }
