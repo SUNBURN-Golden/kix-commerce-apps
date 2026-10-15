@@ -20,6 +20,7 @@ import { GiftPage } from "./pages/Gift";
 import { HandoffPage } from "./pages/Handoff";
 import { InventoryPage } from "./pages/Inventory";
 import { MarketingJourneyPage } from "./pages/MarketingJourney";
+import { MarketplacePerformancePage } from "./pages/MarketplacePerformance";
 import { MerchantPage } from "./pages/Merchant";
 import { NotificationsPage } from "./pages/Notifications";
 import { OrganizerPage } from "./pages/Organizer";
@@ -64,6 +65,7 @@ export function App() {
         <Route path="/permissions" element={<TenantPermissionsPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/provider" element={<ProviderJourneyPage />} />
+        <Route path="/marketplace-performance" element={<MarketplacePerformancePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>
