@@ -90,7 +90,7 @@ The real connection is `c-credit-servicing-journey`. This node consumes no SDK, 
 
 ## Browser run
 
-Observed in headless Google Chrome 154.0.8037.97 on 2026-10-15, driven by a Playwright script kept outside the repo. The stub desk was the production build (`apps/web/dist`) served from `http://127.0.0.1:4190`; the HTTP desk was a second build (`apps/web/dist-http`, `VITE_KIX_PROTOCOL_MODE=http`, `VITE_KIX_PROTOCOL_API_BASE=http://127.0.0.1:8765`) served from `http://127.0.0.1:4191`, and nothing was listening on port 8765. There was no page exception and no console error on either desk. On the stub desk every request was a page `GET` — no `POST` and no request to port 8765. The HTTP desk made no request outside the page assets beyond the shell's `GET /health` probe to port 8765.
+Observed in headless Google Chrome 154.0.8037.97 on 2026-10-15, driven by a Playwright script kept outside the repo. The stub desk was the production build (`apps/web/dist`) served from `http://127.0.0.1:4190`; the HTTP desk was a second build (`apps/web/dist-http`, `VITE_KIX_PROTOCOL_MODE=http`, `VITE_KIX_PROTOCOL_API_BASE=http://127.0.0.1:8765`) served from `http://127.0.0.1:4191`, and nothing was listening on port 8765. There was no page exception on either desk. The only console error on the stub desk was Chrome's automatic `/favicon.ico` probe, and the HTTP desk added only the shell's failed probe to port 8765. On the stub desk every request was a page `GET` — no `POST` and no request to port 8765. The HTTP desk made no request outside the page assets beyond the shell's `GET /health` probe to port 8765.
 
 | State | Observed |
 | --- | --- |
