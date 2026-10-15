@@ -636,6 +636,12 @@ export const ROLE_JOURNEYS = {
       ["marketing-hub", "marketing-m01", "marketing-m02", "marketing-m03", "marketing-m04", "marketing-m05", "marketing-journey"],
       "M01–M04 stay session stubs. M05 posts set_consent and authorize_marketing. The label stays 미착수. CRM send stays none. The benefit journey is synthetic: a notice or an application confirms no purchase and pays no reward, and it reads consent without posting it.",
     ),
+    stepFromSurfaces(
+      "delegated-assistant",
+      "buyer",
+      ["delegated-assistant"],
+      "Synthetic delegation assistant. Request text is untrusted intent and never authority, a proposal is not an approval, and only the approve control on a recorded open proposal sends one synthetic command once. An unadopted execution delegation stays in query/propose mode, and nothing here moves funds, transfers a right, or signs.",
+    ),
   ],
   organizer: [
     stepFromSurfaces(
