@@ -55,14 +55,14 @@
 | `c-accessibility-acceptance` | NO | 정책 C 위임 | A2 | 기존 승인 계약의 시험·측정·증거/수용 인계; 새 계약 정의 없음 |
 | `c-integrated-chaos-qualification` | NO | 정책 C 위임 | A3 | 선행에서 채택한 계약의 구현·소비; 새로운 공개 의미/형식 변경은 제외 |
 | `commerce-integration-closeout` | NO | 정책 C 위임 | A2 | 기존 승인 계약의 시험·측정·증거/수용 인계; 새 계약 정의 없음 |
-| `c-workspace-design` | NO | 대표님 (user_merge) | A2 | 로컬 워크스페이스 설계; 잠긴 바인딩만 사용, 새 공개 계약 없음 (사후 확인, 대표님이 PR #35 병합) |
+| `c-workspace-design` | NO | 대표님 (user_merge) | A3 | 로컬 워크스페이스 설계; 잠긴 바인딩만 사용, 새 공개 계약 없음 (사후 확인, 대표님이 PR #35 병합) |
 | `c-buyer-workspace` | NO | 정책 C 위임 | A2 | 선행에서 채택한 계약의 구현·소비; 새로운 공개 의미/형식 변경은 제외 (사후 확인) |
 | `c-organizer-workspace` | NO | 정책 C 위임 | A2 | 선행에서 채택한 계약의 구현·소비; 새로운 공개 의미/형식 변경은 제외 (사후 확인) |
 | `c-discovery-prototype` | NO | 정책 C 위임 | A2 | 선행에서 채택한 계약의 구현·소비; 새로운 공개 의미/형식 변경은 제외 (사후 확인) |
 | `c-receipt-explorer` | NO | 정책 C 위임 | A2 | 선행에서 채택한 계약의 구현·소비; 새로운 공개 의미/형식 변경은 제외 (사후 확인) |
-| `c-accessibility-baseline` | NO | 정책 C 위임 | A1 | 기존 승인 계약의 시험·접근성 기준; 새 계약 정의 없음 (사후 확인) |
+| `c-accessibility-baseline` | NO | 정책 C 위임 | A2 | 기존 승인 계약의 시험·접근성 기준; 새 계약 정의 없음 (사후 확인) |
 | `c-contract-fixture-library` | NO | 정책 C 위임 | A2 | 기존 승인 계약의 fixture 정리; 계약 형식 변경 없음 (사후 확인) |
-| `c-local-workspace-closeout` | NO | 정책 C 위임 | A1 | 로컬 워크스페이스 마감·증거 인계; 새 계약 정의 없음 (사후 확인) |
+| `c-local-workspace-closeout` | NO | 정책 C 위임 | A2 | 로컬 워크스페이스 마감·증거 인계; 새 계약 정의 없음 (사후 확인) |
 | `c-discovery-live-stub` | NO | 정책 C 위임 | A2 | stub 범위의 선행 계약 구현·소비; 새로운 공개 의미/형식 변경은 제외 (사후 확인) |
 | `c-inventory-venue-stub` | NO | 정책 C 위임 | A2 | stub 범위의 선행 계약 구현·소비; 새로운 공개 의미/형식 변경은 제외 (사후 확인) |
 | `c-platform-journey-stub` | NO | 정책 C 위임 | A2 | stub 범위의 선행 계약 구현·소비; 새로운 공개 의미/형식 변경은 제외 (사후 확인) |
@@ -85,3 +85,5 @@
 채택 검토 source는 [중앙 #47](https://github.com/BeautifulMind-JT/ai-ops-control-plane/pull/47) `09e161caa652d75e9617caf632b3b9899be35740` 하나다. source 후보로 구현됐으며 설치·독립 A3·User 채택·실제 host qualification·activation은 PENDING이다. runtime/client pin이나 host record는 이 변경으로 바꾸지 않는다. 과거 checkpoint 목록과 별도 시작 PR 절차는 [REGISTRATION_SCOPE_APPROVAL_KO.md](REGISTRATION_SCOPE_APPROVAL_KO.md)를 따른다.
 
 외부 선행은 pending catalogue에 둔다. 실제 저장소/program/node·plan/definition·delivery HEAD·merge SHA·필요한 post-merge 검증의 보호된 완료를 확인한 뒤, 별도 대표님 병합 plan revision에서 변환 전/후 digest와 근거를 기록해 승격한다. 현 schema v1은 빈 `depends_on_external`도 거부한다. 미완료·UNKNOWN·wrong-revision을 삭제해서 실행하지 않는다. bootstrap/범위/시작 PR은 자동 병합할 program delivery가 아니다.
+
+대표님 위임 결정 2026-10-15 (감리 3, 소유자 판단 위임 "알아서 결정"): audit_floor 불일치 3건은 program.json 값에 맞춰 위임표를 정렬한다(옵션 a). c-workspace-design A3, c-accessibility-baseline A2, c-local-workspace-closeout A2. program.json은 바꾸지 않는다.
