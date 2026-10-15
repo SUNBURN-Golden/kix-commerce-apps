@@ -279,7 +279,8 @@ describe("local handoff packet", () => {
     expect(buildHandoffView({ phase: "settled", query: "", code: "NOT_BOUND", role: "organizer" }).diagnosis?.confirmsSuccess).toBe(
       false,
     );
-    expect(ROLE_JOURNEYS.buyer.map((step) => step.id)).toEqual([...BUYER_FLOW_STAGE_IDS, "marketing"]);
+    expect(ROLE_JOURNEYS.buyer.map((step) => step.id)).toEqual([...BUYER_FLOW_STAGE_IDS, "marketing", "delegated-assistant"]);
+    expect(ROLE_JOURNEYS.buyer.find((step) => step.id === "delegated-assistant")?.surfaces).toContain("delegated-assistant");
     expect(ROLE_JOURNEYS.buyer.every((step) => step.protocolIntegrationComplete === false)).toBe(true);
     expect(ROLE_JOURNEYS.organizer.map((step) => step.id)).toEqual([
       "organizer-console",
