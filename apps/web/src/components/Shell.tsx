@@ -37,6 +37,7 @@ const links = [
   { to: "/mobile", label: "Mobile shell", end: true },
   { to: "/qualification", label: "Qualification", end: true },
   { to: "/release", label: "Release", end: true },
+  { to: "/identity", label: "Journey context", end: true },
 ];
 
 export function Shell({ children }: { children: ReactNode }) {

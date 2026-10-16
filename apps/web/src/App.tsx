@@ -20,6 +20,7 @@ import { GiftPage } from "./pages/Gift";
 import { HandoffPage } from "./pages/Handoff";
 import { InstallableMobilePage } from "./pages/InstallableMobile";
 import { InventoryPage } from "./pages/Inventory";
+import { JourneyIdentityPage } from "./pages/JourneyIdentity";
 import { MarketingJourneyPage } from "./pages/MarketingJourney";
 import { MarketplacePerformancePage } from "./pages/MarketplacePerformance";
 import { MerchantPage } from "./pages/Merchant";
@@ -72,6 +73,7 @@ export function App() {
         <Route path="/mobile" element={<InstallableMobilePage />} />
         <Route path="/qualification" element={<OperationalQualificationPage />} />
         <Route path="/release" element={<PlatformReleasePage />} />
+        <Route path="/identity" element={<JourneyIdentityPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>
