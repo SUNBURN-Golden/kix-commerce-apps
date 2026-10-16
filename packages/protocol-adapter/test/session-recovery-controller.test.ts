@@ -186,6 +186,22 @@ describe("session recovery controller", () => {
     expect(spy.submits).toBe(0);
   });
 
+  it("keeps the hold after a reload when the store was cleared and then checked mid-session", async () => {
+    const store = new FakeSessionStore();
+    const spy: Spy = { submits: 0 };
+    const first = await load(store, spy);
+    expect(await first.controller.run(FIRST)).toMatchObject({ kind: "UNKNOWN" });
+    store.data.clear();
+    first.controller.verify();
+    const second = await load(store, spy);
+    expect(second.controller.gateFor(FIRST)).toMatchObject({ reason: "evidence-lost", cause: "LOST_DURING_SESSION" });
+    expect(await second.controller.run(FIRST)).toMatchObject({ kind: "FENCED", fence: { reason: "evidence-lost", cause: "LOST_DURING_SESSION" } });
+    expect(await second.controller.run(SECOND)).toMatchObject({ kind: "FENCED", fence: { reason: "evidence-lost", cause: "LOST_DURING_SESSION" } });
+    expect(spy.submits).toBe(1);
+    expect(second.stub.effects().attaches).toBe(0);
+    expect(second.journal.nextSeq()).toBe(0);
+  });
+
   it("records a store cleared while a send was in flight as an UNKNOWN the page cannot persist", async () => {
     const store = new FakeSessionStore();
     const spy: Spy = { submits: 0 };
@@ -198,6 +214,10 @@ describe("session recovery controller", () => {
     expect(result).toMatchObject({ kind: "UNKNOWN", record: { code: "JOURNAL_SETTLE_FAILED" } });
     expect(await controller.run(FIRST)).toMatchObject({ kind: "FENCED" });
     expect(spy.submits).toBe(1);
+    const reopened = await load(store, spy);
+    expect(await reopened.controller.run(FIRST)).toMatchObject({ kind: "FENCED", fence: { reason: "evidence-lost", cause: "LOST_DURING_SESSION" } });
+    expect(spy.submits).toBe(1);
+    expect(reopened.controller.state().records).toEqual([]);
   });
 
   it("turns an in-flight intent UNKNOWN on a tab resume, and a later answer is evidence only", async () => {

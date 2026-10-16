@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
@@ -10,7 +11,7 @@ import {
   createStubJourneyIdentity,
   type JourneyIdentityScenario,
 } from "@kix/protocol-adapter";
-import { buildIdentityModel, identityFenceLine, resetIdentitySession, type IdentityLastAction } from "../src/journey-identity";
+import { applyIdentityScenario, buildIdentityModel, identityFenceLine, resetIdentitySession, type IdentityLastAction } from "../src/journey-identity";
 import { JourneyIdentityPanel } from "../src/pages/JourneyIdentityPanels";
 import { WORKSPACE_SURFACES } from "../src/workspace/registry";
 
@@ -161,5 +162,36 @@ describe("source reset keeps the page and controller on one source", () => {
     const result = await session.controller.refresh();
     expect(result.kind).not.toBe("CURRENT");
     expect(first.port.effects().submits).toBe(0);
+  });
+});
+
+describe("a scenario change keeps earlier unknowns", () => {
+  it("still fences the unknown subject, never reissues intent-1, and sends nothing to the new source", async () => {
+    const first = rig("attach-lost");
+    const session = { port: first.port, controller: first.controller };
+    await session.controller.refresh();
+    const result = await session.controller.run({ observationId: "obs-0001", intentRef: "intent-1" });
+    expect(result.kind).toBe("UNKNOWN");
+    applyIdentityScenario(session, "stub", "clean");
+    expect(session.port).not.toBe(first.port);
+    expect(session.port.scenario).toBe("clean");
+    await session.controller.refresh();
+    expect(session.controller.gateFor({ observationId: "obs-0001", intentRef: "intent-2" })).toMatchObject({ reason: "unknown-outcome", earlierContext: true });
+    expect(session.controller.gateFor({ observationId: "obs-0001", intentRef: "intent-1" })).toMatchObject({ reason: "duplicate-intent" });
+    expect((await session.controller.run({ observationId: "obs-0001", intentRef: "intent-2" })).kind).toBe("FENCED");
+    expect(session.port.effects().attaches).toBe(0);
+    expect((await session.controller.run({ observationId: "obs-0002", intentRef: "intent-2" })).kind).toBe("CONFIRMED");
+    const html = markup(live(session.controller, "clean"));
+    expect(html).toContain("UNKNOWN");
+    expect(html).toContain("isolated");
+  });
+
+  it("says so on the page and builds one controller per environment", () => {
+    const html = markup(live(null));
+    expect(html).toContain("keep fencing");
+    expect(html).not.toContain("as a reload would");
+    const source = readFileSync(new URL("../src/journey-identity.ts", import.meta.url), "utf8");
+    expect(source.match(/new JourneyIdentityController\(/g)).toHaveLength(1);
+    expect(source).not.toContain("intentCounter.current = 0");
   });
 });
