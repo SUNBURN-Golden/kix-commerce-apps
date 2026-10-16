@@ -33,6 +33,7 @@ import { PlatformPage } from "./pages/Platform";
 import { ProviderJourneyPage } from "./pages/ProviderJourney";
 import { ReceiptsPage } from "./pages/Receipts";
 import { ResalePage } from "./pages/Resale";
+import { SessionRecoveryPage } from "./pages/SessionRecovery";
 import { TenantPermissionsPage } from "./pages/TenantPermissions";
 
 export function App() {
@@ -74,6 +75,7 @@ export function App() {
         <Route path="/qualification" element={<OperationalQualificationPage />} />
         <Route path="/release" element={<PlatformReleasePage />} />
         <Route path="/identity" element={<JourneyIdentityPage />} />
+        <Route path="/session" element={<SessionRecoveryPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>

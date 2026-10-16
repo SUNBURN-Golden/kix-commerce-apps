@@ -963,6 +963,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     doc: "docs/c-journey-identity-stub-apps-bind.md",
     anchor: "receipt minted under another context is never this journey's evidence",
   },
+  {
+    id: "c-session-recovery-stub",
+    doc: "docs/c-session-recovery-stub-apps-bind.md",
+    anchor: "an unresolved intent comes back as UNKNOWN and is never sent again",
+  },
 ] as const satisfies readonly PreservedEvidence[];
 
 export function filterFeatures(query: string): readonly FeatureRow[] {
