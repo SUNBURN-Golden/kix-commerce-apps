@@ -318,7 +318,12 @@ export function adjudicateObservation(
       detail: `Item ${item.itemId} was minted under cut ${stamp.cutGeneration}; this session is bound to cut ${context.cutGeneration}. It stays stale and is not evidence.`,
     };
   }
-  if (watermarkFloor !== null && Date.parse(item.watermark) < Date.parse(watermarkFloor)) {
+  if (
+    watermarkFloor !== null &&
+    (Number.isNaN(Date.parse(item.watermark)) ||
+      Number.isNaN(Date.parse(watermarkFloor)) ||
+      Date.parse(item.watermark) < Date.parse(watermarkFloor))
+  ) {
     return {
       item,
       verdict: "stale",

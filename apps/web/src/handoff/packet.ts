@@ -961,7 +961,7 @@ export const LOCAL_SURFACE_EVIDENCE = [
   {
     id: "c-journey-identity-stub",
     doc: "docs/c-journey-identity-stub-apps-bind.md",
-    anchor: "a receipt minted under another context is never this journey's evidence",
+    anchor: "receipt minted under another context is never this journey's evidence",
   },
 ] as const satisfies readonly PreservedEvidence[];
 

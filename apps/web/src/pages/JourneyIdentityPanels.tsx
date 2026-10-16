@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useRestoreFocus } from "../a11y/focus";
 import {
   IDENTITY_BOUNDARY,
@@ -59,6 +60,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
  */
 export function JourneyIdentityPanel({ live }: { live: IdentityDeskLive }) {
   const { model, actions } = live;
+  const [pendingScenario, setPendingScenario] = useState<JourneyIdentityScenario>(live.scenario);
   useRestoreFocus(model.lastNeedsFocus && model.lastSeq !== null ? `identity:${model.lastSeq}` : null, "identity-status");
   return (
     <section aria-label={IDENTITY_TITLE} data-identity-state={model.state} data-adapter-environment={live.environment} data-source={live.environment === "stub" ? "synthetic-identity" : "none"}>
@@ -106,6 +108,7 @@ export function JourneyIdentityPanel({ live }: { live: IdentityDeskLive }) {
       {model.items.length === 0 ? (
         <p className="muted">No adjudicated rows in this read.</p>
       ) : (
+        <div className="identity-scroll" role="region" aria-label="Adjudicated observations, scrollable" tabIndex={0}>
         <table aria-label="Adjudicated observations">
           <thead>
             <tr>
@@ -135,6 +138,7 @@ export function JourneyIdentityPanel({ live }: { live: IdentityDeskLive }) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
 
       <h3>Session journal</h3>
@@ -169,8 +173,8 @@ export function JourneyIdentityPanel({ live }: { live: IdentityDeskLive }) {
           Scenario{" "}
           <select
             aria-label="Scenario"
-            value={live.scenario}
-            onChange={(event) => actions.setScenario(event.target.value as JourneyIdentityScenario)}
+            value={pendingScenario}
+            onChange={(event) => setPendingScenario(event.target.value as JourneyIdentityScenario)}
           >
             {IDENTITY_SCENARIOS.map((scenario) => (
               <option key={scenario} value={scenario}>
@@ -179,7 +183,11 @@ export function JourneyIdentityPanel({ live }: { live: IdentityDeskLive }) {
             ))}
           </select>
         </label>
-        <p className="muted">{IDENTITY_SCENARIO_NOTES[live.scenario]}</p>
+        <button type="button" disabled={pendingScenario === live.scenario} onClick={() => actions.setScenario(pendingScenario)}>
+          Start new session with this scenario
+        </button>
+        <p className="muted">{IDENTITY_SCENARIO_NOTES[pendingScenario]}</p>
+        <p className="muted">Starting a new session drops this page's journal, including earlier unknown writes, as a reload would.</p>
         <button type="button" onClick={() => actions.refresh()}>
           Read again
         </button>

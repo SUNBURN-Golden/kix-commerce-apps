@@ -1236,3 +1236,8 @@ main:focus-visible {
 .refund-lines li, .refund-session li, .refund-not-sent li { margin-block: 0.4rem; }
 .refund-guard { display: inline-flex; flex-direction: column; gap: 0.2rem; }
 .refund-guard button[aria-disabled="true"] { opacity: 0.55; }
+
+.identity-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}

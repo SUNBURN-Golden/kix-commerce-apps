@@ -47,7 +47,11 @@ On `integration-http` the read and the attach are `not-bound`: the contract-only
 
 ## Hold
 
-The real node is `c-journey-identity` (contract_change=YES, user merge). This node consumes no SDK, manifest, or vector and serves no producer. No production deploy, no public host, no real payment, no KYC, no credit disbursement, no venue scan, no bank rail, and no live marketplace. No SLO. No Move, kernel, or settlement math is copied. A real browser pass against a producer stays unverified by design, since no live environment exists for this stub scope.
+The real node is `c-journey-identity` (contract_change=YES, user merge). This node consumes no SDK, manifest, or vector and serves no producer. No production deploy, no public host, no real payment, no KYC, no credit disbursement, no venue scan, no bank rail, and no live marketplace. No SLO. No Move, kernel, or settlement math is copied. Against a producer nothing is verified, since no live environment exists for this stub scope. The synthetic `/identity` desk itself was driven in headless Chrome at 360px (see Browser pass).
+
+## Browser pass
+
+Built from the worktree and served by a static server with SPA fallback; headless Chrome via playwright-core. Observed: initial and `clean` read (current); `empty`, `stale`, `claims-proof` (whole read refused), `foreign-mix`, `older-cut`, `attach-lost`, `held-response` each render their own status; keyboard Enter on an attach button records a synthetic attach (`Sent 1`); actor switch, cut rotation (`generation-moved`, nothing applied) and source reset each show their notice; arrowing through the scenario select changes nothing until the apply button is pressed; no request left the page and no page error was raised. The adjudicated table sits in a focusable scroll region, so there is no horizontal overflow at 360px. The in-progress state (a read or write awaiting its answer) is covered by the controller tests (`held-response`, `attach-lost`), not by a browser screenshot. Applying a scenario starts a new session and drops the page journal, including earlier unknown writes, as a reload would.
 
 ## Tests
 

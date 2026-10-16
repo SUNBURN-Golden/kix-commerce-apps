@@ -182,6 +182,8 @@ export class JourneyIdentityController {
   private floor: string | null = null;
   private readSeq = 0;
   private appliedReadSeq = 0;
+  /** Reads started at or before this seq began before the view went behind; they cannot clear the flag. */
+  private behindAfterSeq = 0;
   private intentSeq = 0;
   private readonly intents: IdentityIntent[] = [];
   private readonly used = new Set<string>();
@@ -276,6 +278,7 @@ export class JourneyIdentityController {
     this.readState = "none";
     this.readDetail = null;
     this.refreshRequired = cause;
+    this.behindAfterSeq = this.readSeq;
     this.floor = null;
   }
 
@@ -346,7 +349,9 @@ export class JourneyIdentityController {
         );
         this.readState = "ready";
         this.readDetail = null;
-        this.refreshRequired = null;
+        if (seq > this.behindAfterSeq) {
+          this.refreshRequired = null;
+        }
         this.floor = outcome.snapshot.watermark;
         break;
       case "empty":
@@ -354,7 +359,9 @@ export class JourneyIdentityController {
         this.adjudications = [];
         this.readState = "empty";
         this.readDetail = null;
-        this.refreshRequired = null;
+        if (seq > this.behindAfterSeq) {
+          this.refreshRequired = null;
+        }
         break;
       case "stale":
         this.snapshot = null;
@@ -562,6 +569,7 @@ export class JourneyIdentityController {
         intent.outcome = "CONFIRMED";
         intent.refs = { ...outcome.refs };
         this.refreshRequired = this.refreshRequired ?? "own-write";
+        this.behindAfterSeq = this.readSeq;
         this.notify();
         return { kind: "CONFIRMED", intent: copyIntent(intent) };
       }
@@ -571,6 +579,7 @@ export class JourneyIdentityController {
         intent.message = outcome.detail;
         if (IDENTITY_STALE_CLASS_CODES.includes(outcome.code)) {
           this.refreshRequired = this.refreshRequired ?? "stale-rejection";
+          this.behindAfterSeq = this.readSeq;
         }
         this.notify();
         return { kind: "REJECTED", intent: copyIntent(intent) };

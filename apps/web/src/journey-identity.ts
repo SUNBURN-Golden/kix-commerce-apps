@@ -526,7 +526,7 @@ export function useJourneyIdentityDesk(): {
       intentCounter.current = 0;
       actorRef.current = JOURNEY_IDENTITY_DESK_ACTOR;
       roleRef.current = "operator";
-      note(`Started a new synthetic session with scenario ${next}. Earlier intents are gone, as after a reload.`);
+      note(`Started a new synthetic session with scenario ${next}. The page's journal, including earlier unknown writes, is dropped, as after a reload.`);
     },
   };
 

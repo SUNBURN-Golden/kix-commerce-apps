@@ -117,8 +117,44 @@ describe("journey identity controller", () => {
   });
 
   it("marks an untrusted confirmed answer unknown", async () => {
+    const base = createStubJourneyIdentity({ scenario: "clean" });
+    const port: JourneyIdentityPort = {
+      environment: base.environment,
+      source: base.source,
+      scenario: base.scenario,
+      currentGeneration: () => base.currentGeneration(),
+      read: (request) => base.read(request),
+      submit: async (request) => {
+        const outcome = await base.submit(request);
+        if (outcome.kind !== "confirmed") {
+          return outcome;
+        }
+        return { ...outcome, nonClaims: { ...outcome.nonClaims, confirmsPayment: true } as unknown as typeof outcome.nonClaims };
+      },
+      rotateCut: () => base.rotateCut(),
+      deliverHeld: () => base.deliverHeld(),
+      deliverLate: () => base.deliverLate(),
+    };
+    const controller = new JourneyIdentityController(port, { actorRef: JOURNEY_IDENTITY_DESK_ACTOR, role: "operator" });
+    await controller.refresh();
+    const result = await controller.run({ observationId: "obs-0001", intentRef: "i1" });
+    expect(result).toMatchObject({ kind: "UNKNOWN", intent: { outcome: "UNKNOWN", code: "UNTRUSTED_RECEIPT" } });
+  });
+
+  it("refuses a claims-proof read", async () => {
     const { controller } = rig("claims-proof");
     await controller.refresh();
     expect(controller.state().readState).toBe("refused");
+  });
+
+  it("does not let a read that started before a write settled clear the refresh flag", async () => {
+    const { controller } = rig("clean");
+    await controller.refresh();
+    const early = controller.refresh();
+    expect(await controller.run({ observationId: "obs-0001", intentRef: "i1" })).toMatchObject({ kind: "CONFIRMED" });
+    await early;
+    expect(controller.gateFor({ observationId: "obs-0002", intentRef: "i2" })).toEqual({ reason: "snapshot-stale", cause: "own-write" });
+    await controller.refresh();
+    expect(controller.gateFor({ observationId: "obs-0002", intentRef: "i2" })).toBeNull();
   });
 });
