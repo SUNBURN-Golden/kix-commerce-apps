@@ -1241,3 +1241,32 @@ main:focus-visible {
   max-width: 100%;
   overflow-x: auto;
 }
+
+.cross-surface .xs-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.cross-surface .xs-scroll:focus-visible {
+  outline: 2px solid var(--line);
+  outline-offset: 3px;
+}
+
+.cross-surface table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cross-surface th,
+.cross-surface td {
+  border: 1px solid var(--line);
+  padding: 0.4rem;
+  text-align: left;
+  vertical-align: top;
+  min-width: 9rem;
+}
+
+.cross-surface [data-status="unknown"],
+.cross-surface [data-compensation="COMPENSATION_UNDEFINED"] {
+  border-left: 4px solid var(--stamp);
+}

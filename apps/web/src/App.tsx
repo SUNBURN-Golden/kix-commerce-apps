@@ -15,6 +15,7 @@ import { MarketingHubPage } from "./pages/marketing/Hub";
 import { CreditPage } from "./pages/Credit";
 import { CreditOriginationPage } from "./pages/CreditOrigination";
 import { CreditServicingPage } from "./pages/CreditServicing";
+import { CrossSurfaceJourneysPage } from "./pages/CrossSurfaceJourneys";
 import { FinancePage } from "./pages/Finance";
 import { GiftPage } from "./pages/Gift";
 import { HandoffPage } from "./pages/Handoff";
@@ -76,6 +77,7 @@ export function App() {
         <Route path="/release" element={<PlatformReleasePage />} />
         <Route path="/identity" element={<JourneyIdentityPage />} />
         <Route path="/session" element={<SessionRecoveryPage />} />
+        <Route path="/journeys" element={<CrossSurfaceJourneysPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Shell>

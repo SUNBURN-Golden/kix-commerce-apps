@@ -75,6 +75,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `provider-connected-journey` | `/provider` | the ten synthetic provider checkout rows below. No fixture pass |
 | `journey-identity` | `/identity` | the six synthetic journey context rows below. No fixture pass |
 | `session-recovery` | `/session` | the six synthetic session recovery rows below. No fixture pass |
+| `cross-surface-journeys` | `/journeys` | the five synthetic cross-surface journey rows below. No fixture pass |
 | `refund-return-desk` | `/booking/:eventId` | the six synthetic refund-and-return rows below. No fixture pass |
 | `marketplace-performance-bench` | `/marketplace-performance` | the eleven synthetic marketplace scale bench rows below. No fixture pass |
 | `installable-mobile-shell` | `/mobile` | the sixteen synthetic installable mobile shell rows below. No fixture pass |
@@ -311,3 +312,8 @@ No product screen changed, so this bind has no new browser run. The live-gate jo
 | `session-recovery.journal-full` | `REJECT` | none. The record or byte budget is reached; refused before send, nothing evicted | `JOURNAL_FULL` |
 | `session-recovery.write-refused` | `REJECT` | none. The write-ahead record was refused or cut short; refused before send | `WRITE_REFUSED` |
 | `session-recovery.history-not-current` | `STALE` | none. A confirmed record from an earlier page load is history and lifts no fence | none |
+| `cross-surface-journeys.explicit-reject` | `REJECT` | none. A source answered a write with an explicit rejection; no opposite command is sent | `SOURCE_REJECTED` |
+| `cross-surface-journeys.response-lost` | `UNKNOWN` | none. A write whose answer never arrived; shown as unconfirmed, later writes stay fenced | none |
+| `cross-surface-journeys.partial-landed` | `UNKNOWN` | none. A leg landed and a later one did not; COMPENSATION_UNDEFINED stays visible | none |
+| `cross-surface-journeys.claim-refused` | `REJECT` | none. A table that claims a completed journey, an executed compensation, or a resolved UNKNOWN; refused whole | `CLAIM` |
+| `cross-surface-journeys.table-unavailable` | `UNKNOWN` | none. A table read whose answer never arrived; unavailable, never an empty table | none |
