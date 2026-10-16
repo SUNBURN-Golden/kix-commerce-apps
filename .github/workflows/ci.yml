@@ -85,3 +85,31 @@ jobs:
         env:
           KIX_PROTOCOL_ROOT: ${{ github.workspace }}/.kix-protocol-gate
           KIX_REQUIRE_GATE: '1'
+
+  browser-e2e:
+    name: Browser journeys (stub, headless Chrome)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck:e2e
+      # Builds a clean stub-mode bundle, serves it on 127.0.0.1 only, and drives the runner's Chrome.
+      # The browser loads its own loopback origin and nothing else. No secrets and no network beyond npm ci.
+      - run: npm run test:e2e
+        env:
+          KIX_E2E_CHROME: /usr/bin/google-chrome
+          KIX_E2E_NO_SANDBOX: '1'
+          KIX_E2E_RECORD_OUT: ${{ runner.temp }}/browser-e2e-record.json
+      - name: Run record
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/browser-e2e-record.json" ]; then
+            { echo '### Browser journeys (stub). Not HTTP mode, not production qualification.'; echo '```json'; cat "$RUNNER_TEMP/browser-e2e-record.json"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          fi
