@@ -29,7 +29,7 @@ On `integration-http` the read and the attach are `not-bound`: the contract-only
 
 ## Session isolation
 
-`switchContext` (actor or role) and `resetSource` (a stub re-initialisation or a mode change) isolate the earlier session: its key, fields, and unknown count go to the isolated-sessions journal, in-flight writes become `UNKNOWN` (`CONTEXT_SWITCHED`/`SOURCE_RESET`), and their results are quarantined. A stub reset keeps every earlier UNKNOWN on record and still fencing its subject. A read reporting a different cut generation is `generation-moved` and applies nothing.
+`switchContext` (actor or role) and `resetSource` (a stub re-initialisation, a scenario change or a mode change) isolate the earlier session: its key, fields, and unknown count go to the isolated-sessions journal, in-flight writes become `UNKNOWN` (`CONTEXT_SWITCHED`/`SOURCE_RESET`), and their results are quarantined. A stub reset or a scenario change keeps every earlier UNKNOWN on record and still fencing its subject. A read reporting a different cut generation is `generation-moved` and applies nothing.
 
 ## Acceptance mapping
 
@@ -51,7 +51,7 @@ The real node is `c-journey-identity` (contract_change=YES, user merge). This no
 
 ## Browser pass
 
-Built from the worktree and served by a static server with SPA fallback; headless Chrome via playwright-core. Observed: initial and `clean` read (current); `empty`, `stale`, `claims-proof` (whole read refused), `foreign-mix`, `older-cut`, `attach-lost`, `held-response` each render their own status; keyboard Enter on an attach button records a synthetic attach (`Sent 1`); actor switch, cut rotation (`generation-moved`, nothing applied) and source reset each show their notice; arrowing through the scenario select changes nothing until the apply button is pressed; no request left the page and no page error was raised. The adjudicated table sits in a focusable scroll region, so there is no horizontal overflow at 360px. The in-progress state (a read or write awaiting its answer) is covered by the controller tests (`held-response`, `attach-lost`), not by a browser screenshot. Applying a scenario starts a new session and drops the page journal, including earlier unknown writes, as a reload would.
+Built from the worktree and served by a static server with SPA fallback; headless Chrome via playwright-core. Observed: initial and `clean` read (current); `empty`, `stale`, `claims-proof` (whole read refused), `foreign-mix`, `older-cut`, `attach-lost`, `held-response` each render their own status; keyboard Enter on an attach button records a synthetic attach (`Sent 1`); actor switch, cut rotation (`generation-moved`, nothing applied) and source reset each show their notice; arrowing through the scenario select changes nothing until the apply button is pressed; no request left the page and no page error was raised. The adjudicated table sits in a focusable scroll region, so there is no horizontal overflow at 360px. The in-progress state (a read or write awaiting its answer) is covered by the controller tests (`held-response`, `attach-lost`), not by a browser screenshot. Applying a scenario rebinds the same session to a fresh synthetic source through `resetIdentitySession`, the same path as the reset control. Earlier unknown writes keep fencing their subject, the intent counter keeps running, and only a reload clears the page journal. This scenario-apply behaviour is covered by the web test, not yet re-observed in a browser.
 
 ## Tests
 

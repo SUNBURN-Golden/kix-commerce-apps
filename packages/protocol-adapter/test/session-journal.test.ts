@@ -161,6 +161,33 @@ describe("session journal damage", () => {
     expect(journal.settle("intent-1", "CONFIRMED", null)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
   });
 
+  it("keeps a mid-session loss across reloads by recording it in the quarantine entry", () => {
+    const store = new FakeSessionStore();
+    const journal = openSessionJournal(store);
+    begin(journal, 1);
+    store.data.delete(SESSION_JOURNAL_KEY);
+    expect(journal.verify()).toEqual({ kind: "evidence-lost", cause: "LOST_DURING_SESSION" });
+    expect(JSON.parse(store.data.get(SESSION_JOURNAL_QUARANTINE_KEY) ?? "null")).toMatchObject({ cause: "LOST_DURING_SESSION", raw: "" });
+    expect(store.data.has(SESSION_JOURNAL_KEY)).toBe(false);
+    for (let load = 0; load < 5; load += 1) {
+      const reopened = openSessionJournal(store);
+      expect(reopened.status()).toEqual({ kind: "evidence-lost", cause: "LOST_DURING_SESSION" });
+      expect(begin(reopened, 1)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+      expect(reopened.nextSeq()).toBe(0);
+      expect(store.data.has(SESSION_JOURNAL_KEY)).toBe(false);
+    }
+  });
+
+  it("still holds a mid-session loss in memory when the quarantine write is refused", () => {
+    const store = new FakeSessionStore();
+    const journal = openSessionJournal(store);
+    begin(journal, 1);
+    store.data.delete(SESSION_JOURNAL_KEY);
+    store.throwOnSet = true;
+    expect(journal.verify()).toEqual({ kind: "evidence-lost", cause: "LOST_DURING_SESSION" });
+    expect(begin(journal, 2)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+  });
+
   it("quarantines a blob damaged in the middle of the session", () => {
     const store = new FakeSessionStore();
     const journal = openSessionJournal(store);

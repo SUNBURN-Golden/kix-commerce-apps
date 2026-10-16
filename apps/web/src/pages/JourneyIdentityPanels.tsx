@@ -184,10 +184,10 @@ export function JourneyIdentityPanel({ live }: { live: IdentityDeskLive }) {
           </select>
         </label>
         <button type="button" disabled={pendingScenario === live.scenario} onClick={() => actions.setScenario(pendingScenario)}>
-          Start new session with this scenario
+          Apply this scenario
         </button>
         <p className="muted">{IDENTITY_SCENARIO_NOTES[pendingScenario]}</p>
-        <p className="muted">Starting a new session drops this page's journal, including earlier unknown writes, as a reload would.</p>
+        <p className="muted">Applying a scenario binds this page to a new synthetic source. Earlier unknown writes stay on record and keep fencing their subject, and intent numbers keep counting. Only a reload clears them.</p>
         <button type="button" onClick={() => actions.refresh()}>
           Read again
         </button>
