@@ -757,6 +757,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "journey-identity",
+    role: "operator",
+    route: "/identity",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic journey context desk on one page: a session binds an app-internal context key of mode, actor, role, domain, source cut generation, pin tuple, and incarnation — never a public identifier and never an authentication result. Every read row is adjudicated before it is used: a row minted under another mode, domain, tuple, actor, role, or session is foreign and is never this journey's evidence, a row on an older cut or behind the watermark floor is stale, and an observation is never a proof of payment, issuance, or admission. An attach is sent once per subject, a lost or late answer keeps that subject blocked, a context or cut change isolates the earlier session, and a stub reset keeps earlier unknowns on record. On integration-http the read and the attach stay not-bound because pending node c-journey-identity is not promoted and the contract-only catalogue has no journey read or evidence command. Synthetic rows are not a producer receipt.",
+    taskId: "c-journey-identity-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",

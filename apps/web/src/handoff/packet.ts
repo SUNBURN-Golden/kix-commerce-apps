@@ -516,6 +516,14 @@ export const PENDING_PRODUCERS = [
     note: "The qualification packet is a synthetic record of stub journeys. A real platform, finance, and marketing operational qualification stays on that pending node, which waits on kix-protocol:ps-07-scale-qualification, kix-protocol:cr-10-credit-qualification, and the unpromoted commerce-integration-closeout. A per-call confirmed is not a journey close, and the packet is never a public deployment, a real-money approval, or a service qualification.",
   },
   {
+    id: "c-journey-identity",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "journey-identity",
+    note: "The journey context desk is synthetic. A real context-bound identity registry and a real read-projection evidence contract stay on that pending node, which waits on kix-protocol:protocol-runtime-boundary-register, protocol-canonical-identity-conformance, protocol-read-projection-evidence, and contract-compatibility-profile. The context key here is app-internal and is never a public identifier.",
+  },
+  {
     id: "c-platform-release",
     catalogue: "pending",
     connected: false,
@@ -949,6 +957,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-refund-return-states-stub",
     doc: "docs/c-refund-return-states-stub-apps-bind.md",
     anchor: "Return-required is its own state",
+  },
+  {
+    id: "c-journey-identity-stub",
+    doc: "docs/c-journey-identity-stub-apps-bind.md",
+    anchor: "receipt minted under another context is never this journey's evidence",
   },
 ] as const satisfies readonly PreservedEvidence[];
 

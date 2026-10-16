@@ -73,6 +73,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `tenant-permissions` | `/permissions` | the ten synthetic tenant permission rows below. No fixture pass |
 | `notification-inbox` | `/notifications` | the twelve synthetic notification inbox rows below. No fixture pass |
 | `provider-connected-journey` | `/provider` | the ten synthetic provider checkout rows below. No fixture pass |
+| `journey-identity` | `/identity` | the six synthetic journey context rows below. No fixture pass |
 | `refund-return-desk` | `/booking/:eventId` | the six synthetic refund-and-return rows below. No fixture pass |
 | `marketplace-performance-bench` | `/marketplace-performance` | the eleven synthetic marketplace scale bench rows below. No fixture pass |
 | `installable-mobile-shell` | `/mobile` | the sixteen synthetic installable mobile shell rows below. No fixture pass |
@@ -297,3 +298,9 @@ No product screen changed, so this bind has no new browser run. The live-gate jo
 | `refund-return-desk.claim-refused` | `REJECT` | none. A payload that omits or asserts a non-claim is refused whole | `CLAIM` |
 | `refund-return-desk.write-lost` | `UNKNOWN` | none. A synthetic write whose answer never arrived; the order stays fenced | none |
 | `refund-return-desk.stale-read` | `STALE` | none. The last read is behind; read again before the next write | none |
+| `journey-identity.foreign-context` | `REJECT` | none. A row minted under another mode, domain, tuple, actor, role, or session is refused as evidence | `EVIDENCE_FOREIGN` |
+| `journey-identity.generation-stale` | `REJECT` | none. An attach built under an older source cut | `GENERATION_STALE` |
+| `journey-identity.claim-refused` | `REJECT` | none. A payload that claims a proof of payment, issuance, or admission; refused whole | `CLAIM` |
+| `journey-identity.attach-lost` | `UNKNOWN` | none. A synthetic attach whose answer never arrived; the subject stays fenced and a stub reset keeps it | none |
+| `journey-identity.stale-read` | `STALE` | none. A stale watermark or a rotated source cut | none |
+| `journey-identity.stale-observation` | `STALE` | none. An item minted under an older cut or behind the floor | none |
