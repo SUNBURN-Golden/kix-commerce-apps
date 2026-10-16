@@ -385,9 +385,16 @@ export interface IdentityActions {
   setScenario(next: JourneyIdentityScenario): void;
 }
 
-interface IdentitySession {
+export interface IdentitySession {
   port: JourneyIdentityPort;
   controller: JourneyIdentityController;
+}
+
+/** Rebinds the page and its controller to one new source, so page actions never act on a discarded source. */
+export function resetIdentitySession(session: IdentitySession, port: JourneyIdentityPort) {
+  const next = session.controller.resetSource(port);
+  session.port = port;
+  return next;
 }
 
 export function useJourneyIdentityDesk(): {
@@ -491,7 +498,8 @@ export function useJourneyIdentityDesk(): {
         return;
       }
       const port = journeyIdentityPortFor(environment, { scenario });
-      const next = current.controller.resetSource(port);
+      const next = resetIdentitySession(current, port);
+      // Earlier unknowns keep fencing their subject because the deterministic stub seed repeats subject refs.
       note(`Started a new synthetic source and bound session ${next.incarnation} to cut ${next.cutGeneration}. Earlier unknown writes stay on record and keep fencing their subject.`);
       setTick((value) => value + 1);
     },

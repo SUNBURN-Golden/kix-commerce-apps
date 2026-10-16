@@ -10,7 +10,7 @@ import {
   createStubJourneyIdentity,
   type JourneyIdentityScenario,
 } from "@kix/protocol-adapter";
-import { buildIdentityModel, identityFenceLine, type IdentityLastAction } from "../src/journey-identity";
+import { buildIdentityModel, identityFenceLine, resetIdentitySession, type IdentityLastAction } from "../src/journey-identity";
 import { JourneyIdentityPanel } from "../src/pages/JourneyIdentityPanels";
 import { WORKSPACE_SURFACES } from "../src/workspace/registry";
 
@@ -145,5 +145,21 @@ describe("journey identity screen", () => {
     expect(html).not.toContain("$");
     expect(html).not.toContain("KRW");
     expect(html).toContain("never sent");
+  });
+});
+
+describe("source reset keeps the page and controller on one source", () => {
+  it("rotates the new source after a reset and the controller sees generation-moved", async () => {
+    const first = rig();
+    const session = { port: first.port, controller: first.controller };
+    await session.controller.refresh();
+    const fresh = createStubJourneyIdentity({ scenario: "clean" });
+    resetIdentitySession(session, fresh);
+    expect(session.port).toBe(fresh);
+    await session.controller.refresh();
+    session.port.rotateCut();
+    const result = await session.controller.refresh();
+    expect(result.kind).not.toBe("CURRENT");
+    expect(first.port.effects().submits).toBe(0);
   });
 });
