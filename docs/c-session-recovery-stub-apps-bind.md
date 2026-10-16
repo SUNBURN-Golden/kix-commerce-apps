@@ -52,9 +52,9 @@ After a reload, an unresolved intent comes back as UNKNOWN and is never sent aga
 | --- | --- |
 | `CORRUPT` | Not JSON, wrong shape, extra key, bad record, digest mismatch, or over the byte budget |
 | `UNSUPPORTED_VERSION` | Valid JSON with a `v` other than 1, or none |
-| `LOST_DURING_SESSION` | The journal this page wrote is gone from the store during the session |
+| `LOST_DURING_SESSION` | The journal this page wrote is gone from the store during the session. The loss is recorded in the quarantine entry (cause only, empty `raw`), so it survives the next load |
 
-The damaged blob is copied to the quarantine key and the original is removed. If the quarantine write fails, the original stays where it is and the session is still lost. The quarantine entry survives the next load, so a reload is not a way out. While evidence is lost every write is held, `nextSeq` is not reset, and no new reference is issued.
+The damaged blob is copied to the quarantine key and the original is removed. If the quarantine write fails, the original stays where it is and the session is still lost. The quarantine entry survives the next load, so a reload is not a way out. A loss is recorded only once the page notices it (a run, a resume, or the tab becoming visible runs the check); a clear followed by an immediate reload with no check looks like a new tab. If the quarantine write itself fails, the hold lasts this page load only. While evidence is lost every write is held, `nextSeq` is not reset, and no new reference is issued.
 
 ## UNDETERMINED and out of scope
 
@@ -105,4 +105,4 @@ The real node is `c-async-session-fence` (a pending node that waits on kix-proto
 
 ## Tests
 
-`packages/protocol-adapter/test/session-journal.test.ts` covers the journal: tokens only, recovery, resume, the damage cases, quarantine, quota, partial and silent partial writes, the budgets, and the source scan. `packages/protocol-adapter/test/session-recovery-controller.test.ts` covers the write-ahead order, a reload with a spy on the port, the fences, a settle that cannot be written, evidence loss, a tab resume, the not-bound desk, and the missing resend and clear calls. `apps/web/test/session-recovery.test.tsx` covers the rendered states, the off controls' reasons, the registry row, the fixture rows, the source scan, and the docs.
+`packages/protocol-adapter/test/session-journal.test.ts` covers the journal: tokens only, recovery, resume, the damage cases, quarantine, quota, reopening over a store cleared mid-session (still evidence-lost, nothing written), partial and silent partial writes, the budgets, and the source scan. `packages/protocol-adapter/test/session-recovery-controller.test.ts` covers the write-ahead order, a reload with a spy on the port, a reload after a store cleared mid-session (fenced, no second send), the fences, a settle that cannot be written, evidence loss, a tab resume, the not-bound desk, and the missing resend and clear calls. `apps/web/test/session-recovery.test.tsx` covers the rendered states, the off controls' reasons, the registry row, the fixture rows, the source scan, and the docs.

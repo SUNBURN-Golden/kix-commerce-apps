@@ -49,7 +49,7 @@ export const IDENTITY_RULE_NOTE =
   "An observation binds to the cut it was minted on. A receipt also binds to the actor, role, and session that recorded it. A foreign or stale row is never evidence for this journey, and a read never resolves an unknown write.";
 
 export const IDENTITY_SESSION_NOTE =
-  "A stub reset keeps the journal: an earlier unknown write stays unknown and keeps fencing its subject. Intents live in this page load only and nothing is stored.";
+  "A stub reset or a scenario change keeps the journal: an earlier unknown write stays unknown and keeps fencing its subject. Intents live in this page load only and nothing is stored.";
 
 export const IDENTITY_SCENARIO_NOTES: Readonly<Record<JourneyIdentityScenario, string>> = {
   clean: "Two ambient observations minted on the bound cut.",
@@ -390,6 +390,11 @@ export interface IdentitySession {
   controller: JourneyIdentityController;
 }
 
+/** Applies a scenario by rebinding the same session to a fresh synthetic source, so the journal and its unknown fences stay. */
+export function applyIdentityScenario(session: IdentitySession, environment: "stub" | "integration-http", scenario: JourneyIdentityScenario) {
+  return resetIdentitySession(session, journeyIdentityPortFor(environment, { scenario }));
+}
+
 /** Rebinds the page and its controller to one new source, so page actions never act on a discarded source. */
 export function resetIdentitySession(session: IdentitySession, port: JourneyIdentityPort) {
   const next = session.controller.resetSource(port);
@@ -416,7 +421,7 @@ export function useJourneyIdentityDesk(): {
   const actorRef = useRef<string>(JOURNEY_IDENTITY_DESK_ACTOR);
   const roleRef = useRef<JourneyRole>("operator");
 
-  const wantedKey = `${environment}|${scenario}`;
+  const wantedKey = environment;
   if (sessionKeyRef.current !== wantedKey) {
     const port = journeyIdentityPortFor(environment, { scenario });
     sessionRef.current = { port, controller: new JourneyIdentityController(port, { actorRef: actorRef.current, role: roleRef.current }) };
@@ -497,8 +502,7 @@ export function useJourneyIdentityDesk(): {
       if (current === null) {
         return;
       }
-      const port = journeyIdentityPortFor(environment, { scenario });
-      const next = resetIdentitySession(current, port);
+      const next = applyIdentityScenario(current, environment, scenario);
       // Earlier unknowns keep fencing their subject because the deterministic stub seed repeats subject refs.
       note(`Started a new synthetic source and bound session ${next.incarnation} to cut ${next.cutGeneration}. Earlier unknown writes stay on record and keep fencing their subject.`);
       setTick((value) => value + 1);
@@ -530,11 +534,14 @@ export function useJourneyIdentityDesk(): {
       note(lines.join(" "));
     },
     setScenario(next) {
+      const current = sessionRef.current;
+      if (current === null) {
+        return;
+      }
+      const bound = applyIdentityScenario(current, environment, next);
       setScenarioState(next);
-      intentCounter.current = 0;
-      actorRef.current = JOURNEY_IDENTITY_DESK_ACTOR;
-      roleRef.current = "operator";
-      note(`Started a new synthetic session with scenario ${next}. The page's journal, including earlier unknown writes, is dropped, as after a reload.`);
+      note(`Started a new synthetic source with scenario ${next} and bound session ${bound.incarnation} to cut ${bound.cutGeneration}. Earlier unknown writes stay on record and keep fencing their subject. Intent numbers keep counting.`);
+      void current.controller.refresh();
     },
   };
 

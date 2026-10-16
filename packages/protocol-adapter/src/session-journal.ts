@@ -341,7 +341,7 @@ export class SessionJournal {
     return "CORRUPT";
   }
 
-  /** Moves the damaged blob aside. If that write fails, the original stays where it is. */
+  /** Moves the damaged blob aside, or records that the blob is gone. If that write fails, the original stays where it is and the hold lasts this page load only. */
   private quarantine(raw: string | null, cause: EvidenceLostCause): void {
     this.current = { kind: "evidence-lost", cause };
     this.env = null;
@@ -420,8 +420,8 @@ export class SessionJournal {
       return this.status();
     }
     if (raw === null) {
-      this.current = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
-      this.env = null;
+      // Nothing to copy aside. The quarantine entry carries the cause, so a reload stays lost.
+      this.quarantine(null, "LOST_DURING_SESSION");
       return this.status();
     }
     if (this.dirty || raw === this.lastWritten) {
