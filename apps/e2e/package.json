@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:a11y": "vitest run -c vitest.a11y.config.ts"
   },
-  "dependencies": {},
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "axe-core": "4.14.0",
     "playwright-core": "1.58.2",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
