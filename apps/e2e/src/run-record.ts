@@ -47,7 +47,7 @@ export interface RunRecord {
 
 export const NOT_RUN = [
   "HTTP mode in a browser (needs a kix-protocol gate change)",
-  "fault and latency injection (c-fault-injection-stub)",
+  "latency injection and SLO figures (fault cells are in the separate fault record)",
   "in-flight screen (the stub resolves at once)",
   "real device",
   "screen reader",
@@ -84,4 +84,14 @@ export function readLedger(dir: string): LedgerLine[] {
     .split("\n")
     .filter((line) => line.length > 0)
     .map((line) => JSON.parse(line) as LedgerLine);
+}
+
+/** The fault record is a separate document from the journeys record. It goes through the same redaction check. */
+export function renderFaultRecord(record: object): string {
+  const text = JSON.stringify(record, null, 2);
+  const hits = findSensitive(text);
+  if (hits.length > 0) {
+    throw new Error(`The fault record holds text that looks sensitive: ${hits.join(", ")}`);
+  }
+  return text;
 }

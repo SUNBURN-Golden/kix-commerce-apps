@@ -275,6 +275,10 @@ KIX_E2E_CHROME=/usr/bin/google-chrome npm run test:e2e
 
 Each journey has a success, a rejection, an UNKNOWN, and a not-bound cell. A check fails the run if a cell has no executed check. The stub desk never loses a response, so the box office, admission, and credit UNKNOWN cells are recorded as not reachable and owned by `c-fault-injection-stub`; no fault hook is added to production source. This is stub mode only. It does not exercise HTTP mode, does not qualify production, and does not move money. Details, the run record, and what was not verified are in [docs/c-browser-e2e-stub-apps-bind.md](docs/c-browser-e2e-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
+## Fault injection (stub)
+
+Deterministic fault injection runs on the two existing seams (the `fetchImpl` of `HttpProtocolAdapter` and the `LocalCallInvoker` the journeys use) and on the production stub bundle in headless Chrome, with no hook in production source. Every injected fault (a throw before send, a lost answer, a cut body, a timeout, a stale correlation id, an invalid receipt, a rejection, a 5xx, a redirect, a late answer) leaves one send per command and no new write or compensation after an UNKNOWN. A reload is a known limit: the fence on `/booking`, `/gift`, and `/organizer` lasts for the page load. Node and browser results are recorded apart, by app head, mode, and source. This is synthetic stub evidence, not a service qualification and not an HTTP-mode result. Result tables are in [docs/c-fault-injection-stub-apps-bind.md](docs/c-fault-injection-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+
 ## Tests
 
 `npm test` runs the adapter suite and the web marketing stub:

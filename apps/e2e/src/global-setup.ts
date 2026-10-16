@@ -4,8 +4,9 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import type { TestProject } from "vitest/node";
 import { buildStubApp, type BuiltApp } from "./build";
+import { FAULT_CHECKS, FAULT_NOT_RUN, isFaultCheck } from "./fault-matrix";
 import { expectedCheckIds, matrixProblems } from "./journey-matrix";
-import { readChecks, readLedger, renderRecord, NOT_RUN, type RunRecord } from "./run-record";
+import { readChecks, readLedger, renderFaultRecord, renderRecord, NOT_RUN, type RunRecord } from "./run-record";
 import { LOOPBACK, serveDirectory, type StaticServer } from "./static-server";
 
 declare module "vitest" {
@@ -38,7 +39,7 @@ export async function setup(project: TestProject): Promise<void> {
 export async function teardown(): Promise<void> {
   const problems: string[] = [...matrixProblems()];
   const ran = new Set(readChecks(recordDir).map((line) => line.checkId));
-  for (const id of expectedCheckIds()) {
+  for (const id of [...expectedCheckIds(), ...FAULT_CHECKS]) {
     if (!ran.has(id)) {
       problems.push(`check did not pass in this run: ${id}`);
     }
@@ -62,10 +63,26 @@ export async function teardown(): Promise<void> {
       baseMainSha: git(["merge-base", "HEAD", "origin/main"]),
       ledger: { nonLoopback: sum("nonLoopback"), nonGet: sum("nonGet"), appNetworkCalls: sum("appNetworkCalls") },
       claims: { httpModePass: false, productionQualification: false, realPayment: false, released: false },
-      checks: [...ran].sort().map((checkId) => ({ checkId, pass: true })),
+      checks: [...ran].filter((id) => !isFaultCheck(id)).sort().map((checkId) => ({ checkId, pass: true })),
       notRun: [...NOT_RUN],
     };
     fs.writeFileSync(outFile, renderRecord(record) + "\n");
+    // Fault cells keep their own record and denominator: never summed with the journeys cells.
+    const faultRecord = {
+      suite: "fault-injection",
+      runner: "browser",
+      mode: record.mode,
+      source: "browser-production-bundle(stub)",
+      appHead: git(["rev-parse", "HEAD"]),
+      dirty: git(["status", "--porcelain"]) !== "",
+      baseMainSha: record.baseMainSha,
+      chrome: record.chrome,
+      ledger: record.ledger,
+      claims: { serviceQualification: false, ...record.claims },
+      checks: [...ran].filter(isFaultCheck).sort().map((checkId) => ({ checkId, pass: true })),
+      notRun: [...FAULT_NOT_RUN],
+    };
+    fs.writeFileSync(`${outFile}.fault.json`, renderFaultRecord(faultRecord) + "\n");
   }
   await server?.close();
   app?.cleanup();
