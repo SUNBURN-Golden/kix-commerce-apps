@@ -771,6 +771,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "session-recovery",
+    role: "operator",
+    route: "/session",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic session recovery desk on one page: an intent and its conflict scope are recorded in a versioned journal in this tab's session storage before the synthetic attach is sent, and the answer is recorded after. After a reload or a tab resume, an intent that was not settled is UNKNOWN, nothing is sent again, and no new write or compensation goes out for that subject. A confirmed record from an earlier page load is history only. A corrupt, unsupported, or lost journal is quarantined and shown as SESSION_EVIDENCE_LOST, every write is held, and no new reference is issued. Browser storage can be cleared, lost, or copied, so this is not an exactly-once guarantee; retention is UNDETERMINED and nothing expires a fence. The journal format is app-internal and is not a public schema, operation, capability, or identifier. On integration-http the attach stays not-bound because pending node c-async-session-fence is not promoted and the contract-only catalogue has no journey read or evidence command. Synthetic rows are not a producer receipt.",
+    taskId: "c-session-recovery-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",

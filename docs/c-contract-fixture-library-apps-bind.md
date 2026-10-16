@@ -74,6 +74,7 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `notification-inbox` | `/notifications` | the twelve synthetic notification inbox rows below. No fixture pass |
 | `provider-connected-journey` | `/provider` | the ten synthetic provider checkout rows below. No fixture pass |
 | `journey-identity` | `/identity` | the six synthetic journey context rows below. No fixture pass |
+| `session-recovery` | `/session` | the six synthetic session recovery rows below. No fixture pass |
 | `refund-return-desk` | `/booking/:eventId` | the six synthetic refund-and-return rows below. No fixture pass |
 | `marketplace-performance-bench` | `/marketplace-performance` | the eleven synthetic marketplace scale bench rows below. No fixture pass |
 | `installable-mobile-shell` | `/mobile` | the sixteen synthetic installable mobile shell rows below. No fixture pass |
@@ -304,3 +305,9 @@ No product screen changed, so this bind has no new browser run. The live-gate jo
 | `journey-identity.attach-lost` | `UNKNOWN` | none. A synthetic attach whose answer never arrived; the subject stays fenced and a stub reset keeps it | none |
 | `journey-identity.stale-read` | `STALE` | none. A stale watermark or a rotated source cut | none |
 | `journey-identity.stale-observation` | `STALE` | none. An item minted under an older cut or behind the floor | none |
+| `session-recovery.recovered-unknown` | `UNKNOWN` | none. A write in flight or with a lost answer when the page went away; not sent again after a reload | none |
+| `session-recovery.evidence-lost` | `UNKNOWN` | none. A corrupt, unsupported, or cleared journal is quarantined as SESSION_EVIDENCE_LOST; every write is held | none |
+| `session-recovery.settle-write-failed` | `UNKNOWN` | none. The write was sent and the answer could not be recorded; the scope stays locked | none |
+| `session-recovery.journal-full` | `REJECT` | none. The record or byte budget is reached; refused before send, nothing evicted | `JOURNAL_FULL` |
+| `session-recovery.write-refused` | `REJECT` | none. The write-ahead record was refused or cut short; refused before send | `WRITE_REFUSED` |
+| `session-recovery.history-not-current` | `STALE` | none. A confirmed record from an earlier page load is history and lifts no fence | none |
