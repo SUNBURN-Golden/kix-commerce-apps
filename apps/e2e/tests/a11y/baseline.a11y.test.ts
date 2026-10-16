@@ -28,7 +28,7 @@ describe("automated baseline: tool, version and tags are recorded, and automatio
       expect(await axeRuleCountForTag(page, tag), `axe ${A11Y_BASELINE.version} has rules for tag ${tag}`).toBeGreaterThan(0);
     }
     const changeLog = doc.split("## Baseline change log")[1] ?? "";
-    expect(changeLog, "a change-log row for this version").toMatch(new RegExp(`\\|\\s*\\d{4}-\\d{2}-\\d{2}\\s*\\|\\s*${A11Y_BASELINE.version.replace(/\./g, "\\.")}\\s*\\|`));
+    expect(changeLog, "a change-log row for this version").toMatch(new RegExp(`\\|\\s*\\d{4}-\\d{2}-\\d{2}\\s*\\|\\s*${A11Y_BASELINE.version.replace(/[\\\\.]/g, "\\$&")}\\s*\\|`));
     for (const tag of A11Y_BASELINE.tags) {
       expect(doc, `the doc lists tag ${tag}`).toContain(tag);
     }

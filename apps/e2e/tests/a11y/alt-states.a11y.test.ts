@@ -36,9 +36,15 @@ const DRIVERS: Record<string, Driver> = {
     return [];
   },
   "discovery:conflict": async (page) => {
-    await page.locator("#discovery-from").fill("2026-12-01");
-    await page.locator("#discovery-to").fill("2026-01-01");
-    await page.locator("#discovery-conflict").waitFor();
+    // Re-enter the dates when the conflict does not show: an early fill can land before the controlled inputs are wired.
+    // Each attempt waits for the render before it refills, so a late render never has its focus move overwritten.
+    let shown = false;
+    for (let attempt = 0; attempt < 5 && !shown; attempt += 1) {
+      await page.locator("#discovery-from").fill("2026-12-01");
+      await page.locator("#discovery-to").fill("2026-01-01");
+      shown = await page.locator("#discovery-conflict").waitFor({ timeout: 5_000 }).then(() => true, () => false);
+    }
+    expect(shown, "the filter conflict is shown").toBe(true);
     return formProblems(page, "discovery-from");
   },
   "organizer-workspace:empty-id": async (page) => {
