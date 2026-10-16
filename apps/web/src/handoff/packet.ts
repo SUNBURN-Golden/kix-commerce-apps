@@ -404,6 +404,14 @@ export const PENDING_PRODUCERS = [
     note: "The write fence and the unknown handling on the trade page live in this page load only. Durable session recovery stays on that pending node.",
   },
   {
+    id: "c-cross-surface-journeys",
+    catalogue: "pending",
+    connected: false,
+    implementedHere: false,
+    waitingSurface: "cross-surface-journeys",
+    note: "The journey table is synthetic. A real cross-surface journey connection over producer reads stays on that pending node.",
+  },
+  {
     id: "c-merchant-operations",
     catalogue: "pending",
     connected: false,
@@ -967,6 +975,11 @@ export const LOCAL_SURFACE_EVIDENCE = [
     id: "c-session-recovery-stub",
     doc: "docs/c-session-recovery-stub-apps-bind.md",
     anchor: "an unresolved intent comes back as UNKNOWN and is never sent again",
+  },
+  {
+    id: "c-cross-surface-journeys-stub",
+    doc: "docs/c-cross-surface-journeys-stub-apps-bind.md",
+    anchor: "a partly landed journey keeps COMPENSATION_UNDEFINED visible",
   },
 ] as const satisfies readonly PreservedEvidence[];
 

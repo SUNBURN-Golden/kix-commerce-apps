@@ -785,6 +785,20 @@ export const WORKSPACE_SURFACES = [
     pageControl: true,
   },
   {
+    id: "cross-surface-journeys",
+    role: "operator",
+    route: "/journeys",
+    binding: "stub-only",
+    sender: null,
+    actions: [],
+    deskMethods: [],
+    provenanceNote:
+      "Synthetic read-only table of journeys on one page: for each journey and branch (normal, explicit rejection, response lost, partly landed) the last confirmed step, the unconfirmed request, the blocked next action, and the compensation cell. Rows come from the synthetic sources that already exist, driven in this process, from the operational qualification packet, or as a pointer to the test that already pins the branch. UNKNOWN is never shown as done or lost, a branch no source reproduces stays visible and is never counted as a success, and the compensation cell has three words (NONE_NEEDED, FENCED, COMPENSATION_UNDEFINED) and names no command. The page sends no command and composes no opposite or compensating command. Whether a marketing reclaim restores a usage count or a budget is UNDETERMINED. On integration-http the table stays not-bound because pending node c-cross-surface-journeys is not promoted and no producer contract for it is merged. The table format is app-internal and is not a public schema, operation, capability, or identifier. Synthetic rows are not a producer receipt.",
+    taskId: "c-cross-surface-journeys-stub",
+    implemented: true,
+    pageControl: true,
+  },
+  {
     id: "buyer-workspace",
     role: "buyer",
     route: "/buyer",

@@ -39,6 +39,7 @@ const links = [
   { to: "/release", label: "Release", end: true },
   { to: "/identity", label: "Journey context", end: true },
   { to: "/session", label: "Session recovery", end: true },
+  { to: "/journeys", label: "Journeys", end: true },
 ];
 
 export function Shell({ children }: { children: ReactNode }) {
