@@ -113,3 +113,30 @@ jobs:
           if [ -f "$RUNNER_TEMP/browser-e2e-record.json" ]; then
             { echo '### Browser journeys (stub). Not HTTP mode, not production qualification.'; echo '```json'; cat "$RUNNER_TEMP/browser-e2e-record.json"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           fi
+
+  a11y-observation:
+    name: Accessibility observation (stub, headless Chrome)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck:e2e
+      # Same loopback-only rules as the journey job. axe-core is read from node_modules, nothing is fetched.
+      - run: npm run test:a11y
+        env:
+          KIX_E2E_CHROME: /usr/bin/google-chrome
+          KIX_E2E_NO_SANDBOX: '1'
+          KIX_A11Y_RECORD_OUT: ${{ runner.temp }}/a11y-record.json
+      - name: Observation record
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/a11y-record.json" ]; then
+            { echo '### Accessibility observation (stub). Not user acceptance, not conformance, not release.'; echo '```json'; cat "$RUNNER_TEMP/a11y-record.json"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          fi
