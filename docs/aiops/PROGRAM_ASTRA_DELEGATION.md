@@ -87,6 +87,14 @@
 | `c-a11y-acceptance-stub` | NO | 정책 C 위임 | A2 | stub 범위의 시험·접근성 증거; 수용은 PENDING, 새 계약 정의 없음 |
 | `c-fault-injection-stub` | NO | 정책 C 위임 | A3 | stub 범위의 시험·측정·증거; 새 계약 정의 없음 |
 | `c-local-evidence-matrix-stub` | NO | 정책 C 위임 | A2 | stub 범위의 마감·증거 인계; 새 계약 정의 없음 |
+| `c-app-shell-resilience-stub` | NO | 정책 C 위임 | A2 | stub 범위의 앱 셸 오류 상태·404; 새 공개 계약 없음 |
+| `c-route-registry-navigation-stub` | NO | 정책 C 위임 | A2 | stub 범위의 앱 내부 라우트 registry·내비; 공개 식별자 없음 |
+| `c-bundle-performance-budget-stub` | NO | 정책 C 위임 | A2 | stub 범위의 시험·측정·증거(번들 예산); 새 계약 정의 없음 |
+| `c-locale-ko-en-stub` | NO | 정책 C 위임 | A2 | stub 범위의 앱 내부 표시 catalogue; protocol 단어는 번역하지 않음, 새 공개 계약 없음 |
+| `c-display-preferences-stub` | NO | 정책 C 위임 | A2 | stub 범위의 표시 환경 설정·접근성 시험; 수용은 PENDING, 새 계약 정의 없음 |
+| `c-untrusted-render-csp-stub` | NO | 정책 C 위임 | A3 | stub 범위의 렌더 안전·CSP·저장소 감사 시험; TTL 미정 유지, 새 계약 정의 없음 |
+| `c-quality-gates-stub` | NO | 정책 C 위임 | A2 | stub 범위의 정적 품질 게이트·CI; 새 계약 정의 없음 |
+| `c-user-guides-stub` | NO | 정책 C 위임 | A1 | stub 범위의 문서·도움말; 새 공개 계약 없음 |
 
 ## 중앙 및 시작 경계
 
@@ -97,3 +105,5 @@
 대표님 위임 결정 2026-10-15 (감리 3, 소유자 판단 위임 "알아서 결정"): audit_floor 불일치 3건은 program.json 값에 맞춰 위임표를 정렬한다(옵션 a). c-workspace-design A3, c-accessibility-baseline A2, c-local-workspace-closeout A2. program.json은 바꾸지 않는다.
 
 대표님 위임 결정 2026-10-15 14:44 KST ("제품화까지 개발, 결정이 필요한 건 알아서 결정"; 비용·하드웨어·메인넷·시크릿키·프로덕션 배포·결제 변경 제외)에 따라 KIX Commerce가 2026-10-16 plan revision으로 `*-stub` 로컬 갭 노드 8개를 추가했다. 8개 모두 contract_change=NO, 병합은 정책 C 위임(user_merge=false)이다. 원 pending 노드 c-journey-identity·c-async-session-fence는 contract_change=YES/대표님이지만, stub 범위 노드는 앱 내부 전용 형식만 쓰고 공개 schema·operation·ID를 만들지 않는다. 진행 중 공개 계약 변경이 필요해지면 YES/A3/대표님 경계로 다시 분류한다. 상세와 digest는 [PLAN_REVISION_20261016_KO.md](PLAN_REVISION_20261016_KO.md)를 본다.
+
+대표님 위임 결정 2026-10-15 14:44 KST("제품화까지 개발, 결정이 필요한 건 알아서 결정"; 비용·하드웨어·메인넷·시크릿키·프로덕션 배포·결제 변경 제외)에 따라 KIX Commerce가 2026-10-17 plan revision으로 (1) 외부 선행 kix-protocol:p-sdk-0(PR #123, merge a74e7c4)이 병합된 pending 노드 `consume-p-sdk-0`을 승격하고(depends_on_external 제거, 나머지 원문 유지; 위 표의 기존 행 NO/정책 C/A2 유지) (2) 위 `*-stub` 제품 완성도 노드 8개를 추가했다. 8개 모두 contract_change=NO, 병합은 정책 C 위임(user_merge=false)이다. 진행 중 공개 계약 변경이 필요해지면 YES/A3/대표님 경계로 다시 분류한다. 상세와 digest는 [PLAN_REVISION_20261017_KO.md](PLAN_REVISION_20261017_KO.md)를 본다.
