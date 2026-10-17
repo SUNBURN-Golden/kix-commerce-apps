@@ -284,6 +284,10 @@ Each journey has a success, a rejection, an UNKNOWN, and a not-bound cell. A che
 
 Deterministic fault injection runs on the two existing seams (the `fetchImpl` of `HttpProtocolAdapter` and the `LocalCallInvoker` the journeys use) and on the production stub bundle in headless Chrome, with no hook in production source. Every injected fault (a throw before send, a lost answer, a cut body, a timeout, a stale correlation id, an invalid receipt, a rejection, a 5xx, a redirect, a late answer) leaves one send per command and no new write or compensation after an UNKNOWN. A reload is a known limit: the fence on `/booking`, `/gift`, and `/organizer` lasts for the page load. Node and browser results are recorded apart, by app head, mode, and source. This is synthetic stub evidence, not a service qualification and not an HTTP-mode result. Result tables are in [docs/c-fault-injection-stub-apps-bind.md](docs/c-fault-injection-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
+## Local evidence matrix (stub)
+
+One document keeps an evidence matrix over every stub-scope surface, journey, and node, with a final denominator table. `node_state`, `qualification_state`, `acceptance_state`, and `release_state` stay in four columns. Live-gate skipped, NOT_BOUND, stub-only, user acceptance PENDING, and release NOT_AUTHORIZED are counted on separate lines. Pending nodes and their external prerequisites stay in the denominator and are not counted as done. The document links the `/handoff` and `/release` records and replaces neither. It approves no completion, acceptance, or release, and a test keeps it equal to the sources it summarises. There is no new screen. Matrix and denominator are in [docs/c-local-evidence-matrix-stub-apps-bind.md](docs/c-local-evidence-matrix-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+
 ## Tests
 
 `npm test` runs the adapter suite and the web marketing stub:
