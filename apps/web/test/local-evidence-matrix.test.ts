@@ -34,7 +34,9 @@ import {
   NODE_PRS,
   PENDING_NODES,
   pointerExists,
+  postBaseProgramNodes,
   PROGRAM_NODES,
+  PROMOTED_FROM_PENDING,
   REPO_ROOT,
   RULING_LINE,
   sharedTuple,
@@ -81,7 +83,8 @@ describe("local evidence matrix: rows", () => {
     const pending = PENDING_NODES.map((node) => node.id);
     expect(new Set(program).size).toBe(program.length);
     expect(new Set(pending).size).toBe(pending.length);
-    expect(program.filter((id) => pending.includes(id))).toEqual([]);
+    expect(program.filter((id) => pending.includes(id) && !PROMOTED_FROM_PENDING.includes(id))).toEqual([]);
+    for (const id of PROMOTED_FROM_PENDING) expect(program).toContain(id);
     expect(program).toContain(THIS_NODE);
   });
 
@@ -176,7 +179,9 @@ describe("local evidence matrix: facets stay separate and approve nothing", () =
     const own = rows.find((row) => row.rowId === THIS_NODE);
     expect(own?.nodeState).toBe("IN_PROGRESS");
     for (const node of PROGRAM_NODES) {
-      if (node.id !== THIS_NODE) expect(NODE_PRS[node.id], node.id).toBeGreaterThan(0);
+      if (node.id === THIS_NODE) continue;
+      if (postBaseProgramNodes().includes(node.id)) expect(rows.find((row) => row.rowId === node.id && row.catalogue === "program")?.nodeState, node.id).toBe("NOT_STARTED");
+      else expect(NODE_PRS[node.id], node.id).toBeGreaterThan(0);
     }
   });
 

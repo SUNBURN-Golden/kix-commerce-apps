@@ -14,6 +14,7 @@ import {
   OPENAPI_INTEGRATION_GATE_PIN,
 } from "@kix/protocol-adapter";
 import { App } from "../src/App";
+import { PROMOTED_FROM_PENDING } from "./support/local-evidence-matrix";
 import {
   buildHandoffView,
   claimRefused,
@@ -205,7 +206,8 @@ describe("local handoff packet", () => {
       expect(row.connected).toBe(false);
       expect(row.implementedHere).toBe(false);
       expect(pendingIds.has(row.id)).toBe(true);
-      expect(programIds).not.toContain(row.id);
+      // A pending node promoted by a plan revision stays in the pending catalogue as history and may be active; it stays unconnected here until its own node merges.
+      if (!PROMOTED_FROM_PENDING.includes(row.id)) expect(programIds).not.toContain(row.id);
       if (row.waitingSurface) {
         expect(FEATURE_ROWS.map((feature) => feature.id)).toContain(row.waitingSurface);
       }

@@ -229,7 +229,16 @@ One row per node in `.aiops/program.json` and one per node in `docs/aiops/PENDIN
 | c-a11y-acceptance-stub | program | MERGED_RECORDED(PR #74) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
 | c-fault-injection-stub | program | MERGED_RECORDED(PR #75) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
 | c-local-evidence-matrix-stub | program | IN_PROGRESS | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| consume-p-sdk-0 | pending | WAITING | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | kix:p-sdk-0 |
+| c-app-shell-resilience-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-route-registry-navigation-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-bundle-performance-budget-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-locale-ko-en-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-display-preferences-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-untrusted-render-csp-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-quality-gates-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-user-guides-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| consume-p-sdk-0 | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| consume-p-sdk-0 | pending | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | promoted to program (plan revision 20261017) |
 | bind-settlement-fsm | pending | WAITING | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | kix:openapi-catalogue-promotion, kix:contract-compatibility-profile |
 | bind-reservation-fsm | pending | WAITING | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | kix:openapi-catalogue-promotion, kix:contract-compatibility-profile |
 | bind-admission-fsm | pending | WAITING | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | kix:openapi-catalogue-promotion, kix:contract-compatibility-profile |
@@ -289,9 +298,9 @@ Each line has its own count. Nothing is summed, nothing is subtracted, and there
 - D11 user acceptance PENDING a11y screens: 36 of 36; ACCEPTED 0
 - D12 release page user acceptance: PENDING_USER_DECISION, 1 packet; realUserAcceptance false
 - D13 release decisions: install awaiting-user-decision, publish not-open, operate not-open; taken 0
-- D14 release NOT_AUTHORIZED rows: surfaces 43 of 43, journeys 10 of 10, nodes 84 of 84; RELEASED 0
-- D15 active program nodes: 42; MERGED_RECORDED 41, IN_PROGRESS 1; central DONE not evaluated
-- D16 pending catalogue nodes: 42; WAITING 41, NOT_STARTED 1; counted as done 0
+- D14 release NOT_AUTHORIZED rows: surfaces 43 of 43, journeys 10 of 10, nodes 93 of 93; RELEASED 0
+- D15 active program nodes: 51; MERGED_RECORDED 41, IN_PROGRESS 1; central DONE not evaluated
+- D16 pending catalogue nodes: 42; WAITING 40, NOT_STARTED 2; counted as done 0
 - D17 distinct external prerequisites named by pending nodes: 26; completion not verified here; subtracted 0
 - D18 release page area denominators: scope 29 of 29, acceptance 3 of 3, environment 3 of 3, operations 4 of 4, gate 3 of 3 (own denominators, not merged)
 - D19 pending producers on the handoff packet: 32; connected 0

@@ -36,6 +36,12 @@ export const LOCKED_BINDINGS_SHA256 = "83816276bc2c281161ad4df78c91d5696051c276e
 export const RULING_LINE = "M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce";
 export const THIS_NODE = "c-local-evidence-matrix-stub";
 
+/**
+ * Pending-catalogue nodes promoted into the active program by a plan revision (docs/aiops/PLAN_REVISION_20261017_KO.md).
+ * The pending catalogue keeps the original row as history, so an id may sit in both catalogues only if it is listed here.
+ */
+export const PROMOTED_FROM_PENDING: readonly string[] = ["consume-p-sdk-0"];
+
 export const NODE_STATES = ["MERGED_RECORDED", "IN_PROGRESS", "WAITING", "NOT_STARTED", "REPO_PRESENT", "NOT_PRESENT"] as const;
 export const QUALIFICATION_STATES = ["UNQUALIFIED", "NOT_REQUIRED"] as const;
 export const ACCEPTANCE_STATES = ["PENDING", "NOT_REQUIRED"] as const;
@@ -339,30 +345,41 @@ export function journeyRows(table: readonly CrossSurfaceRow[]): EvidenceRow[] {
   });
 }
 
+/** Active program nodes with no recorded PR at this matrix base: added by a later plan revision, so they are NOT_STARTED here. */
+export function postBaseProgramNodes(): string[] {
+  return PROGRAM_NODES.map((node) => node.id).filter((id) => id !== THIS_NODE && NODE_PRS[id] === undefined);
+}
+
+function programNodeState(id: string): string {
+  if (id === THIS_NODE) return "IN_PROGRESS";
+  return NODE_PRS[id] === undefined ? "NOT_STARTED" : `MERGED_RECORDED(PR #${NODE_PRS[id]})`;
+}
+
 export function nodeRows(): NodeRow[] {
   const programRows: NodeRow[] = PROGRAM_NODES.map((node) => ({
     rowId: node.id,
     catalogue: "program",
-    nodeState: node.id === THIS_NODE ? "IN_PROGRESS" : `MERGED_RECORDED(PR #${NODE_PRS[node.id]})`,
+    nodeState: programNodeState(node.id),
     centralDone: "NOT_EVALUATED",
     countedAsDone: false,
     waitingOn: "none",
     facets: {
-      nodeState: node.id === THIS_NODE ? "IN_PROGRESS" : `MERGED_RECORDED(PR #${NODE_PRS[node.id]})`,
+      nodeState: programNodeState(node.id),
       ...FACET_BASE,
       acceptanceState: "PENDING",
     },
   }));
   const pendingRows: NodeRow[] = PENDING_NODES.map((node) => {
+    const promoted = PROMOTED_FROM_PENDING.includes(node.id);
     const externals = (node.depends_on_external ?? []).map((item) => `${item.program}:${item.node}`);
-    const nodeState = externals.length > 0 ? "WAITING" : "NOT_STARTED";
+    const nodeState = externals.length > 0 && !promoted ? "WAITING" : "NOT_STARTED";
     return {
       rowId: node.id,
       catalogue: "pending",
       nodeState,
       centralDone: "NOT_EVALUATED",
       countedAsDone: false,
-      waitingOn: externals.length > 0 ? externals.join(", ") : "pending nodes only",
+      waitingOn: promoted ? "promoted to program (plan revision 20261017)" : externals.length > 0 ? externals.join(", ") : "pending nodes only",
       facets: { nodeState, ...FACET_BASE, acceptanceState: "PENDING" },
     };
   });
