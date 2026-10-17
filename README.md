@@ -257,6 +257,7 @@ The reviewed gate does not answer CORS, so from a browser at `:5173` the banner 
 - `desk` runs `npm ci`, `npm run typecheck`, `npm run build`, and `npm test`. It sets `KIX_REQUIRE_GATE=0`, so the live gate suites are skipped there on purpose.
 - `live-gate` checks out kix-protocol at the pinned merge `52a9b5cbf7777df55d2d2062cb8d99d862b423bb` and runs the adapter suite with `KIX_REQUIRE_GATE=1` against that checkout. kix-protocol is private, so this job needs a `KIX_PROTOCOL_READ_TOKEN` repository secret with read-only contents access to it. A small `gate-token` job checks for the secret first. Without it, `gate-token` posts a warning and `live-gate` shows as skipped, never as a pass.
 
+- `a11y-observation` (named "Accessibility observation (stub, headless Chrome)") runs the separate `npm run test:a11y` suite. It is additive and has no `needs`, secret or protocol checkout. Its record goes to the job summary. A green run is not user acceptance, not a conformance claim and not a release permission.
 - `browser-e2e` (named "Browser journeys (stub, headless Chrome)") runs `npm ci`, `npm run typecheck:e2e`, and `npm run test:e2e` on the runner's Google Chrome. It is additive: the `desk` job and its checks are unchanged. It has no `needs`, no secret, and no protocol checkout. The run record goes to the job summary and is not uploaded as an artifact.
 
 A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha`. Moving the pin means moving both.
@@ -274,6 +275,10 @@ KIX_E2E_CHROME=/usr/bin/google-chrome npm run test:e2e
 `KIX_E2E_CHROME` names the binary. Without it the first of `/usr/bin/google-chrome`, `/usr/bin/google-chrome-stable`, `/usr/bin/chromium`, and `/usr/bin/chromium-browser` is used, and a missing browser fails the run; it never skips. Set `KIX_E2E_NO_SANDBOX=1` only where the Chrome sandbox cannot start (a container or the CI runner). Set `KIX_E2E_RECORD_OUT=<file>` to write the run record. There is no trace, video, or screenshot code, and the record holds check ids, counts, and the Chrome version only.
 
 Each journey has a success, a rejection, an UNKNOWN, and a not-bound cell. A check fails the run if a cell has no executed check. The stub desk never loses a response, so the box office, admission, and credit UNKNOWN cells are recorded as not reachable and owned by `c-fault-injection-stub`; no fault hook is added to production source. This is stub mode only. It does not exercise HTTP mode, does not qualify production, and does not move money. Details, the run record, and what was not verified are in [docs/c-browser-e2e-stub-apps-bind.md](docs/c-browser-e2e-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+
+## Accessibility observation (stub)
+
+`npm run test:a11y` (same Chrome variables as `test:e2e`) runs a second browser suite in `apps/e2e`: axe-core (exact pin, injected from disk) on all 36 screens at 1280px and 320px, keyboard-only Tab walks, widget keys, form error links, table and status structure, and reflow. Open findings are listed in `KNOWN_FINDINGS` and gate the run as a ratchet. User acceptance is PENDING for every screen, no ACCEPTED value exists, no target standard is named, and no screen-reader or real-device run exists. Details and the not-verified list are in [docs/c-a11y-acceptance-stub-apps-bind.md](docs/c-a11y-acceptance-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
 ## Fault injection (stub)
 
