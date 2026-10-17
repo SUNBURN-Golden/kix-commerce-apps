@@ -92,6 +92,12 @@ Each runner writes its own record, keyed by app head, mode, and source, and the 
 
 Both carry `appHead` from `git rev-parse HEAD` at run time. This document records only the base main SHA, because a document cannot hold its own head. All claims are literal false: `serviceQualification`, `productionQualification`, `realPayment`, `httpModePass`, `released`. The browser fault record goes through the same redaction check as the journeys record.
 
+### Fix round 1: a git id that looks like a digit run
+
+The first hosted run of this branch (run 38997113843) checked out the PR merge commit `c17425a76a48010fa4ece21554538337cc301a5a`. Every browser test passed (47 of 47 journeys, 204 of 205 accessibility), and then both teardowns threw `holds text that looks sensitive: long-digits`: the hex id holds an eleven digit run, and the redaction scan reads the record as text. Any record that carries `appHead` (the fault record and the accessibility record) fails at such a merge commit, and the journeys record would at such a merge base. The fix keeps the scan and narrows nothing in it: `findSensitiveInRecord` in `apps/e2e/src/redact.ts` masks a value only when it is exactly 40 hex characters under one of the teardown's own id keys (`appHead`, `baseMainSha`, `evidenceHead`), then scans the rest as before. A digit run anywhere else, a non-hex value under those keys, an email, a bearer, a token, or a JWT still throws. `apps/e2e/tests/record.e2e.test.ts` renders all three records at that exact merge id and checks both sides.
+
+The same run had one accessibility failure, `discovery:conflict` with `form.focus-not-on-control`. Its driver filled the two date inputs back to back. The query lives in the URL and the router commits it in a React transition, so a second edit that lands before the first commit reads the stale query and drops the first date. No conflict shows, the driver refilled after a timeout, and that refill moved focus onto the second input. The driver now enters each date once and waits for the URL to carry it before the next, so the conflict comes from one edit and its focus move is the only one. The screen itself is unchanged (`apps/web/src` stays untouched); the two-edits-in-one-frame window is narrower than a keyboard user can reach and is noted, not fixed, here.
+
 ## Limits
 
 - This is not a service qualification. Every fault is synthetic: a fake fetch, an in-process source, or a script that throws inside a headless Chrome page. There is no real outage, real server, real PG data, or real device.
@@ -117,7 +123,7 @@ Retention of a persisted fence, a desk-level UNKNOWN meaning, and any resend or 
 
 ## Not verified
 
-The live gate (this node needs no producer), HTTP mode in a browser, a real device, a screen reader, latency, and the first CI run of the new browser file on the hosted runner.
+The live gate (this node needs no producer), HTTP mode in a browser, a real device, a screen reader, latency, and the hosted-runner pass of the fixed head. Locally at this head: `npm run test:e2e` 50 of 50 with both records written, `npm run test:a11y` 205 of 205 with the accessibility record written, and the alternate-states file five more times with `discovery:conflict` passing each time.
 
 ## Hold
 

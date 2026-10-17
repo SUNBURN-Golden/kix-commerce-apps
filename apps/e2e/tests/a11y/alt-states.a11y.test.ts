@@ -36,15 +36,16 @@ const DRIVERS: Record<string, Driver> = {
     return [];
   },
   "discovery:conflict": async (page) => {
-    // Re-enter the dates when the conflict does not show: an early fill can land before the controlled inputs are wired.
-    // Each attempt waits for the render before it refills, so a late render never has its focus move overwritten.
-    let shown = false;
-    for (let attempt = 0; attempt < 5 && !shown; attempt += 1) {
-      await page.locator("#discovery-from").fill("2026-12-01");
-      await page.locator("#discovery-to").fill("2026-01-01");
-      shown = await page.locator("#discovery-conflict").waitFor({ timeout: 5_000 }).then(() => true, () => false);
-    }
-    expect(shown, "the filter conflict is shown").toBe(true);
+    // The query lives in the URL and the router commits it in a transition. A second edit that lands before
+    // the first one is committed reads the stale query and drops the first value (seen in CI: the conflict then
+    // never shows, and a refill moved focus onto the second input). Each date is entered once, and the URL is
+    // awaited in between, so the conflict appears from one edit and its focus move is the only one that happens.
+    await page.locator("#discovery-from").fill("2026-12-01");
+    await page.waitForFunction(() => new URLSearchParams(location.search).get("from") === "2026-12-01");
+    await page.locator("#discovery-to").fill("2026-01-01");
+    await page.waitForFunction(() => new URLSearchParams(location.search).get("to") === "2026-01-01");
+    await page.locator("#discovery-conflict").waitFor();
+    expect(await page.locator("#discovery-from").inputValue(), "the from date is kept").toBe("2026-12-01");
     return formProblems(page, "discovery-from");
   },
   "organizer-workspace:empty-id": async (page) => {

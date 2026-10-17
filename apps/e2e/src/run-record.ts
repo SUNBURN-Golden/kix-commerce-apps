@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { findSensitive } from "./redact";
+import { findSensitiveInRecord } from "./redact";
 
 export interface CheckLine {
   checkId: string;
@@ -55,12 +55,11 @@ export const NOT_RUN = [
 ] as const;
 
 export function renderRecord(record: RunRecord): string {
-  const text = JSON.stringify(record, null, 2);
-  const hits = findSensitive(text);
+  const hits = findSensitiveInRecord(record);
   if (hits.length > 0) {
     throw new Error(`The run record holds text that looks sensitive: ${hits.join(", ")}`);
   }
-  return text;
+  return JSON.stringify(record, null, 2);
 }
 
 export interface LedgerLine {
@@ -88,10 +87,9 @@ export function readLedger(dir: string): LedgerLine[] {
 
 /** The fault record is a separate document from the journeys record. It goes through the same redaction check. */
 export function renderFaultRecord(record: object): string {
-  const text = JSON.stringify(record, null, 2);
-  const hits = findSensitive(text);
+  const hits = findSensitiveInRecord(record);
   if (hits.length > 0) {
     throw new Error(`The fault record holds text that looks sensitive: ${hits.join(", ")}`);
   }
-  return text;
+  return JSON.stringify(record, null, 2);
 }
