@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { findSensitive } from "./redact";
+import { findSensitiveInRecord } from "./redact";
 
 export interface CheckLine {
   checkId: string;
@@ -47,7 +47,7 @@ export interface RunRecord {
 
 export const NOT_RUN = [
   "HTTP mode in a browser (needs a kix-protocol gate change)",
-  "fault and latency injection (c-fault-injection-stub)",
+  "latency injection and SLO figures (fault cells are in the separate fault record)",
   "in-flight screen (the stub resolves at once)",
   "real device",
   "screen reader",
@@ -55,12 +55,11 @@ export const NOT_RUN = [
 ] as const;
 
 export function renderRecord(record: RunRecord): string {
-  const text = JSON.stringify(record, null, 2);
-  const hits = findSensitive(text);
+  const hits = findSensitiveInRecord(record);
   if (hits.length > 0) {
     throw new Error(`The run record holds text that looks sensitive: ${hits.join(", ")}`);
   }
-  return text;
+  return JSON.stringify(record, null, 2);
 }
 
 export interface LedgerLine {
@@ -84,4 +83,13 @@ export function readLedger(dir: string): LedgerLine[] {
     .split("\n")
     .filter((line) => line.length > 0)
     .map((line) => JSON.parse(line) as LedgerLine);
+}
+
+/** The fault record is a separate document from the journeys record. It goes through the same redaction check. */
+export function renderFaultRecord(record: object): string {
+  const hits = findSensitiveInRecord(record);
+  if (hits.length > 0) {
+    throw new Error(`The fault record holds text that looks sensitive: ${hits.join(", ")}`);
+  }
+  return JSON.stringify(record, null, 2);
 }

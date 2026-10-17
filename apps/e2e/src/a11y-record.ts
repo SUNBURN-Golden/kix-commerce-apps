@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { findSensitive } from "./redact";
+import { findSensitiveInRecord } from "./redact";
 import { recordDir } from "./run-record";
 import type { ManualFacet, ScreenRecord, ViewportName } from "./a11y-matrix";
 
@@ -80,10 +80,9 @@ export function renderA11yRecord(record: A11yRecord): string {
   if (Object.values(record.claims).some((claim) => claim !== false)) {
     throw new Error("Every claim in the accessibility record must be false.");
   }
-  const text = JSON.stringify(record, null, 2);
-  const hits = findSensitive(text);
+  const hits = findSensitiveInRecord(record);
   if (hits.length > 0) {
     throw new Error(`The accessibility record holds text that looks sensitive: ${hits.join(", ")}`);
   }
-  return text;
+  return JSON.stringify(record, null, 2);
 }
