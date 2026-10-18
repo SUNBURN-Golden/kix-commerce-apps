@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
+import { LocaleProvider } from "./i18n/LocaleProvider";
 import { AppBoundary } from "./shell/RenderBoundary";
 import "./styles.css";
 
@@ -12,10 +13,12 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <BrowserRouter>
-      <AppBoundary>
-        <App />
-      </AppBoundary>
-    </BrowserRouter>
+    <LocaleProvider>
+      <BrowserRouter>
+        <AppBoundary>
+          <App />
+        </AppBoundary>
+      </BrowserRouter>
+    </LocaleProvider>
   </StrictMode>,
 );

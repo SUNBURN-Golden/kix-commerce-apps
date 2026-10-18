@@ -4,7 +4,7 @@ import { ProtocolError, type Booking, type Hold, type Performance } from "@kix/p
 import { focusControl, heldAfterError } from "../a11y/focus";
 import { AmountNotice, DeadlineLine, StatusMark } from "../a11y/marks";
 import { bookingQuantityNumber, capacityLine, presentQuantityLine } from "../a11y/present";
-import { formatWhen } from "../format";
+import { useFormatWhen } from "../i18n/locale-context";
 import { protocol } from "../protocol";
 import { useAdmissionDesk } from "../admission-desk";
 import { useJourneyDesk } from "../journey-desk";
@@ -16,6 +16,7 @@ import { RefundReturnPanel } from "./RefundReturnPanel";
 import { ReservationPanel } from "./ReservationPanel";
 
 export function BookingPage() {
+  const formatWhen = useFormatWhen();
   const { eventId = "" } = useParams();
   const [performance, setPerformance] = useState<Performance | null>(null);
   const [quantity, setQuantity] = useState("1");

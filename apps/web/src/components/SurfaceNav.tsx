@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useT } from "../i18n/locale-context";
+import { routeKey } from "../i18n/use-page-identity";
 import { currentNavPath, navGroups } from "../shell/route-registry";
 
 const MENU_ID = "surface-menu";
@@ -11,6 +13,7 @@ const MENU_ID = "surface-menu";
  */
 export function SurfaceNav() {
   const { pathname } = useLocation();
+  const t = useT();
   const current = currentNavPath(pathname);
   const [open, setOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
@@ -29,15 +32,15 @@ export function SurfaceNav() {
   };
 
   return (
-    <nav aria-label="Surfaces" onKeyDown={onKeyDown}>
+    <nav aria-label={t("shell.nav")} onKeyDown={onKeyDown}>
       <button type="button" className="nav-toggle" aria-expanded={open} aria-controls={MENU_ID} onClick={() => setOpen((value) => !value)} ref={toggle}>
-        Menu
+        {t("shell.menu")}
       </button>
       <ul id={MENU_ID} className="nav-menu" data-open={open ? "true" : "false"}>
         {navGroups().map((group) => (
           <li key={group.id} className="nav-group">
             <span id={`nav-group-${group.id}`} className="nav-group-label">
-              {group.label}
+              {t(`nav.group.${group.id}`)}
             </span>
             <ul aria-labelledby={`nav-group-${group.id}`}>
               {group.links.map((link) => (
@@ -55,7 +58,7 @@ export function SurfaceNav() {
                       }
                     }}
                   >
-                    {link.label}
+                    {t(routeKey(link))}
                   </Link>
                 </li>
               ))}
