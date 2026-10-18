@@ -135,12 +135,13 @@ Driven by keys where a key path exists (a few values are set with `fill`), then 
 | `receipts:empty` | receipts with no receipt on this load (`/receipts`) |
 | `journeys:unknown-filter` | journeys table filtered to Unknown (`/journeys`) |
 | `session:attach-lost` | session attach whose answer is lost (`/session`) |
+| `not-found:unknown-path` | not-found screen at an unknown address (`/no-such-screen`) |
 
 Forms: booking `1.5` keeps the typed value, marks the field invalid, returns focus to it and links the alert. The discovery conflict and the organizer-workspace empty id do the same. The gift refusal returns focus and marks the field invalid but links no message (finding below).
 
 Widgets: the Handoff and Receipts tablists use roving tabindex and answer ArrowLeft, ArrowRight, Home and End; the discovery and inventory listboxes move `aria-activedescendant` with ArrowDown and ArrowUp; the `/journeys` disclosure opens with Enter and closes with Space.
 
-Observations (not assertions): after a keyboard route change the document title is unchanged ("KIX Box Office") and focus stays on the activated link. Screen-reader users get no title or focus cue that the view changed. During exploration, typing into the discovery search box with no delay between keys dropped characters (the box is synced with the URL); it was not reproducible at a 60 ms delay, so it is noted here and not asserted.
+Observations (not assertions): when this node was written, after a keyboard route change the document title was unchanged ("KIX Box Office") and focus stayed on the activated link. That was true at the time and is superseded by `c-app-shell-resilience-stub` (2026-10-18): the title is now per page and focus moves to the page heading; see `docs/c-app-shell-resilience-stub-apps-bind.md`. The observation test still only records what it sees. During exploration, typing into the discovery search box with no delay between keys dropped characters (the box is synced with the URL); it was not reproducible at a 60 ms delay, so it is noted here and not asserted.
 
 ## Findings (all OPEN, none fixed here)
 

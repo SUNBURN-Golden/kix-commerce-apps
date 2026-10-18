@@ -3,13 +3,15 @@ import { NavLink, useLocation } from "react-router-dom";
 import { CREDIT_BOUNDARY, ProtocolError, type TransportObservation } from "@kix/protocol-adapter";
 import { transportStatusWord } from "../a11y/marks";
 import { marketingChromeLabel } from "../marketing/labels";
+import { identifyPage } from "../shell/page-identity";
+import { useRouteFocus } from "../shell/route-focus";
 import { protocol } from "../protocol";
 import { preferFresh, transportBannerText, type HeldObservation } from "../transport-status";
 
 /** How often integration HTTP reads the loopback probes again. The stub is not polled. */
 const TRANSPORT_PROBE_MS = 15_000;
 
-const links = [
+export const links = [
   { to: "/", label: "Box office", end: true },
   { to: "/buyer", label: "Buyer", end: false },
   { to: "/discovery", label: "Discover", end: false },
@@ -51,7 +53,9 @@ export function Shell({ children }: { children: ReactNode }) {
   const generation = useRef(0);
   const probing = useRef(false);
 
-  const documentTitle = marketingLabel?.title ?? "KIX Box Office";
+  const identity = identifyPage(location.pathname, links);
+  const documentTitle = identity.title;
+  useRouteFocus(identity.key);
   useEffect(() => {
     document.title = documentTitle;
   }, [documentTitle]);

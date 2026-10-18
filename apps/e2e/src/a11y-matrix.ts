@@ -153,6 +153,7 @@ export const ALT_STATES = [
   { id: "receipts:empty", path: "/receipts", label: "receipts with no receipt on this load" },
   { id: "journeys:unknown-filter", path: "/journeys", label: "journeys table filtered to Unknown" },
   { id: "session:attach-lost", path: "/session", label: "session attach whose answer is lost" },
+  { id: "not-found:unknown-path", path: "/no-such-screen", label: "not-found screen at an unknown address" },
 ] as const;
 
 export const altCheckId = (altId: string) => `a11y.alt.${altId}`;
@@ -174,6 +175,13 @@ export const STATIC_CHECK_IDS: readonly string[] = [
   "a11y.kbd.escape-noop",
   "a11y.kbd.route-change",
   "a11y.status.disabled-reasons",
+  "a11y.shell.title-focus",
+  "a11y.shell.not-found-keys",
+  "a11y.shell.no-focus-steal",
+  "a11y.shell.noscript",
+  "a11y.shell.boot-note",
+  "a11y.shell.route-fault",
+  "a11y.shell.app-fault",
 ];
 
 export function expectedCheckIds(): string[] {

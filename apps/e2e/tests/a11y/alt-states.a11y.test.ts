@@ -87,6 +87,10 @@ const DRIVERS: Record<string, Driver> = {
     await page.getByTestId("session-status").getByText(/unknown|unconfirmed|lost/i).first().waitFor();
     return [];
   },
+  "not-found:unknown-path": async (page) => {
+    await page.getByRole("heading", { name: "Page not found" }).waitFor();
+    return [];
+  },
 };
 
 describe("alternate states the stub reaches today: axe, structure and form probes (desktop)", () => {

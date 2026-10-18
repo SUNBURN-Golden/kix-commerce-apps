@@ -5,6 +5,8 @@ import { recordCheck, recordLedger } from "./run-record";
 
 export interface Suite {
   origin: string;
+  /** The origin of the shell-fault build. Set only in the accessibility suite. */
+  faultOrigin: string | undefined;
   session: () => Session;
   /** Opens a page in the shared context. */
   newPage: () => Promise<Page>;
@@ -17,9 +19,10 @@ export interface Suite {
 /** One browser per test file. At the end the ledger must show no external request and no non-GET request. */
 export function useBrowser(): Suite {
   const origin = inject("origin");
+  const faultOrigin = (inject as (key: string) => unknown)("faultOrigin") as string | undefined;
   let current: Session | null = null;
   beforeAll(async () => {
-    current = await openSession(origin);
+    current = await openSession(origin, faultOrigin ? [faultOrigin] : []);
   });
   afterAll(async () => {
     if (!current) {
@@ -40,6 +43,7 @@ export function useBrowser(): Suite {
   };
   return {
     origin,
+    faultOrigin,
     session,
     newPage: () => session().context.newPage(),
     quiet: async (page, what) => {

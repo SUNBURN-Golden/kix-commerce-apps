@@ -1,5 +1,8 @@
-import { Navigate, Route, Routes } from "react-router-dom";
-import { Shell } from "./components/Shell";
+import { Route, Routes, useLocation } from "react-router-dom";
+import { Shell, links } from "./components/Shell";
+import { identifyPage } from "./shell/page-identity";
+import { RouteBoundary } from "./shell/RenderBoundary";
+import { NotFoundPage } from "./pages/NotFound";
 import { AdmissionPage } from "./pages/Admission";
 import { AssistantPage } from "./pages/Assistant";
 import { BookingPage } from "./pages/Booking";
@@ -37,9 +40,10 @@ import { ResalePage } from "./pages/Resale";
 import { SessionRecoveryPage } from "./pages/SessionRecovery";
 import { TenantPermissionsPage } from "./pages/TenantPermissions";
 
-export function App() {
+function RoutedScreens() {
+  const identity = identifyPage(useLocation().pathname, links);
   return (
-    <Shell>
+    <RouteBoundary screenKey={identity.key} screenLabel={identity.label}>
       <Routes>
         <Route path="/" element={<BoxOfficePage />} />
         <Route path="/buyer" element={<BuyerPage />} />
@@ -78,8 +82,16 @@ export function App() {
         <Route path="/identity" element={<JourneyIdentityPage />} />
         <Route path="/session" element={<SessionRecoveryPage />} />
         <Route path="/journeys" element={<CrossSurfaceJourneysPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
+    </RouteBoundary>
+  );
+}
+
+export function App() {
+  return (
+    <Shell>
+      <RoutedScreens />
     </Shell>
   );
 }
