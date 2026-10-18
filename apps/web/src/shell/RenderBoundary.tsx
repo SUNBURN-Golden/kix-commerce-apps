@@ -1,6 +1,7 @@
 import { Component, useEffect, useRef, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { classifyFault, type RenderFault } from "./render-fault";
+import { forgetFailedScreens } from "./screen-loader";
 
 export type BoundaryScope = "route" | "app";
 
@@ -41,6 +42,7 @@ export class RenderBoundary extends Component<BoundaryProps, BoundaryState> {
 
   componentDidUpdate(): void {
     if (this.state.fault && this.state.keyAtFault !== null && this.state.keyAtFault !== this.props.resetKey) {
+      forgetFailedScreens();
       this.setState(stateAfterReset());
     }
   }
@@ -54,7 +56,11 @@ export class RenderBoundary extends Component<BoundaryProps, BoundaryState> {
         fault={this.state.fault}
         scope={this.props.scope}
         screenLabel={this.props.screenLabel}
-        onAgain={() => this.setState(stateAfterReset())}
+        onAgain={() => {
+          // A failed screen load is kept until now, so drawing again does not import again by itself.
+          forgetFailedScreens();
+          this.setState(stateAfterReset());
+        }}
       />
     );
   }
@@ -76,6 +82,38 @@ export function ErrorPanel({
     heading.current?.focus();
   }, []);
   const request = fault.requestId ?? fault.correlationId;
+  if (fault.kind === "screen-load-error") {
+    return (
+      <section className="shell-error" role="alert" aria-labelledby="shell-error-title" data-scope={scope} data-cause={fault.kind}>
+        <h2 id="shell-error-title" ref={heading} tabIndex={-1}>
+          This screen could not be loaded
+        </h2>
+        <dl className="shell-error-facts">
+          <dt>Cause</dt>
+          <dd>Screen load error (the code for this screen could not be loaded or started; the app may have been updated while this page was open)</dd>
+          <dt>Screen</dt>
+          <dd>{screenLabel}</dd>
+          <dt>Reference</dt>
+          <dd data-testid="shell-error-reference">{fault.reference}</dd>
+          <dt>Request reference</dt>
+          <dd>none (a screen file was requested; no desk request was sent)</dd>
+          <dt>Code</dt>
+          <dd>{fault.code ?? "SCREEN_LOAD_FAILED"}</dd>
+        </dl>
+        <p>
+          This is a load failure, not an UNKNOWN outcome. This panel sent nothing and cleared nothing: results and records the
+          page already holds are untouched, and an UNKNOWN result is not resolved by this panel.
+        </p>
+        <p>If loading again fails, reload the page. A reload clears what this page holds in memory, so read any UNKNOWN fence first.</p>
+        <p className="shell-error-actions">
+          <button type="button" id="shell-error-again" onClick={onAgain}>
+            Load this screen again
+          </button>{" "}
+          {scope === "app" ? <a href="/">Go to Box office</a> : <Link to="/">Go to Box office</Link>}
+        </p>
+      </section>
+    );
+  }
   return (
     <section className="shell-error" role="alert" aria-labelledby="shell-error-title" data-scope={scope} data-cause={fault.kind}>
       <h2 id="shell-error-title" ref={heading} tabIndex={-1}>

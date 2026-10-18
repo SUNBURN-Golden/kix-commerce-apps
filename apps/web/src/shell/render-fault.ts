@@ -5,9 +5,10 @@
  * never copied, so nothing they hold can reach the screen. Duck-typed on purpose: this file does not import
  * the adapter, a desk or any storage.
  */
+import { ScreenLoadError } from "./screen-loader";
 
 export interface RenderFault {
-  kind: "render-error";
+  kind: "render-error" | "screen-load-error";
   /** Upper-case code the thrown value carried, when it matched the safe shape. */
   code: string | null;
   requestId: string | null;
@@ -29,7 +30,7 @@ export function classifyFault(thrown: unknown): RenderFault {
   counter += 1;
   const source = typeof thrown === "object" && thrown !== null ? (thrown as Record<string, unknown>) : {};
   return {
-    kind: "render-error",
+    kind: thrown instanceof ScreenLoadError ? "screen-load-error" : "render-error",
     code: safe(source.code, CODE_SHAPE),
     requestId: safe(source.requestId, ID_SHAPE),
     correlationId: safe(source.correlationId, ID_SHAPE),

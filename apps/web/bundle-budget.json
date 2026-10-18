@@ -1,0 +1,60 @@
+{
+  "schema": "kix-commerce-bundle-budget/1",
+  "scope": "clean stub build (no VITE_* variable, envDir empty), gzip level 9 of each emitted file, measured by scripts/check-bundle-budget.mjs. App-internal; not a public schema, operation or ID. Tripwires for this repository's CI, not an SLO, a qualification or a production performance claim.",
+  "baseline": {
+    "preSplit": {
+      "sourceSha": "f5707862624cc34c249a1b4602da2e3e9c9d0764",
+      "note": "main before this node; every screen in one entry chunk",
+      "initialJsGzip": 523334,
+      "initialCssGzip": 4192,
+      "totalGzip": 527526,
+      "fileCount": 2
+    },
+    "postSplit": {
+      "sourceSha": "f5707862624cc34c249a1b4602da2e3e9c9d0764 plus the c-bundle-performance-budget-stub working tree",
+      "note": "one chunk per registry route; the adapter and both vendored pin files stay in the entry chunk",
+      "initialJsGzip": 258936,
+      "initialCssGzip": 4222,
+      "totalGzip": 585286,
+      "fileCount": 61,
+      "landingJsGzip": 338270
+    }
+  },
+  "limits": {
+    "initialJsGzip": 290000,
+    "initialCssGzip": 5000,
+    "chunkJsGzip": 30000,
+    "landingJsGzip": 400000,
+    "totalGrowth": {
+      "base": 527526,
+      "maxRatio": 1.2
+    },
+    "render": {
+      "discoveryReadyMs": 5000,
+      "discoveryPage50Ms": 5000,
+      "inventorySectionMs": 5000
+    }
+  },
+  "history": [
+    {
+      "date": "2026-10-18",
+      "limits": {
+        "initialJsGzip": 290000,
+        "initialCssGzip": 5000,
+        "chunkJsGzip": 30000,
+        "landingJsGzip": 400000,
+        "totalGrowth": {
+          "base": 527526,
+          "maxRatio": 1.2
+        },
+        "render": {
+          "discoveryReadyMs": 5000,
+          "discoveryPage50Ms": 5000,
+          "inventorySectionMs": 5000
+        }
+      },
+      "reason": "First budget. Limits sit about 12% over the post-split initial JS, 18% over the landing set and initial CSS, 38% over the largest chunk, and 20% over the pre-split total; render caps are about 10 times the local median of 5 cold loads.",
+      "evidence": "docs/c-bundle-performance-budget-stub-apps-bind.md section Numbers: pre-split and post-split reports from scripts/check-bundle-budget.mjs, and the test:budget record."
+    }
+  ]
+}
