@@ -1,11 +1,7 @@
-import { matchPath } from "react-router-dom";
-import { MARKETING_SURFACES, marketingChromeLabel } from "../marketing/labels";
+import { marketingChromeLabel } from "../marketing/labels";
+import { NOT_FOUND_LABEL, ROUTES, routeFor, type RouteEntry } from "./route-registry";
 
-export interface ShellLink {
-  to: string;
-  label: string;
-  end: boolean;
-}
+export { NOT_FOUND_LABEL };
 
 export interface PageIdentity {
   /** Stable key for focus moves. The discovery alias shares one key so a row choice does not move focus. */
@@ -16,27 +12,15 @@ export interface PageIdentity {
 }
 
 const PRODUCT = "KIX Box Office";
-export const NOT_FOUND_LABEL = "Page not found";
 
-/** Routes that have no Shell link (the marketing surfaces M01-M05 are added from their own list). A test reads App.tsx so this list cannot drift from the router. */
-const EXTRA_PATTERNS = [
-  { pattern: "/booking/:eventId", key: "/booking", label: "Booking" },
-  { pattern: "/discovery/:rowId", key: "/discovery", label: "Discover" },
-] as const;
-
-export function identifyPage(pathname: string, links: readonly ShellLink[]): PageIdentity {
-  const marketing = marketingChromeLabel(pathname);
-  const link = links.find((item) => matchPath({ path: item.to, end: true }, pathname));
-  const surface = MARKETING_SURFACES.find((item) => item.path === pathname);
-  const extra =
-    EXTRA_PATTERNS.find((item) => matchPath({ path: item.pattern, end: true }, pathname)) ??
-    (surface ? { key: surface.path, label: `Marketing ${surface.id}` } : undefined);
-  const key = link?.to ?? extra?.key ?? null;
-  const label = link?.label ?? extra?.label ?? null;
-  if (key === null || label === null) {
+/** Titles and focus keys come from the route registry, so a route added there is identified here with no second list. */
+export function identifyPage(pathname: string, routes: readonly RouteEntry[] = ROUTES): PageIdentity {
+  const hit = routeFor(pathname, routes);
+  if (!hit) {
     // No route matches, so the not-found screen is what is drawn. Its title wins even under /marketing.
     return { key: "*", title: `${NOT_FOUND_LABEL} · ${PRODUCT}`, label: NOT_FOUND_LABEL, known: false };
   }
-  const title = marketing?.title ?? (key === "/" ? PRODUCT : `${label} · ${PRODUCT}`);
-  return { key, title, label, known: true };
+  const marketing = marketingChromeLabel(pathname);
+  const title = marketing?.title ?? (hit.path === "/" ? PRODUCT : `${hit.label} · ${PRODUCT}`);
+  return { key: hit.path, title, label: hit.label, known: true };
 }

@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { ALT_STATES, KNOWN_FINDINGS, SCREENS } from "../../src/a11y-matrix";
+import { ROUTES } from "../../../web/src/shell/route-registry";
 import { A11Y_NOT_RUN, assertNoAcceptance, renderA11yRecord, type A11yRecord } from "../../src/a11y-record";
 import { recordCheck } from "../../src/run-record";
 
@@ -11,8 +12,10 @@ const root = path.resolve(here, "../../../..");
 const read = (file: string) => fs.readFileSync(path.join(root, file), "utf8");
 const doc = read("docs/c-a11y-acceptance-stub-apps-bind.md");
 
+/** The routes the app draws, read from the route registry that App.tsx and the nav derive from. The discovery alias is not a registry route. */
 function appRoutes(): string[] {
-  return [...read("apps/web/src/App.tsx").matchAll(/<Route path="([^"]+)"/g)].map((match) => match[1]!).filter((route) => route !== "*" && route !== "/discovery/:rowId");
+  expect(read("apps/web/src/App.tsx"), "App.tsx writes no route path of its own").not.toMatch(/<Route\s+path="\//);
+  return ROUTES.map((route) => route.path);
 }
 
 function minimalRecord(): A11yRecord {
@@ -38,13 +41,12 @@ function minimalRecord(): A11yRecord {
 }
 
 describe("user acceptance matrix: every screen is PENDING, and nothing here can say ACCEPTED", () => {
-  it("the screen rows equal the App.tsx routes (the discovery alias excluded) and the Shell links are all covered", () => {
+  it("the screen rows equal the registry routes (the discovery alias excluded) and the nav links are all covered", () => {
     const patterns = SCREENS.map((screen) => screen.pattern).sort();
     expect(patterns).toEqual(appRoutes().sort());
-    const links = [...read("apps/web/src/components/Shell.tsx").matchAll(/\{ to: "([^"]+)"/g)].map((match) => match[1]!);
     const paths = new Set(SCREENS.map((screen) => screen.pattern));
-    for (const link of links) {
-      expect(paths.has(link), `a Shell link without a screen row: ${link}`).toBe(true);
+    for (const link of ROUTES.filter((route) => route.nav === "link")) {
+      expect(paths.has(link.path), `a nav link without a screen row: ${link.path}`).toBe(true);
     }
   });
 
