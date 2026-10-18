@@ -182,6 +182,11 @@ export const STATIC_CHECK_IDS: readonly string[] = [
   "a11y.shell.boot-note",
   "a11y.shell.route-fault",
   "a11y.shell.app-fault",
+  "a11y.nav.desktop-keys",
+  "a11y.nav.menu-keys",
+  "a11y.nav.menu-focus",
+  "a11y.nav.menu-axe",
+  "a11y.nav.breadcrumb",
 ];
 
 export function expectedCheckIds(): string[] {

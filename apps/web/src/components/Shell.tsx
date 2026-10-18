@@ -1,48 +1,17 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { CREDIT_BOUNDARY, ProtocolError, type TransportObservation } from "@kix/protocol-adapter";
 import { transportStatusWord } from "../a11y/marks";
 import { marketingChromeLabel } from "../marketing/labels";
 import { identifyPage } from "../shell/page-identity";
+import { Breadcrumb } from "./Breadcrumb";
+import { SurfaceNav } from "./SurfaceNav";
 import { useRouteFocus } from "../shell/route-focus";
 import { protocol } from "../protocol";
 import { preferFresh, transportBannerText, type HeldObservation } from "../transport-status";
 
 /** How often integration HTTP reads the loopback probes again. The stub is not polled. */
 const TRANSPORT_PROBE_MS = 15_000;
-
-export const links = [
-  { to: "/", label: "Box office", end: true },
-  { to: "/buyer", label: "Buyer", end: false },
-  { to: "/discovery", label: "Discover", end: false },
-  { to: "/inventory", label: "Seats and GA", end: false },
-  { to: "/platform", label: "Trading platform", end: false },
-  { to: "/admission", label: "Admission", end: false },
-  { to: "/resale", label: "Resale", end: false },
-  { to: "/gift", label: "Gift", end: false },
-  { to: "/organizer", label: "Organizer", end: true },
-  { to: "/organizer/workspace", label: "Organizer workspace", end: true },
-  { to: "/merchant", label: "Merchant", end: true },
-  { to: "/receipts", label: "Receipts", end: true },
-  { to: "/handoff", label: "Local handoff", end: true },
-  { to: "/credit", label: "Credit", end: true },
-  { to: "/credit/origination", label: "Credit origination", end: true },
-  { to: "/credit/servicing", label: "Credit servicing", end: true },
-  { to: "/finance", label: "Finance", end: true },
-  { to: "/marketing", label: "Marketing", end: false },
-  { to: "/marketing/journey", label: "Benefit journey", end: true },
-  { to: "/assistant", label: "Assistant", end: true },
-  { to: "/permissions", label: "Permissions", end: true },
-  { to: "/notifications", label: "Notifications", end: true },
-  { to: "/provider", label: "Provider journey", end: true },
-  { to: "/marketplace-performance", label: "Marketplace bench", end: true },
-  { to: "/mobile", label: "Mobile shell", end: true },
-  { to: "/qualification", label: "Qualification", end: true },
-  { to: "/release", label: "Release", end: true },
-  { to: "/identity", label: "Journey context", end: true },
-  { to: "/session", label: "Session recovery", end: true },
-  { to: "/journeys", label: "Journeys", end: true },
-];
 
 export function Shell({ children }: { children: ReactNode }) {
   const meta = protocol.describe();
@@ -53,7 +22,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const generation = useRef(0);
   const probing = useRef(false);
 
-  const identity = identifyPage(location.pathname, links);
+  const identity = identifyPage(location.pathname);
   const documentTitle = identity.title;
   useRouteFocus(identity.key);
   useEffect(() => {
@@ -140,15 +109,9 @@ export function Shell({ children }: { children: ReactNode }) {
             <h1>{onMarketing ? "Marketing" : "Box office"}</h1>
           </div>
         </div>
-        <nav aria-label="Surfaces">
-          {links.map((link) => (
-            // The journey sits under /marketing. Only its own link is current there.
-            <NavLink key={link.to} to={link.to} end={link.to === "/marketing" && location.pathname === "/marketing/journey" ? true : link.end}>
-              {link.label}
-            </NavLink>
-          ))}
-        </nav>
+        <SurfaceNav />
       </header>
+      <Breadcrumb />
       <p className="banner" role="status">
         Adapter <strong>{meta.adapter}</strong>. Environment <strong>{meta.environment}</strong>. No live chain and no
         funds movement. Public production deployment is not selected. {CREDIT_BOUNDARY.note}

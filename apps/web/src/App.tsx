@@ -1,6 +1,8 @@
+import type { ComponentType } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
-import { Shell, links } from "./components/Shell";
+import { Shell } from "./components/Shell";
 import { identifyPage } from "./shell/page-identity";
+import { ROUTES, ROUTE_ALIASES, type RouteId } from "./shell/route-registry";
 import { RouteBoundary } from "./shell/RenderBoundary";
 import { NotFoundPage } from "./pages/NotFound";
 import { AdmissionPage } from "./pages/Admission";
@@ -40,48 +42,60 @@ import { ResalePage } from "./pages/Resale";
 import { SessionRecoveryPage } from "./pages/SessionRecovery";
 import { TenantPermissionsPage } from "./pages/TenantPermissions";
 
+/** The component each registry route draws. A route added to the registry without a component here fails typecheck. */
+const SCREENS: Record<RouteId, ComponentType> = {
+  "box-office": BoxOfficePage,
+  buyer: BuyerPage,
+  discovery: DiscoveryPage,
+  inventory: InventoryPage,
+  booking: BookingPage,
+  admission: AdmissionPage,
+  resale: ResalePage,
+  gift: GiftPage,
+  mobile: InstallableMobilePage,
+  assistant: AssistantPage,
+  organizer: OrganizerPage,
+  "organizer-workspace": OrganizerWorkspacePage,
+  merchant: MerchantPage,
+  finance: FinancePage,
+  provider: ProviderJourneyPage,
+  credit: CreditPage,
+  "credit-origination": CreditOriginationPage,
+  "credit-servicing": CreditServicingPage,
+  marketing: MarketingHubPage,
+  "marketing-journey": MarketingJourneyPage,
+  "marketing-m01": M01Page,
+  "marketing-m02": M02Page,
+  "marketing-m03": M03Page,
+  "marketing-m04": M04Page,
+  "marketing-m05": M05Page,
+  platform: PlatformPage,
+  "marketplace-performance": MarketplacePerformancePage,
+  permissions: TenantPermissionsPage,
+  notifications: NotificationsPage,
+  identity: JourneyIdentityPage,
+  session: SessionRecoveryPage,
+  receipts: ReceiptsPage,
+  handoff: HandoffPage,
+  journeys: CrossSurfaceJourneysPage,
+  qualification: OperationalQualificationPage,
+  release: PlatformReleasePage,
+};
+
 function RoutedScreens() {
-  const identity = identifyPage(useLocation().pathname, links);
+  const identity = identifyPage(useLocation().pathname);
   return (
     <RouteBoundary screenKey={identity.key} screenLabel={identity.label}>
       <Routes>
-        <Route path="/" element={<BoxOfficePage />} />
-        <Route path="/buyer" element={<BuyerPage />} />
-        <Route path="/discovery" element={<DiscoveryPage />} />
-        <Route path="/discovery/:rowId" element={<DiscoveryPage />} />
-        <Route path="/inventory" element={<InventoryPage />} />
-        <Route path="/platform" element={<PlatformPage />} />
-        <Route path="/merchant" element={<MerchantPage />} />
-        <Route path="/booking/:eventId" element={<BookingPage />} />
-        <Route path="/admission" element={<AdmissionPage />} />
-        <Route path="/resale" element={<ResalePage />} />
-        <Route path="/gift" element={<GiftPage />} />
-        <Route path="/organizer/workspace" element={<OrganizerWorkspacePage />} />
-        <Route path="/organizer" element={<OrganizerPage />} />
-        <Route path="/receipts" element={<ReceiptsPage />} />
-        <Route path="/handoff" element={<HandoffPage />} />
-        <Route path="/credit/origination" element={<CreditOriginationPage />} />
-        <Route path="/credit/servicing" element={<CreditServicingPage />} />
-        <Route path="/credit" element={<CreditPage />} />
-        <Route path="/finance" element={<FinancePage />} />
-        <Route path="/marketing" element={<MarketingHubPage />} />
-        <Route path="/marketing/journey" element={<MarketingJourneyPage />} />
-        <Route path="/marketing/m01" element={<M01Page />} />
-        <Route path="/marketing/m02" element={<M02Page />} />
-        <Route path="/marketing/m03" element={<M03Page />} />
-        <Route path="/marketing/m04" element={<M04Page />} />
-        <Route path="/marketing/m05" element={<M05Page />} />
-        <Route path="/assistant" element={<AssistantPage />} />
-        <Route path="/permissions" element={<TenantPermissionsPage />} />
-        <Route path="/notifications" element={<NotificationsPage />} />
-        <Route path="/provider" element={<ProviderJourneyPage />} />
-        <Route path="/marketplace-performance" element={<MarketplacePerformancePage />} />
-        <Route path="/mobile" element={<InstallableMobilePage />} />
-        <Route path="/qualification" element={<OperationalQualificationPage />} />
-        <Route path="/release" element={<PlatformReleasePage />} />
-        <Route path="/identity" element={<JourneyIdentityPage />} />
-        <Route path="/session" element={<SessionRecoveryPage />} />
-        <Route path="/journeys" element={<CrossSurfaceJourneysPage />} />
+        {ROUTES.map((entry) => {
+          const Screen = SCREENS[entry.id];
+          return <Route key={entry.id} path={entry.path} element={<Screen />} />;
+        })}
+        {ROUTE_ALIASES.map((alias) => {
+          const target = ROUTES.find((entry) => entry.path === alias.of);
+          const Screen = SCREENS[target!.id];
+          return <Route key={alias.path} path={alias.path} element={<Screen />} />;
+        })}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </RouteBoundary>

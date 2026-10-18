@@ -252,8 +252,10 @@ describe("cross-surface journeys screen", () => {
       </MemoryRouter>,
     );
     expect(html).toContain('aria-label="Cross-surface journey sections"');
-    expect(html.match(/aria-current="page"/g) ?? []).toHaveLength(1);
-    expect(html).toMatch(/<a[^>]*aria-current="page"[^>]*href="\/journeys"|<a[^>]*href="\/journeys"[^>]*aria-current="page"/);
+    // The breadcrumb also marks its own current crumb, so the count is taken inside the Surfaces nav.
+    const nav = html.match(/<nav aria-label="Surfaces">.*?<\/nav>/s)?.[0] ?? "";
+    expect(nav.match(/aria-current="page"/g) ?? []).toHaveLength(1);
+    expect(nav).toMatch(/<a[^>]*aria-current="page"[^>]*href="\/journeys"|<a[^>]*href="\/journeys"[^>]*aria-current="page"/);
     expect(html).toContain("Journeys");
   });
 });

@@ -217,7 +217,7 @@ export const JOURNEY_TESTS: Readonly<Record<string, { adapter: string; e2e: stri
 };
 
 /** Browser journeys suite id -> the route pattern it drives. */
-const E2E_ROUTE: Readonly<Record<(typeof E2E_JOURNEYS)[number], string>> = {
+export const E2E_ROUTE: Readonly<Record<(typeof E2E_JOURNEYS)[number], string>> = {
   "box-office": "/",
   booking: "/booking/:eventId",
   admission: "/admission",
