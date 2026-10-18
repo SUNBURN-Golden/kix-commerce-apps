@@ -252,14 +252,13 @@ The reviewed gate does not answer CORS, so from a browser at `:5173` the banner 
 
 ## CI
 
-`.github/workflows/ci.yml` runs on pushes to `main`, on pull requests, and on demand. Besides the small `gate-token` check, it has three jobs:
+`.github/workflows/ci.yml` runs on pushes to `main`, on pull requests, and on demand. Besides the small `gate-token` check, it has five jobs:
 
 - `desk` runs `npm ci`, `npm run typecheck`, `npm run build`, and `npm test`. It sets `KIX_REQUIRE_GATE=0`, so the live gate suites are skipped there on purpose.
 - `live-gate` checks out kix-protocol at the pinned merge `52a9b5cbf7777df55d2d2062cb8d99d862b423bb` and runs the adapter suite with `KIX_REQUIRE_GATE=1` against that checkout. kix-protocol is private, so this job needs a `KIX_PROTOCOL_READ_TOKEN` repository secret with read-only contents access to it. A small `gate-token` job checks for the secret first. Without it, `gate-token` posts a warning and `live-gate` shows as skipped, never as a pass.
-
-- `bundle-budget` (named "Bundle budget") runs `npm ci`, `npm run build`, `npm run budget` (the size check against `apps/web/bundle-budget.json`), `npm run typecheck:e2e` and `npm run test:budget` on the runner's Google Chrome. It is additive: no existing job changed. It has no `needs`, no secret and no protocol checkout. The size table and the measurement record go to the job summary. The numbers are regression tripwires, not an SLO, not a qualification and not a production performance claim.
-- `a11y-observation` (named "Accessibility observation (stub, headless Chrome)") runs the separate `npm run test:a11y` suite. It is additive and has no `needs`, secret or protocol checkout. Its record goes to the job summary. A green run is not user acceptance, not a conformance claim and not a release permission.
 - `browser-e2e` (named "Browser journeys (stub, headless Chrome)") runs `npm ci`, `npm run typecheck:e2e`, and `npm run test:e2e` on the runner's Google Chrome. It is additive: the `desk` job and its checks are unchanged. It has no `needs`, no secret, and no protocol checkout. The run record goes to the job summary and is not uploaded as an artifact.
+- `a11y-observation` (named "Accessibility observation (stub, headless Chrome)") runs the separate `npm run test:a11y` suite. It is additive and has no `needs`, secret or protocol checkout. Its record goes to the job summary. A green run is not user acceptance, not a conformance claim and not a release permission.
+- `bundle-budget` (named "Bundle budget") runs `npm ci`, `npm run build`, `npm run budget` (the size check against `apps/web/bundle-budget.json`), `npm run typecheck:e2e` and `npm run test:budget` on the runner's Google Chrome. It is additive: no existing job changed. It has no `needs`, no secret and no protocol checkout. The size table and the measurement record go to the job summary. The numbers are regression tripwires, not an SLO, not a qualification and not a production performance claim.
 
 A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha`. Moving the pin means moving both.
 
@@ -287,7 +286,7 @@ Deterministic fault injection runs on the two existing seams (the `fetchImpl` of
 
 ## Local evidence matrix (stub)
 
-One document keeps an evidence matrix over every stub-scope surface, journey, and node, with a final denominator table. `node_state`, `qualification_state`, `acceptance_state`, and `release_state` stay in four columns. Live-gate skipped, NOT_BOUND, stub-only, user acceptance PENDING, and release NOT_AUTHORIZED are counted on separate lines. Pending nodes and their external prerequisites stay in the denominator and are not counted as done. The document links the `/handoff` and `/release` records and replaces neither. It approves no completion, acceptance, or release, and a test keeps it equal to the sources it summarises. There is no new screen. Matrix and denominator are in [docs/c-local-evidence-matrix-stub-apps-bind.md](docs/c-local-evidence-matrix-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+One document keeps an evidence matrix over every stub-scope surface, journey, and node, with a final denominator table. `node_state`, `qualification_state`, `acceptance_state`, and `release_state` stay in four columns. Live-gate skipped, NOT_BOUND, stub-only, user acceptance PENDING, and release NOT_AUTHORIZED are counted on separate lines. Pending nodes and their external prerequisites stay in the denominator and are not counted as done. The document links the `/handoff` and `/release` records and replaces neither. It approves no completion, acceptance, or release, and a test keeps it equal to the repo files it reads (surfaces, fixtures, pins, node lists). Node merge status is a snapshot typed at the base the document names; a later merge shows only after the table is regenerated at a newer base. There is no new screen. Matrix and denominator are in [docs/c-local-evidence-matrix-stub-apps-bind.md](docs/c-local-evidence-matrix-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
 ## Tests
 
