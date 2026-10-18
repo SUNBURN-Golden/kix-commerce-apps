@@ -4,9 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>KIX Box Office</title>
+    <noscript>
+      <style>
+        .boot-loading {
+          display: none;
+        }
+      </style>
+    </noscript>
   </head>
   <body>
-    <div id="root"></div>
+    <noscript>
+      <p class="boot-note">This desk needs JavaScript. It is switched off in this browser, so nothing can be shown here. Nothing was sent.</p>
+    </noscript>
+    <div id="root">
+      <p class="boot-note boot-loading" role="status">Loading the desk. If this note stays, the script did not start. Reload the page.</p>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

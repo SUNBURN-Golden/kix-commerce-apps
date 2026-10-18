@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import type { TestProject } from "vitest/node";
-import { buildStubApp, type BuiltApp } from "./build";
+import { buildShellFaultApp, buildStubApp, type BuiltApp } from "./build";
 import { A11Y_BASELINE, KNOWN_FINDINGS, SCREENS, VIEWPORTS, expectedCheckIds, matrixProblems, type ScreenRecord, type ViewportName } from "./a11y-matrix";
 import { A11Y_NOT_RUN, readFacets, renderA11yRecord, type A11yRecord, type FacetLine } from "./a11y-record";
 import { readChecks, readLedger } from "./run-record";
@@ -12,11 +12,14 @@ import { LOOPBACK, serveDirectory, type StaticServer } from "./static-server";
 declare module "vitest" {
   export interface ProvidedContext {
     origin: string;
+    faultOrigin: string;
   }
 }
 
 let app: BuiltApp | null = null;
 let server: StaticServer | null = null;
+let faultApp: BuiltApp | null = null;
+let faultServer: StaticServer | null = null;
 let recordDir = "";
 
 function git(args: string[]): string {
@@ -33,6 +36,9 @@ export async function setup(project: TestProject): Promise<void> {
   app = await buildStubApp();
   server = await serveDirectory(app.outDir);
   project.provide("origin", server.origin);
+  faultApp = await buildShellFaultApp();
+  faultServer = await serveDirectory(faultApp.outDir);
+  project.provide("faultOrigin", faultServer.origin);
 }
 
 function screenRecords(facets: FacetLine[], checks: Set<string>, head: string): ScreenRecord[] {
@@ -76,8 +82,10 @@ export async function teardown(): Promise<void> {
       problems.push(`check did not pass in this run: ${id}`);
     }
   }
-  if (server && server.address !== LOOPBACK) {
-    problems.push(`server bound to ${server.address}`);
+  for (const bound of [server, faultServer]) {
+    if (bound && bound.address !== LOOPBACK) {
+      problems.push(`server bound to ${bound.address}`);
+    }
   }
   const ledgers = readLedger(recordDir);
   if (ledgers.length === 0) {
@@ -110,7 +118,9 @@ export async function teardown(): Promise<void> {
     fs.writeFileSync(outFile, renderA11yRecord(record) + "\n");
   }
   await server?.close();
+  await faultServer?.close();
   app?.cleanup();
+  faultApp?.cleanup();
   fs.rmSync(recordDir, { recursive: true, force: true });
   if (problems.length > 0) {
     throw new Error(`Accessibility observation matrix is incomplete:\n${problems.join("\n")}`);

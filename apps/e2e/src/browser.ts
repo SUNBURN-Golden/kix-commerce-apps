@@ -52,7 +52,8 @@ const COUNTER = `
 })();
 `;
 
-export async function openSession(origin: string): Promise<Session> {
+export async function openSession(origin: string, extraOrigins: readonly string[] = []): Promise<Session> {
+  const allowed = new Set([origin, ...extraOrigins]);
   const args = ["--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE 127.0.0.1", "--no-proxy-server"];
   if (process.env.KIX_E2E_NO_SANDBOX === "1") {
     args.push("--no-sandbox");
@@ -63,7 +64,7 @@ export async function openSession(origin: string): Promise<Session> {
   await context.route("**/*", (route) => {
     const request = route.request();
     const url = new URL(request.url());
-    if (url.origin !== origin) {
+    if (!allowed.has(url.origin)) {
       ledger.nonLoopback.push(`${request.method()} ${url.origin}`);
       return route.abort();
     }

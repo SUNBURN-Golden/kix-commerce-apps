@@ -18,6 +18,19 @@ export interface BuiltApp {
  * so a stray .env file or shell variable cannot select HTTP mode.
  */
 export async function buildStubApp(): Promise<BuiltApp> {
+  return buildApp(false);
+}
+
+/**
+ * A second stub build for the shell-resilience browser tests only. Two aliases swap the receipts screen and
+ * the protocol port for fixtures that throw on purpose while a window flag is set. The product bundle that
+ * every other test uses is not touched.
+ */
+export async function buildShellFaultApp(): Promise<BuiltApp> {
+  return buildApp(true);
+}
+
+async function buildApp(withFaults: boolean): Promise<BuiltApp> {
   for (const key of Object.keys(process.env)) {
     if (key.startsWith("VITE_")) {
       delete process.env[key];
@@ -33,6 +46,14 @@ export async function buildStubApp(): Promise<BuiltApp> {
     envDir,
     mode: "production",
     logLevel: "warn",
+    resolve: withFaults
+      ? {
+          alias: [
+            { find: /^\.\/pages\/Receipts$/, replacement: path.resolve(here, "../shell-fixtures/receipts-fault.ts") },
+            { find: /^(\.\.?\/)+protocol$/, replacement: path.resolve(here, "../shell-fixtures/protocol-fault.ts") },
+          ],
+        }
+      : undefined,
     build: { outDir, emptyOutDir: true, minify: true },
   });
   return { outDir, cleanup: () => fs.rmSync(scratch, { recursive: true, force: true }) };
