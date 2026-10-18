@@ -177,8 +177,8 @@ describe("index.html boot and noscript notes", () => {
     expect(html).toContain('id="root"');
     expect(html).toMatch(/Loading the desk/);
     expect(html).not.toMatch(/https?:\/\//);
-    expect(html).not.toMatch(/<link\b/);
+    expect(html).not.toMatch(/<link\b/i);
     expect(html).not.toMatch(/\sstyle=/);
-    expect([...html.matchAll(/<script\b[^>]*>/g)].map((m) => m[0])).toEqual(['<script type="module" src="/src/main.tsx">']);
+    expect([...html.matchAll(/<script\b[^>]*>/gi)].map((m) => m[0])).toEqual(['<script type="module" src="/src/main.tsx">']);
   });
 });
