@@ -5,5 +5,5 @@ import { VIEWPORTS, type ViewportName } from "../../src/a11y-matrix";
 export async function openScreen(page: Page, origin: string, path: string, viewport: ViewportName = "desktop"): Promise<void> {
   await page.setViewportSize(VIEWPORTS[viewport]);
   await page.goto(origin + path);
-  await page.locator("#desk-main > *").first().waitFor();
+  await page.locator("#desk-main > :not([data-screen-loading])").first().waitFor();
 }

@@ -119,7 +119,7 @@ describe("widget keyboard behaviour, disabled reasons, Escape and route change (
     expect(await tabTo(page, "nav a[href='/buyer']")).toBe(true);
     await page.keyboard.press("Enter");
     await page.waitForURL("**/buyer");
-    await page.locator("#desk-main > *").first().waitFor();
+    await page.locator("#desk-main > :not([data-screen-loading])").first().waitFor();
     const after = await page.title();
     const landed = await page.evaluate(() => {
       const el = document.activeElement;

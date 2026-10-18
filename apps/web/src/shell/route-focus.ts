@@ -20,6 +20,23 @@ export function focusPrimaryHeading(): boolean {
   return document.activeElement === target;
 }
 
+/** True from a route change that found no page heading yet (the screen's code was still loading) until the screen is drawn. */
+let headingPending = false;
+
+/** Called by a screen slot after its screen is drawn. Finishes a focus move the route change could not make yet. */
+export function onScreenReady(): void {
+  if (!headingPending) {
+    return;
+  }
+  headingPending = false;
+  const main = document.getElementById("desk-main");
+  const active = document.activeElement;
+  if (main && active && active !== main && main.contains(active)) {
+    return;
+  }
+  focusPrimaryHeading();
+}
+
 /**
  * Focuses the page heading when the page key changes after the first render.
  * First paint keeps the skip link first in the Tab order. A page that already put focus inside main keeps it.
@@ -36,6 +53,12 @@ export function useRouteFocus(key: string): void {
     if (main && active && active !== main && main.contains(active)) {
       return;
     }
+    if (main && !main.querySelector("h1, h2")) {
+      // The screen's code is still loading: the slot finishes the move when the screen is drawn.
+      headingPending = true;
+      return;
+    }
+    headingPending = false;
     focusPrimaryHeading();
   }, [key]);
 }
