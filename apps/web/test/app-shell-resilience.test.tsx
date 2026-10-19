@@ -173,7 +173,7 @@ describe("not found and page identity", () => {
 describe("index.html boot and noscript notes", () => {
   const html = read("index.html");
   it("has a noscript note and a loading note with no external resource, link, inline style or extra script", () => {
-    expect(html).toMatch(/<noscript>[\s\S]*JavaScript[\s\S]*<\/noscript>/);
+    expect(html).toMatch(/<noscript>[\s\S]*JavaScript[\s\S]*<\/noscript\b[^>]*>/);
     expect(html).toContain('id="root"');
     expect(html).toMatch(/Loading the desk/);
     expect(html).not.toMatch(/https?:\/\//);
