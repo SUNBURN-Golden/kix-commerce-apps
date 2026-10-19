@@ -81,6 +81,24 @@ describe("catalogue keys", () => {
   });
 });
 
+/**
+ * Removes every `<style>…</style>` block with a plain scan, not a regex replace: the brace check below
+ * must not see CSS, and a regex stripper can leave a re-assembled `<style` behind (incomplete sanitization).
+ */
+const withoutStyleBlocks = (html: string) => {
+  let text = "";
+  let rest = html;
+  for (;;) {
+    const open = rest.indexOf("<style");
+    if (open === -1) {
+      return text + rest;
+    }
+    const close = rest.indexOf("</style>", open + "<style".length);
+    text += rest.slice(0, open);
+    rest = close === -1 ? "" : rest.slice(close + "</style>".length);
+  }
+};
+
 describe("interpolation", () => {
   it("fills named values in both languages", () => {
     expect(makeTranslate("en")("screen.loading", { label: "Gift" })).toBe("Loading Gift…");
@@ -98,7 +116,7 @@ describe("interpolation", () => {
     for (const locale of ["en", "ko"] as const) {
       for (const at of ["/", "/no-such-screen", "/receipts", "/marketing/m01"]) {
         const html = draw(<App />, locale, at);
-        const text = html.replace(/<style[\s\S]*?<\/style>/g, "");
+        const text = withoutStyleBlocks(html);
         expect(/\{[A-Za-z]+\}/.test(text), `${locale} ${at}`).toBe(false);
       }
     }
