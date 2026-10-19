@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { CREDIT_BOUNDARY, ProtocolError, type TransportObservation } from "@kix/protocol-adapter";
 import { transportStatusWord } from "../a11y/marks";
+import { motionReduced, REDUCED_MOTION_QUERY } from "../a11y/motion";
 import { marketingChromeLabel } from "../marketing/labels";
 import { LocaleSwitch } from "../i18n/LocaleSwitch";
 import { useLocale } from "../i18n/locale-context";
@@ -31,8 +32,21 @@ export function Shell({ children }: { children: ReactNode }) {
   const onMarketing = location.pathname === "/marketing" || location.pathname.startsWith("/marketing/");
   const marketingLabel = marketingChromeLabel(location.pathname);
   const [held, setHeld] = useState<HeldObservation | null>(null);
+  // The user's stop control for the one timed update on this desk.
+  const [motionPaused, setMotionPaused] = useState(motionReduced);
   const generation = useRef(0);
   const probing = useRef(false);
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") {
+      return;
+    }
+    const list = window.matchMedia(REDUCED_MOTION_QUERY);
+    const update = () => setMotionPaused(list.matches);
+    update();
+    list.addEventListener("change", update);
+    return () => list.removeEventListener("change", update);
+  }, []);
 
   const identity = usePageIdentity(location.pathname);
   const documentTitle = identity.title;
@@ -92,7 +106,9 @@ export function Shell({ children }: { children: ReactNode }) {
         });
     };
     probe(false);
-    if (meta.environment === "stub") {
+    // Stub mode never polls, and a reduced-motion preference stops the one
+    // timed update this desk has. The load probe above still ran once.
+    if (meta.environment === "stub" || motionPaused) {
       return () => {
         cancelled = true;
       };
@@ -102,9 +118,9 @@ export function Shell({ children }: { children: ReactNode }) {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [meta.environment, location.pathname]);
+  }, [meta.environment, location.pathname, motionPaused]);
 
-  const transport = transportBannerText(meta.environment, held?.observation ?? null, t);
+  const transport = transportBannerText(meta.environment, held?.observation ?? null, t, motionPaused);
 
   const transportWord = transportStatusWord(transport.state, t);
 

@@ -260,7 +260,7 @@ function HandoffBody({
           <StatusMark kind="review" /> These names are posted only by the named sender. Local only. Protocol integration is
           not complete.
         </p>
-        <div className="handoff-scroll">
+        <div className="handoff-scroll" role="region" aria-label="Supported commands, scrollable" tabIndex={0}>
           <table>
             <caption>Commands this desk can post on the stub or the loopback gate</caption>
             <thead>
@@ -298,7 +298,7 @@ function HandoffBody({
       <section className="panel">
         <h3>Pending producers</h3>
         <p>These catalogue ids are not connected and are not implemented on this desk.</p>
-        <div className="handoff-scroll">
+        <div className="handoff-scroll" role="region" aria-label="Pending producers, scrollable" tabIndex={0}>
           <table>
             <caption>Pending producers the local desk does not consume</caption>
             <thead>
@@ -381,7 +381,7 @@ function HandoffBody({
 
 function FeatureTable({ rows }: { rows: readonly FeatureRow[] }) {
   return (
-    <div className="handoff-scroll">
+    <div className="handoff-scroll" role="region" aria-label="Feature status, scrollable" tabIndex={0}>
       <table>
         <caption>Feature connection status. A row with a screen is still not protocol integration.</caption>
         <thead>

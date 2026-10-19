@@ -1,16 +1,84 @@
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
   --paper: #efe4d2;
   --card: #f7f1e4;
+  --field: #ffffff;
   --ink: #241910;
   --muted: #5e5146;
   --line: #241910;
   --stamp: #8d1d32;
   --ok: #1d5c3d;
+  --wash: rgba(141, 29, 50, 0.08);
   --shadow: 6px 6px 0 #241910;
   font-family: "Avenir Next", "Segoe UI", sans-serif;
   background: var(--paper);
   color: var(--ink);
+}
+
+/*
+ * Dark scheme: the same tokens, dark values. Every rule below reads the
+ * tokens, so the whole desk follows. A status is still carried by its word
+ * and its border style, never by a colour alone.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #171208;
+    --card: #231c10;
+    --field: #171208;
+    --ink: #f3ecdd;
+    --muted: #cabea6;
+    --line: #e3d7c0;
+    --stamp: #f5a8b3;
+    --ok: #a6dcba;
+    --wash: rgba(245, 168, 179, 0.14);
+    --shadow: 6px 6px 0 #050403;
+  }
+}
+
+/*
+ * Forced colours (Windows high contrast and friends): the tokens point at
+ * the platform system colours and everything else follows. Words and the
+ * different border styles on status marks survive; colour is never the only
+ * signal. Box shadows and the background wash go away on their own.
+ */
+@media (forced-colors: active) {
+  :root {
+    --paper: Canvas;
+    --card: Canvas;
+    --field: Field;
+    --ink: CanvasText;
+    --muted: CanvasText;
+    --line: CanvasText;
+    --stamp: CanvasText;
+    --ok: CanvasText;
+    --wash: transparent;
+    --shadow: none;
+  }
+
+  /* The current nav link keeps a second, non-colour mark: the underline. */
+  nav a[aria-current="page"] {
+    text-decoration: underline;
+  }
+}
+
+/*
+ * Reduced motion: no transition or animation may run. The desk has none of
+ * its own today; this block keeps it that way when one is ever added. The
+ * one timed update (the integration-http transport re-probe) is stopped in
+ * Shell.tsx, not here.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 * {
@@ -20,7 +88,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background-image: radial-gradient(circle at top left, rgba(141, 29, 50, 0.08), transparent 28rem);
+  background-image: radial-gradient(circle at top left, var(--wash), transparent 28rem);
 }
 
 a {
@@ -203,7 +271,7 @@ select {
   font: inherit;
   padding: 0.5rem 0.6rem;
   border: 1px solid var(--line);
-  background: white;
+  background: var(--field);
   color: var(--ink);
   max-width: 24rem;
 }
@@ -1164,6 +1232,12 @@ main:focus-visible {
   min-width: 0;
 }
 
+/* Long unbreakable tokens (env names, commands) must not push a grid track past the window at 320px. */
+.handoff li,
+.handoff p {
+  overflow-wrap: anywhere;
+}
+
 .handoff table {
   width: 100%;
   border-collapse: collapse;
@@ -1460,4 +1534,41 @@ nav a[aria-current="page"] {
 
 :lang(ko) {
   word-break: keep-all;
+}
+
+/*
+ * Print: the receipt explorer and the handoff packet read as documents on
+ * paper. The shell nav, the breadcrumb row, the locale switch, the skip
+ * link and the in-page receipt nav are hidden, link targets are printed
+ * after their text, and a line keeps the synthetic wording on the page.
+ * A printed copy is still not a receipt.
+ */
+@media print {
+  .top nav,
+  .crumb-row,
+  .locale-switch,
+  .skip,
+  .receipt-nav {
+    display: none;
+  }
+
+  .banner,
+  .ticket {
+    box-shadow: none;
+  }
+
+  .receipt::before,
+  .handoff::before {
+    content: "Synthetic stub display. A printed copy is not a receipt, not a confirmation, and not a qualification.";
+    display: block;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--line);
+  }
+
+  .receipt a[href]::after,
+  .handoff a[href]::after {
+    content: " (" attr(href) ")";
+    font-weight: normal;
+  }
 }
