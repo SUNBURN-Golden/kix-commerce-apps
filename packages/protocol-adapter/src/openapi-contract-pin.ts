@@ -1,3 +1,4 @@
+import { COMMANDS, type CommandName } from "#kix-sdk-0/catalogue";
 import openApiRaw from "../vendor/kix-protocol.contract-only.openapi.json?raw";
 import { isRecord } from "./record.js";
 import { sha256Hex } from "./sha256.js";
@@ -35,50 +36,14 @@ export const CONTRACT_ONLY_LOCAL_CALL_METHOD = "POST" as const;
 
 export const LOCAL_CALL_PARAMETER_NAMES = ["operationId", "actor", "action", "body"] as const;
 
-export const PINNED_ACTIONS = [
-  "abort_effect",
-  "abort_trade",
-  "accept_gift",
-  "accept_trade",
-  "adjust_pg_cancel",
-  "admit",
-  "advance_clock",
-  "authorize_marketing",
-  "cancel_event",
-  "cancel_gift",
-  "cancel_listing",
-  "capture",
-  "claim_effect",
-  "close_delegation",
-  "close_sales",
-  "commit_trade",
-  "complete_event",
-  "create_event",
-  "create_listing",
-  "delegate",
-  "dispatch_effect",
-  "expire_trade",
-  "finalize_effect",
-  "issue_invitation",
-  "observe_dispatch_lookup",
-  "observe_effect",
-  "observe_funding",
-  "observe_recovery",
-  "observe_return",
-  "offer_gift",
-  "open_admission",
-  "prepare_effect",
-  "prepare_trade",
-  "refund_ticket",
-  "release_inventory",
-  "reserve_listing",
-  "send_effect",
-  "set_consent",
-  "settle_capture",
-  "void_unissued",
-] as const;
+/**
+ * The action list is not kept by hand. It is the generated SDK catalogue's
+ * COMMANDS, bound to the vendored OpenAPI document by the pin checks here and
+ * by the p-sdk-0 manifest verification in sdk-pin.ts.
+ */
+export const PINNED_ACTIONS = COMMANDS;
 
-export type PinnedAction = (typeof PINNED_ACTIONS)[number];
+export type PinnedAction = CommandName;
 
 const PINNED_ACTION_SET: ReadonlySet<string> = new Set(PINNED_ACTIONS);
 
@@ -293,14 +258,6 @@ export function requireOpenApiContractPin(): typeof OPENAPI_CONTRACT_PIN {
 export function readPinnedOpenApiDocument(): unknown {
   requireOpenApiContractPin();
   return structuredClone(liveDocument);
-}
-
-export function pinnedCommandSchemas(): Record<string, unknown> {
-  const doc = liveDocument;
-  if (!doc) {
-    throw new ProtocolError("OpenAPI pin is not loaded.");
-  }
-  return requireRecord(requireRecord(doc.components, "OpenAPI components").schemas, "OpenAPI schemas");
 }
 
 function assertLocalCallEnvelope(schema: Record<string, unknown>): void {

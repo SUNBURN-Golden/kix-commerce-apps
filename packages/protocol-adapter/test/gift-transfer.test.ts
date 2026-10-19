@@ -17,7 +17,7 @@ import {
   type LocalCallInvoker,
 } from "../src/index.js";
 import type { LocalCallInput } from "../src/local-call.js";
-import { pinnedCommandSchemas } from "../src/openapi-contract-pin.js";
+import { COMMAND_SCHEMAS } from "#kix-sdk-0/catalogue";
 import { localCallReceipt } from "./support/receipt.js";
 
 const OFFER: GiftOfferInput = {
@@ -45,7 +45,7 @@ function recordingStub(seen: LocalCallInput[] = []): LocalCallInvoker {
 }
 
 function requiredKeys(action: string): string[] {
-  const schema = pinnedCommandSchemas()[action];
+  const schema: unknown = (COMMAND_SCHEMAS as Record<string, unknown>)[action];
   if (!isRecord(schema) || !Array.isArray(schema.required)) {
     throw new Error(`missing schema for ${action}`);
   }
