@@ -26,11 +26,11 @@ afterEach(() => {
 });
 
 describe("browser storage allow-list", () => {
-  it("allows only the journal keys and named attempt prefixes", () => {
-    for (const key of STORAGE_ALLOW_LIST.slice(0, 2)) {
+  it("allows only the exact keys and named attempt prefixes", () => {
+    for (const key of STORAGE_ALLOW_LIST.slice(0, 3)) {
       expect(isAllowedStorageKey(key)).toBe(true);
     }
-    for (const prefix of STORAGE_ALLOW_LIST.slice(2)) {
+    for (const prefix of STORAGE_ALLOW_LIST.slice(3)) {
       expect(isAllowedStorageKey(`${prefix}fixture`)).toBe(true);
       expect(isAllowedStorageKey(prefix)).toBe(false);
     }

@@ -8,12 +8,12 @@ M2: the adapter composes nothing past `accept_trade`. `capture` and `settle_capt
 
 ## What did not change
 
-- Base main is `118e8d711683872c08a7364fb29981dc1233d016`. A document cannot hold its own head, so the exact PR head is stated in the PR body.
+- Base main is `f570c84c6a969bb88642eecf534e68c60ffee853`. This document is a snapshot at that base. Node merge status was typed from `git log --first-parent --merges` there, and the test reads repo files, not git history. A node merged later shows `NOT_STARTED` until the table is regenerated at a newer base. `audit-5-fix` is not a program node and has no row. The exact PR head is stated in the PR body.
 - `packages/protocol-adapter/src/commerce-bindings.ts` is byte-identical. Its sha256 is `83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249`, and a test checks it.
-- Both vendored OpenAPI pins, `PINNED_ACTIONS`, the CI `KIX_PROTOCOL_GATE_SHA`, and `protocolMergeSha` do not move. `packages/protocol-adapter/src`, `apps/web/src`, `apps/e2e`, `.github/`, `.aiops/`, and `docs/aiops/` are untouched. Nothing changes in kix-protocol.
+- Both vendored OpenAPI pins, `PINNED_ACTIONS`, the CI `KIX_PROTOCOL_GATE_SHA`, and `protocolMergeSha` do not move. `packages/protocol-adapter/src`, `apps/web/src`, `apps/e2e`, `.github/`, `.aiops/`, and `docs/aiops/` are untouched. The base refresh edits only the README, this document, and the two evidence-matrix test files. Nothing changes in kix-protocol.
 - `contract_change=NO`. The row ids, the facet words, and the record format here are app-internal. They are not a public schema, operation, capability, or identifier.
 
-Count note: the node brief says the program file has 18 nodes. At this base `.aiops/program.json` holds 42 nodes (including this one) and `docs/aiops/PENDING_NODES.json` holds 42. The tests count from the files and never hardcode a number.
+Count note: the node brief says the program file has 18 nodes. At this base `.aiops/program.json` holds 51 program nodes and `docs/aiops/PENDING_NODES.json` holds 42. The tests count from the files and never hardcode a number.
 
 ## Facets
 
@@ -21,7 +21,7 @@ Four facets stay in four columns. None folds into another, and there is no aggre
 
 | Facet | Words this matrix writes | Words it never writes |
 | --- | --- | --- |
-| `node_state` | `MERGED_RECORDED(PR #N)`, `IN_PROGRESS`, `WAITING`, `NOT_STARTED` for nodes; `REPO_PRESENT` for surfaces and journeys | a completion word |
+| `node_state` | `MERGED_RECORDED(PR #N)`, `WAITING`, `NOT_STARTED` for nodes; `REPO_PRESENT` for surfaces and journeys | a completion word |
 | `qualification_state` | `UNQUALIFIED` | a qualified word |
 | `acceptance_state` | `PENDING`; `NOT_REQUIRED` for a row with no page | an accepted or a refused word |
 | `release_state` | `NOT_AUTHORIZED` | a released word, or a not-released word that reads like a decision |
@@ -228,10 +228,10 @@ One row per node in `.aiops/program.json` and one per node in `docs/aiops/PENDIN
 | c-browser-e2e-stub | program | MERGED_RECORDED(PR #73) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
 | c-a11y-acceptance-stub | program | MERGED_RECORDED(PR #74) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
 | c-fault-injection-stub | program | MERGED_RECORDED(PR #75) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| c-local-evidence-matrix-stub | program | IN_PROGRESS | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| c-app-shell-resilience-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| c-route-registry-navigation-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| c-bundle-performance-budget-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-local-evidence-matrix-stub | program | MERGED_RECORDED(PR #76) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-app-shell-resilience-stub | program | MERGED_RECORDED(PR #78) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-route-registry-navigation-stub | program | MERGED_RECORDED(PR #79) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-bundle-performance-budget-stub | program | MERGED_RECORDED(PR #80) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
 | c-locale-ko-en-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
 | c-display-preferences-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
 | c-untrusted-render-csp-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
@@ -299,7 +299,7 @@ Each line has its own count. Nothing is summed, nothing is subtracted, and there
 - D12 release page user acceptance: PENDING_USER_DECISION, 1 packet; realUserAcceptance false
 - D13 release decisions: install awaiting-user-decision, publish not-open, operate not-open; taken 0
 - D14 release NOT_AUTHORIZED rows: surfaces 43 of 43, journeys 10 of 10, nodes 93 of 93; RELEASED 0
-- D15 active program nodes: 51; MERGED_RECORDED 41, IN_PROGRESS 1; central DONE not evaluated
+- D15 active program nodes: 51; MERGED_RECORDED 45, NOT_STARTED 6; central DONE not evaluated
 - D16 pending catalogue nodes: 42; WAITING 40, NOT_STARTED 2; counted as done 0
 - D17 distinct external prerequisites named by pending nodes: 26; completion not verified here; subtracted 0
 - D18 release page area denominators: scope 29 of 29, acceptance 3 of 3, environment 3 of 3, operations 4 of 4, gate 3 of 3 (own denominators, not merged)
@@ -359,42 +359,12 @@ This matrix does not replace the `/handoff` or `/release` records and does not a
 
 ## Local runs observed
 
-Run on 2026-10-17 at base main `118e8d711683872c08a7364fb29981dc1233d016` plus this change, in a local worktree. These are local results, not CI results, and the exact PR head is in the PR body.
+Run on 2026-10-18 at base main `f570c84c6a969bb88642eecf534e68c60ffee853` plus the base refresh, in a local worktree. These are local results, not CI results, and the exact PR head is in the PR body.
 
 | Run | Result |
 | --- | --- |
 | `npm ci`, `npm run typecheck`, `npm run build` | exit 0 |
 | `KIX_REQUIRE_GATE=0 npm test`, adapter | 62 files passed, 5 files skipped (1293 tests passed, 23 skipped) |
-| `KIX_REQUIRE_GATE=0 npm test`, web | 49 files passed (624 tests passed), including `local-evidence-matrix.test.ts` with 20 tests |
-| Same test with one denominator line edited by hand | failed on that line, then the edit was reverted |
+| `KIX_REQUIRE_GATE=0 npm test`, web | 54 files passed (695 tests passed), including `local-evidence-matrix.test.ts` |
 
-Separately, and never merged with the skipped line above: a read-only clone of kix-protocol checked out at the CI gate sha `52a9b5cbf7777df55d2d2062cb8d99d862b423bb` ran the adapter suite with `KIX_REQUIRE_GATE=1`: 67 files and 1316 tests passed with 0 skipped. This is a local pinned-checkout run. It is not the hosted `live-gate` job, which needs the read token.
-
-No browser suite was run: no UI source changed.
-
-## Not verified
-
-- No real producer, SDK, provider, payment, credit disbursement, venue scan, bank rail, or marketplace was connected. Every row is stub or synthetic.
-- No central completion receipt or runtime attestation exists here, so no node is evaluated for completion.
-- Completion of the kix-protocol prerequisites is not verified from this repo (D17).
-- No real user accepted anything, and the release decision is open (D09 to D13).
-- HTTP mode in a browser is not run; no gate with CORS is consumed.
-- No real device, assistive-technology run, or named accessibility standard backs the a11y screens.
-- The retention of a persisted fence is UNDETERMINED.
-- No UI changed, so this node runs no new browser pass. The browser evidence cited is from the existing suites.
-
-## Acceptance mapping
-
-| Item | Evidence |
-| --- | --- |
-| Row has mode, tuple, app head, success/reject/UNKNOWN, browser/Node evidence, skipped reason | the matrices above; `apps/web/test/local-evidence-matrix.test.ts` checks one row per id, no missing field, and every pointer |
-| Separate counts; pending and external prerequisites stay in the denominator | D01 to D19 above, checked against the sources |
-| Links `/handoff` and `/release`, approves nothing | the links section, and the facet checks that no row holds a completion, qualified, accepted, or released word |
-| Stub alone is not PASS, acceptance, or release | the facet rules and the `RECORDED` definition |
-| Pending external prerequisites are not counted done | `countedAsDone` false on every node row; D16 and D17 |
-| Development and release are not one state | `node_state` and `release_state` are two columns |
-| Locks held | the lock hash above, checked by test |
-
-## Hold
-
-Nothing here decides completion, acceptance, or release. Those stay with the central completion check, a real user, and the release decision.
+The pinned-checkout live-gate run and the browser suites (`browser-e2e`, `a11y-observation`, `bundle-budget`) were not re-run locally at this base.

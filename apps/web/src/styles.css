@@ -1,16 +1,84 @@
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
   --paper: #efe4d2;
   --card: #f7f1e4;
+  --field: #ffffff;
   --ink: #241910;
   --muted: #5e5146;
   --line: #241910;
   --stamp: #8d1d32;
   --ok: #1d5c3d;
+  --wash: rgba(141, 29, 50, 0.08);
   --shadow: 6px 6px 0 #241910;
   font-family: "Avenir Next", "Segoe UI", sans-serif;
   background: var(--paper);
   color: var(--ink);
+}
+
+/*
+ * Dark scheme: the same tokens, dark values. Every rule below reads the
+ * tokens, so the whole desk follows. A status is still carried by its word
+ * and its border style, never by a colour alone.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #171208;
+    --card: #231c10;
+    --field: #171208;
+    --ink: #f3ecdd;
+    --muted: #cabea6;
+    --line: #e3d7c0;
+    --stamp: #f5a8b3;
+    --ok: #a6dcba;
+    --wash: rgba(245, 168, 179, 0.14);
+    --shadow: 6px 6px 0 #050403;
+  }
+}
+
+/*
+ * Forced colours (Windows high contrast and friends): the tokens point at
+ * the platform system colours and everything else follows. Words and the
+ * different border styles on status marks survive; colour is never the only
+ * signal. Box shadows and the background wash go away on their own.
+ */
+@media (forced-colors: active) {
+  :root {
+    --paper: Canvas;
+    --card: Canvas;
+    --field: Field;
+    --ink: CanvasText;
+    --muted: CanvasText;
+    --line: CanvasText;
+    --stamp: CanvasText;
+    --ok: CanvasText;
+    --wash: transparent;
+    --shadow: none;
+  }
+
+  /* The current nav link keeps a second, non-colour mark: the underline. */
+  nav a[aria-current="page"] {
+    text-decoration: underline;
+  }
+}
+
+/*
+ * Reduced motion: no transition or animation may run. The desk has none of
+ * its own today; this block keeps it that way when one is ever added. The
+ * one timed update (the integration-http transport re-probe) is stopped in
+ * Shell.tsx, not here.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 * {
@@ -20,7 +88,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background-image: radial-gradient(circle at top left, rgba(141, 29, 50, 0.08), transparent 28rem);
+  background-image: radial-gradient(circle at top left, var(--wash), transparent 28rem);
 }
 
 a {
@@ -62,6 +130,7 @@ button:disabled {
   justify-content: space-between;
   gap: 1.5rem;
   align-items: end;
+  flex-wrap: wrap;
   border-bottom: 1px solid var(--line);
   padding-bottom: 1rem;
 }
@@ -202,7 +271,7 @@ select {
   font: inherit;
   padding: 0.5rem 0.6rem;
   border: 1px solid var(--line);
-  background: white;
+  background: var(--field);
   color: var(--ink);
   max-width: 24rem;
 }
@@ -1164,6 +1233,12 @@ main:focus-visible {
   min-width: 0;
 }
 
+/* Long unbreakable tokens (env names, commands) must not push a grid track past the window at 320px. */
+.handoff li,
+.handoff p {
+  overflow-wrap: anywhere;
+}
+
 .handoff table {
   width: 100%;
   border-collapse: collapse;
@@ -1292,4 +1367,209 @@ main:focus-visible {
 #desk-main h2:focus {
   outline: 3px solid var(--stamp);
   outline-offset: 2px;
+}
+
+/* Route registry navigation: grouped surface nav, menu fold, breadcrumb. */
+nav[aria-label="Surfaces"] {
+  display: block;
+  flex: 1 1 32rem;
+  min-width: 0;
+}
+
+.nav-menu,
+.nav-menu ul,
+.crumbs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.5rem;
+}
+
+.nav-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.75rem;
+}
+
+.nav-group > ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+}
+
+.nav-group-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.nav-toggle {
+  display: none;
+  align-items: center;
+  padding: 0 1rem;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+}
+
+/* The current page is bold, underlined and has a thicker rule, so it does not depend on colour. */
+nav a[aria-current="page"] {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+  border-bottom-width: 4px;
+}
+
+.crumb-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  padding: 0.35rem 0;
+  font-size: 0.9rem;
+}
+
+.crumb-row nav {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+}
+
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+}
+
+.crumbs li + li::before {
+  content: "/";
+  content: "/" / "";
+  margin-right: 0.5rem;
+  color: var(--muted);
+}
+
+.crumb-binding {
+  margin: 0;
+  color: var(--muted);
+}
+
+@media (max-width: 720px) {
+  nav[aria-label="Surfaces"] {
+    flex-basis: auto;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  .nav-menu[data-open="false"] {
+    display: none;
+  }
+
+  .nav-menu[data-open="true"] {
+    display: grid;
+    gap: 0.6rem;
+    margin-top: 0.6rem;
+  }
+
+  .nav-group {
+    display: grid;
+    gap: 0.1rem;
+  }
+
+  .nav-group > ul {
+    display: grid;
+  }
+}
+
+.screen-loading {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px dashed currentColor;
+  border-radius: 6px;
+}
+
+.locale-switch {
+  display: flex;
+  flex: 1 0 100%;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.locale-switch button {
+  padding: 0.2rem 0.7rem;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+}
+
+.locale-switch button[aria-pressed="true"] {
+  border-width: 2px;
+  font-weight: 700;
+}
+
+.locale-switch > span,
+.banner,
+.shell-error dd,
+.crumbs,
+.nav-group-label {
+  overflow-wrap: anywhere;
+}
+
+:lang(ko) {
+  word-break: keep-all;
+}
+
+/*
+ * Print: the receipt explorer and the handoff packet read as documents on
+ * paper. The shell nav, the breadcrumb row, the locale switch, the skip
+ * link and the in-page receipt nav are hidden, link targets are printed
+ * after their text, and a line keeps the synthetic wording on the page.
+ * A printed copy is still not a receipt.
+ */
+@media print {
+  .top nav,
+  .crumb-row,
+  .locale-switch,
+  .skip,
+  .receipt-nav {
+    display: none;
+  }
+
+  .banner,
+  .ticket {
+    box-shadow: none;
+  }
+
+  .receipt::before,
+  .handoff::before {
+    content: "Synthetic stub display. A printed copy is not a receipt, not a confirmation, and not a qualification.";
+    display: block;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--line);
+  }
+
+  .receipt a[href]::after,
+  .handoff a[href]::after {
+    content: " (" attr(href) ")";
+    font-weight: normal;
+  }
 }

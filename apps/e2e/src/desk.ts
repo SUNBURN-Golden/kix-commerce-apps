@@ -16,7 +16,7 @@ export async function goHome(page: Page, origin: string): Promise<void> {
 }
 
 export async function nav(page: Page, name: string): Promise<void> {
-  await page.getByRole("navigation").getByRole("link", { name, exact: true }).click();
+  await page.getByRole("navigation", { name: "Surfaces", exact: true }).getByRole("link", { name, exact: true }).click();
 }
 
 export function panel(page: Page, label: string): Locator {

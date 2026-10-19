@@ -40,6 +40,7 @@ The runtime audit found no web-app `localStorage`, IndexedDB, or cookie writes. 
 | --- | --- | --- |
 | `kix-session-journal` | unresolved/confirmed synthetic session journal | bounded versioned JSON written by `SessionJournal` |
 | `kix-session-journal-quarantine` | corrupt/lost journal evidence | bounded versioned JSON quarantine record |
+| `kix-locale` | display-language preference | the literal `en` or `ko` |
 | `kix-reservation-attempt:` | reservation attempt counter | non-negative integer text |
 | `kix-resale-attempt:` | resale attempt counter | non-negative integer text |
 | `kix-organizer-attempt:` | organizer attempt counter | non-negative integer text |
@@ -50,7 +51,7 @@ The runtime audit found no web-app `localStorage`, IndexedDB, or cookie writes. 
 | `kix-admission-attempt:` | admission attempt counter | non-negative integer text |
 | `kix-settlement-attempt:` | settlement attempt counter | non-negative integer text |
 
-Exact journal keys and non-empty suffixes on attempt prefixes are required. Journal access is wrapped and attempt writes validate before touching storage. Tests enumerate a storage object and fail unknown keys. Stored-value tests directly reuse `findSensitive` from `apps/e2e/src/redact.ts`, covering email, bearer/token strings, JWTs, and long digit runs; a secret-like fixture must be detected.
+Exact keys and non-empty suffixes on attempt prefixes are required. Journal access is wrapped and attempt writes validate before touching storage. Tests enumerate a storage object and fail unknown keys. Stored-value tests directly reuse `findSensitive` from `apps/e2e/src/redact.ts`, covering email, bearer/token strings, JWTs, and long digit runs; a secret-like fixture must be detected.
 
 ## Acceptance evidence
 

@@ -50,7 +50,7 @@ One row per screen (36 screens; `/discovery/:rowId` is the same page as `/discov
 | `organizer-workspace` | `/organizer/workspace` | none | none | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
 | `organizer` | `/organizer` | none | none | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
 | `receipts` | `/receipts` | none | none | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
-| `handoff` | `/handoff` | none | none | OBSERVED | OBSERVED | FINDING | NOT_RUN | PENDING | NOT_AUTHORIZED |
+| `handoff` | `/handoff` | none | none | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
 | `credit-origination` | `/credit/origination` | none | none | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
 | `credit-servicing` | `/credit/servicing` | heading-order | heading-order | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
 | `credit` | `/credit` | none | none | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
@@ -143,14 +143,14 @@ Widgets: the Handoff and Receipts tablists use roving tabindex and answer ArrowL
 
 Observations (not assertions): when this node was written, after a keyboard route change the document title was unchanged ("KIX Box Office") and focus stayed on the activated link. That was true at the time and is superseded by `c-app-shell-resilience-stub` (2026-10-18): the title is now per page and focus moves to the page heading; see `docs/c-app-shell-resilience-stub-apps-bind.md`. The observation test still only records what it sees. During exploration, typing into the discovery search box with no delay between keys dropped characters (the box is synced with the URL); it was not reproducible at a 60 ms delay, so it is noted here and not asserted.
 
-## Findings (all OPEN, none fixed here)
+## Findings (OPEN unless a row is marked FIXED)
 
 | Where | Rule or probe | What |
 | --- | --- | --- |
 | discovery, inventory:section-page | `nested-interactive` | A control sits inside a listbox option, so the option is not a clean widget for assistive technology. |
 | platform, merchant, finance, marketing-journey, provider, mobile | `landmark-unique` | Two landmarks of the same role have no distinct accessible name. |
 | merchant, credit-servicing, booking:missing | `heading-order` | A heading level is skipped. |
-| handoff (320px) | `reflow.narrow-overflow` | The Role journey list is about 8px wider than a 320px window, so the document scrolls sideways. |
+| handoff (320px) | `reflow.narrow-overflow` | FIXED 2026-10-19 in `c-display-preferences-stub`: the unbreakable env token in the Startup faults list pushed a panel grid track past the window; handoff list text now wraps anywhere and the scrollable table regions are named focusable regions. The screen-matrix cell above is updated to OBSERVED. Was: the Role journey list is about 8px wider than a 320px window, so the document scrolls sideways. |
 | gift:not-sent | `form.error-not-linked / struct.invalid-unlinked` | The ticket id is marked invalid after a refused send, and focus returns to it, but no message is linked to it with aria-describedby. |
 | booking, gift | `status.disabled-no-reason` | Natively disabled buttons carry no reason that aria-describedby reaches. /journeys uses aria-disabled with a reason and passes. |
 

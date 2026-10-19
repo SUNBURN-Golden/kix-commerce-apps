@@ -1,59 +1,54 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { CREDIT_BOUNDARY, ProtocolError, type TransportObservation } from "@kix/protocol-adapter";
 import { transportStatusWord } from "../a11y/marks";
+import { motionReduced, REDUCED_MOTION_QUERY } from "../a11y/motion";
 import { marketingChromeLabel } from "../marketing/labels";
-import { identifyPage } from "../shell/page-identity";
+import { LocaleSwitch } from "../i18n/LocaleSwitch";
+import { useLocale } from "../i18n/locale-context";
+import { usePageIdentity } from "../i18n/use-page-identity";
+import { Breadcrumb } from "./Breadcrumb";
+import { SurfaceNav } from "./SurfaceNav";
 import { useRouteFocus } from "../shell/route-focus";
+import type { Translate } from "../i18n/translate";
 import { protocol } from "../protocol";
 import { preferFresh, transportBannerText, type HeldObservation } from "../transport-status";
 
 /** How often integration HTTP reads the loopback probes again. The stub is not polled. */
 const TRANSPORT_PROBE_MS = 15_000;
 
-export const links = [
-  { to: "/", label: "Box office", end: true },
-  { to: "/buyer", label: "Buyer", end: false },
-  { to: "/discovery", label: "Discover", end: false },
-  { to: "/inventory", label: "Seats and GA", end: false },
-  { to: "/platform", label: "Trading platform", end: false },
-  { to: "/admission", label: "Admission", end: false },
-  { to: "/resale", label: "Resale", end: false },
-  { to: "/gift", label: "Gift", end: false },
-  { to: "/organizer", label: "Organizer", end: true },
-  { to: "/organizer/workspace", label: "Organizer workspace", end: true },
-  { to: "/merchant", label: "Merchant", end: true },
-  { to: "/receipts", label: "Receipts", end: true },
-  { to: "/handoff", label: "Local handoff", end: true },
-  { to: "/credit", label: "Credit", end: true },
-  { to: "/credit/origination", label: "Credit origination", end: true },
-  { to: "/credit/servicing", label: "Credit servicing", end: true },
-  { to: "/finance", label: "Finance", end: true },
-  { to: "/marketing", label: "Marketing", end: false },
-  { to: "/marketing/journey", label: "Benefit journey", end: true },
-  { to: "/assistant", label: "Assistant", end: true },
-  { to: "/permissions", label: "Permissions", end: true },
-  { to: "/notifications", label: "Notifications", end: true },
-  { to: "/provider", label: "Provider journey", end: true },
-  { to: "/marketplace-performance", label: "Marketplace bench", end: true },
-  { to: "/mobile", label: "Mobile shell", end: true },
-  { to: "/qualification", label: "Qualification", end: true },
-  { to: "/release", label: "Release", end: true },
-  { to: "/identity", label: "Journey context", end: true },
-  { to: "/session", label: "Session recovery", end: true },
-  { to: "/journeys", label: "Journeys", end: true },
-];
+/** The eyebrow. A charter surface label ("M01 · 설계중") is copied; only the hub and the default follow the locale. */
+function marketingEyebrow(label: { eyebrow: string } | null, t: Translate): string {
+  if (!label) {
+    return t("shell.eyebrow.default");
+  }
+  return label.eyebrow === "Marketing desk" ? t("shell.eyebrow.marketing") : label.eyebrow;
+}
 
 export function Shell({ children }: { children: ReactNode }) {
   const meta = protocol.describe();
+  const { t } = useLocale();
   const location = useLocation();
   const onMarketing = location.pathname === "/marketing" || location.pathname.startsWith("/marketing/");
   const marketingLabel = marketingChromeLabel(location.pathname);
   const [held, setHeld] = useState<HeldObservation | null>(null);
+  // The user's stop control for the one timed update on this desk.
+  const [motionPaused, setMotionPaused] = useState(motionReduced);
   const generation = useRef(0);
   const probing = useRef(false);
 
-  const identity = identifyPage(location.pathname, links);
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") {
+      return;
+    }
+    const list = window.matchMedia(REDUCED_MOTION_QUERY);
+    const update = () => setMotionPaused(list.matches);
+    update();
+    list.addEventListener("change", update);
+    return () => list.removeEventListener("change", update);
+  }, []);
+
+  const identity = usePageIdentity(location.pathname);
   const documentTitle = identity.title;
   useRouteFocus(identity.key);
   useEffect(() => {
@@ -111,7 +106,9 @@ export function Shell({ children }: { children: ReactNode }) {
         });
     };
     probe(false);
-    if (meta.environment === "stub") {
+    // Stub mode never polls, and a reduced-motion preference stops the one
+    // timed update this desk has. The load probe above still ran once.
+    if (meta.environment === "stub" || motionPaused) {
       return () => {
         cancelled = true;
       };
@@ -121,37 +118,32 @@ export function Shell({ children }: { children: ReactNode }) {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [meta.environment, location.pathname]);
+  }, [meta.environment, location.pathname, motionPaused]);
 
-  const transport = transportBannerText(meta.environment, held?.observation ?? null);
+  const transport = transportBannerText(meta.environment, held?.observation ?? null, t, motionPaused);
 
-  const transportWord = transportStatusWord(transport.state);
+  const transportWord = transportStatusWord(transport.state, t);
 
   return (
     <div className="shell">
       <a className="skip" href="#desk-main">
-        Skip to content
+        {t("shell.skip")}
       </a>
       <header className="top">
         <div className="brand">
           <span className="mark">KIX</span>
           <div>
-            <p className="eyebrow">{marketingLabel?.eyebrow ?? "Commerce desk"}</p>
-            <h1>{onMarketing ? "Marketing" : "Box office"}</h1>
+            <p className="eyebrow">{marketingEyebrow(marketingLabel, t)}</p>
+            <h1>{onMarketing ? t("shell.title.marketing") : t("shell.title.boxOffice")}</h1>
           </div>
         </div>
-        <nav aria-label="Surfaces">
-          {links.map((link) => (
-            // The journey sits under /marketing. Only its own link is current there.
-            <NavLink key={link.to} to={link.to} end={link.to === "/marketing" && location.pathname === "/marketing/journey" ? true : link.end}>
-              {link.label}
-            </NavLink>
-          ))}
-        </nav>
+        <SurfaceNav />
+        <LocaleSwitch />
       </header>
+      <Breadcrumb />
       <p className="banner" role="status">
-        Adapter <strong>{meta.adapter}</strong>. Environment <strong>{meta.environment}</strong>. No live chain and no
-        funds movement. Public production deployment is not selected. {CREDIT_BOUNDARY.note}
+        {t("shell.banner.adapter")} <strong>{meta.adapter}</strong>. {t("shell.banner.environment")}{" "}
+        <strong>{meta.environment}</strong>. {t("shell.banner.rest")} {CREDIT_BOUNDARY.note}
       </p>
       <p className="banner transport" role="status" data-transport-state={transport.state} data-status-mark={transport.state}>
         <span className="status-word">{transportWord}</span> {transport.text}

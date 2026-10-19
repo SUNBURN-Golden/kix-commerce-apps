@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Performance } from "@kix/protocol-adapter";
-import { formatWhen } from "../../format";
+import { useFormatWhen } from "../../i18n/locale-context";
 import { presaleWindowFor } from "../../marketing/desk";
 import { marketingSession } from "../../marketing/session";
 import { useMarketingSnapshot } from "../../marketing/useMarketingSnapshot";
@@ -9,6 +9,7 @@ import { protocol } from "../../protocol";
 import { errorText, MarketingChrome } from "./MarketingChrome";
 
 export function M02Page() {
+  const formatWhen = useFormatWhen();
   const { snapshot, refresh } = useMarketingSnapshot();
   const [performances, setPerformances] = useState<Performance[] | null>(null);
   const [error, setError] = useState<string | null>(null);

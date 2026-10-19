@@ -43,7 +43,7 @@ import {
 } from "../discovery/model";
 import { AmountNotice, StatusMark } from "../a11y/marks";
 import type { DiscoveryModel, PurchaseDecision } from "../discovery-workspace";
-import { formatWhen } from "../format";
+import { useFormatWhen } from "../i18n/locale-context";
 
 export function DiscoveryBanner({ model }: { model: DiscoveryModel }) {
   return (
@@ -271,6 +271,7 @@ export function DiscoveryRowCard({
   active: boolean;
   onOpen: (rowId: string) => void;
 }) {
+  const formatWhen = useFormatWhen();
   return (
     <li
       id={`discovery-result-${row.rowId}`}
@@ -429,6 +430,7 @@ export function LiveReadSection({
   handlers: LiveListHandlers;
   onOpen: (rowId: string) => void;
 }) {
+  const formatWhen = useFormatWhen();
   const [focus, setFocus] = useState(0);
   const rows = model.rows;
   const safeFocus = rows.length === 0 ? 0 : Math.min(focus, rows.length - 1);
@@ -573,6 +575,7 @@ export function LiveReadDetail({
   model: LiveDetailModel;
   handlers: LiveDetailHandlers;
 }) {
+  const formatWhen = useFormatWhen();
   const row = model.row;
   return (
     <article

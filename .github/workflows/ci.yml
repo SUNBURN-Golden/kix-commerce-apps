@@ -140,3 +140,36 @@ jobs:
           if [ -f "$RUNNER_TEMP/a11y-record.json" ]; then
             { echo '### Accessibility observation (stub). Not user acceptance, not conformance, not release.'; echo '```json'; cat "$RUNNER_TEMP/a11y-record.json"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           fi
+
+  bundle-budget:
+    name: Bundle budget
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # Size check of the clean stub build against apps/web/bundle-budget.json. Node built-ins only.
+      - name: Size budget
+        shell: bash
+        run: npm run budget | tee -a "$GITHUB_STEP_SUMMARY"
+      - run: npm run typecheck:e2e
+      # Split, chunk-failure and long-list render checks. Loopback only; no secrets and no network beyond npm ci.
+      # Times are regression tripwires on this runner, not an SLO.
+      - run: npm run test:budget
+        env:
+          KIX_E2E_CHROME: /usr/bin/google-chrome
+          KIX_E2E_NO_SANDBOX: '1'
+          KIX_BUDGET_RECORD_OUT: ${{ runner.temp }}/bundle-budget-record.json
+      - name: Measurement record
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/bundle-budget-record.json" ]; then
+            { echo '### Bundle budget measurements (stub). Tripwires on one runner. Not an SLO, not qualification, not production performance.'; echo '```json'; cat "$RUNNER_TEMP/bundle-budget-record.json"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ProtocolError, type Performance, type SettlementCaseView } from "@kix/protocol-adapter";
 import { capacityLine } from "../a11y/present";
 import { StatusMark } from "../a11y/marks";
-import { formatWhen } from "../format";
+import { useFormatWhen } from "../i18n/locale-context";
 import { protocol } from "../protocol";
 import { useJourneyDesk } from "../journey-desk";
 import { useRefundReturnDesk } from "../refund-return";
@@ -13,6 +13,7 @@ import { RefundReturnPanel } from "./RefundReturnPanel";
 import { SettlementPanel, type SettlementDeskCommand } from "./SettlementPanel";
 
 export function BoxOfficePage() {
+  const formatWhen = useFormatWhen();
   const [performances, setPerformances] = useState<Performance[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);

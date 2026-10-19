@@ -5,9 +5,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { App } from "../src/App";
-import { links } from "../src/components/Shell";
 import { NotFoundPage } from "../src/pages/NotFound";
 import { identifyPage } from "../src/shell/page-identity";
+import { ROUTES, ROUTE_ALIASES } from "../src/shell/route-registry";
 import { AppBoundary, ErrorPanel, RenderBoundary, stateAfterReset } from "../src/shell/RenderBoundary";
 import { classifyFault } from "../src/shell/render-fault";
 import { CarryingError, HOSTILE_TEXT, THROWN_SAMPLES, ThrowingScreen } from "./support/render-fault-fixtures";
@@ -96,7 +96,7 @@ describe("RenderBoundary", () => {
       const source = read(`src/shell/${file}`);
       const imports = [...source.matchAll(/from "([^"]+)"/g)].map((match) => match[1]!);
       for (const spec of imports) {
-        expect(["react", "react-router-dom"].includes(spec) || spec.startsWith("./") || spec === "../marketing/labels", `${file} imports ${spec}`).toBe(true);
+        expect(["react", "react-router-dom"].includes(spec) || spec.startsWith("./") || spec === "../marketing/labels" || ["../i18n/locale-context", "../i18n/translate", "../i18n/locales"].includes(spec), `${file} imports ${spec}`).toBe(true);
       }
     }
   });
@@ -137,26 +137,26 @@ describe("not found and page identity", () => {
     }
   });
 
-  it("every App.tsx route pattern is identified, and the catch-all is the one unknown path", () => {
-    const patterns = [...read("src/App.tsx").matchAll(/<Route path="([^"]+)"/g)].map((match) => match[1]!);
-    expect(patterns.length).toBeGreaterThan(30);
-    for (const pattern of patterns) {
-      const concrete = pattern.replace(":eventId", "evt_x").replace(":rowId", "row_x");
-      const identity = identifyPage(concrete, links);
-      expect(identity.known, pattern).toBe(pattern !== "*");
+  it("every registry route and alias is identified, App.tsx writes no route path of its own, and the catch-all is the one unknown path", () => {
+    expect([...read("src/App.tsx").matchAll(/<Route\s+path="([^"]+)"/g)].map((match) => match[1]!)).toEqual(["*"]);
+    for (const route of ROUTES) {
+      expect(identifyPage(route.sample), route.path).toMatchObject({ known: true, label: route.label });
     }
-    expect(identifyPage("/definitely/not/here", links)).toMatchObject({ known: false, key: "*" });
+    for (const alias of ROUTE_ALIASES) {
+      expect(identifyPage(alias.sample).known, alias.path).toBe(true);
+    }
+    expect(identifyPage("/definitely/not/here")).toMatchObject({ known: false, key: "*" });
   });
 
   it("titles are per page, the discovery alias shares one key, and marketing keeps its own title", () => {
-    expect(identifyPage("/", links).title).toBe("KIX Box Office");
-    expect(identifyPage("/receipts", links).title).toBe("Receipts · KIX Box Office");
-    expect(identifyPage("/booking/evt_lanterns", links).title).toBe("Booking · KIX Box Office");
-    expect(identifyPage("/discovery/row_1", links).key).toBe(identifyPage("/discovery", links).key);
-    expect(identifyPage("/marketing/m01", links).title).toMatch(/^KIX Marketing · M01/);
-    expect(identifyPage("/marketing/zzz", links).title).toBe("Page not found · KIX Box Office");
-    expect(identifyPage("/nope", links).title).toBe("Page not found · KIX Box Office");
-    const titles = links.map((link) => identifyPage(link.to, links).title);
+    expect(identifyPage("/").title).toBe("KIX Box Office");
+    expect(identifyPage("/receipts").title).toBe("Receipts · KIX Box Office");
+    expect(identifyPage("/booking/evt_lanterns").title).toBe("Booking · KIX Box Office");
+    expect(identifyPage("/discovery/row_1").key).toBe(identifyPage("/discovery").key);
+    expect(identifyPage("/marketing/m01").title).toMatch(/^KIX Marketing · M01/);
+    expect(identifyPage("/marketing/zzz").title).toBe("Page not found · KIX Box Office");
+    expect(identifyPage("/nope").title).toBe("Page not found · KIX Box Office");
+    const titles = ROUTES.map((route) => identifyPage(route.sample).title);
     expect(titles.every((title) => title.length > 0 && !title.startsWith("Page not found"))).toBe(true);
   });
 

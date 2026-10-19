@@ -42,7 +42,6 @@ import {
   sharedTuple,
   SURFACE_TESTS,
   surfaceRows,
-  THIS_NODE,
   type EvidenceRow,
 } from "./support/local-evidence-matrix";
 
@@ -85,7 +84,7 @@ describe("local evidence matrix: rows", () => {
     expect(new Set(pending).size).toBe(pending.length);
     expect(program.filter((id) => pending.includes(id) && !PROMOTED_FROM_PENDING.includes(id))).toEqual([]);
     for (const id of PROMOTED_FROM_PENDING) expect(program).toContain(id);
-    expect(program).toContain(THIS_NODE);
+    for (const id of Object.keys(NODE_PRS)) expect(program).toContain(id);
   });
 
   it("resolves every test pointer to an existing file", () => {
@@ -176,10 +175,14 @@ describe("local evidence matrix: facets stay separate and approve nothing", () =
       expect(row.centralDone).toBe("NOT_EVALUATED");
     }
     for (const row of pending) expect(["WAITING", "NOT_STARTED"]).toContain(row.nodeState);
-    const own = rows.find((row) => row.rowId === THIS_NODE);
-    expect(own?.nodeState).toBe("IN_PROGRESS");
+    for (const [id, pr] of [["c-local-evidence-matrix-stub", 76], ["c-app-shell-resilience-stub", 78], ["c-route-registry-navigation-stub", 79], ["c-bundle-performance-budget-stub", 80]] as const) {
+      expect(rows.find((row) => row.rowId === id && row.catalogue === "program")?.nodeState, id).toBe(`MERGED_RECORDED(PR #${pr})`);
+    }
+    for (const row of rows) expect(row.nodeState).not.toBe("IN_PROGRESS");
+    const prs = Object.values(NODE_PRS);
+    expect(new Set(prs).size).toBe(prs.length);
+    for (const pr of prs) expect(Number.isInteger(pr) && pr > 0).toBe(true);
     for (const node of PROGRAM_NODES) {
-      if (node.id === THIS_NODE) continue;
       if (postBaseProgramNodes().includes(node.id)) expect(rows.find((row) => row.rowId === node.id && row.catalogue === "program")?.nodeState, node.id).toBe("NOT_STARTED");
       else expect(NODE_PRS[node.id], node.id).toBeGreaterThan(0);
     }

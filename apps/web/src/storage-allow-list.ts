@@ -1,6 +1,7 @@
 export const STORAGE_ALLOW_LIST = [
   "kix-session-journal",
   "kix-session-journal-quarantine",
+  "kix-locale",
   "kix-reservation-attempt:",
   "kix-resale-attempt:",
   "kix-organizer-attempt:",
@@ -12,8 +13,8 @@ export const STORAGE_ALLOW_LIST = [
   "kix-settlement-attempt:",
 ] as const;
 
-const EXACT_KEYS = new Set<string>(STORAGE_ALLOW_LIST.slice(0, 2));
-const PREFIXES: readonly string[] = STORAGE_ALLOW_LIST.slice(2);
+const EXACT_KEYS = new Set<string>(STORAGE_ALLOW_LIST.slice(0, 3));
+const PREFIXES: readonly string[] = STORAGE_ALLOW_LIST.slice(3);
 
 export function isAllowedStorageKey(key: string): boolean {
   return EXACT_KEYS.has(key) || PREFIXES.some((prefix) => key.startsWith(prefix) && key.length > prefix.length);

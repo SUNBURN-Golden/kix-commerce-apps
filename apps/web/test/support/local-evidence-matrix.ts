@@ -31,10 +31,9 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, "../../../..");
 export const DOC_PATH = "docs/c-local-evidence-matrix-stub-apps-bind.md";
 
-export const BASE_MAIN_SHA = "118e8d711683872c08a7364fb29981dc1233d016";
+export const BASE_MAIN_SHA = "f570c84c6a969bb88642eecf534e68c60ffee853";
 export const LOCKED_BINDINGS_SHA256 = "83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249";
 export const RULING_LINE = "M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce";
-export const THIS_NODE = "c-local-evidence-matrix-stub";
 
 /**
  * Pending-catalogue nodes promoted into the active program by a plan revision (docs/aiops/PLAN_REVISION_20261017_KO.md).
@@ -42,7 +41,7 @@ export const THIS_NODE = "c-local-evidence-matrix-stub";
  */
 export const PROMOTED_FROM_PENDING: readonly string[] = ["consume-p-sdk-0"];
 
-export const NODE_STATES = ["MERGED_RECORDED", "IN_PROGRESS", "WAITING", "NOT_STARTED", "REPO_PRESENT", "NOT_PRESENT"] as const;
+export const NODE_STATES = ["MERGED_RECORDED", "WAITING", "NOT_STARTED", "REPO_PRESENT", "NOT_PRESENT"] as const;
 export const QUALIFICATION_STATES = ["UNQUALIFIED", "NOT_REQUIRED"] as const;
 export const ACCEPTANCE_STATES = ["PENDING", "NOT_REQUIRED"] as const;
 export const RELEASE_STATES = ["NOT_AUTHORIZED"] as const;
@@ -110,7 +109,7 @@ interface PendingNode {
 export const PROGRAM_NODES: readonly ProgramNode[] = readJson(".aiops/program.json").nodes;
 export const PENDING_NODES: readonly PendingNode[] = readJson("docs/aiops/PENDING_NODES.json").nodes;
 
-/** PR numbers of merged active nodes, typed from `git log --first-parent --merges` at the base. Presence is checked, not git. */
+/** PR numbers of merged active nodes, typed from `git log --first-parent --merges` at `BASE_MAIN_SHA`. Presence is checked, not git, so a later merge shows only after this table is retyped at a newer base. */
 export const NODE_PRS: Readonly<Record<string, number>> = {
   "w6a-journey-map": 23,
   "w6a-journey-adapter": 27,
@@ -153,6 +152,10 @@ export const NODE_PRS: Readonly<Record<string, number>> = {
   "c-browser-e2e-stub": 73,
   "c-a11y-acceptance-stub": 74,
   "c-fault-injection-stub": 75,
+  "c-local-evidence-matrix-stub": 76,
+  "c-app-shell-resilience-stub": 78,
+  "c-route-registry-navigation-stub": 79,
+  "c-bundle-performance-budget-stub": 80,
 };
 
 /** Surface -> existing tests. Existence is checked by the test. "none" means no file of that kind exists for the surface. */
@@ -217,7 +220,7 @@ export const JOURNEY_TESTS: Readonly<Record<string, { adapter: string; e2e: stri
 };
 
 /** Browser journeys suite id -> the route pattern it drives. */
-const E2E_ROUTE: Readonly<Record<(typeof E2E_JOURNEYS)[number], string>> = {
+export const E2E_ROUTE: Readonly<Record<(typeof E2E_JOURNEYS)[number], string>> = {
   "box-office": "/",
   booking: "/booking/:eventId",
   admission: "/admission",
@@ -347,11 +350,10 @@ export function journeyRows(table: readonly CrossSurfaceRow[]): EvidenceRow[] {
 
 /** Active program nodes with no recorded PR at this matrix base: added by a later plan revision, so they are NOT_STARTED here. */
 export function postBaseProgramNodes(): string[] {
-  return PROGRAM_NODES.map((node) => node.id).filter((id) => id !== THIS_NODE && NODE_PRS[id] === undefined);
+  return PROGRAM_NODES.map((node) => node.id).filter((id) => NODE_PRS[id] === undefined);
 }
 
 function programNodeState(id: string): string {
-  if (id === THIS_NODE) return "IN_PROGRESS";
   return NODE_PRS[id] === undefined ? "NOT_STARTED" : `MERGED_RECORDED(PR #${NODE_PRS[id]})`;
 }
 
@@ -434,7 +436,7 @@ export function denominatorLines(table: readonly CrossSurfaceRow[]): string[] {
     `D12 release page user acceptance: PENDING_USER_DECISION, 1 packet; realUserAcceptance false`,
     `D13 release decisions: install ${decision("install")}, publish ${decision("publish")}, operate ${decision("operate")}; taken 0`,
     `D14 release NOT_AUTHORIZED rows: surfaces ${count(surfaces, (row) => row.facets.releaseState === "NOT_AUTHORIZED")} of ${surfaces.length}, journeys ${count(journeys, (row) => row.facets.releaseState === "NOT_AUTHORIZED")} of ${journeys.length}, nodes ${count(nodes, (row) => row.facets.releaseState === "NOT_AUTHORIZED")} of ${nodes.length}; RELEASED 0`,
-    `D15 active program nodes: ${program.length}; MERGED_RECORDED ${count(program, (row) => row.nodeState.startsWith("MERGED_RECORDED"))}, IN_PROGRESS ${count(program, (row) => row.nodeState === "IN_PROGRESS")}; central DONE not evaluated`,
+    `D15 active program nodes: ${program.length}; MERGED_RECORDED ${count(program, (row) => row.nodeState.startsWith("MERGED_RECORDED"))}, NOT_STARTED ${count(program, (row) => row.nodeState === "NOT_STARTED")}; central DONE not evaluated`,
     `D16 pending catalogue nodes: ${pending.length}; WAITING ${count(pending, (row) => row.nodeState === "WAITING")}, NOT_STARTED ${count(pending, (row) => row.nodeState === "NOT_STARTED")}; counted as done 0`,
     `D17 distinct external prerequisites named by pending nodes: ${externalTargets().length}; completion not verified here; subtracted 0`,
     `D18 release page area denominators: ${RELEASE_DENOMINATORS.map((area) => `${area.area} ${area.unresolved} of ${area.denominator}`).join(", ")} (own denominators, not merged)`,

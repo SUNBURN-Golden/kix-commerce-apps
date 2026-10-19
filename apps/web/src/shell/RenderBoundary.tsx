@@ -1,6 +1,8 @@
 import { Component, useEffect, useRef, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useT } from "../i18n/locale-context";
 import { classifyFault, type RenderFault } from "./render-fault";
+import { forgetFailedScreens } from "./screen-loader";
 
 export type BoundaryScope = "route" | "app";
 
@@ -41,6 +43,7 @@ export class RenderBoundary extends Component<BoundaryProps, BoundaryState> {
 
   componentDidUpdate(): void {
     if (this.state.fault && this.state.keyAtFault !== null && this.state.keyAtFault !== this.props.resetKey) {
+      forgetFailedScreens();
       this.setState(stateAfterReset());
     }
   }
@@ -54,7 +57,11 @@ export class RenderBoundary extends Component<BoundaryProps, BoundaryState> {
         fault={this.state.fault}
         scope={this.props.scope}
         screenLabel={this.props.screenLabel}
-        onAgain={() => this.setState(stateAfterReset())}
+        onAgain={() => {
+          // A failed screen load is kept until now, so drawing again does not import again by itself.
+          forgetFailedScreens();
+          this.setState(stateAfterReset());
+        }}
       />
     );
   }
@@ -75,41 +82,70 @@ export function ErrorPanel({
   useEffect(() => {
     heading.current?.focus();
   }, []);
+  const t = useT();
   const request = fault.requestId ?? fault.correlationId;
+  const shownScreen = scope === "app" ? t("error.appShell") : screenLabel;
+  const home = scope === "app" ? <a href="/">{t("error.home")}</a> : <Link to="/">{t("error.home")}</Link>;
+  if (fault.kind === "screen-load-error") {
+    return (
+      <section className="shell-error" role="alert" aria-labelledby="shell-error-title" data-scope={scope} data-cause={fault.kind}>
+        <h2 id="shell-error-title" ref={heading} tabIndex={-1}>
+          {t("error.load.title")}
+        </h2>
+        <dl className="shell-error-facts">
+          <dt>{t("error.fact.cause")}</dt>
+          <dd>{t("error.load.cause")}</dd>
+          <dt>{t("error.fact.screen")}</dt>
+          <dd>{shownScreen}</dd>
+          <dt>{t("error.fact.reference")}</dt>
+          <dd data-testid="shell-error-reference">{fault.reference}</dd>
+          <dt>{t("error.fact.request")}</dt>
+          <dd>{t("error.load.noRequest")}</dd>
+          <dt>{t("error.fact.code")}</dt>
+          <dd>{fault.code ?? "SCREEN_LOAD_FAILED"}</dd>
+        </dl>
+        <p>
+          {t("error.load.note")}
+        </p>
+        <p>{t("error.load.reload")}</p>
+        <p className="shell-error-actions">
+          <button type="button" id="shell-error-again" onClick={onAgain}>
+            {t("error.load.again")}
+          </button>{" "}
+          {home}
+        </p>
+      </section>
+    );
+  }
   return (
     <section className="shell-error" role="alert" aria-labelledby="shell-error-title" data-scope={scope} data-cause={fault.kind}>
       <h2 id="shell-error-title" ref={heading} tabIndex={-1}>
-        This screen could not be drawn
+        {t("error.render.title")}
       </h2>
       <dl className="shell-error-facts">
-        <dt>Cause</dt>
-        <dd>Render error (the screen threw while it was being drawn)</dd>
-        <dt>Screen</dt>
-        <dd>{screenLabel}</dd>
-        <dt>Reference</dt>
+        <dt>{t("error.fact.cause")}</dt>
+        <dd>{t("error.render.cause")}</dd>
+        <dt>{t("error.fact.screen")}</dt>
+        <dd>{shownScreen}</dd>
+        <dt>{t("error.fact.reference")}</dt>
         <dd data-testid="shell-error-reference">{fault.reference}</dd>
-        <dt>Request reference</dt>
-        <dd>{request ?? "none (no request was involved)"}</dd>
+        <dt>{t("error.fact.request")}</dt>
+        <dd>{request ?? t("error.render.noRequest")}</dd>
         {fault.code ? (
           <>
-            <dt>Code</dt>
+            <dt>{t("error.fact.code")}</dt>
             <dd>{fault.code}</dd>
           </>
         ) : null}
       </dl>
       <p>
-        This panel sent nothing and cleared nothing. Anything the screen kept only inside itself is gone. An UNKNOWN
-        result is not resolved by this panel.
+        {t("error.render.note")}
       </p>
       <p className="shell-error-actions">
         <button type="button" id="shell-error-again" onClick={onAgain}>
-          Show this screen again
+          {t("error.render.again")}
         </button>{" "}
-        {scope === "app" ? (
-          <a href="/">Go to Box office</a>
-        ) : (
-          <Link to="/">Go to Box office</Link>
-        )}
+        {home}
       </p>
     </section>
   );
