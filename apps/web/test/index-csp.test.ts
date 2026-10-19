@@ -14,7 +14,7 @@ describe("app shell policy", () => {
   });
 
   it("loads no external or inline script", () => {
-    const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
+    const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)];
     expect(scripts).toHaveLength(1);
     expect(scripts[0]?.[1]).toContain('src="/src/main.tsx"');
     expect(scripts[0]?.[2].trim()).toBe("");
