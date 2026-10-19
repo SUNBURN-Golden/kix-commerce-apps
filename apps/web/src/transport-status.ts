@@ -22,7 +22,10 @@ export function transportBannerText(
   environment: "stub" | "integration-http",
   observation: TransportObservation | null,
   t: Translate = makeTranslate(DEFAULT_LOCALE),
+  autoRefreshStopped = false,
 ): { state: string; text: string } {
+  const paused =
+    autoRefreshStopped && environment === "integration-http" ? ` ${t("transport.paused")}` : "";
   if (environment === "stub") {
     return {
       state: "local",
@@ -32,18 +35,18 @@ export function transportBannerText(
   if (!observation) {
     return {
       state: "checking",
-      text: t("transport.checking"),
+      text: `${t("transport.checking")}${paused}`,
     };
   }
   const trace = observation.requestId ? ` ${t("transport.request", { requestId: observation.requestId })}` : "";
   if (observation.state === "degraded" || observation.state === "unavailable") {
     return {
       state: observation.state,
-      text: `${observation.detail} ${t("transport.staysHttp")}${trace}`,
+      text: `${observation.detail} ${t("transport.staysHttp")}${trace}${paused}`,
     };
   }
   return {
     state: observation.state,
-    text: `${observation.detail}${trace}`,
+    text: `${observation.detail}${trace}${paused}`,
   };
 }

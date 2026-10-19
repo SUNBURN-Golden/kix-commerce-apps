@@ -134,6 +134,7 @@ const en = {
   "transport.checking": "Environment integration-http. Loopback status is not loaded yet. Not production readiness.",
   "transport.request": "Request {requestId}.",
   "transport.staysHttp": "The desk stays on integration HTTP.",
+  "transport.paused": "Automatic re-probing is stopped while reduced motion is preferred. The shown state is from the load probe.",
 } as const;
 
 export type MessageKey = keyof typeof en;
@@ -267,6 +268,7 @@ const ko: Record<MessageKey, string> = {
   "transport.checking": "환경 integration-http. 루프백 상태를 아직 읽지 않았습니다. 프로덕션 준비 상태가 아닙니다.",
   "transport.request": "요청 {requestId}.",
   "transport.staysHttp": "데스크는 integration HTTP에 머뭅니다.",
+  "transport.paused": "움직임 감소 설정이 켜져 있어 자동 재점검이 멈춰 있습니다. 표시된 상태는 첫 점검 결과입니다.",
 };
 
 export const MESSAGES = { en, ko } as const;

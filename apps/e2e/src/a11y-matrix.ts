@@ -136,7 +136,7 @@ export const KNOWN_FINDINGS: readonly KnownFinding[] = [
   single("booking", "desktop", "status.disabled-no-reason", "Disabled booking buttons (such as Confirm before a hold) carry no reason that aria-describedby reaches. Not fixed here."),
   single("gift", "desktop", "status.disabled-no-reason", "Disabled gift buttons carry no reason that aria-describedby reaches. Not fixed here."),
   single("inventory:section-page", "desktop", "nested-interactive", "A control sits inside the seat listbox option. Same rule as on /discovery. Not fixed here."),
-  single("handoff", "narrow", "reflow.narrow-overflow", "At 320px the Role journey list is 8px wider than the window, so the document scrolls sideways. Not fixed here."),
+  { screenId: "handoff", viewport: "narrow", ruleId: "reflow.narrow-overflow", status: "FIXED", note: "At 320px the Startup faults list (an unbreakable VITE_KIX_PROTOCOL_API_BASE token) made the panel grid track wider than the window. Fixed in c-display-preferences-stub: handoff list text wraps anywhere." },
 ];
 
 export const ENV_SENSITIVE_RULES: readonly string[] = ["color-contrast"];
@@ -190,6 +190,10 @@ export const STATIC_CHECK_IDS: readonly string[] = [
   "a11y.locale.switch-keys",
   "a11y.locale.persist",
   "a11y.locale.reflow-320",
+  "a11y.display.dark",
+  "a11y.display.forced-colors",
+  "a11y.display.reduced-motion",
+  "a11y.display.print",
 ];
 
 export function expectedCheckIds(): string[] {
