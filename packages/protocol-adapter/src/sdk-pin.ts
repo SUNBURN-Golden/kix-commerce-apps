@@ -7,6 +7,7 @@ import mixedVectorsRaw from "../vendor/kix-sdk-0/conformance/vectors/mixed-input
 import generatorRaw from "../vendor/kix-sdk-0/generate/generate_client.mjs?raw";
 import catalogueRaw from "../vendor/kix-sdk-0/generated/catalogue.ts?raw";
 import sdkPinFileRaw from "../vendor/kix-sdk-0/sdk-pin.json?raw";
+import producerProvenanceRaw from "../vendor/kix-sdk-0/producer-provenance.json?raw";
 import clientRaw from "../vendor/kix-sdk-0/src/client.ts?raw";
 import jsonschemaRaw from "../vendor/kix-sdk-0/src/jsonschema.ts?raw";
 import manifestHelperRaw from "../vendor/kix-sdk-0/src/manifest.ts?raw";
@@ -48,6 +49,11 @@ import { ProtocolError } from "./types.js";
 export const KIX_SDK_0_PIN = {
   producerRepo: "SUNBURN-Golden/kix-protocol",
   producerMergeSha: "a74e7c459d3be6754ac3cf24503e43c7bc312358",
+  producerHeadSha: "d74dadf87e54ff187ce1fe06bc6c95aa9e92e440",
+  producerMergeTree: "55a05dfbf97141cfff9e6b7072c23d6f0b57f5d5",
+  producerReviewHeadSha: "f761cfdb6817f1489a7f9de0425e636df152f7b2",
+  producerReviewCommentId: 6051281750,
+  producerProvenanceSha256: "ba13a8173c135b40db62f9729235220ce9954e9b2d22d3b062fbe54f066d68ee",
   producerSourceCommit: "7481b0e16ce9b903abbffa62249bb91cd9e63cfe",
   producerSourceTree: "8495c7651e456cead3a8812b9e6fb183f818acd2",
   producerSourcePath: "reference/v0.3-rc1/protocol_contract.json",
@@ -136,6 +142,7 @@ export interface SdkPinInputs {
   generatorRaw: string;
   catalogueRaw: string;
   sdkPinFileRaw: string;
+  producerProvenanceRaw: string;
   clientRaw: string;
   jsonschemaRaw: string;
   manifestHelperRaw: string;
@@ -153,6 +160,7 @@ export const VENDORED_SDK_PIN_INPUTS: SdkPinInputs = {
   generatorRaw,
   catalogueRaw,
   sdkPinFileRaw,
+  producerProvenanceRaw,
   clientRaw,
   jsonschemaRaw,
   manifestHelperRaw,
@@ -477,6 +485,7 @@ export function collectSdkPinErrors(inputs: SdkPinInputs = VENDORED_SDK_PIN_INPU
   }
 
   checkVendoredFileDigests(inputs, errors);
+  checkProducerProvenance(inputs, errors);
   checkGeneratedCataloguePin(errors);
   checkSdkPinFile(inputs, errors);
   checkClientSurface(inputs, errors);
@@ -495,6 +504,79 @@ function checkVendoredFileDigests(inputs: SdkPinInputs, errors: string[]): void 
   for (const [label, raw, sha256] of expected) {
     if (sha256Hex(bytes(raw)) !== sha256) {
       errors.push(`${label} vendored bytes drift`);
+    }
+  }
+}
+
+function checkProducerProvenance(inputs: SdkPinInputs, errors: string[]): void {
+  const raw = inputs.producerProvenanceRaw;
+  if (sha256Hex(bytes(raw)) !== KIX_SDK_0_PIN.producerProvenanceSha256) {
+    errors.push("producer provenance bytes drift");
+  }
+  let value: unknown;
+  try {
+    value = parseStrict(bytes(raw));
+  } catch {
+    errors.push("producer provenance JSON drift");
+    return;
+  }
+  if (canonicalStringify(value) !== raw || !isRecord(value)) {
+    errors.push("producer provenance canonical form drift");
+    return;
+  }
+  if (!sameKeys(keysOf(value), ["checks", "merge", "producer", "review", "schema"])) {
+    errors.push("producer provenance field set drift");
+  }
+  if (value.schema !== "kix-p-sdk-0-producer-provenance/1") {
+    errors.push("producer provenance schema drift");
+  }
+  const merge = value.merge;
+  if (!isRecord(merge) ||
+      merge.repository !== KIX_SDK_0_PIN.producerRepo ||
+      merge.pr !== 123 ||
+      merge.headSha !== KIX_SDK_0_PIN.producerHeadSha ||
+      merge.mergeSha !== KIX_SDK_0_PIN.producerMergeSha ||
+      merge.mergeTree !== KIX_SDK_0_PIN.producerMergeTree ||
+      merge.mergedBy !== "BeautifulMind-JT" ||
+      canonicalStringify(merge.parentShas) !== canonicalStringify([merge.baseSha, KIX_SDK_0_PIN.producerHeadSha])) {
+    errors.push("producer merge binding drift");
+  }
+  const producer = value.producer;
+  if (!isRecord(producer) ||
+      producer.sourceCommit !== KIX_SDK_0_PIN.producerSourceCommit ||
+      producer.sourceTree !== KIX_SDK_0_PIN.producerSourceTree ||
+      producer.manifestPath !== KIX_SDK_0_PIN.manifestPath ||
+      producer.manifestSha256 !== KIX_SDK_0_PIN.manifestSha256 ||
+      producer.profileKind !== KIX_SDK_0_PIN.profileKind ||
+      producer.profileRevision !== KIX_SDK_0_PIN.profileRevision) {
+    errors.push("producer tuple provenance drift");
+  }
+  const review = value.review;
+  if (!isRecord(review) ||
+      review.auditFloor !== "A3" ||
+      review.assessment !== "NO BLOCKING FINDINGS" ||
+      review.builder !== "CURSOR" ||
+      review.reviewer !== "Devin CLI swe-2 read-only" ||
+      review.headSha !== KIX_SDK_0_PIN.producerReviewHeadSha ||
+      review.commentId !== KIX_SDK_0_PIN.producerReviewCommentId) {
+    errors.push("producer independent A3 review drift");
+  }
+  if (!Array.isArray(value.checks)) {
+    errors.push("producer completion checks drift");
+    return;
+  }
+  const requiredChecks: ReadonlyArray<readonly [string, number]> = [
+    ["kernel", 113150856550],
+    ["protocol", 113150857272],
+    ["CodeQL", 113150950915],
+  ];
+  for (const [name, checkRunId] of requiredChecks) {
+    const check = value.checks.find((entry) => isRecord(entry) && entry.name === name);
+    if (!isRecord(check) ||
+        check.checkRunId !== checkRunId ||
+        check.headSha !== KIX_SDK_0_PIN.producerHeadSha ||
+        check.conclusion !== "success") {
+      errors.push(`producer completion check drift: ${name}`);
     }
   }
 }

@@ -73,6 +73,7 @@ describe("p-sdk-0 vendored tuple pin", () => {
     expect(sha256(vendored("src/jsonschema.ts"))).toBe(KIX_SDK_0_PIN.jsonschemaSha256);
     expect(sha256(vendored("src/manifest.ts"))).toBe(KIX_SDK_0_PIN.manifestHelperSha256);
     expect(sha256(vendored("sdk-pin.json"))).toBe(KIX_SDK_0_PIN.sdkPinFileSha256);
+    expect(sha256(vendored("producer-provenance.json"))).toBe(KIX_SDK_0_PIN.producerProvenanceSha256);
     expect(sha256(vendored("compat/verify_compat.mjs"))).toBe(KIX_SDK_0_PIN.verifierSha256);
     expect(sha256(vendored("conformance/vectors/canonical-encoding.vectors.json"))).toBe(
       "3446c13847bb153df06c1d5d3b7f09cd3b1648ac10bb0cc76d7b65c7014e99c2",
@@ -115,6 +116,64 @@ describe("p-sdk-0 vendored tuple pin", () => {
     expect(() => assertSdkPin()).not.toThrow();
   });
 
+  it("rejects producer provenance that does not bind the reviewed head, completion checks, and merge", () => {
+    const original = parseStrict(VENDORED_SDK_PIN_INPUTS.producerProvenanceRaw) as Record<string, unknown>;
+    const cases: ReadonlyArray<readonly [string, unknown, string]> = [
+      ["schema", "unknown", "producer provenance schema drift"],
+      ["merge", null, "producer merge binding drift"],
+      ["merge.repository", "foreign/repository", "producer merge binding drift"],
+      ["merge.pr", 124, "producer merge binding drift"],
+      ["merge.headSha", "0".repeat(40), "producer merge binding drift"],
+      ["merge.mergeSha", "0".repeat(40), "producer merge binding drift"],
+      ["merge.mergeTree", "0".repeat(40), "producer merge binding drift"],
+      ["merge.mergedBy", "other", "producer merge binding drift"],
+      ["merge.parentShas", [], "producer merge binding drift"],
+      ["producer", null, "producer tuple provenance drift"],
+      ["producer.sourceCommit", "0".repeat(40), "producer tuple provenance drift"],
+      ["producer.sourceTree", "0".repeat(40), "producer tuple provenance drift"],
+      ["producer.manifestPath", "other", "producer tuple provenance drift"],
+      ["producer.manifestSha256", "0".repeat(64), "producer tuple provenance drift"],
+      ["producer.profileKind", "SEMANTIC_CONFORMANCE", "producer tuple provenance drift"],
+      ["producer.profileRevision", "other", "producer tuple provenance drift"],
+      ["review", null, "producer independent A3 review drift"],
+      ["review.auditFloor", "A2", "producer independent A3 review drift"],
+      ["review.assessment", "UNKNOWN", "producer independent A3 review drift"],
+      ["review.builder", "reviewer", "producer independent A3 review drift"],
+      ["review.reviewer", "builder", "producer independent A3 review drift"],
+      ["review.headSha", "0".repeat(40), "producer independent A3 review drift"],
+      ["review.commentId", 0, "producer independent A3 review drift"],
+      ["checks.0.checkRunId", 0, "producer completion check drift: kernel"],
+      ["checks.0.headSha", "0".repeat(40), "producer completion check drift: kernel"],
+      ["checks.0.conclusion", "failure", "producer completion check drift: kernel"],
+      ["checks", [], "producer completion check drift: protocol"],
+    ];
+    for (const [dotted, value, expected] of cases) {
+      const changed = structuredClone(original);
+      setPath(changed, dotted, value);
+      const errors = collectSdkPinErrors({
+        ...VENDORED_SDK_PIN_INPUTS,
+        producerProvenanceRaw: canonicalStringify(changed),
+      });
+      expect(errors, dotted).toContain("producer provenance bytes drift");
+      expect(errors, dotted).toContain(expected);
+    }
+    expect(collectSdkPinErrors({ ...VENDORED_SDK_PIN_INPUTS, producerProvenanceRaw: "{" })).toContain(
+      "producer provenance JSON drift",
+    );
+    const withoutChecks = structuredClone(original);
+    setPath(withoutChecks, "checks", null);
+    expect(collectSdkPinErrors({
+      ...VENDORED_SDK_PIN_INPUTS,
+      producerProvenanceRaw: canonicalStringify(withoutChecks),
+    })).toContain("producer completion checks drift");
+    const extraField = structuredClone(original);
+    extraField.extra = false;
+    expect(collectSdkPinErrors({
+      ...VENDORED_SDK_PIN_INPUTS,
+      producerProvenanceRaw: canonicalStringify(extraField),
+    })).toContain("producer provenance field set drift");
+  });
+
   it("rejects a later or foreign tuple", () => {
     const changed = (dotted: string, value: unknown): string => {
       const copy = manifestValue();
@@ -125,9 +184,23 @@ describe("p-sdk-0 vendored tuple pin", () => {
       changed("profile_kind", "SEMANTIC_CONFORMANCE"),
       changed("profile_revision", "bootstrap-2"),
       changed("producer.repository", "BeautifulMind-JT/kix-protocol"),
+      changed("producer.source_commit", "0".repeat(40)),
+      changed("producer.source_tree", "0".repeat(40)),
       changed("producer.protocol_domain", "other-domain"),
+      changed("producer.contract_schema_version", "other"),
+      changed("contract.contract_only.path", "other"),
       changed("contract.contract_only.sha256", "0".repeat(64)),
+      changed("contract.contract_only.gitBlob", "0".repeat(40)),
+      changed("contract.integration_gate.path", "other"),
+      changed("contract.integration_gate.sha256", "0".repeat(64)),
+      changed("contract.integration_gate.gitBlob", "0".repeat(40)),
+      changed("generator.path", "other"),
+      changed("generator.sha256", "0".repeat(64)),
+      changed("generator.toolchain", "other"),
+      changed("sdk_output.path", "other"),
       changed("sdk_output.sha256", "0".repeat(64)),
+      changed("source_references.extension_profile", true),
+      changed("source_references.fixture_profile", "other"),
     ]) {
       const errors = collectSdkPinErrors({ ...VENDORED_SDK_PIN_INPUTS, manifestRaw });
       expect(errors.length).toBeGreaterThan(0);
@@ -211,6 +284,98 @@ describe("p-sdk-0 vendored tuple pin", () => {
     expect(contract.integration_gate.gitBlob).toBe(
       gitBlobId(new TextEncoder().encode(VENDORED_SDK_PIN_INPUTS.integrationGateOpenApiRaw)),
     );
+  });
+
+  it("fails closed for malformed or drifted vendored support files", () => {
+    const pin = JSON.parse(VENDORED_SDK_PIN_INPUTS.sdkPinFileRaw) as Record<string, unknown>;
+    const pinCases: ReadonlyArray<readonly [string, unknown, string]> = [
+      ["commandCount", 0, "sdk-pin command count drift"],
+      ["domain", "other", "sdk-pin domain drift"],
+      ["generatedCatalogue", "other", "sdk-pin path drift"],
+      ["generator", "other", "sdk-pin path drift"],
+      ["openapi", null, "sdk-pin OpenAPI binding drift"],
+      ["openapi.gitBlob", "0".repeat(40), "sdk-pin OpenAPI binding drift"],
+      ["openapi.path", "other", "sdk-pin OpenAPI binding drift"],
+      ["openapi.sha256", "0".repeat(64), "sdk-pin OpenAPI binding drift"],
+      ["source", null, "sdk-pin source binding drift"],
+      ["source.domain", "other", "sdk-pin source binding drift"],
+      ["source.gitBlob", "0".repeat(40), "sdk-pin source binding drift"],
+      ["source.path", "other", "sdk-pin source binding drift"],
+      ["source.sha256", "0".repeat(64), "sdk-pin source binding drift"],
+      ["sourceAuthentication", "OTHER", "sdk-pin source marker drift"],
+      ["unknownFields", "ALLOW", "sdk-pin source marker drift"],
+    ];
+    for (const [dotted, value, expected] of pinCases) {
+      const changed = structuredClone(pin);
+      setPath(changed, dotted, value);
+      expect(collectSdkPinErrors({ ...VENDORED_SDK_PIN_INPUTS, sdkPinFileRaw: JSON.stringify(changed) }), dotted).toContain(
+        expected,
+      );
+    }
+    expect(collectSdkPinErrors({ ...VENDORED_SDK_PIN_INPUTS, sdkPinFileRaw: "{" })).toContain(
+      "sdk-pin file is not JSON",
+    );
+    expect(collectSdkPinErrors({ ...VENDORED_SDK_PIN_INPUTS, sdkPinFileRaw: "[]" })).toContain(
+      "sdk-pin file is not an object",
+    );
+    expect(collectSdkPinErrors({ ...VENDORED_SDK_PIN_INPUTS, sidecarRaw: "bad" })).toContain(
+      "manifest sidecar form drift",
+    );
+    const profile = parseStrict(VENDORED_SDK_PIN_INPUTS.profileRaw) as Record<string, unknown>;
+    const profileCases: ReadonlyArray<readonly [string, unknown, string]> = [
+      ["profile_kind", "SEMANTIC_CONFORMANCE", "profile identity mismatch"],
+      ["profile_revision", "other", "profile identity mismatch"],
+      ["manifest_schema_version", "other", "profile manifest_schema_version drift"],
+      ["grants", "other", "BOOTSTRAP grants drift"],
+      ["vectors", [], "profile and manifest vectors differ"],
+      ["catalogue.openapi_path", "other", "catalogue openapi binding drift"],
+      ["catalogue.openapi_sha256", "0".repeat(64), "catalogue openapi binding drift"],
+      ["catalogue.command_set_sha256", "0".repeat(64), "command set digest drift"],
+      ["catalogue.schema_digests", {}, "schema digest map drift"],
+    ];
+    for (const [dotted, value, expected] of profileCases) {
+      const changed = structuredClone(profile);
+      setPath(changed, dotted, value);
+      expect(collectSdkPinErrors({ ...VENDORED_SDK_PIN_INPUTS, profileRaw: canonicalStringify(changed) }), dotted).toContain(
+        expected,
+      );
+    }
+    expect(collectSdkPinErrors({ ...VENDORED_SDK_PIN_INPUTS, profileRaw: "{" })).toContain("profile truncated");
+    expect(collectSdkPinErrors({ ...VENDORED_SDK_PIN_INPUTS, profileRaw: "null" })).toContain("profile is not an object");
+    const manifest = manifestValue();
+    const manifestCases: ReadonlyArray<readonly [string, unknown]> = [
+      ["producer", null],
+      ["contract", null],
+      ["contract.contract_only", null],
+      ["contract.integration_gate", null],
+      ["generator", null],
+      ["sdk_output", null],
+      ["source_references", null],
+      ["vectors", null],
+      ["vectors", [{}]],
+      ["vectors", [{ name: "bad", path: "../bad", sha256: "0".repeat(64) }]],
+    ];
+    for (const [dotted, value] of manifestCases) {
+      const changed = structuredClone(manifest);
+      setPath(changed, dotted, value);
+      expect(collectSdkPinErrors({ ...VENDORED_SDK_PIN_INPUTS, manifestRaw: canonicalStringify(changed) }).length, dotted)
+        .toBeGreaterThan(0);
+    }
+    expect(collectSdkPinErrors({
+      ...VENDORED_SDK_PIN_INPUTS,
+      sidecarRaw: `${"0".repeat(64)}\n`,
+    })).toContain("manifest sidecar digest drift");
+    expect(collectSdkPinErrors({ ...VENDORED_SDK_PIN_INPUTS, producerProvenanceRaw: "null" })).toContain(
+      "producer provenance canonical form drift",
+    );
+    for (const token of ["http://", "https://", "fetch(", "baseUrl", "baseURL", "Authorization", "retry", "authenticate"]) {
+      expect(collectSdkPinErrors({ ...VENDORED_SDK_PIN_INPUTS, clientRaw: token })).toContain(
+        `client surface carries ${token}`,
+      );
+      expect(collectSdkPinErrors({ ...VENDORED_SDK_PIN_INPUTS, catalogueRaw: token })).toContain(
+        `catalogue carries ${token}`,
+      );
+    }
   });
 
   it("keeps the client surface free of a URL, credential, or repeat-call API", () => {
