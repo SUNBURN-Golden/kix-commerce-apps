@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { createRequire } from "node:module";
 import type { TestProject } from "vitest/node";
 import { buildShellFaultApp, buildStubApp, type BuiltApp } from "./build";
 import { A11Y_BASELINE, KNOWN_FINDINGS, SCREENS, VIEWPORTS, expectedCheckIds, matrixProblems, type ScreenRecord, type ViewportName } from "./a11y-matrix";
@@ -21,6 +22,7 @@ let server: StaticServer | null = null;
 let faultApp: BuiltApp | null = null;
 let faultServer: StaticServer | null = null;
 let recordDir = "";
+const require = createRequire(import.meta.url);
 
 function git(args: string[]): string {
   try {
@@ -33,6 +35,7 @@ function git(args: string[]): string {
 export async function setup(project: TestProject): Promise<void> {
   recordDir = fs.mkdtempSync(path.join(os.tmpdir(), "kix-a11y-record-"));
   process.env.KIX_E2E_RECORD_DIR = recordDir;
+  process.env.KIX_E2E_AXE_SOURCE = require.resolve("axe-core/axe.min.js");
   app = await buildStubApp();
   server = await serveDirectory(app.outDir);
   project.provide("origin", server.origin);

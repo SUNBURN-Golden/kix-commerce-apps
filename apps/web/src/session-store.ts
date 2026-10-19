@@ -1,4 +1,5 @@
 import type { SessionStorePort } from "@kix/protocol-adapter";
+import { assertAllowedStorageKey } from "./storage-allow-list";
 
 /**
  * The only place the web app names the tab's session storage for the session
@@ -8,7 +9,23 @@ import type { SessionStorePort } from "@kix/protocol-adapter";
 export function pageSessionStore(): SessionStorePort | null {
   try {
     const store = globalThis.sessionStorage;
-    return store === undefined || store === null ? null : store;
+    if (store === undefined || store === null) {
+      return null;
+    }
+    return {
+      getItem: (key) => {
+        assertAllowedStorageKey(key);
+        return store.getItem(key);
+      },
+      setItem: (key, value) => {
+        assertAllowedStorageKey(key);
+        store.setItem(key, value);
+      },
+      removeItem: (key) => {
+        assertAllowedStorageKey(key);
+        store.removeItem(key);
+      },
+    };
   } catch {
     return null;
   }

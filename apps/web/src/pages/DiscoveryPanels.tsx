@@ -34,7 +34,6 @@ import {
   isListKey,
   isPageSize,
   PAGE_SIZES,
-  SCALE_VIEWPORT_HEIGHT,
   scaleWindow,
   toggleValue,
   withFilter,
@@ -384,7 +383,6 @@ export function ScaleList({ onOpen, scaleTotal }: { onOpen: (rowId: string) => v
         role="listbox"
         tabIndex={0}
         aria-label="Scale index"
-        style={{ height: SCALE_VIEWPORT_HEIGHT }}
         aria-activedescendant={active ? `discovery-scale-${active.rowId}` : undefined}
         onKeyDown={(event) => {
           if (!isListKey(event.key)) {

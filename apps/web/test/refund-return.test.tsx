@@ -79,8 +79,8 @@ describe("refund-return desk", () => {
     const tracks = [...page.matchAll(/data-track="([^"]+)"/g)].map((m) => m[1]);
     expect(tracks).toEqual(["reservation", "payment", "issuance", "return-required", "refund-done"]);
     // A reservation is never shown as a payment or a refund.
-    const reservationCell = page.match(/data-track="reservation"[\s\S]*?<\/li>/)![0];
-    const paymentCell = page.match(/data-track="payment"[\s\S]*?<\/li>/)![0];
+    const reservationCell = page.match(/data-track="reservation"[\s\S]*?<\/li\b[^>]*>/)![0];
+    const paymentCell = page.match(/data-track="payment"[\s\S]*?<\/li\b[^>]*>/)![0];
     expect(reservationCell).toContain("confirmed");
     expect(reservationCell).toContain("not a payment");
     expect(reservationCell).not.toContain("observed");
@@ -108,8 +108,8 @@ describe("refund-return desk", () => {
   it("records a refund on its own line and keeps return-required a separate state", async () => {
     const controller = await readyModel("refund-recorded");
     const page = markup(live(controller));
-    const refundCell = page.match(/data-track="refund-done"[\s\S]*?<\/li>/)![0];
-    const returnCell = page.match(/data-track="return-required"[\s\S]*?<\/li>/)![0];
+    const refundCell = page.match(/data-track="refund-done"[\s\S]*?<\/li\b[^>]*>/)![0];
+    const returnCell = page.match(/data-track="return-required"[\s\S]*?<\/li\b[^>]*>/)![0];
     expect(refundCell).toContain("recorded");
     expect(returnCell).toContain("required");
     expect(page).toContain("Return-required is its own state");
