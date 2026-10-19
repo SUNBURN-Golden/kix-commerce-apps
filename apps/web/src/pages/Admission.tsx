@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useAdmissionDesk } from "../admission-desk";
 import { useReservationDesk } from "../reservation-desk";
 import { AdmissionCredentialPanel } from "./AdmissionCredentialPanel";
+import { SafeText } from "../safe-text";
 import { ReservationPanel } from "./ReservationPanel";
 
 export function AdmissionPage() {
@@ -34,7 +35,7 @@ export function AdmissionPage() {
         </label>
         <p className="muted">The gate string is an adapter argument. This form does not admit.</p>
         {params.get("rightsRef") ? (
-          <p className="muted">Linked right reference {params.get("rightsRef")}. The credential label uses the performance case.</p>
+          <p className="muted">Linked right reference <SafeText value={params.get("rightsRef")} />. The credential label uses the performance case.</p>
         ) : null}
       </form>
       <form

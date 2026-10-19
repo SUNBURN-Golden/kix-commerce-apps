@@ -56,5 +56,8 @@ async function buildApp(withFaults: boolean): Promise<BuiltApp> {
       : undefined,
     build: { outDir, emptyOutDir: true, minify: true },
   });
+  if (process.env.KIX_E2E_AXE_SOURCE) {
+    fs.copyFileSync(process.env.KIX_E2E_AXE_SOURCE, path.join(outDir, "axe.min.js"));
+  }
   return { outDir, cleanup: () => fs.rmSync(scratch, { recursive: true, force: true }) };
 }

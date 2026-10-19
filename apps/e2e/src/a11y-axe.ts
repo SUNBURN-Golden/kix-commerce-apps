@@ -1,11 +1,10 @@
-import fs from "node:fs";
 import { createRequire } from "node:module";
 import type { Page } from "playwright-core";
 
 const require = createRequire(import.meta.url);
 
 /** axe-core is read from node_modules and injected from disk. No network, no wrapper package. */
-const AXE_SOURCE = fs.readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
+const AXE_PATH = "/axe.min.js";
 
 export interface AxeRule {
   ruleId: string;
@@ -29,7 +28,7 @@ interface AxeResult {
 export async function runAxe(page: Page, tags: readonly string[]): Promise<AxeSummary> {
   const present = await page.evaluate(() => "axe" in window);
   if (!present) {
-    await page.addScriptTag({ content: AXE_SOURCE });
+    await page.addScriptTag({ url: AXE_PATH });
   }
   return page.evaluate(async (runTags: string[]) => {
     const axe = (window as unknown as { axe: { version: string; run: (ctx: Document, opts: object) => Promise<{ violations: AxeResult[]; incomplete: AxeResult[] }> } }).axe;
@@ -46,7 +45,7 @@ export function installedAxeVersion(): string {
 export async function axeRuleCountForTag(page: Page, tag: string): Promise<number> {
   const present = await page.evaluate(() => "axe" in window);
   if (!present) {
-    await page.addScriptTag({ content: AXE_SOURCE });
+    await page.addScriptTag({ url: AXE_PATH });
   }
   return page.evaluate((t: string) => (window as unknown as { axe: { getRules: (tags: string[]) => unknown[] } }).axe.getRules([t]).length, tag);
 }

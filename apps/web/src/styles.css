@@ -857,6 +857,7 @@ a.panel {
 }
 
 .discovery-scale {
+  height: 192px;
   overflow: auto;
   border: 1px solid var(--line);
   background: var(--card);

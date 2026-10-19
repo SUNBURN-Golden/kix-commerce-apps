@@ -6,6 +6,7 @@ import { AmountNotice, DeadlineLine, StatusMark } from "../a11y/marks";
 import { bookingQuantityNumber, capacityLine, presentQuantityLine } from "../a11y/present";
 import { formatWhen } from "../format";
 import { protocol } from "../protocol";
+import { SafeText } from "../safe-text";
 import { useAdmissionDesk } from "../admission-desk";
 import { useJourneyDesk } from "../journey-desk";
 import { useRefundReturnDesk } from "../refund-return";
@@ -159,6 +160,9 @@ export function BookingPage() {
       <section>
         <p className="alert" role="alert">
           <StatusMark kind="blocked" /> {error ?? "That performance is not on this adapter."}
+        </p>
+        <p className="muted">
+          Requested performance: <SafeText value={eventId} />
         </p>
         <JourneyPanel variant="booking" model={journey} />
         <RefundReturnPanel live={refundDesk} variant="booking" />
