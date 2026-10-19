@@ -378,7 +378,8 @@ const EMPTY_CELL_STATES: Readonly<Record<RefundCell, string>> = {
 export function buildRefundReturnModel(input: { controller: RefundReturnController | null; last: RefundLastAction | null; hasOrder: boolean }): RefundReturnModel {
   const { controller } = input;
   const state = controller === null ? null : controller.state();
-  const screen = controller === null || !input.hasOrder ? "needs-order" : readStateToScreen(state!.readState, state!.refreshRequired);
+  const screen =
+    controller === null || !input.hasOrder || state === null ? "needs-order" : readStateToScreen(state.readState, state.refreshRequired);
   const status = statusFor(screen, state?.readDetail ?? null);
   const projection = state === null ? { order: null, freshness: "UNAVAILABLE" as const } : projectRefundReturn(state);
   const freshnessWord =
@@ -403,7 +404,10 @@ export function buildRefundReturnModel(input: { controller: RefundReturnControll
   );
 
   const lines: RefundLineModel[] = REFUND_FLOW_LINES.map((line) => {
-    const step = (Object.keys(STEP_TO_LINE) as RefundStep[]).find((key) => STEP_TO_LINE[key] === line)!;
+    const step = (Object.keys(STEP_TO_LINE) as RefundStep[]).find((key) => STEP_TO_LINE[key] === line);
+    if (step === undefined) {
+      throw new Error(`Unreachable: no refund step maps to line ${line}`);
+    }
     const view = projection.order?.lines[line] ?? null;
     const write = view === null ? { kind: "none", word: "No write sent by this page." } : writeWord(view);
     const fence = controller === null ? null : controller.gateFor({ step, intentRef: GATE_PREVIEW });

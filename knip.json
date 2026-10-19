@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/*.mjs"],
+      "project": ["scripts/*.mjs"]
+    },
+    "apps/web": {
+      "entry": ["src/main.tsx"],
+      "project": ["src/**/*.{ts,tsx}", "test/**/*.{ts,tsx}"]
+    },
+    "apps/e2e": {
+      "entry": ["tests/**/*.test.ts"],
+      "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"]
+    },
+    "packages/protocol-adapter": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts"]
+    }
+  },
+  "ignore": ["**/*.d.ts", "**/coverage/**", "**/dist/**", "**/node_modules/**"]
+}

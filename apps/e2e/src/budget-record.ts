@@ -75,5 +75,8 @@ export function renderBudgetRecord(record: BudgetRecord): string {
 export const median = (values: number[]): number => {
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
+  // An out-of-range index reads undefined and yields NaN, exactly as the
+  // previous indexed reads did.
+  const at = (index: number): number => sorted[index] ?? Number.NaN;
+  return sorted.length % 2 === 1 ? at(mid) : (at(mid - 1) + at(mid)) / 2;
 };

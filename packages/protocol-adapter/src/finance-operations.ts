@@ -1695,6 +1695,8 @@ const NON_CLAIMS: FinanceNonClaims = {
 };
 
 const NOTE_LIMIT = 200;
+// Intentionally rejects ASCII control characters in finance notes.
+// eslint-disable-next-line no-control-regex
 const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f]/;
 
 function isNonEmpty(value: unknown): value is string {

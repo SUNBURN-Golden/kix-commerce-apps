@@ -16,7 +16,7 @@ const PLACEHOLDER = /\{([A-Za-z][A-Za-z0-9]*)\}/g;
 
 /** The placeholder names in a template. A test compares them between en and ko. */
 export function placeholdersOf(template: string): string[] {
-  return [...template.matchAll(PLACEHOLDER)].map((match) => match[1]!);
+  return [...template.matchAll(PLACEHOLDER)].map((match) => match[1]).filter((name): name is string => name !== undefined);
 }
 
 /** Fills `{name}` from params. A placeholder with no value stays visible as written; nothing throws. */

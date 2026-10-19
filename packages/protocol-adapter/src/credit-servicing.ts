@@ -1462,6 +1462,8 @@ function seedFor(scenario: ServicingScenario): SourceState {
     }
     case "delinquent": {
       const state = cleanState();
+      // cleanState() always creates at least two installments; index is in bounds.
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       state.installments[1]!.state = "overdue";
       state.caseStatus = "delinquent";
       state.caseHistory.push({ label: "syn-case-delinquent", status: "delinquent", closureKind: null, note: "Marked delinquent when the schedule ran overdue." });
@@ -1484,7 +1486,10 @@ function seedFor(scenario: ServicingScenario): SourceState {
     }
     case "charged-off": {
       const state = cleanState();
+      // cleanState() always creates at least three installments; indexes are in bounds.
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       state.installments[1]!.state = "charged-off";
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       state.installments[2]!.state = "charged-off";
       state.reservationState = "released";
       state.limitState = "released";
@@ -1530,6 +1535,8 @@ function seedFor(scenario: ServicingScenario): SourceState {
     }
     case "adjustment-applied": {
       const state = cleanState();
+      // cleanState() always creates at least two installments; index is in bounds.
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       state.installments[1]!.state = "adjusted";
       state.adjustments = [
         {

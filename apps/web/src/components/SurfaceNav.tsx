@@ -32,6 +32,7 @@ export function SurfaceNav() {
   };
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- The keydown listener closes the open menu on Escape while focus is on any item inside it; the nav itself takes no keyboard action.
     <nav aria-label={t("shell.nav")} onKeyDown={onKeyDown}>
       <button type="button" className="nav-toggle" aria-expanded={open} aria-controls={MENU_ID} onClick={() => setOpen((value) => !value)} ref={toggle}>
         {t("shell.menu")}
