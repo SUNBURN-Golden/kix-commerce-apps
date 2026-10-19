@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AmountNotice, StatusMark } from "../a11y/marks";
-import { formatWhen } from "../format";
+import { useFormatWhen } from "../i18n/locale-context";
 import { useBuyerWorkspace, type BuyerWorkspaceModel } from "../buyer-workspace";
 import { useRefundReturnDesk } from "../refund-return";
 import { EvidenceRow, ProgressRow, ReturnAction, StateNotice } from "./BuyerPanels";
@@ -28,6 +28,7 @@ export function BuyerScreen({
   onReadAgain: () => void;
   onSelectEvent: (eventId: string) => void;
 }) {
+  const formatWhen = useFormatWhen();
   return (
     <div className="buyer">
       <nav className="buyer-nav" aria-label="Buyer sections" data-adapter-environment={model.environment}>

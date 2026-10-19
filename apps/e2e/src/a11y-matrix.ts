@@ -187,6 +187,9 @@ export const STATIC_CHECK_IDS: readonly string[] = [
   "a11y.nav.menu-focus",
   "a11y.nav.menu-axe",
   "a11y.nav.breadcrumb",
+  "a11y.locale.switch-keys",
+  "a11y.locale.persist",
+  "a11y.locale.reflow-320",
 ];
 
 export function expectedCheckIds(): string[] {

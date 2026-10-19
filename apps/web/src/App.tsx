@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { Shell } from "./components/Shell";
 import { ScreenLoading } from "./components/ScreenLoading";
-import { identifyPage } from "./shell/page-identity";
+import { usePageIdentity } from "./i18n/use-page-identity";
 import { ROUTES, ROUTE_ALIASES } from "./shell/route-registry";
 import { RouteBoundary } from "./shell/RenderBoundary";
 import { ScreenSlot } from "./shell/ScreenSlot";
@@ -19,7 +19,7 @@ function lazyScreen(entry: (typeof ROUTES)[number]) {
 }
 
 function RoutedScreens() {
-  const identity = identifyPage(useLocation().pathname);
+  const identity = usePageIdentity(useLocation().pathname);
   return (
     <RouteBoundary screenKey={identity.key} screenLabel={identity.label}>
       <Routes>

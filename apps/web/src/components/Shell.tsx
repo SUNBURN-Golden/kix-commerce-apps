@@ -3,18 +3,30 @@ import { useLocation } from "react-router-dom";
 import { CREDIT_BOUNDARY, ProtocolError, type TransportObservation } from "@kix/protocol-adapter";
 import { transportStatusWord } from "../a11y/marks";
 import { marketingChromeLabel } from "../marketing/labels";
-import { identifyPage } from "../shell/page-identity";
+import { LocaleSwitch } from "../i18n/LocaleSwitch";
+import { useLocale } from "../i18n/locale-context";
+import { usePageIdentity } from "../i18n/use-page-identity";
 import { Breadcrumb } from "./Breadcrumb";
 import { SurfaceNav } from "./SurfaceNav";
 import { useRouteFocus } from "../shell/route-focus";
+import type { Translate } from "../i18n/translate";
 import { protocol } from "../protocol";
 import { preferFresh, transportBannerText, type HeldObservation } from "../transport-status";
 
 /** How often integration HTTP reads the loopback probes again. The stub is not polled. */
 const TRANSPORT_PROBE_MS = 15_000;
 
+/** The eyebrow. A charter surface label ("M01 · 설계중") is copied; only the hub and the default follow the locale. */
+function marketingEyebrow(label: { eyebrow: string } | null, t: Translate): string {
+  if (!label) {
+    return t("shell.eyebrow.default");
+  }
+  return label.eyebrow === "Marketing desk" ? t("shell.eyebrow.marketing") : label.eyebrow;
+}
+
 export function Shell({ children }: { children: ReactNode }) {
   const meta = protocol.describe();
+  const { t } = useLocale();
   const location = useLocation();
   const onMarketing = location.pathname === "/marketing" || location.pathname.startsWith("/marketing/");
   const marketingLabel = marketingChromeLabel(location.pathname);
@@ -22,7 +34,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const generation = useRef(0);
   const probing = useRef(false);
 
-  const identity = identifyPage(location.pathname);
+  const identity = usePageIdentity(location.pathname);
   const documentTitle = identity.title;
   useRouteFocus(identity.key);
   useEffect(() => {
@@ -92,29 +104,30 @@ export function Shell({ children }: { children: ReactNode }) {
     };
   }, [meta.environment, location.pathname]);
 
-  const transport = transportBannerText(meta.environment, held?.observation ?? null);
+  const transport = transportBannerText(meta.environment, held?.observation ?? null, t);
 
-  const transportWord = transportStatusWord(transport.state);
+  const transportWord = transportStatusWord(transport.state, t);
 
   return (
     <div className="shell">
       <a className="skip" href="#desk-main">
-        Skip to content
+        {t("shell.skip")}
       </a>
       <header className="top">
         <div className="brand">
           <span className="mark">KIX</span>
           <div>
-            <p className="eyebrow">{marketingLabel?.eyebrow ?? "Commerce desk"}</p>
-            <h1>{onMarketing ? "Marketing" : "Box office"}</h1>
+            <p className="eyebrow">{marketingEyebrow(marketingLabel, t)}</p>
+            <h1>{onMarketing ? t("shell.title.marketing") : t("shell.title.boxOffice")}</h1>
           </div>
         </div>
         <SurfaceNav />
+        <LocaleSwitch />
       </header>
       <Breadcrumb />
       <p className="banner" role="status">
-        Adapter <strong>{meta.adapter}</strong>. Environment <strong>{meta.environment}</strong>. No live chain and no
-        funds movement. Public production deployment is not selected. {CREDIT_BOUNDARY.note}
+        {t("shell.banner.adapter")} <strong>{meta.adapter}</strong>. {t("shell.banner.environment")}{" "}
+        <strong>{meta.environment}</strong>. {t("shell.banner.rest")} {CREDIT_BOUNDARY.note}
       </p>
       <p className="banner transport" role="status" data-transport-state={transport.state} data-status-mark={transport.state}>
         <span className="status-word">{transportWord}</span> {transport.text}

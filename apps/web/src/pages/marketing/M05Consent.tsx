@@ -1,12 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { emptyConsentDraft, useConsentDesk, type ConsentDraft, type ConsentPanelModel, type ConsentRowStatus } from "../../consent-desk";
-import { formatWhen } from "../../format";
+import { useFormatWhen } from "../../i18n/locale-context";
 import { MARKETING_CONTRACT_ALIGNMENT } from "../../marketing/contracts";
 import { marketingSession } from "../../marketing/session";
 import { useMarketingSnapshot } from "../../marketing/useMarketingSnapshot";
 import { MarketingChrome } from "./MarketingChrome";
 
 export function M05Page() {
+  const formatWhen = useFormatWhen();
   const { snapshot, refresh } = useMarketingSnapshot();
   const [performanceNotes, setPerformanceNotes] = useState(snapshot.consent.performanceNotes);
   const [membershipNotes, setMembershipNotes] = useState(snapshot.consent.membershipNotes);

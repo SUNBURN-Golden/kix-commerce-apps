@@ -1,0 +1,272 @@
+/**
+ * The message catalogue. English is the source and the default; Korean must carry the same keys (the type below fails the build otherwise).
+ * App-internal; not a public schema, operation, capability or ID.
+ *
+ * Rules kept by test/i18n.test.tsx:
+ *  - protocol words (UNKNOWN, NOT_BOUND, STALE, UNDETERMINED, codes, field names) are copied verbatim; Korean may add a gloss beside them.
+ *  - Korean never says 성공/완료/승인, and says 실패 only for a known load or render fault, never for an UNKNOWN outcome.
+ *  - amounts are the synthetic notice and "mock units" only.
+ * Text that the adapter packages own (CREDIT_BOUNDARY.note, observation.detail, meta values) is not translated here.
+ */
+const en = {
+  "locale.label": "Language",
+  "locale.en": "English",
+  "locale.ko": "한국어",
+  "locale.changed": "Display language is English.",
+  "locale.notice": "",
+
+  "shell.skip": "Skip to content",
+  "shell.eyebrow.default": "Commerce desk",
+  "shell.eyebrow.marketing": "Marketing desk",
+  "shell.title.boxOffice": "Box office",
+  "shell.title.marketing": "Marketing",
+  "shell.title.marketingHub": "KIX Marketing",
+  "shell.menu": "Menu",
+  "shell.nav": "Surfaces",
+  "shell.banner.adapter": "Adapter",
+  "shell.banner.environment": "Environment",
+  "shell.banner.rest": "No live chain and no funds movement. Public production deployment is not selected.",
+
+  "crumb.nav": "Breadcrumb",
+  "crumb.binding": "Binding",
+
+  "nav.group.buyer": "Buyer",
+  "nav.group.organizer": "Organizer",
+  "nav.group.finance": "Finance",
+  "nav.group.credit": "Credit",
+  "nav.group.marketing": "Marketing",
+  "nav.group.platform": "Platform",
+  "nav.group.verification": "Verification",
+
+  "route.box-office": "Box office",
+  "route.buyer": "Buyer",
+  "route.discovery": "Discover",
+  "route.inventory": "Seats and GA",
+  "route.booking": "Booking",
+  "route.admission": "Admission",
+  "route.resale": "Resale",
+  "route.gift": "Gift",
+  "route.mobile": "Mobile shell",
+  "route.assistant": "Assistant",
+  "route.organizer": "Organizer",
+  "route.organizer-workspace": "Organizer workspace",
+  "route.merchant": "Merchant",
+  "route.finance": "Finance",
+  "route.provider": "Provider journey",
+  "route.credit": "Credit",
+  "route.credit-origination": "Credit origination",
+  "route.credit-servicing": "Credit servicing",
+  "route.marketing": "Marketing",
+  "route.marketing-journey": "Benefit journey",
+  "route.marketing-m01": "Marketing M01",
+  "route.marketing-m02": "Marketing M02",
+  "route.marketing-m03": "Marketing M03",
+  "route.marketing-m04": "Marketing M04",
+  "route.marketing-m05": "Marketing M05",
+  "route.platform": "Trading platform",
+  "route.marketplace-performance": "Marketplace bench",
+  "route.permissions": "Permissions",
+  "route.notifications": "Notifications",
+  "route.identity": "Journey context",
+  "route.session": "Session recovery",
+  "route.receipts": "Receipts",
+  "route.handoff": "Local handoff",
+  "route.journeys": "Journeys",
+  "route.qualification": "Qualification",
+  "route.release": "Release",
+
+  "screen.loading": "Loading {label}…",
+
+  "notFound.title": "Page not found",
+  "notFound.body": "No screen exists at this address. Nothing was sent and nothing was changed.",
+  "notFound.home": "Go to Box office",
+  "notFound.nav": "Main screens",
+
+  "error.fact.cause": "Cause",
+  "error.fact.screen": "Screen",
+  "error.fact.reference": "Reference",
+  "error.fact.request": "Request reference",
+  "error.fact.code": "Code",
+  "error.appShell": "The app shell",
+  "error.home": "Go to Box office",
+  "error.load.title": "This screen could not be loaded",
+  "error.load.cause":
+    "Screen load error (the code for this screen could not be loaded or started; the app may have been updated while this page was open)",
+  "error.load.noRequest": "none (a screen file was requested; no desk request was sent)",
+  "error.load.note":
+    "This is a load failure, not an UNKNOWN outcome. This panel sent nothing and cleared nothing: results and records the page already holds are untouched, and an UNKNOWN result is not resolved by this panel.",
+  "error.load.reload":
+    "If loading again fails, reload the page. A reload clears what this page holds in memory, so read any UNKNOWN fence first.",
+  "error.load.again": "Load this screen again",
+  "error.render.title": "This screen could not be drawn",
+  "error.render.cause": "Render error (the screen threw while it was being drawn)",
+  "error.render.noRequest": "none (no request was involved)",
+  "error.render.note":
+    "This panel sent nothing and cleared nothing. Anything the screen kept only inside itself is gone. An UNKNOWN result is not resolved by this panel.",
+  "error.render.again": "Show this screen again",
+
+  "common.inProgress": "In progress",
+  "common.error": "Error",
+  "common.empty": "none",
+  "outcome.UNKNOWN.gloss": "",
+  "outcome.NOT_BOUND.gloss": "",
+  "outcome.STALE.gloss": "",
+
+  "status.loading.word": "Loading",
+  "status.loading.meaning": "This request is still loading. Nothing is confirmed.",
+  "status.blocked.word": "Blocked",
+  "status.blocked.meaning": "This action is blocked. Correct the named field or read the next permitted step.",
+  "status.selected.word": "Selected",
+  "status.selected.meaning": "This row is selected. Selection is not a reservation and not a payment.",
+  "status.review.word": "In review",
+  "status.review.meaning": "This preview is in review. Nothing has been sent.",
+  "status.transport.checking": "Loading.",
+  "status.transport.blocked": "Blocked.",
+  "status.transport.up": "Ready.",
+  "status.transport.local": "Local.",
+
+  "amount.notice": "Price and fee display is UNDETERMINED. No amount is calculated on this page.",
+
+  "deadline.authority": "Authority expiresAt {expiresAt}. expired {flag}. Display locale does not decide expiry.",
+  "deadline.flag.unspecified": "not decided on this page",
+
+  "transport.stub": "Integration HTTP is not selected. A failed gate does not switch this desk, and HTTP mode does not fall back to the stub.",
+  "transport.checking": "Environment integration-http. Loopback status is not loaded yet. Not production readiness.",
+  "transport.request": "Request {requestId}.",
+  "transport.staysHttp": "The desk stays on integration HTTP.",
+} as const;
+
+export type MessageKey = keyof typeof en;
+export type RouteMessageKey = Extract<MessageKey, `route.${string}`>;
+
+/** Korean for the same keys. A missing key is a type error; the test also diffs the key sets at run time. */
+const ko: Record<MessageKey, string> = {
+  "locale.label": "표시 언어",
+  "locale.en": "English",
+  "locale.ko": "한국어",
+  "locale.changed": "표시 언어를 한국어로 바꿨습니다.",
+  "locale.notice": "한국어 표시는 일부 화면에만 적용됩니다. 화면 본문은 아직 영어일 수 있습니다.",
+
+  "shell.skip": "본문으로 건너뛰기",
+  "shell.eyebrow.default": "커머스 데스크",
+  "shell.eyebrow.marketing": "마케팅 데스크",
+  "shell.title.boxOffice": "박스오피스",
+  "shell.title.marketing": "마케팅",
+  "shell.title.marketingHub": "KIX 마케팅",
+  "shell.menu": "메뉴",
+  "shell.nav": "화면 목록",
+  "shell.banner.adapter": "어댑터",
+  "shell.banner.environment": "환경",
+  "shell.banner.rest": "실제 체인과 자금 이동은 없습니다. 공개 프로덕션 배포는 선택되지 않았습니다.",
+
+  "crumb.nav": "현재 위치",
+  "crumb.binding": "연결 상태",
+
+  "nav.group.buyer": "구매자",
+  "nav.group.organizer": "주최자",
+  "nav.group.finance": "재무",
+  "nav.group.credit": "크레딧",
+  "nav.group.marketing": "마케팅",
+  "nav.group.platform": "플랫폼",
+  "nav.group.verification": "검증",
+
+  "route.box-office": "박스오피스",
+  "route.buyer": "구매자",
+  "route.discovery": "공연 찾기",
+  "route.inventory": "좌석과 입석",
+  "route.booking": "예매",
+  "route.admission": "입장",
+  "route.resale": "재판매",
+  "route.gift": "선물",
+  "route.mobile": "모바일 셸",
+  "route.assistant": "어시스턴트",
+  "route.organizer": "주최자",
+  "route.organizer-workspace": "주최자 작업공간",
+  "route.merchant": "판매자",
+  "route.finance": "재무",
+  "route.provider": "제공자 여정",
+  "route.credit": "크레딧",
+  "route.credit-origination": "크레딧 개설",
+  "route.credit-servicing": "크레딧 관리",
+  "route.marketing": "마케팅",
+  "route.marketing-journey": "혜택 여정",
+  "route.marketing-m01": "마케팅 M01",
+  "route.marketing-m02": "마케팅 M02",
+  "route.marketing-m03": "마케팅 M03",
+  "route.marketing-m04": "마케팅 M04",
+  "route.marketing-m05": "마케팅 M05",
+  "route.platform": "거래 플랫폼",
+  "route.marketplace-performance": "마켓플레이스 측정",
+  "route.permissions": "권한",
+  "route.notifications": "알림",
+  "route.identity": "여정 맥락",
+  "route.session": "세션 복구",
+  "route.receipts": "영수증",
+  "route.handoff": "로컬 인계",
+  "route.journeys": "여정",
+  "route.qualification": "자격 검증",
+  "route.release": "릴리스",
+
+  "screen.loading": "{label} 불러오는 중…",
+
+  "notFound.title": "페이지를 찾을 수 없음",
+  "notFound.body": "이 주소에는 화면이 없습니다. 아무것도 전송되지 않았고 아무것도 바뀌지 않았습니다.",
+  "notFound.home": "박스오피스로 이동",
+  "notFound.nav": "주요 화면",
+
+  "error.fact.cause": "원인",
+  "error.fact.screen": "화면",
+  "error.fact.reference": "참조",
+  "error.fact.request": "요청 참조",
+  "error.fact.code": "코드",
+  "error.appShell": "앱 셸",
+  "error.home": "박스오피스로 이동",
+  "error.load.title": "이 화면을 불러오지 못했습니다",
+  "error.load.cause":
+    "화면 불러오기 오류 (이 화면의 코드를 불러오거나 시작하지 못했습니다. 이 페이지가 열려 있는 동안 앱이 갱신되었을 수 있습니다)",
+  "error.load.noRequest": "없음 (화면 파일만 요청했고 데스크 요청은 보내지 않았습니다)",
+  "error.load.note":
+    "이것은 불러오기 실패이며 UNKNOWN(결과 미확인) 결과가 아닙니다. 이 패널은 아무것도 보내지 않았고 아무것도 지우지 않았습니다. 페이지가 이미 가진 결과와 기록은 그대로이며, UNKNOWN(결과 미확인) 결과는 이 패널로 해소되지 않습니다.",
+  "error.load.reload":
+    "다시 불러와도 안 되면 페이지를 새로 고치세요. 새로 고치면 이 페이지가 메모리에 가진 내용이 지워지므로, UNKNOWN(결과 미확인) fence가 있으면 먼저 읽어 두세요.",
+  "error.load.again": "이 화면 다시 불러오기",
+  "error.render.title": "이 화면을 그리지 못했습니다",
+  "error.render.cause": "화면 그리기 오류 (화면을 그리는 도중 예외가 발생했습니다)",
+  "error.render.noRequest": "없음 (관련된 요청이 없습니다)",
+  "error.render.note":
+    "이 패널은 아무것도 보내지 않았고 아무것도 지우지 않았습니다. 화면이 자기 안에서만 들고 있던 내용은 사라졌습니다. UNKNOWN(결과 미확인) 결과는 이 패널로 해소되지 않습니다.",
+  "error.render.again": "이 화면 다시 그리기",
+
+  "common.inProgress": "진행 중",
+  "common.error": "오류",
+  "common.empty": "없음",
+  "outcome.UNKNOWN.gloss": "결과 미확인",
+  "outcome.NOT_BOUND.gloss": "연결되지 않음",
+  "outcome.STALE.gloss": "오래된 값",
+
+  "status.loading.word": "불러오는 중",
+  "status.loading.meaning": "이 요청은 아직 불러오는 중입니다. 확정된 것은 없습니다.",
+  "status.blocked.word": "차단됨",
+  "status.blocked.meaning": "이 동작은 차단되어 있습니다. 지정된 항목을 고치거나 다음 허용 단계를 확인하세요.",
+  "status.selected.word": "선택됨",
+  "status.selected.meaning": "이 행이 선택되었습니다. 선택은 예약도 결제도 아닙니다.",
+  "status.review.word": "검토 중",
+  "status.review.meaning": "이 미리보기는 검토 중입니다. 아무것도 전송되지 않았습니다.",
+  "status.transport.checking": "불러오는 중.",
+  "status.transport.blocked": "차단됨.",
+  "status.transport.up": "준비됨.",
+  "status.transport.local": "로컬.",
+
+  "amount.notice": "가격과 수수료 표시는 UNDETERMINED(미정)입니다. 이 페이지에서는 금액을 계산하지 않습니다.",
+
+  "deadline.authority": "기준 값 expiresAt {expiresAt}. expired {flag}. 표시 언어는 만료 판단에 쓰이지 않습니다.",
+  "deadline.flag.unspecified": "이 페이지에서는 판단하지 않음",
+
+  "transport.stub":
+    "Integration HTTP는 선택되지 않았습니다. 게이트가 응답하지 않아도 이 데스크는 전환되지 않으며, HTTP 모드는 stub으로 되돌아가지 않습니다.",
+  "transport.checking": "환경 integration-http. 루프백 상태를 아직 읽지 않았습니다. 프로덕션 준비 상태가 아닙니다.",
+  "transport.request": "요청 {requestId}.",
+  "transport.staysHttp": "데스크는 integration HTTP에 머뭅니다.",
+};
+
+export const MESSAGES = { en, ko } as const;

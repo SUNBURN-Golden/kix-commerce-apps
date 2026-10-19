@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { conflictControlId, focusControl } from "../a11y/focus";
-import { formatWhen } from "../format";
+import { useFormatWhen } from "../i18n/locale-context";
 import { paramsFromQuery, queryFromParams, searchSuffix, type DiscoveryQuery } from "../discovery/model";
 import {
   useDiscoveryLiveRead,
@@ -137,6 +137,7 @@ export function DiscoveryDetail({
   backSearch: string;
   live: { model: LiveDetailModel; handlers: LiveDetailHandlers };
 }) {
+  const formatWhen = useFormatWhen();
   const detail = model.detail;
   return (
     <div className="discovery" data-adapter-environment={model.environment}>

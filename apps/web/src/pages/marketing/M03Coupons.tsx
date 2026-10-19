@@ -2,10 +2,11 @@ import { useState, type FormEvent } from "react";
 import { COUPON_FIXTURES } from "../../marketing/desk";
 import { marketingSession } from "../../marketing/session";
 import { useMarketingSnapshot } from "../../marketing/useMarketingSnapshot";
-import { formatWhen } from "../../format";
+import { useFormatWhen } from "../../i18n/locale-context";
 import { errorText, MarketingChrome } from "./MarketingChrome";
 
 export function M03Page() {
+  const formatWhen = useFormatWhen();
   const { snapshot, refresh } = useMarketingSnapshot();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);

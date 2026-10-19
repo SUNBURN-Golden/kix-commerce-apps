@@ -1,5 +1,6 @@
 import { Component, useEffect, useRef, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useT } from "../i18n/locale-context";
 import { classifyFault, type RenderFault } from "./render-fault";
 import { forgetFailedScreens } from "./screen-loader";
 
@@ -81,35 +82,37 @@ export function ErrorPanel({
   useEffect(() => {
     heading.current?.focus();
   }, []);
+  const t = useT();
   const request = fault.requestId ?? fault.correlationId;
+  const shownScreen = scope === "app" ? t("error.appShell") : screenLabel;
+  const home = scope === "app" ? <a href="/">{t("error.home")}</a> : <Link to="/">{t("error.home")}</Link>;
   if (fault.kind === "screen-load-error") {
     return (
       <section className="shell-error" role="alert" aria-labelledby="shell-error-title" data-scope={scope} data-cause={fault.kind}>
         <h2 id="shell-error-title" ref={heading} tabIndex={-1}>
-          This screen could not be loaded
+          {t("error.load.title")}
         </h2>
         <dl className="shell-error-facts">
-          <dt>Cause</dt>
-          <dd>Screen load error (the code for this screen could not be loaded or started; the app may have been updated while this page was open)</dd>
-          <dt>Screen</dt>
-          <dd>{screenLabel}</dd>
-          <dt>Reference</dt>
+          <dt>{t("error.fact.cause")}</dt>
+          <dd>{t("error.load.cause")}</dd>
+          <dt>{t("error.fact.screen")}</dt>
+          <dd>{shownScreen}</dd>
+          <dt>{t("error.fact.reference")}</dt>
           <dd data-testid="shell-error-reference">{fault.reference}</dd>
-          <dt>Request reference</dt>
-          <dd>none (a screen file was requested; no desk request was sent)</dd>
-          <dt>Code</dt>
+          <dt>{t("error.fact.request")}</dt>
+          <dd>{t("error.load.noRequest")}</dd>
+          <dt>{t("error.fact.code")}</dt>
           <dd>{fault.code ?? "SCREEN_LOAD_FAILED"}</dd>
         </dl>
         <p>
-          This is a load failure, not an UNKNOWN outcome. This panel sent nothing and cleared nothing: results and records the
-          page already holds are untouched, and an UNKNOWN result is not resolved by this panel.
+          {t("error.load.note")}
         </p>
-        <p>If loading again fails, reload the page. A reload clears what this page holds in memory, so read any UNKNOWN fence first.</p>
+        <p>{t("error.load.reload")}</p>
         <p className="shell-error-actions">
           <button type="button" id="shell-error-again" onClick={onAgain}>
-            Load this screen again
+            {t("error.load.again")}
           </button>{" "}
-          {scope === "app" ? <a href="/">Go to Box office</a> : <Link to="/">Go to Box office</Link>}
+          {home}
         </p>
       </section>
     );
@@ -117,37 +120,32 @@ export function ErrorPanel({
   return (
     <section className="shell-error" role="alert" aria-labelledby="shell-error-title" data-scope={scope} data-cause={fault.kind}>
       <h2 id="shell-error-title" ref={heading} tabIndex={-1}>
-        This screen could not be drawn
+        {t("error.render.title")}
       </h2>
       <dl className="shell-error-facts">
-        <dt>Cause</dt>
-        <dd>Render error (the screen threw while it was being drawn)</dd>
-        <dt>Screen</dt>
-        <dd>{screenLabel}</dd>
-        <dt>Reference</dt>
+        <dt>{t("error.fact.cause")}</dt>
+        <dd>{t("error.render.cause")}</dd>
+        <dt>{t("error.fact.screen")}</dt>
+        <dd>{shownScreen}</dd>
+        <dt>{t("error.fact.reference")}</dt>
         <dd data-testid="shell-error-reference">{fault.reference}</dd>
-        <dt>Request reference</dt>
-        <dd>{request ?? "none (no request was involved)"}</dd>
+        <dt>{t("error.fact.request")}</dt>
+        <dd>{request ?? t("error.render.noRequest")}</dd>
         {fault.code ? (
           <>
-            <dt>Code</dt>
+            <dt>{t("error.fact.code")}</dt>
             <dd>{fault.code}</dd>
           </>
         ) : null}
       </dl>
       <p>
-        This panel sent nothing and cleared nothing. Anything the screen kept only inside itself is gone. An UNKNOWN
-        result is not resolved by this panel.
+        {t("error.render.note")}
       </p>
       <p className="shell-error-actions">
         <button type="button" id="shell-error-again" onClick={onAgain}>
-          Show this screen again
+          {t("error.render.again")}
         </button>{" "}
-        {scope === "app" ? (
-          <a href="/">Go to Box office</a>
-        ) : (
-          <Link to="/">Go to Box office</Link>
-        )}
+        {home}
       </p>
     </section>
   );

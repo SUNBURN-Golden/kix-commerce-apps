@@ -288,7 +288,7 @@ describe("source", () => {
         expect(source.includes(word), `${file} contains ${word}`).toBe(false);
       }
       for (const spec of [...source.matchAll(/from "([^"]+)"/g)].map((match) => match[1]!)) {
-        expect(["react", "react-router-dom", "../marketing/labels"].includes(spec) || spec.startsWith("./") || spec.startsWith("../shell/"), `${file} imports ${spec}`).toBe(true);
+        expect(["react", "react-router-dom", "../marketing/labels", "../i18n/locale-context", "../i18n/use-page-identity"].includes(spec) || spec.startsWith("./") || spec.startsWith("../shell/"), `${file} imports ${spec}`).toBe(true);
       }
     }
     expect(readdirSync(path.join(web, "src/shell")).includes("route-registry.ts")).toBe(true);

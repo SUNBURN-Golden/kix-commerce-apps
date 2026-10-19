@@ -62,6 +62,7 @@ button:disabled {
   justify-content: space-between;
   gap: 1.5rem;
   align-items: end;
+  flex-wrap: wrap;
   border-bottom: 1px solid var(--line);
   padding-bottom: 1rem;
 }
@@ -1425,4 +1426,38 @@ nav a[aria-current="page"] {
   padding: 0.75rem 1rem;
   border: 1px dashed currentColor;
   border-radius: 6px;
+}
+
+.locale-switch {
+  display: flex;
+  flex: 1 0 100%;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.locale-switch button {
+  padding: 0.2rem 0.7rem;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+}
+
+.locale-switch button[aria-pressed="true"] {
+  border-width: 2px;
+  font-weight: 700;
+}
+
+.locale-switch > span,
+.banner,
+.shell-error dd,
+.crumbs,
+.nav-group-label {
+  overflow-wrap: anywhere;
+}
+
+:lang(ko) {
+  word-break: keep-all;
 }

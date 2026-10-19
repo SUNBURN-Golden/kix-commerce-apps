@@ -96,7 +96,7 @@ describe("RenderBoundary", () => {
       const source = read(`src/shell/${file}`);
       const imports = [...source.matchAll(/from "([^"]+)"/g)].map((match) => match[1]!);
       for (const spec of imports) {
-        expect(["react", "react-router-dom"].includes(spec) || spec.startsWith("./") || spec === "../marketing/labels", `${file} imports ${spec}`).toBe(true);
+        expect(["react", "react-router-dom"].includes(spec) || spec.startsWith("./") || spec === "../marketing/labels" || ["../i18n/locale-context", "../i18n/translate", "../i18n/locales"].includes(spec), `${file} imports ${spec}`).toBe(true);
       }
     }
   });
