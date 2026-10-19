@@ -1,0 +1,25 @@
+{
+  "schema": "coverage-floors-v1",
+  "policy": "Lowering any floor requires an explicit decision; raising is auto-allowed.",
+  "workspaces": {
+    "@kix/protocol-adapter": {
+      "lines": 91.1,
+      "functions": 97.4,
+      "branches": 84.5,
+      "statements": 91.1
+    },
+    "@kix/web": {
+      "lines": 83.6,
+      "functions": 60.4,
+      "branches": 84.6,
+      "statements": 83.6
+    },
+    "@kix/e2e": {
+      "lines": null,
+      "functions": null,
+      "branches": null,
+      "statements": null,
+      "note": "e2e coverage is not collected: instrumenting the Playwright-driven stub bundle would require build-time transforms and is out of scope for this static-gate node."
+    }
+  }
+}

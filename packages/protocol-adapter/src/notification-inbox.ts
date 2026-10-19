@@ -1461,6 +1461,7 @@ export class StubNotificationInbox implements NotificationInboxPort {
     if (this.scenario === "duplicate" && rows.length > 0) {
       // A second delivery of the first row's dedupe key. Dedupe drops it; the
       // snapshot counts the drop and lists one row.
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- rows.length > 0 was just asserted above.
       const first = rows[0]!;
       rows.push({ ...first, notificationRef: notifyRefFor("notification", 9999), seq: first.seq + 40 });
     }

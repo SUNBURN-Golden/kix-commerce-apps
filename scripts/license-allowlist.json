@@ -1,0 +1,4 @@
+{
+  "spdx": ["MIT"],
+  "notes": "Bootstrapped from the SPDX identifiers found in the current package-lock.json production dependency tree. Adding or removing an entry requires legal/product approval."
+}

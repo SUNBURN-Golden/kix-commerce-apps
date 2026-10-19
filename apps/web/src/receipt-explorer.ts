@@ -417,13 +417,13 @@ export function looksSensitive(value: string): boolean {
   if (/\d{12,19}/.test(value)) {
     return true;
   }
-  if (/(?:^|[^A-Za-z0-9])(?:sk|pk|rk|tok|api)_[A-Za-z0-9_\-]{6,}/i.test(value)) {
+  if (/(?:^|[^A-Za-z0-9])(?:sk|pk|rk|tok|api)_[A-Za-z0-9_-]{6,}/i.test(value)) {
     return true;
   }
   if (/bearer\s+[A-Za-z0-9._~+/=-]{8,}/i.test(value)) {
     return true;
   }
-  if (/eyJ[A-Za-z0-9_\-]{10,}/.test(value)) {
+  if (/eyJ[A-Za-z0-9_-]{10,}/.test(value)) {
     return true;
   }
   if (/\+\d{8,15}\b/.test(value)) {
@@ -575,6 +575,8 @@ function parseCandidate(raw: unknown): ParsedCandidate | null {
   if (typeof raw.role !== "string" || !ROLES.has(raw.role as WorkspaceRole)) {
     return null;
   }
+  // Intentionally rejects control characters in the actor string.
+  // eslint-disable-next-line no-control-regex
   if (typeof raw.actor !== "string" || raw.actor.length < 1 || raw.actor.length > 80 || /[\u0000-\u001f]/.test(raw.actor)) {
     return null;
   }
@@ -1087,8 +1089,8 @@ function groupEntries(entries: readonly ReceiptEntry[]): ReceiptGroup[] {
 export function sweepExport(text: string): string {
   return text
     .replace(/bearer\s+[A-Za-z0-9._~+/=-]{8,}/gi, "[redacted-token]")
-    .replace(/(?:sk|pk|rk|tok|api)_[A-Za-z0-9_\-]{6,}/gi, "[redacted-token]")
-    .replace(/eyJ[A-Za-z0-9_\-]{10,}/g, "[redacted-token]")
+    .replace(/(?:sk|pk|rk|tok|api)_[A-Za-z0-9_-]{6,}/gi, "[redacted-token]")
+    .replace(/eyJ[A-Za-z0-9_-]{10,}/g, "[redacted-token]")
     .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[redacted-email]")
     .replace(/\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b/g, "[redacted-account]")
     .replace(/\b\d{12,19}\b/g, "[redacted-account]")

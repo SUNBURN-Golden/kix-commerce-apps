@@ -18,5 +18,12 @@ export default defineConfig({
     include: ["test/**/*.test.ts", "test/**/*.test.tsx"],
     // Every screen is imported before a test file runs, so a synchronous render sees the screen, not the loading note.
     setupFiles: ["./test/support/preload-screens.ts"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text-summary", "json-summary"],
+      reportDir: "coverage",
+      reportOnFailure: true,
+      include: ["src/**/*.{ts,tsx}"],
+    },
   },
 });

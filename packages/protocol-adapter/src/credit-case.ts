@@ -76,19 +76,16 @@ const UNDEFINED_PRODUCT: ReadonlySet<string> = new Set([
   "UNDERWRITE",
 ]);
 
-const JOURNAL_OPS = [
-  "offer",
-  "approve",
-  "reject",
-  "cancel",
-  "bind_settlement",
-  "draw",
-  "repay",
-  "close",
-  "default",
-] as const;
-
-type JournalOp = (typeof JOURNAL_OPS)[number];
+type JournalOp =
+  | "offer"
+  | "approve"
+  | "reject"
+  | "cancel"
+  | "bind_settlement"
+  | "draw"
+  | "repay"
+  | "close"
+  | "default";
 type TransitionOp = Exclude<JournalOp, "offer">;
 
 const ALLOWED: Record<TransitionOp, ReadonlySet<CreditPhase>> = {

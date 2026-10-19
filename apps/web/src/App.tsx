@@ -28,7 +28,10 @@ function RoutedScreens() {
         })}
         {ROUTE_ALIASES.map((alias) => {
           const target = ROUTES.find((entry) => entry.path === alias.of);
-          return <Route key={alias.path} path={alias.path} element={lazyScreen(target!)} />;
+          if (target === undefined) {
+            throw new Error(`Route alias ${alias.path} points at an unknown route ${alias.of}`);
+          }
+          return <Route key={alias.path} path={alias.path} element={lazyScreen(target)} />;
         })}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

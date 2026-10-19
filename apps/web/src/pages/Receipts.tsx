@@ -171,6 +171,7 @@ export function ReceiptScreen({
               <div>
                 <h4>Adapter path</h4>
                 <p>An adapter path observation is not a protocol command and not a receipt.</p>
+                {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Keyboard navigation is managed on the list because its items are buttons; arrow keys move focus among entries. */}
                 <ol className="receipt-list" onKeyDown={onTimelineKey}>
                   {model.paths.map((entry) => (
                     <EntryButton key={entry.id} entry={entry} selected={current?.id === entry.id} onSelect={setSelected} />
@@ -281,6 +282,7 @@ function GroupBlock({
       <h4>{group.heading}</h4>
       <p>{group.lastConfirmed}</p>
       <p>{group.unconfirmed}</p>
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Keyboard navigation is managed on the list because its items are buttons; arrow keys move focus among entries. */}
       <ol className="receipt-list" onKeyDown={onKeyDown}>
         {group.entries.map((entry) => (
           <EntryButton key={entry.id} entry={entry} selected={selectedId === entry.id} onSelect={onSelect} />

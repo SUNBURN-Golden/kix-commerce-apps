@@ -1128,6 +1128,8 @@ const NON_CLAIMS: TenantNonClaims = {
 };
 
 const NOTE_LIMIT = 200;
+// Intentionally rejects ASCII control characters in tenant notes.
+// eslint-disable-next-line no-control-regex
 const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f]/;
 
 function isNonEmpty(value: unknown): value is string {
@@ -1489,6 +1491,7 @@ export class StubTenantPermissions implements TenantPermissionsPort {
       state: this.revoked.has(row.memberRef) ? ("revoked" as const) : row.state,
     }));
     if (this.scenario === "tenant-mix") {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- guarded by mapped.length > 0.
       const leaked = mapped.length > 0 ? { ...mapped[0]!, memberRef: "mbr-0007", tenantId: TENANT_FOREIGN } : null;
       if (leaked !== null) {
         mapped.push(leaked);
@@ -1600,7 +1603,7 @@ export class StubTenantPermissions implements TenantPermissionsPort {
       nonClaims: { ...NON_CLAIMS },
     };
     let rows = tenantExportRowsFor(snapshot);
-    let complete = true;
+    const complete = true;
     if (this.scenario === "export-leak") {
       rows = [...rows, { entryRef: "acc-9001", entryKind: "account", label: "Foreign payout account", detail: "tail tail-0000, active" }];
     }

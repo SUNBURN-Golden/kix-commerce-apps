@@ -32,8 +32,10 @@ export function M05Page() {
   return (
     <MarketingChrome id="M05">
       <form className="panel" onSubmit={onSubmit}>
-        <label className="check">
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- The input is nested inside the label and the visible text is in the sibling span; the control is therefore labeled. */}
+        <label className="check" htmlFor="performance-notes">
           <input
+            id="performance-notes"
             type="checkbox"
             checked={performanceNotes}
             onChange={(event) => setPerformanceNotes(event.target.checked)}
@@ -43,8 +45,10 @@ export function M05Page() {
             <span className="muted"> Performance-note flag. No address is collected.</span>
           </span>
         </label>
-        <label className="check">
+        {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- The input is nested inside the label and the visible text is in the sibling span; the control is therefore labeled. */}
+        <label className="check" htmlFor="membership-notes">
           <input
+            id="membership-notes"
             type="checkbox"
             checked={membershipNotes}
             onChange={(event) => setMembershipNotes(event.target.checked)}
