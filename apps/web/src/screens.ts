@@ -42,6 +42,7 @@ const SCREEN_IMPORTS: Record<RouteId, ScreenImport> = {
   journeys: () => import("./pages/CrossSurfaceJourneys").then((m) => ({ default: m.CrossSurfaceJourneysPage })),
   qualification: () => import("./pages/OperationalQualification").then((m) => ({ default: m.OperationalQualificationPage })),
   release: () => import("./pages/PlatformRelease").then((m) => ({ default: m.PlatformReleasePage })),
+  help: () => import("./pages/Help").then((m) => ({ default: m.HelpPage })),
 };
 
 export const screens = createScreenLoader<RouteId>(SCREEN_IMPORTS);

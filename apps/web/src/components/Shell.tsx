@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { CREDIT_BOUNDARY, ProtocolError, type TransportObservation } from "@kix/protocol-adapter";
 import { transportStatusWord } from "../a11y/marks";
 import { motionReduced, REDUCED_MOTION_QUERY } from "../a11y/motion";
@@ -139,6 +139,9 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
         <SurfaceNav />
         <LocaleSwitch />
+        <p className="help-line">
+          {t("guide.hint")} <Link to="/help">{t("guide.link")}</Link>
+        </p>
       </header>
       <Breadcrumb />
       <p className="banner" role="status">

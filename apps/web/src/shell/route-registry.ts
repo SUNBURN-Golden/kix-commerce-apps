@@ -140,6 +140,10 @@ export const ROUTES = [
   route("journeys", "/journeys", "Journeys", "verification", "stub-only", "cross-surface-journeys"),
   route("qualification", "/qualification", "Qualification", "verification", "stub-only", "platform-operational-qualification"),
   route("release", "/release", "Release", "verification", "stub-only", "platform-release"),
+  route("help", "/help", "Help", "verification", "stub-only", null, {
+    parent: "/handoff",
+    note: "The help page is a glossary copy of the guide documents; it has no workspace surface, so the evidence matrix has no row for it.",
+  }),
 ] as const satisfies readonly RouteEntry[];
 
 export type RouteId = (typeof ROUTES)[number]["id"];

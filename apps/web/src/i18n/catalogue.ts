@@ -74,6 +74,10 @@ const en = {
   "route.journeys": "Journeys",
   "route.qualification": "Qualification",
   "route.release": "Release",
+  "route.help": "Help",
+
+  "guide.link": "Help — status words",
+  "guide.hint": "The glossary explains every status word. UNKNOWN is not a failure and not a success.",
 
   "screen.loading": "Loading {label}…",
 
@@ -207,6 +211,10 @@ const ko: Record<MessageKey, string> = {
   "route.journeys": "여정",
   "route.qualification": "자격 검증",
   "route.release": "릴리스",
+  "route.help": "도움말",
+
+  "guide.link": "도움말 — 상태 단어",
+  "guide.hint": "상태 단어 뜻은 도움말에 있습니다. UNKNOWN(결과 미확인)은 결과를 알 수 없다는 뜻입니다.",
 
   "screen.loading": "{label} 불러오는 중…",
 
