@@ -37,6 +37,9 @@ export function sha256Hex(input: string | Uint8Array): string {
   let h7 = 0x5be0cd19;
   const w = new Uint32Array(64);
 
+  /* eslint-disable @typescript-eslint/no-non-null-assertion --
+     Indices are bounded by the SHA-256 schedule and compression loops
+     (0..63); the array is sized to 64 and the loop invariants guarantee access. */
   for (let offset = 0; offset < padded.length; offset += 64) {
     for (let index = 0; index < 16; index += 1) {
       w[index] = view.getUint32(offset + index * 4);
@@ -71,6 +74,7 @@ export function sha256Hex(input: string | Uint8Array): string {
       b = a;
       a = (temp1 + temp2) >>> 0;
     }
+    /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
     h0 = (h0 + a) >>> 0;
     h1 = (h1 + b) >>> 0;

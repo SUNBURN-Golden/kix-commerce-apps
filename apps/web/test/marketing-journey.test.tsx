@@ -181,7 +181,7 @@ function countOf(markup: string, needle: string): number {
 }
 
 function buttonLabels(markup: string): string[] {
-  return [...markup.matchAll(/<button[^>]*>([^<]*)<\/button>/g)].map((match) => (match[1] ?? "").trim());
+  return [...markup.matchAll(/<button[^>]*>([^<]*)<\/button\b[^>]*>/g)].map((match) => (match[1] ?? "").trim());
 }
 
 describe("marketing journey screen states", () => {
@@ -825,7 +825,7 @@ describe("marketing journey as mounted", () => {
         <App />
       </MemoryRouter>,
     );
-    const nav = markup.match(/<nav aria-label="Surfaces">.*?<\/nav>/s)?.[0] ?? "";
+    const nav = markup.match(/<nav aria-label="Surfaces">.*?<\/nav\b[^>]*>/s)?.[0] ?? "";
     expect(nav).not.toBe("");
     expect(countOf(nav, 'aria-current="page"')).toBe(1);
     expect(nav).toMatch(/<a[^>]*aria-current="page"[^>]*href="\/marketing\/journey"|<a[^>]*href="\/marketing\/journey"[^>]*aria-current="page"/);
@@ -835,7 +835,7 @@ describe("marketing journey as mounted", () => {
         <App />
       </MemoryRouter>,
     );
-    const m01Nav = m01.match(/<nav aria-label="Surfaces">.*?<\/nav>/s)?.[0] ?? "";
+    const m01Nav = m01.match(/<nav aria-label="Surfaces">.*?<\/nav\b[^>]*>/s)?.[0] ?? "";
     expect(countOf(m01Nav, 'aria-current="page"')).toBe(1);
     expect(m01Nav).toMatch(/<a[^>]*aria-current="page"[^>]*href="\/marketing"|<a[^>]*href="\/marketing"[^>]*aria-current="page"/);
   });

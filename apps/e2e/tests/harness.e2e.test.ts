@@ -30,6 +30,9 @@ describe("harness guards", () => {
     const page = await raw("GET", "/");
     expect(page.headers["access-control-allow-origin"]).toBeUndefined();
     expect(page.headers["cache-control"]).toBe("no-store");
+    expect(page.headers["content-security-policy"]).toBe("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+    expect(page.headers["referrer-policy"]).toBe("same-origin");
+    expect(page.headers["x-content-type-options"]).toBe("nosniff");
     recordCheck("harness.server");
   });
 

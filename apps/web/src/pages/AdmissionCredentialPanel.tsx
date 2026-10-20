@@ -1,4 +1,5 @@
 import type { AdmissionPresentation } from "@kix/protocol-adapter";
+import { SafeText } from "../safe-text";
 
 export const ADMISSION_DESK_COMMANDS = [
   "adopt_issued",
@@ -37,7 +38,7 @@ export function AdmissionCredentialPanel({
     <aside className="panel" aria-label="Admission credential">
       <p className="eyebrow">{presentation?.surface ?? "wave4.admission.P03.fsm"}</p>
       <h3>Admission credential</h3>
-      <p className="muted">{title}</p>
+      <p className="muted"><SafeText value={title} /></p>
       <p>
         {presentation?.note ??
           "Credential label comes from the adapter. Not venue admission. P03 stays 설계중. Protocol truth remains in kix-protocol."}

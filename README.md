@@ -227,6 +227,19 @@ npm test
 npm run dev
 ```
 
+Quality gates:
+
+```bash
+npm run lint
+npm run coverage:check
+npm run deps:check
+npm run cycle-check
+npm run audit:warn      # warning only; does not block
+npm run unused-exports  # warning only; report
+```
+
+`npm run lint` runs the ESLint flat config over `packages/*/src`, `apps/*/src`, `apps/*/test`, `apps/*/tests`, and `scripts/*.mjs`. `npm run coverage:check` runs the `@kix/protocol-adapter` and `@kix/web` suites with v8 coverage and enforces the floors in `coverage-floors.json`. `npm run deps:check` is an offline gate over `package-lock.json` production dependencies (pinned versions, integrity hashes, and the license allowlist in `scripts/license-allowlist.json`). `npm run audit:warn` runs `npm audit --omit=dev` but always exits 0. `npm run cycle-check` blocks on circular imports reported by `madge`. `npm run unused-exports` runs `knip --no-progress` as a report, not a block.
+
 The desk listens on port 5173. Booking state, the gift transfer, the marketing session, the mock settlement case, the mock reservation case, the mock resale case, and the mock credit case stay in the browser for that page load. A reload clears them. Three stores in the tab's session storage outlive a reload. (1) The session journal on `/session` (`kix-session-journal`, plus `kix-session-journal-quarantine`) is the only recovery evidence: it is read again after a reload to mark an unsettled write UNKNOWN. (2) The desk attempt counters `kix-<desk>-attempt:<id>` for the settlement, reservation, resale, admission, credit, gift, consent, organizer and journey desks (`apps/web/src/desk-attempts.ts`) keep the next idempotency key or `operationId` from reusing an attempt number in the same tab; the journey desk builds `jrn:<eventId>:<attempt>:<step>` from it. An attempt counter is not recovery evidence: it marks nothing UNKNOWN, fences nothing, and resolves no outcome. If storage is blocked or full the counter falls back to this page load's memory. (3) The display language `kix-locale` (`en` or `ko`, `apps/web/src/i18n/locale-store.ts`) is a preference the user sets with the header switch or `?lang=`; it is not recovery evidence, is not part of the session journal, and has no retention value (the record TTL stays UNDETERMINED). All three stores die with the tab. Everything else stays page-load only.
 
 Display language: the default is English. A Korean/English catalogue (`apps/web/src/i18n/`) covers the shell chrome, the nav, the breadcrumb, not-found, the error panels and the shared status marks; screen bodies are listed as not migrated in `docs/c-locale-ko-en-stub-apps-bind.md`. Protocol words such as UNKNOWN and NOT_BOUND are never translated, and the locale never decides expiry.
@@ -254,13 +267,21 @@ The reviewed gate does not answer CORS, so from a browser at `:5173` the banner 
 
 ## CI
 
-`.github/workflows/ci.yml` runs on pushes to `main`, on pull requests, and on demand. Besides the small `gate-token` check, it has five jobs:
+`.github/workflows/ci.yml` runs on pushes to `main`, on pull requests, and on demand. Besides the small `gate-token` check, the existing jobs are unchanged:
 
 - `desk` runs `npm ci`, `npm run typecheck`, `npm run build`, and `npm test`. It sets `KIX_REQUIRE_GATE=0`, so the live gate suites are skipped there on purpose.
 - `live-gate` checks out kix-protocol at the pinned merge `52a9b5cbf7777df55d2d2062cb8d99d862b423bb` and runs the adapter suite with `KIX_REQUIRE_GATE=1` against that checkout. kix-protocol is private, so this job needs a `KIX_PROTOCOL_READ_TOKEN` repository secret with read-only contents access to it. A small `gate-token` job checks for the secret first. Without it, `gate-token` posts a warning and `live-gate` shows as skipped, never as a pass.
 - `browser-e2e` (named "Browser journeys (stub, headless Chrome)") runs `npm ci`, `npm run typecheck:e2e`, and `npm run test:e2e` on the runner's Google Chrome. It is additive: the `desk` job and its checks are unchanged. It has no `needs`, no secret, and no protocol checkout. The run record goes to the job summary and is not uploaded as an artifact.
 - `a11y-observation` (named "Accessibility observation (stub, headless Chrome)") runs the separate `npm run test:a11y` suite. It is additive and has no `needs`, secret or protocol checkout. Its record goes to the job summary. A green run is not user acceptance, not a conformance claim and not a release permission.
 - `bundle-budget` (named "Bundle budget") runs `npm ci`, `npm run build`, `npm run budget` (the size check against `apps/web/bundle-budget.json`), `npm run typecheck:e2e` and `npm run test:budget` on the runner's Google Chrome. It is additive: no existing job changed. It has no `needs`, no secret and no protocol checkout. The size table and the measurement record go to the job summary. The numbers are regression tripwires, not an SLO, not a qualification and not a production performance claim.
+
+New static quality gates (also additive, no `needs`, no secrets):
+
+- `lint` runs `npm run lint`.
+- `coverage` runs `npm run coverage:check` with `KIX_REQUIRE_GATE=0`.
+- `deps-check` runs `npm run deps:check`.
+- `audit-warning` runs `npm run audit:warn` (warning only).
+- `cycle-check` runs `npm run cycle-check`.
 
 A test checks that the workflow's gate SHA equals `OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha`. Moving the pin means moving both.
 
@@ -418,3 +439,7 @@ The app shell now catches a screen that throws while drawing, draws a real not-f
 The route list now lives in one registry (`apps/web/src/shell/route-registry.ts`). `App.tsx` routes, the grouped Surfaces nav (Buyer, Organizer, Finance, Credit, Marketing, Platform, Verification, folded behind a Menu button at 720px and below), the breadcrumb and the page titles are read from it, and tests fail when the registry, the a11y screen matrix, the browser journeys or the evidence matrix doc disagree. No path changed. Details are in [docs/c-route-registry-navigation-stub-apps-bind.md](docs/c-route-registry-navigation-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
 Every registry route now loads its screen on demand (`apps/web/src/screens.ts`, one dynamic import per route). While a screen's code loads, the main region shows a `role="status"` note; a screen file that cannot be loaded reaches the route boundary as its own cause (`SCREEN_LOAD_FAILED`, not an UNKNOWN outcome, nothing sent, nothing cleared) with a "Load this screen again" action and a reload advice. The initial gzip JS of the clean stub build fell from 523334 to 258936 bytes. `scripts/check-bundle-budget.mjs` compares a build with `apps/web/bundle-budget.json` (initial JS and CSS, each route chunk, total growth), and `npm run test:budget` measures the split, a chunk failure and the long-list render time in headless Chrome against the loopback server. A limit is raised only with a recorded reason in the file's `history`. Measured values are regression tripwires on one runner, never an SLO or a qualification. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce; `contract_change=NO`. See `docs/c-bundle-performance-budget-stub-apps-bind.md`.
+
+Colours now live on CSS tokens in `:root`, and the same tokens carry a dark scheme (`prefers-color-scheme: dark`) and forced colours (`forced-colors: active`, mapped to platform system colours); status marks keep their word and differing border styles so a state is never colour-only. A `prefers-reduced-motion` block caps every animation and transition, and the preference is also the user's stop control for the one timed update — the integration-http transport re-probe runs once on load and no interval while reduced motion is preferred, with the pause stated in the transport banner text. The handoff packet no longer scrolls sideways at 320px (long tokens wrap anywhere, scrollable tables are named focusable regions), and `@media print` styles on the receipt explorer and the handoff packet hide the chrome, print link targets and keep the synthetic wording. Contrast is computed against a named criterion in a test, not claimed as conformance. Details are in [docs/c-display-preferences-stub-apps-bind.md](docs/c-display-preferences-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+
+Untrusted strings stay text on every screen: a static check keeps executable-HTML sinks out of the web runtime, and `SafeText` truncates long values and replaces bidi or control characters while a disclosure keeps the copyable original. `index.html` and the e2e static server declare `default-src 'self'`, no inline script, `Referrer-Policy: same-origin`, and `X-Content-Type-Options: nosniff`; a headless-Chrome check on the production stub bundle records zero policy violations and zero non-loopback requests (the Vite development server is a different, documented path). Tab storage holds only an allow-listed set of sessionStorage keys — the journal, its quarantine, the display-language `kix-locale` key, and the named desk attempt prefixes — journal access and attempt writes validate against the list, a scan fails any other key, and stored values go through the same sensitive-pattern scan the e2e record uses. Session retention stays `UNDETERMINED`; no TTL is set. Details and limits are in [docs/c-untrusted-render-csp-stub-apps-bind.md](docs/c-untrusted-render-csp-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.

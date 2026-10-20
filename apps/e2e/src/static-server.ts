@@ -28,7 +28,12 @@ export async function serveDirectory(root: string): Promise<StaticServer> {
     const method = req.method ?? "";
     const pathname = (req.url ?? "/").split("?")[0] ?? "/";
     requests.push({ method, path: pathname });
-    const headers = { "cache-control": "no-store" };
+    const headers = {
+      "cache-control": "no-store",
+      "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+      "referrer-policy": "same-origin",
+      "x-content-type-options": "nosniff",
+    };
     if (method !== "GET" && method !== "HEAD") {
       res.writeHead(405, { ...headers, allow: "GET, HEAD" });
       res.end();

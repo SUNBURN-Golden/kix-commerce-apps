@@ -173,3 +173,84 @@ jobs:
           if [ -f "$RUNNER_TEMP/bundle-budget-record.json" ]; then
             { echo '### Bundle budget measurements (stub). Tripwires on one runner. Not an SLO, not qualification, not production performance.'; echo '```json'; cat "$RUNNER_TEMP/bundle-budget-record.json"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           fi
+
+  lint:
+    name: Lint (eslint flat config)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  coverage:
+    name: Coverage floors (v8)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run coverage:check
+        env:
+          KIX_REQUIRE_GATE: '0'
+
+  deps-check:
+    name: Dependency lock + license gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run deps:check
+
+  audit-warning:
+    name: npm audit warning (production)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run audit:warn
+
+  cycle-check:
+    name: Import cycle check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run cycle-check

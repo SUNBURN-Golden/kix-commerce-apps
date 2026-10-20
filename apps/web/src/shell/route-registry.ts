@@ -89,6 +89,7 @@ function route<const I extends string>(
 }
 
 const marketingStub = (id: (typeof MARKETING_SURFACES)[number]["id"]) => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- id is typed as a member of MARKETING_SURFACES, so the find always succeeds.
   const stub = MARKETING_SURFACES.find((item) => item.id === id)!;
   return route(`marketing-${id.toLowerCase()}` as `marketing-${Lowercase<typeof id>}`, stub.path, `Marketing ${id}`, "marketing", id === "M05" ? "published-bound" : "no-published-command", `marketing-${id.toLowerCase()}`, {
     parent: "/marketing",

@@ -6,6 +6,8 @@
  * Storage that is missing, blocked, or full never throws here, and a read
  * never goes back below the highest attempt this page load has used.
  */
+import { assertAllowedStorageKey } from "./storage-allow-list";
+
 const memory = new Map<string, number>();
 
 export function readDeskAttempt(desk: string, id: string): number {
@@ -18,7 +20,12 @@ export function readDeskAttempt(desk: string, id: string): number {
 }
 
 export function writeDeskAttempt(desk: string, id: string, attempt: number): void {
-  const key = attemptKey(desk, id.trim());
+  const trimmed = id.trim();
+  if (trimmed.length === 0) {
+    return;
+  }
+  const key = attemptKey(desk, trimmed);
+  assertAllowedStorageKey(key);
   memory.set(key, Math.max(attempt, memory.get(key) ?? 0));
   try {
     sessionStorage.setItem(key, String(attempt));

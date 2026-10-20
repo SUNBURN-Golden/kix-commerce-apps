@@ -33,6 +33,9 @@ export async function buildShellFaultApp(): Promise<BuiltApp> {
 async function buildApp(withFaults: boolean): Promise<BuiltApp> {
   for (const key of Object.keys(process.env)) {
     if (key.startsWith("VITE_")) {
+      // Intentional dynamic delete: the e2e harness scrubs every VITE_* env var
+      // so a stray shell variable cannot select HTTP/integration mode.
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete process.env[key];
     }
   }
@@ -56,5 +59,8 @@ async function buildApp(withFaults: boolean): Promise<BuiltApp> {
       : undefined,
     build: { outDir, emptyOutDir: true, minify: true },
   });
+  if (process.env.KIX_E2E_AXE_SOURCE) {
+    fs.copyFileSync(process.env.KIX_E2E_AXE_SOURCE, path.join(outDir, "axe.min.js"));
+  }
   return { outDir, cleanup: () => fs.rmSync(scratch, { recursive: true, force: true }) };
 }

@@ -132,7 +132,7 @@ function modelOf(r: Rig): FinanceModel {
 
 /** The visible label of every button in the markup. */
 function buttonLabels(markup: string): string[] {
-  return [...markup.matchAll(/<button[^>]*>([^<]*)<\/button>/g)].map((match) => match[1] ?? "");
+  return [...markup.matchAll(/<button[^>]*>([^<]*)<\/button\b[^>]*>/g)].map((match) => match[1] ?? "");
 }
 
 /** Every id a describedby points at must exist in the markup. */
