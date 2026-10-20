@@ -7,6 +7,7 @@ const KIND_ORDER: readonly StatusWordGuideEntry["kind"][] = [
   "transport",
   "binding",
   "feature",
+  "admission",
   "facet",
   "journey",
   "code",

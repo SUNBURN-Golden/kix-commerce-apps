@@ -22,11 +22,11 @@ English summary: one entry per route-registry route — what this screen lets yo
 
 ## `/booking/:eventId`
 
-예매 여정(published-bound). stub이 각본대로 응답한다. UNKNOWN fence가 보이면 결과를 알 수 없는 것이며 재시도가 없다. 결제·확정을 결론 내릴 수 없다. 나오는 단어: `published-bound`, `UNKNOWN`, `NOT_BOUND`, `STALE`, `FENCED`, `Loading`, `Blocked`, `In review`.
+예매 여정(published-bound). stub이 각본대로 응답한다. UNKNOWN fence가 보이면 결과를 알 수 없는 것이며 재시도가 없다. 결제·확정을 결론 내릴 수 없다. 입장 credential 패널이 함께 보이며 그 라벨은 입장 허가가 아니다. 나오는 단어: `published-bound`, `UNKNOWN`, `NOT_BOUND`, `STALE`, `FENCED`, `Loading`, `Blocked`, `In review`, 입장 credential 단어(`valid`, `invalid`, `stale`, `already-consumed`, `transferred`, `cancelled`, `unavailable-server`, `ELIGIBLE`, `AUTHORIZED`, `CONSUMED`).
 
 ## `/admission`
 
-입장 credential. 합성 credential 발급·검사 흐름을 읽는다. 실제 현장 검표가 아니다. 나오는 단어: `stub-only`, `ADMISSION_REQUIRED`, `GRANT_REVOKED`.
+입장 credential. 합성 credential 발급·검사 흐름을 읽는다. 실제 현장 검표가 아니며 어댑터가 붙인 라벨을 화면이 그대로 표시할 뿐 입장 여부를 결정하지 않는다. 나오는 단어: `stub-only`, `ADMISSION_REQUIRED`, `GRANT_REVOKED`, `valid`, `invalid`, `stale`, `already-consumed`, `transferred`, `cancelled`, `unavailable-server`, `ELIGIBLE`, `AUTHORIZED`, `CONSUMED`.
 
 ## `/resale`
 

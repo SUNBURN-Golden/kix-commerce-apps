@@ -1,3 +1,4 @@
+import { ADMISSION_DESK_STATES, ADMISSION_PHASES } from "@kix/protocol-adapter";
 import { STATUS_MARKS } from "../a11y/marks";
 import { OUTCOME_WORDS } from "../i18n/translate";
 import { ROUTE_BINDINGS } from "../shell/route-registry";
@@ -22,6 +23,7 @@ export interface StatusWordGuideEntry {
     | "transport"
     | "binding"
     | "feature"
+    | "admission"
     | "facet"
     | "journey"
     | "code"
@@ -148,6 +150,62 @@ const FEATURE: Record<(typeof FEATURE_STATUSES)[number], Omit<StatusWordGuideEnt
   },
 };
 
+const ADMISSION_STATE: Record<(typeof ADMISSION_DESK_STATES)[number], Omit<StatusWordGuideEntry, "word" | "kind">> = {
+  valid: {
+    meaning: "The desk's freshest read of a synthetic credential came back fresh with no decision code.",
+    doText: "Read it as the stub's label for a clean credential read.",
+    dontText: "Not entry granted, not a venue scan result, and not a promise about the next read.",
+  },
+  invalid: {
+    meaning: "The desk label when no more specific label applies: the read did not come back fresh-and-clean.",
+    doText: "Read the decision code beside it for the reason.",
+    dontText: "Not a permanent refusal and not a venue verdict.",
+  },
+  stale: {
+    meaning: "The credential read is older than the source it came from.",
+    doText: "Re-read before deciding anything.",
+    dontText: "Not the outcome word STALE; this word labels one credential read.",
+  },
+  "already-consumed": {
+    meaning: "The credential is recorded as already consumed once.",
+    doText: "Read the consumption record.",
+    dontText: "Not a second entry and not a duplicate-scan finding.",
+  },
+  transferred: {
+    meaning: "A transfer of the right was observed.",
+    doText: "Read the transfer record.",
+    dontText: "Not a decision about who may enter.",
+  },
+  cancelled: {
+    meaning: "The source reported the ticket cancelled.",
+    doText: "Read the cancellation note.",
+    dontText: "Not a refund and not an admission denial.",
+  },
+  "unavailable-server": {
+    meaning: "The source that answers credential reads could not be reached.",
+    doText: "Check the source, then re-read.",
+    dontText: "Not 'invalid'; the answer was never heard.",
+  },
+};
+
+const ADMISSION_PHASE: Record<(typeof ADMISSION_PHASES)[number], Omit<StatusWordGuideEntry, "word" | "kind">> = {
+  ELIGIBLE: {
+    meaning: "Credential FSM phase: the synthetic credential may be authorized. P03 stays 설계중.",
+    doText: "Read it as a phase label only.",
+    dontText: "Not an entry decision and not venue admission.",
+  },
+  AUTHORIZED: {
+    meaning: "Credential FSM phase: the synthetic credential was authorized. P03 stays 설계중.",
+    doText: "Read it as a phase label only.",
+    dontText: "Not entry granted and not a venue scan result.",
+  },
+  CONSUMED: {
+    meaning: "Credential FSM phase: the synthetic credential was consumed once.",
+    doText: "Read it as a phase label only.",
+    dontText: "Not a scan event and not a settlement.",
+  },
+};
+
 const FACET_WORDS: Record<string, Omit<StatusWordGuideEntry, "word" | "kind">> = {
   MERGED_RECORDED: { meaning: "The node's merge is recorded in the node table.", doText: "Read the cited PR.", dontText: "Not a done judgement; central DONE is NOT_EVALUATED here." },
   REPO_PRESENT: { meaning: "The code exists in this repository.", doText: "The screen can be opened.", dontText: "Not qualified, accepted or released." },
@@ -215,6 +273,8 @@ export const STATUS_WORD_GUIDE: readonly StatusWordGuideEntry[] = [
   ...Object.entries(TRANSPORT).map(([word, cell]) => entry(word, "transport", cell.meaning, cell.doText, cell.dontText)),
   ...ROUTE_BINDINGS.map((word) => entry(word, "binding", BINDING[word].meaning, BINDING[word].doText, BINDING[word].dontText)),
   ...FEATURE_STATUSES.map((word) => entry(word, "feature", FEATURE[word].meaning, FEATURE[word].doText, FEATURE[word].dontText)),
+  ...ADMISSION_DESK_STATES.map((word) => entry(word, "admission", ADMISSION_STATE[word].meaning, ADMISSION_STATE[word].doText, ADMISSION_STATE[word].dontText)),
+  ...ADMISSION_PHASES.map((word) => entry(word, "admission", ADMISSION_PHASE[word].meaning, ADMISSION_PHASE[word].doText, ADMISSION_PHASE[word].dontText)),
   ...Object.entries(FACET_WORDS).map(([word, cell]) => entry(word, "facet", cell.meaning, cell.doText, cell.dontText)),
   ...Object.entries(JOURNEY_WORDS).map(([word, cell]) => entry(word, "journey", cell.meaning, cell.doText, cell.dontText)),
   ...Object.entries(CODE_WORDS).map(([word, cell]) => entry(word, "code", cell.meaning, cell.doText, cell.dontText)),
@@ -229,6 +289,7 @@ export const GUIDE_KIND_LABELS: Record<StatusWordGuideEntry["kind"], string> = {
   transport: "Transport banner states",
   binding: "Binding words",
   feature: "Feature statuses",
+  admission: "Admission credential words",
   facet: "Evidence facet cells",
   journey: "Journey leg and compensation words",
   code: "Diagnosis and fault codes",

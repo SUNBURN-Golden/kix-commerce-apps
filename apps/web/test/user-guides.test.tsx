@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
+import { ADMISSION_DESK_STATES, ADMISSION_PHASES } from "@kix/protocol-adapter";
 import { describe, expect, it } from "vitest";
 import { App } from "../src/App";
 import { STATUS_MARKS } from "../src/a11y/marks";
@@ -63,15 +64,17 @@ describe("guide word list", () => {
     }
   });
 
-  it("derives its outcome, mark, binding and feature subsets from the live lists, both ways", () => {
+  it("derives its live subsets from the code vocabularies, both ways", () => {
     const wordsOf = (kind: string) => STATUS_WORD_GUIDE.filter((item) => item.kind === kind).map((item) => item.word);
     expect(wordsOf("outcome")).toEqual([...OUTCOME_WORDS]);
     expect(wordsOf("status-mark")).toEqual(Object.values(STATUS_MARKS).map((mark) => mark.word));
     expect(wordsOf("binding")).toEqual([...ROUTE_BINDINGS]);
     expect(wordsOf("feature")).toEqual([...FEATURE_STATUSES]);
+    // The credential states and phases the admission panel prints on `/admission` and `/booking/:eventId`.
+    expect(wordsOf("admission")).toEqual([...ADMISSION_DESK_STATES, ...ADMISSION_PHASES]);
   });
 
-  it("keeps every facet word inside the evidence matrix's own cell vocabularies", () => {
+  it("keeps the facet words equal to the evidence matrix's own cell vocabularies, both ways", () => {
     const allowed = new Set<string>([
       ...NODE_STATES,
       ...QUALIFICATION_STATES,
@@ -80,9 +83,9 @@ describe("guide word list", () => {
       ...COVERAGE_STATES,
       'NOT_EVALUATED', // the centralDone column word in the node table
     ]);
-    for (const item of STATUS_WORD_GUIDE.filter((entry) => entry.kind === "facet")) {
-      expect(allowed.has(item.word), item.word).toBe(true);
-    }
+    const facetWords = STATUS_WORD_GUIDE.filter((item) => item.kind === "facet").map((item) => item.word);
+    expect(new Set(facetWords).size).toBe(facetWords.length);
+    expect([...facetWords].sort()).toEqual([...allowed].sort());
   });
 });
 

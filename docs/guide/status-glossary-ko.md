@@ -28,6 +28,16 @@ English summary: this glossary explains every status word a reader can meet on t
 | `local-command` | 기능 상태 | stub 또는 루프백 게이트에 로컬 명령을 보낼 수 있는 화면 | stub을 기본으로 로컬에서 사용 | 라이브 통합이 아님 |
 | `synthetic` | 기능 상태 | 화면이 통합된(canned) 또는 로컬 유도 행을 표시. 보내기가 아니라 읽기 시연 | 시연으로 읽기 | producer 데이터가 아님 |
 | `unsupported` | 기능 상태 | 화면은 있으나 해당 단계의 명령도 합성 경로도 없음 | 시도할 것 없음 | 이 빌드에서 진행 예정이 아님 |
+| `valid` | 입장 credential | 합성 credential을 가장 최근에 읽은 결과가 fresh이고 decision code가 없다는 데스크 라벨 | stub이 붙인 깨끗한 읽기 라벨로 읽기 | 입장 허가도 현장 검표 결과도 아니며 다음 읽기에 대한 보장도 아님 |
+| `invalid` | 입장 credential | 더 구체적인 라벨이 적용되지 않을 때 붙는 라벨. 깨끗한 최신 읽기가 아님 | 옆의 decision code에서 이유를 읽기 | 영구 거부도 현장 판정도 아님 |
+| `stale` | 입장 credential | credential 읽기가 그 출처보다 오래됨 | 결정 전 다시 읽기 | 결과 단어 `STALE`이 아니라 한 번의 credential 읽기 라벨 |
+| `already-consumed` | 입장 credential | credential이 이미 한 번 소비된 것으로 기록됨 | 소비 기록을 읽기 | 두 번째 입장도 중복 검표 발견도 아님 |
+| `transferred` | 입장 credential | 권리의 이전이 관찰됨 | 이전 기록을 읽기 | 누가 입장할 수 있는지에 대한 판정이 아님 |
+| `cancelled` | 입장 credential | 출처가 티켓 취소를 보고함 | 취소 메모를 읽기 | 환불도 입장 거부 판정도 아님 |
+| `unavailable-server` | 입장 credential | credential 읽기에 답하는 출처에 도달하지 못함 | 출처를 확인한 뒤 다시 읽기 | `invalid`가 아님 — 답을 듣지 못한 것 |
+| `ELIGIBLE` | 입장 credential | credential FSM phase: 합성 credential이 authorize될 수 있는 단계. P03은 설계중 | phase 라벨로만 읽기 | 입장 판정도 현장 입장도 아님 |
+| `AUTHORIZED` | 입장 credential | credential FSM phase: 합성 credential이 authorize된 단계. P03은 설계중 | phase 라벨로만 읽기 | 입장 허가도 현장 검표 결과도 아님 |
+| `CONSUMED` | 입장 credential | credential FSM phase: 합성 credential이 한 번 소비된 단계 | phase 라벨로만 읽기 | 검표 이벤트도 정산도 아님 |
 | `MERGED_RECORDED` | 증거 facet | 노드 표에 병합이 기록됨 | 인용된 PR을 읽기 | 완료 판단이 아님. 중앙 DONE은 NOT_EVALUATED |
 | `REPO_PRESENT` | 증거 facet | 코드가 이 저장소에 존재 | 화면을 열 수 있음 | 자격 검증·수용·릴리스가 아님 |
 | `NOT_PRESENT` | 증거 facet | 지명된 것이 이 저장소에 없음 | 열 것이 없음 | 삭제된 것이 아니라 처음부터 없음 |
