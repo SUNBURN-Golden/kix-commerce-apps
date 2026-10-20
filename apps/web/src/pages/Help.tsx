@@ -38,7 +38,7 @@ export function HelpPage() {
       {KIND_ORDER.map((kind) => (
         <section className="panel" key={kind}>
           <h3>{GUIDE_KIND_LABELS[kind]}</h3>
-          <div className="handoff-scroll" tabIndex={0}>
+          <div className="handoff-scroll" role="region" aria-label={GUIDE_KIND_LABELS[kind]} tabIndex={0}>
             <table>
               <caption>{GUIDE_KIND_LABELS[kind]}. Each word is printed verbatim and is never translated.</caption>
               <thead>

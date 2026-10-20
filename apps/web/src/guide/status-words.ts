@@ -204,7 +204,6 @@ const ENVIRONMENT_WORDS: Record<string, Omit<StatusWordGuideEntry, "word" | "kin
 };
 
 /** Facet cells from the evidence matrix documents (node, qualification, acceptance, release, coverage). */
-const FACETS = Object.keys(FACET_WORDS) as readonly string[];
 
 export const STATUS_WORD_GUIDE: readonly StatusWordGuideEntry[] = [
   ...OUTCOME_WORDS.map((word) => entry(word, "outcome", OUTCOME[word].meaning, OUTCOME[word].doText, OUTCOME[word].dontText)),
@@ -213,18 +212,14 @@ export const STATUS_WORD_GUIDE: readonly StatusWordGuideEntry[] = [
   ...(Object.keys(STATUS_MARKS) as (keyof typeof STATUS_MARKS)[]).map((kind) =>
     entry(STATUS_MARKS[kind].word, "status-mark", STATUS_MARKS[kind].meaning, "Read the word; it carries the meaning, not the colour.", "Not a promise about any request's outcome."),
   ),
-  ...(["checking", "unavailable", "degraded", "up", "local"] as const).map((word) =>
-    entry(word, "transport", TRANSPORT[word]!.meaning, TRANSPORT[word]!.doText, TRANSPORT[word]!.dontText),
-  ),
+  ...Object.entries(TRANSPORT).map(([word, cell]) => entry(word, "transport", cell.meaning, cell.doText, cell.dontText)),
   ...ROUTE_BINDINGS.map((word) => entry(word, "binding", BINDING[word].meaning, BINDING[word].doText, BINDING[word].dontText)),
   ...FEATURE_STATUSES.map((word) => entry(word, "feature", FEATURE[word].meaning, FEATURE[word].doText, FEATURE[word].dontText)),
-  ...FACETS.map((word) => entry(word, "facet", FACET_WORDS[word]!.meaning, FACET_WORDS[word]!.doText, FACET_WORDS[word]!.dontText)),
-  ...(["RECEIPT", "REJECTED", "NOT_SENT", "FENCED", "NONE_NEEDED", "COMPENSATION_UNDEFINED"] as const).map((word) =>
-    entry(word, "journey", JOURNEY_WORDS[word]!.meaning, JOURNEY_WORDS[word]!.doText, JOURNEY_WORDS[word]!.dontText),
-  ),
-  ...Object.keys(CODE_WORDS).map((word) => entry(word, "code", CODE_WORDS[word]!.meaning, CODE_WORDS[word]!.doText, CODE_WORDS[word]!.dontText)),
-  ...Object.keys(POLICY_WORDS).map((word) => entry(word, "policy", POLICY_WORDS[word]!.meaning, POLICY_WORDS[word]!.doText, POLICY_WORDS[word]!.dontText)),
-  ...Object.keys(ENVIRONMENT_WORDS).map((word) => entry(word, "environment", ENVIRONMENT_WORDS[word]!.meaning, ENVIRONMENT_WORDS[word]!.doText, ENVIRONMENT_WORDS[word]!.dontText)),
+  ...Object.entries(FACET_WORDS).map(([word, cell]) => entry(word, "facet", cell.meaning, cell.doText, cell.dontText)),
+  ...Object.entries(JOURNEY_WORDS).map(([word, cell]) => entry(word, "journey", cell.meaning, cell.doText, cell.dontText)),
+  ...Object.entries(CODE_WORDS).map(([word, cell]) => entry(word, "code", cell.meaning, cell.doText, cell.dontText)),
+  ...Object.entries(POLICY_WORDS).map(([word, cell]) => entry(word, "policy", cell.meaning, cell.doText, cell.dontText)),
+  ...Object.entries(ENVIRONMENT_WORDS).map(([word, cell]) => entry(word, "environment", cell.meaning, cell.doText, cell.dontText)),
 ];
 
 export const GUIDE_KIND_LABELS: Record<StatusWordGuideEntry["kind"], string> = {

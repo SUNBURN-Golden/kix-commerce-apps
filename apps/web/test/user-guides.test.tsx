@@ -118,7 +118,7 @@ describe("glossary document", () => {
 });
 
 describe("screens document", () => {
-  it("has one `## \`<path>\`` entry per registry route, in registry order", () => {
+  it("has one `## `path`` entry per registry route, in registry order", () => {
     expect(screenHeadings()).toEqual(ROUTES.map((route) => route.path));
   });
 });
