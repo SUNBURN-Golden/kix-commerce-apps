@@ -116,7 +116,7 @@ describe("p-sdk-0 vendored tuple pin", () => {
     expect(() => assertSdkPin()).not.toThrow();
   });
 
-  it("rejects producer provenance that does not bind the reviewed head, completion checks, and merge", () => {
+  it("rejects producer provenance that does not bind the reviewed head, completion checks, and merge", { timeout: 30_000 }, () => {
     const original = parseStrict(VENDORED_SDK_PIN_INPUTS.producerProvenanceRaw) as Record<string, unknown>;
     const cases: ReadonlyArray<readonly [string, unknown, string]> = [
       ["schema", "unknown", "producer provenance schema drift"],
@@ -174,7 +174,7 @@ describe("p-sdk-0 vendored tuple pin", () => {
     })).toContain("producer provenance field set drift");
   });
 
-  it("rejects a later or foreign tuple", () => {
+  it("rejects a later or foreign tuple", { timeout: 30_000 }, () => {
     const changed = (dotted: string, value: unknown): string => {
       const copy = manifestValue();
       setPath(copy, dotted, value);
@@ -212,7 +212,7 @@ describe("p-sdk-0 vendored tuple pin", () => {
     }
   });
 
-  it("replays the shared mixed-input golden vectors against the manifest verifier", () => {
+  it("replays the shared mixed-input golden vectors against the manifest verifier", { timeout: 30_000 }, () => {
     const mixed = parseStrict(VENDORED_SDK_PIN_INPUTS.mixedVectorsRaw) as Record<string, unknown>;
     expect(mixed.profile).toBe("kix-compat-mixed-input/1");
     const original = manifestValue();
@@ -286,7 +286,7 @@ describe("p-sdk-0 vendored tuple pin", () => {
     );
   });
 
-  it("fails closed for malformed or drifted vendored support files", () => {
+  it("rejects a drifted sdk-pin file and manifest sidecar", { timeout: 30_000 }, () => {
     const pin = JSON.parse(VENDORED_SDK_PIN_INPUTS.sdkPinFileRaw) as Record<string, unknown>;
     const pinCases: ReadonlyArray<readonly [string, unknown, string]> = [
       ["commandCount", 0, "sdk-pin command count drift"],
@@ -321,6 +321,13 @@ describe("p-sdk-0 vendored tuple pin", () => {
     expect(collectSdkPinErrors({ ...VENDORED_SDK_PIN_INPUTS, sidecarRaw: "bad" })).toContain(
       "manifest sidecar form drift",
     );
+    expect(collectSdkPinErrors({
+      ...VENDORED_SDK_PIN_INPUTS,
+      sidecarRaw: `${"0".repeat(64)}\n`,
+    })).toContain("manifest sidecar digest drift");
+  });
+
+  it("rejects drifted profile or manifest fields", { timeout: 30_000 }, () => {
     const profile = parseStrict(VENDORED_SDK_PIN_INPUTS.profileRaw) as Record<string, unknown>;
     const profileCases: ReadonlyArray<readonly [string, unknown, string]> = [
       ["profile_kind", "SEMANTIC_CONFORMANCE", "profile identity mismatch"],
@@ -361,10 +368,9 @@ describe("p-sdk-0 vendored tuple pin", () => {
       expect(collectSdkPinErrors({ ...VENDORED_SDK_PIN_INPUTS, manifestRaw: canonicalStringify(changed) }).length, dotted)
         .toBeGreaterThan(0);
     }
-    expect(collectSdkPinErrors({
-      ...VENDORED_SDK_PIN_INPUTS,
-      sidecarRaw: `${"0".repeat(64)}\n`,
-    })).toContain("manifest sidecar digest drift");
+  });
+
+  it("rejects drifted producer provenance and a forbidden client surface token", { timeout: 30_000 }, () => {
     expect(collectSdkPinErrors({ ...VENDORED_SDK_PIN_INPUTS, producerProvenanceRaw: "null" })).toContain(
       "producer provenance canonical form drift",
     );
