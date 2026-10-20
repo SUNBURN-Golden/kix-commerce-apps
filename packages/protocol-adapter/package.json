@@ -6,6 +6,20 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "imports": {
+    "#kix-sdk-0/catalogue": {
+      "types": "./vendor/kix-sdk-0/types/catalogue.d.ts",
+      "default": "./vendor/kix-sdk-0/generated/catalogue.ts"
+    },
+    "#kix-sdk-0/client": {
+      "types": "./vendor/kix-sdk-0/types/client.d.ts",
+      "default": "./vendor/kix-sdk-0/src/client.ts"
+    },
+    "#kix-sdk-0/jsonschema": {
+      "types": "./vendor/kix-sdk-0/types/jsonschema.d.ts",
+      "default": "./vendor/kix-sdk-0/src/jsonschema.ts"
+    }
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

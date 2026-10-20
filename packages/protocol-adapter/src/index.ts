@@ -137,6 +137,14 @@ export {
   type PinnedAction,
 } from "./openapi-contract-pin.js";
 export {
+  KIX_SDK_0_PIN,
+  VENDORED_SDK_PIN_INPUTS,
+  assertSdkPin,
+  collectSdkPinErrors,
+  requireSdkPin,
+  type SdkPinInputs,
+} from "./sdk-pin.js";
+export {
   DISCOVERY_CURSOR_VERSION,
   DISCOVERY_DESK_SCOPE,
   DISCOVERY_GAP_CODES,

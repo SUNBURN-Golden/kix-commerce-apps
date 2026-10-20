@@ -25,6 +25,7 @@ import {
   readPinnedOpenApiDocument,
 } from "../src/index.js";
 import { sha256Hex } from "../src/sha256.js";
+import { COMMANDS as GENERATED_COMMANDS } from "#kix-sdk-0/catalogue";
 
 const vendorPath = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -93,6 +94,7 @@ describe("contract-only OpenAPI pin", () => {
     expect(isPinnedAction("reconcile")).toBe(false);
     expect(isPinnedAction("reject_external")).toBe(false);
     expect(PINNED_ACTIONS).toHaveLength(40);
+    expect(PINNED_ACTIONS).toBe(GENERATED_COMMANDS);
     expect(isPinnedAction("admit")).toBe(true);
     expect(isPinnedAction("invokeLocalCall")).toBe(false);
     expect(isPinnedAction("list_performances")).toBe(false);

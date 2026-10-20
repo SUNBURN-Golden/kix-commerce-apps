@@ -1,0 +1,19 @@
+{
+  "commandCount": 40,
+  "domain": "kix:fixture:lifecycle:0.3",
+  "generatedCatalogue": "sdk/generated/catalogue.ts",
+  "generator": "sdk/generate/generate_client.mjs",
+  "openapi": {
+    "gitBlob": "93d6661f9db3a215d45762f7a29a92130f692dab",
+    "path": "docs/contracts/openapi/kix-protocol.contract-only.openapi.json",
+    "sha256": "fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e"
+  },
+  "source": {
+    "domain": "kix:fixture:lifecycle:0.3",
+    "gitBlob": "619ae21c82ca3df5661bd3831613f15fa65225ff",
+    "path": "reference/v0.3-rc1/protocol_contract.json",
+    "sha256": "ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e"
+  },
+  "sourceAuthentication": "FIXTURE_ONLY",
+  "unknownFields": "REJECT"
+}

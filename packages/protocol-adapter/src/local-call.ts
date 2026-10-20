@@ -1,10 +1,9 @@
-import {
-  isPinnedAction,
-  LOCAL_CALL_PARAMETER_NAMES,
-  PINNED_PROTOCOL_DOMAIN,
-  pinnedCommandSchemas,
-} from "./openapi-contract-pin.js";
+import { COMMAND_SCHEMAS } from "#kix-sdk-0/catalogue";
+import { createLocalCallClient } from "#kix-sdk-0/client";
+import { CatalogueRejection } from "#kix-sdk-0/jsonschema";
+import { PINNED_PROTOCOL_DOMAIN } from "./openapi-contract-pin.js";
 import { isRecord } from "./record.js";
+import { requireSdkPin } from "./sdk-pin.js";
 import { ProtocolError } from "./types.js";
 
 export interface LocalCallInput {
@@ -21,180 +20,143 @@ export interface LocalCallEnvelope {
   body: Record<string, unknown>;
 }
 
+requireSdkPin();
+
 /**
- * Builds Core.execute(operationId, actor, action, body).
- * operationId is the per-invocation id. action is the command name.
+ * The generated p-sdk-0 client is the local-call schema check. This transport
+ * only returns the validated envelope; the caller sends it. The client does
+ * not open a connection, read actor as authority, or repeat a call.
+ */
+const generatedLocalCallClient = createLocalCallClient({
+  transport: (envelope) => envelope,
+});
+
+/**
+ * Builds Core.execute(operationId, actor, action, body) through the generated
+ * client. operationId is the per-invocation id. action is the command name.
  * The actor string is not an authentication result.
  */
 export function buildLocalCallEnvelope(input: unknown): LocalCallEnvelope {
-  if (!isRecord(input)) {
-    throw new ProtocolError("Local-call envelope must be an object.");
-  }
-  for (const key of Object.keys(input)) {
-    if (!LOCAL_CALL_PARAMETER_NAMES.includes(key as (typeof LOCAL_CALL_PARAMETER_NAMES)[number])) {
-      throw new ProtocolError(`Unknown local-call field ${key}.`);
+  try {
+    return generatedLocalCallClient.invoke(input) as LocalCallEnvelope;
+  } catch (error) {
+    if (error instanceof CatalogueRejection) {
+      throw asProtocolError(error, input);
     }
+    throw error;
   }
-  const operationId = assertIdent(input.operationId, "operationId");
-  const actor = assertIdent(input.actor, "actor");
-  if (typeof input.action !== "string" || !isPinnedAction(input.action)) {
-    const label = typeof input.action === "string" ? `: ${input.action.slice(0, 80)}` : "";
-    throw new ProtocolError(`Unknown protocol action${label}.`);
-  }
-  const schema = pinnedCommandSchemas()[input.action];
-  validateSchema(schema, input.body, "body");
-  if (!isRecord(input.body) || input.body.domain !== PINNED_PROTOCOL_DOMAIN) {
-    throw new ProtocolError(`DOMAIN_MISMATCH: body.domain must equal ${PINNED_PROTOCOL_DOMAIN}.`);
-  }
-  return {
-    operationId,
-    actor,
-    action: input.action,
-    body: input.body,
-  };
 }
 
-function assertIdent(value: unknown, field: string): string {
-  if (typeof value !== "string" || value.length === 0 || value.length > 100 || value !== value.trim()) {
-    throw new ProtocolError(
-      `${field} must be a non-empty string of at most 100 characters with no leading or trailing whitespace.`,
-    );
+function asProtocolError(error: CatalogueRejection, input: unknown): ProtocolError {
+  const detail = rejectionDetail(error);
+  switch (error.code) {
+    case "ENVELOPE":
+      if (detail === "operationId" || detail === "actor" || detail === "action" || detail === "body") {
+        return new ProtocolError(`Local-call envelope is missing ${detail}.`);
+      }
+      return new ProtocolError("Local-call envelope must be an object.");
+    case "ENVELOPE_EXTRA":
+      return new ProtocolError(`Unknown local-call field ${detail}.`);
+    case "INVALID_ID":
+      return new ProtocolError(
+        `${detail} must be a non-empty string of at most 100 characters with no leading or trailing whitespace.`,
+      );
+    case "UNKNOWN_ACTION":
+      return new ProtocolError(`Unknown protocol action${actionLabel(input)}.`);
+    case "DOMAIN_MISMATCH":
+      return new ProtocolError(`DOMAIN_MISMATCH: body.domain must equal ${PINNED_PROTOCOL_DOMAIN}.`);
+    case "UNKNOWN_FIELD":
+      return new ProtocolError(`Unknown field ${bodyPath(detail)}.`);
+    case "MISSING_REQUIRED":
+      return new ProtocolError(`Missing field ${bodyPath(detail)}.`);
+    case "WRONG_TYPE": {
+      const phrase = expectedPhrase(input, detail);
+      if (phrase !== null) {
+        return new ProtocolError(`Field ${bodyPath(detail)} ${phrase}.`);
+      }
+      return new ProtocolError(`Field ${bodyPath(detail)} has a type outside the published command schema.`);
+    }
+    case "CONSTRAINT":
+      return constraintError(detail);
+    case "SCHEMA":
+      return new ProtocolError(`Unsupported schema in the pinned SDK catalogue (${detail}).`);
+    default:
+      return new ProtocolError(`Local-call schema rejection (${error.message}).`);
   }
-  return value;
 }
 
-function validateSchema(schema: unknown, value: unknown, path: string): void {
+function rejectionDetail(error: CatalogueRejection): string {
+  const prefix = `${error.code}: `;
+  return error.message.startsWith(prefix) ? error.message.slice(prefix.length) : "";
+}
+
+function actionLabel(input: unknown): string {
+  if (isRecord(input) && typeof input.action === "string") {
+    return `: ${input.action.slice(0, 80)}`;
+  }
+  return "";
+}
+
+function bodyPath(detail: string): string {
+  if (detail === "$" || detail === "") {
+    return "body";
+  }
+  return detail.startsWith("$.") ? `body.${detail.slice(2)}` : detail;
+}
+
+/**
+ * Reads the expected schema type at the rejected path so the message matches
+ * the wording the hand-kept check used ("must be an integer", "is outside the
+ * schema enum"). Returns null when the path cannot be resolved.
+ */
+function expectedPhrase(input: unknown, detail: string): string | null {
+  if (!isRecord(input) || typeof input.action !== "string") {
+    return null;
+  }
+  let schema: unknown = (COMMAND_SCHEMAS as Record<string, unknown>)[input.action];
   if (!isRecord(schema)) {
-    throw new ProtocolError(`Unreadable schema at ${path}.`);
+    return null;
   }
-  if (typeof schema.$ref === "string") {
-    const name = schema.$ref.startsWith("#/components/schemas/")
-      ? schema.$ref.slice("#/components/schemas/".length)
-      : "";
-    const resolved = name ? pinnedCommandSchemas()[name] : undefined;
-    if (!isRecord(resolved)) {
-      throw new ProtocolError(`Unresolved schema ref at ${path}.`);
+  if (detail !== "body" && detail !== "$" && detail !== "") {
+    for (const part of (detail.startsWith("$.") ? detail.slice(2) : detail).split(".")) {
+      const properties = isRecord(schema.properties) ? schema.properties : undefined;
+      schema = properties?.[part];
+      if (!isRecord(schema)) {
+        return null;
+      }
     }
-    validateSchema(resolved, value, path);
-    return;
   }
-  if (Array.isArray(schema.enum) && !schema.enum.includes(value)) {
-    throw new ProtocolError(`Field ${path} is outside the schema enum.`);
+  if (Array.isArray(schema.enum)) {
+    return "is outside the schema enum";
   }
   const type = schema.type;
-  if (Array.isArray(type)) {
-    // A union such as ["string", "null"], read the way the gate reads it:
-    // null ends the check, any other value is checked against its own branch.
-    if (type.length === 0 || !type.every(isSchemaTypeName)) {
-      throw new ProtocolError(`Unsupported schema at ${path}.`);
-    }
-    if (value === null && type.includes("null")) {
-      return;
-    }
-    const branch = type.find((name) => name !== "null" && matchesSchemaType(name, value));
-    if (branch === undefined) {
-      throw new ProtocolError(`Field ${path} must be ${type.join(" or ")}.`);
-    }
-    validateSchema({ ...schema, type: branch }, value, path);
-    return;
+  if (Array.isArray(type) && type.every((name) => typeof name === "string")) {
+    return `must be ${type.join(" or ")}`;
   }
-  if (type === "null") {
-    if (value !== null) {
-      throw new ProtocolError(`Field ${path} must be null.`);
-    }
-    return;
-  }
-  if (type === "object") {
-    if (!isRecord(value)) {
-      throw new ProtocolError(`Field ${path} must be an object.`);
-    }
-    const properties = isRecord(schema.properties) ? schema.properties : {};
-    if (schema.additionalProperties === false) {
-      for (const key of Object.keys(value)) {
-        if (!Object.hasOwn(properties, key)) {
-          throw new ProtocolError(`Unknown field ${path}.${key}.`);
-        }
-      }
-    } else if (schema.additionalProperties !== undefined && schema.additionalProperties !== true) {
-      throw new ProtocolError(`Unsupported schema at ${path}.`);
-    }
-    const required = Array.isArray(schema.required) ? schema.required : [];
-    for (const key of required) {
-      if (typeof key !== "string" || !Object.hasOwn(value, key)) {
-        throw new ProtocolError(`Missing field ${path}.${String(key)}.`);
-      }
-    }
-    for (const [key, child] of Object.entries(properties)) {
-      if (Object.hasOwn(value, key)) {
-        validateSchema(child, value[key], `${path}.${key}`);
-      }
-    }
-    return;
-  }
-  if (type === "array") {
-    if (!Array.isArray(value)) {
-      throw new ProtocolError(`Field ${path} must be an array.`);
-    }
-    if (schema.items !== undefined) {
-      value.forEach((item, index) => validateSchema(schema.items, item, `${path}[${index}]`));
-    }
-    return;
-  }
-  if (type === "string") {
-    if (typeof value !== "string") {
-      throw new ProtocolError(`Field ${path} must be a string.`);
-    }
-    if (typeof schema.minLength === "number" && value.length < schema.minLength) {
-      throw new ProtocolError(`Field ${path} is shorter than the schema allows.`);
-    }
-    if (typeof schema.maxLength === "number" && value.length > schema.maxLength) {
-      throw new ProtocolError(`Field ${path} is longer than the schema allows.`);
-    }
-    return;
-  }
-  if (type === "integer") {
-    if (typeof value !== "number" || !Number.isInteger(value)) {
-      throw new ProtocolError(`Field ${path} must be an integer.`);
-    }
-    if (typeof schema.minimum === "number" && value < schema.minimum) {
-      throw new ProtocolError(`Field ${path} is below the schema minimum.`);
-    }
-    if (typeof schema.maximum === "number" && value > schema.maximum) {
-      throw new ProtocolError(`Field ${path} is above the schema maximum.`);
-    }
-    return;
-  }
-  if (type === "boolean") {
-    if (typeof value !== "boolean") {
-      throw new ProtocolError(`Field ${path} must be a boolean.`);
-    }
-    return;
-  }
-  if (type === undefined && Array.isArray(schema.enum)) {
-    return;
-  }
-  throw new ProtocolError(`Unsupported schema at ${path}.`);
+  const phrases: Record<string, string> = {
+    object: "an object",
+    array: "an array",
+    string: "a string",
+    integer: "an integer",
+    boolean: "a boolean",
+    null: "null",
+  };
+  return typeof type === "string" && phrases[type] !== undefined ? `must be ${phrases[type]}` : null;
 }
 
-const SCHEMA_TYPE_NAMES = ["object", "array", "string", "integer", "boolean", "null"] as const;
-
-function isSchemaTypeName(value: unknown): value is (typeof SCHEMA_TYPE_NAMES)[number] {
-  return SCHEMA_TYPE_NAMES.includes(value as (typeof SCHEMA_TYPE_NAMES)[number]);
-}
-
-function matchesSchemaType(name: (typeof SCHEMA_TYPE_NAMES)[number], value: unknown): boolean {
-  switch (name) {
-    case "object":
-      return isRecord(value);
-    case "array":
-      return Array.isArray(value);
-    case "string":
-      return typeof value === "string";
-    case "integer":
-      return typeof value === "number" && Number.isInteger(value);
-    case "boolean":
-      return typeof value === "boolean";
-    case "null":
-      return value === null;
+function constraintError(detail: string): ProtocolError {
+  const space = detail.lastIndexOf(" ");
+  const path = space === -1 ? detail : detail.slice(0, space);
+  const kind = space === -1 ? "" : detail.slice(space + 1);
+  const phrases: Record<string, string> = {
+    minLength: "is shorter than the schema allows",
+    maxLength: "is longer than the schema allows",
+    minimum: "is below the schema minimum",
+    maximum: "is above the schema maximum",
+  };
+  const phrase = phrases[kind];
+  if (phrase !== undefined) {
+    return new ProtocolError(`Field ${bodyPath(path)} ${phrase}.`);
   }
+  return new ProtocolError(`Field ${bodyPath(detail)} violates the published command schema.`);
 }
