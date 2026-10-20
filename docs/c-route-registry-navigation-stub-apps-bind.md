@@ -71,8 +71,9 @@ The rows below are generated from the registry by a test and compared with this 
 | `/journeys` | Journeys | Verification | stub-only | link | journeys | - | surface-row |
 | `/qualification` | Qualification | Verification | stub-only | link | qualification | - | surface-row |
 | `/release` | Release | Verification | stub-only | link | release | - | surface-row |
+| `/help` | Help | Verification | stub-only | link | help | - | none |
 
-`/handoff` has no workspace surface row, so the evidence matrix has none for it (the registry carries that as a note).
+`/handoff` has no workspace surface row, so the evidence matrix has none for it (the registry carries that as a note). `/help` was added later by `c-user-guides-stub` and has no surface row for the same reason.
 
 ## Drift checks
 

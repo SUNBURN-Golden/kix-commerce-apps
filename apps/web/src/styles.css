@@ -144,6 +144,13 @@ nav a[aria-current="page"] {
   border-color: var(--stamp);
 }
 
+.help-line {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
 .section-head {
   margin-bottom: 1rem;
 }

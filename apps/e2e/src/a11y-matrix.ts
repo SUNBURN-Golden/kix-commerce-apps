@@ -54,6 +54,7 @@ export const SCREENS: readonly ScreenRow[] = [
   row("identity", "/identity", "Journey context"),
   row("session", "/session", "Session recovery"),
   row("journeys", "/journeys", "Journeys"),
+  row("help", "/help", "Help"),
 ];
 
 export const VIEWPORTS = {

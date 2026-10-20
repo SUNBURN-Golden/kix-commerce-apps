@@ -280,7 +280,7 @@ Each journey has a success, a rejection, an UNKNOWN, and a not-bound cell. A che
 
 ## Accessibility observation (stub)
 
-`npm run test:a11y` (same Chrome variables as `test:e2e`) runs a second browser suite in `apps/e2e`: axe-core (exact pin, injected from disk) on all 36 screens at 1280px and 320px, keyboard-only Tab walks, widget keys, form error links, table and status structure, and reflow. Open findings are listed in `KNOWN_FINDINGS` and gate the run as a ratchet. User acceptance is PENDING for every screen, no ACCEPTED value exists, no target standard is named, and no screen-reader or real-device run exists. Details and the not-verified list are in [docs/c-a11y-acceptance-stub-apps-bind.md](docs/c-a11y-acceptance-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+`npm run test:a11y` (same Chrome variables as `test:e2e`) runs a second browser suite in `apps/e2e`: axe-core (exact pin, injected from disk) on all 37 screens at 1280px and 320px, keyboard-only Tab walks, widget keys, form error links, table and status structure, and reflow. Open findings are listed in `KNOWN_FINDINGS` and gate the run as a ratchet. User acceptance is PENDING for every screen, no ACCEPTED value exists, no target standard is named, and no screen-reader or real-device run exists. Details and the not-verified list are in [docs/c-a11y-acceptance-stub-apps-bind.md](docs/c-a11y-acceptance-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
 ## Fault injection (stub)
 
