@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
 import { ValidatedForm } from "../../forms/ValidatedForm";
 import { field } from "../../forms/validation";
 import { useState, type FormEvent } from "react";
@@ -24,7 +25,7 @@ export function M04Page() {
   }
 
   return (
-    <MarketingChrome id="M04">
+    <MarketingChrome id="M04" onReadAgain={refresh}>
       {error ? (
         <p className="alert" role="alert">
           {error}
@@ -52,7 +53,7 @@ export function M04Page() {
         </label>
         <p className="muted">Fixture codes: {PARTNER_REFERRAL_CODES.join(", ")}.</p>
         <div className="row-actions">
-          <button type="submit">Count demo marker</button>
+          <ConnectivityWriteButton type="submit">Count demo marker</ConnectivityWriteButton>
         </div>
       </ValidatedForm>
       {snapshot.acceptedReferrals.length > 0 ? (

@@ -57,7 +57,8 @@ async function buildApp(withFaults: boolean): Promise<BuiltApp> {
           ],
         }
       : undefined,
-    build: { outDir, emptyOutDir: true, minify: true },
+    // Use the same configured minifier as npm run build.
+    build: { outDir, emptyOutDir: true },
   });
   if (process.env.KIX_E2E_AXE_SOURCE) {
     fs.copyFileSync(process.env.KIX_E2E_AXE_SOURCE, path.join(outDir, "axe.min.js"));

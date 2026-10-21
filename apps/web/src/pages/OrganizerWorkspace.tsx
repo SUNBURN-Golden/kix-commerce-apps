@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { ValidationHandle } from "../forms/useFormValidation";
 import { ValidatedForm } from "../forms/ValidatedForm";
 import { field } from "../forms/validation";
@@ -264,9 +265,9 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
               </table>
             </div>
           ) : null}
-          <button type="submit" className="organizer-ws-button" disabled={!model.canSubmit}>
+          <ConnectivityWriteButton type="submit" className="organizer-ws-button" disabled={!model.canSubmit}>
             Submit
-          </button>
+          </ConnectivityWriteButton>
         </fieldset>
       </ValidatedForm>
       <div className="panel organizer-ws-results">

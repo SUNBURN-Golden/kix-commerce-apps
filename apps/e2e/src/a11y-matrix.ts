@@ -191,6 +191,7 @@ export const STATIC_CHECK_IDS: readonly string[] = [
   "a11y.locale.switch-keys",
   "a11y.locale.persist",
   "a11y.locale.reflow-320",
+  "a11y.connectivity.keyboard-cached",
   "a11y.display.dark",
   "a11y.display.forced-colors",
   "a11y.display.reduced-motion",

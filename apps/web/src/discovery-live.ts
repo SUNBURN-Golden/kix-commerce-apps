@@ -1,3 +1,4 @@
+import { connectedActions } from "./connectivity/write-guard";
 /**
  * The discovery projection read on top of the adapter's bounded port.
  * Stub scope: the default port is the synthetic stream. On integration-http
@@ -24,7 +25,7 @@ import {
   type DiscoveryStreamKind,
 } from "@kix/protocol-adapter";
 import { formatWhen } from "./format";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const LIVE_READ_TITLE = "Projection read (synthetic)";
 
@@ -359,7 +360,7 @@ export function useDiscoveryLiveRead(options: { rowId: string | null; detailEnab
       outcome,
       canNext: outcome.kind === "ready" && outcome.nextCursor !== null,
     }),
-    listHandlers: { nextPage, runReturn, setStream, setFilter, rebuildProjection },
+    listHandlers: connectedActions({ nextPage, runReturn, setStream, setFilter, rebuildProjection }, ["setStream", "rebuildProjection"]),
     detailModel: buildLiveDetailModel({ outcome: detailEnabled ? detailOutcome : { kind: "loading" } }),
     detailHandlers: { readAgain: readDetail },
   };

@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useState } from "react";
 import { useRestoreFocus } from "../a11y/focus";
 import {
@@ -31,7 +32,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
   const reasonId = `${id}-reason`;
   return (
     <span className="refund-guard">
-      <button
+      <ConnectivityWriteButton
         id={id}
         type="button"
         aria-disabled={control.enabled ? undefined : true}
@@ -43,7 +44,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
         }}
       >
         {label}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <span id={reasonId} className="muted">
           {control.reason}
@@ -183,9 +184,9 @@ export function JourneyIdentityPanel({ live }: { live: IdentityDeskLive }) {
             ))}
           </select>
         </label>
-        <button type="button" disabled={pendingScenario === live.scenario} onClick={() => actions.setScenario(pendingScenario)}>
+        <ConnectivityWriteButton type="button" disabled={pendingScenario === live.scenario} onClick={() => actions.setScenario(pendingScenario)}>
           Apply this scenario
-        </button>
+        </ConnectivityWriteButton>
         <p className="muted">{IDENTITY_SCENARIO_NOTES[pendingScenario]}</p>
         <p className="muted">Applying a scenario binds this page to a new synthetic source. Earlier unknown writes stay on record and keep fencing their subject, and intent numbers keep counting. Only a reload clears them.</p>
         <button type="button" onClick={() => actions.refresh()}>
@@ -197,12 +198,12 @@ export function JourneyIdentityPanel({ live }: { live: IdentityDeskLive }) {
         <button type="button" onClick={() => actions.switchRole()}>
           Switch role
         </button>
-        <button type="button" onClick={() => actions.rotateCut()}>
+        <ConnectivityWriteButton type="button" onClick={() => actions.rotateCut()}>
           Rotate source cut
-        </button>
-        <button type="button" onClick={() => actions.resetSource()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" onClick={() => actions.resetSource()}>
           Reset synthetic source
-        </button>
+        </ConnectivityWriteButton>
         {live.heldSupported ? (
           <button type="button" onClick={() => actions.deliverHeld()}>
             Deliver held response

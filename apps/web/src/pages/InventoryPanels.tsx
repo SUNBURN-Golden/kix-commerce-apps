@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { ValidatedForm } from "../forms/ValidatedForm";
 import { field } from "../forms/validation";
 import { useState } from "react";
@@ -86,9 +87,9 @@ export function InventoryControls({
             ))}
           </select>
         </label>
-        <button type="button" className="discovery-action" onClick={() => actions.advanceGeneration()}>
+        <ConnectivityWriteButton requiresFresh={false} type="button" className="discovery-action" onClick={() => actions.advanceGeneration()}>
           {INVENTORY_ADVANCE_LABEL}
-        </button>
+        </ConnectivityWriteButton>
         <button type="button" className="discovery-action" onClick={() => actions.readSummaryAgain()}>
           Read summary again
         </button>

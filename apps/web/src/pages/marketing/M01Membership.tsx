@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
 import { ValidatedForm } from "../../forms/ValidatedForm";
 import { field } from "../../forms/validation";
 import { useState, type FormEvent } from "react";
@@ -31,7 +32,7 @@ export function M01Page() {
   }
 
   return (
-    <MarketingChrome id="M01">
+    <MarketingChrome id="M01" onReadAgain={refresh}>
       {error ? (
         <p className="alert" role="alert">
           {error}
@@ -56,10 +57,10 @@ export function M01Page() {
         </label>
         <p className="muted">The card reference starts with mbr_stub_. It is not a rights reference.</p>
         <div className="row-actions">
-          <button type="submit">Issue demo card</button>
-          <button type="button" className="ghost" onClick={leave} disabled={!card}>
+          <ConnectivityWriteButton type="submit">Issue demo card</ConnectivityWriteButton>
+          <ConnectivityWriteButton type="button" className="ghost" onClick={leave} disabled={!card}>
             Clear demo card
-          </button>
+          </ConnectivityWriteButton>
         </div>
       </ValidatedForm>
       {card ? (

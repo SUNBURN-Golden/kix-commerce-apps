@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { ReactNode } from "react";
 import { MERCHANT_SCENARIOS, type MerchantScenario } from "@kix/protocol-adapter";
 import { AmountNotice, StatusMark } from "../a11y/marks";
@@ -137,15 +138,15 @@ export function MerchantControls({
         <button type="button" id="merchant-switch" className="discovery-action" onClick={() => actions.switchScope()}>
           Switch merchant scope
         </button>
-        <button type="button" id="merchant-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
+        <ConnectivityWriteButton type="button" id="merchant-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
           Revoke grant
-        </button>
-        <button type="button" id="merchant-advance" className="discovery-action" onClick={() => actions.advanceCut()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="merchant-advance" className="discovery-action" onClick={() => actions.advanceCut()}>
           Advance source cut
-        </button>
-        <button type="button" id="merchant-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="merchant-new-session" className="discovery-action" onClick={() => actions.newSession()}>
           Start a new synthetic session
-        </button>
+        </ConnectivityWriteButton>
       </div>
       <p className="muted" data-scenario-note={scenario}>
         {SCENARIO_NOTES[scenario]} Changing the scenario starts a new synthetic session.

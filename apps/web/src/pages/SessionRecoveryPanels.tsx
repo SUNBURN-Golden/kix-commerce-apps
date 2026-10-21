@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { AsyncState } from "../components/AsyncState";
 import { useState } from "react";
 import { useRestoreFocus } from "../a11y/focus";
@@ -32,7 +33,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
   const reasonId = `${id}-reason`;
   return (
     <span className="refund-guard">
-      <button
+      <ConnectivityWriteButton
         id={id}
         type="button"
         aria-disabled={control.enabled ? undefined : true}
@@ -44,7 +45,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
         }}
       >
         {label}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <span id={reasonId} className="muted">
           {control.reason}
@@ -147,9 +148,9 @@ export function SessionRecoveryPanel({ live }: { live: SessionDeskLive }) {
             ))}
           </select>
         </label>
-        <button type="button" disabled={pendingScenario === live.scenario} onClick={() => actions.setScenario(pendingScenario)}>
+        <ConnectivityWriteButton type="button" disabled={pendingScenario === live.scenario} onClick={() => actions.setScenario(pendingScenario)}>
           Start new source with this scenario
-        </button>
+        </ConnectivityWriteButton>
         <p className="muted">{SESSION_SCENARIO_NOTES[pendingScenario]}</p>
         <p className="muted">A new source keeps this tab&apos;s journal. An unknown write keeps blocking its subject.</p>
         <button type="button" onClick={() => actions.refresh()}>

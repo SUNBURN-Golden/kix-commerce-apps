@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { SettlementCaseView } from "@kix/protocol-adapter";
 
 export const SETTLEMENT_DESK_COMMANDS = [
@@ -94,7 +95,7 @@ export function SettlementPanel({
       </dl>
       <div className="row-actions">
         {CONTROLS.map((control) => (
-          <button
+          <ConnectivityWriteButton
             key={control.command}
             type="button"
             className={control.command === "initiate" ? undefined : "ghost"}
@@ -102,7 +103,7 @@ export function SettlementPanel({
             onClick={() => onCommand(control.command)}
           >
             {control.label}
-          </button>
+          </ConnectivityWriteButton>
         ))}
         <button type="button" className="ghost" disabled={pending} onClick={onClose}>
           Close

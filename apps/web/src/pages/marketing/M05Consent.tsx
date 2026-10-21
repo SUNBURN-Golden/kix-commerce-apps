@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
 import type { ValidationHandle } from "../../forms/useFormValidation";
 import { ValidatedForm } from "../../forms/ValidatedForm";
 import { field } from "../../forms/validation";
@@ -33,7 +34,7 @@ export function M05Page() {
   }
 
   return (
-    <MarketingChrome id="M05">
+    <MarketingChrome id="M05" onReadAgain={refresh}>
       <ValidatedForm id="consent-flags-form" fields={[]} className="panel" onSubmit={onSubmit}>
         {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- The input is nested inside the label and the visible text is in the sibling span; the control is therefore labeled. */}
         <label className="check" htmlFor="performance-notes">
@@ -67,10 +68,10 @@ export function M05Page() {
           {MARKETING_CONTRACT_ALIGNMENT.M05.missingFromStub.join(", ")}. channelSend: {consent.channelSend}.
         </p>
         <div className="row-actions">
-          <button type="submit">Save consent flags</button>
-          <button type="button" className="ghost" onClick={withdraw}>
+          <ConnectivityWriteButton type="submit">Save consent flags</ConnectivityWriteButton>
+          <ConnectivityWriteButton type="button" className="ghost" onClick={withdraw}>
             Withdraw flags
-          </button>
+          </ConnectivityWriteButton>
         </div>
       </ValidatedForm>
       <article className="stamp">
@@ -235,12 +236,12 @@ function ConsentBindPanel({
               </dl>
             ) : null}
             <div className="row-actions">
-              <button type="button" disabled={!row.canSend} onClick={() => {
+              <ConnectivityWriteButton type="button" disabled={!row.canSend} onClick={() => {
                 const ids = row.step === "set_consent" ? undefined : ["consent-event", "consent-subject", "consent-business", "consent-channel", "consent-purpose", "consent-version"];
                 if (validation.current?.validate(ids)) model.send(row.step);
               }}>
                 Send {row.step}
-              </button>
+              </ConnectivityWriteButton>
             </div>
           </li>
         ))}
