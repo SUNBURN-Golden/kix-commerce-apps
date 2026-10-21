@@ -235,3 +235,60 @@ docs/c-offline-connectivity-ux-stub-apps-bind.md
 docs/guide/status-glossary-ko.md
 package-lock.json
 ```
+
+## Merge resolution and refreshed verification
+
+This section records the combined working tree and supersedes the original implementation source identification above for this merge verification. The original execution record remains historical evidence.
+
+- Branch source: `e7d865566acc47085ea88c2f4dc616cf3d66b704`.
+- Main merge source: `57cbc3e26d9882c5b8294ef8c2b5288a2004eec1` (`MERGE_HEAD` and the inspected `origin/main`).
+- No new commit SHA exists: the supervisor owns staging and the merge commit. The index intentionally retains its unmerged entries; the working files contain the resolutions.
+- Combined source/test manifest: SHA-256 `62b133a1fdd8f317026c2a4d600ac1d9617895c53250cc3d1857ef0328b2f287`, covering the 475 unique tracked files under `apps/` and `packages/`. The sorted `<file SHA-256>  <path>\n` manifest is `/tmp/kix-offline-merge-source-manifest.sha256`; generated/ignored build outputs are excluded.
+
+M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+
+All 14 conflicted files retain both sides' intent. README keeps connectivity, shared async presentations and form-validation descriptions. Page imports retain both component families. Assistant and resale forms use ValidatedForm with ConnectivityWriteButton; M05 retains explicit local-session rereading and runs field validation inside the connectivity-guarded send handler. Main's async/empty/UNKNOWN presentations and linked form errors remain present. The automatically merged browser registries and tests retain every required check from both sides. No route or screen was added. The local evidence matrix now distinguishes its historical node-state snapshot from the combined implementation inventory.
+
+The combined CSS initially measured 5,069 gzip bytes against the existing 5,000-byte limit. Identical desk-scoped disabled, table and scroll declarations were consolidated; duplicate definitions are superseded by equivalent shared rules. Both new CSS feature blocks remain. An independent PostCSS comparison expanded the simple :is lists and confirmed identical declaration sequences for all 406 selector/context pairs; the grouped selectors retain their specificity. The rebuilt stylesheet measures 4,996 gzip bytes. No budget, baseline, timeout, test or CI configuration was relaxed.
+
+Manual conflict resolutions:
+
+```text
+README.md
+apps/web/src/pages/AssistantPanels.tsx
+apps/web/src/pages/Booking.tsx
+apps/web/src/pages/DiscoveryPanels.tsx
+apps/web/src/pages/InventoryPanels.tsx
+apps/web/src/pages/NotificationsPanels.tsx
+apps/web/src/pages/OrganizerWorkspace.tsx
+apps/web/src/pages/Resale.tsx
+apps/web/src/pages/SessionRecoveryPanels.tsx
+apps/web/src/pages/marketing/M01Membership.tsx
+apps/web/src/pages/marketing/M03Coupons.tsx
+apps/web/src/pages/marketing/M04Rewards.tsx
+apps/web/src/pages/marketing/M05Consent.tsx
+apps/web/src/styles.css
+```
+
+Additional documentation updated: this binding and `docs/c-local-evidence-matrix-stub-apps-bind.md`. Automatically merged main content remains intact. `.aiops/`, `docs/aiops/`, CI, the locked commerce bindings and the protocol pin tuple remain unchanged. No git add, commit, merge, rebase, reset, checkout, push or external comment was performed during resolution.
+
+Final verification uses the default Node 20.19.2 shell unless noted; the initial browser-journey run used the existing local Node 22.20.0 binary. All browser runs use `KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1` and local synthetic fixtures. The first full merged unit run passed. Later concurrent reruns encountered worker, timer and browser-scan timeouts; an additional Node 22 rerun encountered timer/RPC timeouts. Isolated final runs passed with the existing timeouts and unchanged tests. These failures and the initial CSS size failure are retained in `/tmp/kix-offline-merge-*.log`.
+
+| Command / evidence | Result |
+| --- | --- |
+| `npm run typecheck` | PASS; adapter and web |
+| `KIX_REQUIRE_GATE=0 npm test` | PASS; adapter 1,306 passed / 23 configured live-gate skips; web 937 passed; `/tmp/kix-offline-merge-unit-recheck.log` |
+| `npm run typecheck:e2e` | PASS |
+| `npm run lint` | PASS |
+| `npm run build` | PASS; existing large-chunk warning; `/tmp/kix-offline-merge-build-final.log` |
+| `npm run budget` | PASS; initial JS 285,594; CSS 4,996; largest route 21,501; total 630,666 gzip bytes; existing limits unchanged |
+| `npm run test:e2e` | PASS; 54 tests in 15 files on the final source tree; `/tmp/kix-offline-merge-e2e-final.log` and `/tmp/kix-offline-merge-e2e-final-record.json` |
+| `npm run test:a11y` | PASS; 255 tests in 13 files; `/tmp/kix-offline-merge-a11y-final.log` and `/tmp/kix-offline-merge-a11y-final-record.json` |
+| `npm run test:budget` | PASS; 9 tests in 3 files; `/tmp/kix-offline-merge-browser-budget-final.log` and `/tmp/kix-offline-merge-browser-budget-final-record.json` |
+| `npm run test -w @kix/web -- test/local-evidence-matrix.test.ts` | PASS; 21 tests after the combined-state documentation update |
+| CSS selector/declaration comparison | PASS; all 406 expanded selector/context pairs preserved; `/tmp/kix-verify-merge-css.cjs` |
+| Locked binding | PASS; byte-identical to main and SHA-256 `83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249` |
+
+Live-gate skips remain unverified. No real integration, hardware, user acceptance, qualification or release is claimed.
+
+Final browser journey, accessibility and budget records each report `nonLoopback=0`, `nonGet=0` and `appNetworkCalls=0`. The final journey run includes all 37 screens plus 404, zero service-worker registrations/attempts, explicit form-read recovery and durable UNKNOWN without reconnect replay. `git diff --check` and the marker scan pass for all 14 conflict files.

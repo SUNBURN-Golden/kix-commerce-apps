@@ -1,4 +1,6 @@
 import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
+import { ValidatedForm } from "../../forms/ValidatedForm";
+import { field } from "../../forms/validation";
 import { useState, type FormEvent } from "react";
 import type { MemberTier } from "../../marketing/desk";
 import { marketingSession } from "../../marketing/session";
@@ -36,10 +38,10 @@ export function M01Page() {
           {error}
         </p>
       ) : null}
-      <form className="panel" onSubmit={onSubmit}>
+      <ValidatedForm id="membership-form" fields={[field("membership-name", "validation.label.displayName", { maxLength: 40 })]} className="panel" onSubmit={onSubmit}>
         <label>
           Display name
-          <input
+          <input id="membership-name"
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
             autoComplete="off"
@@ -60,7 +62,7 @@ export function M01Page() {
             Clear demo card
           </ConnectivityWriteButton>
         </div>
-      </form>
+      </ValidatedForm>
       {card ? (
         <article className="ticket">
           <p className="eyebrow">Session card · {card.status}</p>

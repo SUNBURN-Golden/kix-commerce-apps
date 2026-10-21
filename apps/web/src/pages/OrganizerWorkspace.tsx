@@ -1,6 +1,10 @@
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import type { ValidationHandle } from "../forms/useFormValidation";
+import { ValidatedForm } from "../forms/ValidatedForm";
+import { field } from "../forms/validation";
+import { AsyncState } from "../components/AsyncState";
 import { useEffect, useRef } from "react";
-import { ORGANIZER_COMPOSED, type OrganizerStep } from "@kix/protocol-adapter";
+import { COMMERCE_COMMAND_BINDINGS, ORGANIZER_COMPOSED, type OrganizerStep } from "@kix/protocol-adapter";
 import { focusControl } from "../a11y/focus";
 import { AmountNotice, StatusMark } from "../a11y/marks";
 import {
@@ -19,6 +23,7 @@ export function OrganizerWorkspacePage() {
 }
 
 export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceModel }) {
+  const validation = useRef<ValidationHandle>(null);
   const resultsRef = useRef<HTMLHeadingElement>(null);
   const previewFault = model.plan?.items.find((item) => item.state !== "ready") ?? null;
   useEffect(() => {
@@ -64,11 +69,20 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
           {model.path.kind === "unavailable" && model.path.code ? ` Code ${model.path.code}.` : ""}
         </p>
       ) : null}
-      <p className="organizer-ws-status" role="status">
-        {model.submitting ? <StatusMark kind="loading" /> : null}{" "}
-        {model.submitting ? "Submitting. One attempt each." : model.results ? model.results.summary : "No results yet."}
-      </p>
-      <form
+      {model.submitting || !model.results ? (
+        <AsyncState kind={model.submitting ? "loading" : "empty"} label="Organizer results" className="organizer-ws-status">
+          <p>{model.submitting ? "Submitting. One attempt each." : "No results yet."}</p>
+        </AsyncState>
+      ) : <p className="organizer-ws-status" role="status">{model.results.summary}</p>}
+      <ValidatedForm id="organizer-workspace-form" validationRef={validation} submitFields={[]} fields={[
+          field("organizer-ws-event-id", "validation.label.eventId"),
+          field("organizer-ws-seats", "validation.label.seats", { kind: "seats" }),
+          field("organizer-ws-quota", "validation.label.quota", { kind: "integer", optional: true }),
+          field("organizer-ws-seconds", "validation.label.seconds", { kind: "integer", optional: true }),
+          field("organizer-ws-inventory-id", "validation.label.inventoryId"),
+          field("organizer-ws-version", "validation.label.version", { kind: "integer" }),
+          field("organizer-ws-recipient", "validation.label.recipient"),
+        ]}
         className="organizer-ws-form"
         onSubmit={(event) => {
           event.preventDefault();
@@ -108,7 +122,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
               <>
                 <label>
                   Seats
-                  <input
+                  <input id="organizer-ws-seats"
                     value={model.editor.draft.seats}
                     autoComplete="off"
                     placeholder="Comma-separated seat ids"
@@ -118,7 +132,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
                 <p>{seatsTypedLine(model.editor.draft.seats)}</p>
                 <label>
                   Invitation quota
-                  <input
+                  <input id="organizer-ws-quota"
                     value={model.editor.draft.invitationQuota}
                     inputMode="numeric"
                     autoComplete="off"
@@ -128,7 +142,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
                 </label>
                 <label>
                   Reservation seconds
-                  <input
+                  <input id="organizer-ws-seconds"
                     value={model.editor.draft.reservationSeconds ?? ""}
                     inputMode="numeric"
                     autoComplete="off"
@@ -153,7 +167,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
               <>
                 <label>
                   Inventory id
-                  <input
+                  <input id="organizer-ws-inventory-id"
                     value={model.editor.draft.inventoryId}
                     list="organizer-ws-inventory"
                     autoComplete="off"
@@ -171,7 +185,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
                 ) : null}
                 <label>
                   Expected inventory version
-                  <input
+                  <input id="organizer-ws-version"
                     value={model.editor.draft.expectedInventoryVersion}
                     inputMode="numeric"
                     autoComplete="off"
@@ -181,7 +195,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
                 </label>
                 <label>
                   Recipient
-                  <input
+                  <input id="organizer-ws-recipient"
                     value={model.editor.draft.recipient}
                     autoComplete="off"
                     onChange={(event) => model.setEditor({ draft: { recipient: event.target.value } })}
@@ -190,7 +204,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
               </>
             ) : null}
             <p className="muted">The synthetic show policy is a fixture, not a policy. It is inside the create_event body.</p>
-            <button type="button" className="organizer-ws-button" onClick={model.addRow}>
+            <button type="button" className="organizer-ws-button" onClick={() => { if (validation.current?.validate()) model.addRow(); }}>
               Add to change list
             </button>
           </div>
@@ -255,7 +269,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
             Submit
           </ConnectivityWriteButton>
         </fieldset>
-      </form>
+      </ValidatedForm>
       <div className="panel organizer-ws-results">
         <h3 id="organizer-ws-results" tabIndex={-1} ref={resultsRef}>
           Results
@@ -305,7 +319,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
             <div key={entry.method}>
               <dt>{entry.method}</dt>
               <dd>
-                {entry.consideredAction ?? "none"} · not-bound. {entry.reason}
+                <AsyncState kind="not-bound" label="Organizer desk" binding={{ method: entry.method, record: COMMERCE_COMMAND_BINDINGS[entry.method] }} />
               </dd>
             </div>
           ))}

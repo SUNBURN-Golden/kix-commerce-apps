@@ -1,4 +1,6 @@
 import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
+import { ValidatedForm } from "../../forms/ValidatedForm";
+import { field } from "../../forms/validation";
 import { useState, type FormEvent } from "react";
 import { PARTNER_REFERRAL_CODES } from "../../marketing/desk";
 import { marketingSession } from "../../marketing/session";
@@ -44,16 +46,16 @@ export function M04Page() {
         </dl>
         <p className="muted">Markers are a count on this stub. They are not a balance and they are not F04 credit.</p>
       </article>
-      <form className="panel" onSubmit={onSubmit}>
+      <ValidatedForm id="referral-form" fields={[field("referral-code", "validation.label.code")]} className="panel" onSubmit={onSubmit}>
         <label>
           Partner demo code
-          <input value={code} onChange={(event) => setCode(event.target.value)} autoComplete="off" />
+          <input id="referral-code" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="off" />
         </label>
         <p className="muted">Fixture codes: {PARTNER_REFERRAL_CODES.join(", ")}.</p>
         <div className="row-actions">
           <ConnectivityWriteButton type="submit">Count demo marker</ConnectivityWriteButton>
         </div>
-      </form>
+      </ValidatedForm>
       {snapshot.acceptedReferrals.length > 0 ? (
         <p className="panel">Counted: {snapshot.acceptedReferrals.join(", ")}</p>
       ) : (

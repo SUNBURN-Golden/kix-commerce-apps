@@ -1,4 +1,5 @@
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { AsyncState } from "../components/AsyncState";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -10,7 +11,6 @@ import {
   type NotifyRole,
   type NotifyScenario,
 } from "@kix/protocol-adapter";
-import { StatusMark } from "../a11y/marks";
 import {
   NOTIFY_ACTION_NOTE,
   NOTIFY_ACTOR_NOTE,
@@ -283,10 +283,9 @@ export function NotifyStatus({ model }: { model: NotifyModel }) {
   return (
     <section id="notify-status" className="discovery-section" tabIndex={-1} data-notify-state={model.state}>
       <h3>Status</h3>
-      <p role="status" data-status={model.state}>
-        {model.state === "loading" ? <StatusMark kind="loading" /> : null} {model.statusLine}
-        {model.detailLine ? ` ${model.detailLine}` : ""}
-      </p>
+      {model.state === "loading" || model.state === "empty" || model.state === "stale" || model.state === "not-bound" ? (
+        <AsyncState kind={model.state} label="Inbox" data-status={model.state}><p>{model.statusLine} {model.detailLine}</p></AsyncState>
+      ) : <p role="status" data-status={model.state}>{model.statusLine} {model.detailLine}</p>}
       <p className="muted">{model.freshnessWord}</p>
       <p className="muted">{model.scopeLine}</p>
       <p className="muted">{model.generationLine}</p>
@@ -298,7 +297,7 @@ export function NotifyStatus({ model }: { model: NotifyModel }) {
         {model.dedupeLine}
       </p>
       {model.lastLine ? (
-        <p role="status" data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
+        <p role="status" aria-live="polite" aria-busy={false} data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
           {model.lastNeedsFocus ? <WordMark word="Attention." /> : null} {model.lastLine}
         </p>
       ) : null}
@@ -507,6 +506,7 @@ export function NotifyRequestsSection({ model }: { model: NotifyModel }) {
       {model.request === null ? <p data-state="empty">No request has been sent from this session.</p> : null}
       {model.request !== null ? (
         <div data-request-seq={model.request.seq} data-request-phase={model.request.phase}>
+          {model.request.phase === "unknown" ? <AsyncState kind="unknown" label="Notification request" announcement="parent" /> : null}
           <p>
             Request {model.request.seq}: {model.request.kindWord}. {model.request.phaseWord}
             {model.request.code ? ` (${model.request.code})` : ""}.

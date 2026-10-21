@@ -1,5 +1,8 @@
 import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
-import { useState, type FormEvent } from "react";
+import type { ValidationHandle } from "../../forms/useFormValidation";
+import { ValidatedForm } from "../../forms/ValidatedForm";
+import { field } from "../../forms/validation";
+import { useRef, useState, type FormEvent } from "react";
 import { emptyConsentDraft, useConsentDesk, type ConsentDraft, type ConsentPanelModel, type ConsentRowStatus } from "../../consent-desk";
 import { useFormatWhen } from "../../i18n/locale-context";
 import { MARKETING_CONTRACT_ALIGNMENT } from "../../marketing/contracts";
@@ -32,7 +35,7 @@ export function M05Page() {
 
   return (
     <MarketingChrome id="M05" onReadAgain={refresh}>
-      <form className="panel" onSubmit={onSubmit}>
+      <ValidatedForm id="consent-flags-form" fields={[]} className="panel" onSubmit={onSubmit}>
         {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- The input is nested inside the label and the visible text is in the sibling span; the control is therefore labeled. */}
         <label className="check" htmlFor="performance-notes">
           <input
@@ -70,7 +73,7 @@ export function M05Page() {
             Withdraw flags
           </ConnectivityWriteButton>
         </div>
-      </form>
+      </ValidatedForm>
       <article className="stamp">
         <p className="stamp-word">{consent.state}</p>
         <p>
@@ -114,6 +117,7 @@ function ConsentBindPanel({
   onEventId: (value: string) => void;
   onDraft: (partial: Partial<ConsentDraft>) => void;
 }) {
+  const validation = useRef<ValidationHandle>(null);
   const unavailable = model.path.kind === "unavailable";
   return (
     <aside className="panel" aria-label="Consent bind" data-consent-path={model.path.kind}>
@@ -138,7 +142,15 @@ function ConsentBindPanel({
           {model.path.kind === "unavailable" && model.path.code ? ` Code ${model.path.code}.` : ""}
         </p>
       ) : null}
-      <form
+      <ValidatedForm id="consent-bind-form" validationRef={validation} fields={[
+          field("consent-event", "validation.label.eventId"),
+          field("consent-subject", "validation.label.subject"),
+          field("consent-business", "validation.label.business"),
+          field("consent-channel", "validation.label.channel"),
+          field("consent-purpose", "validation.label.purpose"),
+          field("consent-version", "validation.label.version", { kind: "integer" }),
+          field("consent-allowed", "validation.label.allowed"),
+        ]}
         className="panel"
         onSubmit={(event) => {
           event.preventDefault();
@@ -146,15 +158,15 @@ function ConsentBindPanel({
       >
         <label>
           Event id
-          <input value={eventId} onChange={(event) => onEventId(event.target.value)} autoComplete="off" />
+          <input id="consent-event" value={eventId} onChange={(event) => onEventId(event.target.value)} autoComplete="off" />
         </label>
         <label>
           Subject
-          <input value={draft.subject} onChange={(event) => onDraft({ subject: event.target.value })} autoComplete="off" />
+          <input id="consent-subject" value={draft.subject} onChange={(event) => onDraft({ subject: event.target.value })} autoComplete="off" />
         </label>
         <label>
           Business
-          <input
+          <input id="consent-business"
             value={draft.business}
             onChange={(event) => onDraft({ business: event.target.value })}
             autoComplete="off"
@@ -162,15 +174,15 @@ function ConsentBindPanel({
         </label>
         <label>
           Channel
-          <input value={draft.channel} onChange={(event) => onDraft({ channel: event.target.value })} autoComplete="off" />
+          <input id="consent-channel" value={draft.channel} onChange={(event) => onDraft({ channel: event.target.value })} autoComplete="off" />
         </label>
         <label>
           Purpose
-          <input value={draft.purpose} onChange={(event) => onDraft({ purpose: event.target.value })} autoComplete="off" />
+          <input id="consent-purpose" value={draft.purpose} onChange={(event) => onDraft({ purpose: event.target.value })} autoComplete="off" />
         </label>
         <label>
           Expected consent version
-          <input
+          <input id="consent-version"
             value={draft.expectedConsentVersion}
             inputMode="numeric"
             placeholder="Caller-supplied integer"
@@ -180,13 +192,13 @@ function ConsentBindPanel({
         </label>
         <label>
           Allowed
-          <select value={draft.allowed} onChange={(event) => onDraft({ allowed: event.target.value })}>
+          <select id="consent-allowed" value={draft.allowed} onChange={(event) => onDraft({ allowed: event.target.value })}>
             <option value="">Choose allowed</option>
             <option value="true">true</option>
             <option value="false">false</option>
           </select>
         </label>
-      </form>
+      </ValidatedForm>
       <p>{model.lastConfirmed}</p>
       <p>{model.unconfirmed}</p>
       <ol className="journey-steps">
@@ -224,7 +236,10 @@ function ConsentBindPanel({
               </dl>
             ) : null}
             <div className="row-actions">
-              <ConnectivityWriteButton type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
+              <ConnectivityWriteButton type="button" disabled={!row.canSend} onClick={() => {
+                const ids = row.step === "set_consent" ? undefined : ["consent-event", "consent-subject", "consent-business", "consent-channel", "consent-purpose", "consent-version"];
+                if (validation.current?.validate(ids)) model.send(row.step);
+              }}>
                 Send {row.step}
               </ConnectivityWriteButton>
             </div>

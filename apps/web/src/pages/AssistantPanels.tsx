@@ -1,4 +1,6 @@
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { ValidatedForm } from "../forms/ValidatedForm";
+import { field } from "../forms/validation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { DELEGATION_SCENARIOS, type DelegationScenario } from "@kix/protocol-adapter";
 import { StatusMark } from "../a11y/marks";
@@ -266,7 +268,7 @@ export function AssistantRequest({ actions }: { actions: DelegationAssistantActi
         <code>draft an order for lst-0001</code> or <code>cancel draft drf-0001</code>). The words are intent, not authority. A proposal
         they produce is recorded and sends nothing until its own approve control is pressed.
       </p>
-      <form onSubmit={onSubmit} className="discovery-controls">
+      <ValidatedForm id="assistant-request-form" fields={[field("dlg-request-text", "validation.label.request")]} onSubmit={onSubmit} className="discovery-controls">
         <label htmlFor="dlg-request-text">
           Request text
           <input
@@ -281,7 +283,7 @@ export function AssistantRequest({ actions }: { actions: DelegationAssistantActi
         <ConnectivityWriteButton type="submit" id="dlg-ask" className="discovery-action">
           Ask
         </ConnectivityWriteButton>
-      </form>
+      </ValidatedForm>
       <p className="muted" id="dlg-request-note">
         Instruction-like words refuse the whole request. A sentence can never approve a proposal, send a command, raise a mode, or create
         a grant.

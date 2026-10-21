@@ -1,4 +1,7 @@
-import { useState } from "react";
+import type { ValidationHandle } from "../forms/useFormValidation";
+import { ValidatedForm } from "../forms/ValidatedForm";
+import { field } from "../forms/validation";
+import { useRef, useState } from "react";
 import { useRestoreFocus } from "../a11y/focus";
 import { GIFT_DEFAULT_RECIPIENT, GIFT_DONOR, emptyDraft, useGiftDesk, type GiftDraft } from "../gift-desk";
 import { GiftPanel } from "./GiftPanel";
@@ -6,6 +9,7 @@ import { GiftPanel } from "./GiftPanel";
 export function GiftPage() {
   const [giftId, setGiftId] = useState("");
   const [draft, setDraft] = useState<GiftDraft>(emptyDraft());
+  const validation = useRef<ValidationHandle>(null);
   const model = useGiftDesk(giftId, draft);
   const fault = model.rows.find(
     (row) => row.status === "rejected" || row.status === "not-sent" || row.status === "unconfirmed",
@@ -28,7 +32,13 @@ export function GiftPage() {
           No funds.
         </p>
       </header>
-      <form
+      <ValidatedForm id="gift-form" validationRef={validation} fields={[
+          field("gift-id", "validation.label.giftId"),
+          field("gift-ticket-id", "validation.label.ticketId"),
+          field("gift-expected-version", "validation.label.version", { kind: "integer" }),
+          field("gift-expires-at", "validation.label.expiresAt", { kind: "integer" }),
+          field("gift-recipient", "validation.label.recipient"),
+        ]}
         className="panel"
         onSubmit={(event) => {
           event.preventDefault();
@@ -46,6 +56,7 @@ export function GiftPage() {
             disabled={offerLocked && fault === undefined}
             readOnly={fault !== undefined}
             aria-invalid={fault !== undefined}
+            aria-describedby={fault ? "gift-outcome-note" : undefined}
             onChange={(event) => patch({ ticketId: event.target.value })}
             autoComplete="off"
           />
@@ -89,8 +100,12 @@ export function GiftPage() {
           />
         </label>
         <p className="muted">Donor {GIFT_DONOR}. Default recipient {GIFT_DEFAULT_RECIPIENT}.</p>
-      </form>
-      <GiftPanel model={model} />
+        {fault ? <p id="gift-outcome-note">{fault.note}</p> : null}
+      </ValidatedForm>
+      <GiftPanel model={{ ...model, send: (step) => {
+        const ids = step === "offer_gift" ? undefined : ["gift-id"];
+        if (validation.current?.validate(ids)) model.send(step);
+      } }} />
     </section>
   );
 }
