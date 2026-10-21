@@ -219,6 +219,8 @@ The platform release page at `/release` is a synthetic release candidate record 
 
 Catalogue version `1` classifies the current pin tuple into `SUCCESS`, `REJECT`, `UNKNOWN`, `NOT_BOUND`, and `STALE`. Adapter tests and UI tests both import `packages/protocol-adapter/src/contract-fixtures.ts`. A recorded pass names one case on this tuple. It does not verify a different case or a different tuple. A failed live call is not replaced with a stub success. The generator copies result key names and does not compute finance or rights. `placeHold` stays not-bound with `consideredAction` `reserve_listing`. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. The mapping table is [docs/c-contract-fixture-library-apps-bind.md](docs/c-contract-fixture-library-apps-bind.md). No catalogue, gate, or SDK change is consumed.
 
+The [SDK0 mock scenario kit](docs/c-sdk0-mock-scenario-kit-stub-apps-bind.md) provides deterministic, seeded offline snapshots for local demo harnesses and the adapter/web tests. It reuses catalogue case identities and validates command envelopes against the vendored p-sdk-0 BOOTSTRAP schema. It stays outside runtime screen imports and opens no network connection. BOOTSTRAP grants catalogue-schema binding only; synthetic results are locally guarded, not generated SDK result types or semantic conformance. Catalogue v1's historical null digests remain unchanged.
+
 ## Run locally
 
 ```bash
