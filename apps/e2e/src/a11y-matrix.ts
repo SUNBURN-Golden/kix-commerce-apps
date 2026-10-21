@@ -195,6 +195,12 @@ export const STATIC_CHECK_IDS: readonly string[] = [
   "a11y.display.forced-colors",
   "a11y.display.reduced-motion",
   "a11y.display.print",
+  "a11y.async.read-states",
+  "a11y.async.catalogue-empty",
+  "a11y.async.unknown-fence",
+  "a11y.async.refund-stale",
+  "a11y.async.dark",
+  "a11y.async.forced-colors",
 ];
 
 export function expectedCheckIds(): string[] {
