@@ -1,3 +1,4 @@
+import { cachedGroups, CACHED_NOT_SENT, assertConnected } from "../connectivity/write-guard";
 /**
  * In-memory marketing fixtures for Wave 7 M01–M05.
  * Data lives for one page load of the demo. It is not a kix-protocol type,
@@ -156,6 +157,8 @@ export class MarketingStubDesk {
   }
 
   reset(): void {
+    assertConnected();
+    if (typeof location !== "undefined" && cachedGroups(location.pathname).some((group) => group.label === "marketing-session")) throw new MarketingStubError(CACHED_NOT_SENT);
     this.seq = 0;
     this.membership = null;
     this.interests = [];
@@ -166,6 +169,8 @@ export class MarketingStubDesk {
   }
 
   join(input: { displayName: string; tier: MemberTier }): MembershipCard {
+    assertConnected();
+    if (typeof location !== "undefined" && cachedGroups(location.pathname).some((group) => group.label === "marketing-session")) throw new MarketingStubError(CACHED_NOT_SENT);
     const displayName = input.displayName.trim();
     if (displayName.length < 1 || displayName.length > 40) {
       throw new MarketingStubError("Enter a display name of 1–40 characters.");
@@ -185,11 +190,15 @@ export class MarketingStubDesk {
   }
 
   leave(): void {
+    assertConnected();
+    if (typeof location !== "undefined" && cachedGroups(location.pathname).some((group) => group.label === "marketing-session")) throw new MarketingStubError(CACHED_NOT_SENT);
     this.membership = null;
     this.interests = [];
   }
 
   recordInterest(eventId: string): PresaleInterest {
+    assertConnected();
+    if (typeof location !== "undefined" && cachedGroups(location.pathname).some((group) => group.label === "marketing-session")) throw new MarketingStubError(CACHED_NOT_SENT);
     const trimmed = eventId.trim();
     if (!trimmed) {
       throw new MarketingStubError("Choose a performance.");
@@ -215,6 +224,8 @@ export class MarketingStubDesk {
   }
 
   applyCoupon(code: string): AppliedCoupon {
+    assertConnected();
+    if (typeof location !== "undefined" && cachedGroups(location.pathname).some((group) => group.label === "marketing-session")) throw new MarketingStubError(CACHED_NOT_SENT);
     const normalized = normalizeCode(code);
     const fixture = COUPON_FIXTURES.find((item) => item.code === normalized);
     if (!fixture) {
@@ -235,6 +246,8 @@ export class MarketingStubDesk {
   }
 
   acceptReferral(code: string): { markers: number } {
+    assertConnected();
+    if (typeof location !== "undefined" && cachedGroups(location.pathname).some((group) => group.label === "marketing-session")) throw new MarketingStubError(CACHED_NOT_SENT);
     const normalized = normalizeCode(code);
     if (!normalized) {
       throw new MarketingStubError("Enter a demo referral code.");
@@ -254,6 +267,8 @@ export class MarketingStubDesk {
   }
 
   saveConsent(input: { performanceNotes: boolean; membershipNotes: boolean }): ConsentRecord {
+    assertConnected();
+    if (typeof location !== "undefined" && cachedGroups(location.pathname).some((group) => group.label === "marketing-session")) throw new MarketingStubError(CACHED_NOT_SENT);
     this.consent = {
       performanceNotes: input.performanceNotes,
       membershipNotes: input.membershipNotes,
@@ -266,6 +281,8 @@ export class MarketingStubDesk {
   }
 
   withdrawConsent(): ConsentRecord {
+    assertConnected();
+    if (typeof location !== "undefined" && cachedGroups(location.pathname).some((group) => group.label === "marketing-session")) throw new MarketingStubError(CACHED_NOT_SENT);
     if (this.consent.state === "unset") {
       return { ...this.consent };
     }

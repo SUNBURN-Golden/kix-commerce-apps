@@ -1,3 +1,5 @@
+import { COMMERCE_COMMAND_BINDINGS } from "@kix/protocol-adapter";
+import { AsyncState } from "../components/AsyncState";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { Link } from "react-router-dom";
 import { StatusMark } from "../a11y/marks";
@@ -179,7 +181,7 @@ export function ReceiptScreen({
                 </ol>
               </div>
             ) : null}
-            {model.groups.length === 0 ? <p className="empty">No receipt on this page load.</p> : null}
+            {model.groups.length === 0 ? <AsyncState kind="empty" label="Receipts"><p className="empty">No receipt on this page load.</p></AsyncState> : null}
             {model.groups.map((group) => (
               <GroupBlock key={group.id} group={group} selectedId={current?.id ?? null} onSelect={setSelected} onKeyDown={onTimelineKey} />
             ))}
@@ -193,7 +195,7 @@ export function ReceiptScreen({
             aria-live="polite"
           >
             <h3 id="receipt-detail-title">Detail</h3>
-            {current ? <Detail entry={current} /> : <p className="empty">No receipt on this page load.</p>}
+            {current ? <Detail entry={current} /> : <AsyncState kind="empty" label="Receipt detail" announcement="parent"><p className="empty">No receipt on this page load.</p></AsyncState>}
           </section>
           <section
             id="receipt-quarantine"
@@ -218,6 +220,7 @@ export function ReceiptScreen({
             <h3>Recorded and not sent</h3>
             <ul className="receipt-list">
               <li data-state="not-bound" data-source="none">
+                <AsyncState kind="not-bound" label="Hold" binding={{ method: "placeHold", record: COMMERCE_COMMAND_BINDINGS.placeHold }} />
                 <p>
                   {model.placeHold.method} stays not-bound. consideredAction {model.placeHold.consideredAction}.
                   mappedOntoPrepareTrade false.
@@ -330,6 +333,8 @@ function EntryButton({
 function Detail({ entry }: { entry: ReceiptEntry }) {
   return (
     <div data-action={entry.action} data-state={entry.status} data-confirmed={entry.confirmed ? "true" : "false"}>
+      {entry.status === "unknown" ? <AsyncState kind="unknown" label="Receipt" announcement="parent" /> : null}
+      {entry.status === "stale" ? <AsyncState kind="stale" label="Receipt" announcement="parent" /> : null}
       <dl className="receipt-detail">
         <dt>Operation</dt>
         <dd>{entry.operationId ?? "none"}</dd>

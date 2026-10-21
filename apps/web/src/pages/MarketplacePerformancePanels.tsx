@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import {
   MARKETPLACE_DEVICE_PROFILES,
   MARKETPLACE_SCENARIOS,
@@ -127,13 +128,13 @@ export function BenchControls({
         <button type="button" id="mperf-second-tab" className="discovery-action" onClick={() => actions.openSecondTab()}>
           Open a second tab (new session incarnation)
         </button>
-        <button type="button" id="mperf-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+        <ConnectivityWriteButton type="button" id="mperf-new-session" className="discovery-action" onClick={() => actions.newSession()}>
           New synthetic session
-        </button>
+        </ConnectivityWriteButton>
       </div>
       <div className="discovery-controls" aria-label="Synthetic controls">
         {MARKETPLACE_SYNTHETIC_CONTROLS.map((control) => (
-          <button
+          <ConnectivityWriteButton
             key={control}
             type="button"
             id={`mperf-sim-${control}`}
@@ -141,7 +142,7 @@ export function BenchControls({
             onClick={() => actions.synthetic(control)}
           >
             Simulate {control}
-          </button>
+          </ConnectivityWriteButton>
         ))}
       </div>
     </section>
@@ -185,9 +186,9 @@ export function BenchQueue({ model, actions }: { model: MarketplaceBenchModel; a
       {model.queue.admittedLine ? <p className="muted">{model.queue.admittedLine}</p> : null}
       {model.queue.detailLine ? <p className="muted">{model.queue.detailLine}</p> : null}
       <div className="discovery-controls">
-        <button type="button" id="mperf-join" className="discovery-action" onClick={() => actions.joinQueue()}>
+        <ConnectivityWriteButton type="button" id="mperf-join" className="discovery-action" onClick={() => actions.joinQueue()}>
           Join the queue once
-        </button>
+        </ConnectivityWriteButton>
         <button type="button" id="mperf-poll" className="discovery-action" onClick={() => actions.pollQueue()}>
           Check the queue once
         </button>

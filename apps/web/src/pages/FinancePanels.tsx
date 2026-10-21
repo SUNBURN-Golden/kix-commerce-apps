@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { FINANCE_ACTORS, FINANCE_SCENARIOS, type FinanceScenario } from "@kix/protocol-adapter";
@@ -66,7 +67,7 @@ function GuardedButton({
   const pointer = control.reason ? (describedBy ?? reasonId) : undefined;
   return (
     <>
-      <button
+      <ConnectivityWriteButton
         type="button"
         id={id}
         className="discovery-action"
@@ -76,7 +77,7 @@ function GuardedButton({
         onClick={control.enabled ? onPress : undefined}
       >
         {label}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason && describedBy === undefined ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word="Blocked." /> {control.reason}
@@ -172,18 +173,18 @@ export function FinanceControls({
         <button type="button" id="finance-switch" className="discovery-action" onClick={() => actions.switchScope()}>
           Switch book scope
         </button>
-        <button type="button" id="finance-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
+        <ConnectivityWriteButton type="button" id="finance-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
           Simulate: withdraw the grant
-        </button>
-        <button type="button" id="finance-advance" className="discovery-action" onClick={() => actions.advanceCut()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="finance-advance" className="discovery-action" onClick={() => actions.advanceCut()}>
           Simulate: the source moves to its next cut
-        </button>
-        <button type="button" id="finance-post-correction" className="discovery-action" onClick={() => actions.postSourceCorrection()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="finance-post-correction" className="discovery-action" onClick={() => actions.postSourceCorrection()}>
           Simulate: the source posts a later cut
-        </button>
-        <button type="button" id="finance-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="finance-new-session" className="discovery-action" onClick={() => actions.newSession()}>
           Start a new synthetic session
-        </button>
+        </ConnectivityWriteButton>
       </div>
       <p className="muted" data-scenario-note={scenario}>
         {SCENARIO_NOTES[scenario]} Choosing a scenario does nothing until you start a session with it, and starting one clears earlier reads, exports, and requests.

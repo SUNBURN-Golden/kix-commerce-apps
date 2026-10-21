@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { RULING, expectNoButton, expectStepStatus, expectText, fact, newDeskPage, nav, poll, press, stepRow } from "../../src/desk";
+import { RULING, expectNoButton, expectStepStatus, expectText, newDeskPage, nav, poll, press, stepRow } from "../../src/desk";
 import { useBrowser } from "../../src/suite";
 
 describe("gift journey (stub, headless Chrome)", () => {
@@ -43,9 +43,11 @@ describe("gift journey (stub, headless Chrome)", () => {
     await page.locator("#gift-id").fill("gift_blank");
     const panel = page.locator("aside.gift-panel");
     await press(stepRow(panel, "offer_gift"), "Send offer_gift");
-    await expectStepStatus(stepRow(panel, "offer_gift"), "not-sent");
-    expect(await fact(stepRow(panel, "offer_gift"), "Status")).toBe("Not sent");
-    await expectText(page, "Not sent. Field body.");
+    await page.locator(".error-summary").waitFor();
+    expect(await page.locator(".error-summary").evaluate((el) => el === document.activeElement)).toBe(true);
+    expect(await panel.locator("li[data-status='not-sent']").count()).toBe(0);
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Enter");
     await poll(() => page.evaluate(() => document.activeElement?.id ?? ""), (id) => id === "gift-ticket-id", "focus on gift-ticket-id");
     expect(await page.locator("#gift-ticket-id").getAttribute("aria-invalid")).toBe("true");
     expect(await stepRow(panel, "accept_gift").getAttribute("data-status")).not.toBe("confirmed");

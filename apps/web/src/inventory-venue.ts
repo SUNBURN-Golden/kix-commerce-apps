@@ -1,3 +1,4 @@
+import { connectedActions } from "./connectivity/write-guard";
 /**
  * The seat and GA selection read on top of the adapter's bounded port.
  * Stub scope: the default port is the synthetic inventory. On integration-http
@@ -31,7 +32,7 @@ import {
   type InventoryUnit,
 } from "@kix/protocol-adapter";
 import { formatWhen } from "./format";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const INVENTORY_TITLE = "Seats and GA (synthetic)";
 
@@ -841,7 +842,7 @@ export function useInventoryRead(options: {
             freeOnly,
           }),
     selectionModel: unitId === null || sectionId === null ? null : buildSelectionModel({ outcome: selection ?? { kind: "loading" } }),
-    actions: {
+    actions: connectedActions({
       readSummaryAgain,
       nextPage,
       readPageAgain,
@@ -850,7 +851,7 @@ export function useInventoryRead(options: {
       setScenario,
       advanceGeneration,
       runReturn,
-    },
+    }, ["setScenario", "advanceGeneration"]),
   };
 }
 

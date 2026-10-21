@@ -1,3 +1,4 @@
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The merchant workroom screen on top of the adapter's synthetic merchant source.
  * Stub scope: the default port is the synthetic ledger. On integration-http the same
@@ -31,7 +32,7 @@ import {
   type MerchantReadState,
   type MerchantScenario,
 } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const MERCHANT_PAGE_TITLE = "Merchant workroom (synthetic)";
 
@@ -570,8 +571,8 @@ interface Session {
 }
 
 function createSession(environment: "stub" | "integration-http", scenario: MerchantScenario, merchantRef: string): Session {
-  const port = merchantOperationsPortFor(environment, { scenario });
-  return { port, controller: new MerchantOperationsController(port, { actorRef: MERCHANT_DESK_ACTOR, merchantRef }) };
+  const port = connectivityPort(merchantOperationsPortFor(environment, { scenario }), "merchant-operations");
+  return { port, controller: connectivityController(new MerchantOperationsController(port, { actorRef: MERCHANT_DESK_ACTOR, merchantRef }), port) };
 }
 
 export function useMerchantOperations(): {
@@ -688,6 +689,6 @@ export function useMerchantOperations(): {
     scenario,
     merchantRef,
     model: buildMerchantModel({ controller: session.controller, last }),
-    actions,
+    actions: connectedActions(actions, ['revokeGrant', 'advanceCut', 'newSession', 'setScenario'], sessionRef.current?.port),
   };
 }

@@ -1,3 +1,4 @@
+import { AsyncStateReporter } from "./test/support/async-state-reporter";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
@@ -15,6 +16,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    reporters: ["default", new AsyncStateReporter()],
     include: ["test/**/*.test.ts", "test/**/*.test.tsx"],
     // Every screen is imported before a test file runs, so a synchronous render sees the screen, not the loading note.
     setupFiles: ["./test/support/preload-screens.ts"],

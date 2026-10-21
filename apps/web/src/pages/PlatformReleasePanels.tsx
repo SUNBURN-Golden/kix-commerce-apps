@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { RELEASE_SCENARIOS, type ReleaseScenario } from "@kix/protocol-adapter";
 import { StatusMark } from "../a11y/marks";
 import {
@@ -77,7 +78,7 @@ export function ReleaseControls({
             </option>
           ))}
         </select>
-        <button
+        <ConnectivityWriteButton
           type="button"
           id="rel-run"
           className="discovery-action"
@@ -87,7 +88,7 @@ export function ReleaseControls({
           onClick={model.runControl.enabled ? () => actions.run() : undefined}
         >
           Assemble the release candidate once
-        </button>
+        </ConnectivityWriteButton>
         {model.runControl.reason ? (
           <p id="rel-run-reason" className="muted">
             {model.runControl.reason}
@@ -110,9 +111,9 @@ export function ReleaseControls({
         <button type="button" id="rel-switch-actor" className="discovery-action" onClick={() => actions.switchActor()}>
           Switch the actor
         </button>
-        <button type="button" id="rel-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+        <ConnectivityWriteButton type="button" id="rel-new-session" className="discovery-action" onClick={() => actions.newSession()}>
           New synthetic session
-        </button>
+        </ConnectivityWriteButton>
       </div>
     </section>
   );

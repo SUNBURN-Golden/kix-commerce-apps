@@ -580,7 +580,7 @@ a.panel {
   padding-left: 0.5rem;
 }
 
-.platform [aria-disabled="true"] {
+:is(.platform, .provider, .mkj, .dlg, .origination, .servicing, .finance, .qualification, .release) [aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.55;
 }
@@ -596,12 +596,20 @@ a.panel {
   padding-left: 0.5rem;
 }
 
-.platform-scroll {
+.platform-scroll,
+.mkj-scroll,
+.dlg-scroll,
+.merchant-scroll,
+.origination-scroll,
+.servicing-scroll,
+.finance-scroll,
+.identity-scroll,
+.cross-surface .xs-scroll {
   max-width: 100%;
   overflow-x: auto;
 }
 
-.platform table {
+:is(.platform, .provider, .mkj, .dlg) table {
   width: 100%;
   border-collapse: collapse;
   margin: 0.5rem 0;
@@ -611,8 +619,7 @@ a.panel {
   min-width: 40rem;
 }
 
-.platform th,
-.platform td {
+:is(.platform, .provider, .mkj, .dlg, .origination, .servicing, .finance) :is(th, td) {
   border: 1px solid var(--line);
   padding: 0.25rem 0.4rem;
   text-align: left;
@@ -624,11 +631,6 @@ a.panel {
   outline-offset: 2px;
 }
 
-.provider [aria-disabled="true"] {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
 .provider [data-blocked-reason="true"],
 .provider .discovery-row[data-shape="abandoned"],
 .provider .discovery-row[data-shape="payment-declined"],
@@ -637,32 +639,13 @@ a.panel {
   padding-left: 0.5rem;
 }
 
-.provider table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0.5rem 0;
-}
-
 .provider table.platform-register {
   min-width: 40rem;
-}
-
-.provider th,
-.provider td {
-  border: 1px solid var(--line);
-  padding: 0.25rem 0.4rem;
-  text-align: left;
-  vertical-align: top;
 }
 
 .provider #provider-status:focus {
   outline: 2px solid var(--stamp);
   outline-offset: 2px;
-}
-
-.mkj [aria-disabled="true"] {
-  cursor: not-allowed;
-  opacity: 0.55;
 }
 
 .mkj .discovery-row[data-state="reclaimed"] {
@@ -676,38 +659,14 @@ a.panel {
   padding-left: 0.5rem;
 }
 
-.mkj-scroll {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.mkj table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0.5rem 0;
-}
-
 .mkj table.mkj-register,
 .mkj table.mkj-crm {
   min-width: 40rem;
 }
 
-.mkj th,
-.mkj td {
-  border: 1px solid var(--line);
-  padding: 0.25rem 0.4rem;
-  text-align: left;
-  vertical-align: top;
-}
-
 .mkj #mkj-status:focus {
   outline: 2px solid var(--stamp);
   outline-offset: 2px;
-}
-
-.dlg [aria-disabled="true"] {
-  cursor: not-allowed;
-  opacity: 0.55;
 }
 
 .dlg .discovery-detail[data-mode="capped"],
@@ -718,38 +677,14 @@ a.panel {
   padding-left: 0.5rem;
 }
 
-.dlg-scroll {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.dlg table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 0.5rem 0;
-}
-
 .dlg table.dlg-register,
 .dlg table.dlg-not-composed {
   min-width: 40rem;
 }
 
-.dlg th,
-.dlg td {
-  border: 1px solid var(--line);
-  padding: 0.25rem 0.4rem;
-  text-align: left;
-  vertical-align: top;
-}
-
 .dlg #dlg-status:focus {
   outline: 2px solid var(--stamp);
   outline-offset: 2px;
-}
-
-.merchant-scroll {
-  max-width: 100%;
-  overflow-x: auto;
 }
 
 .merchant table {
@@ -769,22 +704,9 @@ a.panel {
   outline-offset: 2px;
 }
 
-.origination-scroll {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.origination table {
+:is(.origination, .servicing, .finance) table {
   min-width: 40rem;
   border-collapse: collapse;
-}
-
-.origination th,
-.origination td {
-  border: 1px solid var(--line);
-  padding: 0.25rem 0.4rem;
-  text-align: left;
-  vertical-align: top;
 }
 
 .origination [data-stale-lane],
@@ -799,32 +721,9 @@ a.panel {
   padding-left: 0.5rem;
 }
 
-.origination [aria-disabled="true"] {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
 .origination #origination-status:focus {
   outline: 2px solid var(--stamp);
   outline-offset: 2px;
-}
-
-.servicing-scroll {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.servicing table {
-  min-width: 40rem;
-  border-collapse: collapse;
-}
-
-.servicing th,
-.servicing td {
-  border: 1px solid var(--line);
-  padding: 0.25rem 0.4rem;
-  text-align: left;
-  vertical-align: top;
 }
 
 .servicing [data-stale-lane],
@@ -839,32 +738,9 @@ a.panel {
   padding-left: 0.5rem;
 }
 
-.servicing [aria-disabled="true"] {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
 .servicing #servicing-status:focus {
   outline: 2px solid var(--stamp);
   outline-offset: 2px;
-}
-
-.finance-scroll {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.finance table {
-  min-width: 40rem;
-  border-collapse: collapse;
-}
-
-.finance th,
-.finance td {
-  border: 1px solid var(--line);
-  padding: 0.25rem 0.4rem;
-  text-align: left;
-  vertical-align: top;
 }
 
 .finance [data-flag="true"],
@@ -877,17 +753,6 @@ a.panel {
 .finance [data-behind="true"] {
   border-left: 4px solid var(--stamp);
   padding-left: 0.5rem;
-}
-
-.finance [aria-disabled="true"] {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.qualification [aria-disabled="true"],
-.release [aria-disabled="true"] {
-  cursor: not-allowed;
-  opacity: 0.55;
 }
 
 .finance #finance-status:focus {
@@ -1320,16 +1185,6 @@ main:focus-visible {
 .refund-guard { display: inline-flex; flex-direction: column; gap: 0.2rem; }
 .refund-guard button[aria-disabled="true"] { opacity: 0.55; }
 
-.identity-scroll {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.cross-surface .xs-scroll {
-  max-width: 100%;
-  overflow-x: auto;
-}
-
 .cross-surface .xs-scroll:focus-visible {
   outline: 2px solid var(--line);
   outline-offset: 3px;
@@ -1580,3 +1435,49 @@ nav a[aria-current="page"] {
     font-weight: normal;
   }
 }
+
+.connectivity { margin: .75rem auto; max-width: 76rem; overflow-wrap: anywhere; }
+.connectivity p { margin: .35rem 0; }
+.connectivity-button-reason { font-size: .85em; }
+button[data-connectivity-write][aria-disabled="true"] { cursor: not-allowed; }
+.cached-read { overflow-wrap: anywhere; }
+
+/* App-local input-format errors; outcome panels keep their own status words. */
+.error-summary {
+  border: 2px solid var(--stamp);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 0 0 1rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  grid-column: 1 / -1;
+}
+.error-summary:focus { outline: 3px solid; outline-offset: 3px; }
+.error-summary h3 { margin-top: 0; }
+.field-error { display: block; color: var(--stamp); overflow-wrap: anywhere; }
+:is(input, select)[aria-invalid="true"] { border: 2px solid var(--stamp); }
+
+.error-summary a { display: block; min-height: 24px; padding: 0.25rem 0; }
+
+/* Shared async presentations: words and border styles carry meaning in every colour scheme. */
+.async-state {
+  padding: .75rem;
+  margin: .75rem 0;
+  color: var(--ink);
+  background: var(--card);
+  border: 2px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.async-state > p { margin: .25rem 0; }
+.async-state :is(a, button) { margin-inline-end: .75rem; }
+.async-state-word { font-weight: 700; }
+[data-async-state="loading"] { border-style: dashed; }
+[data-async-state="empty"] { border-style: dotted; }
+[data-async-state="error"] { border-width: 3px; }
+[data-async-state="unknown"] { border-style: double; border-width: 4px; }
+[data-async-state="stale"] { border-style: dashed; border-inline-start-width: 6px; }
+[data-async-state="not-bound"] { border-style: dotted; border-inline-start-width: 6px; }
+.async-state-word[data-status-mark="unknown"] { border-style: double; border-width: 3px; }
+.async-state-word[data-status-mark="stale"] { border-style: dashed; }
+.async-state-word[data-status-mark="not-bound"],
+.async-state-word[data-status-mark="empty"] { border-style: dotted; }
