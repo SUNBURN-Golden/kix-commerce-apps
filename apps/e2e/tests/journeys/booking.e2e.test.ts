@@ -40,7 +40,10 @@ describe("booking journey (stub, headless Chrome)", () => {
     const quantity = page.getByLabel("Quantity");
     await quantity.fill("7");
     await press(page, "Place hold");
-    await expectText(page, "Quantity must be a whole number from 1 to 6. The typed value was kept.");
+    await expectText(page, "Enter a whole number from 1 to 6.");
+    expect(await page.locator(".error-summary").evaluate((el) => el === document.activeElement)).toBe(true);
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Enter");
     expect(await quantity.inputValue()).toBe("7");
     await poll(() => page.evaluate(() => document.activeElement?.id ?? ""), (id) => id === "booking-quantity", "focus on booking-quantity");
     expect(await quantity.getAttribute("aria-invalid")).toBe("true");

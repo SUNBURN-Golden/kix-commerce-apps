@@ -38,8 +38,9 @@ describe("organizer journey (stub, headless Chrome)", () => {
     await page.getByLabel("Event id", { exact: true }).fill("evt_org_2");
     const panel = page.locator("aside.organizer-panel");
     await press(stepRow(panel, "create_event"), "Send create_event");
-    await expectStepStatus(stepRow(panel, "create_event"), "not-sent");
-    await expectText(page, "Not sent.");
+    await page.locator("#organizer-seats-format-error").waitFor();
+    expect(await page.locator(".error-summary").evaluate((el) => el === document.activeElement)).toBe(true);
+    expect(await panel.locator("li[data-status='not-sent']").count()).toBe(0);
     await poll(() => panel.locator("li.journey-step[data-status='confirmed']").count(), (count) => count === 0, "no confirmed step");
     await suite.pass(page, "organizer.REJECT");
     await page.close();

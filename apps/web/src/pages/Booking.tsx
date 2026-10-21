@@ -1,3 +1,5 @@
+import { ValidatedForm } from "../forms/ValidatedForm";
+import { field } from "../forms/validation";
 import { AsyncState } from "../components/AsyncState";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -230,7 +232,7 @@ export function BookingPage() {
           </div>
         </article>
       ) : (
-        <form
+        <ValidatedForm id="booking-form" busy={pending} fields={[field("booking-quantity", "validation.label.quantity", { kind: "bookingQuantity" })]}
           className="panel"
           onSubmit={(event) => {
             event.preventDefault();
@@ -284,7 +286,7 @@ export function BookingPage() {
               </button>
             )}
           </div>
-        </form>
+        </ValidatedForm>
       )}
       <JourneyPanel variant="booking" model={journey} />
       <ReservationPanel

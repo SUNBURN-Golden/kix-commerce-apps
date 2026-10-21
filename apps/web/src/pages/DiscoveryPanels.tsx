@@ -1,3 +1,4 @@
+import { ValidatedForm } from "../forms/ValidatedForm";
 import { AsyncState } from "../components/AsyncState";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -91,7 +92,7 @@ export function DiscoveryForm({
 }) {
   const invalid = invalidControlId ?? null;
   return (
-    <form
+    <ValidatedForm fields={[]} reportedIssues={invalid ? [{ fieldId: invalid, labelKey: "validation.label.filter", messageKey: "validation.filter", params: { max: 0 } }] : []}
       id="discovery-filters"
       className="discovery-form"
       aria-label="Discovery filters"
@@ -238,7 +239,7 @@ export function DiscoveryForm({
       <button type="button" className="discovery-action" onClick={() => onQuery(clearFilters(query))}>
         Clear filters
       </button>
-    </form>
+    </ValidatedForm>
   );
 }
 
