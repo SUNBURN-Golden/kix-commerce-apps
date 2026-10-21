@@ -95,6 +95,15 @@
 | `c-untrusted-render-csp-stub` | NO | 정책 C 위임 | A3 | stub 범위의 렌더 안전·CSP·저장소 감사 시험; TTL 미정 유지, 새 계약 정의 없음 |
 | `c-quality-gates-stub` | NO | 정책 C 위임 | A2 | stub 범위의 정적 품질 게이트·CI; 새 계약 정의 없음 |
 | `c-user-guides-stub` | NO | 정책 C 위임 | A1 | stub 범위의 문서·도움말; 새 공개 계약 없음 |
+| `c-i18n-coverage-completion-stub` | NO | 정책 C 위임 | A2 | stub 범위의 앱 내부 표시 catalogue 확장; protocol 단어 비번역, 새 공개 계약 없음 |
+| `c-async-state-patterns-stub` | NO | 정책 C 위임 | A2 | stub 범위의 앱 내부 상태 표시 컴포넌트·시험; 새 계약 정의 없음 |
+| `c-form-validation-ux-stub` | NO | 정책 C 위임 | A2 | stub 범위의 입력 형식 검증 UX; protocol 판정 비복제, 새 계약 정의 없음 |
+| `c-offline-connectivity-ux-stub` | NO | 정책 C 위임 | A3 | stub 범위의 연결 표시·쓰기 차단; service worker·재시도 없음, 새 계약 정의 없음 |
+| `c-sdk0-mock-scenario-kit-stub` | NO | 정책 C 위임 | A2 | p-sdk-0 BOOTSTRAP 타입 소비만 하는 시험 자료; pin·bindings 불변, 새 계약 정의 없음 |
+| `c-component-gallery-stub` | NO | 정책 C 위임 | A2 | 개발 전용 갤러리·스냅샷 시험; 새 계약 정의 없음 |
+| `c-web-coverage-uplift-stub` | NO | 정책 C 위임 | A2 | 시험 추가·커버리지 하한 상향; 새 계약 정의 없음 |
+| `c-visual-regression-stub` | NO | 정책 C 위임 | A2 | stub 범위의 시각 회귀 시험; 외부 서비스·secret 없음, 새 계약 정의 없음 |
+| `c-first-run-onboarding-stub` | NO | 정책 C 위임 | A1 | stub 범위의 안내·데모 표시; TTL 미정 유지, 새 공개 계약 없음 |
 
 ## 중앙 및 시작 경계
 
@@ -107,3 +116,5 @@
 대표님 위임 결정 2026-10-15 14:44 KST ("제품화까지 개발, 결정이 필요한 건 알아서 결정"; 비용·하드웨어·메인넷·시크릿키·프로덕션 배포·결제 변경 제외)에 따라 KIX Commerce가 2026-10-16 plan revision으로 `*-stub` 로컬 갭 노드 8개를 추가했다. 8개 모두 contract_change=NO, 병합은 정책 C 위임(user_merge=false)이다. 원 pending 노드 c-journey-identity·c-async-session-fence는 contract_change=YES/대표님이지만, stub 범위 노드는 앱 내부 전용 형식만 쓰고 공개 schema·operation·ID를 만들지 않는다. 진행 중 공개 계약 변경이 필요해지면 YES/A3/대표님 경계로 다시 분류한다. 상세와 digest는 [PLAN_REVISION_20261016_KO.md](PLAN_REVISION_20261016_KO.md)를 본다.
 
 대표님 위임 결정 2026-10-15 14:44 KST("제품화까지 개발, 결정이 필요한 건 알아서 결정"; 비용·하드웨어·메인넷·시크릿키·프로덕션 배포·결제 변경 제외)에 따라 KIX Commerce가 2026-10-17 plan revision으로 (1) 외부 선행 kix-protocol:p-sdk-0(PR #123, merge a74e7c4)이 병합된 pending 노드 `consume-p-sdk-0`을 승격하고(depends_on_external 제거, 나머지 원문 유지; 위 표의 기존 행 NO/정책 C/A2 유지) (2) 위 `*-stub` 제품 완성도 노드 8개를 추가했다. 8개 모두 contract_change=NO, 병합은 정책 C 위임(user_merge=false)이다. 진행 중 공개 계약 변경이 필요해지면 YES/A3/대표님 경계로 다시 분류한다. 상세와 digest는 [PLAN_REVISION_20261017_KO.md](PLAN_REVISION_20261017_KO.md)를 본다.
+
+대표님 위임 결정 2026-10-15 14:44 KST("제품화까지 개발, 결정이 필요한 건 알아서 결정"; 비용·하드웨어·메인넷·시크릿키·프로덕션 배포·결제 변경 제외)에 따라 KIX Commerce가 2026-10-21 plan revision(세 번째 제품 완성도 갭 분석)으로 위 `*-stub` 노드 9개를 추가했다. 9개 모두 contract_change=NO, 병합은 정책 C 위임(user_merge=false)이다. pending 승격은 0건이다(남은 외부 선행 미병합). 진행 중 공개 계약 변경이 필요해지면 YES/A3/대표님 경계로 다시 분류한다. 상세와 digest는 [PLAN_REVISION_20261021_KO.md](PLAN_REVISION_20261021_KO.md)를 본다.

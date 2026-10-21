@@ -238,6 +238,15 @@ One row per node in `.aiops/program.json` and one per node in `docs/aiops/PENDIN
 | c-quality-gates-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
 | c-user-guides-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
 | consume-p-sdk-0 | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-i18n-coverage-completion-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-async-state-patterns-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-form-validation-ux-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-offline-connectivity-ux-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-sdk0-mock-scenario-kit-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-component-gallery-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-web-coverage-uplift-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-visual-regression-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-first-run-onboarding-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
 | consume-p-sdk-0 | pending | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | promoted to program (plan revision 20261017) |
 | bind-settlement-fsm | pending | WAITING | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | kix:openapi-catalogue-promotion, kix:contract-compatibility-profile |
 | bind-reservation-fsm | pending | WAITING | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | kix:openapi-catalogue-promotion, kix:contract-compatibility-profile |
@@ -298,8 +307,8 @@ Each line has its own count. Nothing is summed, nothing is subtracted, and there
 - D11 user acceptance PENDING a11y screens: 37 of 37; ACCEPTED 0
 - D12 release page user acceptance: PENDING_USER_DECISION, 1 packet; realUserAcceptance false
 - D13 release decisions: install awaiting-user-decision, publish not-open, operate not-open; taken 0
-- D14 release NOT_AUTHORIZED rows: surfaces 43 of 43, journeys 10 of 10, nodes 93 of 93; RELEASED 0
-- D15 active program nodes: 51; MERGED_RECORDED 45, NOT_STARTED 6; central DONE not evaluated
+- D14 release NOT_AUTHORIZED rows: surfaces 43 of 43, journeys 10 of 10, nodes 102 of 102; RELEASED 0
+- D15 active program nodes: 60; MERGED_RECORDED 45, NOT_STARTED 15; central DONE not evaluated
 - D16 pending catalogue nodes: 42; WAITING 40, NOT_STARTED 2; counted as done 0
 - D17 distinct external prerequisites named by pending nodes: 26; completion not verified here; subtracted 0
 - D18 release page area denominators: scope 29 of 29, acceptance 3 of 3, environment 3 of 3, operations 4 of 4, gate 3 of 3 (own denominators, not merged)
