@@ -1,3 +1,9 @@
+import { messages as copy0 } from "../../i18n/messages/pages--marketing--Hub";
+import { messages as copy1 } from "../../i18n/messages/marketing--contracts";
+import { messages as copy2 } from "../../i18n/messages/marketing--labels";
+import { messages as copy3 } from "../../i18n/messages/marketing--desk";
+import { deskText } from "../../i18n/desk-translate";
+import { useT } from "../../i18n/desk-context";
 import { Link } from "react-router-dom";
 import { MARKETING_CONTRACT_IDS, marketingPublishedLine } from "../../marketing/contracts";
 import { MARKETING_SURFACES } from "../../marketing/labels";
@@ -6,6 +12,7 @@ import { useMarketingSnapshot } from "../../marketing/useMarketingSnapshot";
 import { MarketingChrome } from "./MarketingChrome";
 
 export function MarketingHubPage() {
+  const t = useT(copy0, copy1, copy2, copy3);
   const { snapshot, refresh } = useMarketingSnapshot();
   const boundary = snapshot.boundary;
   const tier = snapshot.membership?.tier ?? "guest";
@@ -13,58 +20,55 @@ export function MarketingHubPage() {
   return (
     <MarketingChrome>
       <header className="section-head">
-        <p className="eyebrow">Wave 7 · ORIGINAL_32</p>
-        <h2>Marketing desk</h2>
-        <p lang="ko">팬 자격, 선예매, 쿠폰, 추천, 데이터 동의의 스텁 데모입니다.</p>
+        <p className="eyebrow">{t("s26f")}</p>
+        <h2>{t("shell.eyebrow.marketing")}</h2>
+        <p lang="ko">{t("s27g")}</p>
         <p className="muted">
-          Fixtures stay in this browser session. They are not kix-protocol types. This desk stays on the marketing
-          stub and makes no contract claim. Each card keeps its ORIGINAL_32 label. M01–M04 stay 설계중. M05 stays
-          미착수.
-        </p>
+          {t("sln")}</p>
       </header>
-      <article className="ticket" aria-label="Marketing session">
-        <p className="eyebrow">Session stub</p>
-        <h3>This page load</h3>
+      <article className="ticket" aria-label={t("sry")}>
+        <p className="eyebrow">{t("s1jv")}</p>
+        <h3>{t("s23b")}</h3>
         <dl>
           <div>
-            <dt>Stub boundary</dt>
+            <dt>{t("s1mu")}</dt>
             <dd>{boundary.status}</dd>
           </div>
           <div>
-            <dt>Protocol binding</dt>
-            <dd>{boundary.protocolBinding}</dd>
+            <dt>{t("s19y")}</dt>
+            <dd>{deskText(t, boundary.protocolBinding)}</dd>
           </div>
           <div>
-            <dt>OpenAPI bound</dt>
-            <dd>{boundary.openApiBound ? "yes" : "no"}</dd>
+            <dt>{t("s14v")}</dt>
+            <dd>{boundary.openApiBound ? t("s277") : t("stt")}</dd>
           </div>
           <div>
-            <dt>Tier</dt>
-            <dd>{tier}</dd>
+            <dt>{t("s244")}</dt>
+            <dd>{deskText(t, tier)}</dd>
           </div>
           <div>
-            <dt>Presale notes</dt>
-            <dd>{snapshot.interests.length}</dd>
+            <dt>{t("s18u")}</dt>
+            <dd>{deskText(t, snapshot.interests.length)}</dd>
           </div>
           <div>
-            <dt>Coupon markers</dt>
-            <dd>{snapshot.coupons.length}</dd>
+            <dt>{t("seq")}</dt>
+            <dd>{deskText(t, snapshot.coupons.length)}</dd>
           </div>
           <div>
-            <dt>Reward markers</dt>
-            <dd>{snapshot.rewardMarkers}</dd>
+            <dt>{t("s1h8")}</dt>
+            <dd>{deskText(t, snapshot.rewardMarkers)}</dd>
           </div>
           <div>
-            <dt>Consent</dt>
+            <dt>{t("sdo")}</dt>
             <dd>{snapshot.consent.state}</dd>
           </div>
           <div>
-            <dt>Funds</dt>
-            <dd>{boundary.fundsMovement}</dd>
+            <dt>{t("sm8")}</dt>
+            <dd>{deskText(t, boundary.fundsMovement)}</dd>
           </div>
           <div>
-            <dt>Outbound send</dt>
-            <dd>{boundary.outboundSend}</dd>
+            <dt>{t("s16e")}</dt>
+            <dd>{deskText(t, boundary.outboundSend)}</dd>
           </div>
         </dl>
         <div className="row-actions">
@@ -76,45 +80,40 @@ export function MarketingHubPage() {
               refresh();
             }}
           >
-            Reset marketing session
-          </button>
+            {t("s1gb")}</button>
         </div>
       </article>
-      <article className="panel" aria-label="Published contract">
-        <p className="eyebrow">Published contract</p>
-        <h3>Catalogue alignment</h3>
+      <article className="panel" aria-label={t("s1ac")}>
+        <p className="eyebrow">{t("s1ac")}</p>
+        <h3>{t("sbn")}</h3>
         <p className="muted">
-          Field names only. This page does not build a command body. Runtime marketing code does not read the OpenAPI
-          pin.
-        </p>
+          {t("sl4")}</p>
         <ul className="program">
-          {MARKETING_CONTRACT_IDS.map((id) => (
+          {deskText(t, MARKETING_CONTRACT_IDS.map((id) => (
             <li key={id}>
               <p>
-                <strong>{id}</strong> {marketingPublishedLine(id)}
+                <strong>{deskText(t, id)}</strong> {marketingPublishedLine(id)}
               </p>
             </li>
-          ))}
+          )))}
         </ul>
       </article>
       <ul className="hub">
-        {MARKETING_SURFACES.map((item) => (
+        {deskText(t, MARKETING_SURFACES.map((item) => (
           <li key={item.id}>
             <Link className="panel hub-card" to={item.path}>
               <p className="eyebrow">
-                {item.id} · {item.status}
+                {deskText(t, item.id)} · {deskText(t, item.status)}
               </p>
-              <h3 lang="ko">{item.titleKo}</h3>
-              <p>{item.titleEn}</p>
-              <p className="muted">{item.blurbEn}</p>
+              <h3 lang="ko">{deskText(t, item.titleKo)}</h3>
+              <p>{deskText(t, item.titleEn)}</p>
+              <p className="muted">{deskText(t, item.blurbEn)}</p>
             </Link>
           </li>
-        ))}
+        )))}
       </ul>
       <p className="muted">
-        <Link to="/marketing/journey">Benefit journey (synthetic)</Link>: discover, apply, rejected, and reclaim as four separate lines. It
-        reads consent and posts none, and it is not a CRM product.
-      </p>
+        <Link to="/marketing/journey">{t("s9u")}</Link>{t("sgp")}</p>
     </MarketingChrome>
   );
 }

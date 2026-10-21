@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "../i18n/messages/discovery--fixture";
+import { sourceMessage } from "../i18n/source-message";
 /**
  * Synthetic discovery rows for the search screen.
  * Counts and tiers are labels. This module does not read the adapter.
@@ -75,7 +77,7 @@ export const FIXTURE_IDS = {
 
 const SECTIONS = ["A", "B", "C"] as const;
 
-const VENUES = ["Paper hall", "North annex", "Studio shed", "Hall C"] as const;
+const VENUES = [sourceCopy.en["s171"], sourceCopy.en["sy8"], sourceCopy.en["s1n2"], sourceCopy.en["smz"]] as const;
 
 function plusDays(days: number, hours = 0): string {
   return new Date(Date.parse(FIXTURE_NOW) + days * 86_400_000 + hours * 3_600_000).toISOString();
@@ -108,8 +110,8 @@ function eventRow(fields: {
 const NAMED: readonly DiscoveryRow[] = [
   eventRow({
     rowId: FIXTURE_IDS.lanterns,
-    title: "Lanterns synthetic show",
-    venueLabel: "Paper hall",
+    title: sourceCopy.en["sq5"],
+    venueLabel: sourceCopy.en["s171"],
     startsAt: "2026-10-09T18:00:00.000Z",
     status: "on-sale",
     syntheticTier: "T1",
@@ -118,8 +120,8 @@ const NAMED: readonly DiscoveryRow[] = [
   }),
   eventRow({
     rowId: FIXTURE_IDS.paper,
-    title: "Paper orchestra synthetic show",
-    venueLabel: "North annex",
+    title: sourceCopy.en["s174"],
+    venueLabel: sourceCopy.en["sy8"],
     startsAt: "2026-10-10T18:00:00.000Z",
     status: "on-sale",
     syntheticTier: "T2",
@@ -128,8 +130,8 @@ const NAMED: readonly DiscoveryRow[] = [
   }),
   eventRow({
     rowId: FIXTURE_IDS.ferry,
-    title: "Last ferry synthetic show",
-    venueLabel: "Studio shed",
+    title: sourceCopy.en["sqc"],
+    venueLabel: sourceCopy.en["s1n2"],
     startsAt: "2026-10-11T18:00:00.000Z",
     status: "on-sale",
     syntheticTier: "T3",
@@ -138,8 +140,8 @@ const NAMED: readonly DiscoveryRow[] = [
   }),
   eventRow({
     rowId: FIXTURE_IDS.cancelled,
-    title: "Cancelled lantern reprint",
-    venueLabel: "Paper hall",
+    title: sourceCopy.en["sb3"],
+    venueLabel: sourceCopy.en["s171"],
     startsAt: "2026-10-12T18:00:00.000Z",
     status: "cancelled",
     syntheticTier: "T2",
@@ -148,8 +150,8 @@ const NAMED: readonly DiscoveryRow[] = [
   }),
   eventRow({
     rowId: FIXTURE_IDS.stale,
-    title: "Stale paper reprint",
-    venueLabel: "North annex",
+    title: sourceCopy.en["s1ls"],
+    venueLabel: sourceCopy.en["sy8"],
     startsAt: "2026-10-13T18:00:00.000Z",
     status: "on-sale",
     syntheticTier: "T1",
@@ -159,8 +161,8 @@ const NAMED: readonly DiscoveryRow[] = [
   makeRow({
     rowId: FIXTURE_IDS.seat,
     kind: "seat",
-    title: "Lanterns seat marker",
-    venueLabel: "Hall C",
+    title: sourceCopy.en["sq4"],
+    venueLabel: sourceCopy.en["smz"],
     startsAt: "2026-10-14T18:00:00.000Z",
     status: "on-sale",
     inventoryMode: "seat",
@@ -174,8 +176,8 @@ const NAMED: readonly DiscoveryRow[] = [
   makeRow({
     rowId: FIXTURE_IDS.ga,
     kind: "ga",
-    title: "Lanterns floor marker",
-    venueLabel: "Paper hall",
+    title: sourceCopy.en["sq2"],
+    venueLabel: sourceCopy.en["s171"],
     startsAt: "2026-10-15T18:00:00.000Z",
     status: "on-sale",
     inventoryMode: "ga",
@@ -189,8 +191,8 @@ const NAMED: readonly DiscoveryRow[] = [
   makeRow({
     rowId: FIXTURE_IDS.resale,
     kind: "resale",
-    title: "Lanterns listing marker",
-    venueLabel: "North annex",
+    title: sourceCopy.en["sq3"],
+    venueLabel: sourceCopy.en["sy8"],
     startsAt: "2026-10-16T18:00:00.000Z",
     status: "on-sale",
     inventoryMode: "none",
@@ -198,13 +200,13 @@ const NAMED: readonly DiscoveryRow[] = [
     syntheticCount: 1,
     syntheticTier: "T3",
     priceAsOf: FIXTURE_NOW,
-    resale: { askTier: "T3", listingLabel: "listing (synthetic)" },
+    resale: { askTier: "T3", listingLabel: sourceCopy.en["sr9"] },
     stubEventId: null,
   }),
   eventRow({
     rowId: FIXTURE_IDS.soldOut,
-    title: "Sold out synthetic show",
-    venueLabel: "Hall C",
+    title: sourceCopy.en["s1l3"],
+    venueLabel: sourceCopy.en["smz"],
     startsAt: "2026-10-17T18:00:00.000Z",
     status: "sold-out",
     syntheticTier: "T2",
@@ -213,8 +215,8 @@ const NAMED: readonly DiscoveryRow[] = [
   }),
   eventRow({
     rowId: FIXTURE_IDS.unlinked,
-    title: "Unlinked synthetic show",
-    venueLabel: "Studio shed",
+    title: sourceCopy.en["s25g"],
+    venueLabel: sourceCopy.en["s1n2"],
     startsAt: "2026-10-18T18:00:00.000Z",
     status: "on-sale",
     syntheticTier: "T2",
@@ -232,8 +234,8 @@ function bulkRow(index: number): DiscoveryRow {
   return makeRow({
     rowId: `syn-bulk-${index}`,
     kind,
-    title: `Synthetic sample ${index}`,
-    venueLabel: VENUES[index % VENUES.length] ?? "Paper hall",
+    title: sourceMessage(sourceCopy.en["p.t134"], { v1: index }),
+    venueLabel: VENUES[index % VENUES.length] ?? sourceCopy.en["s171"],
     startsAt: plusDays(30 + Math.floor(index / 24), index % 24),
     status,
     inventoryMode: kind === "seat" ? "seat" : kind === "ga" ? "ga" : "none",
@@ -241,7 +243,7 @@ function bulkRow(index: number): DiscoveryRow {
     syntheticCount: kind === "event" ? null : (index % 15) + 1,
     syntheticTier: tier,
     priceAsOf: stale ? STALE_PRICE_AS_OF : FIXTURE_NOW,
-    resale: kind === "resale" ? { askTier: tier, listingLabel: "listing (synthetic)" } : null,
+    resale: kind === "resale" ? { askTier: tier, listingLabel: sourceCopy.en["sr9"] } : null,
     stubEventId: null,
   });
 }
@@ -263,8 +265,8 @@ export function scaleRowAt(index: number): DiscoveryRow {
   return makeRow({
     rowId: `scale-${safe}`,
     kind,
-    title: `Scale row ${safe}`,
-    venueLabel: "Scale venue",
+    title: sourceMessage(sourceCopy.en["p.t135"], { v1: safe }),
+    venueLabel: sourceCopy.en["s1ib"],
     startsAt: plusDays(Math.floor(safe / 24), safe % 24),
     status,
     inventoryMode: kind === "seat" ? "seat" : kind === "ga" ? "ga" : "none",
@@ -272,7 +274,7 @@ export function scaleRowAt(index: number): DiscoveryRow {
     syntheticCount: kind === "event" ? null : (safe % 20) + 1,
     syntheticTier: tier,
     priceAsOf: FIXTURE_NOW,
-    resale: kind === "resale" ? { askTier: tier, listingLabel: "listing (synthetic)" } : null,
+    resale: kind === "resale" ? { askTier: tier, listingLabel: sourceCopy.en["sr9"] } : null,
     stubEventId: null,
   });
 }

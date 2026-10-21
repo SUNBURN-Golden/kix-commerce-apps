@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/tenant-permissions";
+import { sourceMessage } from "./i18n/source-message";
 /**
  * The tenant permissions desk on top of the adapter's synthetic permissions
  * source. Stub scope: the default port is the synthetic source. On
@@ -46,66 +48,66 @@ import {
 } from "@kix/protocol-adapter";
 import { protocol } from "./protocol";
 
-export const TENANT_PAGE_TITLE = "Tenant permissions desk (synthetic)";
+export const TENANT_PAGE_TITLE = sourceCopy.en["s1pi"];
 
 export const TENANT_SOURCE_LINE =
-  "Organizations, people, role assignments, resources, proposals, the audit record, and the export come from a synthetic permissions source on this page load. They are not a producer read and not a catalogue receipt.";
+  sourceCopy.en["s160"];
 
 export const TENANT_BOUNDARY =
-  "A role decides which resource kinds a workspace lists. A buyer sees its own rows. The audit record goes to the role that holds read-audit and nobody else. Nothing here grants a real permission.";
+  sourceCopy.en["s7g"];
 
 export const TENANT_HIDE_NOTE =
-  "A hidden or greyed control is not enforcement. The source checks every read, export, and request against the assignment and the capability, and this page's tests send requests straight to the port to prove a hidden control is never the check.";
+  sourceCopy.en["s2f"];
 
 export const TENANT_CLAIM_NOTE =
-  "Every read states uiHidingIsEnforcement, actorIsAuthenticated, exportHasRealPersonalData, approvalChangesResource, crossTenantAccess, and auditIsCompleteRecord as false. A payload that says anything else, or stays silent, is refused before a row is shown.";
+  sourceCopy.en["sjj"];
 
 export const TENANT_MAKER_NOTE =
-  "A change is a proposal, and a different actor approves it. The same person's second role is not a different actor. A proposal and an approval are records: the membership or the account changes only when the source applies it, and nothing here applies it.";
+  sourceCopy.en["so"];
 
 export const TENANT_ROLE_NOTE =
-  "An assignment carries a generation. A role switch is a new session: the earlier role's rows and export are cleared, a late answer is dropped, and a write built under an older generation is rejected as role-stale. A revoked assignment denies every call.";
+  sourceCopy.en["s3l"];
 
 export const TENANT_EXPORT_NOTE =
-  "The export is the synthetic source's own sensitive file. It declares itself synthetic, holding no real personal data, not shared outside the tenant, and not an authority record. It is current only when it is one complete export of the very rows the last read saw. Anything else is withheld with every reason, and this page does not repair it.";
+  sourceCopy.en["s1sb"];
 
 export const TENANT_SCOPE_NOTE =
   "Every request names a tenant, an actor, and a role. A direct open of a ref outside the role's kinds or outside the tenant is denied — never empty, never substituted with a row this tenant does own.";
 
 export const TENANT_ACTOR_NOTE =
-  "The actor and role strings are context labels. They are not an authentication result, and the source does not trust them for access.";
+  sourceCopy.en["s1pr"];
 
 export const TENANT_READ_NOTE =
-  "A read, an export, and a request are each one attempt. None is sent again by this page. An answer that arrives after the tenant, the actor, or the role changed is dropped. An answer that never arrives leaves the outcome unknown.";
+  sourceCopy.en["s6a"];
 
 export const TENANT_SESSION_NOTE =
-  "Reads, exports, and requests live in this page load only. A reload or a new synthetic session clears them and resolves nothing at a producer.";
+  sourceCopy.en["s1c6"];
 
 export const TENANT_SYNTHETIC_CONTROL_NOTE =
-  "The Simulate controls are synthetic controls a real producer does not offer. They stand in for a revoked assignment, a rotated generation, and the source applying an approved change. Approving a proposal is not one of them.";
+  sourceCopy.en["s1y7"];
 
-export const TENANT_HOLD_NOTE = `Holding a seat is not available here. ${TENANT_HOLD_NOT_BOUND.reason}`;
+export const TENANT_HOLD_NOTE = sourceMessage(sourceCopy.en["p.t8"], { v1: TENANT_HOLD_NOT_BOUND.reason });
 
-export const TENANT_NOT_COMPOSED_NOTE = `Catalogue actions recorded and never composed here: ${TENANT_NOT_COMPOSED.map((entry) => entry.action).join(", ")}.`;
+export const TENANT_NOT_COMPOSED_NOTE = sourceMessage(sourceCopy.en["p.t9"], { v1: TENANT_NOT_COMPOSED.map((entry) => entry.action).join(", ") });
 
 export const SCENARIO_NOTES: Readonly<Record<TenantScenario, string>> = {
-  clean: "Every read, export, and request is answered.",
-  empty: "The source lists no row for this scope.",
-  stale: "The source serves a watermark older than the floor this page holds.",
-  denied: "Every assignment is revoked at the source.",
-  "tenant-mix": "The source sends a member row that belongs to another tenant. The payload is refused.",
-  "subject-mix": "The source sends an order that belongs to another subject. The payload is refused.",
-  "role-rotated": "The settler assignment already moved a generation at the source. A write under the old one is rejected.",
-  "proposal-pending": "An account-change proposal from the settler waits for the organizer.",
-  "self-approval": "A role-revoke proposal waits, proposed by the dual-role person. The same person may not approve it under the other role.",
-  "claims-enforced": "The source sends a payload that claims hidden controls enforce access. The payload is refused.",
-  "audit-leak": "The source sends an audit entry of another tenant. The payload is refused.",
-  "read-lost": "The answer to a read never arrives.",
-  "act-lost": "A request reaches the source and is recorded. Its answer never arrives.",
-  "export-denied": "The source grants the read and no export.",
-  "export-leak": "The export carries a row of another tenant. It is judged against the last read and withheld.",
-  "export-claims-real": "The export declares real personal data. The payload is refused.",
-  "approve-claims-applied": "The source records an approval, then answers that the resource changed. The answer is not trusted.",
+  clean: sourceCopy.en["sjf"],
+  empty: sourceCopy.en["s1zw"],
+  stale: sourceCopy.en["s21a"],
+  denied: sourceCopy.en["siz"],
+  "tenant-mix": sourceCopy.en["s20s"],
+  "subject-mix": sourceCopy.en["s20v"],
+  "role-rotated": sourceCopy.en["s1y3"],
+  "proposal-pending": sourceCopy.en["s39"],
+  "self-approval": sourceCopy.en["s7h"],
+  "claims-enforced": sourceCopy.en["s213"],
+  "audit-leak": sourceCopy.en["s20t"],
+  "read-lost": sourceCopy.en["s1q3"],
+  "act-lost": sourceCopy.en["s7a"],
+  "export-denied": sourceCopy.en["s1zc"],
+  "export-leak": sourceCopy.en["s1s3"],
+  "export-claims-real": sourceCopy.en["s1s5"],
+  "approve-claims-applied": sourceCopy.en["s20b"],
 };
 
 export type TenantScreenState =
@@ -277,51 +279,51 @@ export interface TenantModel {
 }
 
 const PROPOSAL_KIND_WORDS: Readonly<Record<string, string>> = {
-  "account-change": "Account change",
-  "role-revoke": "Role revoke",
+  "account-change": sourceCopy.en["sh"],
+  "role-revoke": sourceCopy.en["s1hi"],
 };
 
 const PROPOSAL_STATE_WORDS: Readonly<Record<string, string>> = {
-  pending: "Pending",
-  "approval-recorded": "Approval recorded, nothing changed",
-  rejected: "Rejected",
-  "applied-by-source": "Applied by the source",
+  pending: sourceCopy.en["s17p"],
+  "approval-recorded": sourceCopy.en["s5u"],
+  rejected: sourceCopy.en["s1ew"],
+  "applied-by-source": sourceCopy.en["s5g"],
 };
 
 const MEMBER_STATE_WORDS: Readonly<Record<string, string>> = {
-  active: "Active",
-  revoked: "Revoked at the source",
+  active: sourceCopy.en["s10"],
+  revoked: sourceCopy.en["s1h4"],
 };
 
 const ACCOUNT_STATE_WORDS: Readonly<Record<string, string>> = {
-  active: "Active",
-  "changed-by-source": "Changed by the source",
+  active: sourceCopy.en["s10"],
+  "changed-by-source": sourceCopy.en["sbs"],
 };
 
 const EXPORT_REASON_WORDS: Readonly<Record<string, string>> = {
-  NO_SNAPSHOT: "there is no read to judge it against",
-  SCOPE: "the export names another tenant or role",
-  WATERMARK: "the export was taken before the read this page holds",
-  PARTIAL: "the producer says the export was cut off",
-  COUNT: "the export lists a different number of rows than the read yields",
-  ROWS_DIFFER: "the export rows differ from the rows the read yields",
+  NO_SNAPSHOT: sourceCopy.en["s1wk"],
+  SCOPE: sourceCopy.en["s1sg"],
+  WATERMARK: sourceCopy.en["s1sr"],
+  PARTIAL: sourceCopy.en["s1vg"],
+  COUNT: sourceCopy.en["s1sd"],
+  ROWS_DIFFER: sourceCopy.en["s1sj"],
 };
 
 const ACTION_WORDS: Readonly<Record<TenantActionKind, string>> = {
-  "propose-account-change": "Account-change proposal",
-  "propose-role-revoke": "Role-revoke proposal",
-  "approve-proposal": "Proposal approval",
+  "propose-account-change": sourceCopy.en["si"],
+  "propose-role-revoke": sourceCopy.en["s1hj"],
+  "approve-proposal": sourceCopy.en["s19h"],
 };
 
 const PHASE_WORDS: Readonly<Record<TenantActPhase, string>> = {
-  applied: "Recorded at the synthetic source",
-  rejected: "Rejected by the source",
-  denied: "Denied by the source",
-  refused: "The answer was not trusted, and the request may have been recorded",
-  invalid: "Refused before it was recorded",
-  "tuple-changed": "Nothing was recorded because the pin tuple changed",
-  "not-bound": "Not recorded: not bound",
-  unknown: "Outcome unknown. The request may have been recorded",
+  applied: sourceCopy.en["s1du"],
+  rejected: sourceCopy.en["s1ez"],
+  denied: sourceCopy.en["sgb"],
+  refused: sourceCopy.en["s1q6"],
+  invalid: sourceCopy.en["s1eu"],
+  "tuple-changed": sourceCopy.en["s11m"],
+  "not-bound": sourceCopy.en["s12f"],
+  unknown: sourceCopy.en["s16j"],
 };
 
 function readStateToScreen(readState: TenantReadState): TenantScreenState {
@@ -363,50 +365,50 @@ function statusFor(
   const suffix = code ? ` (${code})` : "";
   switch (state) {
     case "loading":
-      return { statusLine: "Reading the synthetic permissions source. Nothing is shown yet.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s1bk"], detailLine: "", actionLabel: null };
     case "ready":
-      return { statusLine: "Workspace read.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s26z"], detailLine: "", actionLabel: null };
     case "empty":
       return {
-        statusLine: "The source lists no row for this scope in this read.",
-        detailLine: detail ?? "An empty workspace is not denied and not unknown.",
-        actionLabel: "Read again",
+        statusLine: sourceCopy.en["s1zx"],
+        detailLine: detail ?? sourceCopy.en["s40"],
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "stale":
-      return { statusLine: "Stale read.", detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["s1lw"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "role-stale":
       return {
-        statusLine: "The role assignment moved underneath this view.",
-        detailLine: detail ?? "Read again under the current assignment.",
-        actionLabel: "Read again",
+        statusLine: sourceCopy.en["s1xe"],
+        detailLine: detail ?? sourceCopy.en["s1b6"],
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "denied":
       return {
-        statusLine: `The source denied this call${suffix}.`,
-        detailLine: `${detail ?? ""} No row is shown, and a hidden control was not what denied it.`,
-        actionLabel: "Read again",
+        statusLine: sourceMessage(sourceCopy.en["p.t290"], { v1: suffix }),
+        detailLine: sourceMessage(sourceCopy.en["p.t291"], { v1: detail ?? "" }),
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "refused":
       return {
-        statusLine: `The source sent a payload this page does not trust${suffix}.`,
-        detailLine: `${detail ?? ""} No row from it is shown.`,
-        actionLabel: "Read again",
+        statusLine: sourceMessage(sourceCopy.en["p.t11"], { v1: suffix }),
+        detailLine: sourceMessage(sourceCopy.en["p.t12"], { v1: detail ?? "" }),
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "invalid":
-      return { statusLine: `The request was refused before it read${suffix}.`, detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t13"], { v1: suffix }), detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "not-bound":
       return { statusLine: TENANT_NOT_BOUND_REASON, detailLine: "", actionLabel: null };
     case "tuple-changed":
       return {
-        statusLine: "The pin tuple changed. Nothing was read and nothing was applied.",
+        statusLine: sourceCopy.en["s1v8"],
         detailLine: detail ?? "",
-        actionLabel: "Start a new synthetic session",
+        actionLabel: sourceCopy.en["s1m2"],
       };
     case "unavailable":
       return {
-        statusLine: "The source did not answer. This is not an empty workspace.",
+        statusLine: sourceCopy.en["s1yy"],
         detailLine: detail ?? "",
-        actionLabel: "Read again",
+        actionLabel: sourceCopy.en["s1ax"],
       };
     default: {
       const exhaustive: never = state;
@@ -423,7 +425,7 @@ function verdictModel(verdict: TenantExportVerdict | null): {
     return { verdictWord: "none", verdictLines: [] };
   }
   if (verdict.current) {
-    return { verdictWord: "current", verdictLines: ["Current export for the last read."] };
+    return { verdictWord: "current", verdictLines: [sourceCopy.en["sfa"]] };
   }
   return {
     verdictWord: "withheld",
@@ -449,29 +451,29 @@ function exportModel(exported: TenantExportState): TenantExportModel {
   const verdict = verdictModel(exported.verdict);
   switch (exported.phase) {
     case "none":
-      return emptyExport("none", "No export is loaded. An export is requested only after a ready read.", "");
+      return emptyExport("none", sourceCopy.en["svf"], "");
     case "loaded": {
       const value = exported.value;
       const declaration = value?.scopeDeclaration;
       return {
         phase: "loaded",
         statusLine:
-          verdict.verdictWord === "current" ? "Export loaded and current for the last read." : "Export loaded. It is not the current export.",
+          verdict.verdictWord === "current" ? sourceCopy.en["skj"] : sourceCopy.en["skk"],
         detailLine: "",
         verdictWord: verdict.verdictWord,
         verdictLines: verdict.verdictLines,
         exportRef: value?.exportRef ?? null,
         scopeLine: declaration
-          ? `SYNTHETIC export. provenance ${declaration.provenance} · realPersonalData ${String(declaration.realPersonalData)} · sharedOutsideTenant ${String(declaration.sharedOutsideTenant)} · authorityRecord ${String(declaration.authorityRecord)} · target ${declaration.target}.`
+          ? sourceMessage(sourceCopy.en["p.t432"], { v1: declaration.provenance, v2: String(declaration.realPersonalData), v3: String(declaration.sharedOutsideTenant), v4: String(declaration.authorityRecord), v5: declaration.target })
           : null,
-        rowsLine: value ? `${value.rows.length} rows of ${value.declaredRowCount} declared.` : null,
+        rowsLine: value ? sourceMessage(sourceCopy.en["p.t147"], { v1: value.rows.length, v2: value.declaredRowCount }) : null,
         // A withheld export shows no row at all. Its rows are not this tenant's
         // to display — one of them may be the foreign row it was withheld for.
         rows:
           verdict.verdictWord === "current"
             ? (value?.rows.map((row) => ({
                 entryRef: row.entryRef,
-                kindWord: row.entryKind === "member" ? "Member" : "Account",
+                kindWord: row.entryKind === "member" ? sourceCopy.en["ssf"] : sourceCopy.en["sg"],
                 label: row.label,
                 detail: row.detail,
               })) ?? [])
@@ -479,17 +481,17 @@ function exportModel(exported: TenantExportState): TenantExportModel {
       };
     }
     case "denied":
-      return emptyExport("denied", `The source denied the export (${exported.code ?? "no code"}).`, exported.detail ?? "");
+      return emptyExport("denied", sourceMessage(sourceCopy.en["p.t433"], { v1: exported.code ?? "no code" }), exported.detail ?? "");
     case "refused":
-      return emptyExport("refused", `The export payload was refused (${exported.code ?? "no code"}).`, exported.detail ?? "");
+      return emptyExport("refused", sourceMessage(sourceCopy.en["p.t150"], { v1: exported.code ?? "no code" }), exported.detail ?? "");
     case "invalid":
-      return emptyExport("invalid", `The export request was refused (${exported.code ?? "no code"}).`, exported.detail ?? "");
+      return emptyExport("invalid", sourceMessage(sourceCopy.en["p.t151"], { v1: exported.code ?? "no code" }), exported.detail ?? "");
     case "not-bound":
-      return emptyExport("not-bound", "The export stays not-bound.", exported.detail ?? TENANT_NOT_BOUND_REASON);
+      return emptyExport("not-bound", sourceCopy.en["s1sm"], exported.detail ?? TENANT_NOT_BOUND_REASON);
     case "tuple-changed":
-      return emptyExport("tuple-changed", "The pin tuple changed. No export was applied.", exported.detail ?? "");
+      return emptyExport("tuple-changed", sourceCopy.en["s1v6"], exported.detail ?? "");
     case "unavailable":
-      return emptyExport("unavailable", "The export answer did not arrive.", exported.detail ?? "");
+      return emptyExport("unavailable", sourceCopy.en["s1s2"], exported.detail ?? "");
     default: {
       const exhaustive: never = exported.phase;
       return exhaustive;
@@ -499,8 +501,8 @@ function exportModel(exported: TenantExportState): TenantExportModel {
 
 function fenceText(fence: TenantFence): string {
   return fence.reason === "in-flight"
-    ? `A ${fence.action} request is in flight. One request goes at a time.`
-    : `Request ${fence.seq} (${fence.action}) has an unknown outcome and may have been recorded. Nothing is sent again from here, and a read does not resolve it. Switching the tenant, the actor, or the role, or starting a new synthetic session, begins a new context and counts this unknown outcome.`;
+    ? sourceMessage(sourceCopy.en["p.t14"], { v1: fence.action })
+    : sourceMessage(sourceCopy.en["p.t311"], { v1: fence.seq, v2: fence.action });
 }
 
 function focusModel(focus: TenantFocus | null): TenantFocusModel | null {
@@ -511,49 +513,49 @@ function focusModel(focus: TenantFocus | null): TenantFocusModel | null {
     case "member":
       return {
         kind: "member",
-        title: `Membership ${focus.row.memberRef}`,
+        title: sourceMessage(sourceCopy.en["p.t577"], { v1: focus.row.memberRef }),
         lines: [
-          `Person ${focus.row.actorRef} holds role ${focus.row.role} in tenant ${focus.row.tenantId}, generation ${focus.row.generation}, ${focus.row.state}.`,
+          sourceMessage(sourceCopy.en["p.t434"], { v1: focus.row.actorRef, v2: focus.row.role, v3: focus.row.tenantId, v4: focus.row.generation, v5: focus.row.state }),
         ],
       };
     case "order":
       return {
         kind: "order",
-        title: `Order ${focus.row.orderRef}`,
-        lines: [`Subject ${focus.row.subjectRef}. Event ${focus.row.eventRef}. ${focus.row.state}. ${focus.row.label}`],
+        title: sourceMessage(sourceCopy.en["p.t578"], { v1: focus.row.orderRef }),
+        lines: [sourceMessage(sourceCopy.en["p.t579"], { v1: focus.row.subjectRef, v2: focus.row.eventRef, v3: focus.row.state, v4: focus.row.label })],
       };
     case "event":
       return {
         kind: "event",
-        title: `Event ${focus.row.eventRef}`,
-        lines: [`${focus.row.title}. Tenant ${focus.row.tenantId}. ${focus.row.state}.`],
+        title: sourceMessage(sourceCopy.en["p.t580"], { v1: focus.row.eventRef }),
+        lines: [sourceMessage(sourceCopy.en["p.t581"], { v1: focus.row.title, v2: focus.row.tenantId, v3: focus.row.state })],
       };
     case "account":
       return {
         kind: "account",
-        title: `Account ${focus.row.accountRef}`,
-        lines: [`${focus.row.label}. Synthetic tail ${focus.row.accountTail}. Tenant ${focus.row.tenantId}. ${focus.row.state}.`],
+        title: sourceMessage(sourceCopy.en["p.t582"], { v1: focus.row.accountRef }),
+        lines: [sourceMessage(sourceCopy.en["p.t435"], { v1: focus.row.label, v2: focus.row.accountTail, v3: focus.row.tenantId, v4: focus.row.state })],
       };
     case "case":
       return {
         kind: "case",
-        title: `Case ${focus.row.caseRef}`,
-        lines: [`Subject ${focus.row.subjectRef}. ${focus.row.topic}. Tenant ${focus.row.tenantId}. ${focus.row.state}.`],
+        title: sourceMessage(sourceCopy.en["p.t583"], { v1: focus.row.caseRef }),
+        lines: [sourceMessage(sourceCopy.en["p.t584"], { v1: focus.row.subjectRef, v2: focus.row.topic, v3: focus.row.tenantId, v4: focus.row.state })],
       };
     case "proposal":
       return {
         kind: "proposal",
-        title: `Proposal ${focus.row.proposalRef}`,
+        title: sourceMessage(sourceCopy.en["p.t585"], { v1: focus.row.proposalRef }),
         lines: [
-          `${PROPOSAL_KIND_WORDS[focus.row.kind] ?? focus.row.kind} on ${focus.row.targetRef}. Proposed by ${focus.row.proposedBy} as ${focus.row.proposedAs}. ${PROPOSAL_STATE_WORDS[focus.row.state] ?? focus.row.state}. resourceChanged ${String(focus.row.resourceChanged)}.`,
+          sourceMessage(sourceCopy.en["p.t436"], { v1: PROPOSAL_KIND_WORDS[focus.row.kind] ?? focus.row.kind, v2: focus.row.targetRef, v3: focus.row.proposedBy, v4: focus.row.proposedAs, v5: PROPOSAL_STATE_WORDS[focus.row.state] ?? focus.row.state, v6: String(focus.row.resourceChanged) }),
         ],
       };
     case "audit": {
       const row: TenantAuditEntry = focus.row;
       return {
         kind: "audit",
-        title: `Audit entry ${row.auditRef}`,
-        lines: [`Seq ${row.seq}. ${row.actorRef} as ${row.role} called ${row.action}${row.targetRef ? ` on ${row.targetRef}` : ""}: ${row.decision}. ${row.detail}`],
+        title: sourceMessage(sourceCopy.en["p.t437"], { v1: row.auditRef }),
+        lines: [sourceMessage(sourceCopy.en["p.t586"], { v1: row.seq, v2: row.actorRef, v3: row.role, v4: row.action, v5: row.targetRef ? ` on ${row.targetRef}` : "", v6: row.decision, v7: row.detail })],
       };
     }
     default: {
@@ -576,29 +578,29 @@ export function buildTenantModel(input: { controller: TenantPermissionsControlle
   const freshnessWord =
     state.freshness === "CURRENT"
       ? state.behind
-        ? "The last read is behind a request that reached the source. Read again."
-        : "The last read is current."
+        ? sourceCopy.en["s1tj"]
+        : sourceCopy.en["s1tn"]
       : state.freshness === "STALE"
-        ? "The last read is behind the assignment or the watermark."
-        : "There is no usable read.";
+        ? sourceCopy.en["s1tm"]
+        : sourceCopy.en["s1wv"];
 
   const capabilities = tenantCapabilities(role);
   const authority: TenantAuthorityModel[] = tenantAuthorityTable().map((row) => ({
     capability: row.capability,
-    heldByLine: row.heldBy.length === 0 ? "Held by no role on this desk." : `Held by ${row.heldBy.join(", ")}.`,
+    heldByLine: row.heldBy.length === 0 ? sourceCopy.en["snc"] : sourceMessage(sourceCopy.en["p.t160"], { v1: row.heldBy.join(", ") }),
     heldByRole: row.heldBy.includes(role),
   }));
 
   const accountEligibility = controller.canSend("propose-account-change");
   const revokeEligibility = controller.canSend("propose-role-revoke");
   const approveEligibility = controller.canSend("approve-proposal");
-  const accountBlock = accountEligibility.allowed ? null : (accountEligibility.reason ?? "Account changes are not on offer.");
-  const revokeBlock = revokeEligibility.allowed ? null : (revokeEligibility.reason ?? "Role revokes are not on offer.");
-  const approveBlock = approveEligibility.allowed ? null : (approveEligibility.reason ?? "Approvals are not on offer.");
+  const accountBlock = accountEligibility.allowed ? null : (accountEligibility.reason ?? sourceCopy.en["sj"]);
+  const revokeBlock = revokeEligibility.allowed ? null : (revokeEligibility.reason ?? sourceCopy.en["s1hk"]);
+  const approveBlock = approveEligibility.allowed ? null : (approveEligibility.reason ?? sourceCopy.en["s5v"]);
 
   const members: TenantMemberModel[] = (snapshot?.members ?? []).map((row) => {
     const target = assessment?.memberTargets.some((item) => item.memberRef === row.memberRef) ?? false;
-    const reason = revokeBlock !== null ? revokeBlock : target ? null : "The read offers no role-revoke on this membership.";
+    const reason = revokeBlock !== null ? revokeBlock : target ? null : sourceCopy.en["s1w6"];
     return {
       memberRef: row.memberRef,
       actorRef: row.actorRef,
@@ -626,11 +628,11 @@ export function buildTenantModel(input: { controller: TenantPermissionsControlle
 
   const accounts: TenantAccountModel[] = (snapshot?.accounts ?? []).map((row) => {
     const target = assessment?.accountTargets.some((item) => item.accountRef === row.accountRef) ?? false;
-    const reason = accountBlock !== null ? accountBlock : target ? null : "The read offers no account change on this account.";
+    const reason = accountBlock !== null ? accountBlock : target ? null : sourceCopy.en["s1w4"];
     return {
       accountRef: row.accountRef,
       label: row.label,
-      tailLine: `Synthetic tail ${row.accountTail}. Not a real account number.`,
+      tailLine: sourceMessage(sourceCopy.en["p.t438"], { v1: row.accountTail }),
       state: row.state,
       stateWord: ACCOUNT_STATE_WORDS[row.state] ?? row.state,
       proposeChange: capabilities.includes("propose-account-change") ? { enabled: reason === null, reason } : null,
@@ -652,10 +654,10 @@ export function buildTenantModel(input: { controller: TenantPermissionsControlle
     } else if (!approvable) {
       reason =
         row.state !== "pending"
-          ? `Proposal ${row.proposalRef} is ${row.state}. A proposal is approved only while it is pending.`
+          ? sourceMessage(sourceCopy.en["p.t59"], { v1: row.proposalRef, v2: row.state })
           : row.proposedBy === actorRef
-            ? `Proposal ${row.proposalRef} was proposed by this actor. A different actor approves it.`
-            : "The read does not offer an approval on this proposal.";
+            ? sourceMessage(sourceCopy.en["p.t439"], { v1: row.proposalRef })
+            : sourceCopy.en["s1w0"];
     } else {
       reason = null;
     }
@@ -664,7 +666,7 @@ export function buildTenantModel(input: { controller: TenantPermissionsControlle
       kindWord: PROPOSAL_KIND_WORDS[row.kind] ?? row.kind,
       targetRef: row.targetRef,
       note: row.note,
-      proposedLine: `Proposed by ${row.proposedBy} as ${row.proposedAs}.`,
+      proposedLine: sourceMessage(sourceCopy.en["p.t440"], { v1: row.proposedBy, v2: row.proposedAs }),
       state: row.state,
       stateWord: PROPOSAL_STATE_WORDS[row.state] ?? row.state,
       approve: { enabled: reason === null, reason },
@@ -700,22 +702,22 @@ export function buildTenantModel(input: { controller: TenantPermissionsControlle
           detail: last.detail,
           receiptLines: last.receipt
             ? [
-                `Receipt ${last.receipt.kind} for ${last.receipt.proposalRef} on ${last.receipt.targetRef}.`,
+                sourceMessage(sourceCopy.en["p.t511"], { v1: last.receipt.kind, v2: last.receipt.proposalRef, v3: last.receipt.targetRef }),
                 `resourceChanged ${String(last.receipt.resourceChanged)} · approvalChangesResource ${String(last.receipt.approvalChangesResource)}`,
-                "Recorded is not applied. The rows above change only when the source applies the change and this page reads again.",
+                sourceCopy.en["s1dy"],
               ]
             : [],
         };
 
   const counters = state.counters;
   const session: TenantSessionModel = {
-    contextLine: `Actor ${actorRef}, tenant ${state.context.scope.tenantId}, role ${role}, session ${state.context.incarnation}, mode ${state.context.environment}.`,
-    capabilityLine: `Role ${role} holds: ${capabilities.length === 0 ? "no capability" : capabilities.join(", ")}.`,
-    countersLine: `Reads ${counters.reads}. Exports ${counters.exports}. Requests ${counters.acts}. Not sent ${counters.notSent}. Reads dropped ${counters.droppedReads}. Exports dropped ${counters.droppedExports}.`,
+    contextLine: sourceMessage(sourceCopy.en["p.t548"], { v1: actorRef, v2: state.context.scope.tenantId, v3: role, v4: state.context.incarnation, v5: state.context.environment }),
+    capabilityLine: sourceMessage(sourceCopy.en["p.t549"], { v1: role, v2: capabilities.length === 0 ? "no capability" : capabilities.join(", ") }),
+    countersLine: sourceMessage(sourceCopy.en["p.t172"], { v1: counters.reads, v2: counters.exports, v3: counters.acts, v4: counters.notSent, v5: counters.droppedReads, v6: counters.droppedExports }),
     earlierUnknownLine:
       state.earlierUnknown === 0
-        ? "No unknown request outcome in earlier sessions."
-        : `${state.earlierUnknown} unknown request outcome${state.earlierUnknown === 1 ? "" : "s"} in earlier sessions. They are counted, not forgotten.`,
+        ? sourceCopy.en["s131"]
+        : sourceMessage(sourceCopy.en["p.t173"], { v1: state.earlierUnknown, v2: state.earlierUnknown === 1 ? "" : "s" }),
     notComposedLine: TENANT_NOT_COMPOSED_NOTE,
     holdLine: TENANT_HOLD_NOTE,
   };
@@ -727,15 +729,15 @@ export function buildTenantModel(input: { controller: TenantPermissionsControlle
     detailLine: status.detailLine,
     actionLabel: status.actionLabel,
     freshnessWord,
-    scopeLine: `Tenant ${state.context.scope.tenantId}. Actor ${actorRef} acting as ${role}.`,
+    scopeLine: sourceMessage(sourceCopy.en["p.t319"], { v1: state.context.scope.tenantId, v2: actorRef, v3: role }),
     generationLine: snapshot
-      ? `Assignment generation ${snapshot.roleGeneration} as of this read. A write built under an older one is rejected as role-stale.`
-      : "No assignment generation without a ready read.",
-    watermarkLine: snapshot ? `Watermark ${snapshot.watermark}. Read ${snapshot.snapshotId} on this port.` : "No watermark without a ready read.",
+      ? sourceMessage(sourceCopy.en["p.t441"], { v1: snapshot.roleGeneration })
+      : sourceCopy.en["su5"],
+    watermarkLine: snapshot ? sourceMessage(sourceCopy.en["p.t41"], { v1: snapshot.watermark, v2: snapshot.snapshotId }) : sourceCopy.en["s134"],
     workspaceLine:
       visible.length === 0
-        ? "This role's workspace lists no resource kind."
-        : `This role's workspace lists: ${visible.join(", ")}. Anything else stays absent, not hidden.`,
+        ? sourceCopy.en["s23j"]
+        : sourceMessage(sourceCopy.en["p.t442"], { v1: visible.join(", ") }),
     authority,
     focus: focusModel(snapshot?.focus ?? null),
     members,
@@ -753,7 +755,7 @@ export function buildTenantModel(input: { controller: TenantPermissionsControlle
     request,
     fenceLine: state.fence === null ? null : fenceText(state.fence),
     behindLine: state.behind
-      ? "A request reached the source after the last read. The rows on screen are the last read's. Read again to see the proposals."
+      ? sourceCopy.en["s78"]
       : null,
     session,
     lastLine: input.last === null ? null : input.last.text,
@@ -789,23 +791,23 @@ function actResultLine(kind: TenantActionKind, result: TenantActResult): { text:
   switch (result.kind) {
     case "APPLIED":
       return {
-        text: `${word} recorded at the synthetic source. Nothing was applied: no membership and no account changed. Read again to see it.`,
+        text: sourceMessage(sourceCopy.en["p.t443"], { v1: word }),
         attention: false,
       };
     case "REJECTED":
       return {
-        text: `${word} rejected (${result.record.code ?? "no code"}). ${result.record.detail ?? ""} The source recorded nothing for this request.`.trim(),
+        text: sourceMessage(sourceCopy.en["p.t176"], { v1: word, v2: result.record.code ?? "no code", v3: result.record.detail ?? "" }).trim(),
         attention: true,
       };
     case "UNKNOWN":
       return {
-        text: `${word} outcome unknown (${result.record.code ?? "no code"}). It may have been recorded. Every later request is fenced, and a read does not resolve it.`,
+        text: sourceMessage(sourceCopy.en["p.t177"], { v1: word, v2: result.record.code ?? "no code" }),
         attention: true,
       };
     case "FENCED":
-      return { text: `${word} not sent. ${fenceText(result.fence)}`, attention: true };
+      return { text: sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: fenceText(result.fence) }), attention: true };
     case "NOT_SENT":
-      return { text: `${word} not sent. ${result.detail}`, attention: true };
+      return { text: sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: result.detail }), attention: true };
     default: {
       const exhaustive: never = result;
       return exhaustive;
@@ -915,7 +917,7 @@ export function useTenantPermissions(): {
         return;
       }
       const done = session.port.synthetic(control, ref);
-      note(done ? `${moved} A real producer offers no such control. Read again.` : nothing, done);
+      note(done ? sourceMessage(sourceCopy.en["p.t46"], { v1: moved }) : nothing, done);
     },
     [note],
   );
@@ -927,7 +929,7 @@ export function useTenantPermissions(): {
     openResource(ref) {
       const text = ref.trim();
       if (text.length === 0) {
-        note("A deep-open names a resource reference copied from a row or a URL. It is never guessed.", true);
+        note(sourceCopy.en["s1b"], true);
         return;
       }
       void sessionRef.current?.controller.read(text);
@@ -942,7 +944,7 @@ export function useTenantPermissions(): {
           return;
         }
         if (result.kind === "NOT_SENT") {
-          note(result.reason === "not-bound" ? TENANT_NOT_BOUND_REASON : `No export was sent. ${result.detail}`, true);
+          note(result.reason === "not-bound" ? TENANT_NOT_BOUND_REASON : sourceMessage(sourceCopy.en["p.t178"], { v1: result.detail }), true);
         }
       });
     },
@@ -971,12 +973,12 @@ export function useTenantPermissions(): {
       }
       const context = session.controller.switchRole(nextRole);
       if (context === null) {
-        note("A request is in flight. The role cannot change under it.", true);
+        note(sourceCopy.en["s73"], true);
         return;
       }
       setRole(nextRole);
       note(
-        `Switched the same actor to role ${context.scope.role}, session ${context.incarnation}. The earlier role's rows and export are cleared, a late answer is dropped, and proposals it offered are fenced off. One read for the new role was asked for.`,
+        sourceMessage(sourceCopy.en["p.t444"], { v1: context.scope.role, v2: context.incarnation }),
       );
       void session.controller.read();
     },
@@ -987,12 +989,12 @@ export function useTenantPermissions(): {
       }
       const context = session.controller.switchActor(next);
       if (context === null) {
-        note("A request is in flight. The actor cannot change under it.", true);
+        note(sourceCopy.en["s72"], true);
         return;
       }
       setActorRef(next);
       note(
-        `Switched the desk actor to ${context.actorRef}, session ${context.incarnation}, still acting as ${context.scope.role}. The source decides whether that assignment exists. Rows and the export are cleared, and an answer in flight is dropped. One read was asked for.`,
+        sourceMessage(sourceCopy.en["p.t445"], { v1: context.actorRef, v2: context.incarnation, v3: context.scope.role }),
       );
       void session.controller.read();
     },
@@ -1004,11 +1006,11 @@ export function useTenantPermissions(): {
       const nextTenant = session.controller.state().context.scope.tenantId === "ten-0001" ? "ten-0002" : "ten-0001";
       const context = session.controller.switchTenant(nextTenant);
       if (context === null) {
-        note("A request is in flight. The tenant cannot change under it.", true);
+        note(sourceCopy.en["s74"], true);
         return;
       }
       note(
-        `Switched the tenant to ${context.scope.tenantId}, session ${context.incarnation}. Rows and the export of the earlier tenant are cleared, and an answer in flight for it is dropped. One read for the new tenant was asked for.`,
+        sourceMessage(sourceCopy.en["p.t446"], { v1: context.scope.tenantId, v2: context.incarnation }),
       );
       void session.controller.read();
     },
@@ -1016,35 +1018,35 @@ export function useTenantPermissions(): {
       synthetic(
         "revoke-role",
         memberRef,
-        `The synthetic assignment ${memberRef} is withdrawn at the source. Its next call is denied.`,
-        "There is no synthetic source to withdraw an assignment from, or that membership is already revoked.",
+        sourceMessage(sourceCopy.en["p.t447"], { v1: memberRef }),
+        sourceCopy.en["s1ws"],
       );
     },
     rotateRole(memberRef) {
       synthetic(
         "rotate-role",
         memberRef,
-        `The synthetic assignment ${memberRef} moved a generation at the source. A write built under the old one is rejected.`,
-        "There is no synthetic source to rotate, or that membership is already revoked.",
+        sourceMessage(sourceCopy.en["p.t448"], { v1: memberRef }),
+        sourceCopy.en["s1wt"],
       );
     },
     applyApproved() {
       synthetic(
         "apply-approved-change",
         undefined,
-        "The synthetic source applied its oldest recorded approval. No approval chose to apply it; the source did.",
-        "There is no recorded approval for the source to apply.",
+        sourceCopy.en["s21y"],
+        sourceCopy.en["s1wl"],
       );
     },
     setScenario(next) {
-      startSession(next, actorRef, role, `Started a new synthetic session with scenario ${next}. Earlier reads, exports, and requests are gone, as after a reload.`);
+      startSession(next, actorRef, role, sourceMessage(sourceCopy.en["p.t181"], { v1: next }));
     },
     newSession() {
       startSession(
         scenario,
         actorRef,
         role,
-        "Started a new synthetic session. Earlier reads, exports, and requests are gone, as after a reload. Nothing was resolved at a producer.",
+        sourceCopy.en["s1m8"],
       );
     },
   };

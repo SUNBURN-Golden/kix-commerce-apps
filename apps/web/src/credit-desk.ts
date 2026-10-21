@@ -1,3 +1,4 @@
+import { messages as sourceCopy } from "./i18n/messages/credit-desk";
 import { useCallback, useEffect, useState } from "react";
 import { ProtocolError, type CreditCaseView } from "@kix/protocol-adapter";
 import { protocol } from "./protocol";
@@ -175,7 +176,7 @@ export function useCreditDesk(eventId: string) {
 }
 
 function message(reason: unknown): string {
-  return reason instanceof Error ? reason.message : "Mock credit command was rejected.";
+  return reason instanceof Error ? reason.message : sourceCopy.en["ssx"];
 }
 
 function readAttempt(eventId: string): number {

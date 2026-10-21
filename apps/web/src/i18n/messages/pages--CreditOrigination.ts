@@ -1,0 +1,26 @@
+export const messages = {
+  en: {
+    "s58": "Application and review",
+    "scg": "Claim basis",
+    "sdb": "Commitment and drawdown",
+    "sed": "Controls",
+    "s16d": "Origination sections",
+    "s18l": "Policy and consents",
+    "s1d7": "Reasons and paths",
+    "s1fv": "Requests",
+    "s1js": "Session record",
+    "s1mj": "Status",
+  },
+  ko: {
+    "s58": "신청과 검토",
+    "scg": "청구 근거",
+    "sdb": "약정과 인출",
+    "sed": "제어",
+    "s16d": "신청 영역",
+    "s18l": "정책과 동의",
+    "s1d7": "사유와 경로",
+    "s1fv": "요청 목록",
+    "s1js": "세션 기록",
+    "s1mj": "상태",
+  },
+} as const;

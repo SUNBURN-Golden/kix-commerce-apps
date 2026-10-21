@@ -1,6 +1,11 @@
+import { messages as deskCopy } from "../../i18n/desk-catalogue";
+import { messages as copy0 } from "../../i18n/messages/pages--marketing--M02Presale";
+import { messages as copy1 } from "../../i18n/messages/marketing--desk";
+import { deskText } from "../../i18n/desk-translate";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Performance } from "@kix/protocol-adapter";
+import { useT } from "../../i18n/desk-context";
 import { useFormatWhen } from "../../i18n/locale-context";
 import { presaleWindowFor } from "../../marketing/desk";
 import { marketingSession } from "../../marketing/session";
@@ -9,6 +14,7 @@ import { protocol } from "../../protocol";
 import { errorText, MarketingChrome } from "./MarketingChrome";
 
 export function M02Page() {
+  const t = useT(deskCopy, copy0, copy1);
   const formatWhen = useFormatWhen();
   const { snapshot, refresh } = useMarketingSnapshot();
   const [performances, setPerformances] = useState<Performance[] | null>(null);
@@ -27,7 +33,7 @@ export function M02Page() {
       })
       .catch((reason: unknown) => {
         if (!cancelled) {
-          setError(errorText(reason, "Could not load performances."));
+          setError(errorText(reason, deskCopy.en["desk.performance.loadError"]));
         }
       });
     return () => {
@@ -41,7 +47,7 @@ export function M02Page() {
       marketingSession.recordInterest(eventId);
       refresh();
     } catch (reason) {
-      setError(errorText(reason, "Could not record demo interest."));
+      setError(errorText(reason, copy0.en["e.63"]));
     }
   }
 
@@ -49,38 +55,32 @@ export function M02Page() {
     <MarketingChrome id="M02">
       {error ? (
         <p className="alert" role="alert">
-          {error}
+          {deskText(t, error)}
         </p>
       ) : null}
       <article className="panel">
-        <p className="eyebrow">Demo window · {windowState}</p>
-        <h3>{windowState === "open-demo" ? "데모 창 열림 · Open" : "데모 창 닫힘 · Closed"}</h3>
+        <p className="eyebrow">{t("sg9")}{" "}{deskText(t, windowState)}</p>
+        <h3>{windowState === "open-demo" ? t("s27c") : t("s27b")}</h3>
         <p className="muted">
-          Catalog titles are read from the protocol adapter for display. Recording interest writes only this marketing
-          stub.
-          {windowState === "closed-demo"
-            ? " Issue a fan or member card on M01 to open the demo window."
-            : null}{" "}
-          Open the <Link to="/">box office</Link> for the separate Wave 6 booking desk.
-        </p>
+          {t("sbm")}{windowState === "closed-demo" ? (" " + t("sot")) : null}{" "}
+          {t("s15a")}{" "}<Link to="/">{t("sai")}</Link> {t("sls")}</p>
       </article>
-      {performances === null && !error ? <p className="muted">Loading performances.</p> : null}
-      {performances?.length === 0 ? <p className="empty">No performances on this adapter.</p> : null}
+      {performances === null && !error ? <p className="muted">{t("desk.performance.loading")}</p> : null}
+      {performances?.length === 0 ? <p className="empty">{t("desk.performance.empty")}</p> : null}
       <ul className="program">
-        {performances?.map((item) => {
+        {deskText(t, performances?.map((item) => {
           const interest = snapshot.interests.find((row) => row.eventId === item.eventId);
           return (
             <li key={item.eventId}>
               <article className="row">
                 <div>
                   <p className="when">{formatWhen(item.startsAt)}</p>
-                  <h3>{item.title}</h3>
+                  <h3>{deskText(t, item.title)}</h3>
                   <p className="muted">
-                    {item.venue} · {item.remainingCapacity} still open on the catalog
-                  </p>
+                    {deskText(t, item.venue)} · {deskText(t, item.remainingCapacity)} {t("s1mo")}</p>
                   {interest ? (
                     <p>
-                      Interest recorded {formatWhen(interest.recordedAt)} · {interest.window}
+                      {t("soj")}{" "}{formatWhen(interest.recordedAt)} · {deskText(t, interest.window)}
                     </p>
                   ) : null}
                 </div>
@@ -90,13 +90,13 @@ export function M02Page() {
                     disabled={windowState !== "open-demo" || Boolean(interest)}
                     onClick={() => record(item.eventId)}
                   >
-                    {interest ? "Interest recorded" : "Record demo interest"}
+                    {interest ? t("soj") : t("s1dq")}
                   </button>
                 </div>
               </article>
             </li>
           );
-        })}
+        }))}
       </ul>
     </MarketingChrome>
   );

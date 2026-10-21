@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/journey-desk";
+import { sourceMessage } from "./i18n/source-message";
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 import {
   BookingJourney,
@@ -32,9 +34,9 @@ const BUYER = "desk-buyer";
 const SEATS = ["A1"];
 
 const STEP_LABEL: Record<JourneyStep, string> = {
-  create_event: "Create event",
-  prepare_trade: "Prepare trade",
-  accept_trade: "Accept trade",
+  create_event: sourceCopy.en["set"],
+  prepare_trade: sourceCopy.en["s18r"],
+  accept_trade: sourceCopy.en["sf"],
 };
 
 const HIDDEN_RECEIPT_KEYS = new Set([
@@ -178,8 +180,8 @@ export function selectJourneyView(
     source: snapshot.source,
     path: snapshot.path,
     rows: found?.rows ?? snapshot.template,
-    lastConfirmed: found?.lastConfirmed ?? "Last confirmed receipt: none",
-    unconfirmed: found?.unconfirmed ?? "Unconfirmed request: none",
+    lastConfirmed: found?.lastConfirmed ?? sourceCopy.en["sq8"],
+    unconfirmed: found?.unconfirmed ?? sourceCopy.en["s252"],
     pending: found?.pending ?? false,
     opened: snapshot.journeys.map((item) => ({
       eventId: item.eventId,
@@ -266,7 +268,7 @@ export class JourneyDesk {
     current.phase = "in-flight";
     current.operationId = operationId;
     current.actor = actorFor(step);
-    current.note = "In flight. One attempt.";
+    current.note = sourceCopy.en["snx"];
     record.pending = true;
     this.publish();
     try {
@@ -279,7 +281,7 @@ export class JourneyDesk {
       const stepRecord = record.steps.find((item) => item.step === step);
       if (stepRecord && stepRecord.phase === "in-flight") {
         stepRecord.phase = "not-sent";
-        stepRecord.note = "Not sent.";
+        stepRecord.note = sourceCopy.en["s12l"];
         record.localHalt = true;
       }
       this.publish();
@@ -301,7 +303,7 @@ export class JourneyDesk {
       this.path = {
         kind: "unavailable",
         code,
-        detail: "Integration HTTP stayed selected. The desk did not fall back to the stub.",
+        detail: sourceCopy.en["sod"],
       };
     }
     this.publish();
@@ -309,7 +311,7 @@ export class JourneyDesk {
 
   private async dispatch(record: JourneyRecord, step: JourneyStep, operationId: string): Promise<JourneyStepOutcome> {
     if (this.deps.source === null || record.journey === null) {
-      throw new ProtocolError("Journey invoker is not selected.");
+      throw new ProtocolError(sourceCopy.en["sph"]);
     }
     if (step === "create_event") {
       return record.journey.createEvent({
@@ -344,8 +346,8 @@ export class JourneyDesk {
       current.receipt = receiptFields(outcome.receipt);
       current.note =
         this.deps.source?.source === "stub-shape"
-          ? "Confirmed stub-shape receipt. Not from the gate."
-          : "Confirmed receipt.";
+          ? sourceCopy.en["sdk"]
+          : sourceCopy.en["sdj"];
       return;
     }
     if (outcome.kind === "REJECTED") {
@@ -354,7 +356,7 @@ export class JourneyDesk {
       current.code = outcome.code;
       current.requestId = outcome.identity.requestId ?? null;
       current.correlationId = outcome.identity.correlationId ?? null;
-      current.note = `Rejected by the gate (${outcome.code}).`;
+      current.note = sourceMessage(sourceCopy.en["p.t4"], { v1: outcome.code });
       return;
     }
     if (outcome.kind === "UNKNOWN") {
@@ -363,12 +365,12 @@ export class JourneyDesk {
       current.code = outcome.code;
       current.requestId = outcome.identity.requestId ?? null;
       current.correlationId = outcome.identity.correlationId ?? null;
-      current.note = "Unconfirmed: sent, no authoritative receipt. May have applied. Not a rejection.";
+      current.note = sourceCopy.en["s253"];
       return;
     }
     current.phase = "pending";
     current.operationId = null;
-    current.note = "Blocked. The next write stays blocked.";
+    current.note = sourceCopy.en["saa"];
     record.localHalt = true;
   }
 
@@ -385,7 +387,7 @@ export class JourneyDesk {
       current.code = halted.identity.code ?? "UNKNOWN";
       current.requestId = halted.identity.requestId ?? null;
       current.correlationId = halted.identity.correlationId ?? null;
-      current.note = "Unconfirmed: sent, no authoritative receipt. May have applied. Not a rejection.";
+      current.note = sourceCopy.en["s253"];
       return;
     }
     current.phase = "not-sent";
@@ -393,8 +395,8 @@ export class JourneyDesk {
     current.code = halted?.identity.code ?? null;
     current.requestId = halted?.identity.requestId ?? null;
     current.correlationId = halted?.identity.correlationId ?? null;
-    const message = error instanceof Error ? error.message : "The step was not sent.";
-    current.note = `Not sent. ${message}`;
+    const message = error instanceof Error ? error.message : sourceCopy.en["s21f"];
+    current.note = sourceMessage(sourceCopy.en["p.t6"], { v1: message });
     record.localHalt = halted === null;
   }
 
@@ -412,8 +414,8 @@ export class JourneyDesk {
         eventId: record.eventId,
         pending: record.pending,
         rows,
-        lastConfirmed: summaryLine("Last confirmed receipt", lastRow(rows, "confirmed")),
-        unconfirmed: summaryLine("Unconfirmed request", rows.find((row) => row.status === "unconfirmed")),
+        lastConfirmed: summaryLine(sourceCopy.en["sq7"], lastRow(rows, "confirmed")),
+        unconfirmed: summaryLine(sourceCopy.en["s251"], rows.find((row) => row.status === "unconfirmed")),
       };
     });
     return {
@@ -530,26 +532,26 @@ function deriveRows(steps: StepRecord[], path: JourneyPathStatus, isHalted: bool
 
 function noteFor(status: JourneyRowStatus): string {
   if (status === "ready") {
-    return "Ready to send. One attempt.";
+    return sourceCopy.en["s1d1"];
   }
   if (status === "not-started") {
-    return "Waiting for the previous step.";
+    return sourceCopy.en["s268"];
   }
   if (status === "blocked") {
-    return "Blocked. The next write stays blocked.";
+    return sourceCopy.en["saa"];
   }
   if (status === "in-flight") {
-    return "In flight. One attempt.";
+    return sourceCopy.en["snx"];
   }
   if (status === "unavailable") {
-    return "Unavailable. No write is sent.";
+    return sourceCopy.en["s250"];
   }
   return "";
 }
 
 function summaryLine(label: string, row: JourneyRow | undefined): string {
   if (!row || !row.operationId) {
-    return `${label}: none`;
+    return sourceMessage(sourceCopy.en["p.t464"], { v1: label });
   }
   return `${label}: ${row.step} · ${row.operationId}`;
 }

@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/platform-journey";
+import { sourceMessage } from "./i18n/source-message";
 /**
  * The multi-channel trade screen on top of the adapter's synthetic platform source.
  * Stub scope: the default port is the synthetic source. On integration-http the same
@@ -43,58 +45,58 @@ import {
 } from "@kix/protocol-adapter";
 import { protocol } from "./protocol";
 
-export const PLATFORM_TITLE = "Trading platform (synthetic)";
+export const PLATFORM_TITLE = sourceCopy.en["s24i"];
 
 export const PLATFORM_SOURCE_LINE =
-  "Listings, rights, and trades come from a synthetic platform source on this page load. They are not a producer read and not a catalogue receipt.";
+  sourceCopy.en["sr8"];
 
 export const PLATFORM_BOUNDARY =
-  "Each row below is an observation or a synthetic write of this page. A booking, a payment observation, a right transfer, and a refund explanation are four separate lines. None of them completes the others.";
+  sourceCopy.en["si1"];
 
-export const PLATFORM_TIER_NOTE = "Tier labels are opaque. No amount, fee, or share is attached to a tier or calculated on this page.";
+export const PLATFORM_TIER_NOTE = sourceCopy.en["s246"];
 
 export const PLATFORM_ACTOR_NOTE =
-  "The actor string is a context label. It is not an authentication result, and the source does not trust it for access.";
+  sourceCopy.en["s1pw"];
 
 export const PLATFORM_SESSION_NOTE =
-  "Intents live in this page load only. A reload or a new synthetic session clears them and resolves nothing at a producer. After a reload an unknown write is not recovered here.";
+  sourceCopy.en["sog"];
 
 export const PLATFORM_FENCE_NOTE =
-  "One write is sent at a time per right, and each is sent once. This page does not send a write again, does not mint an intent for you, and does not undo one with another.";
+  sourceCopy.en["s14m"];
 
 export const PLATFORM_READ_NOTE =
-  "One read follows each settled write so the next step can use fresh evidence. Nothing polls. A read is evidence and never resolves an unknown write.";
+  sourceCopy.en["s14c"];
 
-export const PLATFORM_HOLD_NOTE = `Holding a seat is not available here. ${PLATFORM_HOLD_NOT_BOUND.reason}`;
+export const PLATFORM_HOLD_NOTE = sourceMessage(sourceCopy.en["p.t8"], { v1: PLATFORM_HOLD_NOT_BOUND.reason });
 
-export const PLATFORM_REFUND_NOTE = `${PLATFORM_REFUND_NOT_BOUND.action} stays ${PLATFORM_REFUND_NOT_BOUND.status}. ${PLATFORM_REFUND_NOT_BOUND.state} is shown where a trade took a payment observation and the right did not move. There is no refund control.`;
+export const PLATFORM_REFUND_NOTE = sourceMessage(sourceCopy.en["p.t354"], { v1: PLATFORM_REFUND_NOT_BOUND.action, v2: PLATFORM_REFUND_NOT_BOUND.status, v3: PLATFORM_REFUND_NOT_BOUND.state });
 
 export const PLATFORM_ALT_ACTOR = "platform-desk-2";
 
 export const SCENARIO_NOTES: Readonly<Record<PlatformScenario, string>> = {
-  clean: "Every step is answered. Two channels list one right.",
-  empty: "The source has no listings.",
-  stale: "The source serves a watermark older than the floor this page holds.",
-  "rival-channel": "Another channel's transfer lands first, so your transfer is refused as stale.",
-  "payment-lost": "A booking is recorded but its payment observation never arrives.",
-  "book-lost": "A booking is applied and its answer is lost.",
-  "transfer-lost": "A transfer is applied and its answer is lost.",
-  "transfer-late": "A transfer is applied, its answer is lost, and a late result can be delivered later.",
-  "held-response": "Answers are held until you deliver them. Use it to switch the session while a write is in flight.",
+  clean: sourceCopy.en["sjs"],
+  empty: sourceCopy.en["s1zf"],
+  stale: sourceCopy.en["s21a"],
+  "rival-channel": sourceCopy.en["s4k"],
+  "payment-lost": sourceCopy.en["s5"],
+  "book-lost": sourceCopy.en["s4"],
+  "transfer-lost": sourceCopy.en["s8s"],
+  "transfer-late": sourceCopy.en["s8t"],
+  "held-response": sourceCopy.en["s4o"],
 };
 
-const STEP_WORDS = { book: "Booking", transfer: "Transfer", reprice: "Tier change" } as const;
+const STEP_WORDS = { book: "Booking", transfer: sourceCopy.en["s24j"], reprice: sourceCopy.en["s245"] } as const;
 
 const CHANNEL_WORDS: Readonly<Record<PlatformChannel, string>> = {
-  "web-board": "Web board",
-  "partner-board": "Partner board",
+  "web-board": sourceCopy.en["s26h"],
+  "partner-board": sourceCopy.en["s179"],
 };
 
 const FACET_LABELS: Readonly<Record<PlatformFacet, string>> = {
   booking: "Booking",
-  payment: "Payment observation",
-  issuance: "Right transfer",
-  refund: "Refund",
+  payment: sourceCopy.en["s17i"],
+  issuance: sourceCopy.en["s1hc"],
+  refund: sourceCopy.en["s1ek"],
 };
 
 export type PlatformScreenState = "loading" | "unread" | "ready" | "empty" | "stale" | "not-bound" | "unavailable" | "tuple-changed";
@@ -203,11 +205,11 @@ export interface PlatformModel {
 export function causeLine(cause: PlatformRefreshCause): string {
   switch (cause) {
     case "own-write":
-      return "Your own write landed after the last read.";
+      return sourceCopy.en["s279"];
     case "stale-rejection":
-      return "The source said the last read was behind.";
+      return sourceCopy.en["s20g"];
     case "context-switch":
-      return "The session context changed.";
+      return sourceCopy.en["s1xw"];
     default: {
       const exhaustive: never = cause;
       return exhaustive;
@@ -219,20 +221,20 @@ export function causeLine(cause: PlatformRefreshCause): string {
 export function fenceLine(fence: PlatformFence): string {
   switch (fence.reason) {
     case "in-flight":
-      return `Another write on this right is in flight (${fence.intentRef}). Wait for its answer.`;
+      return sourceMessage(sourceCopy.en["p.t355"], { v1: fence.intentRef });
     case "unknown-outcome": {
       const late = fence.lateRecorded ? " A late result was recorded, and it does not make the write known." : "";
       const earlier = fence.earlierContext ? " It was sent in an earlier session context." : "";
-      return `An earlier write on this right has an unknown result (${fence.intentRef}).${late}${earlier} Writes on this right stay blocked. A read does not resolve it.`;
+      return sourceMessage(sourceCopy.en["p.t356"], { v1: fence.intentRef, v2: late, v3: earlier });
     }
     case "no-snapshot":
-      return "Read the platform first.";
+      return sourceCopy.en["s1cm"];
     case "snapshot-stale":
-      return `Read again before the next write. ${causeLine(fence.cause)}`;
+      return sourceMessage(sourceCopy.en["p.t86"], { v1: causeLine(fence.cause) });
     case "duplicate-intent":
-      return `Intent ${fence.intentRef} was already used. This page does not send the same intent twice.`;
+      return sourceMessage(sourceCopy.en["p.t87"], { v1: fence.intentRef });
     case "payment-unobserved":
-      return `No payment observation is recorded for ${fence.tradeRef}, so the transfer waits. Whether funds moved is not known here.`;
+      return sourceMessage(sourceCopy.en["p.t357"], { v1: fence.tradeRef });
     case "not-bound":
       return PLATFORM_NOT_BOUND_REASON;
     default: {
@@ -246,17 +248,17 @@ export function stepResultLine(step: PlatformStepInput["step"], result: Platform
   const word = STEP_WORDS[step];
   switch (result.kind) {
     case "CONFIRMED":
-      return `${word} confirmed by the synthetic source. This is not a protocol receipt.`;
+      return sourceMessage(sourceCopy.en["p.t358"], { v1: word });
     case "REJECTED":
-      return `${word} rejected (${result.intent.code ?? "no code"}). ${result.intent.message ?? ""} The source applied nothing for this write.`.trim();
+      return sourceMessage(sourceCopy.en["p.t193"], { v1: word, v2: result.intent.code ?? "no code", v3: result.intent.message ?? "" }).trim();
     case "UNKNOWN":
-      return `${word} result unknown (${result.intent.code ?? "no code"}). It may or may not have applied. Writes on this right are blocked, and neither a read nor a late result resolves it.`;
+      return sourceMessage(sourceCopy.en["p.t359"], { v1: word, v2: result.intent.code ?? "no code" });
     case "QUARANTINED":
-      return `The result of the ${word.toLowerCase()} arrived after the session context changed. It was quarantined and applied nowhere. The write stays unknown.`;
+      return sourceMessage(sourceCopy.en["p.t102"], { v1: word.toLowerCase() });
     case "FENCED":
-      return `${word} not sent. ${fenceLine(result.fence)}`;
+      return sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: fenceLine(result.fence) });
     case "NOT_SENT":
-      return `${word} not sent. ${result.detail}`;
+      return sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: result.detail });
     default: {
       const exhaustive: never = result;
       return exhaustive;
@@ -273,24 +275,24 @@ function attentionFor(last: LastAction | null): boolean {
 
 function writeWord(view: PlatformFacetView): { kind: string; word: string } {
   if (view.outcome === "NOT_BOUND") {
-    return { kind: "not-bound", word: "No write exists for this line." };
+    return { kind: "not-bound", word: sourceCopy.en["s135"] };
   }
   if (view.outcome === null) {
-    return { kind: "none", word: "No write sent by this page." };
+    return { kind: "none", word: sourceCopy.en["s138"] };
   }
   const code = view.code ? ` (${view.code})` : "";
   const late = view.lateRecorded ? " A late result is recorded." : "";
   switch (view.outcome) {
     case "CONFIRMED":
-      return { kind: "confirmed", word: "Confirmed by the synthetic source." };
+      return { kind: "confirmed", word: sourceCopy.en["sdi"] };
     case "REJECTED":
-      return { kind: "rejected", word: `Rejected${code}.` };
+      return { kind: "rejected", word: sourceMessage(sourceCopy.en["p.t560"], { v1: code }) };
     case "UNKNOWN":
-      return { kind: "unknown", word: `Unknown${code}.${late}` };
+      return { kind: "unknown", word: sourceMessage(sourceCopy.en["p.t561"], { v1: code, v2: late }) };
     case "IN_FLIGHT":
-      return { kind: "in-flight", word: "In flight." };
+      return { kind: "in-flight", word: sourceCopy.en["snw"] };
     case "DRAFT":
-      return { kind: "draft", word: `Not sent${code}.` };
+      return { kind: "draft", word: sourceMessage(sourceCopy.en["p.t360"], { v1: code }) };
     default: {
       const exhaustive: never = view.outcome;
       return exhaustive;
@@ -301,18 +303,18 @@ function writeWord(view: PlatformFacetView): { kind: string; word: string } {
 function observedWord(view: PlatformFacetView): { kind: string; word: string } {
   const seen = view.observed;
   if (seen === null) {
-    return { kind: "none", word: "Not read." };
+    return { kind: "none", word: sourceCopy.en["s12d"] };
   }
   const code = seen.code ? ` (${seen.code})` : "";
   switch (seen.state) {
     case "observed":
-      return { kind: "observed", word: "Observed in the last read." };
+      return { kind: "observed", word: sourceCopy.en["s13m"] };
     case "none":
-      return { kind: "not-observed", word: "Not observed." };
+      return { kind: "not-observed", word: sourceCopy.en["s120"] };
     case "unknown":
-      return { kind: "unknown", word: `Unknown in the last read${code}.` };
+      return { kind: "unknown", word: sourceMessage(sourceCopy.en["p.t361"], { v1: code }) };
     case "unavailable":
-      return { kind: "unavailable", word: `Unavailable${code}.` };
+      return { kind: "unavailable", word: sourceMessage(sourceCopy.en["p.t562"], { v1: code }) };
     default: {
       const exhaustive: never = seen.state;
       return exhaustive;
@@ -321,12 +323,12 @@ function observedWord(view: PlatformFacetView): { kind: string; word: string } {
 }
 
 const SHAPE_LINES: Readonly<Record<PlatformTradeShape, string>> = {
-  "booking-only": "Only the booking is observed so far.",
-  "booking-payment-right": "A booking, a payment observation, and a right transfer are each observed. Each keeps its own line.",
-  "payment-without-right": "A payment observation is recorded and the right did not move for this trade. This is a partial result.",
-  "right-without-payment": "The right moved and no payment observation is recorded. This is a partial result.",
-  "payment-unknown": "No payment observation arrived. Whether funds moved is not known here.",
-  "unknown-effect": "The transfer result is unknown. The right may or may not have moved for this trade.",
+  "booking-only": sourceCopy.en["s14p"],
+  "booking-payment-right": sourceCopy.en["s3"],
+  "payment-without-right": sourceCopy.en["s51"],
+  "right-without-payment": sourceCopy.en["s1xb"],
+  "payment-unknown": sourceCopy.en["swv"],
+  "unknown-effect": sourceCopy.en["s22n"],
 };
 
 export function describeTrade(trade: PlatformTradeProjection, transfer: ControlModel): TradeModel {
@@ -346,22 +348,22 @@ export function describeTrade(trade: PlatformTradeProjection, transfer: ControlM
   const original = trade.originalRight;
   const current = trade.currentRight;
   const rightLines = [
-    `Right ${trade.rightRef} when this trade was booked: holder ${original.holder} at version ${original.version}.`,
+    sourceMessage(sourceCopy.en["p.t362"], { v1: trade.rightRef, v2: original.holder, v3: original.version }),
     current
-      ? `Right ${trade.rightRef} in the last read: holder ${current.holder} at version ${current.version}.`
-      : `Right ${trade.rightRef} is not in the last read.`,
+      ? sourceMessage(sourceCopy.en["p.t363"], { v1: trade.rightRef, v2: current.holder, v3: current.version })
+      : sourceMessage(sourceCopy.en["p.t364"], { v1: trade.rightRef }),
   ];
   const refund = trade.facets.refund.observed;
   const stranded = refund !== null && refund.state === "unavailable";
   const refundLine = stranded
-    ? `Refund: ${refund.code ?? PLATFORM_COMPENSATION_UNDEFINED}. ${refund.note} The right stays where the last read shows it.`
-    : "Refund: nothing to compensate on this trade.";
+    ? sourceMessage(sourceCopy.en["p.t365"], { v1: refund.code ?? PLATFORM_COMPENSATION_UNDEFINED, v2: refund.note })
+    : sourceCopy.en["s1es"];
   return {
     tradeRef: trade.tradeRef,
     linked: trade.linked,
     linkLine: trade.linked
-      ? "Linked to a confirmed booking of this page."
-      : "Observed only. It is not linked to a confirmed booking of this page, and this page does not claim it.",
+      ? sourceCopy.en["sqy"]
+      : sourceCopy.en["s13n"],
     channelWord: CHANNEL_WORDS[trade.channel],
     shape: trade.shape,
     shapeLine: SHAPE_LINES[trade.shape],
@@ -411,29 +413,29 @@ function readStateToScreen(readState: PlatformReadState, refreshRequired: Platfo
 function statusFor(state: PlatformScreenState, detail: string | null): { statusLine: string; detailLine: string; actionLabel: string | null } {
   switch (state) {
     case "loading":
-      return { statusLine: "Reading the synthetic platform. Nothing is confirmed yet.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s1bl"], detailLine: "", actionLabel: null };
     case "unread":
       return {
-        statusLine: "The session context changed, so there is no read in this context.",
-        detailLine: "Read again to see the platform from this context. An earlier unknown write on a right still blocks that right.",
-        actionLabel: "Read again",
+        statusLine: sourceCopy.en["s1xx"],
+        detailLine: sourceCopy.en["s1b3"],
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "ready":
-      return { statusLine: "Platform read.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s18h"], detailLine: "", actionLabel: null };
     case "empty":
-      return { statusLine: "No listings in this synthetic session.", detailLine: "Nothing can be booked, changed, or transferred.", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["sw3"], detailLine: sourceCopy.en["s113"], actionLabel: sourceCopy.en["s1ax"] };
     case "stale":
-      return { statusLine: "Stale platform read.", detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["s1lt"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "not-bound":
       return { statusLine: PLATFORM_NOT_BOUND_REASON, detailLine: "", actionLabel: null };
     case "tuple-changed":
       return {
-        statusLine: "The pin tuple changed. Nothing was read and nothing was applied.",
+        statusLine: sourceCopy.en["s1v8"],
         detailLine: detail ?? "",
-        actionLabel: "Start a new synthetic session",
+        actionLabel: sourceCopy.en["s1m2"],
       };
     case "unavailable":
-      return { statusLine: "The source did not answer. This is not an empty platform.", detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["s1yx"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     default: {
       const exhaustive: never = state;
       return exhaustive;
@@ -446,7 +448,7 @@ function lateLineOf(intent: PlatformIntent): string {
     return "";
   }
   const code = intent.late.code ? ` (${intent.late.code})` : "";
-  return `Late result ${intent.late.result}${code}. Evidence only.`;
+  return sourceMessage(sourceCopy.en["p.t195"], { v1: intent.late.result, v2: code });
 }
 
 /** The unused-intent id the gate preview asks with. It is never sent. */
@@ -463,10 +465,10 @@ export function buildPlatformModel(input: {
   const projection = projectPlatform(state);
   const freshnessWord =
     state.freshness === "CURRENT"
-      ? "The last read is current."
+      ? sourceCopy.en["s1tn"]
       : state.freshness === "STALE"
-        ? "The last read is behind."
-        : "There is no usable read.";
+        ? sourceCopy.en["s1ti"]
+        : sourceCopy.en["s1wv"];
 
   const rights: RightModel[] = projection.rights.map((right) => {
     const listings = projection.listings
@@ -475,10 +477,10 @@ export function buildPlatformModel(input: {
         const open = listing.status === "open";
         const bookControl = open
           ? control(controller.gateFor({ step: "book", intentRef: GATE_PREVIEW, listingRef: listing.listingRef }))
-          : { enabled: false, reason: `Superseded by ${listing.supersededBy ?? "a newer listing"}. Book the newer listing.` };
+          : { enabled: false, reason: sourceMessage(sourceCopy.en["p.t366"], { v1: listing.supersededBy ?? "a newer listing" }) };
         const repriceControl = open
           ? control(controller.gateFor({ step: "reprice", intentRef: GATE_PREVIEW, listingRef: listing.listingRef, nextTier: PLATFORM_TIERS[0] }))
-          : { enabled: false, reason: `Superseded by ${listing.supersededBy ?? "a newer listing"}.` };
+          : { enabled: false, reason: sourceMessage(sourceCopy.en["p.t367"], { v1: listing.supersededBy ?? "a newer listing" }) };
         return {
           listingRef: listing.listingRef,
           channel: listing.channel,
@@ -486,20 +488,20 @@ export function buildPlatformModel(input: {
           tier: listing.tier,
           termsRef: listing.termsRef,
           open,
-          statusLine: open ? "Open at the last read." : `Superseded by ${listing.supersededBy ?? "a newer listing"}.`,
+          statusLine: open ? sourceCopy.en["s14y"] : sourceMessage(sourceCopy.en["p.t367"], { v1: listing.supersededBy ?? "a newer listing" }),
           book: bookControl,
           reprice: repriceControl,
         };
       });
     return {
       rightRef: right.rightRef,
-      holderLine: `Holder ${right.holder} at version ${right.version}, from the last read. An observation, not your receipt.`,
+      holderLine: sourceMessage(sourceCopy.en["p.t368"], { v1: right.holder, v2: right.version }),
       transfersLine:
         right.observedTransfers === 0
-          ? "No trade has moved this right in the last read."
+          ? sourceCopy.en["s129"]
           : right.observedTransfers === 1
-            ? "One trade moved this right in the last read."
-            : `${right.observedTransfers} trades show as moving this right. That is an integrity fault, and this page does not call any of them a success.`,
+            ? sourceCopy.en["s14i"]
+            : sourceMessage(sourceCopy.en["p.t369"], { v1: right.observedTransfers }),
       integrityFault: right.integrityFault,
       listings,
     };
@@ -520,17 +522,17 @@ export function buildPlatformModel(input: {
   }));
 
   const quarantineLines = state.quarantined.map(
-    (item) => `Result ${item.arrived} for ${item.intentRef} was quarantined (${item.cause}). It changed nothing.`,
+    (item) => sourceMessage(sourceCopy.en["p.t122"], { v1: item.arrived, v2: item.intentRef, v3: item.cause }),
   );
   const unlinkedLines = projection.unlinkedIntents.map(
     (intent) =>
-      `${STEP_WORDS[intent.step]} ${intent.intentRef} on ${intent.targetRef} is ${intent.outcome.toLowerCase().replace("_", " ")}. No trade is linked to it, and a trade seen in a read is not claimed for it.`,
+      sourceMessage(sourceCopy.en["p.t370"], { v1: STEP_WORDS[intent.step], v2: intent.intentRef, v3: intent.targetRef, v4: intent.outcome.toLowerCase().replace("_", " ") }),
   );
 
   const counters = state.counters;
   const session: SessionModel = {
-    contextLine: `Actor ${state.context.actorRef}, session ${state.context.incarnation}, mode ${state.context.environment}.`,
-    countersLine: `Sent ${counters.sent}. Blocked before sending ${counters.fenced}. Not sent ${counters.notSent}. Reads dropped ${counters.droppedReads}.`,
+    contextLine: sourceMessage(sourceCopy.en["p.t563"], { v1: state.context.actorRef, v2: state.context.incarnation, v3: state.context.environment }),
+    countersLine: sourceMessage(sourceCopy.en["p.t206"], { v1: counters.sent, v2: counters.fenced, v3: counters.notSent, v4: counters.droppedReads }),
     intents,
     quarantineLines,
     unlinkedLines,
@@ -540,7 +542,7 @@ export function buildPlatformModel(input: {
     id: row.id,
     platformField: row.platformField,
     status: row.status,
-    statusWord: row.status === "field-named" ? "Field named in the pin" : "Not-bound",
+    statusWord: row.status === "field-named" ? sourceCopy.en["sl3"] : sourceCopy.en["s10d"],
     bodyFields: row.bodyFields.length === 0 ? "none" : row.bodyFields.map((entry) => `${entry.action}.${entry.field}`).join(", "),
     reason: row.reason,
   }));
@@ -676,7 +678,7 @@ export function usePlatformJourney(): {
       void run({ step: "reprice", intentRef: nextIntent(), listingRef, nextTier: tier });
     },
     setScenario(next) {
-      startSession(next, `Started a new synthetic session with scenario ${next}. Earlier intents are gone, as after a reload.`);
+      startSession(next, sourceMessage(sourceCopy.en["p.t217"], { v1: next }));
     },
     deliverHeld() {
       const session = sessionRef.current;
@@ -684,7 +686,7 @@ export function usePlatformJourney(): {
         return;
       }
       const count = session.port.deliverHeld();
-      note(count === 0 ? "No held response to deliver." : `Delivered ${count} held response${count === 1 ? "" : "s"}.`);
+      note(count === 0 ? sourceCopy.en["svq"] : sourceMessage(sourceCopy.en["p.t130"], { v1: count, v2: count === 1 ? "" : "s" }));
     },
     deliverLate() {
       const session = sessionRef.current;
@@ -693,14 +695,14 @@ export function usePlatformJourney(): {
       }
       const due = session.port.deliverLate();
       if (due.length === 0) {
-        note("No late result is due.");
+        note(sourceCopy.en["svv"]);
         return;
       }
       const lines = due.map((delivery) => {
         const outcome = session.controller.acceptLate(delivery);
         return outcome.kind === "RECORDED"
-          ? `Late result ${delivery.result} recorded for ${delivery.intentRef}. The write stays unknown.`
-          : `Late result for ${delivery.intentRef} was quarantined (${outcome.cause}).`;
+          ? sourceMessage(sourceCopy.en["p.t214"], { v1: delivery.result, v2: delivery.intentRef })
+          : sourceMessage(sourceCopy.en["p.t215"], { v1: delivery.intentRef, v2: outcome.cause });
       });
       note(lines.join(" "));
     },
@@ -712,11 +714,11 @@ export function usePlatformJourney(): {
       const current = session.controller.state().context.actorRef;
       const next = session.controller.switchContext({ actorRef: current === PLATFORM_DESK_ACTOR ? PLATFORM_ALT_ACTOR : PLATFORM_DESK_ACTOR });
       note(
-        `Session context switched to ${next.actorRef}, session ${next.incarnation}. A write in flight is now unknown and its result will be quarantined. Read again.`,
+        sourceMessage(sourceCopy.en["p.t247"], { v1: next.actorRef, v2: next.incarnation }),
       );
     },
     newSession() {
-      startSession(scenario, "Started a new synthetic session. Earlier intents are gone, as after a reload. Nothing was resolved at a producer.");
+      startSession(scenario, sourceCopy.en["s1ma"]);
     },
   };
 

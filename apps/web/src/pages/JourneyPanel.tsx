@@ -1,3 +1,9 @@
+import { messages as bindingCopy } from "../i18n/messages/workspace--registry";
+import { messages as copy0 } from "../i18n/messages/pages--JourneyPanel";
+import { messages as copy1 } from "../i18n/messages/journey-desk";
+import { messages as copy2 } from "../i18n/messages/storage-allow-list";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { Link } from "react-router-dom";
 import {
   JOURNEY_DESK_NOT_BOUND,
@@ -7,93 +13,91 @@ import {
 import type { JourneyPanelModel, JourneyRowStatus } from "../journey-desk";
 
 const STATUS_TEXT: Record<JourneyRowStatus, string> = {
-  "not-started": "Not started",
-  ready: "Ready",
-  "in-flight": "In flight",
-  confirmed: "Confirmed",
-  rejected: "Rejected by the gate",
-  unconfirmed: "Unconfirmed",
-  "not-sent": "Not sent",
+  "not-started": copy0.en["s12p"],
+  ready: copy0.en["e.19"],
+  "in-flight": copy0.en["e.20"],
+  confirmed: copy0.en["e.21"],
+  rejected: copy0.en["e.22"],
+  unconfirmed: copy0.en["e.23"],
+  "not-sent": copy0.en["e.24"],
   blocked: "Blocked",
-  unavailable: "Unavailable",
+  unavailable: copy0.en["s24z"],
 };
 
 export function JourneyPanel({ variant, model }: { variant: "booking" | "box-office"; model: JourneyPanelModel }) {
+  const t = useT(bindingCopy, copy0, copy1, copy2);
   const unavailable = model.path.kind === "unavailable";
   return (
     <aside
       className="panel journey-panel"
-      aria-label="Catalogue journey"
+      aria-label={t("sbp")}
       data-journey-variant={variant}
       data-journey-path={model.path.kind}
     >
-      <p className="eyebrow">{eyebrow(model)}</p>
-      <h3>Catalogue journey</h3>
-      <p>{JOURNEY_RULING}</p>
-      {model.source === "stub-shape" ? <p>Stub-shape receipts are not from the gate.</p> : null}
-      <p>placeHold stays not-bound (reserve_listing).</p>
-      <p>Mock: no funds, no admission.</p>
-      <p className="muted">Policy values on create_event are a synthetic fixture and are not a displayed price.</p>
-      <p className="muted">A reload clears this page-load journey and uses a new attempt id.</p>
+      <p className="eyebrow">{deskText(t, eyebrow(model))}</p>
+      <h3>{t("sbp")}</h3>
+      <p>{deskText(t, JOURNEY_RULING)}</p>
+      {model.source === "stub-shape" ? <p>{t("s1n0")}</p> : null}
+      <p>{t("s18c")}</p>
+      <p>{t("ssz")}</p>
+      <p className="muted">{t("s18o")}</p>
+      <p className="muted">{t("s6x")}</p>
       {model.path.kind === "checking" ? (
-        <p className="muted">Environment integration-http. Loopback status is not loaded yet.</p>
+        <p className="muted">{t("sim")}</p>
       ) : null}
       {unavailable ? (
         <p className="alert" role="alert">
-          Journey path unavailable. The reviewed gate answers no CORS preflight; the desk stays on integration HTTP
-          and does not fall back to the stub. Node tests exercise the live gate. A browser path needs a kix-protocol
-          gate change.
-          {model.path.kind === "unavailable" && model.path.code ? ` Code ${model.path.code}.` : ""}
+          {t("spk")}{model.path.kind === "unavailable" && model.path.code ? t("sd4", { code: model.path.code }) : ""}
         </p>
       ) : null}
-      <p>{model.lastConfirmed}</p>
-      <p>{model.unconfirmed}</p>
-      {variant === "box-office" ? <p>Writes happen on the booking screen.</p> : null}
+      <p>{deskText(t, model.lastConfirmed)}</p>
+      <p>{deskText(t, model.unconfirmed)}</p>
+      {variant === "box-office" ? <p>{t("s271")}</p> : null}
       <ol className="journey-steps">
-        {model.rows.map((row) => (
+        {deskText(t, model.rows.map((row) => (
           <li key={row.step} className="journey-step" data-status={row.status}>
-            <p className="eyebrow">{row.label}</p>
+            <p className="eyebrow">{deskText(t, row.label)}</p>
             <p>
-              {row.step}
-              {variant === "box-office" ? " · planned" : ""}
+              {deskText(t, row.step)}
+              {variant === "box-office" ? (" " + t("s18e")) : ""}
             </p>
             <dl className="facts">
               <div>
-                <dt>Status</dt>
-                <dd>{STATUS_TEXT[row.status]}</dd>
+                <dt>{t("s1mj")}</dt>
+                <dd>{deskText(t, STATUS_TEXT[row.status])}</dd>
               </div>
               <div>
-                <dt>Operation</dt>
-                <dd>{row.operationId ?? "none"}</dd>
+                <dt>{t("s15j")}</dt>
+                <dd>{deskText(t, row.operationId) ?? t("common.empty")}</dd>
               </div>
               <div>
-                <dt>Actor</dt>
-                <dd>{row.actor ?? "none"}</dd>
+                <dt>{t("s12")}</dt>
+                <dd>{deskText(t, row.actor) ?? t("common.empty")}</dd>
               </div>
               <div>
-                <dt>Code</dt>
-                <dd>{row.code ?? "none"}</dd>
+                <dt>{t("error.fact.code")}</dt>
+                <dd>{deskText(t, row.code) ?? t("common.empty")}</dd>
               </div>
               {row.requestId ? (
                 <div>
-                  <dt>Request</dt>
-                  <dd>{row.requestId}</dd>
+                  <dt>{t("s1fq")}</dt>
+                  <dd>{deskText(t, row.requestId)}</dd>
                 </div>
               ) : null}
               {row.correlationId ? (
                 <div>
-                  <dt>Correlation</dt>
-                  <dd>{row.correlationId}</dd>
+                  <dt>{t("sek")}</dt>
+                  <dd>{deskText(t, row.correlationId)}</dd>
                 </div>
               ) : null}
             </dl>
-            {row.note ? <p>{row.note}</p> : null}
+            {row.note ? <p>{deskText(t, row.note)}</p> : null}
             {row.receipt ? (
               <dl className="facts">
                 {row.receipt.map((field) => (
                   <div key={field.key}>
-                    <dt>{field.key}</dt>
-                    <dd>{field.value}</dd>
+                    <dt>{deskText(t, field.key)}</dt>
+                    <dd>{deskText(t, field.value)}</dd>
                   </div>
                 ))}
               </dl>
@@ -101,55 +105,56 @@ export function JourneyPanel({ variant, model }: { variant: "booking" | "box-off
             {variant === "booking" ? (
               <div className="row-actions">
                 <button type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
-                  Send {row.step}
+                  {t("s1j5")}{" "}{deskText(t, row.step)}
                 </button>
               </div>
             ) : (
-              <p className="muted">Planned step. Writes happen on the booking screen.</p>
+              <p className="muted">{t("s18f")}</p>
             )}
           </li>
-        ))}
+        )))}
       </ol>
       {variant === "box-office" ? <OpenedList opened={model.opened} /> : null}
-      <p className="eyebrow">Not composed</p>
+      <p className="eyebrow">{t("s10i")}</p>
       <dl className="facts">
-        {JOURNEY_NOT_COMPOSED.map((entry) => (
+        {deskText(t, JOURNEY_NOT_COMPOSED.map((entry) => (
           <div key={entry.action}>
-            <dt>{entry.action}</dt>
-            <dd>Not composed. {entry.reason}</dd>
+            <dt>{deskText(t, entry.action)}</dt>
+            <dd>{t("s10j")}{" "}{deskText(t, entry.reason)}</dd>
           </div>
-        ))}
+        )))}
       </dl>
-      <p className="eyebrow">Desk methods not bound</p>
+      <p className="eyebrow">{t("sge")}</p>
       <dl className="facts">
-        {JOURNEY_DESK_NOT_BOUND.map((entry) => (
+        {deskText(t, JOURNEY_DESK_NOT_BOUND.map((entry) => (
           <div key={entry.method}>
-            <dt>{entry.method}</dt>
+            <dt>{deskText(t, entry.method)}</dt>
             <dd>
-              {entry.consideredAction ?? "none"} · not-bound. {entry.reason}
+              {deskText(t, entry.consideredAction) ?? t("common.empty")} {t("s10b")}{" "}{deskText(t, entry.reason)}
             </dd>
           </div>
-        ))}
+        )))}
       </dl>
     </aside>
   );
 }
 
 function OpenedList({ opened }: { opened: JourneyPanelModel["opened"] }) {
+  const t = useT(bindingCopy, copy0, copy1, copy2);
   return (
     <div>
-      <p className="eyebrow">Journeys opened on this page load</p>
+      <p className="eyebrow">{t("spo")}</p>
       {opened.length === 0 ? (
-        <p className="empty">No journey opened on this page load.</p>
+        <p className="empty">{t("svu")}</p>
       ) : (
         <ul className="journey-opened">
-          {opened.map((item) => (
+          {deskText(t, opened.map((item) => (
             <li key={item.eventId}>
-              <Link to={`/booking/${encodeURIComponent(item.eventId)}`}>{item.eventId}</Link>
-              <p>{item.lastConfirmed}</p>
-              <p>{item.unconfirmed}</p>
+              <Link to={`/booking/${encodeURIComponent(item.eventId)}`}>{deskText(t, item.eventId)}</Link>
+              <p>{deskText(t, item.lastConfirmed)}</p>
+              <p>{deskText(t, item.unconfirmed)}</p>
             </li>
-          ))}
+          )))}
         </ul>
       )}
     </div>
@@ -158,16 +163,16 @@ function OpenedList({ opened }: { opened: JourneyPanelModel["opened"] }) {
 
 function eyebrow(model: JourneyPanelModel): string {
   if (model.path.kind === "available-stub-shape" || model.source === "stub-shape") {
-    return "wave6a.journey · stub-shape receipts";
+    return copy0.en["e.30"];
   }
   if (model.path.kind === "unavailable") {
-    return "integration-http · unavailable";
+    return copy0.en["e.26"];
   }
   if (model.path.kind === "checking") {
-    return "integration-http · checking";
+    return copy0.en["e.27"];
   }
   if (model.path.kind === "available") {
-    return "integration-http · available";
+    return copy0.en["e.28"];
   }
   return "wave6a.journey";
 }

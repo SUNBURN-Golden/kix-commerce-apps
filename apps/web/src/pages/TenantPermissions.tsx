@@ -1,3 +1,7 @@
+import { messages as copy0 } from "../i18n/messages/pages--TenantPermissions";
+import { messages as copy1 } from "../i18n/messages/tenant-permissions";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { useRestoreFocus } from "../a11y/focus";
 import { useTenantPermissions } from "../tenant-permissions";
 import {
@@ -15,6 +19,7 @@ import {
 } from "./TenantPermissionsPanels";
 
 export function TenantPermissionsPage() {
+  const t = useT(copy0, copy1);
   const live = useTenantPermissions();
   const model = live.model;
   // A block, a refusal, a denial, a read that did not answer, or an unknown result takes focus to the status region.
@@ -22,16 +27,16 @@ export function TenantPermissionsPage() {
 
   return (
     <div className="discovery platform finance" data-adapter-environment={live.environment}>
-      <nav className="discovery-nav" aria-label="Tenant permissions sections">
-        <a href="#tenant-controls">Controls</a>
-        <a href="#tenant-status">Status</a>
-        <a href="#tenant-authority">Who may do what</a>
-        <a href="#tenant-workspace">Role workspace</a>
-        <a href="#tenant-proposals">Proposals</a>
-        <a href="#tenant-audit">Audit record</a>
-        <a href="#tenant-export-panel">Sensitive export</a>
-        <a href="#tenant-requests">Requests</a>
-        <a href="#tenant-session">Session record</a>
+      <nav className="discovery-nav" aria-label={t("s1pj")}>
+        <a href="#tenant-controls">{t("sed")}</a>
+        <a href="#tenant-status">{t("s1mj")}</a>
+        <a href="#tenant-authority">{t("s26m")}</a>
+        <a href="#tenant-workspace">{t("s1hm")}</a>
+        <a href="#tenant-proposals">{t("s19i")}</a>
+        <a href="#tenant-audit">{t("s94")}</a>
+        <a href="#tenant-export-panel">{t("s1jc")}</a>
+        <a href="#tenant-requests">{t("s1fv")}</a>
+        <a href="#tenant-session">{t("s1js")}</a>
       </nav>
       <div className="discovery-body">
         <TenantBanner environment={live.environment} scenario={live.scenario} model={model} />
@@ -44,7 +49,7 @@ export function TenantPermissionsPage() {
             className="discovery-action"
             onClick={() => (model.state === "tuple-changed" ? live.actions.newSession() : live.actions.refresh())}
           >
-            {model.actionLabel}
+            {deskText(t, model.actionLabel)}
           </button>
         ) : null}
         <TenantAuthoritySection model={model} />

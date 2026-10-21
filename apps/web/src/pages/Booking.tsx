@@ -1,11 +1,22 @@
+import { messages as deskCopy } from "../i18n/desk-catalogue";
+import { messages as copy0 } from "../i18n/messages/pages--Booking";
+import { messages as copy1 } from "../i18n/messages/a11y--present";
+import { messages as copy2 } from "../i18n/messages/admission-desk";
+import { messages as copy3 } from "../i18n/messages/reservation-desk";
+import { messages as copy4 } from "../i18n/messages/storage-allow-list";
+import { messages as copy5 } from "../i18n/messages/journey-desk";
+import { messages as copy6 } from "../i18n/messages/refund-return";
+import { messages as copy7 } from "../i18n/messages/workspace--registry";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ProtocolError, type Booking, type Hold, type Performance } from "@kix/protocol-adapter";
 import { focusControl, heldAfterError } from "../a11y/focus";
 import { AmountNotice, DeadlineLine, StatusMark } from "../a11y/marks";
 import { bookingQuantityNumber, capacityLine, presentQuantityLine } from "../a11y/present";
+import { useT } from "../i18n/desk-context";
 import { useFormatWhen } from "../i18n/locale-context";
 import { protocol } from "../protocol";
+import { deskText } from "../i18n/desk-translate";
 import { SafeText } from "../safe-text";
 import { useAdmissionDesk } from "../admission-desk";
 import { useJourneyDesk } from "../journey-desk";
@@ -17,6 +28,7 @@ import { RefundReturnPanel } from "./RefundReturnPanel";
 import { ReservationPanel } from "./ReservationPanel";
 
 export function BookingPage() {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
   const formatWhen = useFormatWhen();
   const { eventId = "" } = useParams();
   const [performance, setPerformance] = useState<Performance | null>(null);
@@ -47,7 +59,7 @@ export function BookingPage() {
         if (!cancelled) {
           setPerformance(null);
           setResolved(true);
-          setError(reason instanceof Error ? reason.message : "Could not load the performance.");
+          setError(reason instanceof Error ? reason.message : deskCopy.en["desk.performance.singleLoadError"]);
         }
       });
     return () => {
@@ -93,7 +105,7 @@ export function BookingPage() {
   async function placeHold() {
     const count = bookingQuantityNumber(quantity);
     if (count === null) {
-      keepQuantity("Quantity must be a whole number from 1 to 6. The typed value was kept.");
+      keepQuantity(deskCopy.en["desk.booking.quantityError"]);
       return;
     }
     setPending(true);
@@ -102,7 +114,7 @@ export function BookingPage() {
       setHold(await protocol.placeHold({ eventId, quantity: count }));
       await refreshPerformance();
     } catch (reason) {
-      keepQuantity(reason instanceof Error ? reason.message : "Could not place the hold.");
+      keepQuantity(reason instanceof Error ? reason.message : deskCopy.en["desk.booking.holdError"]);
     } finally {
       setPending(false);
     }
@@ -119,7 +131,7 @@ export function BookingPage() {
       setHold(null);
       await refreshPerformance();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Could not release the hold.");
+      setError(reason instanceof Error ? reason.message : deskCopy.en["desk.booking.releaseError"]);
       focusControl("booking-release");
       await dropEndedHold(reason);
     } finally {
@@ -136,7 +148,7 @@ export function BookingPage() {
     try {
       setBooking(await protocol.confirmBooking(hold.holdId));
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Could not confirm the booking.");
+      setError(reason instanceof Error ? reason.message : deskCopy.en["desk.booking.confirmError"]);
       focusControl("booking-confirm");
       await dropEndedHold(reason);
     } finally {
@@ -148,7 +160,7 @@ export function BookingPage() {
     return (
       <section>
         <p className="muted" role="status">
-          <StatusMark kind="loading" /> Loading the performance.
+          <StatusMark kind="loading" /> {t("desk.performance.singleLoading")}
         </p>
         <JourneyPanel variant="booking" model={journey} />
         <RefundReturnPanel live={refundDesk} variant="booking" />
@@ -160,14 +172,14 @@ export function BookingPage() {
     return (
       <section>
         <p className="alert" role="alert">
-          <StatusMark kind="blocked" /> {error ?? "That performance is not on this adapter."}
+          <StatusMark kind="blocked" /> {error ? deskText(t, error) : t("desk.performance.missing")}
         </p>
         <p className="muted">
-          Requested performance: <SafeText value={eventId} />
+          {t("desk.performance.requested")} <SafeText value={eventId} />
         </p>
         <JourneyPanel variant="booking" model={journey} />
         <RefundReturnPanel live={refundDesk} variant="booking" />
-        <Link to="/">Back to the window</Link>
+        <Link to="/">{t("desk.performance.back")}</Link>
       </section>
     );
   }
@@ -175,60 +187,56 @@ export function BookingPage() {
   return (
     <section>
       <header className="section-head">
-        <p className="eyebrow">Booking · B01–B05 · mock FSM phase · rights issued as a reference</p>
-        <h2>{performance.title}</h2>
+        <p className="eyebrow">{t("desk.booking.eyebrow")}</p>
+        <h2>{deskText(t, performance.title)}</h2>
         <p className="muted">
-          {performance.venue} · <time dateTime={performance.startsAt}>{formatWhen(performance.startsAt)}</time> ·{" "}
-          {capacityLine(performance.remainingCapacity)}
+          {deskText(t, performance.venue)} · <time dateTime={performance.startsAt}>{deskText(t, formatWhen(performance.startsAt))}</time> ·{" "}
+          {deskText(t, capacityLine(performance.remainingCapacity))}
         </p>
         <AmountNotice />
-        <p className="muted">
-          The hold form is the Wave 4 pointer. The reservation case is a simulated mock phase. Not live admission.
-          B01–B05 stay 설계중.
-        </p>
+        <p className="muted">{t("desk.booking.note")}</p>
       </header>
       {pending ? (
         <p className="muted" role="status">
-          <StatusMark kind="loading" /> One attempt. No retry.
-        </p>
+          <StatusMark kind="loading" /> {t("desk.booking.oneAttempt")}</p>
       ) : null}
       {error ? (
         <p id="booking-error" className="alert" role="alert">
-          <StatusMark kind="blocked" /> {error}
+          <StatusMark kind="blocked" /> {deskText(t, error)}
         </p>
       ) : null}
       {booking ? (
         <article className="ticket">
-          <p className="eyebrow">Confirmed in the adapter</p>
-          <h3>{performance.title}</h3>
+          <p className="eyebrow">{t("desk.booking.confirmed")}</p>
+          <h3>{deskText(t, performance.title)}</h3>
           <dl>
             <div>
-              <dt>Booking</dt>
+              <dt>{t("desk.booking.label")}</dt>
               <dd>{booking.bookingId}</dd>
             </div>
             <div>
-              <dt>Right</dt>
+              <dt>{t("desk.booking.right")}</dt>
               <dd>{booking.rightsRef}</dd>
             </div>
             <div>
-              <dt>Quantity</dt>
-              <dd>{presentQuantityLine(booking.quantity)}</dd>
+              <dt>{t("desk.booking.quantity")}</dt>
+              <dd>{deskText(t, presentQuantityLine(booking.quantity))}</dd>
             </div>
             <div>
-              <dt>Payment</dt>
-              <dd>Simulated — no funds</dd>
+              <dt>{t("desk.booking.payment")}</dt>
+              <dd>{t("desk.booking.simulated")}</dd>
             </div>
           </dl>
-          <p className="muted">Surfaces: {booking.surfaces.join(", ")}</p>
+          <p className="muted">{t("desk.booking.surfaces")} {deskText(t, booking.surfaces.join(", "))}</p>
           <div className="row-actions">
             <Link
               className="button"
               to={`/admission?rightsRef=${encodeURIComponent(booking.rightsRef)}&eventId=${encodeURIComponent(eventId)}`}
             >
-              Check admission
+              {t("desk.booking.check")}
             </Link>
             <Link className="ghost button" to={`/resale?bookingId=${encodeURIComponent(booking.bookingId)}`}>
-              List for resale
+              {t("desk.booking.resale")}
             </Link>
           </div>
         </article>
@@ -245,7 +253,7 @@ export function BookingPage() {
           }}
         >
           <label htmlFor="booking-quantity">
-            Quantity
+            {t("desk.booking.quantity")}
             <input
               id="booking-quantity"
               inputMode="numeric"
@@ -259,11 +267,11 @@ export function BookingPage() {
           </label>
           {hold ? (
             <p>
-              Hold <strong>{hold.holdId}</strong> until <DeadlineLine expiresAt={hold.expiresAt} expired={null} />. Surface{" "}
-              {hold.surface}. Quantity {presentQuantityLine(hold.quantity)}.
+              {t("desk.booking.hold")} <strong>{deskText(t, hold.holdId)}</strong> {t("desk.booking.until")} <DeadlineLine expiresAt={hold.expiresAt} expired={null} />{t("desk.booking.surface")}{" "}
+              {deskText(t, hold.surface)}{t("desk.booking.quantitySuffix")} {deskText(t, presentQuantityLine(hold.quantity))}.
             </p>
           ) : (
-            <p className="muted">A hold reserves capacity in the adapter. Confirming does not take payment.</p>
+            <p className="muted">{t("desk.booking.holdNote")}</p>
           )}
           <div className="row-actions">
             {hold ? (
@@ -275,15 +283,15 @@ export function BookingPage() {
                   disabled={pending}
                   onClick={() => void releaseHold()}
                 >
-                  Release hold
+                  {t("desk.booking.release")}
                 </button>
                 <button id="booking-confirm" type="submit" disabled={pending}>
-                  Confirm booking
+                  {t("desk.booking.confirm")}
                 </button>
               </>
             ) : (
               <button id="booking-place" type="submit" disabled={pending}>
-                Place hold
+                {t("desk.booking.place")}
               </button>
             )}
           </div>
@@ -301,7 +309,7 @@ export function BookingPage() {
         onCommand={(command) => void reservation.run(command)}
       />
       <AdmissionCredentialPanel
-        title={performance.title}
+        title={deskText(t, performance.title)}
         presentation={admission.presentation}
         error={admission.error}
         pending={admission.pending}
@@ -309,7 +317,7 @@ export function BookingPage() {
       />
       <RefundReturnPanel live={refundDesk} variant="booking" />
       <p>
-        <Link to={`/admission?eventId=${encodeURIComponent(eventId)}`}>Mock admission phase</Link>
+        <Link to={`/admission?eventId=${encodeURIComponent(eventId)}`}>{t("desk.booking.admission")}</Link>
       </p>
     </section>
   );

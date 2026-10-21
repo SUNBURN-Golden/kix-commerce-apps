@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/finance-operations";
+import { sourceMessage } from "./i18n/source-message";
 /**
  * The finance desk screen on top of the adapter's synthetic finance source. Stub scope:
  * the default port is the synthetic source. On integration-http the same port is
@@ -54,69 +56,69 @@ import {
 } from "@kix/protocol-adapter";
 import { protocol } from "./protocol";
 
-export const FINANCE_PAGE_TITLE = "Finance desk (synthetic)";
+export const FINANCE_PAGE_TITLE = sourceCopy.en["slb"];
 
 export const FINANCE_SOURCE_LINE =
-  "Cases, facts, payee allocations, totals, balances, cuts, and the export come from a synthetic finance source on this page load. They are not a producer read and not a catalogue receipt.";
+  sourceCopy.en["sbi"];
 
 export const FINANCE_BOUNDARY =
-  "A mismatch is a case linked to its original trade. Reviewing a case moves no money, and nothing on this page makes a ledger match.";
+  sourceCopy.en["s34"];
 
 export const FINANCE_NO_FORCE_NOTE =
-  "There is no confirm, force-match, or apply control on this page. A correction is a proposal, an approval is a record that changes nothing, and the ledger moves only when the source posts a later cut.";
+  sourceCopy.en["s1wj"];
 
 export const FINANCE_CLAIM_NOTE =
-  "Every read states confirmationForcesMatch, proposalChangesEconomicState, approvalChangesEconomicState, payoutExecuted, postedToAccountingSystem, and exportIsBookOfRecord as false. A payload that says anything else, or stays silent, is refused before a row is shown.";
+  sourceCopy.en["sji"];
 
 export const FINANCE_CUT_NOTE =
-  "Every figure belongs to the cut of one source. Cuts of different sources are never merged. When the two sides of a case sit on cuts at different positions, the case is flagged as timing-uncertain and is not called matched or mismatched.";
+  sourceCopy.en["sj3"];
 
 export const FINANCE_FIGURES_NOTE =
-  "Totals, differences, remainders, and payee shares are the source's own text, or UNDETERMINED when the source sent none. This page checks each figure's cut, generation, and case count, and compares text for equality. It adds nothing, orders nothing, and recomputes nothing.";
+  sourceCopy.en["s24d"];
 
 export const FINANCE_EXPORT_NOTE =
-  "The export is the producer's own synthetic file. It is synthetic, holds no real money, is not posted to an accounting system, and is not a book of record. It is current only when it is one complete export of the very cut set the last read saw. Anything else is withheld with every reason, and this page does not repair it.";
+  sourceCopy.en["s1s9"];
 
-export const FINANCE_SCOPE_NOTE = `The finance actors hold a synthetic grant for ${FINANCE_OWN_REF} and none for ${FINANCE_FOREIGN_REF}. A scope the grant does not cover is refused and leaves no row on screen.`;
+export const FINANCE_SCOPE_NOTE = sourceMessage(sourceCopy.en["p.t144"], { v1: FINANCE_OWN_REF, v2: FINANCE_FOREIGN_REF });
 
 export const FINANCE_ACTOR_NOTE =
-  "The actor string is a context label. It is not an authentication result, and the source does not trust it for access.";
+  sourceCopy.en["s1pw"];
 
 export const FINANCE_READ_NOTE =
-  "A read, an export, and a request are each one attempt. None is sent again by this page. An answer that arrives after the scope changed is dropped. An answer that never arrives leaves the outcome unknown.";
+  sourceCopy.en["s69"];
 
 export const FINANCE_SESSION_NOTE =
-  "Reads, exports, and requests live in this page load only. A reload or a new synthetic session clears them and resolves nothing at a producer.";
+  sourceCopy.en["s1c6"];
 
 export const FINANCE_SYNTHETIC_CONTROL_NOTE =
-  "The three Simulate controls are synthetic controls a real producer does not offer. They stand in for a withdrawn grant, a source that moved on, and a later cut in which the source resolves a case. Approving a proposal is not one of them, and nothing a person does here resolves a case.";
+  sourceCopy.en["s22k"];
 
-export const FINANCE_HOLD_NOTE = `Holding a seat is not available here. ${FINANCE_HOLD_NOT_BOUND.reason}`;
+export const FINANCE_HOLD_NOTE = sourceMessage(sourceCopy.en["p.t8"], { v1: FINANCE_HOLD_NOT_BOUND.reason });
 
-export const FINANCE_NOT_COMPOSED_NOTE = `Catalogue actions recorded and never composed here: ${FINANCE_NOT_COMPOSED.map((entry) => entry.action).join(", ")}.`;
+export const FINANCE_NOT_COMPOSED_NOTE = sourceMessage(sourceCopy.en["p.t9"], { v1: FINANCE_NOT_COMPOSED.map((entry) => entry.action).join(", ") });
 
 export const SCENARIO_NOTES: Readonly<Record<FinanceScenario, string>> = {
-  clean: "Every read, export, and request is answered. The queue holds one case per category.",
-  empty: "The source has no reconciliation cases for this book.",
-  stale: "The source serves a watermark older than the floor this page holds.",
-  "stale-totals": "The source totals were built at an older generation than the cut they name.",
-  "totals-mismatch": "One source total counts cases the read does not list.",
-  "balance-mismatch": "One balance is stated matched while the source's own difference text is not zero.",
-  "source-cut-skew": "The payment-observation cut is at an earlier position than the other sources, so no case can be judged and no single export is consistent.",
-  "dangling-link": "One case names a trade the read does not list.",
-  "proposal-pending": "A correction proposal from the reviewer waits for the approver.",
-  "self-approval": "A correction proposal from the approver waits. The approver may not approve its own proposal.",
-  "claims-forced": "The source sends a payload that claims a confirmation forced a match. The payload is refused.",
-  "scope-leak": "The source sends a row that belongs to another book. The payload is refused.",
-  denied: "The grant for this actor is withdrawn at the source.",
-  "read-lost": "The answer to a read never arrives.",
-  "export-partial": "The export is cut off before it lists every row.",
-  "export-stale": "The export was taken at an older cut set than the read saw.",
-  "export-rows-differ": "The export rows differ from the rows the read yields.",
-  "export-denied": "The source grants the read and no export.",
-  "export-claims-real": "The export declares real money. The payload is refused.",
-  "act-lost": "A request reaches the source and is recorded. Its answer never arrives.",
-  "approve-claims-applied": "The source records an approval, then answers that economic state changed. The answer is not trusted.",
+  clean: sourceCopy.en["sje"],
+  empty: sourceCopy.en["s1zh"],
+  stale: sourceCopy.en["s21a"],
+  "stale-totals": sourceCopy.en["s21e"],
+  "totals-mismatch": sourceCopy.en["s14h"],
+  "balance-mismatch": sourceCopy.en["s146"],
+  "source-cut-skew": sourceCopy.en["s1v3"],
+  "dangling-link": sourceCopy.en["s148"],
+  "proposal-pending": sourceCopy.en["sx"],
+  "self-approval": sourceCopy.en["sw"],
+  "claims-forced": sourceCopy.en["s20y"],
+  "scope-leak": sourceCopy.en["s216"],
+  denied: sourceCopy.en["s1t4"],
+  "read-lost": sourceCopy.en["s1q3"],
+  "export-partial": sourceCopy.en["s1s6"],
+  "export-stale": sourceCopy.en["s1sn"],
+  "export-rows-differ": sourceCopy.en["s1si"],
+  "export-denied": sourceCopy.en["s1zc"],
+  "export-claims-real": sourceCopy.en["s1s4"],
+  "act-lost": sourceCopy.en["s7a"],
+  "approve-claims-applied": sourceCopy.en["s20a"],
 };
 
 export type FinanceScreenState =
@@ -335,117 +337,117 @@ export interface FinanceModel {
 }
 
 const CATEGORY_WORDS: Readonly<Record<FinanceCategory, string>> = {
-  UNMATCHED: "Unmatched",
-  DUPLICATE_OBSERVATION: "Duplicate observation",
-  LATE_FACT: "Late fact",
-  MULTI_PAYEE: "Several payees",
-  RESIDUAL: "Residual allocation",
-  BALANCE_MISMATCH: "Balance mismatch",
+  UNMATCHED: sourceCopy.en["s25h"],
+  DUPLICATE_OBSERVATION: sourceCopy.en["shp"],
+  LATE_FACT: sourceCopy.en["sqj"],
+  MULTI_PAYEE: sourceCopy.en["s1k5"],
+  RESIDUAL: sourceCopy.en["s1gd"],
+  BALANCE_MISMATCH: sourceCopy.en["s9m"],
 };
 
 const CASE_STATE_WORDS: Readonly<Record<FinanceCaseState, string>> = {
-  open: "Open",
-  unknown: "Unknown",
-  "resolved-by-source": "Resolved by the source",
+  open: sourceCopy.en["s14s"],
+  unknown: sourceCopy.en["s258"],
+  "resolved-by-source": sourceCopy.en["s1gf"],
 };
 
 const VERDICT_WORDS: Readonly<Record<FinanceVerdict, string>> = {
-  matched: "The source says matched",
-  mismatch: "The source says mismatch",
-  unknown: "The source says unknown",
+  matched: sourceCopy.en["s20i"],
+  mismatch: sourceCopy.en["s20j"],
+  unknown: sourceCopy.en["s20p"],
 };
 
 const CORRECTION_WORDS: Readonly<Record<FinanceCorrectionKind, string>> = {
-  "link-observation": "Link an observation",
-  "mark-duplicate": "Mark as a duplicate observation",
-  "accept-late-fact": "Accept the late fact",
-  "reassign-payee": "Reassign a payee",
-  "allocate-remainder": "Allocate the remainder",
-  "request-source-review": "Ask the source to look again",
+  "link-observation": sourceCopy.en["sqw"],
+  "mark-duplicate": sourceCopy.en["srs"],
+  "accept-late-fact": sourceCopy.en["sd"],
+  "reassign-payee": sourceCopy.en["s1d9"],
+  "allocate-remainder": sourceCopy.en["s2r"],
+  "request-source-review": sourceCopy.en["s89"],
 };
 
 const PROPOSAL_STATE_WORDS: Readonly<Record<FinanceProposalState, string>> = {
-  pending: "Pending",
-  "approval-recorded": "Approval recorded, nothing changed",
-  rejected: "Rejected",
+  pending: sourceCopy.en["s17p"],
+  "approval-recorded": sourceCopy.en["s5u"],
+  rejected: sourceCopy.en["s1ew"],
 };
 
 const TRADE_STATUS_WORDS: Readonly<Record<FinanceOriginalTrade["statusLabel"], string>> = {
-  booked: "Booked",
-  "payment-observed": "Payment observed",
-  "right-moved": "Right moved",
-  "payment-unknown": "Payment unknown",
+  booked: sourceCopy.en["sad"],
+  "payment-observed": sourceCopy.en["s17j"],
+  "right-moved": sourceCopy.en["s1ha"],
+  "payment-unknown": sourceCopy.en["s17n"],
 };
 
 const LINE_KIND_WORDS: Readonly<Record<FinanceCase["lineKind"], string>> = {
-  "sales-observed": "a sales observation",
-  unpaid: "an unpaid line",
-  held: "a held line",
-  "refund-burden": "a refund burden",
+  "sales-observed": sourceCopy.en["s7t"],
+  unpaid: sourceCopy.en["s4q"],
+  held: sourceCopy.en["s2a"],
+  "refund-burden": sourceCopy.en["s6j"],
 };
 
 const FACT_KIND_WORDS: Readonly<Record<FinanceFact["kind"], string>> = {
-  "order-observed": "Order observed",
-  "payment-observed": "Payment observed",
-  "payment-observed-again": "Same payment observed again",
-  "payout-recorded": "Payout recorded",
-  "allocation-recorded": "Allocation recorded",
-  "remainder-recorded": "Remainder recorded",
-  "late-arrival": "Late arrival",
+  "order-observed": sourceCopy.en["s15t"],
+  "payment-observed": sourceCopy.en["s17j"],
+  "payment-observed-again": sourceCopy.en["s1i4"],
+  "payout-recorded": sourceCopy.en["s17o"],
+  "allocation-recorded": sourceCopy.en["s2u"],
+  "remainder-recorded": sourceCopy.en["s1fh"],
+  "late-arrival": sourceCopy.en["sqi"],
 };
 
 const ROLE_WORDS: Readonly<Record<NonNullable<FinanceAllocation["role"]>, string>> = {
-  seller: "Seller",
-  venue: "Venue",
+  seller: sourceCopy.en["s1j2"],
+  venue: sourceCopy.en["s25v"],
   platform: "Platform",
-  lender: "Lender",
+  lender: sourceCopy.en["sqr"],
 };
 
 const AUTHORITY_WORDS: Readonly<Record<FinanceAuthority, { word: string; effect: string }>> = {
-  read: { word: "Read the queue", effect: "Shows the source's cases. Changes nothing." },
-  export: { word: "Load the export", effect: "Asks the source for its synthetic file. Changes nothing." },
+  read: { word: sourceCopy.en["s1co"], effect: sourceCopy.en["s1kb"] },
+  export: { word: sourceCopy.en["srf"], effect: sourceCopy.en["s87"] },
   "propose-correction": {
-    word: "Propose a correction",
-    effect: "Records a proposal at the source. A proposal changes no economic state and forces no match.",
+    word: sourceCopy.en["s19n"],
+    effect: sourceCopy.en["s1e4"],
   },
   "approve-proposal": {
-    word: "Approve a proposal",
-    effect: "Records an approval at the source. An approval changes no economic state either. A different actor approves than proposed.",
+    word: sourceCopy.en["s5x"],
+    effect: sourceCopy.en["s1e3"],
   },
   "change-economic-state": {
-    word: "Change economic state",
-    effect: "The only authority that moves the ledger. No actor on this desk holds it. The ledger moves when the source posts a later cut.",
+    word: sourceCopy.en["sbt"],
+    effect: sourceCopy.en["s1up"],
   },
 };
 
 const EXPORT_REASON_WORDS: Readonly<Record<string, string>> = {
-  NO_SNAPSHOT: "there is no read to judge it against",
-  SOURCES_SKEWED: "the last read spans sources at different positions, so no single export is consistent",
-  SCOPE: "the export names another scope",
-  UNKNOWN_CUT: "the export names a cut the read does not list",
-  CUT_MISSING: "the read used a source cut that the export does not list",
-  STALE_CUT: "the export was taken before the cut set the read saw",
-  AHEAD_CUT: "the export is newer than the cut set the read saw, so the read is behind",
-  ROW_OFF_CUT: "an export row sits on a cut the export does not name",
-  PARTIAL: "the producer says the export was cut off",
-  COUNT: "the export lists a different number of rows than the producer declared",
-  ROWS_DIFFER: "the export rows differ from the rows the read yields",
+  NO_SNAPSHOT: sourceCopy.en["s1wk"],
+  SOURCES_SKEWED: sourceCopy.en["s1tr"],
+  SCOPE: sourceCopy.en["s1sf"],
+  UNKNOWN_CUT: sourceCopy.en["s1se"],
+  CUT_MISSING: sourceCopy.en["s1wa"],
+  STALE_CUT: sourceCopy.en["s1sp"],
+  AHEAD_CUT: sourceCopy.en["s1s7"],
+  ROW_OFF_CUT: sourceCopy.en["s47"],
+  PARTIAL: sourceCopy.en["s1vg"],
+  COUNT: sourceCopy.en["s1sc"],
+  ROWS_DIFFER: sourceCopy.en["s1sj"],
 };
 
 const ACTION_WORDS: Readonly<Record<FinanceActionKind, string>> = {
-  "propose-correction": "Correction proposal",
-  "approve-proposal": "Proposal approval",
+  "propose-correction": sourceCopy.en["seg"],
+  "approve-proposal": sourceCopy.en["s19h"],
 };
 
 const PHASE_WORDS: Readonly<Record<FinanceActPhase, string>> = {
-  applied: "Recorded at the synthetic source",
-  rejected: "Rejected by the source",
-  denied: "Denied by the source",
-  refused: "The answer was not trusted, and the request may have been recorded",
-  invalid: "Refused before it was recorded",
-  "tuple-changed": "Nothing was recorded because the pin tuple changed",
-  "not-bound": "Not recorded: not bound",
-  unknown: "Outcome unknown. The request may have been recorded",
+  applied: sourceCopy.en["s1du"],
+  rejected: sourceCopy.en["s1ez"],
+  denied: sourceCopy.en["sgb"],
+  refused: sourceCopy.en["s1q6"],
+  invalid: sourceCopy.en["s1eu"],
+  "tuple-changed": sourceCopy.en["s11m"],
+  "not-bound": sourceCopy.en["s12f"],
+  unknown: sourceCopy.en["s16j"],
 };
 
 /** The figure as the source stated it, or UNDETERMINED. Nothing here parses it. */
@@ -490,40 +492,40 @@ function statusFor(
   const suffix = code ? ` (${code})` : "";
   switch (state) {
     case "loading":
-      return { statusLine: "Reading the synthetic finance source. Nothing is shown yet.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s1bf"], detailLine: "", actionLabel: null };
     case "ready":
-      return { statusLine: "Finance read.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["sld"], detailLine: "", actionLabel: null };
     case "empty":
       return {
-        statusLine: "No reconciliation cases for this book in this read.",
-        detailLine: detail ?? "An empty queue is not a zero figure.",
-        actionLabel: "Read again",
+        statusLine: sourceCopy.en["sxn"],
+        detailLine: detail ?? sourceCopy.en["s3w"],
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "stale":
-      return { statusLine: "Stale finance read.", detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["s1lm"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "denied":
-      return { statusLine: `The source refused this scope${suffix}.`, detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t10"], { v1: suffix }), detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "refused":
       return {
-        statusLine: `The source sent a payload this page does not trust${suffix}.`,
-        detailLine: `${detail ?? ""} No row from it is shown.`,
-        actionLabel: "Read again",
+        statusLine: sourceMessage(sourceCopy.en["p.t11"], { v1: suffix }),
+        detailLine: sourceMessage(sourceCopy.en["p.t12"], { v1: detail ?? "" }),
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "invalid":
-      return { statusLine: `The request was refused before it read${suffix}.`, detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t13"], { v1: suffix }), detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "not-bound":
       return { statusLine: FINANCE_NOT_BOUND_REASON, detailLine: "", actionLabel: null };
     case "tuple-changed":
       return {
-        statusLine: "The pin tuple changed. Nothing was read and nothing was applied.",
+        statusLine: sourceCopy.en["s1v8"],
         detailLine: detail ?? "",
-        actionLabel: "Start a new synthetic session",
+        actionLabel: sourceCopy.en["s1m2"],
       };
     case "unavailable":
       return {
-        statusLine: "The source did not answer. This is not an empty queue.",
+        statusLine: sourceCopy.en["s1z1"],
         detailLine: detail ?? "",
-        actionLabel: "Read again",
+        actionLabel: sourceCopy.en["s1ax"],
       };
     default: {
       const exhaustive: never = state;
@@ -537,7 +539,7 @@ function verdictModel(verdict: FinanceExportVerdict | null): { verdictWord: Fina
     return { verdictWord: "none", verdictLines: [] };
   }
   if (verdict.state === "current") {
-    return { verdictWord: "current", verdictLines: ["Current export for the last read."] };
+    return { verdictWord: "current", verdictLines: [sourceCopy.en["sfa"]] };
   }
   return {
     verdictWord: "withheld",
@@ -566,30 +568,30 @@ function exportModel(exported: FinanceExportState): FinanceExportModel {
   const verdict = verdictModel(exported.verdict);
   switch (exported.phase) {
     case "none":
-      return emptyExport("none", "No export is loaded. An export is requested only after a ready read.", "");
+      return emptyExport("none", sourceCopy.en["svf"], "");
     case "loaded": {
       const value = exported.value;
       const declaration = value?.scopeDeclaration;
       return {
         phase: "loaded",
-        statusLine: verdict.verdictWord === "current" ? "Export loaded and current for the last read." : "Export loaded. It is not the current export.",
+        statusLine: verdict.verdictWord === "current" ? sourceCopy.en["skj"] : sourceCopy.en["skk"],
         detailLine: "",
         verdictWord: verdict.verdictWord,
         verdictLines: verdict.verdictLines,
         exportRef: value?.exportRef ?? null,
         scopeLine: declaration
-          ? `SYNTHETIC export. provenance ${declaration.provenance} · realMoney ${String(declaration.realMoney)} · postedToAccountingSystem ${String(declaration.postedToAccountingSystem)} · bookOfRecord ${String(declaration.bookOfRecord)} · target ${declaration.target}.`
+          ? sourceMessage(sourceCopy.en["p.t145"], { v1: declaration.provenance, v2: String(declaration.realMoney), v3: String(declaration.postedToAccountingSystem), v4: String(declaration.bookOfRecord), v5: declaration.target })
           : null,
-        cutLines: (value?.cuts ?? []).map((cut) => `Cut ${cut.cutRef} (${cut.source}) at generation ${cut.generation}. Watermark ${cut.watermark}.`),
-        rowsLine: value ? `${value.rows.length} rows of ${value.declaredRowCount} declared.` : null,
-        completeLine: value ? (value.complete ? "The producer says the export is complete." : "The producer says the export was cut off.") : null,
-        digestLine: value ? `Digest ${value.digest ?? "none"}. Opaque producer text; this page does not verify it.` : null,
+        cutLines: (value?.cuts ?? []).map((cut) => sourceMessage(sourceCopy.en["p.t146"], { v1: cut.cutRef, v2: cut.source, v3: cut.generation, v4: cut.watermark })),
+        rowsLine: value ? sourceMessage(sourceCopy.en["p.t147"], { v1: value.rows.length, v2: value.declaredRowCount }) : null,
+        completeLine: value ? (value.complete ? sourceCopy.en["s1vf"] : sourceCopy.en["s1vh"]) : null,
+        digestLine: value ? sourceMessage(sourceCopy.en["p.t148"], { v1: value.digest ?? "none" }) : null,
         rows:
           value?.rows.map((row) => ({
             entryRef: row.entryRef,
-            kindWord: row.entryKind === "case" ? "Case" : row.entryKind === "payee-share" ? "Payee share" : "Unapplied remainder",
+            kindWord: row.entryKind === "case" ? sourceCopy.en["sbe"] : row.entryKind === "payee-share" ? sourceCopy.en["s17g"] : sourceCopy.en["s24y"],
             caseRef: row.caseRef,
-            payeeLine: row.payeeRef ?? "no payee",
+            payeeLine: row.payeeRef ?? sourceCopy.en["sws"],
             categoryWord: CATEGORY_WORDS[row.category],
             amountLine: figure(row.amount, row.unit),
             cutRef: row.cutRef,
@@ -597,17 +599,17 @@ function exportModel(exported: FinanceExportState): FinanceExportModel {
       };
     }
     case "denied":
-      return emptyExport("denied", `The source refused the export (${exported.code ?? "no code"}).`, exported.detail ?? "");
+      return emptyExport("denied", sourceMessage(sourceCopy.en["p.t149"], { v1: exported.code ?? "no code" }), exported.detail ?? "");
     case "refused":
-      return emptyExport("refused", `The export payload was refused (${exported.code ?? "no code"}).`, exported.detail ?? "");
+      return emptyExport("refused", sourceMessage(sourceCopy.en["p.t150"], { v1: exported.code ?? "no code" }), exported.detail ?? "");
     case "invalid":
-      return emptyExport("invalid", `The export request was refused (${exported.code ?? "no code"}).`, exported.detail ?? "");
+      return emptyExport("invalid", sourceMessage(sourceCopy.en["p.t151"], { v1: exported.code ?? "no code" }), exported.detail ?? "");
     case "not-bound":
-      return emptyExport("not-bound", "The export stays not-bound.", exported.detail ?? FINANCE_NOT_BOUND_REASON);
+      return emptyExport("not-bound", sourceCopy.en["s1sm"], exported.detail ?? FINANCE_NOT_BOUND_REASON);
     case "tuple-changed":
-      return emptyExport("tuple-changed", "The pin tuple changed. No export was applied.", exported.detail ?? "");
+      return emptyExport("tuple-changed", sourceCopy.en["s1v6"], exported.detail ?? "");
     case "unavailable":
-      return emptyExport("unavailable", "The export answer did not arrive.", exported.detail ?? "");
+      return emptyExport("unavailable", sourceCopy.en["s1s2"], exported.detail ?? "");
     default: {
       const exhaustive: never = exported.phase;
       return exhaustive;
@@ -617,8 +619,8 @@ function exportModel(exported: FinanceExportState): FinanceExportModel {
 
 function fenceText(fence: FinanceFence): string {
   return fence.reason === "in-flight"
-    ? `A ${fence.action} request is in flight. One request goes at a time.`
-    : `Request ${fence.seq} (${fence.action}) has an unknown outcome and may have been recorded. Nothing is sent again from here, and a read does not resolve it. Switching the scope or the actor, or starting a new synthetic session, begins a new context and counts this unknown outcome.`;
+    ? sourceMessage(sourceCopy.en["p.t14"], { v1: fence.action })
+    : sourceMessage(sourceCopy.en["p.t152"], { v1: fence.seq, v2: fence.action });
 }
 
 /**
@@ -628,10 +630,10 @@ function fenceText(fence: FinanceFence): string {
 function verdictWordFor(verdict: FinanceVerdict, contradicted: boolean, skewed: boolean): string {
   const parts = [VERDICT_WORDS[verdict]];
   if (contradicted) {
-    parts.push("its own difference text contradicts it");
+    parts.push(sourceCopy.en["sp6"]);
   }
   if (skewed) {
-    parts.push("its two sides sit on cuts at different positions");
+    parts.push(sourceCopy.en["sp7"]);
   }
   return parts.join(", and ");
 }
@@ -645,48 +647,48 @@ function explainCase(
 ): string[] {
   if (row.state === "resolved-by-source") {
     return [
-      `The source resolved this case in a later cut. It now states ${VERDICT_WORDS[row.verdict].replace("The source says ", "")} with difference ${figure(row.differenceAmount, row.unit)}. This page did not resolve it, and no approval did. The earlier mismatch is not replayed here.`,
+      sourceMessage(sourceCopy.en["p.t153"], { v1: VERDICT_WORDS[row.verdict].replace("The source says ", ""), v2: figure(row.differenceAmount, row.unit) }),
     ];
   }
   const lines: string[] = [];
   switch (row.category) {
     case "UNMATCHED":
       lines.push(
-        `The source expected ${figure(row.expectedAmount, row.unit)} (${LINE_KIND_WORDS[row.lineKind]}) and found no matching observation${row.observedCutRef ? ` on cut ${row.observedCutRef}` : ""}. Whether anything was paid is not known here.${skewed ? " That cut is at a different position than the expected side, so the missing observation may be timing and not an error." : ""}`,
+        sourceMessage(sourceCopy.en["p.t154"], { v1: figure(row.expectedAmount, row.unit), v2: LINE_KIND_WORDS[row.lineKind], v3: row.observedCutRef ? ` on cut ${row.observedCutRef}` : "", v4: skewed ? " That cut is at a different position than the expected side, so the missing observation may be timing and not an error." : "" }),
       );
       if (row.lineKind === "refund-burden") {
-        lines.push("This is a refund burden. A refund is not a payment observation, and no refund command is composed here.");
+        lines.push(sourceCopy.en["s234"]);
       }
       break;
     case "DUPLICATE_OBSERVATION": {
       const seen = facts.filter((fact) => fact.kind === "payment-observed" || fact.kind === "payment-observed-again");
       lines.push(
-        `The source observed the same payment ${seen.length} times (${seen.map((fact) => fact.factRef).join(", ")}). The observed figure ${figure(row.observedAmount, row.unit)} is the source's own text. This page removes no observation and recomputes nothing.`,
+        sourceMessage(sourceCopy.en["p.t156"], { v1: seen.length, v2: seen.map((fact) => fact.factRef).join(", "), v3: figure(row.observedAmount, row.unit) }),
       );
       break;
     }
     case "LATE_FACT": {
       const late = facts.filter((fact) => fact.arrival === "after-cut");
       lines.push(
-        `A fact (${late.map((fact) => fact.factRef).join(", ")}) reached the source after cut ${row.cutRef} was taken. It is its own fact and is not folded into that cut. Whether this case is unresolved is not known until the source posts a later cut.`,
+        sourceMessage(sourceCopy.en["p.t157"], { v1: late.map((fact) => fact.factRef).join(", "), v2: row.cutRef }),
       );
       break;
     }
     case "MULTI_PAYEE": {
       const shares = allocations.filter((item) => item.kind === "payee-share");
       lines.push(
-        `The source split this payout across ${shares.length} payees. Each share is the source's own text. This page does not check what the shares add up to.`,
+        sourceMessage(sourceCopy.en["p.t158"], { v1: shares.length }),
       );
       break;
     }
     case "RESIDUAL":
       lines.push(
-        "After allocation the source left an amount unapplied. An unapplied remainder applies itself to nothing. The source's own allocation rows are listed below, and this page allocates none of it.",
+        sourceCopy.en["s24"],
       );
       break;
     case "BALANCE_MISMATCH":
       lines.push(
-        `Two of the source's ledgers carry different figures for this trade, and the source's own difference text is ${figure(row.differenceAmount, row.unit)}. This page computes no difference of its own. Read the flags below before relying on it.`,
+        sourceMessage(sourceCopy.en["p.t159"], { v1: figure(row.differenceAmount, row.unit) }),
       );
       break;
     default: {
@@ -709,11 +711,11 @@ export function buildFinanceModel(input: { controller: FinanceOperationsControll
   const freshnessWord =
     state.freshness === "CURRENT"
       ? state.behind
-        ? "The last read is behind a request that reached the source. Read again."
-        : "The last read is current."
+        ? sourceCopy.en["s1tj"]
+        : sourceCopy.en["s1tn"]
       : state.freshness === "STALE"
-        ? "The last read is behind."
-        : "There is no usable read.";
+        ? sourceCopy.en["s1ti"]
+        : sourceCopy.en["s1wv"];
 
   const usedBy = new Map<string, number>();
   if (snapshot) {
@@ -726,21 +728,21 @@ export function buildFinanceModel(input: { controller: FinanceOperationsControll
     source: cut.source,
     generation: cut.generation,
     watermark: cut.watermark,
-    usedBy: `${usedBy.get(cut.cutRef) ?? 0} rows`,
+    usedBy: sourceMessage(sourceCopy.en["p.t469"], { v1: usedBy.get(cut.cutRef) ?? 0 }),
   }));
   const cutAlignment = assessment?.cutAlignment ?? "none";
   const cutLine =
     cutAlignment === "aligned"
-      ? "Every source cut used by this read is at one position (one watermark). Their figures still stay on their own cuts."
+      ? sourceCopy.en["sjp"]
       : cutAlignment === "skewed"
-        ? "The source cuts used by this read are at different positions. A case whose two sides are on different positions is flagged timing-uncertain, and no single export is consistent."
-        : "No row carries a source cut in this read.";
+        ? sourceCopy.en["s1yp"]
+        : sourceCopy.en["sy1"];
 
   const capabilities = financeCapabilities(actorRef);
   const authority: FinanceAuthorityModel[] = financeAuthorityTable().map((row) => ({
     authority: row.authority,
     word: AUTHORITY_WORDS[row.authority].word,
-    heldByLine: row.heldBy.length === 0 ? "Held by no actor on this desk." : `Held by ${row.heldBy.join(", ")}.`,
+    heldByLine: row.heldBy.length === 0 ? sourceCopy.en["snb"] : sourceMessage(sourceCopy.en["p.t160"], { v1: row.heldBy.join(", ") }),
     effectLine: AUTHORITY_WORDS[row.authority].effect,
     changesEconomicState: row.changesEconomicState,
     heldByActor: row.heldBy.includes(actorRef),
@@ -748,8 +750,8 @@ export function buildFinanceModel(input: { controller: FinanceOperationsControll
 
   const proposeEligibility = controller.canSend("propose-correction");
   const approveEligibility = controller.canSend("approve-proposal");
-  const proposeBlock = proposeEligibility.allowed ? null : (proposeEligibility.reason ?? "Corrections are not on offer.");
-  const approveBlock = approveEligibility.allowed ? null : (approveEligibility.reason ?? "Approvals are not on offer.");
+  const proposeBlock = proposeEligibility.allowed ? null : (proposeEligibility.reason ?? sourceCopy.en["sei"]);
+  const approveBlock = approveEligibility.allowed ? null : (approveEligibility.reason ?? sourceCopy.en["s5v"]);
 
   const skewByCase = new Set((assessment?.skew ?? []).filter((item) => item.kind === "case").map((item) => item.ref));
   const contradictionByRef = new Map((assessment?.contradictions ?? []).map((item) => [`${item.kind}|${item.ref}`, item]));
@@ -768,14 +770,14 @@ export function buildFinanceModel(input: { controller: FinanceOperationsControll
 
     let caseBlock: string | null = null;
     if (resolved) {
-      caseBlock = "The source resolved this case. Nothing is left to correct.";
+      caseBlock = sourceCopy.en["s20f"];
     } else if (skewed) {
       caseBlock =
-        "The two sides of this case sit on cuts at different positions, so it is not a mismatch to correct yet. Only a request for the source to look again is offered.";
+        sourceCopy.en["s22p"];
     } else if (contradiction) {
-      caseBlock = "The source's verdict contradicts its own difference text. Only a request for the source to look again is offered.";
+      caseBlock = sourceCopy.en["s21c"];
     } else if (unlinkedCases.has(row.caseRef)) {
-      caseBlock = "The read does not list the original trade of this case. Only a request for the source to look again is offered.";
+      caseBlock = sourceCopy.en["s1vy"];
     }
 
     const corrections: FinanceCorrectionButtonModel[] = row.offeredCorrections.map((correction) => {
@@ -783,9 +785,9 @@ export function buildFinanceModel(input: { controller: FinanceOperationsControll
       if (proposeBlock !== null) {
         reason = proposeBlock;
       } else if (!allowed.includes(correction)) {
-        reason = caseBlock ?? "The read does not offer this correction on this case now.";
+        reason = caseBlock ?? sourceCopy.en["s1w1"];
       }
-      return { correction, label: `Propose: ${CORRECTION_WORDS[correction]}`, control: { enabled: reason === null, reason } };
+      return { correction, label: sourceMessage(sourceCopy.en["p.t507"], { v1: CORRECTION_WORDS[correction] }), control: { enabled: reason === null, reason } };
     });
 
     return {
@@ -799,20 +801,20 @@ export function buildFinanceModel(input: { controller: FinanceOperationsControll
       explanationLines: explainCase(row, facts, allocations, skewed),
       tradeRef: row.tradeRef,
       tradeLine: original
-        ? `Original trade ${original.tradeRef}: listing ${original.listingRef}, event ${original.eventRef}, ${TRADE_STATUS_WORDS[original.statusLabel]}. Cut ${original.cutRef}.`
-        : `Original trade ${row.tradeRef} is not listed in this read. It is not attached elsewhere.`,
+        ? sourceMessage(sourceCopy.en["p.t161"], { v1: original.tradeRef, v2: original.listingRef, v3: original.eventRef, v4: TRADE_STATUS_WORDS[original.statusLabel], v5: original.cutRef })
+        : sourceMessage(sourceCopy.en["p.t162"], { v1: row.tradeRef }),
       tradeLinked: original !== undefined,
-      merchantLineLine: row.merchantLineRef ? `Merchant money line ${row.merchantLineRef} (${LINE_KIND_WORDS[row.lineKind]}).` : null,
-      paymentLine: row.paymentRef ? `Credit servicing payment ${row.paymentRef}.` : null,
-      expectedLine: `Expected ${figure(row.expectedAmount, row.unit)}`,
-      observedLine: `Observed ${figure(row.observedAmount, row.unit)}`,
-      differenceLine: `Difference ${figure(row.differenceAmount, row.unit)}`,
+      merchantLineLine: row.merchantLineRef ? sourceMessage(sourceCopy.en["p.t163"], { v1: row.merchantLineRef, v2: LINE_KIND_WORDS[row.lineKind] }) : null,
+      paymentLine: row.paymentRef ? sourceMessage(sourceCopy.en["p.t164"], { v1: row.paymentRef }) : null,
+      expectedLine: sourceMessage(sourceCopy.en["p.t508"], { v1: figure(row.expectedAmount, row.unit) }),
+      observedLine: sourceMessage(sourceCopy.en["p.t509"], { v1: figure(row.observedAmount, row.unit) }),
+      differenceLine: sourceMessage(sourceCopy.en["p.t510"], { v1: figure(row.differenceAmount, row.unit) }),
       sidesLine: row.observedCutRef
-        ? `Expected side on cut ${row.cutRef}. Observed side looked up on cut ${row.observedCutRef}.`
-        : `Expected side on cut ${row.cutRef}. The source names no observed side.`,
-      reasonLine: row.reasonCode ? `Reason ${row.reasonCode} as the source names it.` : "No reason named.",
+        ? sourceMessage(sourceCopy.en["p.t165"], { v1: row.cutRef, v2: row.observedCutRef })
+        : sourceMessage(sourceCopy.en["p.t166"], { v1: row.cutRef }),
+      reasonLine: row.reasonCode ? sourceMessage(sourceCopy.en["p.t17"], { v1: row.reasonCode }) : sourceCopy.en["sxk"],
       skewLine: skewed
-        ? `TIMING_UNCERTAIN: cut ${row.cutRef} and cut ${row.observedCutRef ?? "(none)"} are at different positions. A difference may be timing, so this page does not call this case matched or mismatched.`
+        ? sourceMessage(sourceCopy.en["p.t167"], { v1: row.cutRef, v2: row.observedCutRef ?? "(none)" })
         : null,
       contradictionLine: contradiction ? `${contradiction.code}: ${contradiction.detail}` : null,
       caseBlock,
@@ -820,25 +822,25 @@ export function buildFinanceModel(input: { controller: FinanceOperationsControll
       facts: facts.map((fact) => ({
         factRef: fact.factRef,
         kindWord: FACT_KIND_WORDS[fact.kind],
-        arrivalWord: fact.arrival === "after-cut" ? "After the cut" : "In the cut",
+        arrivalWord: fact.arrival === "after-cut" ? sourceCopy.en["s27"] : sourceCopy.en["sok"],
         late: fact.arrival === "after-cut",
         amountLine: figure(fact.amount, fact.unit),
-        payeeLine: fact.payeeRef ?? "no payee",
+        payeeLine: fact.payeeRef ?? sourceCopy.en["sws"],
         label: fact.label,
         cutRef: fact.cutRef,
       })),
       allocations: allocations.map((item) => ({
         allocationRef: item.allocationRef,
-        kindWord: item.kind === "payee-share" ? "Payee share" : "Unapplied remainder",
-        roleWord: item.role ? ROLE_WORDS[item.role] : "No payee",
-        payeeLine: item.payeeRef ?? "no payee",
+        kindWord: item.kind === "payee-share" ? sourceCopy.en["s17g"] : sourceCopy.en["s24y"],
+        roleWord: item.role ? ROLE_WORDS[item.role] : sourceCopy.en["swt"],
+        payeeLine: item.payeeRef ?? sourceCopy.en["sws"],
         amountLine: figure(item.amount, item.unit),
         cutRef: item.cutRef,
         remainder: item.kind === "unapplied-remainder",
       })),
       proposals: proposals.map((item) => {
         const approvable = item.state === "pending";
-        const reason = approveBlock !== null ? approveBlock : approvable ? null : `Proposal ${item.proposalRef} is ${item.state}. A proposal is approved only while it is pending.`;
+        const reason = approveBlock !== null ? approveBlock : approvable ? null : sourceMessage(sourceCopy.en["p.t59"], { v1: item.proposalRef, v2: item.state });
         return {
           proposalRef: item.proposalRef,
           caseRef: item.caseRef,
@@ -881,15 +883,15 @@ export function buildFinanceModel(input: { controller: FinanceOperationsControll
         skewed = true;
         flags.push({
           kind: "timing-uncertain",
-          text: `TIMING_UNCERTAIN: cut ${item.leftCutRef} and cut ${item.rightCutRef} are at different positions. A difference may be timing, so this page does not call this balance matched or mismatched.`,
+          text: sourceMessage(sourceCopy.en["p.t168"], { v1: item.leftCutRef, v2: item.rightCutRef }),
         });
       }
     }
     return {
       balanceRef: row.balanceRef,
       label: row.label,
-      leftLine: `${figure(row.leftAmount, row.unit)} on cut ${row.leftCutRef}`,
-      rightLine: `${figure(row.rightAmount, row.unit)} on cut ${row.rightCutRef}`,
+      leftLine: sourceMessage(sourceCopy.en["p.t169"], { v1: figure(row.leftAmount, row.unit), v2: row.leftCutRef }),
+      rightLine: sourceMessage(sourceCopy.en["p.t169"], { v1: figure(row.rightAmount, row.unit), v2: row.rightCutRef }),
       differenceLine: figure(row.differenceAmount, row.unit),
       verdict: row.verdict,
       verdictWord: verdictWordFor(row.verdict, contradiction !== undefined, skewed),
@@ -898,7 +900,7 @@ export function buildFinanceModel(input: { controller: FinanceOperationsControll
   });
 
   const unlinkedLines = (assessment?.unlinked ?? []).map(
-    (item) => `${item.lens} row ${item.ref} names ${item.missing} ${item.missingRef}, which the read does not list. It is not attached elsewhere.`,
+    (item) => sourceMessage(sourceCopy.en["p.t170"], { v1: item.lens, v2: item.ref, v3: item.missing, v4: item.missingRef }),
   );
 
   const exportEligibility = controller.canExport();
@@ -917,22 +919,22 @@ export function buildFinanceModel(input: { controller: FinanceOperationsControll
           detail: last.detail,
           receiptLines: last.receipt
             ? [
-                `Receipt ${last.receipt.kind} for ${last.receipt.proposalRef} on ${last.receipt.caseRef}.`,
+                sourceMessage(sourceCopy.en["p.t511"], { v1: last.receipt.kind, v2: last.receipt.proposalRef, v3: last.receipt.caseRef }),
                 `economicStateChanged ${String(last.receipt.economicStateChanged)} · confirmationForcesMatch ${String(last.receipt.confirmationForcesMatch)}`,
-                "Recorded is not applied. The cases above change only after the source posts a later cut and this page reads again.",
+                sourceCopy.en["s1dx"],
               ]
             : [],
         };
 
   const counters = state.counters;
   const session: FinanceSessionModel = {
-    contextLine: `Actor ${actorRef}, book scope ${state.context.scope.bookRef}, session ${state.context.incarnation}, mode ${state.context.environment}.`,
-    capabilityLine: `Actor ${actorRef} holds: ${capabilities.length === 0 ? "no capability" : capabilities.join(", ")}.`,
-    countersLine: `Reads ${counters.reads}. Exports ${counters.exports}. Requests ${counters.acts}. Not sent ${counters.notSent}. Reads dropped ${counters.droppedReads}. Exports dropped ${counters.droppedExports}.`,
+    contextLine: sourceMessage(sourceCopy.en["p.t171"], { v1: actorRef, v2: state.context.scope.bookRef, v3: state.context.incarnation, v4: state.context.environment }),
+    capabilityLine: sourceMessage(sourceCopy.en["p.t513"], { v1: actorRef, v2: capabilities.length === 0 ? "no capability" : capabilities.join(", ") }),
+    countersLine: sourceMessage(sourceCopy.en["p.t172"], { v1: counters.reads, v2: counters.exports, v3: counters.acts, v4: counters.notSent, v5: counters.droppedReads, v6: counters.droppedExports }),
     earlierUnknownLine:
       state.earlierUnknown === 0
-        ? "No unknown request outcome in earlier sessions."
-        : `${state.earlierUnknown} unknown request outcome${state.earlierUnknown === 1 ? "" : "s"} in earlier sessions. They are counted, not forgotten.`,
+        ? sourceCopy.en["s131"]
+        : sourceMessage(sourceCopy.en["p.t173"], { v1: state.earlierUnknown, v2: state.earlierUnknown === 1 ? "" : "s" }),
     notComposedLine: FINANCE_NOT_COMPOSED_NOTE,
     holdLine: FINANCE_HOLD_NOTE,
   };
@@ -944,11 +946,11 @@ export function buildFinanceModel(input: { controller: FinanceOperationsControll
     detailLine: status.detailLine,
     actionLabel: status.actionLabel,
     freshnessWord,
-    scopeLine: `Tenant ${state.context.scope.tenantId}. Book ${state.context.scope.bookRef}.`,
-    watermarkLine: snapshot ? `Watermark ${snapshot.watermark}. Read ${snapshot.snapshotId} on this port.` : "No watermark without a ready read.",
+    scopeLine: sourceMessage(sourceCopy.en["p.t514"], { v1: state.context.scope.tenantId, v2: state.context.scope.bookRef }),
+    watermarkLine: snapshot ? sourceMessage(sourceCopy.en["p.t41"], { v1: snapshot.watermark, v2: snapshot.snapshotId }) : sourceCopy.en["s134"],
     queueLine: queue
-      ? `Queue as the source states it: ${queue.open} open, ${queue.unknown} unknown, ${queue.resolvedBySource} resolved by the source.`
-      : "No queue without a ready read.",
+      ? sourceMessage(sourceCopy.en["p.t174"], { v1: queue.open, v2: queue.unknown, v3: queue.resolvedBySource })
+      : sourceCopy.en["sxg"],
     cutAlignment,
     cutLine,
     cuts,
@@ -965,7 +967,7 @@ export function buildFinanceModel(input: { controller: FinanceOperationsControll
     request,
     fenceLine: state.fence === null ? null : fenceText(state.fence),
     behindLine: state.behind
-      ? "A request reached the source after the last read. The cases on screen are the last read's. Read again to see the proposals."
+      ? sourceCopy.en["s76"]
       : null,
     session,
     lastLine: input.last === null ? null : input.last.text,
@@ -1001,23 +1003,23 @@ function actResultLine(kind: FinanceActionKind, result: FinanceActResult): { tex
   switch (result.kind) {
     case "APPLIED":
       return {
-        text: `${word} recorded at the synthetic source. Nothing was applied: no economic state changed and no ledger was made to match. Read again to see it.`,
+        text: sourceMessage(sourceCopy.en["p.t175"], { v1: word }),
         attention: false,
       };
     case "REJECTED":
       return {
-        text: `${word} rejected (${result.record.code ?? "no code"}). ${result.record.detail ?? ""} The source recorded nothing for this request.`.trim(),
+        text: sourceMessage(sourceCopy.en["p.t176"], { v1: word, v2: result.record.code ?? "no code", v3: result.record.detail ?? "" }).trim(),
         attention: true,
       };
     case "UNKNOWN":
       return {
-        text: `${word} outcome unknown (${result.record.code ?? "no code"}). It may have been recorded. Every later request is fenced, and a read does not resolve it.`,
+        text: sourceMessage(sourceCopy.en["p.t177"], { v1: word, v2: result.record.code ?? "no code" }),
         attention: true,
       };
     case "FENCED":
-      return { text: `${word} not sent. ${fenceText(result.fence)}`, attention: true };
+      return { text: sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: fenceText(result.fence) }), attention: true };
     case "NOT_SENT":
-      return { text: `${word} not sent. ${result.detail}`, attention: true };
+      return { text: sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: result.detail }), attention: true };
     default: {
       const exhaustive: never = result;
       return exhaustive;
@@ -1119,7 +1121,7 @@ export function useFinanceOperations(): {
         return;
       }
       const done = session.port.synthetic(control);
-      note(done ? `${moved} A real producer offers no such control. Read again.` : nothing, done);
+      note(done ? sourceMessage(sourceCopy.en["p.t46"], { v1: moved }) : nothing, done);
     },
     [note],
   );
@@ -1139,7 +1141,7 @@ export function useFinanceOperations(): {
         }
         if (result.kind === "NOT_SENT") {
           note(
-            result.reason === "not-bound" ? FINANCE_NOT_BOUND_REASON : `No export was sent. ${result.detail}`,
+            result.reason === "not-bound" ? FINANCE_NOT_BOUND_REASON : sourceMessage(sourceCopy.en["p.t178"], { v1: result.detail }),
             true,
           );
         }
@@ -1165,12 +1167,12 @@ export function useFinanceOperations(): {
       const next = session.controller.state().context.scope.bookRef === FINANCE_OWN_REF ? FINANCE_FOREIGN_REF : FINANCE_OWN_REF;
       const context = session.controller.switchScope(next);
       if (context === null) {
-        note("A request is in flight. The scope cannot change under it.", true);
+        note(sourceCopy.en["s71"], true);
         return;
       }
       setBookRef(next);
       note(
-        `Switched the book scope to ${context.scope.bookRef}, session ${context.incarnation}. Rows and the export of the earlier scope are cleared, and an answer in flight for it is dropped. One read for the new scope was asked for.`,
+        sourceMessage(sourceCopy.en["p.t179"], { v1: context.scope.bookRef, v2: context.incarnation }),
       );
       void session.controller.read();
     },
@@ -1181,45 +1183,45 @@ export function useFinanceOperations(): {
       }
       const context = session.controller.switchActor(next);
       if (context === null) {
-        note("A request is in flight. The actor cannot change under it.", true);
+        note(sourceCopy.en["s72"], true);
         return;
       }
       setActorRef(next);
       note(
-        `Switched the desk actor to ${context.actorRef}, session ${context.incarnation}. It holds: ${financeCapabilities(context.actorRef).join(", ")}. Rows and the export are cleared, and an answer in flight is dropped. One read for the new actor was asked for.`,
+        sourceMessage(sourceCopy.en["p.t180"], { v1: context.actorRef, v2: context.incarnation, v3: financeCapabilities(context.actorRef).join(", ") }),
       );
       void session.controller.read();
     },
     revokeGrant() {
       synthetic(
         "revoke-grant",
-        "The synthetic grant is withdrawn at the source. The next read is refused.",
-        "There is no synthetic source to withdraw a grant from.",
+        sourceCopy.en["s21s"],
+        sourceCopy.en["s1wo"],
       );
     },
     advanceCut() {
       synthetic(
         "advance-cut",
-        "The synthetic source moved on to its next cut generation. An export taken before it is now behind.",
-        "There is no synthetic source to advance.",
+        sourceCopy.en["s222"],
+        sourceCopy.en["s1wp"],
       );
     },
     postSourceCorrection() {
       synthetic(
         "post-source-correction",
-        "The synthetic source posted a later cut in which it resolved the next case. No approval chose it.",
-        "There is no synthetic source to post a cut, or it has no case left to resolve.",
+        sourceCopy.en["s228"],
+        sourceCopy.en["s1wq"],
       );
     },
     setScenario(next) {
-      startSession(next, bookRef, actorRef, `Started a new synthetic session with scenario ${next}. Earlier reads, exports, and requests are gone, as after a reload.`);
+      startSession(next, bookRef, actorRef, sourceMessage(sourceCopy.en["p.t181"], { v1: next }));
     },
     newSession() {
       startSession(
         scenario,
         bookRef,
         actorRef,
-        "Started a new synthetic session. Earlier reads, exports, and requests are gone, as after a reload. Nothing was resolved at a producer.",
+        sourceCopy.en["s1m8"],
       );
     },
   };

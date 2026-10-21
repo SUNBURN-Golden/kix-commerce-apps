@@ -1,0 +1,26 @@
+export const messages = {
+  en: {
+    "s3r": ", and a test holds the two equal.",
+    "sh8": "Do not read it as",
+    "sh0": "docs/guide/status-glossary-ko.md",
+    "si6": ". Each word is printed verbatim and is never translated.",
+    "ssd": "Meaning",
+    "s1ml": "Status words and what they mean",
+    "s239": "This page is a glossary. Reading a word here changes nothing: no request is sent, no record is written, and no result is decided. The same list, Korean first, is in",
+    "s25b": "UNKNOWN means the result is not known. It is not a failure and not a success; the request may have applied. No word on this page claims integration, qualification, acceptance or release.",
+    "s26j": "What to do",
+    "s26w": "Word",
+  },
+  ko: {
+    "s3r": ", 시험으로 두 목록의 일치를 확인합니다.",
+    "sh8": "이렇게 해석하지 마세요",
+    "sh0": "docs/guide/status-glossary-ko.md",
+    "si6": ". 각 용어는 원문 그대로 표시하며 번역하지 않습니다.",
+    "ssd": "의미",
+    "s1ml": "상태 용어와 의미",
+    "s239": "용어집입니다. 읽어도 요청 전송·기록·결과 결정이 없습니다. 같은 목록의 한국어 안내 위치:",
+    "s25b": "UNKNOWN은 결과 미확인입니다. 거부나 정상 결과가 아니며 요청이 반영되었을 수 있습니다. 이 화면은 통합·자격 인정·수용·릴리스를 주장하지 않습니다.",
+    "s26j": "필요한 동작",
+    "s26w": "용어",
+  },
+} as const;

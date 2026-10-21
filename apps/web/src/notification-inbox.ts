@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/notification-inbox";
+import { sourceMessage } from "./i18n/source-message";
 /**
  * The notification inbox on top of the adapter's synthetic inbox source. Stub
  * scope: the default port is the synthetic source. On integration-http the same
@@ -43,73 +45,73 @@ import {
 } from "@kix/protocol-adapter";
 import { protocol } from "./protocol";
 
-export const NOTIFY_PAGE_TITLE = "Notification inbox (synthetic)";
+export const NOTIFY_PAGE_TITLE = sourceCopy.en["s11s"];
 
 export const NOTIFY_SOURCE_LINE =
-  "Notifications, dedupe, read state, the offered actions, and the support material come from a synthetic inbox source on this page load. They are not a producer read, not a catalogue receipt, and not an external send.";
+  sourceCopy.en["s11t"];
 
 export const NOTIFY_BOUNDARY =
   "Only producer-contracted event kinds reach this inbox. A notification confirms what the source recorded — never an economic effect: an observation is not confirmed funds, a recorded trade is not a settled one, and an arrival is not a receipt.";
 
 export const NOTIFY_DEDUPE_NOTE =
-  "Deliveries deduplicate on the source's own key. A second delivery of the same key is dropped once, counted, and never listed twice.";
+  sourceCopy.en["sg3"];
 
 export const NOTIFY_CURRENT_NOTE =
   "Every notification carries the grant generation it was issued under. A notification issued under an older generation keeps its row marked stale-issue, and its offered action resolves nothing — it does not skip the current-generation check.";
 
 export const NOTIFY_SENSITIVE_NOTE =
-  "A sensitive notification shows its detail only to a role that holds read-sensitive. For any other role the detail stays withheld at the source; a payload that sends it anyway is refused whole, and this page does not repair it.";
+  sourceCopy.en["s7z"];
 
 export const NOTIFY_ACTION_NOTE =
-  "An offered action is a move, not a send. open-authority moves to the current authority query on the receipts desk; open-support opens the support material the source keeps for that notification.";
+  sourceCopy.en["s4g"];
 
 export const NOTIFY_INQUIRY_NOTE =
-  "The support material is the source's own file: synthetic, redacted, holding no real personal data, not delivered externally, and not an authority record. A payload that says otherwise, or carries a sensitive token, is refused.";
+  sourceCopy.en["s21k"];
 
 export const NOTIFY_SCOPE_NOTE =
   "Every call names a tenant, an actor, and a role. A notification of another tenant or addressed to another subject refuses the whole payload, and a direct open of such a ref is denied — never empty, never substituted.";
 
 export const NOTIFY_HIDE_NOTE =
-  "A hidden or greyed control is not enforcement. The source checks every read, inquiry, and request against the grant and the capability, and this page's tests send requests straight to the port to prove a hidden control is never the check.";
+  sourceCopy.en["s2e"];
 
 export const NOTIFY_ACTOR_NOTE =
-  "The actor and role strings are context labels. They are not an authentication result, and the source does not trust them for access.";
+  sourceCopy.en["s1pr"];
 
 export const NOTIFY_READ_NOTE =
-  "A read, an inquiry, and a request are each one attempt. None is sent again by this page. An answer that arrives after the tenant, the actor, or the role changed is dropped. An answer that never arrives leaves the outcome unknown, and an unknown request outcome fences every later request.";
+  sourceCopy.en["s6b"];
 
 export const NOTIFY_SESSION_NOTE =
-  "Reads, inquiries, and requests live in this page load only. A reload or a new synthetic session clears them and resolves nothing at a producer.";
+  sourceCopy.en["s1c7"];
 
 export const NOTIFY_SYNTHETIC_CONTROL_NOTE =
-  "The Simulate controls are synthetic controls a real producer does not offer. They stand in for a revoked grant, a rotated generation, and a late delivery. Marking read or resolving an offer is not one of them.";
+  sourceCopy.en["s1y6"];
 
 export const NOTIFY_CLAIM_NOTE =
-  "Every read states arrivalConfirmsEffect, externalSendWired, actorIsAuthenticated, crossTenantDelivery, sensitiveDetailShownWithoutGrant, actionSkipsGenerationCheck, and inboxIsCompleteRecord as false. A payload that says anything else, or stays silent, is refused before a row is shown.";
+  sourceCopy.en["sjh"];
 
-export const NOTIFY_HOLD_NOTE = `Holding a seat is not available here. ${NOTIFY_HOLD_NOT_BOUND.reason}`;
+export const NOTIFY_HOLD_NOTE = sourceMessage(sourceCopy.en["p.t8"], { v1: NOTIFY_HOLD_NOT_BOUND.reason });
 
-export const NOTIFY_NOT_COMPOSED_NOTE = `Catalogue actions recorded and never composed here: ${NOTIFY_NOT_COMPOSED.map((entry) => entry.action).join(", ")}.`;
+export const NOTIFY_NOT_COMPOSED_NOTE = sourceMessage(sourceCopy.en["p.t9"], { v1: NOTIFY_NOT_COMPOSED.map((entry) => entry.action).join(", ") });
 
 export const NOTIFY_SCENARIO_NOTES: Readonly<Record<NotifyScenario, string>> = {
-  clean: "Every read, inquiry, and request is answered.",
-  empty: "The source lists no notification for this scope.",
-  stale: "The source serves a watermark older than the floor this page holds.",
-  denied: "Every notification grant is revoked at the source.",
-  "tenant-mix": "The source sends a notification that belongs to another tenant. The payload is refused.",
-  "subject-mix": "The source sends a notification addressed to another subject. The payload is refused.",
-  duplicate: "The source delivers the same dedupe key twice. The second delivery is dropped and counted.",
-  late: "A notification issued under an older grant generation sits in the feed. Its offered action resolves nothing.",
-  "grant-rotated": "Every grant already moved a generation at the source. The earlier rows are stale-issue.",
-  "kind-uncontracted": "The source sends an event kind the producer contract does not name. The payload is refused.",
-  "sensitive-leak": "The source sends a sensitive detail to a role with no read-sensitive capability. The payload is refused.",
-  "claims-arrival": "The source sends a payload that claims an arrival confirms an economic effect. The payload is refused.",
-  "external-wired": "The source sends a payload that claims an external send is wired. The payload is refused.",
-  "read-lost": "The answer to a read never arrives.",
-  "act-lost": "A request reaches the source and is recorded. Its answer never arrives.",
-  "inquiry-denied": "The source grants the inbox read and no inquiry material.",
-  "inquiry-leak": "The support material carries a sensitive token. The payload is refused.",
-  "resolve-claims": "The source answers a resolve by claiming it confirmed an economic effect. The answer is not trusted.",
+  clean: sourceCopy.en["sjg"],
+  empty: sourceCopy.en["s1zu"],
+  stale: sourceCopy.en["s21a"],
+  denied: sourceCopy.en["sj7"],
+  "tenant-mix": sourceCopy.en["s20x"],
+  "subject-mix": sourceCopy.en["s20w"],
+  duplicate: sourceCopy.en["s1yu"],
+  late: sourceCopy.en["s4l"],
+  "grant-rotated": sourceCopy.en["sj4"],
+  "kind-uncontracted": sourceCopy.en["s20u"],
+  "sensitive-leak": sourceCopy.en["s219"],
+  "claims-arrival": sourceCopy.en["s211"],
+  "external-wired": sourceCopy.en["s212"],
+  "read-lost": sourceCopy.en["s1q3"],
+  "act-lost": sourceCopy.en["s7a"],
+  "inquiry-denied": sourceCopy.en["s1zb"],
+  "inquiry-leak": sourceCopy.en["s21j"],
+  "resolve-claims": sourceCopy.en["s1yb"],
 };
 
 export type NotifyScreenState =
@@ -229,34 +231,34 @@ export interface NotifyModel {
 }
 
 const EVENT_WORDS: Readonly<Record<string, string>> = {
-  "trade-recorded": "Trade recorded",
-  "hold-expiring": "Hold expiring",
-  "payment-observed": "Payment observed",
-  "right-moved": "Right moved",
-  "grant-changed": "Grant changed",
-  "support-answered": "Support answered",
-  "inquiry-ready": "Inquiry ready",
+  "trade-recorded": sourceCopy.en["s24f"],
+  "hold-expiring": sourceCopy.en["sng"],
+  "payment-observed": sourceCopy.en["s17j"],
+  "right-moved": sourceCopy.en["s1ha"],
+  "grant-changed": sourceCopy.en["smp"],
+  "support-answered": sourceCopy.en["s1ng"],
+  "inquiry-ready": sourceCopy.en["sny"],
 };
 
 const OFFER_WORDS: Readonly<Record<string, string>> = {
-  "open-authority": "Opens the current authority query",
-  "open-support": "Opens the support material",
+  "open-authority": sourceCopy.en["s157"],
+  "open-support": sourceCopy.en["s158"],
 };
 
 const ACTION_WORDS: Readonly<Record<NotifyActionKind, string>> = {
-  "mark-read": "Mark-read",
-  resolve: "Resolve",
+  "mark-read": sourceCopy.en["ss6"],
+  resolve: sourceCopy.en["s1ge"],
 };
 
 const PHASE_WORDS: Readonly<Record<NotifyActPhase, string>> = {
-  applied: "Recorded at the synthetic source",
-  rejected: "Rejected by the source",
-  denied: "Denied by the source",
-  refused: "The answer was not trusted, and the request may have been recorded",
-  invalid: "Refused before it was recorded",
-  "tuple-changed": "Nothing was recorded because the pin tuple changed",
-  "not-bound": "Not recorded: not bound",
-  unknown: "Outcome unknown. The request may have been recorded",
+  applied: sourceCopy.en["s1du"],
+  rejected: sourceCopy.en["s1ez"],
+  denied: sourceCopy.en["sgb"],
+  refused: sourceCopy.en["s1q6"],
+  invalid: sourceCopy.en["s1eu"],
+  "tuple-changed": sourceCopy.en["s11m"],
+  "not-bound": sourceCopy.en["s12f"],
+  unknown: sourceCopy.en["s16j"],
 };
 
 function readStateToScreen(readState: NotifyReadState): NotifyScreenState {
@@ -278,50 +280,50 @@ function statusFor(
   const suffix = code ? ` (${code})` : "";
   switch (state) {
     case "loading":
-      return { statusLine: "Reading the synthetic inbox source. Nothing is shown yet.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s1bg"], detailLine: "", actionLabel: null };
     case "ready":
-      return { statusLine: "Inbox read.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["snu"], detailLine: "", actionLabel: null };
     case "empty":
       return {
-        statusLine: "The source lists no notification for this scope in this read.",
-        detailLine: detail ?? "An empty inbox is not denied and not unknown.",
-        actionLabel: "Read again",
+        statusLine: sourceCopy.en["s1zv"],
+        detailLine: detail ?? sourceCopy.en["s3u"],
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "stale":
-      return { statusLine: "Stale read.", detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["s1lw"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "generation-stale":
       return {
-        statusLine: "The notification grant moved underneath this view.",
-        detailLine: detail ?? "This session holds the older generation. Switch the tenant, the actor, or the role, or start a new session, to read under the current grant.",
-        actionLabel: "Start a new synthetic session",
+        statusLine: sourceCopy.en["s1uk"],
+        detailLine: detail ?? sourceCopy.en["s23n"],
+        actionLabel: sourceCopy.en["s1m2"],
       };
     case "denied":
       return {
-        statusLine: `The source denied this call${suffix}.`,
-        detailLine: `${detail ?? ""} No row is shown, and a hidden control was not what denied it.`,
-        actionLabel: "Read again",
+        statusLine: sourceMessage(sourceCopy.en["p.t290"], { v1: suffix }),
+        detailLine: sourceMessage(sourceCopy.en["p.t291"], { v1: detail ?? "" }),
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "refused":
       return {
-        statusLine: `The source sent a payload this page does not trust${suffix}.`,
-        detailLine: `${detail ?? ""} No row from it is shown.`,
-        actionLabel: "Read again",
+        statusLine: sourceMessage(sourceCopy.en["p.t11"], { v1: suffix }),
+        detailLine: sourceMessage(sourceCopy.en["p.t12"], { v1: detail ?? "" }),
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "invalid":
-      return { statusLine: `The request was refused before it read${suffix}.`, detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t13"], { v1: suffix }), detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "not-bound":
       return { statusLine: NOTIFY_NOT_BOUND_REASON, detailLine: "", actionLabel: null };
     case "tuple-changed":
       return {
-        statusLine: "The pin tuple changed. Nothing was read and nothing was applied.",
+        statusLine: sourceCopy.en["s1v8"],
         detailLine: detail ?? "",
-        actionLabel: "Start a new synthetic session",
+        actionLabel: sourceCopy.en["s1m2"],
       };
     case "unavailable":
       return {
-        statusLine: "The source did not answer. This is not an empty inbox.",
+        statusLine: sourceCopy.en["s1yw"],
         detailLine: detail ?? "",
-        actionLabel: "Read again",
+        actionLabel: sourceCopy.en["s1ax"],
       };
     default: {
       const exhaustive: never = state;
@@ -332,8 +334,8 @@ function statusFor(
 
 function fenceText(fence: NotifyFence): string {
   return fence.reason === "in-flight"
-    ? `A ${fence.action} request is in flight. One request goes at a time.`
-    : `Request ${fence.seq} (${fence.action}) has an unknown outcome and may have been recorded. Nothing is sent again from here, and a read does not resolve it. Switching the tenant, the actor, or the role, or starting a new synthetic session, begins a new context and counts this unknown outcome.`;
+    ? sourceMessage(sourceCopy.en["p.t14"], { v1: fence.action })
+    : sourceMessage(sourceCopy.en["p.t311"], { v1: fence.seq, v2: fence.action });
 }
 
 function inquiryModel(inquiry: NotifyInquiryState): NotifyInquiryModel {
@@ -347,34 +349,34 @@ function inquiryModel(inquiry: NotifyInquiryState): NotifyInquiryModel {
   });
   switch (inquiry.phase) {
     case "none":
-      return empty("none", "No support material is loaded. Material follows a ready read and a resolve that lands on support.", "");
+      return empty("none", sourceCopy.en["syx"], "");
     case "loaded": {
       const value = inquiry.value;
       if (value === null) {
-        return empty("loaded", "The material record is empty.", "");
+        return empty("loaded", sourceCopy.en["s1ud"], "");
       }
       const declaration = value.declaration;
       return {
         phase: "loaded",
-        statusLine: "Support material loaded.",
+        statusLine: sourceCopy.en["s1nn"],
         detailLine: "",
-        declarationLine: `SYNTHETIC material. provenance ${declaration.provenance} · realPersonalData ${String(declaration.realPersonalData)} · deliveredExternally ${String(declaration.deliveredExternally)} · authorityRecord ${String(declaration.authorityRecord)}.`,
+        declarationLine: sourceMessage(sourceCopy.en["p.t312"], { v1: declaration.provenance, v2: String(declaration.realPersonalData), v3: String(declaration.deliveredExternally), v4: String(declaration.authorityRecord) }),
         notificationRef: value.notificationRef,
         rows: value.lines.map((line) => ({ label: line.label, text: line.text })),
       };
     }
     case "denied":
-      return empty("denied", `The source denied the material (${inquiry.code ?? "no code"}).`, inquiry.detail ?? "");
+      return empty("denied", sourceMessage(sourceCopy.en["p.t313"], { v1: inquiry.code ?? "no code" }), inquiry.detail ?? "");
     case "refused":
-      return empty("refused", `The material payload was refused (${inquiry.code ?? "no code"}).`, inquiry.detail ?? "");
+      return empty("refused", sourceMessage(sourceCopy.en["p.t314"], { v1: inquiry.code ?? "no code" }), inquiry.detail ?? "");
     case "invalid":
-      return empty("invalid", `The inquiry request was refused (${inquiry.code ?? "no code"}).`, inquiry.detail ?? "");
+      return empty("invalid", sourceMessage(sourceCopy.en["p.t315"], { v1: inquiry.code ?? "no code" }), inquiry.detail ?? "");
     case "not-bound":
-      return empty("not-bound", "The inquiry stays not-bound.", inquiry.detail ?? NOTIFY_NOT_BOUND_REASON);
+      return empty("not-bound", sourceCopy.en["s1t8"], inquiry.detail ?? NOTIFY_NOT_BOUND_REASON);
     case "tuple-changed":
-      return empty("tuple-changed", "The pin tuple changed. No material was applied.", inquiry.detail ?? "");
+      return empty("tuple-changed", sourceCopy.en["s1v7"], inquiry.detail ?? "");
     case "unavailable":
-      return empty("unavailable", "The inquiry answer did not arrive.", inquiry.detail ?? "");
+      return empty("unavailable", sourceCopy.en["s1t7"], inquiry.detail ?? "");
     default: {
       const exhaustive: never = inquiry.phase;
       return exhaustive;
@@ -405,23 +407,23 @@ export function buildNotifyModel(input: { controller: NotificationInboxControlle
   const freshnessWord =
     state.freshness === "CURRENT"
       ? state.behind
-        ? "The last read is behind a request that reached the source. Read again."
-        : "The last read is current."
+        ? sourceCopy.en["s1tj"]
+        : sourceCopy.en["s1tn"]
       : state.freshness === "STALE"
-        ? "The last read is behind the grant generation or the watermark."
-        : "There is no usable read.";
+        ? sourceCopy.en["s1tl"]
+        : sourceCopy.en["s1wv"];
 
   const capabilities = notifyCapabilities(role);
   const authority: NotifyAuthorityModel[] = notifyAuthorityTable().map((row) => ({
     capability: row.capability,
-    heldByLine: row.heldBy.length === 0 ? "Held by no role on this desk." : `Held by ${row.heldBy.join(", ")}.`,
+    heldByLine: row.heldBy.length === 0 ? sourceCopy.en["snc"] : sourceMessage(sourceCopy.en["p.t160"], { v1: row.heldBy.join(", ") }),
     heldByRole: row.heldBy.includes(role),
   }));
 
   const markEligibility = controller.canSend("mark-read");
   const resolveEligibility = controller.canSend("resolve");
-  const markBlock = markEligibility.allowed ? null : (markEligibility.reason ?? "Marking read is not on offer.");
-  const resolveBlock = resolveEligibility.allowed ? null : (resolveEligibility.reason ?? "No offered action resolves now.");
+  const markBlock = markEligibility.allowed ? null : (markEligibility.reason ?? sourceCopy.en["ss2"]);
+  const resolveBlock = resolveEligibility.allowed ? null : (resolveEligibility.reason ?? sourceCopy.en["swi"]);
 
   const rows: NotifyRowModel[] = (snapshot?.notifications ?? []).map((row) => {
     const markable = assessment?.markable.some((item) => item.notificationRef === row.notificationRef) ?? false;
@@ -431,8 +433,8 @@ export function buildNotifyModel(input: { controller: NotificationInboxControlle
         : markable
           ? null
           : row.read
-            ? `Notification ${row.notificationRef} is already marked read.`
-            : "The read offers no mark-read on this notification.";
+            ? sourceMessage(sourceCopy.en["p.t316"], { v1: row.notificationRef })
+            : sourceCopy.en["s1w5"];
     const resolvable = assessment?.resolvable.some((item) => item.notificationRef === row.notificationRef) ?? false;
     const resolveReason =
       resolveBlock !== null
@@ -442,25 +444,25 @@ export function buildNotifyModel(input: { controller: NotificationInboxControlle
           : row.issueState === "stale-issue"
             ? "Issued under an older grant generation. Its offered action resolves nothing — it does not skip the current-generation check."
             : row.offer === null
-              ? "This notification offers no action."
-              : "The read does not offer a resolve on this notification.";
+              ? sourceCopy.en["s235"]
+              : sourceCopy.en["s1vz"];
     return {
       notificationRef: row.notificationRef,
       kindWord: EVENT_WORDS[row.kind] ?? row.kind,
       dedupeKey: row.dedupeKey,
       seq: row.seq,
       issuedAt: row.issuedAt,
-      readWord: row.read ? "Read" : "Unread",
-      issueWord: row.issueState === "current" ? "Current issue" : "Stale issue",
+      readWord: row.read ? sourceCopy.en["s1av"] : sourceCopy.en["s25j"],
+      issueWord: row.issueState === "current" ? sourceCopy.en["sfb"] : sourceCopy.en["s1lo"],
       issueState: row.issueState,
       sensitiveLine: row.sensitive
         ? row.detailState === "withheld"
-          ? "Sensitive. Detail withheld at the source: this role holds no read-sensitive capability."
-          : "Sensitive. Detail shown under the read-sensitive capability."
-        : "Not sensitive.",
+          ? sourceCopy.en["s1jb"]
+          : sourceCopy.en["s1ja"]
+        : sourceCopy.en["s12k"],
       headline: row.headline,
-      detailLine: row.detailState === "withheld" ? "Detail withheld at the source." : (row.detail ?? ""),
-      offerWord: row.offer === null ? "No offered action." : (OFFER_WORDS[row.offer.kind] ?? row.offer.kind),
+      detailLine: row.detailState === "withheld" ? sourceCopy.en["sgh"] : (row.detail ?? ""),
+      offerWord: row.offer === null ? sourceCopy.en["swh"] : (OFFER_WORDS[row.offer.kind] ?? row.offer.kind),
       markRead: { enabled: markReason === null, reason: markReason },
       resolve: { enabled: resolveReason === null, reason: resolveReason },
     };
@@ -486,24 +488,24 @@ export function buildNotifyModel(input: { controller: NotificationInboxControlle
           destination,
           receiptLines: last.receipt
             ? [
-                `Receipt ${last.receipt.kind} for ${last.receipt.notificationRef}, checked under grant generation ${last.receipt.checkedGeneration}.`,
+                sourceMessage(sourceCopy.en["p.t317"], { v1: last.receipt.kind, v2: last.receipt.notificationRef, v3: last.receipt.checkedGeneration }),
                 `confirmsEconomicEffect ${String(last.receipt.confirmsEconomicEffect)} · externalSendWired ${String(last.receipt.externalSendWired)}`,
                 last.receipt.kind === "resolved"
-                  ? "Resolved is a destination, not a send. The move below carries the reference text; nothing was posted."
-                  : "A marked read changes read state only. It confirms no economic effect.",
+                  ? sourceCopy.en["s1gg"]
+                  : sourceCopy.en["s31"],
               ]
             : [],
         };
 
   const counters = state.counters;
   const session: NotifySessionModel = {
-    contextLine: `Actor ${actorRef}, tenant ${state.context.scope.tenantId}, role ${role}, session ${state.context.incarnation}, mode ${state.context.environment}.`,
-    capabilityLine: `Role ${role} holds: ${capabilities.length === 0 ? "no capability" : capabilities.join(", ")}.`,
-    countersLine: `Reads ${counters.reads}. Inquiries ${counters.inquiries}. Requests ${counters.acts}. Not sent ${counters.notSent}. Reads dropped ${counters.droppedReads}. Inquiries dropped ${counters.droppedInquiries}.`,
+    contextLine: sourceMessage(sourceCopy.en["p.t548"], { v1: actorRef, v2: state.context.scope.tenantId, v3: role, v4: state.context.incarnation, v5: state.context.environment }),
+    capabilityLine: sourceMessage(sourceCopy.en["p.t549"], { v1: role, v2: capabilities.length === 0 ? "no capability" : capabilities.join(", ") }),
+    countersLine: sourceMessage(sourceCopy.en["p.t318"], { v1: counters.reads, v2: counters.inquiries, v3: counters.acts, v4: counters.notSent, v5: counters.droppedReads, v6: counters.droppedInquiries }),
     earlierUnknownLine:
       state.earlierUnknown === 0
-        ? "No unknown request outcome in earlier sessions."
-        : `${state.earlierUnknown} unknown request outcome${state.earlierUnknown === 1 ? "" : "s"} in earlier sessions. They are counted, not forgotten.`,
+        ? sourceCopy.en["s131"]
+        : sourceMessage(sourceCopy.en["p.t173"], { v1: state.earlierUnknown, v2: state.earlierUnknown === 1 ? "" : "s" }),
     notComposedLine: NOTIFY_NOT_COMPOSED_NOTE,
     holdLine: NOTIFY_HOLD_NOTE,
   };
@@ -515,24 +517,24 @@ export function buildNotifyModel(input: { controller: NotificationInboxControlle
     detailLine: status.detailLine,
     actionLabel: status.actionLabel,
     freshnessWord,
-    scopeLine: `Tenant ${state.context.scope.tenantId}. Actor ${actorRef} acting as ${role}.`,
+    scopeLine: sourceMessage(sourceCopy.en["p.t319"], { v1: state.context.scope.tenantId, v2: actorRef, v3: role }),
     generationLine: snapshot
-      ? `Grant ${snapshot.grantRef} at generation ${snapshot.grantGeneration} as of this read. A request built under an older one is rejected, and a stale-issued notification's action resolves nothing.`
-      : "No grant generation without a ready read.",
-    watermarkLine: snapshot ? `Watermark ${snapshot.watermark}. Read ${snapshot.snapshotId} on this port.` : "No watermark without a ready read.",
-    dedupeLine: snapshot ? `Dedupe dropped ${snapshot.droppedDuplicates} second deliver${snapshot.droppedDuplicates === 1 ? "y" : "ies"} in this read.` : "No dedupe record without a ready read.",
-    unreadLine: snapshot ? `${snapshot.unreadCount} unread of ${snapshot.notifications.length} listed.` : "No unread count without a ready read.",
+      ? sourceMessage(sourceCopy.en["p.t320"], { v1: snapshot.grantRef, v2: snapshot.grantGeneration })
+      : sourceCopy.en["svl"],
+    watermarkLine: snapshot ? sourceMessage(sourceCopy.en["p.t41"], { v1: snapshot.watermark, v2: snapshot.snapshotId }) : sourceCopy.en["s134"],
+    dedupeLine: snapshot ? sourceMessage(sourceCopy.en["p.t321"], { v1: snapshot.droppedDuplicates, v2: snapshot.droppedDuplicates === 1 ? "y" : "ies" }) : sourceCopy.en["sv2"],
+    unreadLine: snapshot ? sourceMessage(sourceCopy.en["p.t322"], { v1: snapshot.unreadCount, v2: snapshot.notifications.length }) : sourceCopy.en["s132"],
     authority,
     focus:
       focus === null
         ? null
         : {
-            title: `Notification ${focus.row.notificationRef}`,
+            title: sourceMessage(sourceCopy.en["p.t550"], { v1: focus.row.notificationRef }),
             lines: [
-              `${EVENT_WORDS[focus.row.kind] ?? focus.row.kind} for ${focus.row.subjectRef} in ${focus.row.tenantId}. ${focus.row.headline}`,
-              `Issued ${focus.row.issuedAt} under grant generation ${focus.row.issueGeneration}. ${focus.row.issueState === "current" ? "Current issue." : "Stale issue."} ${focus.row.read ? "Read." : "Unread."}`,
-              focus.row.detailState === "withheld" ? "Detail withheld at the source." : `Detail: ${focus.row.detail ?? ""}`,
-              "This arrival confirms no economic effect.",
+              sourceMessage(sourceCopy.en["p.t551"], { v1: EVENT_WORDS[focus.row.kind] ?? focus.row.kind, v2: focus.row.subjectRef, v3: focus.row.tenantId, v4: focus.row.headline }),
+              sourceMessage(sourceCopy.en["p.t323"], { v1: focus.row.issuedAt, v2: focus.row.issueGeneration, v3: focus.row.issueState === "current" ? "Current issue." : "Stale issue.", v4: focus.row.read ? "Read." : "Unread." }),
+              focus.row.detailState === "withheld" ? sourceCopy.en["sgh"] : sourceMessage(sourceCopy.en["p.t552"], { v1: focus.row.detail ?? "" }),
+              sourceCopy.en["s22u"],
             ],
           },
     rows,
@@ -543,7 +545,7 @@ export function buildNotifyModel(input: { controller: NotificationInboxControlle
     request,
     fenceLine: state.fence === null ? null : fenceText(state.fence),
     behindLine: state.behind
-      ? "A request reached the source after the last read. The rows on screen are the last read's. Read again to see them change."
+      ? sourceCopy.en["s77"]
       : null,
     session,
     lastLine: input.last === null ? null : input.last.text,
@@ -589,24 +591,24 @@ function actResultLine(kind: NotifyActionKind, result: NotifyActResult): { text:
       return {
         text:
           kind === "mark-read"
-            ? `${word} recorded at the synthetic source. Read state changed; nothing else did. Read again to see it.`
-            : `${word} recorded at the synthetic source. It yields a destination, not a send. The destination is shown in the request record.`,
+            ? sourceMessage(sourceCopy.en["p.t324"], { v1: word })
+            : sourceMessage(sourceCopy.en["p.t325"], { v1: word }),
         attention: false,
       };
     case "REJECTED":
       return {
-        text: `${word} rejected (${result.record.code ?? "no code"}). ${result.record.detail ?? ""} The source recorded nothing for this request.`.trim(),
+        text: sourceMessage(sourceCopy.en["p.t176"], { v1: word, v2: result.record.code ?? "no code", v3: result.record.detail ?? "" }).trim(),
         attention: true,
       };
     case "UNKNOWN":
       return {
-        text: `${word} outcome unknown (${result.record.code ?? "no code"}). It may have been recorded. Every later request is fenced, and a read does not resolve it.`,
+        text: sourceMessage(sourceCopy.en["p.t177"], { v1: word, v2: result.record.code ?? "no code" }),
         attention: true,
       };
     case "FENCED":
-      return { text: `${word} not sent. ${fenceText(result.fence)}`, attention: true };
+      return { text: sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: fenceText(result.fence) }), attention: true };
     case "NOT_SENT":
-      return { text: `${word} not sent. ${result.detail}`, attention: true };
+      return { text: sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: result.detail }), attention: true };
     default: {
       const exhaustive: never = result;
       return exhaustive;
@@ -715,7 +717,7 @@ export function useNotificationInbox(): {
         return;
       }
       const done = session.port.synthetic(control, ref);
-      note(done ? `${moved} A real producer offers no such control. Read again.` : nothing, done);
+      note(done ? sourceMessage(sourceCopy.en["p.t46"], { v1: moved }) : nothing, done);
     },
     [note],
   );
@@ -727,7 +729,7 @@ export function useNotificationInbox(): {
     openNotification(ref) {
       const text = ref.trim();
       if (text.length === 0) {
-        note("A deep-open names a notification reference copied from a row or a URL. It is never guessed.", true);
+        note(sourceCopy.en["s1a"], true);
         return;
       }
       void sessionRef.current?.controller.read(text);
@@ -754,7 +756,7 @@ export function useNotificationInbox(): {
           return;
         }
         if (result.kind === "NOT_SENT") {
-          note(result.reason === "not-bound" ? NOTIFY_NOT_BOUND_REASON : `No inquiry was sent. ${result.detail}`, true);
+          note(result.reason === "not-bound" ? NOTIFY_NOT_BOUND_REASON : sourceMessage(sourceCopy.en["p.t326"], { v1: result.detail }), true);
         }
       });
     },
@@ -765,12 +767,12 @@ export function useNotificationInbox(): {
       }
       const context = session.controller.switchRole(nextRole);
       if (context === null) {
-        note("A request is in flight. The role cannot change under it.", true);
+        note(sourceCopy.en["s73"], true);
         return;
       }
       setRole(nextRole);
       note(
-        `Switched the same actor to role ${context.scope.role}, session ${context.incarnation}. The earlier role's rows and material are cleared, a late answer is dropped, and actions it offered are fenced off. One read for the new role was asked for.`,
+        sourceMessage(sourceCopy.en["p.t327"], { v1: context.scope.role, v2: context.incarnation }),
       );
       void session.controller.read();
     },
@@ -781,12 +783,12 @@ export function useNotificationInbox(): {
       }
       const context = session.controller.switchActor(next);
       if (context === null) {
-        note("A request is in flight. The actor cannot change under it.", true);
+        note(sourceCopy.en["s72"], true);
         return;
       }
       setActorRef(next);
       note(
-        `Switched the desk actor to ${context.actorRef}, session ${context.incarnation}, still acting as ${context.scope.role}. The source decides whether that grant exists. Rows and material are cleared, and an answer in flight is dropped. One read was asked for.`,
+        sourceMessage(sourceCopy.en["p.t328"], { v1: context.actorRef, v2: context.incarnation, v3: context.scope.role }),
       );
       void session.controller.read();
     },
@@ -798,11 +800,11 @@ export function useNotificationInbox(): {
       const nextTenant = session.controller.state().context.scope.tenantId === "ten-0001" ? "ten-0002" : "ten-0001";
       const context = session.controller.switchTenant(nextTenant);
       if (context === null) {
-        note("A request is in flight. The tenant cannot change under it.", true);
+        note(sourceCopy.en["s74"], true);
         return;
       }
       note(
-        `Switched the tenant to ${context.scope.tenantId}, session ${context.incarnation}. Rows and material of the earlier tenant are cleared, and an answer in flight for it is dropped. One read for the new tenant was asked for.`,
+        sourceMessage(sourceCopy.en["p.t329"], { v1: context.scope.tenantId, v2: context.incarnation }),
       );
       void session.controller.read();
     },
@@ -812,8 +814,8 @@ export function useNotificationInbox(): {
       synthetic(
         "revoke-grant",
         grantRef,
-        `The synthetic notification grant ${grantRef ?? "?"} is withdrawn at the source. Its next call is denied.`,
-        "There is no synthetic grant to withdraw, or it is already revoked.",
+        sourceMessage(sourceCopy.en["p.t330"], { v1: grantRef ?? "?" }),
+        sourceCopy.en["s1wm"],
       );
     },
     rotateGrant() {
@@ -822,8 +824,8 @@ export function useNotificationInbox(): {
       synthetic(
         "rotate-grant",
         grantRef,
-        `The synthetic notification grant ${grantRef ?? "?"} moved a generation at the source. A request built under the old one is rejected.`,
-        "There is no synthetic grant to rotate, or it is already revoked.",
+        sourceMessage(sourceCopy.en["p.t331"], { v1: grantRef ?? "?" }),
+        sourceCopy.en["s1wn"],
       );
     },
     deliverLate() {
@@ -832,8 +834,8 @@ export function useNotificationInbox(): {
       synthetic(
         "deliver-late",
         actor,
-        `The synthetic source delivered a notification issued under an older grant generation for ${actor ?? "?"}.`,
-        "There is no synthetic source to deliver into, or this actor holds no grant here.",
+        sourceMessage(sourceCopy.en["p.t332"], { v1: actor ?? "?" }),
+        sourceCopy.en["s1wr"],
       );
     },
     setScenario(next) {
@@ -841,7 +843,7 @@ export function useNotificationInbox(): {
         next,
         actorRef,
         role,
-        `Started a new synthetic inbox session on scenario ${next} for ${actorRef} as ${role}. Earlier reads, material, and requests are cleared.`,
+        sourceMessage(sourceCopy.en["p.t333"], { v1: next, v2: actorRef, v3: role }),
       );
     },
     newSession() {
@@ -849,7 +851,7 @@ export function useNotificationInbox(): {
         scenario,
         actorRef,
         role,
-        `Started a new synthetic inbox session on scenario ${scenario} for ${actorRef} as ${role}. Earlier reads, material, and requests are cleared.`,
+        sourceMessage(sourceCopy.en["p.t333"], { v1: scenario, v2: actorRef, v3: role }),
       );
     },
   };

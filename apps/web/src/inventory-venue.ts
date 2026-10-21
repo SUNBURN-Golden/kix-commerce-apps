@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/inventory-venue";
+import { sourceMessage } from "./i18n/source-message";
 /**
  * The seat and GA selection read on top of the adapter's bounded port.
  * Stub scope: the default port is the synthetic inventory. On integration-http
@@ -33,34 +35,34 @@ import {
 import { formatWhen } from "./format";
 import { protocol } from "./protocol";
 
-export const INVENTORY_TITLE = "Seats and GA (synthetic)";
+export const INVENTORY_TITLE = sourceCopy.en["s1is"];
 
 export const INVENTORY_SOURCE_LINE =
-  "Rows come from a synthetic inventory projection on this page load. They are not a producer read and not a catalogue receipt.";
+  sourceCopy.en["s1hu"];
 
 export const INVENTORY_BOUNDARY =
-  "A free label is an observation. It is not a hold, not a sale, and not an approval from the economic writer. Trade commands re-check on their own path.";
+  sourceCopy.en["s22"];
 
 export const INVENTORY_SELECTION_BOUNDARY =
-  "Selected on this screen only. Nothing was reserved, held, sold, or paid, and nothing was sent.";
+  sourceCopy.en["s1iv"];
 
-export const INVENTORY_GA_NOTE = "GA is a quantity in a pool. No seat is assigned and no seat is owned.";
+export const INVENTORY_GA_NOTE = sourceCopy.en["smb"];
 
 export const INVENTORY_QUEUE_BOUNDARY =
-  "Queue admission is access to these pages. It is not a hold, a payment, an issued right, or entry at the door.";
+  sourceCopy.en["s1at"];
 
-export const INVENTORY_QUEUE_JOIN_NOTE = "No command to join or rejoin a queue is published, so this desk cannot join one.";
+export const INVENTORY_QUEUE_JOIN_NOTE = sourceCopy.en["sur"];
 
-export const INVENTORY_PAGE_NOTE = `One bounded page per click, at most ${INVENTORY_PAGE_BOUND} rows. The seat list never arrives as one response. Refresh is explicit and nothing polls.`;
+export const INVENTORY_PAGE_NOTE = sourceMessage(sourceCopy.en["p.t219"], { v1: INVENTORY_PAGE_BOUND });
 
-export const INVENTORY_SCOPE_NOTE = `Access scope ${INVENTORY_DESK_SCOPE.tenantId}. The subject string is not an authentication result.`;
+export const INVENTORY_SCOPE_NOTE = sourceMessage(sourceCopy.en["p.t136"], { v1: INVENTORY_DESK_SCOPE.tenantId });
 
-export const INVENTORY_HOLD_NOTE = `Reserving a seat is not available here. ${INVENTORY_HOLD_NOT_BOUND.reason} The booking journey re-checks inventory on its own path.`;
+export const INVENTORY_HOLD_NOTE = sourceMessage(sourceCopy.en["p.t220"], { v1: INVENTORY_HOLD_NOT_BOUND.reason });
 
 export const INVENTORY_ACCESSIBLE_NOTE =
-  "Unsupported. The policy is undetermined, so this desk neither offers nor hides these seats.";
+  sourceCopy.en["s25p"];
 
-export const INVENTORY_ADVANCE_LABEL = "Advance generation";
+export const INVENTORY_ADVANCE_LABEL = sourceCopy.en["s1t"];
 
 export type InventoryStage = "summary" | "page" | "selection";
 
@@ -119,15 +121,15 @@ function rawReturnMode(outcome: AnyOutcome): InventoryReturnMode | null {
 export function inventoryReturnLabel(mode: InventoryReturnMode): string {
   switch (mode) {
     case "resync":
-      return "Start over";
+      return sourceCopy.en["s1me"];
     case "again":
-      return "Read again";
+      return sourceCopy.en["s1ax"];
     case "first":
-      return "Back to first page";
+      return sourceCopy.en["s9h"];
     case "page":
-      return "Back to page";
+      return sourceCopy.en["s9i"];
     case "summary":
-      return "Back to summary";
+      return sourceCopy.en["s9k"];
     default: {
       const exhaustive: never = mode;
       return exhaustive;
@@ -138,64 +140,64 @@ export function inventoryReturnLabel(mode: InventoryReturnMode): string {
 export function inventoryStatusLine(outcome: AnyOutcome): { statusLine: string; detailLine: string } {
   switch (outcome.kind) {
     case "loading":
-      return { statusLine: "Loading inventory.", detailLine: "" };
+      return { statusLine: sourceCopy.en["srd"], detailLine: "" };
     case "ready":
-      return { statusLine: "Read ready.", detailLine: "" };
+      return { statusLine: sourceCopy.en["s1c3"], detailLine: "" };
     case "empty":
-      return { statusLine: "Nothing to show in this read.", detailLine: "" };
+      return { statusLine: sourceCopy.en["s11h"], detailLine: "" };
     case "unsupported":
-      return { statusLine: "Unsupported mode.", detailLine: outcome.reason };
+      return { statusLine: sourceCopy.en["s25o"], detailLine: outcome.reason };
     case "mode-mismatch":
       return {
-        statusLine: `Mode mismatch in ${outcome.sectionId}.`,
-        detailLine: `This read expected ${outcome.expected} and the section is ${outcome.actual} now. Nothing was converted between modes.`,
+        statusLine: sourceMessage(sourceCopy.en["p.t221"], { v1: outcome.sectionId }),
+        detailLine: sourceMessage(sourceCopy.en["p.t222"], { v1: outcome.expected, v2: outcome.actual }),
       };
     case "generation-changed":
       return {
-        statusLine: "Inventory generation changed.",
-        detailLine: `You read generation ${outcome.held} and the inventory now serves generation ${outcome.current}. Nothing was carried over.`,
+        statusLine: sourceCopy.en["som"],
+        detailLine: sourceMessage(sourceCopy.en["p.t223"], { v1: outcome.held, v2: outcome.current }),
       };
     case "queue-blocked":
-      return { statusLine: `Queue ${outcome.queue.state}. Selection pages are closed.`, detailLine: outcome.queue.note };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t224"], { v1: outcome.queue.state }), detailLine: outcome.queue.note };
     case "cursor-invalid":
-      return { statusLine: `Cursor invalid (${outcome.code}).`, detailLine: outcome.detail };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t139"], { v1: outcome.code }), detailLine: outcome.detail };
     case "gap":
-      return { statusLine: `Gap in the synthetic inventory (${outcome.code}).`, detailLine: outcome.detail };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t225"], { v1: outcome.code }), detailLine: outcome.detail };
     case "tenant-mismatch":
       return {
-        statusLine: "A unit from another tenant arrived.",
-        detailLine: `unit ${outcome.unitId}. tenant ${outcome.tenantId}.`,
+        statusLine: sourceCopy.en["s95"],
+        detailLine: sourceMessage(sourceCopy.en["p.t524"], { v1: outcome.unitId, v2: outcome.tenantId }),
       };
     case "stale":
       return {
-        statusLine: "Stale inventory watermark.",
-        detailLine: `watermark ${formatWhen(outcome.watermark)}. floor ${formatWhen(outcome.floor)}.`,
+        statusLine: sourceCopy.en["s1ln"],
+        detailLine: sourceMessage(sourceCopy.en["p.t502"], { v1: formatWhen(outcome.watermark), v2: formatWhen(outcome.floor) }),
       };
     case "tuple-changed":
       return {
-        statusLine: `Projection tuple changed (${outcome.field}).`,
-        detailLine: `expected ${outcome.expected}. actual ${outcome.actual}.`,
+        statusLine: sourceMessage(sourceCopy.en["p.t140"], { v1: outcome.field }),
+        detailLine: sourceMessage(sourceCopy.en["p.t504"], { v1: outcome.expected, v2: outcome.actual }),
       };
     case "not-bound":
       return { statusLine: outcome.reason, detailLine: "" };
     case "invalid-request":
-      return { statusLine: `Blocked read (${outcome.code}).`, detailLine: outcome.detail };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t141"], { v1: outcome.code }), detailLine: outcome.detail };
     case "unknown":
-      return { statusLine: "Unknown read.", detailLine: `${outcome.message} The outcome is not confirmed.` };
+      return { statusLine: sourceCopy.en["s25d"], detailLine: sourceMessage(sourceCopy.en["p.t226"], { v1: outcome.message }) };
     case "unit-unavailable":
       return {
-        statusLine: `Not free in the latest read (${outcome.observed}).`,
+        statusLine: sourceMessage(sourceCopy.en["p.t227"], { v1: outcome.observed }),
         detailLine: outcome.changedSincePage
-          ? "It changed since the page was read. Nothing was reserved for you."
-          : "Nothing was reserved for you.",
+          ? sourceCopy.en["sp1"]
+          : sourceCopy.en["s11n"],
       };
     case "hold-stale":
       return {
-        statusLine: "The observed hold is stale.",
+        statusLine: sourceCopy.en["s1un"],
         detailLine:
           outcome.reason === "expired"
-            ? "It has expired. The seat is not shown as free until a later read says so."
-            : `It was recorded under generation ${outcome.hold.holdGeneration}, not the current one. The seat is not shown as free.`,
+            ? sourceCopy.en["sp3"]
+            : sourceMessage(sourceCopy.en["p.t228"], { v1: outcome.hold.holdGeneration }),
       };
     default: {
       const exhaustive: never = outcome;
@@ -212,7 +214,7 @@ export function modeWord(mode: InventoryMode): string {
 }
 
 export function bandWord(band: "available" | "limited" | "none"): string {
-  return `${band.toUpperCase()} (observed band)`;
+  return sourceMessage(sourceCopy.en["p.t229"], { v1: band.toUpperCase() });
 }
 
 export interface SummarySectionView {
@@ -250,14 +252,14 @@ export interface SummaryModel {
 export function describeQueue(queue: InventoryQueueView): QueueModel {
   const stateLine =
     queue.state === "none"
-      ? "Queue: none in front of the selection pages."
-      : `Queue: ${queue.state}.`;
+      ? sourceCopy.en["s1au"]
+      : sourceMessage(sourceCopy.en["p.t525"], { v1: queue.state });
   return {
     state: queue.state,
     stateLine,
-    positionLine: queue.position === null ? null : `Position ${queue.position} (synthetic).`,
+    positionLine: queue.position === null ? null : sourceMessage(sourceCopy.en["p.t526"], { v1: queue.position }),
     deadline: queue.admittedUntil === null || queue.expired === null ? null : { expiresAt: queue.admittedUntil, expired: queue.expired },
-    accessLine: queue.grantsSelectionAccess ? "Selection pages are open." : "Selection pages are closed.",
+    accessLine: queue.grantsSelectionAccess ? sourceCopy.en["s1iz"] : sourceCopy.en["s1iy"],
     note: queue.note,
   };
 }
@@ -279,7 +281,7 @@ export function describeSection(section: InventorySectionSummary): SummarySectio
     capacityLine:
       section.capacityEstimate === null
         ? null
-        : `declared capacity about ${section.capacityEstimate} (synthetic). A label, not remaining stock.`,
+        : sourceMessage(sourceCopy.en["p.t230"], { v1: section.capacityEstimate }),
     bandLine: section.band === null ? null : bandWord(section.band),
     noteLine,
   };
@@ -295,14 +297,14 @@ export function buildSummaryModel(input: {
   const { statusLine, detailLine } = inventoryStatusLine(outcome);
   const mode = inventoryReturnMode("summary", outcome);
   const generationBehind = input.heldGeneration !== null && input.heldGeneration !== input.servedGeneration;
-  const read = input.heldGeneration === null ? "none yet" : String(input.heldGeneration);
-  let metaLine = `scenario ${input.scenario}. served generation ${input.servedGeneration}. last summary read generation ${read}.`;
+  const read = input.heldGeneration === null ? sourceCopy.en["swe"] : String(input.heldGeneration);
+  let metaLine = sourceMessage(sourceCopy.en["p.t231"], { v1: input.scenario, v2: input.servedGeneration, v3: read });
   if (outcome.kind === "ready") {
-    metaLine = `${metaLine} watermark ${formatWhen(outcome.watermark)}.`;
+    metaLine = sourceMessage(sourceCopy.en["p.t527"], { v1: metaLine, v2: formatWhen(outcome.watermark) });
   }
   return {
     state: outcome.kind,
-    statusLine: outcome.kind === "ready" ? "Summary ready." : statusLine,
+    statusLine: outcome.kind === "ready" ? sourceCopy.en["s1nf"] : statusLine,
     detailLine,
     metaLine,
     generationBehind,
@@ -333,13 +335,13 @@ export function describeUnit(unit: InventoryUnit): PageRowView {
     return {
       unitId: unit.unitId,
       mode: "ga",
-      title: `${unit.poolLabel} pool`,
+      title: sourceMessage(sourceCopy.en["p.t528"], { v1: unit.poolLabel }),
       observedKind: null,
       observedWord: bandWord(unit.band),
-      observedLine: unit.band === "none" ? "No quantity is free in this pool in the latest read." : "A quantity may be free in this pool in the latest read.",
+      observedLine: unit.band === "none" ? sourceCopy.en["sxc"] : sourceCopy.en["s68"],
       hold: null,
       seenAs: inventoryUnitLabel(unit),
-      capacityLine: `declared capacity about ${unit.capacityEstimate} (synthetic). A label, not remaining stock.`,
+      capacityLine: sourceMessage(sourceCopy.en["p.t230"], { v1: unit.capacityEstimate }),
       noteLine: INVENTORY_GA_NOTE,
     };
   }
@@ -348,13 +350,13 @@ export function describeUnit(unit: InventoryUnit): PageRowView {
     return {
       ...base,
       observedKind: "free",
-      observedWord: "FREE (observed)",
-      observedLine: "Free in the latest read. This is not a hold and not a sale.",
+      observedWord: sourceCopy.en["sm1"],
+      observedLine: sourceCopy.en["sm0"],
       hold: null,
     };
   }
   if (unit.observed === "taken") {
-    return { ...base, observedKind: "taken", observedWord: "TAKEN (observed)", observedLine: "Taken in the latest read.", hold: null };
+    return { ...base, observedKind: "taken", observedWord: sourceCopy.en["s1pd"], observedLine: sourceCopy.en["s1pc"], hold: null };
   }
   const hold = unit.hold;
   const view = hold === null ? null : { expiresAt: hold.expiresAt, expired: hold.expired };
@@ -362,8 +364,8 @@ export function describeUnit(unit: InventoryUnit): PageRowView {
     return {
       ...base,
       observedKind: "hold-expired",
-      observedWord: "HOLD EXPIRED (observed)",
-      observedLine: "The observed hold has expired. This seat is not shown as free. Read again.",
+      observedWord: sourceCopy.en["snf"],
+      observedLine: sourceCopy.en["s1um"],
       hold: view,
     };
   }
@@ -371,16 +373,16 @@ export function describeUnit(unit: InventoryUnit): PageRowView {
     return {
       ...base,
       observedKind: "hold-other-generation",
-      observedWord: "HOLD FROM EARLIER GENERATION (observed)",
-      observedLine: `The observed hold was recorded under generation ${hold.holdGeneration}, not the current one. This seat is not shown as free.`,
+      observedWord: sourceCopy.en["snh"],
+      observedLine: sourceMessage(sourceCopy.en["p.t232"], { v1: hold.holdGeneration }),
       hold: view,
     };
   }
   return {
     ...base,
     observedKind: "held",
-    observedWord: "HELD (observed)",
-    observedLine: "Held by another selection in the latest read.",
+    observedWord: sourceCopy.en["snd"],
+    observedLine: sourceCopy.en["sna"],
     hold: view,
   };
 }
@@ -410,15 +412,15 @@ export function buildPageModel(input: {
   const { statusLine, detailLine } = inventoryStatusLine(outcome);
   const mode = inventoryReturnMode("page", outcome);
   const section = outcome.kind === "ready" || outcome.kind === "empty" ? outcome.section : input.section;
-  let metaLine = `filter ${input.freeOnly ? "free only" : "all"}.`;
+  let metaLine = sourceMessage(sourceCopy.en["p.t529"], { v1: input.freeOnly ? "free only" : "all" });
   let statusOut = statusLine;
   let detailOut = detailLine;
   if (outcome.kind === "ready") {
-    metaLine = `${metaLine} generation ${outcome.generation}. watermark ${formatWhen(outcome.watermark)}. scanned ${outcome.scannedCount} of about ${outcome.totalEstimate}.`;
-    statusOut = outcome.rows.length === 0 ? "Page ready. No free-observed units in the scanned window." : "Page ready.";
-    detailOut = outcome.rows.length === 0 && outcome.nextCursor !== null ? "The next page continues the scan." : "";
+    metaLine = sourceMessage(sourceCopy.en["p.t233"], { v1: metaLine, v2: outcome.generation, v3: formatWhen(outcome.watermark), v4: outcome.scannedCount, v5: outcome.totalEstimate });
+    statusOut = outcome.rows.length === 0 ? sourceCopy.en["s16y"] : sourceCopy.en["s16x"];
+    detailOut = outcome.rows.length === 0 && outcome.nextCursor !== null ? sourceCopy.en["s1uh"] : "";
   } else if (outcome.kind === "empty") {
-    statusOut = "No seats in this section.";
+    statusOut = sourceCopy.en["syf"];
   }
   return {
     state: outcome.kind,
@@ -479,12 +481,12 @@ export function buildSelectionModel(input: { outcome: SelectionState }): Selecti
     if (selection.mode === "ga") {
       return {
         ...base,
-        statusLine: "Selection ready.",
+        statusLine: sourceCopy.en["s1j0"],
         mode: "ga",
-        title: `${selection.unit.poolLabel} pool`,
+        title: sourceMessage(sourceCopy.en["p.t528"], { v1: selection.unit.poolLabel }),
         observedWord: bandWord(selection.unit.band),
-        quantityLine: `Quantity ${selection.quantity}. A count, not a price.`,
-        assignmentLine: `No seat assigned. ${INVENTORY_GA_NOTE}`,
+        quantityLine: sourceMessage(sourceCopy.en["p.t530"], { v1: selection.quantity }),
+        assignmentLine: sourceMessage(sourceCopy.en["p.t234"], { v1: INVENTORY_GA_NOTE }),
         changedSincePage: outcome.changedSincePage,
         selected: true,
         boundaryLine: INVENTORY_SELECTION_BOUNDARY,
@@ -492,10 +494,10 @@ export function buildSelectionModel(input: { outcome: SelectionState }): Selecti
     }
     return {
       ...base,
-      statusLine: "Selection ready.",
+      statusLine: sourceCopy.en["s1j0"],
       mode: "seat",
       title: selection.unit.seatLabel,
-      observedWord: "FREE (observed)",
+      observedWord: sourceCopy.en["sm1"],
       quantityLine: null,
       assignmentLine: null,
       changedSincePage: outcome.changedSincePage,
@@ -514,7 +516,7 @@ export function buildSelectionModel(input: { outcome: SelectionState }): Selecti
     return { ...base, hold: { expiresAt: outcome.hold.expiresAt, expired: outcome.hold.expired } };
   }
   if (outcome.kind === "empty") {
-    return { ...base, statusLine: "No unit for this id.", detailLine: "" };
+    return { ...base, statusLine: sourceCopy.en["s12y"], detailLine: "" };
   }
   return base;
 }
@@ -642,7 +644,7 @@ export function useInventoryRead(options: {
       setPage({
         kind: "invalid-request",
         code: "SECTION",
-        detail: `Section ${sectionId} is not in the summary this page read.`,
+        detail: sourceMessage(sourceCopy.en["p.t235"], { v1: sectionId }),
       });
       return;
     }
@@ -684,7 +686,7 @@ export function useInventoryRead(options: {
       setSelection({
         kind: "invalid-request",
         code: "SECTION",
-        detail: `Section ${sectionId} is not in the summary this page read.`,
+        detail: sourceMessage(sourceCopy.en["p.t235"], { v1: sectionId }),
       });
       return;
     }
@@ -862,4 +864,4 @@ export function quantityFromParam(raw: string | null): number | null {
   return Number(raw);
 }
 
-export const INVENTORY_QUANTITY_HINT = `A whole count from 1 to ${INVENTORY_QUANTITY_BOUND}. A count, not a price.`;
+export const INVENTORY_QUANTITY_HINT = sourceMessage(sourceCopy.en["p.t236"], { v1: INVENTORY_QUANTITY_BOUND });

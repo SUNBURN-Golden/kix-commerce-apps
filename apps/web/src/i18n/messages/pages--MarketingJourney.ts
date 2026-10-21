@@ -1,0 +1,26 @@
+export const messages = {
+  en: {
+    "s9v": "Benefits",
+    "sdo": "Consent",
+    "sec": "Contract register",
+    "sed": "Controls",
+    "srw": "Marketing journey sections",
+    "s15v": "Orders and applications",
+    "s1ew": "Rejected",
+    "s1js": "Session record",
+    "s1lg": "Stages",
+    "s1mj": "Status",
+  },
+  ko: {
+    "s9v": "혜택",
+    "sdo": "동의",
+    "sec": "계약 등록부",
+    "sed": "제어",
+    "srw": "마케팅 여정 영역",
+    "s15v": "주문과 신청",
+    "s1ew": "거부됨",
+    "s1js": "세션 기록",
+    "s1lg": "단계 목록",
+    "s1mj": "상태",
+  },
+} as const;

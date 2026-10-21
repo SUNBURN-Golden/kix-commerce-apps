@@ -1,6 +1,21 @@
+import { messages as copy0 } from "../i18n/messages/pages--Discovery";
+import { messages as copy1 } from "../i18n/messages/discovery--model";
+import { messages as copy2 } from "../i18n/messages/discovery--fixture";
+import { messages as copy3 } from "../i18n/messages/a11y--present";
+import { messages as copy4 } from "../i18n/messages/discovery-live";
+import { messages as copy5 } from "../i18n/messages/discovery-workspace";
+import { messages as copy6 } from "../i18n/messages/buyer-workspace";
+import { messages as copy7 } from "../i18n/messages/gift-desk";
+import { messages as copy8 } from "../i18n/messages/storage-allow-list";
+import { messages as copy9 } from "../i18n/messages/journey-desk";
+import { messages as copy10 } from "../i18n/messages/resale-desk";
+import { messages as copy11 } from "../i18n/messages/reservation-desk";
+import { messages as copy12 } from "../i18n/messages/workspace--registry";
+import { deskText } from "../i18n/desk-translate";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { conflictControlId, focusControl } from "../a11y/focus";
+import { useT } from "../i18n/desk-context";
 import { useFormatWhen } from "../i18n/locale-context";
 import { paramsFromQuery, queryFromParams, searchSuffix, type DiscoveryQuery } from "../discovery/model";
 import {
@@ -76,6 +91,7 @@ export function DiscoveryScreen({
   onReadAgain: () => void;
   live: { model: LiveListModel; handlers: LiveListHandlers };
 }) {
+  const t = useT(copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   const [focus, setFocus] = useState(0);
   const signature = `${model.result.state}:${model.result.page}:${model.result.rows.length}:${query.sort}:${query.pageSize}`;
   const [seen, setSeen] = useState(signature);
@@ -98,16 +114,16 @@ export function DiscoveryScreen({
 
   return (
     <div className="discovery" data-adapter-environment={model.environment}>
-      <nav className="discovery-nav" aria-label="Discovery sections">
-        <a href="#discovery-filters">Filters</a>
-        <a href="#discovery-results">Results</a>
-        <a href="#discovery-scale">Scale</a>
-        <a href="#discovery-live">Projection</a>
+      <nav className="discovery-nav" aria-label={t("sgu")}>
+        <a href="#discovery-filters">{t("sla")}</a>
+        <a href="#discovery-results">{t("s1gl")}</a>
+        <a href="#discovery-scale">{t("s1i9")}</a>
+        <a href="#discovery-live">{t("s19d")}</a>
       </nav>
       <div className="discovery-body">
         <DiscoveryBanner model={model} />
         <section className="discovery-section" data-catalog={model.catalog.kind} data-source={model.catalogSource}>
-          <h3>Catalogue read</h3>
+          <h3>{t("sbq")}</h3>
           <CatalogNotice model={model} onReadAgain={onReadAgain} />
         </section>
         <DiscoveryForm query={query} onQuery={onQuery} invalidControlId={invalidControlId} />
@@ -137,6 +153,7 @@ export function DiscoveryDetail({
   backSearch: string;
   live: { model: LiveDetailModel; handlers: LiveDetailHandlers };
 }) {
+  const t = useT(copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   const formatWhen = useFormatWhen();
   const detail = model.detail;
   return (
@@ -145,18 +162,16 @@ export function DiscoveryDetail({
         <DiscoveryBanner model={model} />
         <p>
           <Link className="button discovery-action" to={{ pathname: "/discovery", search: backSearch }}>
-            Back to results
-          </Link>
+            {t("s9j")}</Link>
         </p>
         <section className="discovery-section" data-catalog={model.catalog.kind} data-source={model.catalogSource}>
-          <h3>Catalogue read</h3>
+          <h3>{t("sbq")}</h3>
           <CatalogNotice model={model} onReadAgain={onReadAgain} />
         </section>
         {model.missingRow || !detail ? (
           <>
             <p className="empty" data-state="empty">
-              No synthetic row for this id.
-            </p>
+              {t("syz")}</p>
             <LiveReadDetail model={live.model} handlers={live.handlers} />
           </>
         ) : (
@@ -174,27 +189,27 @@ export function DiscoveryDetail({
               </span>
             </p>
             <p className="when">
-              <time dateTime={detail.row.startsAt}>{formatWhen(detail.row.startsAt)}</time>
+              <time dateTime={detail.row.startsAt}>{deskText(t, formatWhen(detail.row.startsAt))}</time>
             </p>
-            <h3>{detail.row.title}</h3>
-            <p className="muted">{detail.row.venueLabel}</p>
-            <p>{detail.facts.kindLine}</p>
-            <p className="discovery-status">{detail.facts.statusLine}</p>
-            {detail.facts.inventoryLine ? <p>{detail.facts.inventoryLine}</p> : null}
-            {detail.facts.countLine ? <p>{detail.facts.countLine}</p> : null}
-            {detail.facts.tierLine ? <p>{detail.facts.tierLine}</p> : null}
-            {detail.facts.resaleLine ? <p>{detail.facts.resaleLine}</p> : null}
+            <h3>{deskText(t, detail.row.title)}</h3>
+            <p className="muted">{deskText(t, detail.row.venueLabel)}</p>
+            <p>{deskText(t, detail.facts.kindLine)}</p>
+            <p className="discovery-status">{deskText(t, detail.facts.statusLine)}</p>
+            {detail.facts.inventoryLine ? <p>{deskText(t, detail.facts.inventoryLine)}</p> : null}
+            {detail.facts.countLine ? <p>{deskText(t, detail.facts.countLine)}</p> : null}
+            {detail.facts.tierLine ? <p>{deskText(t, detail.facts.tierLine)}</p> : null}
+            {detail.facts.resaleLine ? <p>{deskText(t, detail.facts.resaleLine)}</p> : null}
             {detail.facts.stale ? (
               <p>
                 <span className="discovery-badge" data-state="stale">
                   STALE
                 </span>{" "}
-                <time dateTime={detail.row.priceAsOf}>{formatWhen(detail.row.priceAsOf)}</time>
+                <time dateTime={detail.row.priceAsOf}>{deskText(t, formatWhen(detail.row.priceAsOf))}</time>
               </p>
             ) : null}
             {detail.row.kind === "resale" ? (
               <p data-state="not-bound" data-source="none">
-                {model.resaleNotBoundReason}
+                {deskText(t, model.resaleNotBoundReason)}
               </p>
             ) : null}
             <PurchasePathView purchase={detail.purchase} />

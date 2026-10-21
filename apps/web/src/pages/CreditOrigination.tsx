@@ -1,3 +1,7 @@
+import { messages as copy0 } from "../i18n/messages/pages--CreditOrigination";
+import { messages as copy1 } from "../i18n/messages/credit-origination";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { useRestoreFocus } from "../a11y/focus";
 import { useCreditOrigination } from "../credit-origination";
 import {
@@ -14,6 +18,7 @@ import {
 } from "./CreditOriginationPanels";
 
 export function CreditOriginationPage() {
+  const t = useT(copy0, copy1);
   const live = useCreditOrigination();
   const model = live.model;
   // A block, a refusal, or an unknown result takes focus to the status region.
@@ -21,16 +26,16 @@ export function CreditOriginationPage() {
 
   return (
     <div className="discovery origination" data-adapter-environment={live.environment}>
-      <nav className="discovery-nav" aria-label="Origination sections">
-        <a href="#origination-controls">Controls</a>
-        <a href="#origination-status">Status</a>
-        <a href="#origination-application">Application and review</a>
-        <a href="#origination-basis">Claim basis</a>
-        <a href="#origination-policy">Policy and consents</a>
-        <a href="#origination-reasons">Reasons and paths</a>
-        <a href="#origination-commitment">Commitment and drawdown</a>
-        <a href="#origination-requests">Requests</a>
-        <a href="#origination-session">Session record</a>
+      <nav className="discovery-nav" aria-label={t("s16d")}>
+        <a href="#origination-controls">{t("sed")}</a>
+        <a href="#origination-status">{t("s1mj")}</a>
+        <a href="#origination-application">{t("s58")}</a>
+        <a href="#origination-basis">{t("scg")}</a>
+        <a href="#origination-policy">{t("s18l")}</a>
+        <a href="#origination-reasons">{t("s1d7")}</a>
+        <a href="#origination-commitment">{t("sdb")}</a>
+        <a href="#origination-requests">{t("s1fv")}</a>
+        <a href="#origination-session">{t("s1js")}</a>
       </nav>
       <div className="discovery-body">
         <OriginationBanner environment={live.environment} scenario={live.scenario} model={model} />
@@ -43,7 +48,7 @@ export function CreditOriginationPage() {
             className="discovery-action"
             onClick={() => (model.state === "tuple-changed" ? live.actions.newSession() : live.actions.refresh())}
           >
-            {model.actionLabel}
+            {deskText(t, model.actionLabel)}
           </button>
         ) : null}
         <ApplicationSection model={model} />

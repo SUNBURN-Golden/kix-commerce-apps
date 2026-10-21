@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/provider-journey";
+import { sourceMessage } from "./i18n/source-message";
 /**
  * The synthetic provider-connected journey screen on top of the adapter's
  * synthetic provider sandbox source. Stub scope: the default port is the
@@ -43,66 +45,66 @@ import {
 } from "@kix/protocol-adapter";
 import { protocol } from "./protocol";
 
-export const PROVIDER_TITLE = "Provider checkout journey (synthetic)";
+export const PROVIDER_TITLE = sourceCopy.en["s1a5"];
 
 export const PROVIDER_SOURCE_LINE =
-  "Orders, checkouts, provider reports, issuances, and refunds come from a synthetic provider source on this page load. They are not a provider receipt, not a payment processor response, and not a producer read. No real test account or provider credential exists here, so every row is labelled synthetic.";
+  sourceCopy.en["s15x"];
 
 export const PROVIDER_BOUNDARY =
-  "Each row below is an observation or a synthetic write of this page. The redirect, the buyer's return landing, the provider's own report, the issuance record, and the refund record are five separate lines. None of them completes the others.";
+  sourceCopy.en["si2"];
 
 export const PROVIDER_RETURN_NOTE =
-  "A return landing is not a payment observation. The buyer landing on the return URL records a return event only; the payment line waits for the provider's own report and a confirmed observe write. Success is never claimed from the return URL alone.";
+  sourceCopy.en["s7c"];
 
 export const PROVIDER_ENVIRONMENT_NOTE =
-  "The environment and the account are checked before any write. The desk serves the sandbox only: a declared production environment refuses the read, a write that does not declare sandbox is refused, and an unqualified account fences every write. A sandbox success is not a real payment.";
+  sourceCopy.en["s1s1"];
 
 export const PROVIDER_ISSUANCE_NOTE =
-  "An issuance record is a synthetic row and a right reference on the same order. It is not a real right and grants no admission authority. A refund record is a synthetic row; it returns no funds and executes nothing.";
+  sourceCopy.en["s49"];
 
 export const PROVIDER_ACTOR_NOTE =
-  "The actor string is a context label. It is not an authentication result. Only the desk actor string is sandbox-qualified by the synthetic source; every other actor reads unqualified.";
+  sourceCopy.en["s1py"];
 
 export const PROVIDER_SESSION_NOTE =
-  "Intents live in this page load only. A reload or a new synthetic session clears them and resolves nothing at a provider. After a reload an unknown write is not recovered here.";
+  sourceCopy.en["soh"];
 
 export const PROVIDER_FENCE_NOTE =
-  "One write is sent at a time per order, and each is sent once. This page does not send a write again, does not mint an intent for you, and does not undo one with another.";
+  sourceCopy.en["s14n"];
 
 export const PROVIDER_READ_NOTE =
-  "One read follows each settled write so the next step can use fresh evidence. Nothing polls. A read is evidence and never resolves an unknown write.";
+  sourceCopy.en["s14c"];
 
-export const PROVIDER_HOLD_NOTE = `Holding a seat is not available here. ${PROVIDER_HOLD_NOT_BOUND.reason}`;
+export const PROVIDER_HOLD_NOTE = sourceMessage(sourceCopy.en["p.t8"], { v1: PROVIDER_HOLD_NOT_BOUND.reason });
 
-export const PROVIDER_AMOUNT_NOTE = `Amounts are the source's own text in ${PROVIDER_UNIT}, a synthetic unit. An order with no amount shows UNDETERMINED. This page does not compute, convert, or verify any amount.`;
+export const PROVIDER_AMOUNT_NOTE = sourceMessage(sourceCopy.en["p.t185"], { v1: PROVIDER_UNIT });
 
 export const SCENARIO_NOTES: Readonly<Record<ProviderScenario, string>> = {
-  clean: "Every step is answered. Two sandbox orders are seeded; the second has no amount.",
-  empty: "The source has no orders.",
-  stale: "The source serves a watermark older than the floor this page holds.",
-  unqualified: "The desk actor reads as unqualified. Every write is fenced before any send.",
-  "production-claimed": "The source declares a production environment. The read is refused before any snapshot is applied.",
-  "provider-error": "The synthetic provider refuses the begin. Nothing is opened.",
-  declined: "The provider's own report is a decline. The observe write reads as a rejection.",
-  "return-only": "The buyer lands on the return URL and the provider never reports. Observe stays pending.",
-  "begin-lost": "A begin is applied and its answer is lost.",
-  "observe-lost": "An observe is applied and its answer is lost.",
-  "observe-late": "An observe is applied, its answer is lost, and a late result can be delivered later.",
-  "issue-lost": "An issuance is applied and its answer is lost.",
-  "refund-lost": "A refund record is applied and its answer is lost.",
-  "held-response": "Answers are held until you deliver them. Use it to switch the session while a write is in flight.",
-  "claims-real": "The read payload claims a real payment. The whole payload is refused before a row shows.",
-  "receipt-claims": "The read is clean but a confirmed answer claims a real payment. The write is unknown.",
+  clean: sourceCopy.en["sjt"],
+  empty: sourceCopy.en["s1zg"],
+  stale: sourceCopy.en["s21a"],
+  unqualified: sourceCopy.en["s1rl"],
+  "production-claimed": sourceCopy.en["s1yr"],
+  "provider-error": sourceCopy.en["s21v"],
+  declined: sourceCopy.en["s1vo"],
+  "return-only": sourceCopy.en["s1ql"],
+  "begin-lost": sourceCopy.en["s2"],
+  "observe-lost": sourceCopy.en["s4e"],
+  "observe-late": sourceCopy.en["s4f"],
+  "issue-lost": sourceCopy.en["s48"],
+  "refund-lost": sourceCopy.en["s6m"],
+  "held-response": sourceCopy.en["s4o"],
+  "claims-real": sourceCopy.en["s1w8"],
+  "receipt-claims": sourceCopy.en["s1w3"],
 };
 
-const STEP_WORDS = { begin: "Begin checkout", observe: "Payment observation", issue: "Issuance", refund: "Refund" } as const;
+const STEP_WORDS = { begin: sourceCopy.en["s9r"], observe: sourceCopy.en["s17i"], issue: sourceCopy.en["sor"], refund: sourceCopy.en["s1ek"] } as const;
 
 const FACET_LABELS: Readonly<Record<ProviderFacet, string>> = {
-  redirect: "Checkout redirect",
-  return: "Return landing",
-  payment: "Provider observation",
-  issuance: "Issuance",
-  refund: "Refund",
+  redirect: sourceCopy.en["sc3"],
+  return: sourceCopy.en["s1gp"],
+  payment: sourceCopy.en["s1a7"],
+  issuance: sourceCopy.en["sor"],
+  refund: sourceCopy.en["s1ek"],
 };
 
 export type ProviderScreenState =
@@ -207,11 +209,11 @@ export interface ProviderModel {
 export function causeLine(cause: ProviderRefreshCause): string {
   switch (cause) {
     case "own-write":
-      return "Your own write landed after the last read.";
+      return sourceCopy.en["s279"];
     case "stale-rejection":
-      return "The source said the last read was behind.";
+      return sourceCopy.en["s20g"];
     case "context-switch":
-      return "The session context changed.";
+      return sourceCopy.en["s1xw"];
     default: {
       const exhaustive: never = cause;
       return exhaustive;
@@ -223,24 +225,24 @@ export function causeLine(cause: ProviderRefreshCause): string {
 export function fenceLine(fence: ProviderFence): string {
   switch (fence.reason) {
     case "in-flight":
-      return `Another write on this order is in flight (${fence.intentRef}). Wait for its answer.`;
+      return sourceMessage(sourceCopy.en["p.t384"], { v1: fence.intentRef });
     case "unknown-outcome": {
       const late = fence.lateRecorded ? " A late result was recorded, and it does not make the write known." : "";
       const earlier = fence.earlierContext ? " It was sent in an earlier session context." : "";
-      return `An earlier write on this order has an unknown result (${fence.intentRef}).${late}${earlier} Writes on this order stay blocked. A read does not resolve it.`;
+      return sourceMessage(sourceCopy.en["p.t385"], { v1: fence.intentRef, v2: late, v3: earlier });
     }
     case "no-snapshot":
-      return "Read the provider desk first.";
+      return sourceCopy.en["s1cn"];
     case "snapshot-stale":
-      return `Read again before the next write. ${causeLine(fence.cause)}`;
+      return sourceMessage(sourceCopy.en["p.t86"], { v1: causeLine(fence.cause) });
     case "duplicate-intent":
-      return `Intent ${fence.intentRef} was already used. This page does not send the same intent twice.`;
+      return sourceMessage(sourceCopy.en["p.t87"], { v1: fence.intentRef });
     case "environment":
-      return "The source declares a production environment. This desk serves the sandbox only.";
+      return sourceCopy.en["s1yt"];
     case "account-unqualified":
-      return `Actor ${fence.actorRef} is not qualified for the sandbox. Without a test account and provider qualification every write is synthetic and fenced.`;
+      return sourceMessage(sourceCopy.en["p.t386"], { v1: fence.actorRef });
     case "payment-unobserved":
-      return `No provider payment report is recorded for ${fence.orderRef}. A return landing alone does not unlock issuance or refund.`;
+      return sourceMessage(sourceCopy.en["p.t387"], { v1: fence.orderRef });
     case "not-bound":
       return PROVIDER_NOT_BOUND_REASON;
     default: {
@@ -254,17 +256,17 @@ export function stepResultLine(step: ProviderStepInput["step"], result: Provider
   const word = STEP_WORDS[step];
   switch (result.kind) {
     case "CONFIRMED":
-      return `${word} confirmed by the synthetic source. This is not a provider receipt and not a real payment.`;
+      return sourceMessage(sourceCopy.en["p.t388"], { v1: word });
     case "REJECTED":
-      return `${word} rejected (${result.intent.code ?? "no code"}). ${result.intent.message ?? ""} The source applied nothing for this write.`.trim();
+      return sourceMessage(sourceCopy.en["p.t193"], { v1: word, v2: result.intent.code ?? "no code", v3: result.intent.message ?? "" }).trim();
     case "UNKNOWN":
-      return `${word} result unknown (${result.intent.code ?? "no code"}). It may or may not have applied. Writes on this order are blocked, and neither a read nor a late result resolves it.`;
+      return sourceMessage(sourceCopy.en["p.t389"], { v1: word, v2: result.intent.code ?? "no code" });
     case "QUARANTINED":
-      return `The result of the ${word.toLowerCase()} arrived after the session context changed. It was quarantined and applied nowhere. The write stays unknown.`;
+      return sourceMessage(sourceCopy.en["p.t102"], { v1: word.toLowerCase() });
     case "FENCED":
-      return `${word} not sent. ${fenceLine(result.fence)}`;
+      return sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: fenceLine(result.fence) });
     case "NOT_SENT":
-      return `${word} not sent. ${result.detail}`;
+      return sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: result.detail });
     default: {
       const exhaustive: never = result;
       return exhaustive;
@@ -281,24 +283,24 @@ function attentionFor(last: LastAction | null): boolean {
 
 function writeWord(view: ProviderFacetView): { kind: string; word: string } {
   if (view.outcome === "NOT_BOUND") {
-    return { kind: "not-bound", word: "No write exists for this line. A return landing is a source event." };
+    return { kind: "not-bound", word: sourceCopy.en["s136"] };
   }
   if (view.outcome === null) {
-    return { kind: "none", word: "No write sent by this page." };
+    return { kind: "none", word: sourceCopy.en["s138"] };
   }
   const code = view.code ? ` (${view.code})` : "";
   const late = view.lateRecorded ? " A late result is recorded." : "";
   switch (view.outcome) {
     case "CONFIRMED":
-      return { kind: "confirmed", word: "Confirmed by the synthetic source." };
+      return { kind: "confirmed", word: sourceCopy.en["sdi"] };
     case "REJECTED":
-      return { kind: "rejected", word: `Rejected${code}.` };
+      return { kind: "rejected", word: sourceMessage(sourceCopy.en["p.t560"], { v1: code }) };
     case "UNKNOWN":
-      return { kind: "unknown", word: `Unknown${code}.${late}` };
+      return { kind: "unknown", word: sourceMessage(sourceCopy.en["p.t561"], { v1: code, v2: late }) };
     case "IN_FLIGHT":
-      return { kind: "in-flight", word: "In flight." };
+      return { kind: "in-flight", word: sourceCopy.en["snw"] };
     case "DRAFT":
-      return { kind: "draft", word: `Not sent${code}.` };
+      return { kind: "draft", word: sourceMessage(sourceCopy.en["p.t360"], { v1: code }) };
     default: {
       const exhaustive: never = view.outcome;
       return exhaustive;
@@ -309,44 +311,44 @@ function writeWord(view: ProviderFacetView): { kind: string; word: string } {
 function observedWord(view: ProviderFacetView): { kind: string; word: string } {
   const seen = view.observed;
   if (seen === null) {
-    return { kind: "none", word: "Not read." };
+    return { kind: "none", word: sourceCopy.en["s12d"] };
   }
   switch (seen.state) {
     case "observed":
-      return { kind: "observed", word: "Observed in the last read." };
+      return { kind: "observed", word: sourceCopy.en["s13m"] };
     case "pending":
-      return { kind: "pending", word: "Returned, and no provider report is recorded." };
+      return { kind: "pending", word: sourceCopy.en["s1go"] };
     case "declined":
-      return { kind: "declined", word: "The provider reported a decline." };
+      return { kind: "declined", word: sourceCopy.en["s1vm"] };
     case "landed":
-      return { kind: "landed", word: "A return landing is recorded. It is not a payment observation." };
+      return { kind: "landed", word: sourceCopy.en["s7d"] };
     case "open":
-      return { kind: "open", word: "The checkout is open." };
+      return { kind: "open", word: sourceCopy.en["s1qw"] };
     case "returned":
-      return { kind: "returned", word: "The buyer returned." };
+      return { kind: "returned", word: sourceCopy.en["s1qm"] };
     case "abandoned":
-      return { kind: "abandoned", word: "The provider closed the checkout after the buyer left." };
+      return { kind: "abandoned", word: sourceCopy.en["s1vi"] };
     case "issued":
-      return { kind: "issued", word: "An issuance record is recorded." };
+      return { kind: "issued", word: sourceCopy.en["s4a"] };
     case "recorded":
-      return { kind: "recorded", word: "A refund record is recorded. It executes nothing." };
+      return { kind: "recorded", word: sourceCopy.en["s6n"] };
     case "none":
-      return { kind: "not-observed", word: "Not observed." };
+      return { kind: "not-observed", word: sourceCopy.en["s120"] };
     default:
-      return { kind: "other", word: `State ${seen.state}.` };
+      return { kind: "other", word: sourceMessage(sourceCopy.en["p.t568"], { v1: seen.state }) };
   }
 }
 
 const SHAPE_LINES: Readonly<Record<ProviderOrderShape, string>> = {
-  none: "No checkout is recorded for this order.",
-  "checkout-open": "A checkout is open. The buyer has not returned.",
-  "returned-unobserved": "The buyer returned. No provider report is recorded, so nothing is paid, issued, or refunded.",
-  abandoned: "The provider closed the checkout after the buyer left. Nothing was paid, issued, or refunded.",
-  "payment-declined": "The provider reported a decline. Nothing was issued or refunded.",
-  "payment-observed": "A provider payment report is recorded. It is not a real payment.",
-  issued: "An issuance record is recorded. It is not a real right and grants no admission authority.",
-  "refund-recorded": "A refund record is recorded. It executes no return of funds.",
-  "unknown-effect": "A write result is unknown. The order may or may not have moved for that write.",
+  none: sourceCopy.en["sui"],
+  "checkout-open": sourceCopy.en["sq"],
+  "returned-unobserved": sourceCopy.en["s1qn"],
+  abandoned: sourceCopy.en["s1vj"],
+  "payment-declined": sourceCopy.en["s1vn"],
+  "payment-observed": sourceCopy.en["s66"],
+  issued: sourceCopy.en["s4b"],
+  "refund-recorded": sourceCopy.en["s6o"],
+  "unknown-effect": sourceCopy.en["s9f"],
 };
 
 function describeOrder(
@@ -369,8 +371,8 @@ function describeOrder(
   const events: EventModel[] = [];
   if (order.facets.redirect.observed?.state === "open") {
     events.push(
-      { id: "return", label: "Land the buyer on the return URL", line: "Records a return event. Not a payment." },
-      { id: "abandon", label: "Abandon the checkout", line: "The provider closes the checkout." },
+      { id: "return", label: sourceCopy.en["spy"], line: sourceCopy.en["s1e5"] },
+      { id: "abandon", label: sourceCopy.en["s0"], line: sourceCopy.en["s1vk"] },
     );
   }
   // A returned checkout still takes the provider's report or an abandonment
@@ -378,21 +380,21 @@ function describeOrder(
   // decided and neither control applies.
   if (order.facets.redirect.observed?.state === "returned" && order.facets.payment.observed?.state === "pending") {
     events.push(
-      { id: "callback", label: "Deliver the provider report", line: "The provider's own report. Only this unlocks observation." },
-      { id: "abandon", label: "Abandon the checkout", line: "The provider closes the checkout." },
+      { id: "callback", label: sourceCopy.en["sg5"], line: sourceCopy.en["s1vp"] },
+      { id: "abandon", label: sourceCopy.en["s0"], line: sourceCopy.en["s1vk"] },
     );
   }
   return {
     orderRef: order.orderRef,
     linked: order.linked,
     linkLine: order.linked
-      ? "Linked to a confirmed begin of this page."
-      : "Observed only. It is not linked to a confirmed begin of this page, and this page does not claim it.",
+      ? sourceCopy.en["sqx"]
+      : sourceCopy.en["s13o"],
     amountWord:
       order.amount === null
-        ? `Amount: UNDETERMINED (${PROVIDER_UNIT})`
-        : `Amount ${order.amount} ${order.currency}, the source's own text.`,
-    versionLine: `Order at version ${order.version} in the last read.`,
+        ? sourceMessage(sourceCopy.en["p.t523"], { v1: PROVIDER_UNIT })
+        : sourceMessage(sourceCopy.en["p.t212"], { v1: order.amount, v2: order.currency }),
+    versionLine: sourceMessage(sourceCopy.en["p.t390"], { v1: order.version }),
     shape: order.shape,
     shapeLine: SHAPE_LINES[order.shape],
     identities: [
@@ -448,41 +450,41 @@ function statusFor(
 ): { statusLine: string; detailLine: string; actionLabel: string | null } {
   switch (state) {
     case "loading":
-      return { statusLine: "Reading the synthetic provider desk. Nothing is confirmed yet.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s1bm"], detailLine: "", actionLabel: null };
     case "unread":
       return {
-        statusLine: "The session context changed, so there is no read in this context.",
-        detailLine: "Read again to see the desk from this context. An earlier unknown write on an order still blocks that order.",
-        actionLabel: "Read again",
+        statusLine: sourceCopy.en["s1xx"],
+        detailLine: sourceCopy.en["s1b0"],
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "ready":
-      return { statusLine: "Provider desk read.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s1a6"], detailLine: "", actionLabel: null };
     case "empty":
-      return { statusLine: "No orders in this synthetic session.", detailLine: "Nothing can be checked out.", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["swn"], detailLine: sourceCopy.en["s115"], actionLabel: sourceCopy.en["s1ax"] };
     case "stale":
-      return { statusLine: "Stale provider read.", detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["s1lv"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "refused":
       return {
-        statusLine: "The read payload was refused whole before any row was shown.",
+        statusLine: sourceCopy.en["s1w9"],
         detailLine: detail ?? "",
-        actionLabel: "Start a new synthetic session",
+        actionLabel: sourceCopy.en["s1m2"],
       };
     case "environment-refused":
       return {
-        statusLine: "The source declares a production environment. This desk serves the sandbox only.",
+        statusLine: sourceCopy.en["s1yt"],
         detailLine: detail ?? "",
-        actionLabel: "Start a new synthetic session",
+        actionLabel: sourceCopy.en["s1m2"],
       };
     case "not-bound":
       return { statusLine: PROVIDER_NOT_BOUND_REASON, detailLine: "", actionLabel: null };
     case "tuple-changed":
       return {
-        statusLine: "The pin tuple changed. Nothing was read and nothing was applied.",
+        statusLine: sourceCopy.en["s1v8"],
         detailLine: detail ?? "",
-        actionLabel: "Start a new synthetic session",
+        actionLabel: sourceCopy.en["s1m2"],
       };
     case "unavailable":
-      return { statusLine: "The source did not answer. This is not an empty desk.", detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["s1z3"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     default: {
       const exhaustive: never = state;
       return exhaustive;
@@ -495,7 +497,7 @@ function lateLineOf(intent: ProviderIntent): string {
     return "";
   }
   const code = intent.late.code ? ` (${intent.late.code})` : "";
-  return `Late result ${intent.late.result}${code}. Evidence only.`;
+  return sourceMessage(sourceCopy.en["p.t195"], { v1: intent.late.result, v2: code });
 }
 
 /** The unused-intent id the gate preview asks with. It is never sent. */
@@ -512,27 +514,27 @@ export function buildProviderModel(input: {
   const projection = projectProvider(state);
   const freshnessWord =
     state.freshness === "CURRENT"
-      ? "The last read is current."
+      ? sourceCopy.en["s1tn"]
       : state.freshness === "STALE"
-        ? "The last read is behind."
-        : "There is no usable read.";
+        ? sourceCopy.en["s1ti"]
+        : sourceCopy.en["s1wv"];
   const environment = state.snapshot?.environment ?? null;
   const environmentLine = environment
-    ? `Environment ${environment.providerEnvironment}, actor ${environment.account.actorRef}, qualification ${environment.account.qualification}. Sandbox only; every row is synthetic.`
-    : "No environment is read. Environment and account are checked on every read.";
+    ? sourceMessage(sourceCopy.en["p.t391"], { v1: environment.providerEnvironment, v2: environment.account.actorRef, v3: environment.account.qualification })
+    : sourceCopy.en["svb"];
 
   const orders = projection.orders.map((order) =>
     describeOrder(order, {
       begin: control(controller.gateFor({ step: "begin", intentRef: GATE_PREVIEW, orderRef: order.orderRef })),
       observe:
         order.identities.checkout === null
-          ? { enabled: false, reason: "No checkout is recorded for this order. Nothing to observe." }
+          ? { enabled: false, reason: sourceCopy.en["suj"] }
           : control(
               controller.gateFor({ step: "observe", intentRef: GATE_PREVIEW, checkoutRef: order.identities.checkout }),
             ),
       issue:
         order.identities.checkout === null
-          ? { enabled: false, reason: "No checkout is recorded for this order. Nothing to issue against." }
+          ? { enabled: false, reason: sourceCopy.en["suk"] }
           : control(
               controller.gateFor({ step: "issue", intentRef: GATE_PREVIEW, checkoutRef: order.identities.checkout }),
             ),
@@ -551,17 +553,17 @@ export function buildProviderModel(input: {
   }));
 
   const quarantineLines = state.quarantined.map(
-    (item) => `Result ${item.arrived} for ${item.intentRef} was quarantined (${item.cause}). It changed nothing.`,
+    (item) => sourceMessage(sourceCopy.en["p.t122"], { v1: item.arrived, v2: item.intentRef, v3: item.cause }),
   );
   const unlinkedLines = projection.unlinkedIntents.map(
     (intent) =>
-      `${STEP_WORDS[intent.step]} ${intent.intentRef} on ${intent.targetRef} is ${intent.outcome.toLowerCase().replace("_", " ")}. No order row is linked to it, and an order seen in a read is not claimed for it.`,
+      sourceMessage(sourceCopy.en["p.t392"], { v1: STEP_WORDS[intent.step], v2: intent.intentRef, v3: intent.targetRef, v4: intent.outcome.toLowerCase().replace("_", " ") }),
   );
 
   const counters = state.counters;
   const session: SessionModel = {
-    contextLine: `Actor ${state.context.actorRef}, session ${state.context.incarnation}, mode ${state.context.environment}.`,
-    countersLine: `Sent ${counters.sent}. Blocked before sending ${counters.fenced}. Not sent ${counters.notSent}. Reads dropped ${counters.droppedReads}.`,
+    contextLine: sourceMessage(sourceCopy.en["p.t563"], { v1: state.context.actorRef, v2: state.context.incarnation, v3: state.context.environment }),
+    countersLine: sourceMessage(sourceCopy.en["p.t206"], { v1: counters.sent, v2: counters.fenced, v3: counters.notSent, v4: counters.droppedReads }),
     intents,
     quarantineLines,
     unlinkedLines,
@@ -571,7 +573,7 @@ export function buildProviderModel(input: {
     id: row.id,
     providerField: row.providerField,
     status: row.status,
-    statusWord: row.status === "field-named" ? "Field named in the pin" : "Not-bound",
+    statusWord: row.status === "field-named" ? sourceCopy.en["sl3"] : sourceCopy.en["s10d"],
     bodyFields: row.bodyFields.length === 0 ? "none" : row.bodyFields.map((entry) => `${entry.action}.${entry.field}`).join(", "),
     reason: row.reason,
   }));
@@ -706,21 +708,21 @@ export function useProviderJourney(): {
       if (kind === "return") {
         note(
           session.port.deliverReturn(checkoutRef) === null
-            ? `No return landing was applied to ${checkoutRef}. The checkout is not open for it.`
-            : `A return landing was recorded on ${checkoutRef}. It is not a payment observation.`,
+            ? sourceMessage(sourceCopy.en["p.t393"], { v1: checkoutRef })
+            : sourceMessage(sourceCopy.en["p.t394"], { v1: checkoutRef }),
         );
       } else if (kind === "callback") {
         const report = session.port.deliverCallback(checkoutRef);
         note(
           report === null
-            ? `No provider report was applied to ${checkoutRef}. The provider did not report on it.`
-            : `A provider report (${report.result}) was recorded on ${checkoutRef}. Observe it to record the payment line.`,
+            ? sourceMessage(sourceCopy.en["p.t395"], { v1: checkoutRef })
+            : sourceMessage(sourceCopy.en["p.t396"], { v1: report.result, v2: checkoutRef }),
         );
       } else {
         note(
           session.port.markAbandoned(checkoutRef) === null
-            ? `No abandonment was applied to ${checkoutRef}. The checkout is not open for it.`
-            : `The provider closed ${checkoutRef} as abandoned.`,
+            ? sourceMessage(sourceCopy.en["p.t397"], { v1: checkoutRef })
+            : sourceMessage(sourceCopy.en["p.t398"], { v1: checkoutRef }),
         );
       }
       await session.controller.refresh();
@@ -759,7 +761,7 @@ export function useProviderJourney(): {
         return;
       }
       const count = session.port.deliverHeld();
-      note(count === 0 ? "No held response to deliver." : `Delivered ${count} held response${count === 1 ? "" : "s"}.`);
+      note(count === 0 ? sourceCopy.en["svq"] : sourceMessage(sourceCopy.en["p.t130"], { v1: count, v2: count === 1 ? "" : "s" }));
     },
     deliverLate() {
       const session = sessionRef.current;
@@ -768,14 +770,14 @@ export function useProviderJourney(): {
       }
       const due = session.port.deliverLate();
       if (due.length === 0) {
-        note("No late result is due.");
+        note(sourceCopy.en["svv"]);
         return;
       }
       const lines = due.map((delivery) => {
         const outcome = session.controller.acceptLate(delivery);
         return outcome.kind === "RECORDED"
-          ? `Late result ${delivery.result} recorded for ${delivery.intentRef}. The write stays unknown.`
-          : `Late result for ${delivery.intentRef} was quarantined (${outcome.cause}).`;
+          ? sourceMessage(sourceCopy.en["p.t214"], { v1: delivery.result, v2: delivery.intentRef })
+          : sourceMessage(sourceCopy.en["p.t215"], { v1: delivery.intentRef, v2: outcome.cause });
       });
       note(lines.join(" "));
     },
@@ -789,14 +791,14 @@ export function useProviderJourney(): {
         actorRef: current === PROVIDER_DESK_ACTOR ? PROVIDER_GUEST_ACTOR : PROVIDER_DESK_ACTOR,
       });
       note(
-        `Session context switched to ${next.actorRef}, session ${next.incarnation}. A write in flight is now unknown and its result will be quarantined. A guest actor reads unqualified. Read again.`,
+        sourceMessage(sourceCopy.en["p.t399"], { v1: next.actorRef, v2: next.incarnation }),
       );
     },
     newSession() {
-      startSession(scenario, "Started a new synthetic session. Earlier intents are gone, as after a reload. Nothing was resolved at a provider.");
+      startSession(scenario, sourceCopy.en["s1mc"]);
     },
     setScenario(next) {
-      startSession(next, `Started a new synthetic session with scenario ${next}. Earlier intents are gone, as after a reload.`);
+      startSession(next, sourceMessage(sourceCopy.en["p.t217"], { v1: next }));
     },
   };
 

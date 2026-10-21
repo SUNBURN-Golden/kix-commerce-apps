@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "../i18n/messages/discovery--model";
+import { sourceMessage } from "../i18n/source-message";
 /**
  * Search, filter, sort, page, and scale-window maths.
  * No adapter import and no clock read.
@@ -128,17 +130,17 @@ export function describeRow(row: DiscoveryRow, now = FIXTURE_NOW): RowFacts {
     row.kind === "event" || row.syntheticCount === null ? null : syntheticCountLine(row.syntheticCount);
   let inventoryLine: string | null = null;
   if (row.kind === "seat") {
-    inventoryLine = `section ${row.section ?? ""}`;
+    inventoryLine = sourceMessage(sourceCopy.en["p.t496"], { v1: row.section ?? "" });
   } else if (row.kind === "ga") {
-    inventoryLine = "no seat assigned";
+    inventoryLine = sourceCopy.en["sye"];
   }
   return {
-    kindLine: `kind ${row.kind}`,
+    kindLine: sourceMessage(sourceCopy.en["p.t497"], { v1: row.kind }),
     inventoryLine,
     countLine,
     tierLine,
-    resaleLine: row.kind === "resale" ? "listing (synthetic)" : null,
-    statusLine: `${row.status} (synthetic)`,
+    resaleLine: row.kind === "resale" ? sourceCopy.en["sr9"] : null,
+    statusLine: sourceMessage(sourceCopy.en["p.t498"], { v1: row.status }),
     stale: isPriceStale(row.priceAsOf, now),
   };
 }
@@ -147,18 +149,18 @@ export function detectConflicts(query: DiscoveryQuery): DiscoveryConflict[] {
   const conflicts: DiscoveryConflict[] = [];
   const section = query.section.trim();
   if (section.length > 0 && query.kinds.length === 1 && query.kinds[0] === "ga") {
-    conflicts.push({ code: "ga-section", message: "A GA kind cannot take a section." });
+    conflicts.push({ code: "ga-section", message: sourceCopy.en["s28"] });
   }
   if (query.purchasableOnly && query.statuses.length === 1 && query.statuses[0] === "cancelled") {
     conflicts.push({
       code: "cancelled-purchasable",
-      message: "Cancelled status cannot combine with purchasable only.",
+      message: sourceCopy.en["sb4"],
     });
   }
   const fromMs = boundMs(query.from);
   const toMs = boundMs(query.to);
   if (fromMs !== null && toMs !== null && fromMs > toMs) {
-    conflicts.push({ code: "from-after-to", message: "The from date is after the to date." });
+    conflicts.push({ code: "from-after-to", message: sourceCopy.en["s1sy"] });
   }
   return conflicts;
 }
@@ -294,22 +296,22 @@ export function moveListFocus(index: number, key: string, count: number, windowS
   }
   const current = Math.min(count - 1, Math.max(0, index));
   const step = Math.max(1, windowStep);
-  if (key === "ArrowDown") {
+  if (key === sourceCopy.en["s7n"]) {
     return Math.min(count - 1, current + 1);
   }
-  if (key === "ArrowUp") {
+  if (key === sourceCopy.en["s7q"]) {
     return Math.max(0, current - 1);
   }
-  if (key === "Home") {
+  if (key === sourceCopy.en["sni"]) {
     return 0;
   }
-  if (key === "End") {
+  if (key === sourceCopy.en["sid"]) {
     return count - 1;
   }
-  if (key === "PageDown") {
+  if (key === sourceCopy.en["s16w"]) {
     return Math.min(count - 1, current + step);
   }
-  if (key === "PageUp") {
+  if (key === sourceCopy.en["s170"]) {
     return Math.max(0, current - step);
   }
   return current;
@@ -317,13 +319,13 @@ export function moveListFocus(index: number, key: string, count: number, windowS
 
 export function isListKey(key: string): boolean {
   return (
-    key === "ArrowDown" ||
-    key === "ArrowUp" ||
-    key === "Home" ||
-    key === "End" ||
-    key === "PageDown" ||
-    key === "PageUp" ||
-    key === "Enter"
+    key === sourceCopy.en["s7n"] ||
+    key === sourceCopy.en["s7q"] ||
+    key === sourceCopy.en["sni"] ||
+    key === sourceCopy.en["sid"] ||
+    key === sourceCopy.en["s16w"] ||
+    key === sourceCopy.en["s170"] ||
+    key === sourceCopy.en["sie"]
   );
 }
 
@@ -332,7 +334,7 @@ export function applyPageKey(index: number, key: string, count: number): { index
     return { index: 0, open: false };
   }
   const current = Math.min(count - 1, Math.max(0, index));
-  if (key === "Enter") {
+  if (key === sourceCopy.en["sie"]) {
     return { index: current, open: true };
   }
   const step = Math.max(1, Math.min(10, count));
@@ -346,32 +348,32 @@ export function applyScaleKey(
 ): ScaleKeyState {
   const current = scaleWindow({ scrollTop: state.scrollTop, viewportHeight });
   const step = Math.max(1, Math.ceil(viewportHeight / SCALE_ROW_HEIGHT));
-  if (key === "Enter") {
+  if (key === sourceCopy.en["sie"]) {
     return {
       scrollTop: state.scrollTop,
       focus: clampFocus(state.focus, current),
       open: current.rows.length > 0,
     };
   }
-  if (key === "Home") {
+  if (key === sourceCopy.en["sni"]) {
     return { scrollTop: 0, focus: 0, open: false };
   }
-  if (key === "End") {
+  if (key === sourceCopy.en["sid"]) {
     const scrollTop = maxScaleScroll(viewportHeight);
     const tail = scaleWindow({ scrollTop, viewportHeight });
     return { scrollTop, focus: Math.max(0, tail.end - 1), open: false };
   }
-  if (key === "PageDown") {
+  if (key === sourceCopy.en["s16w"]) {
     const scrollTop = Math.min(maxScaleScroll(viewportHeight), state.scrollTop + viewportHeight);
     const next = scaleWindow({ scrollTop, viewportHeight });
     return { scrollTop, focus: next.start, open: false };
   }
-  if (key === "PageUp") {
+  if (key === sourceCopy.en["s170"]) {
     const scrollTop = Math.max(0, state.scrollTop - viewportHeight);
     const next = scaleWindow({ scrollTop, viewportHeight });
     return { scrollTop, focus: next.start, open: false };
   }
-  if (key === "ArrowDown" || key === "ArrowUp") {
+  if (key === sourceCopy.en["s7n"] || key === sourceCopy.en["s7q"]) {
     const local = clampFocus(state.focus, current) - current.start;
     const moved = moveListFocus(local, key, current.end - current.start, step);
     return { scrollTop: state.scrollTop, focus: current.start + moved, open: false };

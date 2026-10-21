@@ -1,10 +1,17 @@
+import { messages as deskCopy } from "../i18n/desk-catalogue";
+import { messages as copy0 } from "../i18n/messages/pages--Credit";
+import { messages as copy1 } from "../i18n/messages/credit-desk";
+import { messages as copy2 } from "../i18n/messages/storage-allow-list";
 import { useEffect, useState } from "react";
+import { useT } from "../i18n/desk-context";
 import type { Performance } from "@kix/protocol-adapter";
 import { useCreditDesk } from "../credit-desk";
 import { protocol } from "../protocol";
+import { deskText } from "../i18n/desk-translate";
 import { CreditPanel } from "./CreditPanel";
 
 export function CreditPage() {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   const [eventId, setEventId] = useState("evt_lanterns");
   const [performances, setPerformances] = useState<Performance[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -21,7 +28,7 @@ export function CreditPage() {
       })
       .catch((reason: unknown) => {
         if (!cancelled) {
-          setLoadError(reason instanceof Error ? reason.message : "Could not load performances.");
+          setLoadError(reason instanceof Error ? reason.message : deskCopy.en["desk.performance.loadError"]);
         }
       });
     return () => {
@@ -34,36 +41,30 @@ export function CreditPage() {
   return (
     <section>
       <header className="section-head">
-        <p className="eyebrow">Credit · F04 · exposure is simulated</p>
-        <h2>Mock credit case</h2>
-        <p className="muted">
-          The case below is a mock phase on the adapter stub. Not live credit. It does not disburse to a bank and it
-          does not change a booking or a resale holder.
-        </p>
+        <p className="eyebrow">{t("desk.credit.eyebrow")}</p>
+        <h2>{t("desk.credit.title")}</h2>
+        <p className="muted">{t("desk.credit.note")}</p>
       </header>
       {loadError ? (
         <p className="alert" role="alert">
-          {loadError}
+          {deskText(t, loadError)}
         </p>
       ) : null}
       <div className="panel">
         <label>
-          Mock case event
+          {t("desk.credit.event")}
           <select value={eventId} onChange={(event) => setEventId(event.target.value)}>
-            {(performances && performances.length > 0
+            {deskText(t, (performances && performances.length > 0
               ? performances
-              : [{ eventId: "evt_lanterns", title: "North Station Lanterns" }]
+              : [{ eventId: "evt_lanterns", title: copy0.en["e.6"] }]
             ).map((item) => (
               <option key={item.eventId} value={item.eventId}>
-                {item.title}
+                {deskText(t, item.title)}
               </option>
-            ))}
+            )))}
           </select>
         </label>
-        <p className="muted">
-          Bind uses the box-office mock settlement id for this event. A committed mock phase is an observation. It is
-          not live funds. Amounts on the case are mock units.
-        </p>
+        <p className="muted">{t("desk.credit.bindNote")}</p>
       </div>
       <CreditPanel
         eventTitle={title}

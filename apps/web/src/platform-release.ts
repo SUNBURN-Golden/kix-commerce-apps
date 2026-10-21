@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/platform-release";
+import { sourceMessage } from "./i18n/source-message";
 /**
  * The platform release candidate screen on top of the adapter's synthetic
  * release runner. Stub scope: the default port is the synthetic runner. On
@@ -40,31 +42,31 @@ import {
 import { PENDING_PRODUCERS } from "./handoff/packet";
 import { protocol } from "./protocol";
 
-export const RELEASE_TITLE = "Platform release candidate (synthetic)";
+export const RELEASE_TITLE = sourceCopy.en["s18i"];
 
 export const RELEASE_SOURCE_LINE =
-  "This page assembles one synthetic release candidate packet over the stub scope on this page load. It is not a release, not a public deployment, and not a real-user acceptance.";
+  sourceCopy.en["s237"];
 
 export const RELEASE_BOUNDARY =
-  "A recorded candidate is never a release: UNKNOWN, NOT_BOUND, and STALE stay separate rows, and none is a success. The packet this run records is never promoted to a public deployment, a real-money approval, or real operations, and no decision is taken before the user RELEASE decision.";
+  sourceCopy.en["s6i"];
 
 export const RELEASE_RUN_NOTE =
-  "One run is sent at a time and each is sent once. This page does not mint an intent for a re-send, does not retry a lost answer, and does not resolve an unknown run.";
+  sourceCopy.en["s14f"];
 
 export const RELEASE_ACTOR_NOTE =
-  "The actor string is a context label. It is not an authentication result, and a run under a changed actor reuses nothing from the earlier context.";
+  sourceCopy.en["s1px"];
 
 export const RELEASE_PENDING_NOTE =
-  "The real final review and operations handoff stays on pending node c-platform-release after kix-protocol:k-platform-release lands and the RELEASE gate and the user RELEASE decision are taken. This screen stands in for it at stub scope only.";
+  sourceCopy.en["s1we"];
 
 export const RELEASE_TUPLE_NOTE =
-  "The candidate is scoped to the exact source and contract tuple it was built under. An approval or a packet recorded under a different UI or contract is never reused.";
+  sourceCopy.en["s1qq"];
 
 export const SCENARIO_NOTES: Readonly<Record<ReleaseScenario, string>> = {
-  clean: "The run answers with a recorded candidate packet.",
-  held: "The run's answer is held until you deliver it. Use it to switch the actor while a run is in flight.",
-  "read-lost": "The run's answer never arrives. The run stays in flight and later runs are fenced.",
-  "claims-pass": "The packet claims a release and an acceptance it can never claim. The controller leaves the run unknown.",
+  clean: sourceCopy.en["s1xh"],
+  held: sourceCopy.en["s1xj"],
+  "read-lost": sourceCopy.en["s1xk"],
+  "claims-pass": sourceCopy.en["s1uw"],
 };
 
 export type ReleaseScreenState =
@@ -151,30 +153,30 @@ export type LastAction =
   | { seq: number; kind: "note"; text: string };
 
 const STATE_LINES: Readonly<Record<ReleaseScreenState, string>> = {
-  none: "No release run has been sent in this session.",
-  "in-flight": "A release run is in flight. Its answer is applied here only if it correlates with the run that was sent.",
-  ready: "The release candidate packet is recorded below. It states STUB_CANDIDATE_RECORDED and releases nothing.",
-  rejected: "The last run was explicitly rejected. That is a refusal, not a failure of this page.",
-  unknown: "The last run's result is unknown. It may have recorded a packet. Runs stay fenced; nothing retries it.",
-  refused: "The run was refused before a packet was trusted. The refusal is recorded, not worked around.",
-  "not-bound": "The release run is not bound on this environment.",
-  "tuple-changed": "The pin tuple changed under the run. Nothing was applied and no earlier approval is reused.",
+  none: sourceCopy.en["sxq"],
+  "in-flight": sourceCopy.en["s6s"],
+  ready: sourceCopy.en["s1wy"],
+  rejected: sourceCopy.en["s1tt"],
+  unknown: sourceCopy.en["s1ts"],
+  refused: sourceCopy.en["s1xl"],
+  "not-bound": sourceCopy.en["s1x0"],
+  "tuple-changed": sourceCopy.en["s1vc"],
 };
 
 export function runResultLine(result: ReleaseRunResult): string {
   switch (result.kind) {
     case "CONFIRMED":
-      return "Release run recorded a synthetic candidate packet. This is not a release and not a user acceptance.";
+      return sourceCopy.en["s1f8"];
     case "REJECTED":
-      return `Run refused (${result.intent.code ?? "no code"}). ${result.intent.message ?? ""}`.trim();
+      return sourceMessage(sourceCopy.en["p.t334"], { v1: result.intent.code ?? "no code", v2: result.intent.message ?? "" }).trim();
     case "UNKNOWN":
-      return `Run result unknown (${result.intent.code ?? "no code"}). It may or may not have recorded a packet. Runs are blocked and nothing retries it.`;
+      return sourceMessage(sourceCopy.en["p.t335"], { v1: result.intent.code ?? "no code" });
     case "QUARANTINED":
-      return "The run's answer arrived after the session context changed. It was quarantined and applied nowhere. The run stays unknown.";
+      return sourceCopy.en["s1xi"];
     case "FENCED":
-      return `Run not sent. ${releaseFenceLine(result.fence)}`;
+      return sourceMessage(sourceCopy.en["p.t336"], { v1: releaseFenceLine(result.fence) });
     case "NOT_SENT":
-      return `Run not sent. ${result.detail}`;
+      return sourceMessage(sourceCopy.en["p.t336"], { v1: result.detail });
     default: {
       const exhaustive: never = result;
       return exhaustive;
@@ -188,27 +190,27 @@ function packetModel(packet: ReleasePacket): ReleasePacketModel {
   return {
     packetId: packet.packetId,
     generatedAt: packet.generatedAt,
-    stateLine: `Release state ${packet.releaseState}. Environment ${packet.environment}. Ruling ${packet.ruling}`,
-    releaseLine: `Released ${packet.release.released}. Public deploy ${packet.release.publicDeploy}. Real-money approval ${packet.release.realMoneyApproval}. Real operations started ${packet.release.realOperationsStarted}. ${packet.release.note}`,
+    stateLine: sourceMessage(sourceCopy.en["p.t371"], { v1: packet.releaseState, v2: packet.environment, v3: packet.ruling }),
+    releaseLine: sourceMessage(sourceCopy.en["p.t372"], { v1: packet.release.released, v2: packet.release.publicDeploy, v3: packet.release.realMoneyApproval, v4: packet.release.realOperationsStarted, v5: packet.release.note }),
     nonClaimsLine: Object.entries(packet.nonClaims)
       .map(([field, value]) => `${field} ${String(value)}`)
       .join(". "),
     candidateLines: [
-      `Candidate ${c.candidateId} recorded under tuple ${c.tupleKey.slice(0, 24)}… (the live pin tuple key; an approval under a different tuple is never reused).`,
-      `Producer: contract OpenAPI ${c.producer.contractOpenApiSha256} at ${c.producer.contractInfoVersion}; gate OpenAPI ${c.producer.gateOpenApiSha256}; protocol merge ${c.producer.protocolMergeSha}; feature ${c.producer.protocolFeatureSha}; source contract ${c.producer.sourceProtocolContractSha256}; domain ${c.producer.domain}; ${c.producer.pinnedActionCount} pinned actions.`,
-      `Producer digests: SDK ${c.producer.sdkDigest ?? "none"}, manifest ${c.producer.manifestDigest ?? "none"}, vector ${c.producer.vectorDigest ?? "none"}. Consumed producer change ${c.producer.consumedProducerChange}.`,
-      `Consumer: ${c.consumer.descriptor} ${c.consumer.surfaces} surfaces on fixture catalogue v${c.consumer.fixtureCatalogueVersion} (${c.consumer.fixtureScreens} screens).`,
-      `Artifact: ${c.artifact.kind} for ${c.artifact.package} built with ${c.artifact.build}; digest ${c.artifact.digest ?? "none"}; deployed ${c.artifact.deployed}. ${c.artifact.note}`,
-      `Config: default mode ${c.config.defaultMode}; HTTP modes ${c.config.httpModes.join(", ")}; base ${c.config.baseUrl}; one attempt ${c.config.oneAttempt}; retry ${c.config.retry}; idempotency key ${c.config.idempotencyKey}; follow redirects ${c.config.followRedirects}; stub fallback ${c.config.stubFallback}; proxy ${c.config.proxy}; UI fetch ${c.config.uiFetch}; production flags ${c.config.productionFlags}; truth flags ${c.config.truthFlags}; runtime enabled ${c.config.runtimeEnabled}.`,
+      sourceMessage(sourceCopy.en["p.t373"], { v1: c.candidateId, v2: c.tupleKey.slice(0, 24) }),
+      sourceMessage(sourceCopy.en["p.t374"], { v1: c.producer.contractOpenApiSha256, v2: c.producer.contractInfoVersion, v3: c.producer.gateOpenApiSha256, v4: c.producer.protocolMergeSha, v5: c.producer.protocolFeatureSha, v6: c.producer.sourceProtocolContractSha256, v7: c.producer.domain, v8: c.producer.pinnedActionCount }),
+      sourceMessage(sourceCopy.en["p.t375"], { v1: c.producer.sdkDigest ?? "none", v2: c.producer.manifestDigest ?? "none", v3: c.producer.vectorDigest ?? "none", v4: c.producer.consumedProducerChange }),
+      sourceMessage(sourceCopy.en["p.t376"], { v1: c.consumer.descriptor, v2: c.consumer.surfaces, v3: c.consumer.fixtureCatalogueVersion, v4: c.consumer.fixtureScreens }),
+      sourceMessage(sourceCopy.en["p.t377"], { v1: c.artifact.kind, v2: c.artifact.package, v3: c.artifact.build, v4: c.artifact.digest ?? "none", v5: c.artifact.deployed, v6: c.artifact.note }),
+      sourceMessage(sourceCopy.en["p.t378"], { v1: c.config.defaultMode, v2: c.config.httpModes.join(", "), v3: c.config.baseUrl, v4: c.config.oneAttempt, v5: c.config.retry, v6: c.config.idempotencyKey, v7: c.config.followRedirects, v8: c.config.stubFallback, v9: c.config.proxy, v10: c.config.uiFetch, v11: c.config.productionFlags, v12: c.config.truthFlags, v13: c.config.runtimeEnabled }),
     ],
     qualificationLines: [
-      `Sibling qualification run: ${q.runOutcome}${q.packetId ? `, packet ${q.packetId}` : ""}${q.qualificationState ? `, state ${q.qualificationState}` : ""}.`,
+      sourceMessage(sourceCopy.en["p.t379"], { v1: q.runOutcome, v2: q.packetId ? `, packet ${q.packetId}` : "", v3: q.qualificationState ? `, state ${q.qualificationState}` : "" }),
       q.journeys === null
-        ? "No qualification packet was recorded; the record above is the whole outcome."
-        : `${q.journeys} journeys (${q.closed} closed, ${q.open} open, ${q.blocked} blocked). ${q.exercises} exercises, ${q.recorded} recorded, ${q.deviations} deviations. ${q.classesCovered}/${q.classesTotal} exercise classes covered.`,
-      `Technical only ${q.technicalOnly}. Acceptance separated ${q.acceptanceSeparated}. ${q.note}`,
+        ? sourceCopy.en["sx9"]
+        : sourceMessage(sourceCopy.en["p.t338"], { v1: q.journeys, v2: q.closed, v3: q.open, v4: q.blocked, v5: q.exercises, v6: q.recorded, v7: q.deviations, v8: q.classesCovered, v9: q.classesTotal }),
+      sourceMessage(sourceCopy.en["p.t380"], { v1: q.technicalOnly, v2: q.acceptanceSeparated, v3: q.note }),
     ],
-    acceptanceLine: `User acceptance state ${packet.userAcceptance.state}, decided by the ${packet.userAcceptance.decidedBy}. Real user acceptance ${packet.userAcceptance.realUserAcceptance}. Technical qualification is acceptance ${packet.userAcceptance.technicalQualificationIsAcceptance}. ${packet.userAcceptance.note}`,
+    acceptanceLine: sourceMessage(sourceCopy.en["p.t381"], { v1: packet.userAcceptance.state, v2: packet.userAcceptance.decidedBy, v3: packet.userAcceptance.realUserAcceptance, v4: packet.userAcceptance.technicalQualificationIsAcceptance, v5: packet.userAcceptance.note }),
     decisions: packet.decisions.map((item) => ({
       id: item.id,
       title: item.title,
@@ -222,14 +224,14 @@ function packetModel(packet: ReleasePacket): ReleasePacketModel {
       const item = packet.opsHandoff[lane];
       return {
         lane,
-        line: `${item.lane}: route ${item.route}${item.module ? `, module ${item.module}` : ""}${item.keptSeparate ? `; kept separate: ${item.keptSeparate.join(", ")}` : ""}. ${item.note}`,
+        line: sourceMessage(sourceCopy.en["p.t566"], { v1: item.lane, v2: item.route, v3: item.module ? `, module ${item.module}` : "", v4: item.keptSeparate ? `; kept separate: ${item.keptSeparate.join(", ")}` : "", v5: item.note }),
       };
     }),
-    pendingLine: `${PENDING_PRODUCERS.length} pending producers listed in PENDING_PRODUCERS.`,
+    pendingLine: sourceMessage(sourceCopy.en["p.t383"], { v1: PENDING_PRODUCERS.length }),
     denominators: packet.denominators.map((area) => ({
       area: area.area,
-      line: `${area.unresolved} unresolved of ${area.denominator} items on this area's own denominator.`,
-      itemLines: area.items.map((item) => `${item.id} — ${item.note} (blocked by ${item.blockedBy})`),
+      line: sourceMessage(sourceCopy.en["p.t345"], { v1: area.unresolved, v2: area.denominator }),
+      itemLines: area.items.map((item) => sourceMessage(sourceCopy.en["p.t346"], { v1: item.id, v2: item.note, v3: item.blockedBy })),
     })),
     checks: packet.bindingChecks.map((check) => ({
       id: check.id,
@@ -267,13 +269,13 @@ export function buildReleaseModel(
     heldSupported: false,
     packet: state.packet === null ? null : packetModel(state.packet),
     intentLines: state.intents.map(
-      (item) => `#${item.seq} ${item.intentRef} — ${item.outcome}${item.code ? ` (${item.code})` : ""}${item.packetId ? ` packet ${item.packetId}` : ""}`,
+      (item) => `#${item.seq} ${item.intentRef} — ${item.outcome}${item.code ? ` (${item.code})` : ""}${item.packetId ? sourceMessage(sourceCopy.en["p.t556"], { v1: item.packetId }) : ""}`,
     ),
     quarantineLines: state.quarantined.map(
-      (item) => `${item.intentRef} — a ${item.arrived} answer arrived after the context changed and was quarantined.`,
+      (item) => sourceMessage(sourceCopy.en["p.t350"], { v1: item.intentRef, v2: item.arrived }),
     ),
-    countersLine: `Sent ${state.counters.sent}. Fenced ${state.counters.fenced}. Not sent ${state.counters.notSent}.`,
-    contextLine: `Environment ${state.context.environment}. Actor ${state.context.actorRef}. Session ${state.context.incarnation}.`,
+    countersLine: sourceMessage(sourceCopy.en["p.t351"], { v1: state.counters.sent, v2: state.counters.fenced, v3: state.counters.notSent }),
+    contextLine: sourceMessage(sourceCopy.en["p.t487"], { v1: state.context.environment, v2: state.context.actorRef, v3: state.context.incarnation }),
     lastLine: last === null ? null : last.kind === "note" ? last.text : runResultLine(last.result),
     lastNeedsFocus: attentionFor(last),
     lastSeq: last?.seq ?? null,
@@ -353,11 +355,11 @@ export function usePlatformRelease(): {
     deliverHeld() {
       const session = sessionRef.current;
       if (session === null || session.port.scenario !== "held") {
-        note("Held answers exist only in the held scenario. Nothing was delivered.");
+        note(sourceCopy.en["sn7"]);
         return;
       }
       const released = session.port.deliverHeld();
-      note(`Delivered ${released} held answer(s).`);
+      note(sourceMessage(sourceCopy.en["p.t77"], { v1: released }));
     },
     switchActor() {
       const session = sessionRef.current;
@@ -367,20 +369,20 @@ export function usePlatformRelease(): {
       const current = session.controller.state().context.actorRef;
       const next = current === RELEASE_DESK_ACTOR ? RELEASE_GUEST_ACTOR : RELEASE_DESK_ACTOR;
       const context = session.controller.switchContext({ actorRef: next });
-      note(`Session context switched to actor ${context.actorRef} (incarnation ${context.incarnation}). An in-flight run is now unknown.`);
+      note(sourceMessage(sourceCopy.en["p.t352"], { v1: context.actorRef, v2: context.incarnation }));
     },
     setScenario(next) {
       sessionRef.current = createSession(environment, next);
       intentCounter.current = 0;
       setScenarioState(next);
       setEpoch((value) => value + 1);
-      note(`New synthetic session under scenario ${next}. ${SCENARIO_NOTES[next]}`);
+      note(sourceMessage(sourceCopy.en["p.t79"], { v1: next, v2: SCENARIO_NOTES[next] }));
     },
     newSession() {
       sessionRef.current = createSession(environment, sessionRef.current?.port.scenario ?? "clean");
       intentCounter.current = 0;
       setEpoch((value) => value + 1);
-      note("New synthetic session. The earlier intents and fences are gone with the last page state; nothing was recovered at a producer.");
+      note(sourceCopy.en["stp"]);
     },
   };
 

@@ -1,0 +1,28 @@
+export const messages = {
+  en: {
+    "sed": "Controls",
+    "snr": "Identity links",
+    "snz": "Install",
+    "sqv": "Link and clock",
+    "sso": "Mobile shell sections",
+    "s17r": "Pending order",
+    "s1jl": "Session",
+    "s1js": "Session record",
+    "s1mj": "Status",
+    "s1ms": "Stored items",
+    "s1no": "Support range",
+  },
+  ko: {
+    "sed": "제어",
+    "snr": "식별 연결",
+    "snz": "설치",
+    "sqv": "연결과 시계",
+    "sso": "모바일 셸 영역",
+    "s17r": "대기 주문",
+    "s1jl": "세션",
+    "s1js": "세션 기록",
+    "s1mj": "상태",
+    "s1ms": "저장 항목",
+    "s1no": "지원 범위",
+  },
+} as const;

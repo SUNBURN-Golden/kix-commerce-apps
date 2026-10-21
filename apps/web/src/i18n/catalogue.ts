@@ -8,7 +8,10 @@
  *  - amounts are the synthetic notice and "mock units" only.
  * Text that the adapter packages own (CREDIT_BOUNDARY.note, observation.detail, meta values) is not translated here.
  */
+
 const en = {
+  "amount.mockUnits": "mock units",
+  "safe.copyOriginal": "Copyable original",
   "locale.label": "Language",
   "locale.en": "English",
   "locale.ko": "한국어",
@@ -146,6 +149,8 @@ export type RouteMessageKey = Extract<MessageKey, `route.${string}`>;
 
 /** Korean for the same keys. A missing key is a type error; the test also diffs the key sets at run time. */
 const ko: Record<MessageKey, string> = {
+  "amount.mockUnits": "모의 단위",
+  "safe.copyOriginal": "복사 가능한 원문",
   "locale.label": "표시 언어",
   "locale.en": "English",
   "locale.ko": "한국어",

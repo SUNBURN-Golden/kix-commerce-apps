@@ -1,3 +1,9 @@
+import { messages as copy0 } from "../i18n/messages/pages--Organizer";
+import { messages as copy1 } from "../i18n/messages/organizer-desk";
+import { messages as copy2 } from "../i18n/messages/storage-allow-list";
+import { messages as copy3 } from "../i18n/messages/journey-desk";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { useState } from "react";
 import {
   ORGANIZER_DEFAULT_ID,
@@ -9,6 +15,7 @@ import {
 import { OrganizerPanel } from "./OrganizerPanel";
 
 export function OrganizerPage() {
+  const t = useT(copy0, copy1, copy2, copy3);
   const [eventId, setEventId] = useState("");
   const [draft, setDraft] = useState<OrganizerDraft>(emptyDraft());
   const model = useOrganizerDesk(eventId, draft);
@@ -22,12 +29,10 @@ export function OrganizerPage() {
   return (
     <section>
       <header className="section-head">
-        <p className="eyebrow">Organizer · event lifecycle</p>
-        <h2>Organizer console</h2>
+        <p className="eyebrow">{t("s165")}</p>
+        <h2>{t("s163")}</h2>
         <p className="muted">
-          Send create, close sales, open admission, complete, cancel, and issue invitation for an event id the caller
-          types. No funds.
-        </p>
+          {t("s1j6")}</p>
       </header>
       <form
         className="panel"
@@ -36,61 +41,53 @@ export function OrganizerPage() {
         }}
       >
         <label>
-          Event id
-          <input value={eventId} onChange={(event) => setEventId(event.target.value)} autoComplete="off" />
+          {t("sis")}<input value={eventId} onChange={(event) => setEventId(event.target.value)} autoComplete="off" />
         </label>
         <label>
-          Seats
-          <input
+          {t("s1ir")}<input
             value={draft.seats}
             disabled={createLocked}
-            placeholder="Comma-separated seat ids"
+            placeholder={t("sd8")}
             onChange={(event) => patch({ seats: event.target.value })}
             autoComplete="off"
           />
         </label>
         <label>
-          Invitation quota
-          <input
+          {t("soq")}<input
             value={draft.invitationQuota}
             disabled={createLocked}
             inputMode="numeric"
-            placeholder="Caller-supplied integer, or leave blank"
+            placeholder={t("sat")}
             onChange={(event) => patch({ invitationQuota: event.target.value })}
             autoComplete="off"
           />
         </label>
         <label>
-          Inventory id
-          <input
+          {t("son")}<input
             value={draft.inventoryId}
-            placeholder="Caller-supplied inventory id"
+            placeholder={t("sau")}
             onChange={(event) => patch({ inventoryId: event.target.value })}
             autoComplete="off"
           />
         </label>
         <label>
-          Expected inventory version
-          <input
+          {t("sk7")}<input
             value={draft.expectedInventoryVersion}
             inputMode="numeric"
-            placeholder="Caller-supplied integer"
+            placeholder={t("sas")}
             onChange={(event) => patch({ expectedInventoryVersion: event.target.value })}
             autoComplete="off"
           />
         </label>
         <label>
-          Recipient
-          <input
+          {t("s1di")}<input
             value={draft.recipient}
             onChange={(event) => patch({ recipient: event.target.value })}
             autoComplete="off"
           />
         </label>
         <p className="muted">
-          Operator {ORGANIZER_OPERATOR}. Organizer {ORGANIZER_DEFAULT_ID}. The synthetic show policy is a fixture, not a
-          policy. It is not shown.
-        </p>
+          {t("s15p")}{" "}{deskText(t, ORGANIZER_OPERATOR)}{t("s161")}{" "}{deskText(t, ORGANIZER_DEFAULT_ID)}{t("s21w")}</p>
       </form>
       <OrganizerPanel model={model} />
     </section>

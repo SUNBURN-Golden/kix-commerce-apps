@@ -1,3 +1,4 @@
+import { messages as sourceCopy } from "../i18n/messages/marketing--desk";
 /**
  * In-memory marketing fixtures for Wave 7 M01–M05.
  * Data lives for one page load of the demo. It is not a kix-protocol type,
@@ -33,19 +34,19 @@ export const COUPON_FIXTURES = [
   {
     code: "LANTERN-NOTE",
     titleKo: "랜턴 회차 안내",
-    titleEn: "Lantern listing note",
+    titleEn: sourceCopy.en["sq0"],
     marker: "session-marker",
   },
   {
     code: "PAPER-NOTE",
     titleKo: "페이퍼 오케스트라 안내",
-    titleEn: "Paper Orchestra listing note",
+    titleEn: sourceCopy.en["s173"],
     marker: "session-marker",
   },
   {
     code: "FERRY-NOTE",
     titleKo: "라스트 페리 안내",
-    titleEn: "Last Ferry listing note",
+    titleEn: sourceCopy.en["sqb"],
     marker: "session-marker",
   },
 ] as const;
@@ -56,12 +57,12 @@ export const PARTNER_REFERRAL_CODES = ["REF-STUB-HALL", "REF-STUB-PAPER", "REF-S
 export const OWN_REFERRAL_CODE = "REF-STUB-SELF";
 
 const MEMBERSHIP_NOTE =
-  "Local marketing fixture for this page load. It is not a Wave 2 right and it is not a protocol field.";
+  sourceCopy.en["srj"];
 
 export class MarketingStubError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = "MarketingStubError";
+    this.name = sourceCopy.en["srz"];
   }
 }
 
@@ -171,7 +172,7 @@ export class MarketingStubDesk {
       throw new MarketingStubError("Enter a display name of 1–40 characters.");
     }
     if (input.tier !== "fan" && input.tier !== "member") {
-      throw new MarketingStubError("Choose a fan or member demo tier.");
+      throw new MarketingStubError(sourceCopy.en["sc9"]);
     }
     this.seq += 1;
     this.membership = {
@@ -192,12 +193,12 @@ export class MarketingStubDesk {
   recordInterest(eventId: string): PresaleInterest {
     const trimmed = eventId.trim();
     if (!trimmed) {
-      throw new MarketingStubError("Choose a performance.");
+      throw new MarketingStubError(sourceCopy.en["scb"]);
     }
     const tier = this.membership?.tier;
     if (!tier || presaleWindowFor(tier) !== "open-demo") {
       throw new MarketingStubError(
-        "The demo presale window is closed. Issue a fan or member card on M01 first. This screen does not place a hold.",
+        sourceCopy.en["s1rk"],
       );
     }
     const existing = this.interests.find((item) => item.eventId === trimmed);
@@ -218,10 +219,10 @@ export class MarketingStubDesk {
     const normalized = normalizeCode(code);
     const fixture = COUPON_FIXTURES.find((item) => item.code === normalized);
     if (!fixture) {
-      throw new MarketingStubError("Unknown demo code. Markers are display-only.");
+      throw new MarketingStubError(sourceCopy.en["s259"]);
     }
     if (this.coupons.some((item) => item.code === fixture.code)) {
-      throw new MarketingStubError("That demo code is already on this session.");
+      throw new MarketingStubError(sourceCopy.en["s1pq"]);
     }
     const applied: AppliedCoupon = {
       code: fixture.code,
@@ -237,16 +238,16 @@ export class MarketingStubDesk {
   acceptReferral(code: string): { markers: number } {
     const normalized = normalizeCode(code);
     if (!normalized) {
-      throw new MarketingStubError("Enter a demo referral code.");
+      throw new MarketingStubError(sourceCopy.en["sif"]);
     }
     if (normalized === OWN_REFERRAL_CODE) {
-      throw new MarketingStubError("This session cannot accept its own demo code.");
+      throw new MarketingStubError(sourceCopy.en["s23m"]);
     }
     if (!isPartnerCode(normalized)) {
-      throw new MarketingStubError("Unknown demo referral code.");
+      throw new MarketingStubError(sourceCopy.en["s25a"]);
     }
     if (this.acceptedReferrals.includes(normalized)) {
-      throw new MarketingStubError("That demo code is already counted.");
+      throw new MarketingStubError(sourceCopy.en["s1pp"]);
     }
     this.acceptedReferrals.push(normalized);
     this.rewardMarkers += 1;

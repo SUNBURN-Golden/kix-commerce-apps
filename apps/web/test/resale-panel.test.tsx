@@ -216,7 +216,7 @@ describe("resale panel copy", () => {
     }
 
     const files = ["src/pages/ResalePanel.tsx", "src/pages/Resale.tsx", "src/resale-desk.ts"];
-    const combined = files.map((file) => readFileSync(path.join(webRoot, file), "utf8")).join("\n");
+    const combined = [...files, "src/i18n/messages/pages--ResalePanel.ts", "src/i18n/messages/resale-desk.ts", "src/i18n/desk-catalogue.ts"].map((file) => readFileSync(path.join(webRoot, file), "utf8")).join("\n");
     for (const pattern of BANNED_COPY) {
       expect(combined).not.toMatch(pattern);
     }

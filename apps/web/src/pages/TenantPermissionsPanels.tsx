@@ -1,3 +1,8 @@
+import { messages as copy0 } from "../i18n/messages/pages--TenantPermissionsPanels";
+import { messages as copy1 } from "../i18n/messages/tenant-permissions";
+import { messages as copy2 } from "../i18n/messages/workspace--registry";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   TENANT_ACTORS,
@@ -33,18 +38,20 @@ import { WORKSPACE_RULING } from "../workspace/registry";
 
 /** A word, not only a color. */
 function WordMark({ word }: { word: string }) {
+  const t = useT(copy0, copy1, copy2);
   return (
     <span className="status-mark" data-status-mark="blocked">
-      <span className="status-word">{word}</span>
+      <span className="status-word">{deskText(t, word)}</span>
     </span>
   );
 }
 
 /** A wide table scrolls inside its own region, so the page does not scroll sideways. */
 function ScrollTable({ label, children }: { label: string; children: ReactNode }) {
+  const t = useT(copy0, copy1, copy2);
   return (
-    <div className="finance-scroll" role="region" aria-label={label} tabIndex={0}>
-      {children}
+    <div className="finance-scroll" role="region" aria-label={deskText(t, label)} tabIndex={0}>
+      {deskText(t, children)}
     </div>
   );
 }
@@ -68,6 +75,7 @@ function GuardedButton({
   describedBy?: string;
   onPress: () => void;
 }) {
+  const t = useT(copy0, copy1, copy2);
   const reasonId = `${id}-reason`;
   const pointer = control.reason ? (describedBy ?? reasonId) : undefined;
   return (
@@ -81,11 +89,11 @@ function GuardedButton({
         data-enabled={control.enabled ? "true" : "false"}
         onClick={control.enabled ? onPress : undefined}
       >
-        {label}
+        {deskText(t, label)}
       </button>
       {control.reason && describedBy === undefined ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
-          <WordMark word="Blocked." /> {control.reason}
+          <WordMark word={t("status.transport.blocked")} /> {deskText(t, control.reason)}
         </p>
       ) : null}
     </>
@@ -109,6 +117,7 @@ export function TenantBanner({
   scenario: TenantScenario;
   model: TenantModel;
 }) {
+  const t = useT(copy0, copy1, copy2);
   return (
     <header
       className="section-head discovery-section"
@@ -116,24 +125,24 @@ export function TenantBanner({
       data-scenario={scenario}
       data-freshness={model.freshnessWord}
     >
-      <p className="eyebrow">Tenant permissions</p>
-      <h2>{TENANT_PAGE_TITLE}</h2>
+      <p className="eyebrow">{t("s1ph")}</p>
+      <h2>{deskText(t, TENANT_PAGE_TITLE)}</h2>
       <p className="discovery-banner" data-provenance="synthetic" data-source="synthetic-tenant-permissions">
-        SYNTHETIC. {TENANT_SOURCE_LINE}
+        SYNTHETIC. {deskText(t, TENANT_SOURCE_LINE)}
       </p>
-      <p>{TENANT_BOUNDARY}</p>
-      <p data-hide-note="true">{TENANT_HIDE_NOTE}</p>
-      <p>{TENANT_CLAIM_NOTE}</p>
-      <p>{TENANT_MAKER_NOTE}</p>
-      <p>{TENANT_ROLE_NOTE}</p>
-      <p>{TENANT_EXPORT_NOTE}</p>
-      <p>{TENANT_SCOPE_NOTE}</p>
-      <p>{TENANT_ACTOR_NOTE}</p>
-      <p>{TENANT_READ_NOTE}</p>
-      <p>{TENANT_SESSION_NOTE}</p>
-      <p>{WORKSPACE_RULING}</p>
-      <p data-hold-record="not-bound">{model.session.holdLine}</p>
-      <p data-not-composed="recorded">{model.session.notComposedLine}</p>
+      <p>{deskText(t, TENANT_BOUNDARY)}</p>
+      <p data-hide-note="true">{deskText(t, TENANT_HIDE_NOTE)}</p>
+      <p>{deskText(t, TENANT_CLAIM_NOTE)}</p>
+      <p>{deskText(t, TENANT_MAKER_NOTE)}</p>
+      <p>{deskText(t, TENANT_ROLE_NOTE)}</p>
+      <p>{deskText(t, TENANT_EXPORT_NOTE)}</p>
+      <p>{deskText(t, TENANT_SCOPE_NOTE)}</p>
+      <p>{deskText(t, TENANT_ACTOR_NOTE)}</p>
+      <p>{deskText(t, TENANT_READ_NOTE)}</p>
+      <p>{deskText(t, TENANT_SESSION_NOTE)}</p>
+      <p>{deskText(t, WORKSPACE_RULING)}</p>
+      <p data-hold-record="not-bound">{deskText(t, model.session.holdLine)}</p>
+      <p data-not-composed="recorded">{deskText(t, model.session.notComposedLine)}</p>
     </header>
   );
 }
@@ -159,6 +168,7 @@ function PickAndApply({
   applyLabel: string;
   onApply: (next: string) => void;
 }) {
+  const t = useT(copy0, copy1, copy2);
   const [choice, setChoice] = useState(value);
   useEffect(() => {
     setChoice(value);
@@ -166,17 +176,17 @@ function PickAndApply({
   return (
     <>
       <label htmlFor={id}>
-        {label}
+        {deskText(t, label)}
         <select id={id} value={choice} onChange={(event) => setChoice(event.target.value)}>
-          {options.map((item) => (
+          {deskText(t, options.map((item) => (
             <option key={item} value={item}>
-              {item}
+              {deskText(t, item)}
             </option>
-          ))}
+          )))}
         </select>
       </label>
       <button type="button" id={applyId} className="discovery-action" onClick={() => onApply(choice)}>
-        {applyLabel}
+        {deskText(t, applyLabel)}
       </button>
     </>
   );
@@ -195,94 +205,89 @@ export function TenantControls({
   model: TenantModel;
   actions: TenantActions;
 }) {
+  const t = useT(copy0, copy1, copy2);
   const [focusText, setFocusText] = useState("");
   return (
-    <section id="tenant-controls" className="discovery-section" aria-label="Synthetic controls">
+    <section id="tenant-controls" className="discovery-section" aria-label={t("s1o9")}>
       <div className="discovery-controls">
         <PickAndApply
           id="tenant-scenario"
-          label="Synthetic scenario"
+          label={t("s1p5")}
           value={scenario}
           options={TENANT_SCENARIOS}
           applyId="tenant-apply-scenario"
-          applyLabel="Start a session with this scenario"
+          applyLabel={t("s1m5")}
           onApply={(next) => actions.setScenario(next as TenantScenario)}
         />
         <PickAndApply
           id="tenant-actor"
-          label="Desk actor"
+          label={t("sgd")}
           value={actorRef}
           options={TENANT_ACTORS}
           applyId="tenant-apply-actor"
-          applyLabel="Switch to this actor"
+          applyLabel={t("s1o6")}
           onApply={(next) => actions.switchActor(next)}
         />
         <PickAndApply
           id="tenant-role"
-          label="Role for this actor"
+          label={t("s1hg")}
           value={role}
           options={TENANT_ROLES}
           applyId="tenant-apply-role"
-          applyLabel="Switch to this role"
+          applyLabel={t("s1o7")}
           onApply={(next) => actions.switchRole(next as TenantRole)}
         />
         <button type="button" id="tenant-refresh" className="discovery-action" onClick={() => actions.refresh()}>
-          Read again
-        </button>
+          {t("s1ax")}</button>
         <button type="button" id="tenant-switch-tenant" className="discovery-action" onClick={() => actions.switchTenant()}>
-          Switch tenant ({TENANT_OWN} / {TENANT_FOREIGN})
+          {t("s1o3")}{deskText(t, TENANT_OWN)} / {deskText(t, TENANT_FOREIGN)})
         </button>
-        <GuardedButton id="tenant-export" label="Load the sensitive export" control={model.exportControl} onPress={() => actions.loadExport()} />
+        <GuardedButton id="tenant-export" label={t("srg")} control={model.exportControl} onPress={() => actions.loadExport()} />
         <button type="button" id="tenant-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          Start a new synthetic session
-        </button>
+          {t("s1m2")}</button>
       </div>
-      <div className="discovery-controls" role="group" aria-label="Direct open by reference">
+      <div className="discovery-controls" role="group" aria-label={t("sgn")}>
         <label htmlFor="tenant-focus-ref">
-          Open a resource by reference
-          <input
+          {t("s14w")}<input
             id="tenant-focus-ref"
             name="tenant-focus-ref"
             autoComplete="off"
-            placeholder="evn-0001, acc-0001, tck-0001…"
+            placeholder={t("sjx")}
             value={focusText}
             onChange={(event) => setFocusText(event.target.value)}
           />
         </label>
         <button type="button" id="tenant-open-ref" className="discovery-action" onClick={() => actions.openResource(focusText)}>
-          Open this resource
-        </button>
+          {t("s15i")}</button>
       </div>
       <p className="muted">
-        A pasted reference is a direct open, like a typed URL. The source answers a ref outside this role&apos;s kinds or outside
-        this tenant with denied — never a row of another tenant, never a row of another subject.
-      </p>
+        {t("s4w")}</p>
       <p className="muted" data-scenario-note={scenario}>
-        {SCENARIO_NOTES[scenario]} Choosing a scenario does nothing until you start a session with it, and starting one clears earlier reads, exports, and requests.
-      </p>
-      <p className="muted">{TENANT_SYNTHETIC_CONTROL_NOTE}</p>
+        {deskText(t, SCENARIO_NOTES[scenario])} {t("scc")}</p>
+      <p className="muted">{deskText(t, TENANT_SYNTHETIC_CONTROL_NOTE)}</p>
     </section>
   );
 }
 
 export function TenantStatus({ model }: { model: TenantModel }) {
+  const t = useT(copy0, copy1, copy2);
   return (
     <section id="tenant-status" className="discovery-section" tabIndex={-1} data-tenant-state={model.state}>
-      <h3>Status</h3>
+      <h3>{t("s1mj")}</h3>
       <p role="status" data-status={model.state}>
-        {model.state === "loading" ? <StatusMark kind="loading" /> : null} {model.statusLine}
-        {model.detailLine ? ` ${model.detailLine}` : ""}
+        {model.state === "loading" ? <StatusMark kind="loading" /> : null} {deskText(t, model.statusLine)}
+        {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
       </p>
-      <p className="muted">{model.freshnessWord}</p>
-      <p className="muted">{model.scopeLine}</p>
-      <p className="muted">{model.generationLine}</p>
-      <p className="muted">{model.watermarkLine}</p>
+      <p className="muted">{deskText(t, model.freshnessWord)}</p>
+      <p className="muted">{deskText(t, model.scopeLine)}</p>
+      <p className="muted">{deskText(t, model.generationLine)}</p>
+      <p className="muted">{deskText(t, model.watermarkLine)}</p>
       <p className="muted" data-workspace-line="true">
-        {model.workspaceLine}
+        {deskText(t, model.workspaceLine)}
       </p>
       {model.lastLine ? (
         <p role="status" data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
-          {model.lastNeedsFocus ? <WordMark word="Attention." /> : null} {model.lastLine}
+          {model.lastNeedsFocus ? <WordMark word={t("s91")} /> : null} {deskText(t, model.lastLine)}
         </p>
       ) : null}
     </section>
@@ -290,32 +295,31 @@ export function TenantStatus({ model }: { model: TenantModel }) {
 }
 
 export function TenantAuthoritySection({ model }: { model: TenantModel }) {
+  const t = useT(copy0, copy1, copy2);
   return (
-    <section id="tenant-authority" className="discovery-section" aria-label="Who may do what">
-      <h3>Who may do what</h3>
+    <section id="tenant-authority" className="discovery-section" aria-label={t("s26m")}>
+      <h3>{t("s26m")}</h3>
       <p className="muted">
-        Read-own, read-tenant, and read-audit stay separate, and each proposal and the approval keep their own capability. The
-        export is a separate grant from the read. No role here holds them all.
-      </p>
-      <ScrollTable label="Capabilities and the roles that hold them">
+        {t("s1c1")}</p>
+      <ScrollTable label={t("sba")}>
         <table className="finance-authority">
-          <caption>The source&apos;s capabilities on this desk</caption>
+          <caption>{t("s1yf")}</caption>
           <thead>
             <tr>
-              <th scope="col">Capability</th>
-              <th scope="col">Held by</th>
+              <th scope="col">{t("sbb")}</th>
+              <th scope="col">{t("sn9")}</th>
             </tr>
           </thead>
           <tbody>
-            {model.authority.map((row) => (
+            {deskText(t, model.authority.map((row) => (
               <tr key={row.capability} data-capability={row.capability} data-held-by-role={row.heldByRole ? "true" : "false"}>
-                <th scope="row">{row.capability}</th>
+                <th scope="row">{deskText(t, row.capability)}</th>
                 <td>
-                  {row.heldByLine}
-                  {row.heldByRole ? " The role on screen holds it." : ""}
+                  {deskText(t, row.heldByLine)}
+                  {row.heldByRole ? (" " + t("s1xf")) : ""}
                 </td>
               </tr>
-            ))}
+            )))}
           </tbody>
         </table>
       </ScrollTable>
@@ -324,15 +328,16 @@ export function TenantAuthoritySection({ model }: { model: TenantModel }) {
 }
 
 export function TenantFocusSection({ model }: { model: TenantModel }) {
+  const t = useT(copy0, copy1, copy2);
   if (model.focus === null) {
     return null;
   }
   return (
-    <section id="tenant-focus" className="discovery-section" aria-label="Deep-opened resource" data-focus-kind={model.focus.kind}>
-      <h3>{model.focus.title}</h3>
-      {model.focus.lines.map((line) => (
-        <p key={line}>{line}</p>
-      ))}
+    <section id="tenant-focus" className="discovery-section" aria-label={t("sfq")} data-focus-kind={model.focus.kind}>
+      <h3>{deskText(t, model.focus.title)}</h3>
+      {deskText(t, model.focus.lines.map((line) => (
+        <p key={line}>{deskText(t, line)}</p>
+      )))}
     </section>
   );
 }
@@ -347,57 +352,57 @@ function noteValue(): string {
 }
 
 export function TenantWorkspaceSection({ model, actions }: { model: TenantModel; actions: TenantActions }) {
+  const t = useT(copy0, copy1, copy2);
   return (
-    <section id="tenant-workspace" className="discovery-section" aria-label="Role workspace">
-      <h3>Role workspace</h3>
+    <section id="tenant-workspace" className="discovery-section" aria-label={t("s1hm")}>
+      <h3>{t("s1hm")}</h3>
       <div className="discovery-controls">
         <label htmlFor="tenant-note">
-          Note for a proposal
-          <input id="tenant-note" name="tenant-note" autoComplete="off" defaultValue="Reviewed against the last read." />
+          {t("s10s")}<input id="tenant-note" name="tenant-note" autoComplete="off" defaultValue="Reviewed against the last read." />
         </label>
       </div>
       {model.accountBlock ? (
         <p id="tenant-account-reason" className="muted" data-blocked-reason="true" data-block="account-change">
-          <WordMark word="Blocked." /> Account changes are off: {model.accountBlock}
+          <WordMark word={t("status.transport.blocked")} /> {t("sk")}{" "}{deskText(t, model.accountBlock)}
         </p>
       ) : null}
       {model.revokeBlock ? (
         <p id="tenant-revoke-reason" className="muted" data-blocked-reason="true" data-block="role-revoke">
-          <WordMark word="Blocked." /> Role revokes are off: {model.revokeBlock}
+          <WordMark word={t("status.transport.blocked")} /> {t("s1hl")}{" "}{deskText(t, model.revokeBlock)}
         </p>
       ) : null}
 
       {model.members.length > 0 ? (
         <>
-          <h4>Members</h4>
-          <ScrollTable label="Memberships in the last read">
+          <h4>{t("ssg")}</h4>
+          <ScrollTable label={t("ssj")}>
             <table className="finance-cuts">
-              <caption>Role assignments the read listed</caption>
+              <caption>{t("s1hf")}</caption>
               <thead>
                 <tr>
-                  <th scope="col">Membership</th>
-                  <th scope="col">Person</th>
-                  <th scope="col">Role</th>
-                  <th scope="col">Generation</th>
-                  <th scope="col">State</th>
-                  <th scope="col">Propose a revoke</th>
+                  <th scope="col">{t("ssh")}</th>
+                  <th scope="col">{t("s180")}</th>
+                  <th scope="col">{t("s1he")}</th>
+                  <th scope="col">{t("sme")}</th>
+                  <th scope="col">{t("s1mi")}</th>
+                  <th scope="col">{t("s19s")}</th>
                 </tr>
               </thead>
               <tbody>
-                {model.members.map((row) => (
+                {deskText(t, model.members.map((row) => (
                   <tr key={row.memberRef} data-member={row.memberRef} data-member-state={row.state}>
-                    <th scope="row">{row.memberRef}</th>
-                    <td>{row.actorRef}</td>
-                    <td>{row.role}</td>
-                    <td>{row.generation}</td>
-                    <td>{row.stateWord}</td>
+                    <th scope="row">{deskText(t, row.memberRef)}</th>
+                    <td>{deskText(t, row.actorRef)}</td>
+                    <td>{deskText(t, row.role)}</td>
+                    <td>{deskText(t, row.generation)}</td>
+                    <td>{deskText(t, row.stateWord)}</td>
                     <td>
                       {row.proposeRevoke === null ? (
-                        <span className="muted">No revoke control for this role.</span>
+                        <span className="muted">{t("sxy")}</span>
                       ) : (
                         <GuardedButton
                           id={`tenant-revoke-${row.memberRef}`}
-                          label={`Propose revoking ${row.memberRef}`}
+                          label={t("s19x", { memberRef: row.memberRef })}
                           control={row.proposeRevoke}
                           describedBy={model.revokeBlock ? "tenant-revoke-reason" : undefined}
                           onPress={() => actions.proposeRoleRevoke(row.memberRef, noteValue())}
@@ -405,7 +410,7 @@ export function TenantWorkspaceSection({ model, actions }: { model: TenantModel;
                       )}
                     </td>
                   </tr>
-                ))}
+                )))}
               </tbody>
             </table>
           </ScrollTable>
@@ -414,62 +419,62 @@ export function TenantWorkspaceSection({ model, actions }: { model: TenantModel;
 
       {model.orders.length > 0 ? (
         <>
-          <h4>Orders</h4>
-          <ul className="discovery-list" aria-label="Orders in the last read">
-            {model.orders.map((row) => (
+          <h4>{t("s15u")}</h4>
+          <ul className="discovery-list" aria-label={t("s15z")}>
+            {deskText(t, model.orders.map((row) => (
               <li key={row.orderRef} data-order={row.orderRef} data-order-state={row.state}>
-                <Synthetic /> <strong>{row.orderRef}</strong> {row.label}. Subject {row.subjectRef}. Event {row.eventRef}. {row.state}.
+                <Synthetic /> <strong>{deskText(t, row.orderRef)}</strong> {deskText(t, row.label)}{t("s1n4")}{" "}{deskText(t, row.subjectRef)}{t("sir")}{" "}{deskText(t, row.eventRef)}. {deskText(t, row.state)}.
               </li>
-            ))}
+            )))}
           </ul>
         </>
       ) : null}
 
       {model.events.length > 0 ? (
         <>
-          <h4>Events</h4>
-          <ul className="discovery-list" aria-label="Events in the last read">
-            {model.events.map((row) => (
+          <h4>{t("sit")}</h4>
+          <ul className="discovery-list" aria-label={t("siv")}>
+            {deskText(t, model.events.map((row) => (
               <li key={row.eventRef} data-event={row.eventRef} data-event-state={row.state}>
-                <Synthetic /> <strong>{row.eventRef}</strong> {row.title}. {row.state}.
+                <Synthetic /> <strong>{deskText(t, row.eventRef)}</strong> {deskText(t, row.title)}. {deskText(t, row.state)}.
               </li>
-            ))}
+            )))}
           </ul>
         </>
       ) : null}
 
       {model.accounts.length > 0 ? (
         <>
-          <h4>Settlement accounts</h4>
-          <ul className="discovery-list" aria-label="Accounts in the last read">
-            {model.accounts.map((row) => (
+          <h4>{t("s1jy")}</h4>
+          <ul className="discovery-list" aria-label={t("sm")}>
+            {deskText(t, model.accounts.map((row) => (
               <li key={row.accountRef} data-account={row.accountRef} data-account-state={row.state}>
-                <Synthetic /> <strong>{row.accountRef}</strong> {row.label}. {row.tailLine} {row.stateWord}.
+                <Synthetic /> <strong>{deskText(t, row.accountRef)}</strong> {deskText(t, row.label)}. {deskText(t, row.tailLine)} {deskText(t, row.stateWord)}.
                 <br />
                 {row.proposeChange === null ? null : (
                   <GuardedButton
                     id={`tenant-account-${row.accountRef}`}
-                    label={`Propose an account change on ${row.accountRef}`}
+                    label={t("s19q", { accountRef: row.accountRef })}
                     control={row.proposeChange}
                     describedBy={model.accountBlock ? "tenant-account-reason" : undefined}
                     onPress={() => actions.proposeAccountChange(row.accountRef, noteValue())}
                   />
                 )}
               </li>
-            ))}
+            )))}
           </ul>
         </>
       ) : null}
 
       {model.cases.length > 0 ? (
         <>
-          <h4>Support cases</h4>
-          <ul className="discovery-list" aria-label="Cases in the last read">
-            {model.cases.map((row) => (
+          <h4>{t("s1nh")}</h4>
+          <ul className="discovery-list" aria-label={t("sbj")}>
+            {deskText(t, model.cases.map((row) => (
               <li key={row.caseRef} data-case={row.caseRef} data-case-state={row.state}>
-                <Synthetic /> <strong>{row.caseRef}</strong> {row.topic}. Subject {row.subjectRef}. {row.state}.
+                <Synthetic /> <strong>{deskText(t, row.caseRef)}</strong> {deskText(t, row.topic)}{t("s1n4")}{" "}{deskText(t, row.subjectRef)}. {deskText(t, row.state)}.
               </li>
-            ))}
+            )))}
           </ul>
         </>
       ) : null}
@@ -479,42 +484,41 @@ export function TenantWorkspaceSection({ model, actions }: { model: TenantModel;
       model.events.length === 0 &&
       model.accounts.length === 0 &&
       model.cases.length === 0 ? (
-        <p data-state="empty">This role&apos;s workspace lists no row in this read.</p>
+        <p data-state="empty">{t("s23i")}</p>
       ) : null}
     </section>
   );
 }
 
 export function TenantProposalsSection({ model, actions }: { model: TenantModel; actions: TenantActions }) {
+  const t = useT(copy0, copy1, copy2);
   return (
-    <section id="tenant-proposals" className="discovery-section" aria-label="Proposals" data-proposal-count={model.proposals.length}>
-      <h3>Proposals</h3>
+    <section id="tenant-proposals" className="discovery-section" aria-label={t("s19i")} data-proposal-count={model.proposals.length}>
+      <h3>{t("s19i")}</h3>
       <p className="muted">
-        A change is a proposal, and a different actor approves it. The same person&apos;s second role is not a different actor.
-        Recorded is not applied: the target row changes only when the source applies it.
-      </p>
+        {t("sn")}</p>
       {model.approveBlock ? (
         <p id="tenant-approve-reason" className="muted" data-blocked-reason="true" data-block="approve">
-          <WordMark word="Blocked." /> Approvals are off: {model.approveBlock}
+          <WordMark word={t("status.transport.blocked")} /> {t("s5w")}{" "}{deskText(t, model.approveBlock)}
         </p>
       ) : null}
-      {model.proposals.length === 0 ? <p data-state="empty">No proposal in this read.</p> : null}
+      {model.proposals.length === 0 ? <p data-state="empty">{t("sx1")}</p> : null}
       {model.proposals.length > 0 ? (
-        <ul className="discovery-list" aria-label="Proposals in the last read">
-          {model.proposals.map((proposal) => (
+        <ul className="discovery-list" aria-label={t("s19j")}>
+          {deskText(t, model.proposals.map((proposal) => (
             <li key={proposal.proposalRef} data-proposal={proposal.proposalRef} data-proposal-state={proposal.state}>
-              <Synthetic /> <strong>{proposal.proposalRef}</strong> {proposal.kindWord} on {proposal.targetRef}.{" "}
-              {proposal.proposedLine} {proposal.stateWord}. Note: {proposal.note}
+              <Synthetic /> <strong>{deskText(t, proposal.proposalRef)}</strong> {deskText(t, proposal.kindWord)} {t("s140")}{" "}{deskText(t, proposal.targetRef)}.{" "}
+              {deskText(t, proposal.proposedLine)} {deskText(t, proposal.stateWord)}{t("s10q")}{" "}{deskText(t, proposal.note)}
               <br />
               <GuardedButton
                 id={`tenant-approve-${proposal.proposalRef}`}
-                label={`Record an approval of ${proposal.proposalRef}`}
+                label={t("s1dp", { proposalRef: proposal.proposalRef })}
                 control={proposal.approve}
                 describedBy={model.approveBlock ? "tenant-approve-reason" : undefined}
                 onPress={() => actions.approveProposal(proposal.proposalRef)}
               />
             </li>
-          ))}
+          )))}
         </ul>
       ) : null}
     </section>
@@ -522,43 +526,42 @@ export function TenantProposalsSection({ model, actions }: { model: TenantModel;
 }
 
 export function TenantAuditSection({ model }: { model: TenantModel }) {
+  const t = useT(copy0, copy1, copy2);
   return (
-    <section id="tenant-audit" className="discovery-section" aria-label="Audit record" data-audit-count={model.audit.length}>
-      <h3>Audit record</h3>
+    <section id="tenant-audit" className="discovery-section" aria-label={t("s94")} data-audit-count={model.audit.length}>
+      <h3>{t("s94")}</h3>
       <p className="muted">
-        The source&apos;s own record of the decisions it made on calls in this tenant. Only a role that holds read-audit sees it,
-        and it is not a complete record.
-      </p>
-      {model.audit.length === 0 ? <p data-state="empty">No audit entry in this read, or this role may not read them.</p> : null}
+        {t("s1yi")}</p>
+      {model.audit.length === 0 ? <p data-state="empty">{t("su6")}</p> : null}
       {model.audit.length > 0 ? (
-        <ScrollTable label="Audit entries in the last read">
+        <ScrollTable label={t("s93")}>
           <table className="finance-cuts">
-            <caption>Decisions the source recorded</caption>
+            <caption>{t("sfl")}</caption>
             <thead>
               <tr>
-                <th scope="col">Entry</th>
-                <th scope="col">Actor</th>
-                <th scope="col">Role</th>
-                <th scope="col">Action</th>
-                <th scope="col">Target</th>
-                <th scope="col">Decision</th>
-                <th scope="col">Detail</th>
+                <th scope="col">{t("sij")}</th>
+                <th scope="col">{t("s12")}</th>
+                <th scope="col">{t("s1he")}</th>
+                <th scope="col">{t("sy")}</th>
+                <th scope="col">{t("s1pe")}</th>
+                <th scope="col">{t("sfj")}</th>
+                <th scope="col">{t("sgf")}</th>
               </tr>
             </thead>
             <tbody>
-              {model.audit.map((row) => (
+              {deskText(t, model.audit.map((row) => (
                 <tr key={row.auditRef} data-audit={row.auditRef} data-audit-decision={row.decision}>
                   <th scope="row">
-                    {row.auditRef} (seq {row.seq})
+                    {deskText(t, row.auditRef)} {t("s1je")}{" "}{deskText(t, row.seq)})
                   </th>
-                  <td>{row.actorRef}</td>
-                  <td>{row.role}</td>
-                  <td>{row.action}</td>
-                  <td>{row.targetRef ?? "—"}</td>
-                  <td>{row.decision}</td>
-                  <td>{row.detail}</td>
+                  <td>{deskText(t, row.actorRef)}</td>
+                  <td>{deskText(t, row.role)}</td>
+                  <td>{deskText(t, row.action)}</td>
+                  <td>{deskText(t, row.targetRef) ?? "—"}</td>
+                  <td>{deskText(t, row.decision)}</td>
+                  <td>{deskText(t, row.detail)}</td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </ScrollTable>
@@ -568,73 +571,75 @@ export function TenantAuditSection({ model }: { model: TenantModel }) {
 }
 
 export function TenantExportSection({ model }: { model: TenantModel }) {
+  const t = useT(copy0, copy1, copy2);
   const exported = model.export;
   return (
-    <section id="tenant-export-panel" className="discovery-section" aria-label="Sensitive export" data-export-phase={exported.phase}>
-      <h3>Sensitive export</h3>
-      <p data-export-status={exported.phase}>{exported.statusLine}</p>
-      {exported.detailLine ? <p className="muted">{exported.detailLine}</p> : null}
-      {exported.verdictLines.map((line) => (
+    <section id="tenant-export-panel" className="discovery-section" aria-label={t("s1jc")} data-export-phase={exported.phase}>
+      <h3>{t("s1jc")}</h3>
+      <p data-export-status={exported.phase}>{deskText(t, exported.statusLine)}</p>
+      {exported.detailLine ? <p className="muted">{deskText(t, exported.detailLine)}</p> : null}
+      {deskText(t, exported.verdictLines.map((line) => (
         <p key={line} data-export-verdict={exported.verdictWord}>
-          {exported.verdictWord === "withheld" ? <WordMark word="Withheld." /> : null} {line}
+          {exported.verdictWord === "withheld" ? <WordMark word={t("s26v")} /> : null} {deskText(t, line)}
         </p>
-      ))}
-      {exported.scopeLine ? <p className="muted" data-export-scope="declared">{exported.scopeLine}</p> : null}
-      {exported.exportRef ? <p className="muted">Export {exported.exportRef}.</p> : null}
-      {exported.rowsLine ? <p className="muted">{exported.rowsLine}</p> : null}
+      )))}
+      {exported.scopeLine ? <p className="muted" data-export-scope="declared">{deskText(t, exported.scopeLine)}</p> : null}
+      {exported.exportRef ? <p className="muted">{t("ski")}{" "}{deskText(t, exported.exportRef)}.</p> : null}
+      {exported.rowsLine ? <p className="muted">{deskText(t, exported.rowsLine)}</p> : null}
       {exported.rows.length > 0 ? (
-        <ScrollTable label="Export rows">
+        <ScrollTable label={t("skl")}>
           <table className="finance-cuts">
-            <caption>Rows of the sensitive export, withheld unless it is the current export of the last read</caption>
+            <caption>{t("s1hx")}</caption>
             <thead>
               <tr>
-                <th scope="col">Entry</th>
-                <th scope="col">Kind</th>
-                <th scope="col">Label</th>
-                <th scope="col">Detail</th>
+                <th scope="col">{t("sij")}</th>
+                <th scope="col">{t("sps")}</th>
+                <th scope="col">{t("spx")}</th>
+                <th scope="col">{t("sgf")}</th>
               </tr>
             </thead>
             <tbody>
-              {exported.rows.map((row) => (
+              {deskText(t, exported.rows.map((row) => (
                 <tr key={row.entryRef} data-export-row={row.entryRef}>
-                  <th scope="row">{row.entryRef}</th>
-                  <td>{row.kindWord}</td>
-                  <td>{row.label}</td>
-                  <td>{row.detail}</td>
+                  <th scope="row">{deskText(t, row.entryRef)}</th>
+                  <td>{deskText(t, row.kindWord)}</td>
+                  <td>{deskText(t, row.label)}</td>
+                  <td>{deskText(t, row.detail)}</td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </ScrollTable>
       ) : null}
-      <p className="muted">{TENANT_EXPORT_NOTE}</p>
+      <p className="muted">{deskText(t, TENANT_EXPORT_NOTE)}</p>
     </section>
   );
 }
 
 export function TenantRequestsSection({ model }: { model: TenantModel }) {
+  const t = useT(copy0, copy1, copy2);
   return (
-    <section id="tenant-requests" className="discovery-section" aria-label="Requests">
-      <h3>Requests</h3>
-      {model.behindLine ? <p data-behind="true">{model.behindLine}</p> : null}
+    <section id="tenant-requests" className="discovery-section" aria-label={t("s1fv")}>
+      <h3>{t("s1fv")}</h3>
+      {model.behindLine ? <p data-behind="true">{deskText(t, model.behindLine)}</p> : null}
       {model.fenceLine ? (
         <p data-fence="true">
-          <WordMark word="Fenced." /> {model.fenceLine}
+          <WordMark word={t("sky")} /> {deskText(t, model.fenceLine)}
         </p>
       ) : null}
-      {model.request === null ? <p data-state="empty">No request has been sent from this session.</p> : null}
+      {model.request === null ? <p data-state="empty">{t("sxr")}</p> : null}
       {model.request !== null ? (
         <div data-request-seq={model.request.seq} data-request-phase={model.request.phase}>
           <p>
-            Request {model.request.seq}: {model.request.kindWord}. {model.request.phaseWord}
-            {model.request.code ? ` (${model.request.code})` : ""}.
+            {t("s1fq")}{" "}{deskText(t, model.request.seq)}: {deskText(t, model.request.kindWord)}. {deskText(t, model.request.phaseWord)}
+            {model.request.code ? (" " + t("sd2", { code: model.request.code })) : ""}.
           </p>
-          {model.request.detail ? <p className="muted">{model.request.detail}</p> : null}
-          {model.request.receiptLines.map((line) => (
+          {model.request.detail ? <p className="muted">{deskText(t, model.request.detail)}</p> : null}
+          {deskText(t, model.request.receiptLines.map((line) => (
             <p key={line} className="muted">
-              {line}
+              {deskText(t, line)}
             </p>
-          ))}
+          )))}
         </div>
       ) : null}
     </section>
@@ -642,15 +647,16 @@ export function TenantRequestsSection({ model }: { model: TenantModel }) {
 }
 
 export function TenantSessionSection({ session }: { session: TenantSessionModel }) {
+  const t = useT(copy0, copy1, copy2);
   return (
-    <section id="tenant-session" className="discovery-section" aria-label="Session record">
-      <h3>Session record</h3>
-      <p className="muted">{session.contextLine}</p>
-      <p className="muted">{session.capabilityLine}</p>
-      <p className="muted">{session.countersLine}</p>
-      <p className="muted">{session.earlierUnknownLine}</p>
-      <p className="muted" data-hold-record="not-bound">{session.holdLine}</p>
-      <p className="muted" data-not-composed="recorded">{session.notComposedLine}</p>
+    <section id="tenant-session" className="discovery-section" aria-label={t("s1js")}>
+      <h3>{t("s1js")}</h3>
+      <p className="muted">{deskText(t, session.contextLine)}</p>
+      <p className="muted">{deskText(t, session.capabilityLine)}</p>
+      <p className="muted">{deskText(t, session.countersLine)}</p>
+      <p className="muted">{deskText(t, session.earlierUnknownLine)}</p>
+      <p className="muted" data-hold-record="not-bound">{deskText(t, session.holdLine)}</p>
+      <p className="muted" data-not-composed="recorded">{deskText(t, session.notComposedLine)}</p>
     </section>
   );
 }

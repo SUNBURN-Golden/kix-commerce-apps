@@ -1,3 +1,7 @@
+import { messages as copy0 } from "../i18n/messages/pages--Finance";
+import { messages as copy1 } from "../i18n/messages/finance-operations";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { useRestoreFocus } from "../a11y/focus";
 import { useFinanceOperations } from "../finance-operations";
 import {
@@ -14,6 +18,7 @@ import {
 } from "./FinancePanels";
 
 export function FinancePage() {
+  const t = useT(copy0, copy1);
   const live = useFinanceOperations();
   const model = live.model;
   // A block, a refusal, a denial, a read that did not answer, or an unknown result takes focus to the status region.
@@ -21,16 +26,16 @@ export function FinancePage() {
 
   return (
     <div className="discovery platform finance" data-adapter-environment={live.environment}>
-      <nav className="discovery-nav" aria-label="Finance sections">
-        <a href="#finance-controls">Controls</a>
-        <a href="#finance-status">Status</a>
-        <a href="#finance-authority">Who may do what</a>
-        <a href="#finance-cuts">Source cuts</a>
-        <a href="#finance-queue">Exception queue</a>
-        <a href="#finance-figures">Source figures</a>
-        <a href="#finance-export-panel">Accounting export</a>
-        <a href="#finance-requests">Requests</a>
-        <a href="#finance-session">Session record</a>
+      <nav className="discovery-nav" aria-label={t("sle")}>
+        <a href="#finance-controls">{t("sed")}</a>
+        <a href="#finance-status">{t("s1mj")}</a>
+        <a href="#finance-authority">{t("s26m")}</a>
+        <a href="#finance-cuts">{t("s1l7")}</a>
+        <a href="#finance-queue">{t("sjz")}</a>
+        <a href="#finance-figures">{t("s1la")}</a>
+        <a href="#finance-export-panel">{t("sl")}</a>
+        <a href="#finance-requests">{t("s1fv")}</a>
+        <a href="#finance-session">{t("s1js")}</a>
       </nav>
       <div className="discovery-body">
         <FinanceBanner environment={live.environment} scenario={live.scenario} model={model} />
@@ -43,7 +48,7 @@ export function FinancePage() {
             className="discovery-action"
             onClick={() => (model.state === "tuple-changed" ? live.actions.newSession() : live.actions.refresh())}
           >
-            {model.actionLabel}
+            {deskText(t, model.actionLabel)}
           </button>
         ) : null}
         <AuthoritySection model={model} />

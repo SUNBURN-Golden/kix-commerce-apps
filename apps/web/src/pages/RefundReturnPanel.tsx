@@ -1,3 +1,9 @@
+import { messages as deskCopy } from "../i18n/desk-catalogue";
+import { messages as copy0 } from "../i18n/messages/pages--RefundReturnPanel";
+import { messages as copy1 } from "../i18n/messages/refund-return";
+import { messages as copy2 } from "../i18n/messages/workspace--registry";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { useRestoreFocus } from "../a11y/focus";
 import { AmountNotice } from "../a11y/marks";
 import {
@@ -41,6 +47,7 @@ function GuardedButton({
   control: RefundControl;
   onPress: () => void;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   const reasonId = `${id}-reason`;
   return (
     <span className="refund-guard">
@@ -55,11 +62,11 @@ function GuardedButton({
           }
         }}
       >
-        {label}
+        {deskText(t, label)}
       </button>
       {control.reason ? (
         <span id={reasonId} className="muted">
-          {control.reason}
+          {deskText(t, control.reason)}
         </span>
       ) : null}
     </span>
@@ -88,6 +95,7 @@ export function RefundReturnPanel({
   /** booking and settlement render the write controls; buyer is read-only. */
   variant: "booking" | "settlement" | "buyer";
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   const model = live.model;
   const readOnly = variant === "buyer";
   const baseId = `refund-${variant}`;
@@ -97,26 +105,26 @@ export function RefundReturnPanel({
     <section
       id={baseId}
       className="refund-desk panel"
-      aria-label={REFUND_TITLE}
+      aria-label={deskText(t, REFUND_TITLE)}
       data-refund-variant={variant}
       data-refund-state={model.state}
       data-adapter-environment={live.environment}
       data-source={live.environment === "stub" ? "synthetic-refund" : "none"}
     >
       <header className="section-head">
-        <p className="eyebrow">{REFUND_TITLE}</p>
-        <h3>{REFUND_TITLE}</h3>
-        <p className="muted">{REFUND_SOURCE_LINE}</p>
-        <p className="muted">{REFUND_BOUNDARY}</p>
-        <p className="muted">{REFUND_RETURN_NOTE}</p>
-        <p className="muted">{REFUND_NOTSENT_NOTE}</p>
+        <p className="eyebrow">{deskText(t, REFUND_TITLE)}</p>
+        <h3>{deskText(t, REFUND_TITLE)}</h3>
+        <p className="muted">{deskText(t, REFUND_SOURCE_LINE)}</p>
+        <p className="muted">{deskText(t, REFUND_BOUNDARY)}</p>
+        <p className="muted">{deskText(t, REFUND_RETURN_NOTE)}</p>
+        <p className="muted">{deskText(t, REFUND_NOTSENT_NOTE)}</p>
         <AmountNotice />
       </header>
 
       <p id={`${baseId}-status`} className={model.state === "ready" ? "muted" : "alert"} role="status" tabIndex={-1}>
-        {model.statusLine} {model.detailLine}
+        {deskText(t, model.statusLine)} {deskText(t, model.detailLine)}
       </p>
-      {model.lastLine ? <p className="muted">{model.lastLine}</p> : null}
+      {model.lastLine ? <p className="muted">{deskText(t, model.lastLine)}</p> : null}
       {model.actionLabel ? (
         <button
           type="button"
@@ -125,135 +133,128 @@ export function RefundReturnPanel({
             model.state === "tuple-changed" || model.state === "refused" ? live.actions.newSession() : live.actions.refresh()
           }
         >
-          {model.actionLabel}
+          {deskText(t, model.actionLabel)}
         </button>
       ) : null}
 
-      <h4>Five separate order states</h4>
+      <h4>{t("sli")}</h4>
       <ol className="refund-states">
-        {model.cells.map((cell) => (
+        {deskText(t, model.cells.map((cell) => (
           <li key={cell.cell} className="refund-cell" data-track={cell.track} data-state={cell.state}>
-            <p className="eyebrow">{cell.track}</p>
+            <p className="eyebrow">{deskText(t, cell.track)}</p>
             <p>
-              <strong>{cell.label}</strong> — {cell.state}
+              <strong>{deskText(t, cell.label)}</strong> — {deskText(t, cell.state)}
             </p>
-            <p className="muted">{cell.ref ?? "no ref"}</p>
-            <p className="muted">{cell.note}</p>
+            <p className="muted">{deskText(t, cell.ref) ?? t("sxo")}</p>
+            <p className="muted">{deskText(t, cell.note)}</p>
           </li>
-        ))}
+        )))}
       </ol>
 
-      <h4>Five separate refund-flow lines</h4>
+      <h4>{t("slj")}</h4>
       <ul className="refund-lines">
-        {model.lines.map((line) => (
+        {deskText(t, model.lines.map((line) => (
           <li key={line.line} className="refund-line" data-line={line.line} data-state={line.observedState} data-write={line.writeKind}>
             <p>
-              <strong>{line.label}</strong> — {line.observedState === "recorded" ? `recorded ${line.observedRef}` : "none"}
+              <strong>{deskText(t, line.label)}</strong> — {line.observedState === "recorded" ? t("s1e0", { observedRef: line.observedRef ?? "" }) : t("common.empty")}
             </p>
-            <p className="muted">{line.writeWord}</p>
-            <p className="muted">{line.note}</p>
+            <p className="muted">{deskText(t, line.writeWord)}</p>
+            <p className="muted">{deskText(t, line.note)}</p>
             <p className="muted">
-              {line.pinnedAction === null
-                ? "No pinned booking-cancel command exists. This line sends nothing."
-                : `${line.pinnedAction} is recorded and not sent.`}
+              {line.pinnedAction === null ? t("sww") : t("s185", { pinnedAction: line.pinnedAction })}
             </p>
             {readOnly ? null : (
               <GuardedButton
                 id={`${baseId}-${line.line}`}
-                label={`Record ${line.label.toLowerCase()}`}
+                label={t("s1e9", { v1: line.label.toLowerCase() })}
                 control={line.control}
                 onPress={() => live.actions.write(LINE_STEPS[line.line])}
               />
             )}
           </li>
-        ))}
+        )))}
       </ul>
 
       {readOnly ? null : (
         <div className="refund-controls">
-          <h4>Synthetic controls</h4>
-          <p className="muted">{REFUND_SESSION_NOTE}</p>
-          <p className="muted">{REFUND_FENCE_NOTE}</p>
-          <p className="muted">{REFUND_READ_NOTE}</p>
+          <h4>{t("s1o9")}</h4>
+          <p className="muted">{deskText(t, REFUND_SESSION_NOTE)}</p>
+          <p className="muted">{deskText(t, REFUND_FENCE_NOTE)}</p>
+          <p className="muted">{deskText(t, REFUND_READ_NOTE)}</p>
           <div className="row-actions">
             <button type="button" className="ghost" onClick={() => live.actions.refresh()}>
-              Read again
-            </button>
+              {t("s1ax")}</button>
             <button type="button" className="ghost" onClick={() => live.actions.markReturnRequired()}>
-              Mark a return required
-            </button>
+              {t("srr")}</button>
             <GuardedButton
               id={`${baseId}-held`}
-              label="Deliver held response"
+              label={t("sg2")}
               control={
                 live.heldSupported
                   ? { enabled: true, reason: null }
-                  : { enabled: false, reason: "Only the held-response scenario holds answers." }
+                  : { enabled: false, reason: copy0.en["e.37"] }
               }
               onPress={() => live.actions.deliverHeld()}
             />
             <GuardedButton
               id={`${baseId}-late`}
-              label="Deliver late result"
+              label={t("sg4")}
               control={
                 live.lateSupported
                   ? { enabled: true, reason: null }
-                  : { enabled: false, reason: "Only a lost scenario holds a late result." }
+                  : { enabled: false, reason: copy0.en["e.38"] }
               }
               onPress={() => live.actions.deliverLate()}
             />
             <button type="button" className="ghost" onClick={() => live.actions.switchContext()}>
-              Switch session context
-            </button>
+              {t("s1nz")}</button>
             <button type="button" className="ghost" onClick={() => live.actions.newSession()}>
-              New synthetic session
-            </button>
+              {t("sto")}</button>
           </div>
           {live.environment === "stub" ? (
             <label className="refund-scenario">
-              Synthetic scenario
-              <select
+              {t("s1p5")}<select
                 value={live.scenario}
                 onChange={(event) => live.actions.setScenario(event.target.value as RefundScenario)}
               >
-                {REFUND_SCENARIOS.map((name) => (
+                {deskText(t, REFUND_SCENARIOS.map((name) => (
                   <option key={name} value={name}>
-                    {name}
+                    {deskText(t, name)}
                   </option>
-                ))}
+                )))}
               </select>
-              <span className="muted">{REFUND_SCENARIO_NOTES[live.scenario]}</span>
+              <span className="muted">{deskText(t, REFUND_SCENARIO_NOTES[live.scenario])}</span>
             </label>
           ) : null}
         </div>
       )}
 
-      <h4>Session record</h4>
-      <p className="muted">{model.session.contextLine}</p>
-      <p className="muted">{model.session.countersLine}</p>
-      <p className="muted">{model.freshnessWord} {model.versionLine}</p>
+      <h4>{t("s1js")}</h4>
+      <p className="muted">{deskText(t, model.session.contextLine)}</p>
+      <p className="muted">{deskText(t, model.session.countersLine)}</p>
+      <p className="muted">{deskText(t, model.freshnessWord)} {deskText(t, model.versionLine)}</p>
       <ul className="refund-session">
-        {model.session.intents.map((intent) => (
+        {deskText(t, model.session.intents.map((intent) => (
           <li key={intent.seq} data-outcome={intent.outcome}>
-            {intent.stepWord} · {intent.intentRef} · {intent.outcome}
-            {intent.code ? ` (${intent.code})` : ""} {intent.lateLine}
+            {deskText(t, intent.stepWord)} · {deskText(t, intent.intentRef)} · {deskText(t, intent.outcome)}
+            {intent.code ? (" " + t("sd2", { code: intent.code })) : ""} {deskText(t, intent.lateLine)}
           </li>
-        ))}
-        {model.session.quarantineLines.map((line) => (
+        )))}
+        {deskText(t, model.session.quarantineLines.map((line) => (
           <li key={line} data-outcome="QUARANTINED">
-            {line}
+            {deskText(t, line)}
           </li>
-        ))}
+        )))}
       </ul>
 
-      <h4>Recorded and not sent</h4>
+      <h4>{t("desk.buyer.recorded")}</h4>
       <ul className="refund-not-sent">
-        {model.notComposed.map((entry) => (
+        {deskText(t, model.notComposed.map((entry) => (
           <li key={entry.action} data-action={entry.action}>
-            <p>{entry.action}</p>
-            <p className="muted">{entry.reason}</p>
+            <p>{deskText(t, entry.action)}</p>
+            <p className="muted">{deskText(t, entry.reason)}</p>
           </li>
-        ))}
+        )))}
       </ul>
     </section>
   );

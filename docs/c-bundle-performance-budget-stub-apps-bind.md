@@ -60,7 +60,7 @@ The largest route chunk is `CreditOrigination`, 21649 gzip bytes.
 
 ## Limits
 
-`apps/web/bundle-budget.json` is the single source. The numbers below are the current limits. A test reads the file and fails if this doc does not name each one.
+`apps/web/bundle-budget.json` is the single source. The fixed initial/chunk/landing/render limits below remain current. The original total-growth row is historical; the current bilingual total baseline is recorded in the final section. A test reads the file and fails if this doc does not name each one.
 
 | Limit | Value | Meaning |
 | --- | --- | --- |
@@ -104,3 +104,10 @@ Raising a limit to make a failing run pass, with no reason that names a cause, i
 ## Not run
 
 Screen reader, a real device, throttled CPU or network, HTTP mode in a browser, a runner other than the local one and the CI runner, and any production or public deployment. Nothing here is user acceptance, qualification, conformance or a release.
+
+
+## Full-route bilingual catalogue baseline (2026-10-21)
+
+The historical pre-split and post-split measurements above remain unchanged. The locale coverage node adds the complete Korean/English screen catalogue and records a separate `baseline.localized` measurement, tied to source `288c8ef8b58dec52093cfbc0a9cbca6b65deeab3` plus its working tree. See [the locale bind](c-i18n-coverage-completion-stub-apps-bind.md) for scope, measurements, failed attempts and browser evidence.
+
+The current total-growth base is 774384 with maximum ratio 1.02; this replaces the historical base 527526 and ratio 1.2 for the current comparison only. The previous dated history entry and both original measurements are retained. Initial JS 290000, CSS 5000, individual chunk 30000, landing 400000, and the three render caps 5000 are unchanged. The total baseline accounts for new bilingual copy; none of the transport, claim, render, or chunk checks is removed. Raising a limit still requires the dated `history` entry, reason, evidence, and matching documentation described above. This is a local regression tripwire and conveys no acceptance or runtime authority.

@@ -1,10 +1,18 @@
+import { messages as deskCopy } from "../i18n/desk-catalogue";
+import { messages as copy0 } from "../i18n/messages/a11y--present";
+import { messages as copy1 } from "../i18n/messages/journey-desk";
+import { messages as copy2 } from "../i18n/messages/storage-allow-list";
+import { messages as copy3 } from "../i18n/messages/refund-return";
+import { messages as copy4 } from "../i18n/messages/workspace--registry";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ProtocolError, type Performance, type SettlementCaseView } from "@kix/protocol-adapter";
 import { capacityLine } from "../a11y/present";
 import { StatusMark } from "../a11y/marks";
+import { useT } from "../i18n/desk-context";
 import { useFormatWhen } from "../i18n/locale-context";
 import { protocol } from "../protocol";
+import { deskText } from "../i18n/desk-translate";
 import { useJourneyDesk } from "../journey-desk";
 import { useRefundReturnDesk } from "../refund-return";
 import { runSettlementCommand, settlementIdFor } from "../settlement-desk";
@@ -13,6 +21,7 @@ import { RefundReturnPanel } from "./RefundReturnPanel";
 import { SettlementPanel, type SettlementDeskCommand } from "./SettlementPanel";
 
 export function BoxOfficePage() {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4);
   const formatWhen = useFormatWhen();
   const [performances, setPerformances] = useState<Performance[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -34,7 +43,7 @@ export function BoxOfficePage() {
       })
       .catch((reason: unknown) => {
         if (!cancelled) {
-          setLoadError(reason instanceof Error ? reason.message : "Could not load performances.");
+          setLoadError(reason instanceof Error ? reason.message : deskCopy.en["desk.performance.loadError"]);
         }
       });
     return () => {
@@ -64,7 +73,7 @@ export function BoxOfficePage() {
       await refreshCase(eventId);
     } catch (reason) {
       setSettlement(null);
-      setSettlementError(message(reason, "Could not read the mock settlement case."));
+      setSettlementError(message(reason, deskCopy.en["desk.boxOffice.readError"]));
     } finally {
       setPending(false);
     }
@@ -81,7 +90,7 @@ export function BoxOfficePage() {
       await runSettlementCommand(protocol, command, eventId);
       await refreshCase(eventId);
     } catch (reason) {
-      setSettlementError(message(reason, "Mock settlement command was rejected."));
+      setSettlementError(message(reason, deskCopy.en["desk.boxOffice.commandError"]));
       try {
         await refreshCase(eventId);
       } catch {
@@ -95,48 +104,46 @@ export function BoxOfficePage() {
   return (
     <section>
       <header className="section-head">
-        <p className="eyebrow">Wave 4 catalog · Wave 2 rights issued at booking</p>
-        <h2>Tonight’s window</h2>
-        <p className="muted">
-          Booking and admission can open a simulated reservation phase on the adapter stub. Not live admission.
-        </p>
+        <p className="eyebrow">{t("desk.boxOffice.eyebrow")}</p>
+        <h2>{t("desk.boxOffice.title")}</h2>
+        <p className="muted">{t("desk.boxOffice.note")}</p>
       </header>
       <JourneyPanel variant="box-office" model={journey} />
       {loadError ? (
         <p className="alert" role="alert">
-          <StatusMark kind="blocked" /> {loadError}
+          <StatusMark kind="blocked" /> {deskText(t, loadError)}
         </p>
       ) : null}
       {performances === null ? (
         <p className="muted" role="status">
-          <StatusMark kind="loading" /> Loading performances.
+          <StatusMark kind="loading" /> {t("desk.performance.loading")}
         </p>
       ) : null}
-      {performances?.length === 0 ? <p className="empty">No performances on this adapter.</p> : null}
+      {performances?.length === 0 ? <p className="empty">{t("desk.performance.empty")}</p> : null}
       <ul className="program">
-        {performances?.map((item) => (
+        {deskText(t, performances?.map((item) => (
           <li key={item.eventId}>
             <article className="row">
               <div>
                 <p className="when">
                   <time dateTime={item.startsAt}>{formatWhen(item.startsAt)}</time>
                 </p>
-                <h3>{item.title}</h3>
+                <h3>{deskText(t, item.title)}</h3>
                 <p className="muted">
-                  {item.venue} · {capacityLine(item.remainingCapacity)}
+                  {deskText(t, item.venue)} · {deskText(t, capacityLine(item.remainingCapacity))}
                 </p>
               </div>
               <div className="row-actions">
                 <button type="button" className="ghost" onClick={() => void openSettlement(item.eventId)}>
-                  Mock settlement
+                  {t("desk.boxOffice.settlement")}
                 </button>
                 <Link className="button" to={`/booking/${item.eventId}`}>
-                  Book
+                  {t("desk.boxOffice.book")}
                 </Link>
               </div>
             </article>
           </li>
-        ))}
+        )))}
       </ul>
       {selectedEventId ? (
         <SettlementPanel

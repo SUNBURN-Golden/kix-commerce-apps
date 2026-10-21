@@ -1,3 +1,18 @@
+import { messages as deskCopy } from "../i18n/desk-catalogue";
+import { messages as copy0 } from "../i18n/messages/pages--DiscoveryPanels";
+import { messages as copy1 } from "../i18n/messages/discovery-live";
+import { messages as copy2 } from "../i18n/messages/a11y--present";
+import { messages as copy3 } from "../i18n/messages/discovery--fixture";
+import { messages as copy4 } from "../i18n/messages/discovery--model";
+import { messages as copy5 } from "../i18n/messages/discovery-workspace";
+import { messages as copy6 } from "../i18n/messages/buyer-workspace";
+import { messages as copy7 } from "../i18n/messages/gift-desk";
+import { messages as copy8 } from "../i18n/messages/storage-allow-list";
+import { messages as copy9 } from "../i18n/messages/journey-desk";
+import { messages as copy10 } from "../i18n/messages/resale-desk";
+import { messages as copy11 } from "../i18n/messages/reservation-desk";
+import { messages as copy12 } from "../i18n/messages/workspace--registry";
+import { deskText } from "../i18n/desk-translate";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -43,57 +58,57 @@ import {
 } from "../discovery/model";
 import { AmountNotice, StatusMark } from "../a11y/marks";
 import type { DiscoveryModel, PurchaseDecision } from "../discovery-workspace";
+import { useT } from "../i18n/desk-context";
 import { useFormatWhen } from "../i18n/locale-context";
 
 export function DiscoveryBanner({ model }: { model: DiscoveryModel }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   return (
     <header className="section-head discovery-section" data-adapter-environment={model.environment}>
-      <p className="eyebrow">Discovery fixture</p>
-      <h2>Discover</h2>
+      <p className="eyebrow">{t("sgs")}</p>
+      <h2>{t("route.discovery")}</h2>
       <p className="discovery-banner" data-provenance="synthetic" data-source="synthetic-fixture">
-        SYNTHETIC fixture. Rows come from a synthetic-fixture. They are not a catalogue receipt.
-      </p>
+        {t("s1ok")}</p>
       <AmountNotice />
-      <p>Tiers and counts are synthetic labels. A tier is not an amount.</p>
-      <p>{model.ruling}</p>
-      <p>{model.stubSentence}</p>
-      <p>{model.reloadNote}</p>
-      <p>{model.sampleNote}</p>
+      <p>{t("s247")}</p>
+      <p>{deskText(t, model.ruling)}</p>
+      <p>{deskText(t, model.stubSentence)}</p>
+      <p>{deskText(t, model.reloadNote)}</p>
+      <p>{deskText(t, model.sampleNote)}</p>
     </header>
   );
 }
 
 export function CatalogNotice({ model, onReadAgain }: { model: DiscoveryModel; onReadAgain: () => void }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   if (model.catalog.kind === "loading") {
     return (
       <p className="muted" role="status">
-        <StatusMark kind="loading" /> Loading performances.
-      </p>
+        <StatusMark kind="loading" /> {t("desk.performance.loading")}</p>
     );
   }
   if (model.catalog.kind === "error") {
     return (
       <div>
         <p className="alert" role="alert">
-          <StatusMark kind="blocked" /> {model.catalog.message}
+          <StatusMark kind="blocked" /> {deskText(t, model.catalog.message)}
         </p>
         <button type="button" className="discovery-action" onClick={() => onReadAgain()}>
-          Read again
-        </button>
+          {t("s1ax")}</button>
       </div>
     );
   }
   if (model.catalog.kind === "not-bound") {
     return (
       <p className="alert" role="alert" data-state="not-bound" data-source="none">
-        <StatusMark kind="blocked" /> {model.catalog.reason}
+        <StatusMark kind="blocked" /> {deskText(t, model.catalog.reason)}
       </p>
     );
   }
   if (model.catalog.kind === "empty") {
-    return <p className="empty">No performances on this adapter.</p>;
+    return <p className="empty">{t("desk.performance.empty")}</p>;
   }
-  return <p>source {model.catalogSource}</p>;
+  return <p>{t("desk.buyer.source")}{" "}{deskText(t, model.catalogSource)}</p>;
 }
 
 export function DiscoveryForm({
@@ -105,17 +120,17 @@ export function DiscoveryForm({
   onQuery: (next: DiscoveryQuery) => void;
   invalidControlId?: string | null;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   const invalid = invalidControlId ?? null;
   return (
     <form
       id="discovery-filters"
       className="discovery-form"
-      aria-label="Discovery filters"
+      aria-label={t("sgr")}
       onSubmit={(event) => event.preventDefault()}
     >
       <label htmlFor="discovery-q">
-        Search
-        <input
+        {t("s1in")}<input
           id="discovery-q"
           type="search"
           value={query.text}
@@ -124,8 +139,8 @@ export function DiscoveryForm({
         />
       </label>
       <fieldset>
-        <legend>Kind</legend>
-        {DISCOVERY_KINDS.map((kind) => (
+        <legend>{t("sps")}</legend>
+        {deskText(t, DISCOVERY_KINDS.map((kind) => (
           <label key={kind}>
             <input
               type="checkbox"
@@ -134,13 +149,13 @@ export function DiscoveryForm({
               checked={query.kinds.includes(kind)}
               onChange={() => onQuery(withFilter(query, { kinds: toggleValue(query.kinds, kind, DISCOVERY_KINDS) }))}
             />
-            {kind}
+            {deskText(t, kind)}
           </label>
-        ))}
+        )))}
       </fieldset>
       <fieldset>
-        <legend>Status</legend>
-        {DISCOVERY_STATUSES.map((status) => (
+        <legend>{t("s1mj")}</legend>
+        {deskText(t, DISCOVERY_STATUSES.map((status) => (
           <label key={status}>
             <input
               type="checkbox"
@@ -151,13 +166,13 @@ export function DiscoveryForm({
                 onQuery(withFilter(query, { statuses: toggleValue(query.statuses, status, DISCOVERY_STATUSES) }))
               }
             />
-            {status}
+            {deskText(t, status)}
           </label>
-        ))}
+        )))}
       </fieldset>
       <fieldset>
-        <legend>Tier</legend>
-        {SYNTHETIC_TIERS.map((tier) => (
+        <legend>{t("s244")}</legend>
+        {deskText(t, SYNTHETIC_TIERS.map((tier) => (
           <label key={tier}>
             <input
               type="checkbox"
@@ -166,13 +181,12 @@ export function DiscoveryForm({
               checked={query.tiers.includes(tier)}
               onChange={() => onQuery(withFilter(query, { tiers: toggleValue(query.tiers, tier, SYNTHETIC_TIERS) }))}
             />
-            {tier}
+            {deskText(t, tier)}
           </label>
-        ))}
+        )))}
       </fieldset>
       <label htmlFor="discovery-section">
-        Section
-        <input
+        {t("s1iu")}<input
           id="discovery-section"
           value={query.section}
           aria-invalid={invalid === "discovery-section"}
@@ -181,8 +195,7 @@ export function DiscoveryForm({
         />
       </label>
       <label htmlFor="discovery-from">
-        From
-        <input
+        {t("sm5")}<input
           id="discovery-from"
           type="date"
           value={query.from}
@@ -192,8 +205,7 @@ export function DiscoveryForm({
         />
       </label>
       <label htmlFor="discovery-to">
-        To
-        <input
+        {t("s24a")}<input
           id="discovery-to"
           type="date"
           value={query.to}
@@ -209,11 +221,9 @@ export function DiscoveryForm({
           aria-describedby={invalid === "discovery-purchasable" ? "discovery-conflict" : undefined}
           onChange={(event) => onQuery(withFilter(query, { purchasableOnly: event.target.checked }))}
         />
-        Purchasable only
-      </label>
+        {t("s1ad")}</label>
       <label htmlFor="discovery-sort">
-        Sort
-        <select
+        {t("s1l4")}<select
           id="discovery-sort"
           value={query.sort}
           onChange={(event) => {
@@ -224,16 +234,15 @@ export function DiscoveryForm({
             onQuery(withFilter(query, { sort: value }));
           }}
         >
-          {DISCOVERY_SORTS.map((sort) => (
+          {deskText(t, DISCOVERY_SORTS.map((sort) => (
             <option key={sort} value={sort}>
-              {sort}
+              {deskText(t, sort)}
             </option>
-          ))}
+          )))}
         </select>
       </label>
       <label htmlFor="discovery-page-size">
-        Page size
-        <select
+        {t("s16z")}<select
           id="discovery-page-size"
           value={String(query.pageSize)}
           onChange={(event) => {
@@ -244,16 +253,15 @@ export function DiscoveryForm({
             onQuery(withFilter(query, { pageSize: value }));
           }}
         >
-          {PAGE_SIZES.map((size) => (
+          {deskText(t, PAGE_SIZES.map((size) => (
             <option key={size} value={size}>
-              {size}
+              {deskText(t, size)}
             </option>
-          ))}
+          )))}
         </select>
       </label>
       <button type="button" className="discovery-action" onClick={() => onQuery(clearFilters(query))}>
-        Clear filters
-      </button>
+        {t("scq")}</button>
     </form>
   );
 }
@@ -271,6 +279,7 @@ export function DiscoveryRowCard({
   active: boolean;
   onOpen: (rowId: string) => void;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   const formatWhen = useFormatWhen();
   return (
     <li
@@ -290,33 +299,32 @@ export function DiscoveryRowCard({
         </span>
       </p>
       <p className="when">
-        <time dateTime={row.startsAt}>{formatWhen(row.startsAt)}</time>
+        <time dateTime={row.startsAt}>{deskText(t, formatWhen(row.startsAt))}</time>
       </p>
       {active ? <StatusMark kind="selected" /> : null}
-      <h3>{row.title}</h3>
-      <p className="muted">{row.venueLabel}</p>
-      <p>{facts.kindLine}</p>
-      <p className="discovery-status">{facts.statusLine}</p>
-      {facts.inventoryLine ? <p>{facts.inventoryLine}</p> : null}
-      {facts.countLine ? <p>{facts.countLine}</p> : null}
-      {facts.tierLine ? <p>{facts.tierLine}</p> : null}
-      {facts.resaleLine ? <p>{facts.resaleLine}</p> : null}
+      <h3>{deskText(t, row.title)}</h3>
+      <p className="muted">{deskText(t, row.venueLabel)}</p>
+      <p>{deskText(t, facts.kindLine)}</p>
+      <p className="discovery-status">{deskText(t, facts.statusLine)}</p>
+      {facts.inventoryLine ? <p>{deskText(t, facts.inventoryLine)}</p> : null}
+      {facts.countLine ? <p>{deskText(t, facts.countLine)}</p> : null}
+      {facts.tierLine ? <p>{deskText(t, facts.tierLine)}</p> : null}
+      {facts.resaleLine ? <p>{deskText(t, facts.resaleLine)}</p> : null}
       {facts.stale ? (
         <p>
           <span className="discovery-badge" data-state="stale">
             STALE
           </span>{" "}
-          <time dateTime={row.priceAsOf}>{formatWhen(row.priceAsOf)}</time>
+          <time dateTime={row.priceAsOf}>{deskText(t, formatWhen(row.priceAsOf))}</time>
         </p>
       ) : null}
       {row.kind === "resale" && resaleReason ? (
         <p data-state="not-bound" data-source="none">
-          {resaleReason}
+          {deskText(t, resaleReason)}
         </p>
       ) : null}
       <button type="button" className="discovery-action" onClick={() => onOpen(row.rowId)}>
-        Open detail
-      </button>
+        {t("s152")}</button>
     </li>
   );
 }
@@ -332,6 +340,7 @@ export function ResultList({
   onFocus: (index: number) => void;
   onOpen: (rowId: string) => void;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   const rows = model.result.rows;
   const active = rows[focus];
   return (
@@ -339,7 +348,7 @@ export function ResultList({
       className="discovery-list"
       role="listbox"
       tabIndex={0}
-      aria-label="Discovery results"
+      aria-label={t("sgt")}
       aria-activedescendant={active ? `discovery-result-${active.rowId}` : undefined}
       onKeyDown={(event) => {
         if (!isListKey(event.key)) {
@@ -354,7 +363,7 @@ export function ResultList({
         }
       }}
     >
-      {rows.map((row, index) => (
+      {deskText(t, rows.map((row, index) => (
         <DiscoveryRowCard
           key={row.rowId}
           row={row}
@@ -363,26 +372,27 @@ export function ResultList({
           active={index === focus}
           onOpen={onOpen}
         />
-      ))}
+      )))}
     </ul>
   );
 }
 
 export function ScaleList({ onOpen, scaleTotal }: { onOpen: (rowId: string) => void; scaleTotal: number }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   const [scrollTop, setScrollTop] = useState(0);
   const [focus, setFocus] = useState(0);
   const windowed = scaleWindow({ scrollTop });
   const active = windowed.rows.find((row) => row.rowId === `scale-${focus}`);
   return (
     <section id="discovery-scale" className="discovery-section">
-      <h3>Scale</h3>
-      <p>synthetic scale {scaleTotal}</p>
-      <p>Search and filters apply to the materialized sample only.</p>
+      <h3>{t("s1i9")}</h3>
+      <p>{t("s1p2")}{" "}{deskText(t, scaleTotal)}</p>
+      <p>{t("s1io")}</p>
       <ul
         className="discovery-list discovery-scale"
         role="listbox"
         tabIndex={0}
-        aria-label="Scale index"
+        aria-label={t("s1ia")}
         aria-activedescendant={active ? `discovery-scale-${active.rowId}` : undefined}
         onKeyDown={(event) => {
           if (!isListKey(event.key)) {
@@ -397,7 +407,7 @@ export function ScaleList({ onOpen, scaleTotal }: { onOpen: (rowId: string) => v
           }
         }}
       >
-        {windowed.rows.map((row) => {
+        {deskText(t, windowed.rows.map((row) => {
           const facts = describeRow(row);
           return (
             <li
@@ -412,10 +422,10 @@ export function ScaleList({ onOpen, scaleTotal }: { onOpen: (rowId: string) => v
               <span className="discovery-badge" data-provenance="synthetic">
                 SYNTHETIC
               </span>{" "}
-              <span>{row.title}</span> <span>{facts.kindLine}</span> <span>{facts.statusLine}</span>
+              <span>{deskText(t, row.title)}</span> <span>{deskText(t, facts.kindLine)}</span> <span>{deskText(t, facts.statusLine)}</span>
             </li>
           );
-        })}
+        }))}
       </ul>
     </section>
   );
@@ -430,6 +440,7 @@ export function LiveReadSection({
   handlers: LiveListHandlers;
   onOpen: (rowId: string) => void;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   const formatWhen = useFormatWhen();
   const [focus, setFocus] = useState(0);
   const rows = model.rows;
@@ -437,36 +448,34 @@ export function LiveReadSection({
   const active = rows[safeFocus];
   return (
     <section id="discovery-live" className="discovery-section" data-live-state={model.state}>
-      <h3>{LIVE_READ_TITLE}</h3>
+      <h3>{deskText(t, LIVE_READ_TITLE)}</h3>
       <p className="discovery-banner" data-provenance="synthetic" data-source="synthetic-projection">
-        {LIVE_READ_SOURCE_LINE}
+        {deskText(t, LIVE_READ_SOURCE_LINE)}
       </p>
-      <p>{LIVE_READ_BOUNDARY}</p>
-      <p>{LIVE_READ_SCOPE_NOTE}</p>
-      <p className="muted">{LIVE_READ_PAGE_NOTE}</p>
-      <p className="muted">{model.metaLine}</p>
+      <p>{deskText(t, LIVE_READ_BOUNDARY)}</p>
+      <p>{deskText(t, LIVE_READ_SCOPE_NOTE)}</p>
+      <p className="muted">{deskText(t, LIVE_READ_PAGE_NOTE)}</p>
+      <p className="muted">{deskText(t, model.metaLine)}</p>
       <p role="status" data-live-status={model.state}>
-        {model.statusLine}
-        {model.detailLine ? ` ${model.detailLine}` : ""}
+        {deskText(t, model.statusLine)}
+        {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
       </p>
       <div className="discovery-controls">
         <label htmlFor="discovery-live-stream">
-          Synthetic stream
-          <select
+          {t("s1pa")}<select
             id="discovery-live-stream"
             value={model.stream}
             onChange={(event) => handlers.setStream(event.target.value as DiscoveryStreamKind)}
           >
-            {DISCOVERY_STREAMS.map((stream) => (
+            {deskText(t, DISCOVERY_STREAMS.map((stream) => (
               <option key={stream} value={stream}>
-                {stream}
+                {deskText(t, stream)}
               </option>
-            ))}
+            )))}
           </select>
         </label>
         <label htmlFor="discovery-live-text">
-          Text
-          <input
+          {t("s1pn")}<input
             id="discovery-live-text"
             type="search"
             maxLength={64}
@@ -475,8 +484,7 @@ export function LiveReadSection({
           />
         </label>
         <label htmlFor="discovery-live-kind">
-          Kind
-          <select
+          {t("sps")}<select
             id="discovery-live-kind"
             value={model.filter.kinds[0] ?? ""}
             onChange={(event) =>
@@ -486,20 +494,20 @@ export function LiveReadSection({
               })
             }
           >
-            <option value="">all</option>
-            {DISCOVERY_ROW_KINDS.map((kind) => (
+            <option value="">{t("s2p")}</option>
+            {deskText(t, DISCOVERY_ROW_KINDS.map((kind) => (
               <option key={kind} value={kind}>
-                {kind}
+                {deskText(t, kind)}
               </option>
-            ))}
+            )))}
           </select>
         </label>
         <button type="button" className="discovery-action" onClick={() => handlers.rebuildProjection()}>
-          {LIVE_READ_REBUILD_LABEL}
+          {deskText(t, LIVE_READ_REBUILD_LABEL)}
         </button>
         {model.actionLabel ? (
           <button type="button" className="discovery-action" onClick={() => handlers.runReturn()}>
-            {model.actionLabel}
+            {deskText(t, model.actionLabel)}
           </button>
         ) : null}
         <button
@@ -508,15 +516,14 @@ export function LiveReadSection({
           disabled={!model.canNext}
           onClick={() => handlers.nextPage()}
         >
-          Next page
-        </button>
+          {t("stq")}</button>
       </div>
       {rows.length > 0 ? (
         <ul
           className="discovery-list discovery-live-list"
           role="listbox"
           tabIndex={0}
-          aria-label="Synthetic projection rows"
+          aria-label={t("s1ot")}
           aria-activedescendant={active ? `discovery-live-row-${active.rowId}` : undefined}
           onKeyDown={(event) => {
             if (!isListKey(event.key)) {
@@ -531,7 +538,7 @@ export function LiveReadSection({
             }
           }}
         >
-          {rows.map((row, index) => (
+          {deskText(t, rows.map((row, index) => (
             <li
               key={row.rowId}
               id={`discovery-live-row-${row.rowId}`}
@@ -549,19 +556,18 @@ export function LiveReadSection({
                 </span>
               </p>
               {index === safeFocus ? <StatusMark kind="selected" /> : null}
-              <h3>{row.title}</h3>
+              <h3>{deskText(t, row.title)}</h3>
               <p>
-                {row.kind} · {row.statusLabel} · sequence {row.sequence}
+                {deskText(t, row.kind)} · {deskText(t, row.statusLabel)} {t("s1jf")}{" "}{deskText(t, row.sequence)}
               </p>
-              <p className="muted">{row.venueLabel}</p>
+              <p className="muted">{deskText(t, row.venueLabel)}</p>
               <p className="when">
                 <time dateTime={row.watermark}>{formatWhen(row.watermark)}</time>
               </p>
               <button type="button" className="discovery-action" onClick={() => onOpen(row.rowId)}>
-                Open detail
-              </button>
+                {t("s152")}</button>
             </li>
-          ))}
+          )))}
         </ul>
       ) : null}
     </section>
@@ -575,6 +581,7 @@ export function LiveReadDetail({
   model: LiveDetailModel;
   handlers: LiveDetailHandlers;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   const formatWhen = useFormatWhen();
   const row = model.row;
   return (
@@ -587,33 +594,32 @@ export function LiveReadDetail({
         <>
           <p>
             <span className="discovery-badge" data-provenance="synthetic">
-              SYNTHETIC PROJECTION
-            </span>
+              {t("s1or")}</span>
           </p>
-          <p className="muted">This id lives in the projection space, not the fixture space.</p>
-          <h3>{row.title}</h3>
+          <p className="muted">{t("s233")}</p>
+          <h3>{deskText(t, row.title)}</h3>
           <p>
-            {row.kind} · {row.statusLabel} · sequence {row.sequence}
+            {row.kind} · {deskText(t, row.statusLabel)} {t("s1jf")}{" "}{row.sequence}
           </p>
-          <p className="muted">{row.venueLabel}</p>
+          <p className="muted">{deskText(t, row.venueLabel)}</p>
           <p className="when">
-            <time dateTime={row.startsAt}>{formatWhen(row.startsAt)}</time>
+            <time dateTime={row.startsAt}>{deskText(t, formatWhen(row.startsAt))}</time>
           </p>
           <p className="when">
-            watermark <time dateTime={row.watermark}>{formatWhen(row.watermark)}</time>
+            {t("s26a")}{" "}<time dateTime={row.watermark}>{deskText(t, formatWhen(row.watermark))}</time>
           </p>
-          <p>{LIVE_READ_BOUNDARY}</p>
-          <p className="muted">No purchase path runs from a projection row.</p>
+          <p>{deskText(t, LIVE_READ_BOUNDARY)}</p>
+          <p className="muted">{t("sx7")}</p>
         </>
       ) : (
         <>
           <p role="status" data-live-status={model.state}>
-            {model.statusLine}
-            {model.detailLine ? ` ${model.detailLine}` : ""}
+            {deskText(t, model.statusLine)}
+            {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
           </p>
           {model.actionLabel ? (
             <button type="button" className="discovery-action" onClick={() => handlers.readAgain()}>
-              {model.actionLabel}
+              {deskText(t, model.actionLabel)}
             </button>
           ) : null}
         </>
@@ -623,34 +629,33 @@ export function LiveReadDetail({
 }
 
 export function PurchasePathView({ purchase }: { purchase: PurchaseDecision }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   if (purchase.kind === "booking") {
     return (
       <p data-purchase="booking">
         <Link className="button discovery-action" to={`/booking/${encodeURIComponent(purchase.eventId)}`}>
-          Open booking
-        </Link>
+          {t("desk.buyer.open")}</Link>
       </p>
     );
   }
   if (purchase.kind === "not-bound") {
     return (
       <p data-purchase="not-bound" data-state="not-bound" data-source="none">
-        {purchase.reason}
+        {deskText(t, purchase.reason)}
       </p>
     );
   }
   if (purchase.kind === "unavailable") {
-    return <p data-purchase="unavailable">{purchase.message}</p>;
+    return <p data-purchase="unavailable">{deskText(t, purchase.message)}</p>;
   }
   return (
     <p data-purchase="unsupported">
-      {purchase.message}
+      {deskText(t, purchase.message)}
       {purchase.inventoryRoute ? (
         <>
           {" "}
           <Link className="button discovery-action" to={purchase.inventoryRoute}>
-            Open synthetic seat and GA selection
-          </Link>
+            {t("s159")}</Link>
         </>
       ) : null}
     </p>
@@ -672,45 +677,43 @@ export function ResultSection({
   onQuery: (next: DiscoveryQuery) => void;
   onOpen: (rowId: string) => void;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   return (
     <section id="discovery-results" className="discovery-section" data-state={model.result.state}>
-      <h3>Results</h3>
+      <h3>{t("s1gl")}</h3>
       <p>
-        materialized sample {model.result.ofFixtureRows}. synthetic scale {model.scaleTotal}.
+        {t("ssa")}{" "}{deskText(t, model.result.ofFixtureRows)}{t("s1p3")}{" "}{deskText(t, model.scaleTotal)}.
       </p>
       {model.result.state === "filter-conflict" ? (
         <div>
           <p id="discovery-conflict" role="status">
-            <StatusMark kind="blocked" /> Filter conflict. The query was not run.
-          </p>
+            <StatusMark kind="blocked" /> {t("sl8")}</p>
           <ul className="discovery-list">
-            {model.result.conflicts.map((conflict) => (
+            {deskText(t, model.result.conflicts.map((conflict) => (
               <li key={conflict.code}>
-                <p>{conflict.message}</p>
+                <p>{deskText(t, conflict.message)}</p>
                 <button
                   type="button"
                   className="discovery-action"
                   onClick={() => onQuery(applyConflictClear(query, conflict.code))}
                 >
-                  Clear conflict
-                </button>
+                  {t("scn")}</button>
               </li>
-            ))}
+            )))}
           </ul>
         </div>
       ) : null}
       {model.result.state === "empty" ? (
         <div>
-          <p className="empty">No matching synthetic rows.</p>
+          <p className="empty">{t("sw4")}</p>
           <button type="button" className="discovery-action" onClick={() => onQuery(clearFilters(query))}>
-            Clear filters
-          </button>
+            {t("scq")}</button>
         </div>
       ) : null}
       {model.result.state === "ready" ? (
         <div>
           <p>
-            page {model.result.page} of {model.result.pageCount}. matching {model.result.totalMatching}.
+            {t("s16s")}{" "}{deskText(t, model.result.page)} {t("s13t")}{" "}{deskText(t, model.result.pageCount)}{t("ss8")}{" "}{deskText(t, model.result.totalMatching)}.
           </p>
           <button
             type="button"
@@ -718,16 +721,14 @@ export function ResultSection({
             disabled={query.page <= 1}
             onClick={() => onQuery({ ...query, page: query.page - 1 })}
           >
-            Previous page
-          </button>
+            {t("s193")}</button>
           <button
             type="button"
             className="discovery-action"
             disabled={model.result.pageCount === 0 || query.page >= model.result.pageCount}
             onClick={() => onQuery({ ...query, page: query.page + 1 })}
           >
-            Next page
-          </button>
+            {t("stq")}</button>
           <ResultList model={model} focus={focus} onFocus={onFocus} onOpen={onOpen} />
         </div>
       ) : null}

@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/journey-identity";
+import { sourceMessage } from "./i18n/source-message";
 /**
  * The synthetic journey context desk on top of the adapter's identity source.
  * Stub scope: the default port is the synthetic source. On integration-http
@@ -37,29 +39,29 @@ import {
 } from "@kix/protocol-adapter";
 import { protocol } from "./protocol";
 
-export const IDENTITY_TITLE = "Journey context (synthetic)";
+export const IDENTITY_TITLE = sourceCopy.en["spg"];
 
 export const IDENTITY_SOURCE_LINE =
-  "Context rows and observations come from a synthetic source on this page load. They are not a producer read, not a protocol receipt, and never a proof of payment, issuance, or admission. Every row is labelled synthetic.";
+  sourceCopy.en["seb"];
 
 export const IDENTITY_BOUNDARY =
-  "The context key is an app-internal binding: mode, actor, role, domain, source cut generation, pin tuple, and session incarnation. It is not a public identifier, and the actor label is not an authentication result.";
+  sourceCopy.en["s1r5"];
 
 export const IDENTITY_RULE_NOTE =
-  "An observation binds to the cut it was minted on. A receipt also binds to the actor, role, and session that recorded it. A foreign or stale row is never evidence for this journey, and a read never resolves an unknown write.";
+  sourceCopy.en["s4d"];
 
 export const IDENTITY_SESSION_NOTE =
-  "A stub reset or a scenario change keeps the journal: an earlier unknown write stays unknown and keeps fencing its subject. Intents live in this page load only and nothing is stored.";
+  sourceCopy.en["s8j"];
 
 export const IDENTITY_SCENARIO_NOTES: Readonly<Record<JourneyIdentityScenario, string>> = {
-  clean: "Two ambient observations minted on the bound cut.",
-  empty: "The source holds no items.",
-  stale: "The source serves a watermark older than the floor this page holds.",
-  "foreign-mix": "The read carries rows minted under another mode, domain, tuple, actor, and an earlier session.",
-  "older-cut": "The read carries rows minted under older and newer cuts.",
-  "claims-proof": "An item claims it proves a payment. The whole read is refused before a row shows.",
-  "attach-lost": "An attach is applied and its answer is lost. The write stays unknown.",
-  "held-response": "Answers are held until you deliver them.",
+  clean: sourceCopy.en["s24v"],
+  empty: sourceCopy.en["s1zm"],
+  stale: sourceCopy.en["s21a"],
+  "foreign-mix": sourceCopy.en["s1vw"],
+  "older-cut": sourceCopy.en["s1vx"],
+  "claims-proof": sourceCopy.en["s4c"],
+  "attach-lost": sourceCopy.en["s3o"],
+  "held-response": sourceCopy.en["s4p"],
 };
 
 export type IdentityScreenState =
@@ -124,15 +126,15 @@ export interface JourneyIdentityModel {
 export function identityCauseLine(cause: IdentityRefreshCause): string {
   switch (cause) {
     case "own-write":
-      return "Your own write landed after the last read.";
+      return sourceCopy.en["s279"];
     case "stale-rejection":
-      return "The source said the last read was behind.";
+      return sourceCopy.en["s20g"];
     case "context-switch":
-      return "The session context changed.";
+      return sourceCopy.en["s1xw"];
     case "source-reset":
-      return "The synthetic source was reset.";
+      return sourceCopy.en["s22b"];
     case "generation-moved":
-      return "The source moved to a new cut.";
+      return sourceCopy.en["s201"];
     default: {
       const exhaustive: never = cause;
       return exhaustive;
@@ -144,20 +146,20 @@ export function identityCauseLine(cause: IdentityRefreshCause): string {
 export function identityFenceLine(fence: IdentityFence): string {
   switch (fence.reason) {
     case "in-flight":
-      return `Another write on this subject is in flight (${fence.intentRef}). Wait for its answer.`;
+      return sourceMessage(sourceCopy.en["p.t237"], { v1: fence.intentRef });
     case "unknown-outcome": {
       const late = fence.lateRecorded ? " A late result was recorded, and it does not make the write known." : "";
       const earlier = fence.earlierContext ? " It was sent in an earlier session context." : "";
-      return `An earlier write on this subject has an unknown result (${fence.intentRef}).${late}${earlier} Writes on this subject stay blocked. A read does not resolve it.`;
+      return sourceMessage(sourceCopy.en["p.t238"], { v1: fence.intentRef, v2: late, v3: earlier });
     }
     case "no-snapshot":
-      return "Read the context desk first.";
+      return sourceCopy.en["s1ci"];
     case "snapshot-stale":
-      return `Read again before the next write. ${identityCauseLine(fence.cause)}`;
+      return sourceMessage(sourceCopy.en["p.t86"], { v1: identityCauseLine(fence.cause) });
     case "duplicate-intent":
-      return `Intent ${fence.intentRef} was already used. This page does not send the same intent twice.`;
+      return sourceMessage(sourceCopy.en["p.t87"], { v1: fence.intentRef });
     case "not-current":
-      return `Item ${fence.observationId} is ${fence.verdict} on this context. A stale or foreign row is never this journey's evidence.`;
+      return sourceMessage(sourceCopy.en["p.t239"], { v1: fence.observationId, v2: fence.verdict });
     case "not-bound":
       return JOURNEY_IDENTITY_NOT_BOUND_REASON;
     default: {
@@ -170,17 +172,17 @@ export function identityFenceLine(fence: IdentityFence): string {
 export function identityStepResultLine(result: IdentityStepResult): string {
   switch (result.kind) {
     case "CONFIRMED":
-      return "Attach recorded by the synthetic source. This is a synthetic evidence record, not a producer receipt.";
+      return sourceCopy.en["s8z"];
     case "REJECTED":
-      return `Attach rejected (${result.intent.code ?? "no code"}). ${result.intent.message ?? ""} The source applied nothing for this write.`.trim();
+      return sourceMessage(sourceCopy.en["p.t240"], { v1: result.intent.code ?? "no code", v2: result.intent.message ?? "" }).trim();
     case "UNKNOWN":
-      return `Attach result unknown (${result.intent.code ?? "no code"}). It may or may not have applied. Writes on this subject are blocked, and neither a read nor a late result resolves it.`;
+      return sourceMessage(sourceCopy.en["p.t241"], { v1: result.intent.code ?? "no code" });
     case "QUARANTINED":
-      return "The attach answer arrived after the session context changed. It was quarantined and applied nowhere. The write stays unknown.";
+      return sourceCopy.en["s1qd"];
     case "FENCED":
-      return `Attach not sent. ${identityFenceLine(result.fence)}`;
+      return sourceMessage(sourceCopy.en["p.t242"], { v1: identityFenceLine(result.fence) });
     case "NOT_SENT":
-      return `Attach not sent. ${result.detail}`;
+      return sourceMessage(sourceCopy.en["p.t242"], { v1: result.detail });
     default: {
       const exhaustive: never = result;
       return exhaustive;
@@ -222,33 +224,33 @@ function readStateToScreen(readState: IdentityReadState, refreshRequired: Identi
 function statusFor(state: IdentityScreenState, detail: string | null): { statusLine: string; detailLine: string; actionLabel: string | null } {
   switch (state) {
     case "loading":
-      return { statusLine: "Reading the synthetic context desk. Nothing is confirmed yet.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s1bd"], detailLine: "", actionLabel: null };
     case "unread":
       return {
-        statusLine: "The session context changed, so there is no read in this context.",
-        detailLine: "Read again to see the desk from this context. An earlier unknown write still blocks its subject.",
-        actionLabel: "Read again",
+        statusLine: sourceCopy.en["s1xx"],
+        detailLine: sourceCopy.en["s1az"],
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "ready":
-      return { statusLine: "Context desk read.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["sea"], detailLine: "", actionLabel: null };
     case "empty":
-      return { statusLine: "No observations in this synthetic session.", detailLine: "Nothing can be attached.", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["swg"], detailLine: sourceCopy.en["s112"], actionLabel: sourceCopy.en["s1ax"] };
     case "stale":
-      return { statusLine: "Stale context read.", detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["s1lk"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "generation-moved":
       return {
-        statusLine: "The source moved to a new cut. This session stays bound to the earlier cut.",
-        detailLine: `${detail ?? ""} Start a new synthetic session to bind the current cut.`,
-        actionLabel: "Reset synthetic source",
+        statusLine: sourceCopy.en["s202"],
+        detailLine: sourceMessage(sourceCopy.en["p.t243"], { v1: detail ?? "" }),
+        actionLabel: sourceCopy.en["s1gc"],
       };
     case "refused":
-      return { statusLine: "The read payload was refused whole before any row was shown.", detailLine: detail ?? "", actionLabel: "Reset synthetic source" };
+      return { statusLine: sourceCopy.en["s1w9"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1gc"] };
     case "not-bound":
       return { statusLine: JOURNEY_IDENTITY_NOT_BOUND_REASON, detailLine: "", actionLabel: null };
     case "tuple-changed":
-      return { statusLine: "The pin tuple changed. Nothing was read and nothing was applied.", detailLine: detail ?? "", actionLabel: "Reset synthetic source" };
+      return { statusLine: sourceCopy.en["s1v8"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1gc"] };
     case "unavailable":
-      return { statusLine: "The source did not answer. This is not an empty desk.", detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["s1z3"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     default: {
       const exhaustive: never = state;
       return exhaustive;
@@ -260,14 +262,14 @@ function issuedLine(verdict: ObservationVerdict): string {
   const stamp = verdict.item.stamp;
   const who =
     verdict.item.kind === "receipt"
-      ? `recorded by ${stamp.actorRef ?? "?"} as ${stamp.role ?? "?"} in session ${stamp.incarnation ?? "?"}`
+      ? sourceMessage(sourceCopy.en["p.t244"], { v1: stamp.actorRef ?? "?", v2: stamp.role ?? "?", v3: stamp.incarnation ?? "?" })
       : "ambient";
-  return `${stamp.environment} · ${stamp.domain} · cut ${stamp.cutGeneration} · ${who}`;
+  return sourceMessage(sourceCopy.en["p.t534"], { v1: stamp.environment, v2: stamp.domain, v3: stamp.cutGeneration, v4: who });
 }
 
 function tupleTag(tupleKey: string): string {
   const fields = tupleKey.split("|");
-  return `merge ${fields[5]?.slice(0, 12) ?? "unknown"}…`;
+  return sourceMessage(sourceCopy.en["p.t535"], { v1: fields[5]?.slice(0, 12) ?? "unknown" });
 }
 
 /** The unused-intent id the gate preview asks with. It is never sent. */
@@ -281,24 +283,24 @@ export function buildIdentityModel(input: { controller: JourneyIdentityControlle
   const projection = state === null ? null : projectIdentity(state);
   const freshnessWord =
     projection === null
-      ? "There is no usable read."
+      ? sourceCopy.en["s1wv"]
       : projection.freshness === "CURRENT"
-        ? "The last read is current."
+        ? sourceCopy.en["s1tn"]
         : projection.freshness === "STALE"
-          ? "The last read is behind."
-          : "There is no usable read.";
+          ? sourceCopy.en["s1ti"]
+          : sourceCopy.en["s1wv"];
 
   const contextRows: IdentityContextRow[] =
     state === null
       ? []
       : [
           { field: "mode", value: state.context.environment },
-          { field: "actor", value: `${state.context.actorRef} (a label, not authentication)` },
+          { field: "actor", value: sourceMessage(sourceCopy.en["p.t245"], { v1: state.context.actorRef }) },
           { field: "role", value: state.context.role },
           { field: "domain", value: state.context.domain },
-          { field: "source cut generation", value: String(state.context.cutGeneration) },
-          { field: "pin tuple", value: `${tupleTag(state.context.tupleKey)} (app-internal)` },
-          { field: "session incarnation", value: String(state.context.incarnation) },
+          { field: sourceCopy.en["s1l6"], value: String(state.context.cutGeneration) },
+          { field: sourceCopy.en["s189"], value: sourceMessage(sourceCopy.en["p.t536"], { v1: tupleTag(state.context.tupleKey) }) },
+          { field: sourceCopy.en["s1jo"], value: String(state.context.incarnation) },
         ];
 
   const items: IdentityItemModel[] = (state?.adjudications ?? []).map((verdict) => {
@@ -320,7 +322,7 @@ export function buildIdentityModel(input: { controller: JourneyIdentityControlle
             enabled: false,
             reason:
               verdict.verdict !== "current"
-                ? `Verdict ${verdict.verdict}. ${verdict.detail}`
+                ? sourceMessage(sourceCopy.en["p.t537"], { v1: verdict.verdict, v2: verdict.detail })
                 : fence === null
                   ? null
                   : identityFenceLine(fence),
@@ -334,14 +336,14 @@ export function buildIdentityModel(input: { controller: JourneyIdentityControlle
     outcome: intent.outcome,
     code: intent.code ?? "",
     scope: intent.scope,
-    lateLine: intent.late === null ? "" : `Late result ${intent.late.result}${intent.late.code ? ` (${intent.late.code})` : ""}. Evidence only.`,
+    lateLine: intent.late === null ? "" : sourceMessage(sourceCopy.en["p.t195"], { v1: intent.late.result, v2: intent.late.code ? ` (${intent.late.code})` : "" }),
   }));
   const quarantineLines = (state?.quarantined ?? []).map(
-    (row) => `Result ${row.arrived} for ${row.intentRef} was quarantined (${row.cause}). It changed nothing.`,
+    (row) => sourceMessage(sourceCopy.en["p.t122"], { v1: row.arrived, v2: row.intentRef, v3: row.cause }),
   );
   const isolatedLines = (state?.isolated ?? []).map(
     (row) =>
-      `Session ${row.incarnation} (${row.actorRef} as ${row.role}, cut ${row.cutGeneration}) was isolated (${row.cause}). ${row.unknownIntents} unknown write${row.unknownIntents === 1 ? "" : "s"} stay${row.unknownIntents === 1 ? "s" : ""} on record.`,
+      sourceMessage(sourceCopy.en["p.t246"], { v1: row.incarnation, v2: row.actorRef, v3: row.role, v4: row.cutGeneration, v5: row.cause, v6: row.unknownIntents, v7: row.unknownIntents === 1 ? "" : "s", v8: row.unknownIntents === 1 ? "s" : "" }),
   );
   const counters = state?.counters ?? { sent: 0, fenced: 0, notSent: 0, droppedReads: 0 };
 
@@ -362,7 +364,7 @@ export function buildIdentityModel(input: { controller: JourneyIdentityControlle
     intents,
     quarantineLines,
     isolatedLines,
-    countersLine: `Sent ${counters.sent}. Blocked before sending ${counters.fenced}. Not sent ${counters.notSent}. Reads dropped ${counters.droppedReads}.`,
+    countersLine: sourceMessage(sourceCopy.en["p.t206"], { v1: counters.sent, v2: counters.fenced, v3: counters.notSent, v4: counters.droppedReads }),
     notComposed: JOURNEY_IDENTITY_NOT_COMPOSED.map((entry) => ({ action: entry.action, reason: entry.reason })),
     lastLine,
     lastNeedsFocus,
@@ -475,7 +477,7 @@ export function useJourneyIdentityDesk(): {
       }
       actorRef.current = actorRef.current === JOURNEY_IDENTITY_DESK_ACTOR ? JOURNEY_IDENTITY_PEER_ACTOR : JOURNEY_IDENTITY_DESK_ACTOR;
       const next = current.controller.switchContext({ actorRef: actorRef.current });
-      note(`Session context switched to ${next.actorRef}, session ${next.incarnation}. A write in flight is now unknown and its result will be quarantined. Read again.`);
+      note(sourceMessage(sourceCopy.en["p.t247"], { v1: next.actorRef, v2: next.incarnation }));
     },
     switchRole() {
       const current = sessionRef.current;
@@ -485,16 +487,16 @@ export function useJourneyIdentityDesk(): {
       const index = JOURNEY_IDENTITY_ROLES.indexOf(roleRef.current);
       roleRef.current = JOURNEY_IDENTITY_ROLES[(index + 1) % JOURNEY_IDENTITY_ROLES.length] ?? "operator";
       const next = current.controller.switchContext({ role: roleRef.current });
-      note(`Session context switched to role ${next.role}, session ${next.incarnation}. A write in flight is now unknown and its result will be quarantined. Read again.`);
+      note(sourceMessage(sourceCopy.en["p.t248"], { v1: next.role, v2: next.incarnation }));
     },
     rotateCut() {
       const current = sessionRef.current;
       if (current === null || current.port.source === "none") {
-        note("No synthetic source to rotate.");
+        note(sourceCopy.en["sz0"]);
         return;
       }
       const next = current.port.rotateCut();
-      note(`The source moved to cut ${next}. This session stays bound to its earlier cut; read again to see the superseded state.`);
+      note(sourceMessage(sourceCopy.en["p.t249"], { v1: next }));
       void current.controller.refresh();
     },
     resetSource() {
@@ -504,7 +506,7 @@ export function useJourneyIdentityDesk(): {
       }
       const next = applyIdentityScenario(current, environment, scenario);
       // Earlier unknowns keep fencing their subject because the deterministic stub seed repeats subject refs.
-      note(`Started a new synthetic source and bound session ${next.incarnation} to cut ${next.cutGeneration}. Earlier unknown writes stay on record and keep fencing their subject.`);
+      note(sourceMessage(sourceCopy.en["p.t250"], { v1: next.incarnation, v2: next.cutGeneration }));
       setTick((value) => value + 1);
     },
     deliverHeld() {
@@ -513,7 +515,7 @@ export function useJourneyIdentityDesk(): {
         return;
       }
       const count = current.port.deliverHeld();
-      note(count === 0 ? "No held response to deliver." : `Delivered ${count} held response${count === 1 ? "" : "s"}.`);
+      note(count === 0 ? sourceCopy.en["svq"] : sourceMessage(sourceCopy.en["p.t130"], { v1: count, v2: count === 1 ? "" : "s" }));
     },
     deliverLate() {
       const current = sessionRef.current;
@@ -522,14 +524,14 @@ export function useJourneyIdentityDesk(): {
       }
       const due = current.port.deliverLate();
       if (due.length === 0) {
-        note("No late result is due.");
+        note(sourceCopy.en["svv"]);
         return;
       }
       const lines = due.map((delivery) => {
         const outcome = current.controller.acceptLate(delivery);
         return outcome.kind === "RECORDED"
-          ? `Late result ${delivery.result} recorded for ${delivery.intentRef}. The write stays unknown.`
-          : `Late result for ${delivery.intentRef} was quarantined (${outcome.cause}).`;
+          ? sourceMessage(sourceCopy.en["p.t214"], { v1: delivery.result, v2: delivery.intentRef })
+          : sourceMessage(sourceCopy.en["p.t215"], { v1: delivery.intentRef, v2: outcome.cause });
       });
       note(lines.join(" "));
     },
@@ -540,7 +542,7 @@ export function useJourneyIdentityDesk(): {
       }
       const bound = applyIdentityScenario(current, environment, next);
       setScenarioState(next);
-      note(`Started a new synthetic source with scenario ${next} and bound session ${bound.incarnation} to cut ${bound.cutGeneration}. Earlier unknown writes stay on record and keep fencing their subject. Intent numbers keep counting.`);
+      note(sourceMessage(sourceCopy.en["p.t251"], { v1: next, v2: bound.incarnation, v3: bound.cutGeneration }));
       void current.controller.refresh();
     },
   };

@@ -1,0 +1,26 @@
+export const messages = {
+  en: {
+    "sb7": "Candidate",
+    "sc4": "Checks",
+    "sed": "Controls",
+    "sfk": "Decisions",
+    "sgc": "Denominators",
+    "sn3": "Handoffs",
+    "s16r": "Packet",
+    "s1f9": "Release sections",
+    "s1js": "Session record",
+    "s1mj": "Status",
+  },
+  ko: {
+    "sb7": "후보",
+    "sc4": "검사",
+    "sed": "제어",
+    "sfk": "결정 목록",
+    "sgc": "분모",
+    "sn3": "인계 목록",
+    "s16r": "자료 묶음",
+    "s1f9": "릴리스 영역",
+    "s1js": "세션 기록",
+    "s1mj": "상태",
+  },
+} as const;

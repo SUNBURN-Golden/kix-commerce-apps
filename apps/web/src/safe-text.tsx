@@ -1,3 +1,4 @@
+import { useT } from "./i18n/locale-context";
 import type { JSX } from "react";
 
 // Intentionally matches control and bidirectional-override characters so they can be stripped.
@@ -19,14 +20,15 @@ export function visibleSafeText(value: unknown, maxDisplay = 120): { display: st
   return { display: shortened ? `${points.slice(0, Math.max(0, maxDisplay)).join("")}…` : visible, original, shortened };
 }
 
-export function SafeText({ value, maxDisplay = 120, className, copyLabel = "Copyable original" }: SafeTextProps): JSX.Element {
+export function SafeText({ value, maxDisplay = 120, className, copyLabel }: SafeTextProps): JSX.Element {
+  const t = useT();
   const safe = visibleSafeText(value, maxDisplay);
   return (
     <span className={className}>
       <span>{safe.display}</span>
       {safe.shortened || safe.display !== safe.original ? (
         <details className="safe-text-original">
-          <summary>{copyLabel}</summary>
+          <summary>{copyLabel ?? t("safe.copyOriginal")}</summary>
           <pre>{safe.original}</pre>
         </details>
       ) : null}

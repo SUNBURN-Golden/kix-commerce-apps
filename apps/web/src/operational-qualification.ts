@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/operational-qualification";
+import { sourceMessage } from "./i18n/source-message";
 /**
  * The platform operational qualification screen on top of the adapter's synthetic
  * qualification runner. Stub scope: the default port is the synthetic runner. On
@@ -38,28 +40,28 @@ import {
 import { PENDING_PRODUCERS } from "./handoff/packet";
 import { protocol } from "./protocol";
 
-export const QUALIFICATION_TITLE = "Platform operational qualification (synthetic)";
+export const QUALIFICATION_TITLE = sourceCopy.en["s18g"];
 
 export const QUALIFICATION_SOURCE_LINE =
-  "This page runs one synthetic qualification matrix over the stub surfaces on this page load. It is not a service qualification and not a real-user review.";
+  sourceCopy.en["s23d"];
 
 export const QUALIFICATION_BOUNDARY =
-  "A per-call confirmed is never an end-to-end journey close. UNKNOWN, NOT_BOUND, and STALE stay separate rows, and none is a success. The packet this run records is never promoted to a public deployment, a real-money approval, or a service qualification.";
+  sourceCopy.en["s56"];
 
 export const QUALIFICATION_RUN_NOTE =
-  "One run is sent at a time and each is sent once. This page does not mint an intent for a re-send, does not retry a lost answer, and does not resolve an unknown run.";
+  sourceCopy.en["s14f"];
 
 export const QUALIFICATION_ACTOR_NOTE =
-  "The actor string is a context label. It is not an authentication result, and a run under a changed actor reuses nothing from the earlier context.";
+  sourceCopy.en["s1px"];
 
 export const QUALIFICATION_PENDING_NOTE =
-  "The real qualification stays on pending node c-platform-operational-qualification after kix-protocol:ps-07-scale-qualification, kix-protocol:cr-10-credit-qualification, and commerce-integration-closeout land. This screen stands in for it at stub scope only.";
+  sourceCopy.en["s1wf"];
 
 export const SCENARIO_NOTES: Readonly<Record<QualificationScenario, string>> = {
-  clean: "Every leg is answered. The packet records the whole matrix.",
-  held: "The run's answer is held until you deliver it. Use it to switch the actor while a run is in flight.",
-  "read-lost": "The run's answer never arrives. The run stays in flight and later runs are fenced.",
-  "claims-pass": "The packet claims a promotion it can never claim. The controller leaves the run unknown.",
+  clean: sourceCopy.en["sj5"],
+  held: sourceCopy.en["s1xj"],
+  "read-lost": sourceCopy.en["s1xk"],
+  "claims-pass": sourceCopy.en["s1uv"],
 };
 
 export type QualificationScreenState =
@@ -158,41 +160,41 @@ export type LastAction =
   | { seq: number; kind: "note"; text: string };
 
 const CLASS_WORDS: Readonly<Record<string, string>> = {
-  success: "Normal",
-  decline: "Decline",
-  stale: "Stale",
-  unknown: "Unknown",
-  cancel: "Cancel",
-  refund: "Refund",
-  recovery: "Recovery",
-  "permission-revocation": "Permission revocation",
+  success: sourceCopy.en["sy0"],
+  decline: sourceCopy.en["sfm"],
+  stale: sourceCopy.en["s1li"],
+  unknown: sourceCopy.en["s258"],
+  cancel: sourceCopy.en["saw"],
+  refund: sourceCopy.en["s1ek"],
+  recovery: sourceCopy.en["s1eb"],
+  "permission-revocation": sourceCopy.en["s17y"],
 };
 
 const STATE_LINES: Readonly<Record<QualificationScreenState, string>> = {
-  none: "No qualification run has been sent in this session.",
-  "in-flight": "A qualification run is in flight. Its answer is applied here only if it correlates with the run that was sent.",
-  ready: "The qualification packet is recorded below. It states STUB_RUN_RECORDED and claims nothing else.",
-  rejected: "The last run was explicitly rejected. That is a refusal, not a failure of this page.",
-  unknown: "The last run's result is unknown. It may have recorded a packet. Runs stay fenced; nothing retries it.",
-  refused: "The run was refused before a packet was trusted. The refusal is recorded, not worked around.",
-  "not-bound": "The qualification run is not bound on this environment.",
-  "tuple-changed": "The pin tuple changed under the run. Nothing was applied.",
+  none: sourceCopy.en["sxb"],
+  "in-flight": sourceCopy.en["s67"],
+  ready: sourceCopy.en["s1vr"],
+  rejected: sourceCopy.en["s1tt"],
+  unknown: sourceCopy.en["s1ts"],
+  refused: sourceCopy.en["s1xl"],
+  "not-bound": sourceCopy.en["s1vs"],
+  "tuple-changed": sourceCopy.en["s1vb"],
 };
 
 export function runResultLine(result: QualificationRunResult): string {
   switch (result.kind) {
     case "CONFIRMED":
-      return "Qualification run recorded a synthetic packet. This is not a service qualification.";
+      return sourceCopy.en["s1ak"];
     case "REJECTED":
-      return `Run refused (${result.intent.code ?? "no code"}). ${result.intent.message ?? ""}`.trim();
+      return sourceMessage(sourceCopy.en["p.t334"], { v1: result.intent.code ?? "no code", v2: result.intent.message ?? "" }).trim();
     case "UNKNOWN":
-      return `Run result unknown (${result.intent.code ?? "no code"}). It may or may not have recorded a packet. Runs are blocked and nothing retries it.`;
+      return sourceMessage(sourceCopy.en["p.t335"], { v1: result.intent.code ?? "no code" });
     case "QUARANTINED":
-      return "The run's answer arrived after the session context changed. It was quarantined and applied nowhere. The run stays unknown.";
+      return sourceCopy.en["s1xi"];
     case "FENCED":
-      return `Run not sent. ${qualificationFenceLine(result.fence)}`;
+      return sourceMessage(sourceCopy.en["p.t336"], { v1: qualificationFenceLine(result.fence) });
     case "NOT_SENT":
-      return `Run not sent. ${result.detail}`;
+      return sourceMessage(sourceCopy.en["p.t336"], { v1: result.detail });
     default: {
       const exhaustive: never = result;
       return exhaustive;
@@ -210,16 +212,16 @@ function packetModel(packet: QualificationPacket): PacketModel {
   return {
     packetId: packet.packetId,
     generatedAt: packet.generatedAt,
-    stateLine: `Qualification state ${packet.qualificationState}. Environment ${packet.environment}. Ruling ${packet.ruling}`,
-    summaryLine: `${s.journeys} journeys (${s.closed} closed, ${s.open} open, ${s.blocked} blocked). ${s.exercises} exercises, ${s.recorded} recorded, ${s.deviations} deviations. ${s.classesCovered}/${s.classesTotal} exercise classes covered.`,
+    stateLine: sourceMessage(sourceCopy.en["p.t337"], { v1: packet.qualificationState, v2: packet.environment, v3: packet.ruling }),
+    summaryLine: sourceMessage(sourceCopy.en["p.t338"], { v1: s.journeys, v2: s.closed, v3: s.open, v4: s.blocked, v5: s.exercises, v6: s.recorded, v7: s.deviations, v8: s.classesCovered, v9: s.classesTotal }),
     pinLines: [
-      `Contract OpenAPI ${packet.pins.contractOpenApiSha256}`,
-      `Gate OpenAPI ${packet.pins.gateOpenApiSha256}`,
-      `Protocol merge ${packet.pins.protocolMergeSha}`,
-      `SDK digest ${packet.pins.sdkDigest ?? "none"}. Manifest digest ${packet.pins.manifestDigest ?? "none"}. Vector digest ${packet.pins.vectorDigest ?? "none"}.`,
-      `Consumed producer change ${packet.pins.consumedProducerChange ? "yes" : "no"}.`,
+      sourceMessage(sourceCopy.en["p.t339"], { v1: packet.pins.contractOpenApiSha256 }),
+      sourceMessage(sourceCopy.en["p.t340"], { v1: packet.pins.gateOpenApiSha256 }),
+      sourceMessage(sourceCopy.en["p.t341"], { v1: packet.pins.protocolMergeSha }),
+      sourceMessage(sourceCopy.en["p.t342"], { v1: packet.pins.sdkDigest ?? "none", v2: packet.pins.manifestDigest ?? "none", v3: packet.pins.vectorDigest ?? "none" }),
+      sourceMessage(sourceCopy.en["p.t343"], { v1: packet.pins.consumedProducerChange ? "yes" : "no" }),
     ],
-    promotionLine: `Promoted ${packet.promotion.promoted}. Public deploy ${packet.promotion.publicDeploy}. Real-money approval ${packet.promotion.realMoneyApproval}. Service qualification ${packet.promotion.serviceQualification}. ${packet.promotion.note}`,
+    promotionLine: sourceMessage(sourceCopy.en["p.t344"], { v1: packet.promotion.promoted, v2: packet.promotion.publicDeploy, v3: packet.promotion.realMoneyApproval, v4: packet.promotion.serviceQualification, v5: packet.promotion.note }),
     nonClaimsLine: Object.entries(packet.nonClaims)
       .map(([field, value]) => `${field} ${String(value)}`)
       .join(". "),
@@ -229,7 +231,7 @@ function packetModel(packet: QualificationPacket): PacketModel {
       surface: item.surface,
       actor: item.actor,
       verdict: item.verdict,
-      verdictWord: item.verdict === "closed" ? "Closed on the whole sequence" : item.verdict === "open" ? "Open" : "Blocked",
+      verdictWord: item.verdict === "closed" ? sourceCopy.en["scy"] : item.verdict === "open" ? sourceCopy.en["s14s"] : "Blocked",
       reason: item.reason,
       callLines: item.calls.map((leg) => callLineOf(leg.label, leg.outcome, leg.code, leg.note)),
     })),
@@ -244,8 +246,8 @@ function packetModel(packet: QualificationPacket): PacketModel {
     })),
     denominators: packet.denominators.map((area) => ({
       area: area.area,
-      line: `${area.unresolved} unresolved of ${area.denominator} items on this area's own denominator.`,
-      itemLines: area.items.map((item) => `${item.id} — ${item.note} (blocked by ${item.blockedBy})`),
+      line: sourceMessage(sourceCopy.en["p.t345"], { v1: area.unresolved, v2: area.denominator }),
+      itemLines: area.items.map((item) => sourceMessage(sourceCopy.en["p.t346"], { v1: item.id, v2: item.note, v3: item.blockedBy })),
     })),
     evidence: packet.evidence.map((scope) => ({
       scope: scope.scope,
@@ -260,9 +262,9 @@ function packetModel(packet: QualificationPacket): PacketModel {
       note: item.note,
     })),
     opsLines: [
-      `Operational support: ${packet.opsBundle.opsSupport.diagnosis} at ${packet.opsBundle.opsSupport.route}. Kept separate: ${packet.opsBundle.opsSupport.keptSeparate.join(", ")}. ${packet.opsBundle.opsSupport.note}`,
-      `Incident handoff: ${packet.opsBundle.incidentHandoff.packetModule} at ${packet.opsBundle.incidentHandoff.route}; ${PENDING_PRODUCERS.length} pending producers listed in ${packet.opsBundle.incidentHandoff.pendingProducerList}. ${packet.opsBundle.incidentHandoff.note}`,
-      `UI review material: fixture catalogue v${packet.opsBundle.uiReviewMaterial.fixtureVersion}, ${packet.opsBundle.uiReviewMaterial.fixtureScreens} screens, ${packet.opsBundle.uiReviewMaterial.surfacesDocumented} documented surfaces. ${packet.opsBundle.uiReviewMaterial.note}`,
+      sourceMessage(sourceCopy.en["p.t347"], { v1: packet.opsBundle.opsSupport.diagnosis, v2: packet.opsBundle.opsSupport.route, v3: packet.opsBundle.opsSupport.keptSeparate.join(", "), v4: packet.opsBundle.opsSupport.note }),
+      sourceMessage(sourceCopy.en["p.t348"], { v1: packet.opsBundle.incidentHandoff.packetModule, v2: packet.opsBundle.incidentHandoff.route, v3: PENDING_PRODUCERS.length, v4: packet.opsBundle.incidentHandoff.pendingProducerList, v5: packet.opsBundle.incidentHandoff.note }),
+      sourceMessage(sourceCopy.en["p.t349"], { v1: packet.opsBundle.uiReviewMaterial.fixtureVersion, v2: packet.opsBundle.uiReviewMaterial.fixtureScreens, v3: packet.opsBundle.uiReviewMaterial.surfacesDocumented, v4: packet.opsBundle.uiReviewMaterial.note }),
     ],
     boundaryNote: packet.boundaryNote,
   };
@@ -293,13 +295,13 @@ export function buildQualificationModel(
     heldSupported: false,
     packet: state.packet === null ? null : packetModel(state.packet),
     intentLines: state.intents.map(
-      (item) => `#${item.seq} ${item.intentRef} — ${item.outcome}${item.code ? ` (${item.code})` : ""}${item.packetId ? ` packet ${item.packetId}` : ""}`,
+      (item) => `#${item.seq} ${item.intentRef} — ${item.outcome}${item.code ? ` (${item.code})` : ""}${item.packetId ? sourceMessage(sourceCopy.en["p.t556"], { v1: item.packetId }) : ""}`,
     ),
     quarantineLines: state.quarantined.map(
-      (item) => `${item.intentRef} — a ${item.arrived} answer arrived after the context changed and was quarantined.`,
+      (item) => sourceMessage(sourceCopy.en["p.t350"], { v1: item.intentRef, v2: item.arrived }),
     ),
-    countersLine: `Sent ${state.counters.sent}. Fenced ${state.counters.fenced}. Not sent ${state.counters.notSent}.`,
-    contextLine: `Environment ${state.context.environment}. Actor ${state.context.actorRef}. Session ${state.context.incarnation}.`,
+    countersLine: sourceMessage(sourceCopy.en["p.t351"], { v1: state.counters.sent, v2: state.counters.fenced, v3: state.counters.notSent }),
+    contextLine: sourceMessage(sourceCopy.en["p.t487"], { v1: state.context.environment, v2: state.context.actorRef, v3: state.context.incarnation }),
     lastLine: last === null ? null : last.kind === "note" ? last.text : runResultLine(last.result),
     lastNeedsFocus: attentionFor(last),
     lastSeq: last?.seq ?? null,
@@ -379,11 +381,11 @@ export function useOperationalQualification(): {
     deliverHeld() {
       const session = sessionRef.current;
       if (session === null || session.port.scenario !== "held") {
-        note("Held answers exist only in the held scenario. Nothing was delivered.");
+        note(sourceCopy.en["sn7"]);
         return;
       }
       const released = session.port.deliverHeld();
-      note(`Delivered ${released} held answer(s).`);
+      note(sourceMessage(sourceCopy.en["p.t77"], { v1: released }));
     },
     switchActor() {
       const session = sessionRef.current;
@@ -393,20 +395,20 @@ export function useOperationalQualification(): {
       const current = session.controller.state().context.actorRef;
       const next = current === QUALIFICATION_DESK_ACTOR ? QUALIFICATION_GUEST_ACTOR : QUALIFICATION_DESK_ACTOR;
       const context = session.controller.switchContext({ actorRef: next });
-      note(`Session context switched to actor ${context.actorRef} (incarnation ${context.incarnation}). An in-flight run is now unknown.`);
+      note(sourceMessage(sourceCopy.en["p.t352"], { v1: context.actorRef, v2: context.incarnation }));
     },
     setScenario(next) {
       sessionRef.current = createSession(environment, next);
       intentCounter.current = 0;
       setScenarioState(next);
       setEpoch((value) => value + 1);
-      note(`New synthetic session under scenario ${next}. ${SCENARIO_NOTES[next]}`);
+      note(sourceMessage(sourceCopy.en["p.t79"], { v1: next, v2: SCENARIO_NOTES[next] }));
     },
     newSession() {
       sessionRef.current = createSession(environment, sessionRef.current?.port.scenario ?? "clean");
       intentCounter.current = 0;
       setEpoch((value) => value + 1);
-      note("New synthetic session. The earlier intents and fences are gone with the last page state; nothing was recovered at a producer.");
+      note(sourceCopy.en["stp"]);
     },
   };
 

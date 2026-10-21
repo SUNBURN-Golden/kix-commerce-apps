@@ -1,3 +1,7 @@
+import { messages as copy0 } from "../i18n/messages/pages--Inventory";
+import { messages as copy1 } from "../i18n/messages/inventory-venue";
+import { messages as copy2 } from "../i18n/messages/a11y--present";
+import { useT } from "../i18n/desk-context";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useRestoreFocus } from "../a11y/focus";
@@ -35,6 +39,7 @@ function quantityBlocked(model: SelectionModel | null): boolean {
 }
 
 export function InventoryPage() {
+  const t = useT(copy0, copy1, copy2);
   const [params, setParams] = useSearchParams();
   const sectionId = params.get("section");
   const unitId = sectionId === null ? null : params.get("unit");
@@ -74,11 +79,11 @@ export function InventoryPage() {
 
   return (
     <div className="discovery inventory" data-adapter-environment={live.environment}>
-      <nav className="discovery-nav" aria-label="Inventory sections">
-        <a href="#inventory-controls">Controls</a>
-        <a href="#inventory-summary">Summary</a>
-        {sectionId !== null ? <a href="#inventory-page">Page</a> : null}
-        {unitId !== null ? <a href="#inventory-selection">Selection</a> : null}
+      <nav className="discovery-nav" aria-label={t("soo")}>
+        <a href="#inventory-controls">{t("sed")}</a>
+        <a href="#inventory-summary">{t("s1ne")}</a>
+        {sectionId !== null ? <a href="#inventory-page">{t("s16t")}</a> : null}
+        {unitId !== null ? <a href="#inventory-selection">{t("s1iw")}</a> : null}
       </nav>
       <div className="discovery-body">
         <InventoryBanner

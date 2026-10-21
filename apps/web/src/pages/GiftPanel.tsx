@@ -1,57 +1,60 @@
+import { messages as copy0 } from "../i18n/messages/pages--GiftPanel";
+import { messages as copy1 } from "../i18n/messages/gift-desk";
+import { messages as copy2 } from "../i18n/messages/storage-allow-list";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { GIFT_DESK_NOT_BOUND, GIFT_NOT_COMPOSED, JOURNEY_RULING } from "@kix/protocol-adapter";
 import { StatusMark } from "../a11y/marks";
 import type { GiftPanelModel, GiftRowStatus } from "../gift-desk";
 
 const STATUS_TEXT: Record<GiftRowStatus, string> = {
-  "not-started": "Not started",
-  ready: "Ready",
-  "in-flight": "In flight",
-  confirmed: "Confirmed",
-  rejected: "Rejected by the gate",
-  unconfirmed: "Unconfirmed",
-  "not-sent": "Not sent",
+  "not-started": copy0.en["s12p"],
+  ready: copy0.en["e.19"],
+  "in-flight": copy0.en["e.20"],
+  confirmed: copy0.en["e.21"],
+  rejected: copy0.en["e.22"],
+  unconfirmed: copy0.en["e.23"],
+  "not-sent": copy0.en["e.24"],
   blocked: "Blocked",
-  unavailable: "Unavailable",
+  unavailable: copy0.en["s24z"],
 };
 
 export function GiftPanel({ model }: { model: GiftPanelModel }) {
+  const t = useT(copy0, copy1, copy2);
   const unavailable = model.path.kind === "unavailable";
   return (
-    <aside className="panel gift-panel" aria-label="Gift transfer" data-gift-path={model.path.kind}>
-      <p className="eyebrow">{eyebrow(model)}</p>
-      <h3>Gift transfer</h3>
-      <p>{JOURNEY_RULING}</p>
-      {model.source === "stub-shape" ? <p>Stub-shape receipts are not from the gate.</p> : null}
-      <p>Gift offer is not a credit draw.</p>
-      <p>No funds.</p>
-      <p>The right must already be held. The booking journey does not produce a giftable right.</p>
-      <p className="muted">The donor and recipient are caller-supplied strings. They are not an authentication result.</p>
-      <p className="muted">expiresAt and expectedVersion are caller-supplied. This desk does not default them.</p>
-      <p className="muted">A reload clears this page-load transfer and uses a new attempt id.</p>
-      <p className="muted">The same gift id after a reload is a new attempt. It is not a confirmation of the earlier request.</p>
+    <aside className="panel gift-panel" aria-label={t("smm")} data-gift-path={model.path.kind}>
+      <p className="eyebrow">{deskText(t, eyebrow(model))}</p>
+      <h3>{t("smm")}</h3>
+      <p>{deskText(t, JOURNEY_RULING)}</p>
+      {model.source === "stub-shape" ? <p>{t("s1n0")}</p> : null}
+      <p>{t("smh")}</p>
+      <p>{t("svk")}</p>
+      <p>{t("s1xd")}</p>
+      <p className="muted">{t("s1ry")}</p>
+      <p className="muted">{t("skc")}</p>
+      <p className="muted">{t("s6w")}</p>
+      <p className="muted">{t("s1xn")}</p>
       {model.path.kind === "checking" ? (
-        <p className="muted">Environment integration-http. Loopback status is not loaded yet.</p>
+        <p className="muted">{t("sim")}</p>
       ) : null}
       {unavailable ? (
         <p className="alert" role="alert">
-          Gift path unavailable. The reviewed gate answers no CORS preflight; the desk stays on integration HTTP and
-          does not fall back to the stub. Node tests exercise the live gate. A browser path needs a kix-protocol gate
-          change.
-          {model.path.kind === "unavailable" && model.path.code ? ` Code ${model.path.code}.` : ""}
+          {t("smk")}{model.path.kind === "unavailable" && model.path.code ? t("sd4", { code: model.path.code }) : ""}
         </p>
       ) : null}
-      <p>{model.lastConfirmed}</p>
-      <p>{model.unconfirmed}</p>
+      <p>{deskText(t, model.lastConfirmed)}</p>
+      <p>{deskText(t, model.unconfirmed)}</p>
       <ol className="journey-steps">
-        {model.rows.map((row) => (
+        {deskText(t, model.rows.map((row) => (
           <li key={row.step} className="journey-step" data-status={row.status}>
-            <p className="eyebrow">{row.label}</p>
-            <p>{row.step}</p>
+            <p className="eyebrow">{deskText(t, row.label)}</p>
+            <p>{deskText(t, row.step)}</p>
             <dl className="facts">
               <div>
-                <dt>Status</dt>
+                <dt>{t("s1mj")}</dt>
                 <dd>
-                  {STATUS_TEXT[row.status]}
+                  {deskText(t, STATUS_TEXT[row.status])}
                   {row.status === "blocked" ? (
                     <>
                       {" "}
@@ -67,68 +70,68 @@ export function GiftPanel({ model }: { model: GiftPanelModel }) {
                 </dd>
               </div>
               <div>
-                <dt>Operation</dt>
-                <dd>{row.operationId ?? "none"}</dd>
+                <dt>{t("s15j")}</dt>
+                <dd>{deskText(t, row.operationId) ?? t("common.empty")}</dd>
               </div>
               <div>
-                <dt>Actor</dt>
-                <dd>{row.actor ?? "none"}</dd>
+                <dt>{t("s12")}</dt>
+                <dd>{deskText(t, row.actor) ?? t("common.empty")}</dd>
               </div>
               <div>
-                <dt>Code</dt>
-                <dd>{row.code ?? "none"}</dd>
+                <dt>{t("error.fact.code")}</dt>
+                <dd>{deskText(t, row.code) ?? t("common.empty")}</dd>
               </div>
               {row.requestId ? (
                 <div>
-                  <dt>Request</dt>
-                  <dd>{row.requestId}</dd>
+                  <dt>{t("s1fq")}</dt>
+                  <dd>{deskText(t, row.requestId)}</dd>
                 </div>
               ) : null}
               {row.correlationId ? (
                 <div>
-                  <dt>Correlation</dt>
-                  <dd>{row.correlationId}</dd>
+                  <dt>{t("sek")}</dt>
+                  <dd>{deskText(t, row.correlationId)}</dd>
                 </div>
               ) : null}
             </dl>
-            {row.note ? <p>{row.note}</p> : null}
+            {row.note ? <p>{deskText(t, row.note)}</p> : null}
             {row.receipt ? (
               <dl className="facts">
                 {row.receipt.map((field) => (
                   <div key={field.key}>
-                    <dt>{field.key}</dt>
-                    <dd>{field.value}</dd>
+                    <dt>{deskText(t, field.key)}</dt>
+                    <dd>{deskText(t, field.value)}</dd>
                   </div>
                 ))}
               </dl>
             ) : null}
             <div className="row-actions">
               <button type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
-                Send {row.step}
+                {t("s1j5")}{" "}{deskText(t, row.step)}
               </button>
             </div>
           </li>
-        ))}
+        )))}
       </ol>
-      <p className="eyebrow">Not composed</p>
+      <p className="eyebrow">{t("s10i")}</p>
       <dl className="facts">
-        {GIFT_NOT_COMPOSED.map((entry) => (
+        {deskText(t, GIFT_NOT_COMPOSED.map((entry) => (
           <div key={entry.action}>
-            <dt>{entry.action}</dt>
-            <dd>Not composed. {entry.reason}</dd>
+            <dt>{deskText(t, entry.action)}</dt>
+            <dd>{t("s10j")}{" "}{deskText(t, entry.reason)}</dd>
           </div>
-        ))}
+        )))}
       </dl>
-      <p className="eyebrow">Desk methods not bound</p>
+      <p className="eyebrow">{t("sge")}</p>
       <dl className="facts">
-        {GIFT_DESK_NOT_BOUND.map((entry) => (
+        {deskText(t, GIFT_DESK_NOT_BOUND.map((entry) => (
           <div key={entry.method}>
-            <dt>{entry.method}</dt>
+            <dt>{deskText(t, entry.method)}</dt>
             <dd>
-              {entry.consideredAction ?? "none"} · not-bound. {entry.reason}
+              {deskText(t, entry.consideredAction) ?? t("common.empty")} {t("s10b")}{" "}{deskText(t, entry.reason)}
             </dd>
           </div>
-        ))}
+        )))}
       </dl>
     </aside>
   );
@@ -136,16 +139,16 @@ export function GiftPanel({ model }: { model: GiftPanelModel }) {
 
 function eyebrow(model: GiftPanelModel): string {
   if (model.path.kind === "available-stub-shape" || model.source === "stub-shape") {
-    return "P02 transfer · stub-shape receipts";
+    return copy0.en["e.25"];
   }
   if (model.path.kind === "unavailable") {
-    return "integration-http · unavailable";
+    return copy0.en["e.26"];
   }
   if (model.path.kind === "checking") {
-    return "integration-http · checking";
+    return copy0.en["e.27"];
   }
   if (model.path.kind === "available") {
-    return "integration-http · available";
+    return copy0.en["e.28"];
   }
-  return "P02 transfer";
+  return copy0.en["s16q"];
 }

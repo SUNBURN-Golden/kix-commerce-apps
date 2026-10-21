@@ -1,3 +1,4 @@
+import { DESK_EN } from "../src/i18n/desk-catalogue";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -153,7 +154,7 @@ describe("reservation panel copy", () => {
       "src/admission-desk.ts",
       "src/pages/AdmissionCredentialPanel.tsx",
     ];
-    const combined = files.map((file) => readFileSync(path.join(webRoot, file), "utf8")).join("\n");
+    const combined = [...files, "src/i18n/messages/pages--ReservationPanel.ts", "src/i18n/messages/reservation-desk.ts", "src/i18n/messages/admission-desk.ts"].map((file) => readFileSync(path.join(webRoot, file), "utf8")).concat(Object.entries(DESK_EN).filter(([key]) => /^desk\.(booking|admission|boxOffice|performance)\./.test(key)).map(([, text]) => text)).join("\n");
     for (const pattern of BANNED_COPY) {
       expect(combined).not.toMatch(pattern);
     }

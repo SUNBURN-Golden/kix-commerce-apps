@@ -1,0 +1,26 @@
+export const messages = {
+  en: {
+    "s94": "Audit record",
+    "sed": "Controls",
+    "s19i": "Proposals",
+    "s1fv": "Requests",
+    "s1hm": "Role workspace",
+    "s1jc": "Sensitive export",
+    "s1js": "Session record",
+    "s1mj": "Status",
+    "s1pj": "Tenant permissions sections",
+    "s26m": "Who may do what",
+  },
+  ko: {
+    "s94": "감사 기록",
+    "sed": "제어",
+    "s19i": "제안 목록",
+    "s1fv": "요청 목록",
+    "s1hm": "역할 작업공간",
+    "s1jc": "민감 내보내기",
+    "s1js": "세션 기록",
+    "s1mj": "상태",
+    "s1pj": "테넌트 권한 영역",
+    "s26m": "주체별 허용 동작",
+  },
+} as const;

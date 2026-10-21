@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/merchant-operations";
+import { sourceMessage } from "./i18n/source-message";
 /**
  * The merchant workroom screen on top of the adapter's synthetic merchant source.
  * Stub scope: the default port is the synthetic ledger. On integration-http the same
@@ -33,61 +35,61 @@ import {
 } from "@kix/protocol-adapter";
 import { protocol } from "./protocol";
 
-export const MERCHANT_PAGE_TITLE = "Merchant workroom (synthetic)";
+export const MERCHANT_PAGE_TITLE = sourceCopy.en["ssm"];
 
 export const MERCHANT_SOURCE_LINE =
-  "Events, listings, trades, money lines, cuts, and the export come from a synthetic merchant source on this page load. They are not a producer read and not a catalogue receipt.";
+  sourceCopy.en["six"];
 
 export const MERCHANT_BOUNDARY =
-  "A sales figure is an observation of the order side. It is never settlement, never available funds, and never something to lend against.";
+  sourceCopy.en["s7s"];
 
 export const MERCHANT_CUT_NOTE =
-  "Every figure belongs to a source cut. Figures from different cuts are never merged into one confirmed balance, and a read that spans cuts has no single export.";
+  sourceCopy.en["sj2"];
 
 export const MERCHANT_CLAIM_NOTE =
-  "Every line states settled, fundsAvailable, and lendable as false. A payload that says anything else, or stays silent, is refused before a row is shown.";
+  sourceCopy.en["sj6"];
 
 export const MERCHANT_AGGREGATE_NOTE =
-  "The totals are the source's own text. This page checks their cut and their line count and recomputes no figure.";
+  sourceCopy.en["s22m"];
 
 export const MERCHANT_EXPORT_NOTE =
-  "The export is the producer's own file. It is current only when it is one complete export of the cut the last read saw. Anything else is withheld with every reason, and this page does not repair it.";
+  sourceCopy.en["s1sa"];
 
-export const MERCHANT_SCOPE_NOTE = `The desk actor holds a synthetic grant for ${MERCHANT_OWN_REF} and none for ${MERCHANT_FOREIGN_REF}. A scope the grant does not cover is refused and leaves no row on screen.`;
+export const MERCHANT_SCOPE_NOTE = sourceMessage(sourceCopy.en["p.t7"], { v1: MERCHANT_OWN_REF, v2: MERCHANT_FOREIGN_REF });
 
 export const MERCHANT_ACTOR_NOTE =
-  "The actor string is a context label. It is not an authentication result, and the source does not trust it for access.";
+  sourceCopy.en["s1pw"];
 
 export const MERCHANT_READ_NOTE =
-  "A read is one request and an export is one request. Neither is sent again by this page. An answer that arrives after the scope changed is dropped.";
+  sourceCopy.en["s6f"];
 
 export const MERCHANT_SESSION_NOTE =
-  "Reads and exports live in this page load only. A reload or a new synthetic session clears them and resolves nothing at a producer.";
+  sourceCopy.en["s1c4"];
 
 export const MERCHANT_SYNTHETIC_CONTROL_NOTE =
-  "Revoke grant and advance source cut are synthetic controls a real producer does not offer. They stand in for a withdrawn grant and a source that moved on.";
+  sourceCopy.en["s1h7"];
 
-export const MERCHANT_HOLD_NOTE = `Holding a seat is not available here. ${MERCHANT_HOLD_NOT_BOUND.reason}`;
+export const MERCHANT_HOLD_NOTE = sourceMessage(sourceCopy.en["p.t8"], { v1: MERCHANT_HOLD_NOT_BOUND.reason });
 
-export const MERCHANT_NOT_COMPOSED_NOTE = `Catalogue actions recorded and never composed here: ${MERCHANT_NOT_COMPOSED.map((entry) => entry.action).join(", ")}.`;
+export const MERCHANT_NOT_COMPOSED_NOTE = sourceMessage(sourceCopy.en["p.t9"], { v1: MERCHANT_NOT_COMPOSED.map((entry) => entry.action).join(", ") });
 
 export const SCENARIO_NOTES: Readonly<Record<MerchantScenario, string>> = {
-  clean: "Every read and export is answered.",
-  empty: "The source has no rows for this merchant.",
-  stale: "The source serves a watermark older than the floor this page holds.",
-  "stale-aggregate": "The source figures were built at an older generation than the cut they name.",
-  "aggregate-mismatch": "One source figure counts lines the read does not list.",
-  "mixed-cut": "The lines span two source cuts, so no single export is current.",
-  "dangling-link": "One line names a trade the read does not list.",
-  exceptions: "Lines carry exception and unknown states as the source names them.",
-  "claims-settled": "The source sends a line that claims it is settled. The payload is refused.",
-  "scope-leak": "The source sends a row that belongs to another merchant. The payload is refused.",
-  denied: "The grant for this actor is withdrawn at the source.",
-  "read-lost": "The answer to a read never arrives.",
-  "export-partial": "The export is cut off before it lists every row.",
-  "export-stale": "The export was taken at an older generation than the cut the read saw.",
-  "export-lines-differ": "The export rows differ from the lines the read lists.",
-  "export-denied": "The source grants the read and no export.",
+  clean: sourceCopy.en["sjb"],
+  empty: sourceCopy.en["s1zk"],
+  stale: sourceCopy.en["s21a"],
+  "stale-aggregate": sourceCopy.en["s1z8"],
+  "aggregate-mismatch": sourceCopy.en["s14g"],
+  "mixed-cut": sourceCopy.en["s1tv"],
+  "dangling-link": sourceCopy.en["s14a"],
+  exceptions: sourceCopy.en["squ"],
+  "claims-settled": sourceCopy.en["s20r"],
+  "scope-leak": sourceCopy.en["s218"],
+  denied: sourceCopy.en["s1t4"],
+  "read-lost": sourceCopy.en["s1q3"],
+  "export-partial": sourceCopy.en["s1s6"],
+  "export-stale": sourceCopy.en["s1so"],
+  "export-lines-differ": sourceCopy.en["s1sk"],
+  "export-denied": sourceCopy.en["s1zc"],
 };
 
 export type MerchantScreenState =
@@ -221,37 +223,37 @@ export interface MerchantModel {
 }
 
 const KIND_WORDS: Readonly<Record<MerchantLineKind, string>> = {
-  "sales-observed": "Sales observed",
-  unpaid: "Unpaid",
-  held: "Held",
-  "refund-burden": "Refund burden",
+  "sales-observed": sourceCopy.en["s1i1"],
+  unpaid: sourceCopy.en["s25i"],
+  held: sourceCopy.en["sn4"],
+  "refund-burden": sourceCopy.en["s1eo"],
 };
 
 const LINE_STATE_WORDS: Readonly<Record<MerchantLineState, string>> = {
-  observed: "Observed",
-  pending: "Pending",
-  exception: "Exception",
-  unknown: "Unknown",
+  observed: sourceCopy.en["s13j"],
+  pending: sourceCopy.en["s17p"],
+  exception: sourceCopy.en["sjy"],
+  unknown: sourceCopy.en["s258"],
 };
 
 const TRADE_STATUS_WORDS: Readonly<Record<string, { word: string; line: string }>> = {
-  booked: { word: "Booked", line: "A booking is recorded on the order side. It says nothing about settlement." },
-  "payment-observed": { word: "Payment observed", line: "A payment observation is recorded. It is not a claim that funds are available." },
-  "right-moved": { word: "Right moved", line: "The right moved for this trade. It says nothing about settlement." },
-  "payment-unknown": { word: "Payment unknown", line: "No payment observation arrived. Whether funds moved is not known here." },
+  booked: { word: sourceCopy.en["sad"], line: sourceCopy.en["s6"] },
+  "payment-observed": { word: sourceCopy.en["s17j"], line: sourceCopy.en["s52"] },
+  "right-moved": { word: sourceCopy.en["s1ha"], line: sourceCopy.en["s1xc"] },
+  "payment-unknown": { word: sourceCopy.en["s17n"], line: sourceCopy.en["swv"] },
 };
 
 const VERDICT_REASON_WORDS: Readonly<Record<string, string>> = {
-  NO_SNAPSHOT: "there is no read to judge it against",
-  SNAPSHOT_MIXED: "the last read spans more than one cut, so no single export is current",
-  SCOPE: "the export names another scope",
-  UNKNOWN_CUT: "the export names a cut the read does not list",
-  MIXED_CUT: "the export rows are not all on the cut the export names",
-  STALE_CUT: "the export was taken before the cut the read saw",
-  AHEAD_CUT: "the export is newer than the cut the read saw, so the read is behind",
-  PARTIAL: "the producer says the export was cut off",
-  COUNT: "the export lists a different number of rows than the producer declared",
-  LINES_DIFFER: "the export rows differ from the lines the read lists",
+  NO_SNAPSHOT: sourceCopy.en["s1wk"],
+  SNAPSHOT_MIXED: sourceCopy.en["s1tq"],
+  SCOPE: sourceCopy.en["s1sf"],
+  UNKNOWN_CUT: sourceCopy.en["s1se"],
+  MIXED_CUT: sourceCopy.en["s1sh"],
+  STALE_CUT: sourceCopy.en["s1sq"],
+  AHEAD_CUT: sourceCopy.en["s1s8"],
+  PARTIAL: sourceCopy.en["s1vg"],
+  COUNT: sourceCopy.en["s1sc"],
+  LINES_DIFFER: sourceCopy.en["s1sl"],
 };
 
 function readStateToScreen(readState: MerchantReadState): MerchantScreenState {
@@ -291,40 +293,40 @@ function statusFor(state: MerchantScreenState, code: string | null, detail: stri
   const suffix = code ? ` (${code})` : "";
   switch (state) {
     case "loading":
-      return { statusLine: "Reading the synthetic merchant ledger. Nothing is shown yet.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s1bi"], detailLine: "", actionLabel: null };
     case "ready":
-      return { statusLine: "Merchant read.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["ssk"], detailLine: "", actionLabel: null };
     case "empty":
       return {
-        statusLine: "No rows for this merchant in this read.",
-        detailLine: detail ?? "An empty ledger is not a zero figure.",
-        actionLabel: "Read again",
+        statusLine: sourceCopy.en["sy5"],
+        detailLine: detail ?? sourceCopy.en["s3v"],
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "stale":
-      return { statusLine: "Stale merchant read.", detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["s1lq"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "denied":
-      return { statusLine: `The source refused this scope${suffix}.`, detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t10"], { v1: suffix }), detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "refused":
       return {
-        statusLine: `The source sent a payload this page does not trust${suffix}.`,
-        detailLine: `${detail ?? ""} No row from it is shown.`,
-        actionLabel: "Read again",
+        statusLine: sourceMessage(sourceCopy.en["p.t11"], { v1: suffix }),
+        detailLine: sourceMessage(sourceCopy.en["p.t12"], { v1: detail ?? "" }),
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "invalid":
-      return { statusLine: `The request was refused before it read${suffix}.`, detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t13"], { v1: suffix }), detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "not-bound":
       return { statusLine: MERCHANT_NOT_BOUND_REASON, detailLine: "", actionLabel: null };
     case "tuple-changed":
       return {
-        statusLine: "The pin tuple changed. Nothing was read and nothing was applied.",
+        statusLine: sourceCopy.en["s1v8"],
         detailLine: detail ?? "",
-        actionLabel: "Start a new synthetic session",
+        actionLabel: sourceCopy.en["s1m2"],
       };
     case "unavailable":
       return {
-        statusLine: "The source did not answer. This is not an empty ledger.",
+        statusLine: sourceCopy.en["s1z6"],
         detailLine: detail ?? "",
-        actionLabel: "Read again",
+        actionLabel: sourceCopy.en["s1ax"],
       };
     default: {
       const exhaustive: never = state;
@@ -338,7 +340,7 @@ function verdictModel(verdict: MerchantExportVerdict | null): { verdictWord: Mer
     return { verdictWord: "none", verdictLines: [] };
   }
   if (verdict.state === "current") {
-    return { verdictWord: "current", verdictLines: ["Current export for the last read."] };
+    return { verdictWord: "current", verdictLines: [sourceCopy.en["sfa"]] };
   }
   return {
     verdictWord: "withheld",
@@ -352,7 +354,7 @@ function exportModel(exported: MerchantExportState): MerchantExportModel {
     case "none":
       return {
         phase: "none",
-        statusLine: "No export is loaded. An export is requested only after a ready read.",
+        statusLine: sourceCopy.en["svf"],
         detailLine: "",
         verdictWord: "none",
         verdictLines: [],
@@ -367,15 +369,15 @@ function exportModel(exported: MerchantExportState): MerchantExportModel {
       const value = exported.value;
       return {
         phase: "loaded",
-        statusLine: verdict.verdictWord === "current" ? "Export loaded and current for the last read." : "Export loaded. It is not the current export.",
+        statusLine: verdict.verdictWord === "current" ? sourceCopy.en["skj"] : sourceCopy.en["skk"],
         detailLine: "",
         verdictWord: verdict.verdictWord,
         verdictLines: verdict.verdictLines,
         exportRef: value?.exportRef ?? null,
-        cutLine: value ? `Cut ${value.cutRef} at generation ${value.generation}. Watermark ${value.watermark}.` : null,
-        rowsLine: value ? `${value.rows.length} rows of ${value.declaredRowCount} declared.` : null,
-        completeLine: value ? (value.complete ? "The producer says the export is complete." : "The producer says the export was cut off.") : null,
-        digestLine: value ? `Digest ${value.digest ?? "none"}. Opaque producer text; this page does not verify it.` : null,
+        cutLine: value ? sourceMessage(sourceCopy.en["p.t306"], { v1: value.cutRef, v2: value.generation, v3: value.watermark }) : null,
+        rowsLine: value ? sourceMessage(sourceCopy.en["p.t147"], { v1: value.rows.length, v2: value.declaredRowCount }) : null,
+        completeLine: value ? (value.complete ? sourceCopy.en["s1vf"] : sourceCopy.en["s1vh"]) : null,
+        digestLine: value ? sourceMessage(sourceCopy.en["p.t148"], { v1: value.digest ?? "none" }) : null,
         rows:
           value?.rows.map((row) => ({
             obligationRef: row.obligationRef,
@@ -388,17 +390,17 @@ function exportModel(exported: MerchantExportState): MerchantExportModel {
       };
     }
     case "denied":
-      return emptyExport("denied", `The source refused the export (${exported.code ?? "no code"}).`, exported.detail ?? "");
+      return emptyExport("denied", sourceMessage(sourceCopy.en["p.t149"], { v1: exported.code ?? "no code" }), exported.detail ?? "");
     case "refused":
-      return emptyExport("refused", `The export payload was refused (${exported.code ?? "no code"}).`, exported.detail ?? "");
+      return emptyExport("refused", sourceMessage(sourceCopy.en["p.t150"], { v1: exported.code ?? "no code" }), exported.detail ?? "");
     case "invalid":
-      return emptyExport("invalid", `The export request was refused (${exported.code ?? "no code"}).`, exported.detail ?? "");
+      return emptyExport("invalid", sourceMessage(sourceCopy.en["p.t151"], { v1: exported.code ?? "no code" }), exported.detail ?? "");
     case "not-bound":
-      return emptyExport("not-bound", "The export stays not-bound.", exported.detail ?? MERCHANT_NOT_BOUND_REASON);
+      return emptyExport("not-bound", sourceCopy.en["s1sm"], exported.detail ?? MERCHANT_NOT_BOUND_REASON);
     case "tuple-changed":
-      return emptyExport("tuple-changed", "The pin tuple changed. No export was applied.", exported.detail ?? "");
+      return emptyExport("tuple-changed", sourceCopy.en["s1v6"], exported.detail ?? "");
     case "unavailable":
-      return emptyExport("unavailable", "The export answer did not arrive.", exported.detail ?? "");
+      return emptyExport("unavailable", sourceCopy.en["s1s2"], exported.detail ?? "");
     default: {
       const exhaustive: never = exported.phase;
       return exhaustive;
@@ -432,10 +434,10 @@ export function buildMerchantModel(input: { controller: MerchantOperationsContro
 
   const freshnessWord =
     state.freshness === "CURRENT"
-      ? "The last read is current."
+      ? sourceCopy.en["s1tn"]
       : state.freshness === "STALE"
-        ? "The last read is behind."
-        : "There is no usable read.";
+        ? sourceCopy.en["s1ti"]
+        : sourceCopy.en["s1wv"];
 
   const usedBy = new Map<string, number>();
   if (snapshot) {
@@ -448,15 +450,15 @@ export function buildMerchantModel(input: { controller: MerchantOperationsContro
     source: cut.source,
     generation: cut.generation,
     watermark: cut.watermark,
-    usedBy: `${usedBy.get(cut.cutRef) ?? 0} rows`,
+    usedBy: sourceMessage(sourceCopy.en["p.t469"], { v1: usedBy.get(cut.cutRef) ?? 0 }),
   }));
   const cutState = assessment?.cutState ?? "none";
   const cutLine =
     cutState === "single"
-      ? "Every row is on one source cut."
+      ? sourceCopy.en["sjl"]
       : cutState === "mixed"
-        ? "Rows are on more than one source cut. They are not merged, and no single export is current."
-        : "No row carries a source cut in this read.";
+        ? sourceCopy.en["s1ht"]
+        : sourceCopy.en["sy1"];
 
   const events: MerchantEventModel[] = (snapshot?.events ?? []).map((row) => ({
     eventRef: row.eventRef,
@@ -488,9 +490,9 @@ export function buildMerchantModel(input: { controller: MerchantOperationsContro
     kindWord: KIND_WORDS[row.kind],
     state: row.state,
     stateWord: LINE_STATE_WORDS[row.state],
-    reasonLine: row.reasonCode ? `Reason ${row.reasonCode} as the source names it.` : "No reason named.",
+    reasonLine: row.reasonCode ? sourceMessage(sourceCopy.en["p.t17"], { v1: row.reasonCode }) : sourceCopy.en["sxk"],
     amountLine: `${row.amount} ${row.unit}`,
-    claimLine: "settled false · fundsAvailable false · lendable false",
+    claimLine: sourceCopy.en["s1jx"],
     cutRef: row.cutRef,
   }));
 
@@ -509,20 +511,20 @@ export function buildMerchantModel(input: { controller: MerchantOperationsContro
     flagLines: flagByKey.get(`${row.kind}|${row.cutRef}`) ?? [],
   }));
   const unlinkedLines = (assessment?.unlinked ?? []).map(
-    (item) => `${item.lens} row ${item.ref} names ${item.missing} ${item.missingRef}, which the read does not list. It is not attached elsewhere.`,
+    (item) => sourceMessage(sourceCopy.en["p.t170"], { v1: item.lens, v2: item.ref, v3: item.missing, v4: item.missingRef }),
   );
 
   const exportControl: ControlModel =
     state.context.environment === "integration-http"
       ? { enabled: false, reason: MERCHANT_NOT_BOUND_REASON }
       : state.readState !== "ready"
-        ? { enabled: false, reason: "An export is judged against the last read. Read the ledger first." }
+        ? { enabled: false, reason: sourceCopy.en["s46"] }
         : { enabled: true, reason: null };
 
   const counters = state.counters;
   const session: MerchantSessionModel = {
-    contextLine: `Actor ${state.context.actorRef}, merchant scope ${state.context.scope.merchantRef}, session ${state.context.incarnation}, mode ${state.context.environment}.`,
-    countersLine: `Reads ${counters.reads}. Exports ${counters.exports}. Not sent ${counters.notSent}. Reads dropped ${counters.droppedReads}. Exports dropped ${counters.droppedExports}.`,
+    contextLine: sourceMessage(sourceCopy.en["p.t307"], { v1: state.context.actorRef, v2: state.context.scope.merchantRef, v3: state.context.incarnation, v4: state.context.environment }),
+    countersLine: sourceMessage(sourceCopy.en["p.t308"], { v1: counters.reads, v2: counters.exports, v3: counters.notSent, v4: counters.droppedReads, v5: counters.droppedExports }),
     notComposedLine: MERCHANT_NOT_COMPOSED_NOTE,
     holdLine: MERCHANT_HOLD_NOTE,
   };
@@ -533,8 +535,8 @@ export function buildMerchantModel(input: { controller: MerchantOperationsContro
     detailLine: status.detailLine,
     actionLabel: status.actionLabel,
     freshnessWord,
-    scopeLine: `Tenant ${state.context.scope.tenantId}. Merchant ${state.context.scope.merchantRef}.`,
-    watermarkLine: snapshot ? `Watermark ${snapshot.watermark}. Read ${snapshot.snapshotId} on this port.` : "No watermark without a ready read.",
+    scopeLine: sourceMessage(sourceCopy.en["p.t546"], { v1: state.context.scope.tenantId, v2: state.context.scope.merchantRef }),
+    watermarkLine: snapshot ? sourceMessage(sourceCopy.en["p.t41"], { v1: snapshot.watermark, v2: snapshot.snapshotId }) : sourceCopy.en["s134"],
     cutState,
     cutLine,
     cuts,
@@ -632,7 +634,7 @@ export function useMerchantOperations(): {
           return;
         }
         if (result.kind === "NOT_SENT") {
-          note(result.reason === "not-bound" ? MERCHANT_NOT_BOUND_REASON : "No export was sent. Read the ledger first.", true);
+          note(result.reason === "not-bound" ? MERCHANT_NOT_BOUND_REASON : sourceCopy.en["svg"], true);
         }
       });
     },
@@ -645,7 +647,7 @@ export function useMerchantOperations(): {
       const context = session.controller.switchScope(next);
       setMerchantRef(next);
       note(
-        `Switched the merchant scope to ${context.scope.merchantRef}, session ${context.incarnation}. Rows and the export of the earlier scope are cleared, and an answer in flight for it is dropped. Read again.`,
+        sourceMessage(sourceCopy.en["p.t309"], { v1: context.scope.merchantRef, v2: context.incarnation }),
       );
     },
     revokeGrant() {
@@ -656,8 +658,8 @@ export function useMerchantOperations(): {
       const done = session.port.revokeGrant();
       note(
         done
-          ? "The synthetic grant is withdrawn at the source. The next read is refused. A real producer offers no such control."
-          : "There is no synthetic source to withdraw a grant from.",
+          ? sourceCopy.en["s21r"]
+          : sourceCopy.en["s1wo"],
         done,
       );
     },
@@ -669,16 +671,16 @@ export function useMerchantOperations(): {
       const done = session.port.advanceCut();
       note(
         done
-          ? "The synthetic source moved on to its next cut generation. An export taken before it is now behind, and the next read sees the new generation."
-          : "There is no synthetic source to advance.",
+          ? sourceCopy.en["s223"]
+          : sourceCopy.en["s1wp"],
         done,
       );
     },
     setScenario(next) {
-      startSession(next, merchantRef, `Started a new synthetic session with scenario ${next}. Earlier reads and exports are gone, as after a reload.`);
+      startSession(next, merchantRef, sourceMessage(sourceCopy.en["p.t310"], { v1: next }));
     },
     newSession() {
-      startSession(scenario, merchantRef, "Started a new synthetic session. Earlier reads and exports are gone, as after a reload. Nothing was resolved at a producer.");
+      startSession(scenario, merchantRef, sourceCopy.en["s1mb"]);
     },
   };
 

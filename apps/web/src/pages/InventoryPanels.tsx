@@ -1,3 +1,12 @@
+import { messages as deskCopy } from "../i18n/desk-catalogue";
+import { messages as copy0 } from "../i18n/messages/pages--InventoryPanels";
+import { messages as copy1 } from "../i18n/messages/discovery--model";
+import { messages as copy2 } from "../i18n/messages/discovery--fixture";
+import { messages as copy3 } from "../i18n/messages/a11y--present";
+import { messages as copy4 } from "../i18n/messages/inventory-venue";
+import { messages as copy5 } from "../i18n/messages/workspace--registry";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { INVENTORY_SCENARIOS, type InventoryScenario } from "@kix/protocol-adapter";
@@ -34,6 +43,7 @@ export function InventoryBanner({
   servedGeneration: number;
   summary: SummaryModel;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5);
   return (
     <header
       className="section-head discovery-section"
@@ -41,18 +51,18 @@ export function InventoryBanner({
       data-scenario={scenario}
       data-served-generation={servedGeneration}
     >
-      <p className="eyebrow">Inventory selection</p>
-      <h2>{INVENTORY_TITLE}</h2>
+      <p className="eyebrow">{t("sop")}</p>
+      <h2>{deskText(t, INVENTORY_TITLE)}</h2>
       <p className="discovery-banner" data-provenance="synthetic" data-source="synthetic-inventory">
-        SYNTHETIC. {INVENTORY_SOURCE_LINE}
+        SYNTHETIC. {deskText(t, INVENTORY_SOURCE_LINE)}
       </p>
-      <p>{INVENTORY_BOUNDARY}</p>
+      <p>{deskText(t, INVENTORY_BOUNDARY)}</p>
       <AmountNotice />
-      <p>{WORKSPACE_RULING}</p>
-      <p data-hold-record="not-bound">{INVENTORY_HOLD_NOTE}</p>
-      <p>{INVENTORY_SCOPE_NOTE}</p>
+      <p>{deskText(t, WORKSPACE_RULING)}</p>
+      <p data-hold-record="not-bound">{deskText(t, INVENTORY_HOLD_NOTE)}</p>
+      <p>{deskText(t, INVENTORY_SCOPE_NOTE)}</p>
       <p className="muted" data-generation-line={summary.generationBehind ? "behind" : "current"}>
-        {summary.metaLine}
+        {deskText(t, summary.metaLine)}
       </p>
     </header>
   );
@@ -67,79 +77,77 @@ export function InventoryControls({
   summary: SummaryModel;
   actions: InventoryActions;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5);
   return (
-    <section id="inventory-controls" className="discovery-section" aria-label="Synthetic controls">
+    <section id="inventory-controls" className="discovery-section" aria-label={t("s1o9")}>
       <div className="discovery-controls">
         <label htmlFor="inventory-scenario">
-          Synthetic scenario
-          <select
+          {t("s1p5")}<select
             id="inventory-scenario"
             value={scenario}
             onChange={(event) => actions.setScenario(event.target.value as InventoryScenario)}
           >
-            {INVENTORY_SCENARIOS.map((item) => (
+            {deskText(t, INVENTORY_SCENARIOS.map((item) => (
               <option key={item} value={item}>
-                {item}
+                {deskText(t, item)}
               </option>
-            ))}
+            )))}
           </select>
         </label>
         <button type="button" className="discovery-action" onClick={() => actions.advanceGeneration()}>
-          {INVENTORY_ADVANCE_LABEL}
+          {deskText(t, INVENTORY_ADVANCE_LABEL)}
         </button>
         <button type="button" className="discovery-action" onClick={() => actions.readSummaryAgain()}>
-          Read summary again
-        </button>
+          {t("s1ca")}</button>
       </div>
       <p className="muted">
-        {INVENTORY_ADVANCE_LABEL} serves the next synthetic generation and reads nothing. Your next read is refused until you go back to the
-        summary.
-      </p>
+        {deskText(t, INVENTORY_ADVANCE_LABEL)} {t("s1jg")}</p>
       {summary.generationBehind ? (
         <p role="status" data-generation="behind">
-          <StatusMark kind="blocked" /> The inventory serves a newer generation than your last summary read.
-        </p>
+          <StatusMark kind="blocked" /> {t("s1tc")}</p>
       ) : null}
     </section>
   );
 }
 
 export function QueueCard({ queue }: { queue: QueueModel }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5);
   return (
     <div className="discovery-row" data-queue-state={queue.state} data-source="synthetic-inventory">
-      <h3>Queue admission</h3>
-      <p className="discovery-status">{queue.stateLine}</p>
-      {queue.positionLine ? <p>{queue.positionLine}</p> : null}
+      <h3>{t("s1as")}</h3>
+      <p className="discovery-status">{deskText(t, queue.stateLine)}</p>
+      {queue.positionLine ? <p>{deskText(t, queue.positionLine)}</p> : null}
       {queue.deadline ? (
         <p>
-          Admitted until <DeadlineLine expiresAt={queue.deadline.expiresAt} expired={queue.deadline.expired} />
+          {t("s1r")}{" "}<DeadlineLine expiresAt={queue.deadline.expiresAt} expired={queue.deadline.expired} />
         </p>
       ) : null}
-      <p>{queue.accessLine}</p>
-      <p>{queue.note}</p>
-      <p>{INVENTORY_QUEUE_BOUNDARY}</p>
-      <p className="muted">{INVENTORY_QUEUE_JOIN_NOTE}</p>
+      <p>{deskText(t, queue.accessLine)}</p>
+      <p>{deskText(t, queue.note)}</p>
+      <p>{deskText(t, INVENTORY_QUEUE_BOUNDARY)}</p>
+      <p className="muted">{deskText(t, INVENTORY_QUEUE_JOIN_NOTE)}</p>
     </div>
   );
 }
 
 export function SummarySection({ model, actions }: { model: SummaryModel; actions: InventoryActions }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5);
   return (
     <section id="inventory-summary" className="discovery-section" data-inventory-state={model.state}>
-      <h3>Summary</h3>
+      <h3>{t("s1ne")}</h3>
       <p role="status" data-inventory-status={model.state}>
-        {model.state === "loading" ? <StatusMark kind="loading" /> : null} {model.statusLine}
-        {model.detailLine ? ` ${model.detailLine}` : ""}
+        {model.state === "loading" ? <StatusMark kind="loading" /> : null} {deskText(t, model.statusLine)}
+        {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
       </p>
       {model.actionLabel ? (
         <button type="button" className="discovery-action" onClick={() => actions.runReturn("summary")}>
-          {model.actionLabel}
+          {deskText(t, model.actionLabel)}
         </button>
       ) : null}
       {model.queue ? <QueueCard queue={model.queue} /> : null}
       {model.sections.length > 0 ? (
-        <ul className="discovery-list" aria-label="Venue sections">
-          {model.sections.map((section) => (
+        <ul className="discovery-list" aria-label={t("s25x")}>
+          {deskText(t, model.sections.map((section) => (
             <li
               key={section.sectionId}
               className="discovery-row"
@@ -153,24 +161,23 @@ export function SummarySection({ model, actions }: { model: SummaryModel; action
                   SYNTHETIC
                 </span>{" "}
                 <span className="discovery-badge" data-mode-badge={section.mode}>
-                  {section.modeWord}
+                  {deskText(t, section.modeWord)}
                 </span>
               </p>
-              <h3>{section.label}</h3>
-              <p>{section.noteLine}</p>
-              {section.capacityLine ? <p>{section.capacityLine}</p> : null}
-              {section.bandLine ? <p>{section.bandLine}</p> : null}
+              <h3>{deskText(t, section.label)}</h3>
+              <p>{deskText(t, section.noteLine)}</p>
+              {section.capacityLine ? <p>{deskText(t, section.capacityLine)}</p> : null}
+              {section.bandLine ? <p>{deskText(t, section.bandLine)}</p> : null}
               {section.supported ? (
                 <Link className="button discovery-action" to={`/inventory?section=${encodeURIComponent(section.sectionId)}`}>
-                  Open section
-                </Link>
+                  {t("s156")}</Link>
               ) : (
                 <p data-state="unsupported" data-source="none">
-                  <span className="discovery-badge">UNSUPPORTED</span> {section.unsupportedLine}
+                  <span className="discovery-badge">UNSUPPORTED</span> {deskText(t, section.unsupportedLine)}
                 </p>
               )}
             </li>
-          ))}
+          )))}
         </ul>
       ) : null}
     </section>
@@ -186,6 +193,7 @@ function ObservedRow({
   active: boolean;
   onOpen: (unitId: string) => void;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5);
   return (
     <li
       id={`inventory-row-${row.unitId}`}
@@ -203,20 +211,19 @@ function ObservedRow({
           SYNTHETIC
         </span>{" "}
         <span className="discovery-badge" data-observed-badge={row.observedKind ?? "band"}>
-          {row.observedWord}
+          {deskText(t, row.observedWord)}
         </span>
       </p>
       {active ? <StatusMark kind="selected" /> : null}
-      <h3>{row.title}</h3>
-      <p>{row.observedLine}</p>
+      <h3>{deskText(t, row.title)}</h3>
+      <p>{deskText(t, row.observedLine)}</p>
       {row.hold ? (
         <p>
-          Hold <DeadlineLine expiresAt={row.hold.expiresAt} expired={row.hold.expired} />
+          {t("desk.booking.hold")}{" "}<DeadlineLine expiresAt={row.hold.expiresAt} expired={row.hold.expired} />
         </p>
       ) : null}
       <button type="button" className="discovery-action" onClick={() => onOpen(row.unitId)}>
-        Open detail
-      </button>
+        {t("s152")}</button>
     </li>
   );
 }
@@ -230,6 +237,7 @@ function SeatList({
   selectedUnitId: string | null;
   onOpen: (unitId: string) => void;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5);
   const [focus, setFocus] = useState(0);
   const safe = rows.length === 0 ? 0 : Math.min(focus, rows.length - 1);
   const active = rows[safe];
@@ -238,7 +246,7 @@ function SeatList({
       className="discovery-list inventory-list"
       role="listbox"
       tabIndex={0}
-      aria-label="Seats on this page"
+      aria-label={t("s1it")}
       aria-activedescendant={active ? `inventory-row-${active.unitId}` : undefined}
       onKeyDown={(event) => {
         if (!isListKey(event.key)) {
@@ -253,9 +261,9 @@ function SeatList({
         }
       }}
     >
-      {rows.map((row) => (
+      {deskText(t, rows.map((row) => (
         <ObservedRow key={row.unitId} row={row} active={row.unitId === selectedUnitId} onOpen={onOpen} />
-      ))}
+      )))}
     </ul>
   );
 }
@@ -273,6 +281,7 @@ function GaPool({
   onQuantity: (next: string) => void;
   onSelect: (unitId: string) => void;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5);
   return (
     <div
       className="discovery-row"
@@ -286,24 +295,23 @@ function GaPool({
           SYNTHETIC
         </span>{" "}
         <span className="discovery-badge" data-observed-badge="band">
-          {row.observedWord}
+          {deskText(t, row.observedWord)}
         </span>
       </p>
-      <h3>{row.title}</h3>
-      <p>{row.noteLine}</p>
-      <p>{row.observedLine}</p>
-      {row.capacityLine ? <p>{row.capacityLine}</p> : null}
+      <h3>{deskText(t, row.title)}</h3>
+      <p>{deskText(t, row.noteLine)}</p>
+      <p>{deskText(t, row.observedLine)}</p>
+      {row.capacityLine ? <p>{deskText(t, row.capacityLine)}</p> : null}
       <form
         className="discovery-controls"
-        aria-label="GA quantity"
+        aria-label={t("smc")}
         onSubmit={(event) => {
           event.preventDefault();
           onSelect(row.unitId);
         }}
       >
         <label htmlFor="inventory-quantity">
-          Quantity
-          <input
+          {t("desk.booking.quantity")}<input
             id="inventory-quantity"
             inputMode="numeric"
             value={quantityText}
@@ -313,11 +321,10 @@ function GaPool({
           />
         </label>
         <button type="submit" className="discovery-action">
-          Select quantity
-        </button>
+          {t("s1j1")}</button>
       </form>
       <p id="inventory-quantity-hint" className="muted">
-        {INVENTORY_QUANTITY_HINT}
+        {deskText(t, INVENTORY_QUANTITY_HINT)}
       </p>
     </div>
   );
@@ -342,25 +349,24 @@ export function PageSection({
   onOpen: (unitId: string) => void;
   onSelectPool: (unitId: string) => void;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5);
   const seatRows = model.rows.filter((row) => row.mode === "seat");
   const poolRows = model.rows.filter((row) => row.mode === "ga");
   return (
     <section id="inventory-page" className="discovery-section" data-inventory-state={model.state} data-section={model.sectionId}>
-      <h3>Page: {model.sectionLabel}</h3>
-      <p className="muted">{INVENTORY_PAGE_NOTE}</p>
-      <p className="muted">{model.metaLine}</p>
+      <h3>{t("s16u")}{" "}{deskText(t, model.sectionLabel)}</h3>
+      <p className="muted">{deskText(t, INVENTORY_PAGE_NOTE)}</p>
+      <p className="muted">{deskText(t, model.metaLine)}</p>
       <p role="status" data-inventory-status={model.state}>
-        {model.state === "loading" ? <StatusMark kind="loading" /> : null} {model.statusLine}
-        {model.detailLine ? ` ${model.detailLine}` : ""}
+        {model.state === "loading" ? <StatusMark kind="loading" /> : null} {deskText(t, model.statusLine)}
+        {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
       </p>
       {model.state === "queue-blocked" && model.queue ? <QueueCard queue={model.queue} /> : null}
       <div className="discovery-controls">
         <Link className="button discovery-action" to="/inventory">
-          Back to summary
-        </Link>
+          {t("s9k")}</Link>
         <button type="button" className="discovery-action" onClick={() => actions.readPageAgain()}>
-          Read page again
-        </button>
+          {t("s1c2")}</button>
         {model.mode === "seat" ? (
           <>
             <label htmlFor="inventory-free-only">
@@ -370,21 +376,19 @@ export function PageSection({
                 checked={model.freeOnly}
                 onChange={(event) => actions.setFreeOnly(event.target.checked)}
               />
-              Free-observed only
-            </label>
+              {t("sm2")}</label>
             <button type="button" className="discovery-action" disabled={!model.canNext} onClick={() => actions.nextPage()}>
-              Next page
-            </button>
+              {t("stq")}</button>
           </>
         ) : null}
         {model.actionLabel ? (
           <button type="button" className="discovery-action" onClick={() => actions.runReturn("page")}>
-            {model.actionLabel}
+            {deskText(t, model.actionLabel)}
           </button>
         ) : null}
       </div>
       {seatRows.length > 0 ? <SeatList rows={seatRows} selectedUnitId={selectedUnitId} onOpen={onOpen} /> : null}
-      {poolRows.map((row) => (
+      {deskText(t, poolRows.map((row) => (
         <GaPool
           key={row.unitId}
           row={row}
@@ -393,7 +397,7 @@ export function PageSection({
           onQuantity={onQuantity}
           onSelect={onSelectPool}
         />
-      ))}
+      )))}
     </section>
   );
 }
@@ -411,6 +415,7 @@ export function SelectionSection({
   actions: InventoryActions;
   onClear: () => void;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5);
   return (
     <section
       id="inventory-selection"
@@ -420,15 +425,15 @@ export function SelectionSection({
       data-section={sectionId}
       data-unit={unitId}
     >
-      <h3>Selection detail</h3>
+      <h3>{t("s1ix")}</h3>
       <article
         className="discovery-detail"
         data-source={model.selected ? "synthetic-inventory" : "none"}
         data-selected={model.selected ? "true" : "false"}
       >
         <p role="status" data-inventory-status={model.state}>
-          {model.state === "loading" ? <StatusMark kind="loading" /> : null} {model.statusLine}
-          {model.detailLine ? ` ${model.detailLine}` : ""}
+          {model.state === "loading" ? <StatusMark kind="loading" /> : null} {deskText(t, model.statusLine)}
+          {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
         </p>
         {model.selected ? (
           <>
@@ -437,35 +442,34 @@ export function SelectionSection({
               <span className="discovery-badge" data-provenance="synthetic">
                 SYNTHETIC
               </span>{" "}
-              <span className="discovery-badge">{model.observedWord}</span>
+              <span className="discovery-badge">{deskText(t, model.observedWord)}</span>
             </p>
-            <h3>{model.title}</h3>
-            {model.quantityLine ? <p data-quantity="count">{model.quantityLine}</p> : null}
-            {model.assignmentLine ? <p data-assignment="none">{model.assignmentLine}</p> : null}
+            <h3>{deskText(t, model.title)}</h3>
+            {model.quantityLine ? <p data-quantity="count">{deskText(t, model.quantityLine)}</p> : null}
+            {model.assignmentLine ? <p data-assignment="none">{deskText(t, model.assignmentLine)}</p> : null}
             {model.changedSincePage ? (
-              <p data-changed-since-page="true">This unit changed since the page was read.</p>
+              <p data-changed-since-page="true">{t("s241")}</p>
             ) : null}
-            <p data-selection-boundary="local">{model.boundaryLine}</p>
-            <p>{INVENTORY_BOUNDARY}</p>
-            <p className="muted">No purchase path runs from this selection.</p>
+            <p data-selection-boundary="local">{deskText(t, model.boundaryLine)}</p>
+            <p>{deskText(t, INVENTORY_BOUNDARY)}</p>
+            <p className="muted">{t("sx8")}</p>
           </>
         ) : null}
         {model.hold ? (
           <p>
-            Observed hold <DeadlineLine expiresAt={model.hold.expiresAt} expired={model.hold.expired} />
+            {t("s13l")}{" "}<DeadlineLine expiresAt={model.hold.expiresAt} expired={model.hold.expired} />
           </p>
         ) : null}
         <div className="discovery-controls">
           {model.actionLabel ? (
             <button type="button" className="discovery-action" onClick={() => actions.runReturn("selection")}>
-              {model.actionLabel}
+              {deskText(t, model.actionLabel)}
             </button>
           ) : null}
           <button type="button" className="discovery-action" onClick={() => actions.readSelectionAgain()}>
-            Read detail again
-          </button>
+            {t("s1b8")}</button>
           <button type="button" className="discovery-action" onClick={onClear}>
-            {model.selected ? "Clear selection" : "Close detail"}
+            {model.selected ? t("scr") : t("scx")}
           </button>
         </div>
       </article>

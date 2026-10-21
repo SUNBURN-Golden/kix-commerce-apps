@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "../i18n/messages/marketing--labels";
+import { sourceMessage } from "../i18n/source-message";
 /**
  * ORIGINAL_32 marketing labels for Wave 7.
  * Status is the label in kix-protocol docs/status/ORIGINAL_32_STATUS.md.
@@ -28,45 +30,45 @@ export const MARKETING_SURFACES = [
     status: ORIGINAL_32_MARKETING_STATUS.M01,
     path: "/marketing/m01",
     titleKo: "팬 자격 / 멤버십",
-    titleEn: "Fan qualification / membership",
+    titleEn: sourceCopy.en["skt"],
     blurbKo: "이번 페이지 로드에서만 쓰는 팬·멤버 카드입니다.",
-    blurbEn: "Issue a session-only fan or member card for this page load.",
+    blurbEn: sourceCopy.en["sou"],
   },
   {
     id: "M02",
     status: ORIGINAL_32_MARKETING_STATUS.M02,
     path: "/marketing/m02",
     titleKo: "선예매",
-    titleEn: "Presale",
+    titleEn: sourceCopy.en["s18s"],
     blurbKo: "데모 창에서 관심만 기록합니다. 예매 홀드는 만들지 않습니다.",
-    blurbEn: "Record interest while a demo window is open. The booking desk is unchanged.",
+    blurbEn: sourceCopy.en["s1e2"],
   },
   {
     id: "M03",
     status: ORIGINAL_32_MARKETING_STATUS.M03,
     path: "/marketing/m03",
     titleKo: "쿠폰 / 프로모션",
-    titleEn: "Coupon / promotion",
+    titleEn: sourceCopy.en["ser"],
     blurbKo: "표시용 마커만 붙입니다. 가격과 결제 수단은 없습니다.",
-    blurbEn: "Attach a display marker from a fixture list. No price and no tender.",
+    blurbEn: sourceCopy.en["s8w"],
   },
   {
     id: "M04",
     status: ORIGINAL_32_MARKETING_STATUS.M04,
     path: "/marketing/m04",
     titleKo: "추천 / 리워드",
-    titleEn: "Referral / rewards",
+    titleEn: sourceCopy.en["s1ef"],
     blurbKo: "데모 마커만 셉니다. 크레딧은 지급하지 않습니다.",
-    blurbEn: "Count demo markers from fixture referral codes. No credit is disbursed.",
+    blurbEn: sourceCopy.en["sen"],
   },
   {
     id: "M05",
     status: ORIGINAL_32_MARKETING_STATUS.M05,
     path: "/marketing/m05",
     titleKo: "CRM / 데이터 활용",
-    titleEn: "CRM / data use",
+    titleEn: sourceCopy.en["sf2"],
     blurbKo: "동의 플래그만 세션에 남깁니다. 메시지는 보내지 않습니다.",
-    blurbEn: "Store consent flags in this session. No channel and no send.",
+    blurbEn: sourceCopy.en["s1mr"],
   },
 ] as const;
 
@@ -75,7 +77,7 @@ export type MarketingId = (typeof MARKETING_SURFACES)[number]["id"];
 export function marketingSurface(id: MarketingId) {
   const surface = MARKETING_SURFACES.find((item) => item.id === id);
   if (!surface) {
-    throw new Error(`Unknown marketing label ${id}.`);
+    throw new Error(sourceMessage(sourceCopy.en["p.t255"], { v1: id }));
   }
   return surface;
 }
@@ -90,7 +92,7 @@ export function marketingChromeLabel(pathname: string): { title: string; eyebrow
     return { title: "KIX Marketing", eyebrow: "Marketing desk" };
   }
   return {
-    title: `KIX Marketing · ${surface.id} · ${surface.status}`,
+    title: sourceMessage(sourceCopy.en["p.t256"], { v1: surface.id, v2: surface.status }),
     eyebrow: `${surface.id} · ${surface.status}`,
   };
 }

@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/credit-origination";
+import { sourceMessage } from "./i18n/source-message";
 /**
  * The credit origination screen on top of the adapter's synthetic origination
  * source. Stub scope: the default port is the synthetic source. On
@@ -51,76 +53,76 @@ import {
 } from "@kix/protocol-adapter";
 import { protocol } from "./protocol";
 
-export const ORIGINATION_PAGE_TITLE = "Credit origination (synthetic)";
+export const ORIGINATION_PAGE_TITLE = sourceCopy.en["sez"];
 
 export const ORIGINATION_SOURCE_LINE =
-  "The application, claims, burdens, policy revision, consents, documents, review, commitment, and drawdown permission come from a synthetic origination source on this page load. They are not a producer read and not a catalogue receipt.";
+  sourceCopy.en["s1q7"];
 
 export const ORIGINATION_BOUNDARY =
-  "Four lanes stay four lanes. A submitted application is not a review decision, an approval is not a commitment, a commitment is not permission to draw, and a recorded drawdown request is not a disbursement. Nothing here disburses.";
+  sourceCopy.en["slx"];
 
 export const ORIGINATION_EXPLANATION_NOTE =
-  "An assistant-written explanation is shown as an explanation. It carries no decision field and it is never read as an approval, whatever its text says.";
+  sourceCopy.en["s3m"];
 
 export const ORIGINATION_FIGURE_NOTE =
-  "Every rate, limit, face, burden, and schedule figure is the source's own text, copied and never parsed, summed, scaled, or compared. A figure the source did not decide is shown as UNDETERMINED.";
+  sourceCopy.en["sj8"];
 
 export const ORIGINATION_POLICY_NOTE =
-  "A decision, a commitment, or terms built under an older policy revision than the one the source holds as current stays flagged with both revisions. Permission to draw is withheld while a lane is stale, even when the source still states it.";
+  sourceCopy.en["s18"];
 
 export const ORIGINATION_CLAIM_NOTE =
-  "Every read and every receipt states submissionIsApproval, explanationIsApproval, approvalIsCommitment, commitmentIsDrawdown, and disbursed as false. A payload that says anything else, or stays silent, is refused before a row is shown.";
+  sourceCopy.en["sj9"];
 
 export const ORIGINATION_LIMIT_NOTE =
-  "A shared limit is ranked by the source. A rival request that took the limit first is shown as the source's order; this page ranks nothing itself and offers no correction that changes the order.";
+  sourceCopy.en["s82"];
 
-export const ORIGINATION_SCOPE_NOTE = `The desk actor holds a synthetic grant for ${ORIGINATION_OWN_REF} and none for ${ORIGINATION_FOREIGN_REF}. A scope the grant does not cover is refused and leaves no row on screen.`;
+export const ORIGINATION_SCOPE_NOTE = sourceMessage(sourceCopy.en["p.t7"], { v1: ORIGINATION_OWN_REF, v2: ORIGINATION_FOREIGN_REF });
 
 export const ORIGINATION_ACTOR_NOTE =
-  "The actor string is a context label. It is not an authentication result, and the source does not trust it for access.";
+  sourceCopy.en["s1pw"];
 
 export const ORIGINATION_READ_NOTE =
-  "A read is one request and a write is one request. Neither is sent again by this page. A read that arrives after the scope changed is dropped.";
+  sourceCopy.en["s6d"];
 
 export const ORIGINATION_FENCE_NOTE =
   "One request is in flight at a time. An answer that never arrived, or that arrived untrusted, leaves the outcome unknown — it may have applied — and every later request stays fenced. A read does not lift the fence.";
 
 export const ORIGINATION_SESSION_NOTE =
-  "Reads, receipts, and the fence live in this page load only. A reload or a new synthetic session clears them and resolves nothing at a producer.";
+  sourceCopy.en["s1c9"];
 
 export const ORIGINATION_SYNTHETIC_CONTROL_NOTE =
-  "Advance review, advance policy, withdraw consent, expire document, rival request, and revoke grant are synthetic controls a real producer does not offer. They stand in for a source that moved on.";
+  sourceCopy.en["s1w"];
 
-export const ORIGINATION_HOLD_NOTE = `Holding a seat is not available here. ${ORIGINATION_HOLD_NOT_BOUND.reason}`;
+export const ORIGINATION_HOLD_NOTE = sourceMessage(sourceCopy.en["p.t8"], { v1: ORIGINATION_HOLD_NOT_BOUND.reason });
 
-export const ORIGINATION_NOT_COMPOSED_NOTE = `Catalogue actions recorded and never composed here: ${ORIGINATION_NOT_COMPOSED.map((entry) => entry.action).join(", ")}.`;
+export const ORIGINATION_NOT_COMPOSED_NOTE = sourceMessage(sourceCopy.en["p.t9"], { v1: ORIGINATION_NOT_COMPOSED.map((entry) => entry.action).join(", ") });
 
 export const ORIGINATION_SCENARIO_NOTES: Readonly<Record<OriginationScenario, string>> = {
-  clean: "Every read and request is answered. The application is not started.",
-  empty: "The source has no rows for this applicant.",
-  stale: "The source serves a watermark older than the floor this page holds.",
-  "in-review": "The application is submitted and the review is pending.",
-  conditional: "The decision is conditional, with the reasons and paths the source names.",
-  "more-information": "The source asks for additional evidence before it decides.",
-  rejected: "The review rejected the application, with the reasons and paths the source names.",
-  approved: "The decision is approved. An approval is not a commitment.",
-  offered: "A commitment is offered. Accepting it is the person's request, and it opens no drawdown.",
-  committed: "The commitment is accepted and the source permits a drawdown request.",
-  "stale-policy": "The decision and the commitment were built under an older policy revision. The source still states permission; it is withheld here.",
-  "consent-withdrawn": "The credit-assessment consent is withdrawn at the source.",
-  "docs-expired": "A claim evidence document is expired at the source.",
-  "limit-contended": "Another application outranks this one on the shared limit, as the source ordered it.",
-  "limit-race": "A rival request takes the shared limit after the first read and before the drawdown request lands.",
-  "mixed-cut": "The claims and the burdens are on different source cuts. They are not merged.",
-  "dangling-link": "One burden names a claim the read does not list.",
-  "explanation-says-approved": "The assistant explanation reads like an approval. The decision stays pending.",
-  "claims-approval": "The payload claims a submission is an approval. It is refused before a row is shown.",
-  "claims-disbursed": "The payload claims a disbursement already happened. It is refused before a row is shown.",
-  "scope-leak": "The source sends a row that belongs to another applicant. The payload is refused.",
-  denied: "The grant for this actor is withdrawn at the source.",
-  "read-lost": "The answer to a read never arrives.",
-  "act-lost": "A request reaches the source and takes effect. Its answer never arrives.",
-  "submit-claims-approval": "The source applies a submission, then answers that the decision is approved. The answer is not trusted.",
+  clean: sourceCopy.en["sjc"],
+  empty: sourceCopy.en["s1zi"],
+  stale: sourceCopy.en["s21a"],
+  "in-review": sourceCopy.en["s1q8"],
+  conditional: sourceCopy.en["s1rf"],
+  "more-information": sourceCopy.en["s1yo"],
+  rejected: sourceCopy.en["s1xa"],
+  approved: sourceCopy.en["s1re"],
+  offered: sourceCopy.en["ss"],
+  committed: sourceCopy.en["s1r1"],
+  "stale-policy": sourceCopy.en["s1rd"],
+  "consent-withdrawn": sourceCopy.en["s1rb"],
+  "docs-expired": sourceCopy.en["sr"],
+  "limit-contended": sourceCopy.en["s4i"],
+  "limit-race": sourceCopy.en["s7f"],
+  "mixed-cut": sourceCopy.en["s1qx"],
+  "dangling-link": sourceCopy.en["s147"],
+  "explanation-says-approved": sourceCopy.en["s1qc"],
+  "claims-approval": sourceCopy.en["s1v2"],
+  "claims-disbursed": sourceCopy.en["s1uz"],
+  "scope-leak": sourceCopy.en["s214"],
+  denied: sourceCopy.en["s1t4"],
+  "read-lost": sourceCopy.en["s1q3"],
+  "act-lost": sourceCopy.en["s79"],
+  "submit-claims-approval": sourceCopy.en["s1yn"],
 };
 
 export type OriginationScreenState =
@@ -330,91 +332,91 @@ export interface OriginationModel {
 }
 
 const CLAIM_STATE_WORDS: Readonly<Record<OriginationClaimState, string>> = {
-  valid: "Valid",
-  disputed: "Disputed",
-  expired: "Expired",
-  unknown: "Unknown",
+  valid: sourceCopy.en["s25u"],
+  disputed: sourceCopy.en["sgz"],
+  expired: sourceCopy.en["sk9"],
+  unknown: sourceCopy.en["s258"],
 };
 
 const BURDEN_KIND_WORDS: Readonly<Record<OriginationBurdenKind, string>> = {
-  "refund-burden": "Refund burden",
-  "prior-pledge": "Prior pledge",
+  "refund-burden": sourceCopy.en["s1eo"],
+  "prior-pledge": sourceCopy.en["s197"],
   hold: "Hold",
-  dispute: "Dispute",
+  dispute: sourceCopy.en["sgy"],
 };
 
 const BURDEN_STATE_WORDS: Readonly<Record<OriginationBurdenState, string>> = {
-  observed: "Observed",
-  pending: "Pending",
-  unknown: "Unknown",
+  observed: sourceCopy.en["s13j"],
+  pending: sourceCopy.en["s17p"],
+  unknown: sourceCopy.en["s258"],
 };
 
 const CONSENT_PURPOSE_WORDS: Readonly<Record<OriginationConsentPurpose, string>> = {
-  "claim-data-share": "Claim data share",
-  "credit-assessment": "Credit assessment",
+  "claim-data-share": sourceCopy.en["sch"],
+  "credit-assessment": sourceCopy.en["sex"],
 };
 
 const CONSENT_STATE_WORDS: Readonly<Record<OriginationConsentState, string>> = {
-  granted: "Granted",
-  withdrawn: "Withdrawn",
-  expired: "Expired",
-  unknown: "Unknown",
+  granted: sourceCopy.en["smq"],
+  withdrawn: sourceCopy.en["s26s"],
+  expired: sourceCopy.en["sk9"],
+  unknown: sourceCopy.en["s258"],
 };
 
 const DOCUMENT_KIND_WORDS: Readonly<Record<OriginationDocumentKind, string>> = {
-  "claim-evidence": "Claim evidence",
-  "sales-statement": "Sales statement",
-  "additional-evidence": "Additional evidence",
+  "claim-evidence": sourceCopy.en["sci"],
+  "sales-statement": sourceCopy.en["s1i2"],
+  "additional-evidence": sourceCopy.en["s16"],
 };
 
 const DOCUMENT_STATE_WORDS: Readonly<Record<OriginationDocumentState, string>> = {
-  valid: "Valid",
-  expiring: "Expiring",
-  expired: "Expired",
-  requested: "Requested",
-  unknown: "Unknown",
+  valid: sourceCopy.en["s25u"],
+  expiring: sourceCopy.en["skf"],
+  expired: sourceCopy.en["sk9"],
+  requested: sourceCopy.en["s1fs"],
+  unknown: sourceCopy.en["s258"],
 };
 
 const APPLICATION_STATE_WORDS: Readonly<Record<OriginationApplicationState, string>> = {
-  "not-started": "Not started",
-  submitted: "Submitted",
+  "not-started": sourceCopy.en["s12p"],
+  submitted: sourceCopy.en["s1nb"],
 };
 
 const DECISION_KIND_WORDS: Readonly<Record<OriginationDecisionKind, string>> = {
-  pending: "Pending",
-  conditional: "Conditional",
-  "more-information": "More information requested",
-  rejected: "Rejected",
-  approved: "Approved",
+  pending: sourceCopy.en["s17p"],
+  conditional: sourceCopy.en["sdg"],
+  "more-information": sourceCopy.en["stc"],
+  rejected: sourceCopy.en["s1ew"],
+  approved: sourceCopy.en["s5y"],
 };
 
 const COMMITMENT_STATE_WORDS: Readonly<Record<OriginationCommitmentState, string>> = {
-  offered: "Offered",
-  accepted: "Accepted",
-  lapsed: "Lapsed",
-  withdrawn: "Withdrawn",
+  offered: sourceCopy.en["s13w"],
+  accepted: sourceCopy.en["sb"],
+  lapsed: sourceCopy.en["sq6"],
+  withdrawn: sourceCopy.en["s26s"],
 };
 
 const PERMISSION_WORDS: Readonly<Record<OriginationDrawdownPermission, string>> = {
-  "not-permitted": "Not permitted",
-  permitted: "Permitted",
-  suspended: "Suspended",
+  "not-permitted": sourceCopy.en["s123"],
+  permitted: sourceCopy.en["s17z"],
+  suspended: sourceCopy.en["s1nq"],
 };
 
 const REMEDY_WORDS: Readonly<Record<OriginationRemedy, string>> = {
-  "amend-application": "Amend the application",
-  "provide-document": "Provide a document",
-  "renew-consent": "Renew the consent",
-  "request-re-review": "Ask for a new review",
-  none: "No correction path",
+  "amend-application": sourceCopy.en["s33"],
+  "provide-document": sourceCopy.en["s1a2"],
+  "renew-consent": sourceCopy.en["s1fl"],
+  "request-re-review": sourceCopy.en["s86"],
+  none: sourceCopy.en["suz"],
 };
 
 const ACTION_WORDS: Readonly<Record<OriginationActionKind, string>> = {
-  submit: "Submission",
-  correct: "Correction",
-  "re-review": "Re-review request",
-  "accept-commitment": "Commitment acceptance",
-  "request-drawdown": "Drawdown request",
+  submit: sourceCopy.en["s1n8"],
+  correct: sourceCopy.en["sef"],
+  "re-review": sourceCopy.en["s1g0"],
+  "accept-commitment": sourceCopy.en["sda"],
+  "request-drawdown": sourceCopy.en["shf"],
 };
 
 function readStateToScreen(readState: OriginationReadState): OriginationScreenState {
@@ -454,40 +456,40 @@ function statusFor(
   const suffix = code ? ` (${code})` : "";
   switch (state) {
     case "loading":
-      return { statusLine: "Reading the synthetic origination source. Nothing is shown yet.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s1bj"], detailLine: "", actionLabel: null };
     case "ready":
-      return { statusLine: "Origination read.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s16c"], detailLine: "", actionLabel: null };
     case "empty":
       return {
-        statusLine: "No rows for this applicant in this read.",
-        detailLine: detail ?? "An empty read is not an application with no claim basis.",
-        actionLabel: "Read again",
+        statusLine: sourceCopy.en["sy4"],
+        detailLine: detail ?? sourceCopy.en["s3y"],
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "stale":
-      return { statusLine: "Stale origination read.", detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["s1lr"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "denied":
-      return { statusLine: `The source refused this scope${suffix}.`, detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t10"], { v1: suffix }), detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "refused":
       return {
-        statusLine: `The source sent a payload this page does not trust${suffix}.`,
-        detailLine: `${detail ?? ""} No row from it is shown.`,
-        actionLabel: "Read again",
+        statusLine: sourceMessage(sourceCopy.en["p.t11"], { v1: suffix }),
+        detailLine: sourceMessage(sourceCopy.en["p.t12"], { v1: detail ?? "" }),
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "invalid":
-      return { statusLine: `The request was refused before it read${suffix}.`, detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t13"], { v1: suffix }), detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "not-bound":
       return { statusLine: ORIGINATION_NOT_BOUND_REASON, detailLine: "", actionLabel: null };
     case "tuple-changed":
       return {
-        statusLine: "The pin tuple changed. Nothing was read and nothing was applied.",
+        statusLine: sourceCopy.en["s1v8"],
         detailLine: detail ?? "",
-        actionLabel: "Start a new synthetic session",
+        actionLabel: sourceCopy.en["s1m2"],
       };
     case "unavailable":
       return {
-        statusLine: "The source did not answer. This is not an application with no claim basis.",
+        statusLine: sourceCopy.en["s1yv"],
         detailLine: detail ?? "",
-        actionLabel: "Read again",
+        actionLabel: sourceCopy.en["s1ax"],
       };
     default: {
       const exhaustive: never = state;
@@ -500,9 +502,9 @@ function statusFor(
 export function fenceText(fence: OriginationFence): string {
   switch (fence.reason) {
     case "in-flight":
-      return `A ${fence.action} request is in flight. One request goes at a time.`;
+      return sourceMessage(sourceCopy.en["p.t14"], { v1: fence.action });
     case "unknown-outcome":
-      return `Request ${fence.seq} (${fence.action}) has an unknown outcome and may have applied. Nothing is sent again from here. Start a new synthetic session to clear it.`;
+      return sourceMessage(sourceCopy.en["p.t15"], { v1: fence.seq, v2: fence.action });
     default: {
       const exhaustive: never = fence;
       return exhaustive;
@@ -511,7 +513,7 @@ export function fenceText(fence: OriginationFence): string {
 }
 
 function staleLine(builtUnder: number, currentRevision: number): string {
-  return `Built under policy revision ${builtUnder}; the source holds ${currentRevision} as current. Flagged, never shown as current.`;
+  return sourceMessage(sourceCopy.en["p.t16"], { v1: builtUnder, v2: currentRevision });
 }
 
 export function buildOriginationModel(input: { controller: CreditOriginationController; last: LastAction | null }): OriginationModel {
@@ -525,12 +527,12 @@ export function buildOriginationModel(input: { controller: CreditOriginationCont
 
   const freshnessWord =
     state.freshness === "CURRENT"
-      ? "The last read is current."
+      ? sourceCopy.en["s1tn"]
       : state.freshness === "STALE"
-        ? "The last read is behind."
-        : "There is no usable read.";
+        ? sourceCopy.en["s1ti"]
+        : sourceCopy.en["s1wv"];
 
-  const behindLine = state.behind ? "A request reached the source after the last read. Read again before the next request." : null;
+  const behindLine = state.behind ? sourceCopy.en["s75"] : null;
   const fenceLine = state.fence === null ? null : fenceText(state.fence);
 
   const usedBy = new Map<string, number>();
@@ -544,15 +546,15 @@ export function buildOriginationModel(input: { controller: CreditOriginationCont
     source: cut.source,
     generation: cut.generation,
     watermark: cut.watermark,
-    usedBy: `${usedBy.get(cut.cutRef) ?? 0} rows`,
+    usedBy: sourceMessage(sourceCopy.en["p.t469"], { v1: usedBy.get(cut.cutRef) ?? 0 }),
   }));
   const cutState = assessment?.cutState ?? "none";
   const cutLine =
     cutState === "single"
-      ? "Every claim and burden is on one source cut."
+      ? sourceCopy.en["sj1"]
       : cutState === "mixed"
-        ? "Claims and burdens are on more than one source cut. They are not merged, so there is no single basis to cite."
-        : "No claim or burden carries a source cut in this read.";
+        ? sourceCopy.en["sck"]
+        : sourceCopy.en["sum"];
 
   const claims: OriginationClaimModel[] = (snapshot?.claims ?? []).map((row) => ({
     claimRef: row.claimRef,
@@ -560,7 +562,7 @@ export function buildOriginationModel(input: { controller: CreditOriginationCont
     faceLine: `${row.faceAmount} ${row.unit}`,
     state: row.state,
     stateWord: CLAIM_STATE_WORDS[row.state],
-    reasonLine: row.reasonCode ? `Reason ${row.reasonCode} as the source names it.` : "No reason named.",
+    reasonLine: row.reasonCode ? sourceMessage(sourceCopy.en["p.t17"], { v1: row.reasonCode }) : sourceCopy.en["sxk"],
     cutRef: row.cutRef,
   }));
   const burdens: OriginationBurdenModel[] = (snapshot?.burdens ?? []).map((row) => ({
@@ -596,11 +598,11 @@ export function buildOriginationModel(input: { controller: CreditOriginationCont
       purposeWord: CONSENT_PURPOSE_WORDS[row.purpose],
       state: row.state,
       stateWord: CONSENT_STATE_WORDS[row.state],
-      versionLine: `Version ${row.version}.`,
-      setLine: `State set ${row.setLabel} as the source labels it.`,
+      versionLine: sourceMessage(sourceCopy.en["p.t470"], { v1: row.version }),
+      setLine: sourceMessage(sourceCopy.en["p.t18"], { v1: row.setLabel }),
       renew: needs
         ? consentEligibility
-        : { enabled: false, reason: "The source holds this consent as granted. Nothing needs renewing." },
+        : { enabled: false, reason: sourceCopy.en["s1zn"] },
     };
   });
 
@@ -612,22 +614,22 @@ export function buildOriginationModel(input: { controller: CreditOriginationCont
       kindWord: DOCUMENT_KIND_WORDS[row.kind],
       state: row.state,
       stateWord: DOCUMENT_STATE_WORDS[row.state],
-      claimLine: row.claimRef === null ? "Attached to no claim." : `Attached to claim ${row.claimRef}.`,
-      expiryLine: row.expiresLabel === null ? "No expiry label from the source." : `Expiry ${row.expiresLabel} as the source labels it.`,
+      claimLine: row.claimRef === null ? sourceCopy.en["s8x"] : sourceMessage(sourceCopy.en["p.t19"], { v1: row.claimRef }),
+      expiryLine: row.expiresLabel === null ? sourceCopy.en["sve"] : sourceMessage(sourceCopy.en["p.t20"], { v1: row.expiresLabel }),
       verdictLine:
         row.expired === null
-          ? "The source gave no expiry verdict."
+          ? sourceCopy.en["s1z9"]
           : row.expired
-            ? "The source marks this document expired."
-            : "The source marks this document not expired.",
+            ? sourceCopy.en["s1zz"]
+            : sourceCopy.en["s200"],
       provide: needs
         ? documentEligibility
-        : { enabled: false, reason: "The source holds this document as current. Nothing needs providing." },
+        : { enabled: false, reason: sourceCopy.en["s1zo"] },
     };
   });
 
   const unlinkedLines = (assessment?.unlinked ?? []).map(
-    (item) => `${item.lens} row ${item.ref} names ${item.missingRef}, which the read does not list. It is not attached elsewhere.`,
+    (item) => sourceMessage(sourceCopy.en["p.t21"], { v1: item.lens, v2: item.ref, v3: item.missingRef }),
   );
 
   const application: OriginationApplicationModel | null = snapshot
@@ -635,15 +637,15 @@ export function buildOriginationModel(input: { controller: CreditOriginationCont
         applicationRef: snapshot.application.applicationRef,
         state: snapshot.application.state,
         stateWord: APPLICATION_STATE_WORDS[snapshot.application.state],
-        revisionLine: `Application revision ${snapshot.application.revision}.`,
+        revisionLine: sourceMessage(sourceCopy.en["p.t22"], { v1: snapshot.application.revision }),
         requestLine:
           snapshot.application.requestedAmount === null
-            ? "No amount requested yet."
-            : `Requested ${snapshot.application.requestedAmount} ${snapshot.application.unit}. The asked amount, not an approved one.`,
+            ? sourceCopy.en["su1"]
+            : sourceMessage(sourceCopy.en["p.t23"], { v1: snapshot.application.requestedAmount, v2: snapshot.application.unit }),
         claimLine:
           snapshot.application.claimRefs.length === 0
-            ? "Cites no claim yet."
-            : `Cites ${snapshot.application.claimRefs.join(", ")}.`,
+            ? sourceCopy.en["sce"]
+            : sourceMessage(sourceCopy.en["p.t471"], { v1: snapshot.application.claimRefs.join(", ") }),
       }
     : null;
 
@@ -652,9 +654,9 @@ export function buildOriginationModel(input: { controller: CreditOriginationCont
         decisionRef: snapshot.decision.decisionRef,
         kind: snapshot.decision.kind,
         kindWord: DECISION_KIND_WORDS[snapshot.decision.kind],
-        policyLine: `Decided under policy revision ${snapshot.decision.policyRevision}.`,
-        applicationLine: `Judged application revision ${snapshot.decision.applicationRevision}.`,
-        conditionLines: snapshot.decision.conditions.map((item) => `Condition ${item} as the source names it.`),
+        policyLine: sourceMessage(sourceCopy.en["p.t24"], { v1: snapshot.decision.policyRevision }),
+        applicationLine: sourceMessage(sourceCopy.en["p.t25"], { v1: snapshot.decision.applicationRevision }),
+        conditionLines: snapshot.decision.conditions.map((item) => sourceMessage(sourceCopy.en["p.t26"], { v1: item })),
         staleLine: staleFor("review"),
         withheld: withheld("review"),
       }
@@ -674,8 +676,8 @@ export function buildOriginationModel(input: { controller: CreditOriginationCont
   const termsRow = snapshot?.terms ?? null;
   const terms: OriginationTermsModel | null = termsRow
     ? {
-        policyLine: `Terms from policy revision ${termsRow.policyRevision}.`,
-        rateLine: termsRow.rateLabel === null ? `Rate ${ORIGINATION_UNDETERMINED}.` : `Rate label ${termsRow.rateLabel}.`,
+        policyLine: sourceMessage(sourceCopy.en["p.t27"], { v1: termsRow.policyRevision }),
+        rateLine: termsRow.rateLabel === null ? sourceMessage(sourceCopy.en["p.t472"], { v1: ORIGINATION_UNDETERMINED }) : sourceMessage(sourceCopy.en["p.t28"], { v1: termsRow.rateLabel }),
         rows: (termsRow.scheduleRows ?? []).map((row) => ({
           installmentLabel: row.installmentLabel,
           dueLabel: row.dueLabel,
@@ -690,7 +692,7 @@ export function buildOriginationModel(input: { controller: CreditOriginationCont
         commitmentRef: snapshot.commitment.commitmentRef,
         state: snapshot.commitment.state,
         stateWord: COMMITMENT_STATE_WORDS[snapshot.commitment.state],
-        policyLine: `Offered under policy revision ${snapshot.commitment.policyRevision}.`,
+        policyLine: sourceMessage(sourceCopy.en["p.t29"], { v1: snapshot.commitment.policyRevision }),
         staleLine: staleFor("commitment"),
         withheld: withheld("commitment"),
       }
@@ -700,28 +702,28 @@ export function buildOriginationModel(input: { controller: CreditOriginationCont
   const limit: OriginationLimitModel = snapshot
     ? {
         limitRef: snapshot.limit.limitRef,
-        amountLine: snapshot.limit.amount === null ? `Limit ${ORIGINATION_UNDETERMINED}.` : `Limit ${snapshot.limit.amount} ${snapshot.limit.unit}.`,
+        amountLine: snapshot.limit.amount === null ? sourceMessage(sourceCopy.en["p.t473"], { v1: ORIGINATION_UNDETERMINED }) : sourceMessage(sourceCopy.en["p.t474"], { v1: snapshot.limit.amount, v2: snapshot.limit.unit }),
         contention: snapshot.limit.contention,
-        contentionWord: snapshot.limit.contention === "contended" ? "Contended" : "Not contended",
+        contentionWord: snapshot.limit.contention === "contended" ? sourceCopy.en["se8"] : sourceCopy.en["s10n"],
         rankLines: snapshot.limit.ranks.map((row) =>
           row.applicationRef === ownApplication
-            ? `Rank ${row.rank}: this application (${row.applicationRef}).`
-            : `Rank ${row.rank}: another application (${row.applicationRef}).`,
+            ? sourceMessage(sourceCopy.en["p.t30"], { v1: row.rank, v2: row.applicationRef })
+            : sourceMessage(sourceCopy.en["p.t31"], { v1: row.rank, v2: row.applicationRef }),
         ),
         limitWord:
           assessment?.limitState === "contended-behind"
-            ? "The source ranked another application ahead of this one."
+            ? sourceCopy.en["s206"]
             : assessment?.limitState === "contended-first"
-              ? "The source ranked this application first."
-              : "No contention on this limit.",
+              ? sourceCopy.en["s207"]
+              : sourceCopy.en["suy"],
       }
     : {
         limitRef: "",
         amountLine: "",
         contention: "none",
-        contentionWord: "Not read",
+        contentionWord: sourceCopy.en["s12c"],
         rankLines: [],
-        limitWord: "No limit read.",
+        limitWord: sourceCopy.en["svy"],
       };
 
   const drawdown: OriginationDrawdownModel = snapshot
@@ -729,23 +731,23 @@ export function buildOriginationModel(input: { controller: CreditOriginationCont
         permission: snapshot.drawdown.permission,
         permissionWord: PERMISSION_WORDS[snapshot.drawdown.permission],
         withheld: withheld("drawdown"),
-        reasonLines: snapshot.drawdown.reasonCodes.map((code) => `Reason ${code} as the source names it.`),
+        reasonLines: snapshot.drawdown.reasonCodes.map((code) => sourceMessage(sourceCopy.en["p.t17"], { v1: code })),
         commitmentLine:
           snapshot.drawdown.commitmentRef === null
-            ? "No commitment behind this permission."
-            : `Behind commitment ${snapshot.drawdown.commitmentRef}.`,
-        requests: snapshot.drawdown.requests.map((row) => ({ drawdownRef: row.drawdownRef, stateWord: "Recorded. Not a disbursement." })),
+            ? sourceCopy.en["sus"]
+            : sourceMessage(sourceCopy.en["p.t32"], { v1: snapshot.drawdown.commitmentRef }),
+        requests: snapshot.drawdown.requests.map((row) => ({ drawdownRef: row.drawdownRef, stateWord: sourceCopy.en["s1dz"] })),
       }
-    : { permission: "not-permitted", permissionWord: "Not read", withheld: false, reasonLines: [], commitmentLine: "", requests: [] };
+    : { permission: "not-permitted", permissionWord: sourceCopy.en["s12c"], withheld: false, reasonLines: [], commitmentLine: "", requests: [] };
 
-  const contradictionLines = (assessment?.contradictions ?? []).map((item) => `${item.code} on the ${item.lane} lane. ${item.detail}`);
+  const contradictionLines = (assessment?.contradictions ?? []).map((item) => sourceMessage(sourceCopy.en["p.t33"], { v1: item.code, v2: item.lane, v3: item.detail }));
 
   const staleLaneLines = (assessment?.staleLanes ?? []).map((item) => `${item.lane}: ${staleLine(item.builtUnder, item.currentRevision)}`);
 
-  const policyLine = snapshot ? `Policy ${snapshot.policy.policyRef}, current revision ${snapshot.policy.currentRevision}.` : "No policy read.";
+  const policyLine = snapshot ? sourceMessage(sourceCopy.en["p.t34"], { v1: snapshot.policy.policyRef, v2: snapshot.policy.currentRevision }) : sourceCopy.en["swx"];
 
   const nonClaimsLine =
-    "submissionIsApproval false · explanationIsApproval false · approvalIsCommitment false · commitmentIsDrawdown false · disbursed false";
+    sourceCopy.en["s1n9"];
 
   const guard = (kind: OriginationActionKind, target?: "application" | "document" | "consent"): ControlModel =>
     notBound ? { enabled: false, reason: ORIGINATION_NOT_BOUND_REASON } : toControl(controller.canSend(kind, target));
@@ -759,15 +761,15 @@ export function buildOriginationModel(input: { controller: CreditOriginationCont
           phase: state.last.phase,
           phaseWord:
             state.last.phase === "applied"
-              ? "Applied at the synthetic source"
+              ? sourceCopy.en["s5e"]
               : state.last.phase === "rejected"
-                ? "Rejected by the source"
+                ? sourceCopy.en["s1ez"]
                 : state.last.phase === "unknown"
-                  ? "Unknown outcome"
+                  ? sourceCopy.en["s25c"]
                   : state.last.phase === "refused"
-                    ? "Answer refused; treated as unknown"
+                    ? sourceCopy.en["s4n"]
                     : state.last.phase === "not-bound"
-                      ? "Not bound"
+                      ? sourceCopy.en["s10c"]
                       : state.last.phase,
           code: state.last.code,
           detail: state.last.detail,
@@ -775,23 +777,23 @@ export function buildOriginationModel(input: { controller: CreditOriginationCont
             state.last.receipt === null
               ? []
               : [
-                  `Application revision ${state.last.receipt.revision}.`,
-                  `Decision after: ${state.last.receipt.decisionAfter}. An accepted request is not a decision.`,
-                  `Commitment after: ${state.last.receipt.commitmentAfter}.`,
+                  sourceMessage(sourceCopy.en["p.t22"], { v1: state.last.receipt.revision }),
+                  sourceMessage(sourceCopy.en["p.t35"], { v1: state.last.receipt.decisionAfter }),
+                  sourceMessage(sourceCopy.en["p.t36"], { v1: state.last.receipt.commitmentAfter }),
                   state.last.receipt.drawdownRef === null
-                    ? "No drawdown reference. Nothing is disbursed."
-                    : `Drawdown request ${state.last.receipt.drawdownRef} recorded. A recorded request is not a disbursement.`,
+                    ? sourceCopy.en["sv7"]
+                    : sourceMessage(sourceCopy.en["p.t37"], { v1: state.last.receipt.drawdownRef }),
                 ],
         };
 
   const counters = state.counters;
   const session: OriginationSessionModel = {
-    contextLine: `Actor ${state.context.actorRef}, applicant scope ${state.context.scope.applicantRef}, session ${state.context.incarnation}, mode ${state.context.environment}.`,
-    countersLine: `Reads ${counters.reads}. Requests ${counters.acts}. Not sent ${counters.notSent}. Reads dropped ${counters.droppedReads}.`,
+    contextLine: sourceMessage(sourceCopy.en["p.t38"], { v1: state.context.actorRef, v2: state.context.scope.applicantRef, v3: state.context.incarnation, v4: state.context.environment }),
+    countersLine: sourceMessage(sourceCopy.en["p.t39"], { v1: counters.reads, v2: counters.acts, v3: counters.notSent, v4: counters.droppedReads }),
     earlierUnknownLine:
       state.earlierUnknown === 0
-        ? "No unknown outcome left in an earlier scope."
-        : `${state.earlierUnknown} unknown outcome(s) left behind in earlier scopes. They are not forgotten and not resolved here.`,
+        ? sourceCopy.en["s12z"]
+        : sourceMessage(sourceCopy.en["p.t40"], { v1: state.earlierUnknown }),
     notComposedLine: ORIGINATION_NOT_COMPOSED_NOTE,
     holdLine: ORIGINATION_HOLD_NOTE,
   };
@@ -802,8 +804,8 @@ export function buildOriginationModel(input: { controller: CreditOriginationCont
     detailLine: status.detailLine,
     actionLabel: status.actionLabel,
     freshnessWord,
-    scopeLine: `Tenant ${state.context.scope.tenantId}. Applicant ${state.context.scope.applicantRef}.`,
-    watermarkLine: snapshot ? `Watermark ${snapshot.watermark}. Read ${snapshot.snapshotId} on this port.` : "No watermark without a ready read.",
+    scopeLine: sourceMessage(sourceCopy.en["p.t476"], { v1: state.context.scope.tenantId, v2: state.context.scope.applicantRef }),
+    watermarkLine: snapshot ? sourceMessage(sourceCopy.en["p.t41"], { v1: snapshot.watermark, v2: snapshot.snapshotId }) : sourceCopy.en["s134"],
     behindLine,
     fenceLine,
     nonClaimsLine,
@@ -844,23 +846,23 @@ function actResultLine(kind: OriginationActionKind, result: OriginationActResult
   switch (result.kind) {
     case "APPLIED":
       return {
-        text: `${word} applied at the synthetic source. This is not a decision and not a protocol receipt. Read again to see the lanes.`,
+        text: sourceMessage(sourceCopy.en["p.t42"], { v1: word }),
         attention: false,
       };
     case "REJECTED":
       return {
-        text: `${word} rejected (${result.record.code ?? "no code"}). ${result.record.detail ?? ""} The source applied nothing for this request.`.trim(),
+        text: sourceMessage(sourceCopy.en["p.t43"], { v1: word, v2: result.record.code ?? "no code", v3: result.record.detail ?? "" }).trim(),
         attention: true,
       };
     case "UNKNOWN":
       return {
-        text: `${word} outcome unknown (${result.record.code ?? "no code"}). It may have applied. Every later request is fenced, and a read does not resolve it.`,
+        text: sourceMessage(sourceCopy.en["p.t44"], { v1: word, v2: result.record.code ?? "no code" }),
         attention: true,
       };
     case "FENCED":
-      return { text: `${word} not sent. ${fenceText(result.fence)}`, attention: true };
+      return { text: sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: fenceText(result.fence) }), attention: true };
     case "NOT_SENT":
-      return { text: `${word} not sent. ${result.detail}`, attention: true };
+      return { text: sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: result.detail }), attention: true };
     default: {
       const exhaustive: never = result;
       return exhaustive;
@@ -966,7 +968,7 @@ export function useCreditOrigination(): {
         return;
       }
       const done = session.port.synthetic(control);
-      note(done ? `${moved} A real producer offers no such control. Read again.` : "There is nothing at the synthetic source to move.", done);
+      note(done ? sourceMessage(sourceCopy.en["p.t46"], { v1: moved }) : sourceCopy.en["s1wu"], done);
     },
     [note],
   );
@@ -1025,28 +1027,28 @@ export function useCreditOrigination(): {
       const next = session.controller.state().context.scope.applicantRef === ORIGINATION_OWN_REF ? ORIGINATION_FOREIGN_REF : ORIGINATION_OWN_REF;
       const context = session.controller.switchScope(next);
       if (context === null) {
-        note("A request is in flight. The scope cannot change under it.", true);
+        note(sourceCopy.en["s71"], true);
         return;
       }
       setApplicantRef(next);
       note(
-        `Switched the applicant scope to ${context.scope.applicantRef}, session ${context.incarnation}. Rows of the earlier scope are cleared, and a read in flight for it is dropped. Read again.`,
+        sourceMessage(sourceCopy.en["p.t47"], { v1: context.scope.applicantRef, v2: context.incarnation }),
       );
     },
     advanceReview() {
-      synthetic("advance-review", "The synthetic source moved the review on: a pending decision becomes approved, or an approval offers a commitment.");
+      synthetic("advance-review", sourceCopy.en["s225"]);
     },
     advancePolicy() {
-      synthetic("advance-policy", "The synthetic source moved the policy to a newer revision. Lanes built under an older one stay flagged.");
+      synthetic("advance-policy", sourceCopy.en["s224"]);
     },
     withdrawConsent() {
-      synthetic("withdraw-consent", "The synthetic source withdrew the credit-assessment consent.");
+      synthetic("withdraw-consent", sourceCopy.en["s22c"]);
     },
     expireDocument() {
-      synthetic("expire-document", "The synthetic source marked the claim evidence document expired.");
+      synthetic("expire-document", sourceCopy.en["s221"]);
     },
     rivalRequest() {
-      synthetic("rival-request", "The synthetic source let a rival request take the shared limit.");
+      synthetic("rival-request", sourceCopy.en["s21z"]);
     },
     revokeGrant() {
       const session = sessionRef.current;
@@ -1056,16 +1058,16 @@ export function useCreditOrigination(): {
       const done = session.port.synthetic("revoke-grant");
       note(
         done
-          ? "The synthetic grant is withdrawn at the source. The next read is refused. A real producer offers no such control."
-          : "There is no synthetic source to withdraw a grant from.",
+          ? sourceCopy.en["s21r"]
+          : sourceCopy.en["s1wo"],
         done,
       );
     },
     setScenario(next) {
-      startSession(next, applicantRef, `Started a new synthetic session with scenario ${next}. Earlier reads and requests are gone, as after a reload.`);
+      startSession(next, applicantRef, sourceMessage(sourceCopy.en["p.t48"], { v1: next }));
     },
     newSession() {
-      startSession(scenario, applicantRef, "Started a new synthetic session. Earlier reads and requests are gone, as after a reload. Nothing was resolved at a producer.");
+      startSession(scenario, applicantRef, sourceCopy.en["s1m6"]);
     },
   };
 

@@ -1,3 +1,7 @@
+import { messages as copy0 } from "../../i18n/messages/pages--marketing--M01Membership";
+import { messages as copy1 } from "../../i18n/messages/marketing--desk";
+import { deskText } from "../../i18n/desk-translate";
+import { useT } from "../../i18n/desk-context";
 import { useState, type FormEvent } from "react";
 import type { MemberTier } from "../../marketing/desk";
 import { marketingSession } from "../../marketing/session";
@@ -5,6 +9,7 @@ import { useMarketingSnapshot } from "../../marketing/useMarketingSnapshot";
 import { errorText, MarketingChrome } from "./MarketingChrome";
 
 export function M01Page() {
+  const t = useT(copy0, copy1);
   const { snapshot, refresh } = useMarketingSnapshot();
   const [displayName, setDisplayName] = useState(snapshot.membership?.displayName ?? "");
   const [tier, setTier] = useState<MemberTier>(snapshot.membership?.tier ?? "fan");
@@ -18,7 +23,7 @@ export function M01Page() {
       marketingSession.join({ displayName, tier });
       refresh();
     } catch (reason) {
-      setError(errorText(reason, "Could not issue the demo card."));
+      setError(errorText(reason, copy0.en["e.62"]));
     }
   }
 
@@ -32,13 +37,12 @@ export function M01Page() {
     <MarketingChrome id="M01">
       {error ? (
         <p className="alert" role="alert">
-          {error}
+          {deskText(t, error)}
         </p>
       ) : null}
       <form className="panel" onSubmit={onSubmit}>
         <label>
-          Display name
-          <input
+          {t("sgx")}<input
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
             autoComplete="off"
@@ -46,42 +50,40 @@ export function M01Page() {
           />
         </label>
         <label>
-          Demo tier
-          <select value={tier} onChange={(event) => setTier(event.target.value as MemberTier)}>
-            <option value="fan">팬 · Fan</option>
-            <option value="member">멤버 · Member</option>
+          {t("sg8")}<select value={tier} onChange={(event) => setTier(event.target.value as MemberTier)}>
+            <option value="fan">{t("s27f")}</option>
+            <option value="member">{t("s27d")}</option>
           </select>
         </label>
-        <p className="muted">The card reference starts with mbr_stub_. It is not a rights reference.</p>
+        <p className="muted">{t("s1qr")}</p>
         <div className="row-actions">
-          <button type="submit">Issue demo card</button>
+          <button type="submit">{t("sow")}</button>
           <button type="button" className="ghost" onClick={leave} disabled={!card}>
-            Clear demo card
-          </button>
+            {t("sco")}</button>
         </div>
       </form>
       {card ? (
         <article className="ticket">
-          <p className="eyebrow">Session card · {card.status}</p>
-          <h3>{card.displayName}</h3>
+          <p className="eyebrow">{t("s1jm")}{" "}{card.status}</p>
+          <h3>{deskText(t, card.displayName)}</h3>
           <dl>
             <div>
-              <dt>Local ref</dt>
-              <dd>{card.memberRef}</dd>
+              <dt>{t("srm")}</dt>
+              <dd>{deskText(t, card.memberRef)}</dd>
             </div>
             <div>
-              <dt>Tier</dt>
-              <dd>{card.tier === "fan" ? "팬 · Fan" : "멤버 · Member"}</dd>
+              <dt>{t("s244")}</dt>
+              <dd>{card.tier === "fan" ? t("s27f") : t("s27d")}</dd>
             </div>
             <div>
-              <dt>Status</dt>
+              <dt>{t("s1mj")}</dt>
               <dd>{card.status}</dd>
             </div>
           </dl>
-          <p className="muted">{card.note}</p>
+          <p className="muted">{deskText(t, card.note)}</p>
         </article>
       ) : (
-        <p className="empty">No demo card on this session. The presale window stays closed until one exists.</p>
+        <p className="empty">{t("sv3")}</p>
       )}
     </MarketingChrome>
   );
