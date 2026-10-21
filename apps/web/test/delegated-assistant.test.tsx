@@ -203,6 +203,9 @@ describe("delegated assistant screen model", () => {
     expect(read.statusLine).toBe("Delegation grants read.");
     expect(read.freshnessWord).toBe("The last read is current.");
 
+    for (const scenario of ["empty", "stale"] as const) {
+      expect(pageHtml(modelOf(await ready(scenario)), scenario)).toContain(`data-delegation-status="${scenario}"`);
+    }
     const empty = modelOf(await ready("empty"));
     expect(empty.state).toBe("empty");
     expect(empty.grants).toEqual([]);

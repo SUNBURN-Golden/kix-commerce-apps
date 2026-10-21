@@ -138,3 +138,43 @@ The delivery contains these 32 files (no generated bundles, coverage output or s
 - `apps/web/test/form-validation.test.tsx`
 - `docs/c-a11y-acceptance-stub-apps-bind.md`
 - `docs/c-form-validation-ux-stub-apps-bind.md`
+
+## Merge reconciliation — 2026-10-21
+
+This section supplements the historical implementation ledger above. The merge being resolved combines form branch HEAD `73fd167433736452352b6e9fd1dc159693aa5190` with main/MERGE_HEAD `7a1ffdaf5598412934eecaad402150af2627f54d`. No merge commit exists yet; staging and committing belong to the supervisor.
+
+Both this node and main's `c-async-state-patterns-stub` implementation are retained. The README describes both, and both bind documents, test suites and matrix entries remain present. No route or form is added or removed. The older local evidence matrix explicitly remains a snapshot at its recorded base; its later-node `NOT_STARTED` rows are historical, not a current implementation claim.
+
+| Conflict | Combined result |
+| --- | --- |
+| `apps/e2e/shell-fixtures/protocol-fault.ts` | Both the deferred `placeHold` form probe and held/error/empty catalogue read probe remain in the test-only wrapper. Neither changes desk bindings. |
+| `apps/web/src/pages/Booking.tsx` | Shared async loading/error/empty displays coexist with `ValidatedForm` and quantity validation. |
+| `apps/web/src/pages/DiscoveryPanels.tsx` | Shared async catalogue/result displays coexist with the validated optional filters and source-owned diagnostics. |
+| `apps/web/src/pages/OrganizerWorkspace.tsx` | Main's shared loading/empty status display supersedes the old status paragraph, keeping its text and result summary. The validated row editor, action-specific Add checks and existing preview/submit guards remain. |
+| `apps/web/src/styles.css` | Both validation and async blocks remain. Equivalent selectors and margin/padding shorthands reduce the combined bundle; inherited ink colour, currentColor outline and the base solid border replace redundant declarations. Words, focus outlines, linked errors and state-specific borders remain. |
+
+The initial combined build exceeded the existing CSS gzip limit: 5023 bytes against 5000. A temporary separate form stylesheet reduced CSS but put initial JS at 290020 against 290000, so that experiment was reverted. Final styles remain together in `styles.css`; no budget, test, CI configuration, dependency or lockfile was changed to accommodate the merge. Final measured initial JS is 289991 bytes gzip, initial CSS 4999, total gzip 629887; all existing bundle limits pass.
+
+M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. The locked `commerce-bindings.ts` matches main byte for byte, SHA-256 `83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249`. Protected `.aiops/`, `docs/aiops/`, CI, pins and protocol code are unchanged. The merge adds no command, retry, fallback, payment or production behavior.
+
+Source identity for this reconciliation: SHA-256 of all **293 tracked files under `apps/web` and `apps/e2e`**, deduplicated and sorted by path, hashing UTF-8 path + NUL + file bytes + NUL, is `9fb8326cca9dd6f711562209e2af1c07444e270b49ff4899378513da8407c63f`. Documentation is excluded. This fingerprint identifies the uncommitted merged source rather than claiming the old HEAD alone contains it.
+
+All reconciliation commands use `PATH=/tmp/kix-form-node22/node_modules/.bin:$PATH` (Node v22.20.0). Browser commands also use `KIX_REQUIRE_GATE=0 KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1`.
+
+| Final command / check | Observed result |
+| --- | --- |
+| `npm run typecheck` | PASS; adapter and web |
+| `npm run typecheck:e2e` | PASS |
+| `KIX_REQUIRE_GATE=0 npm test` | PASS; adapter 1306 passed, 23 gate tests skipped; web 915 passed |
+| `npm run test:e2e` | PASS; 51 tests, 14 files; journey and fault matrices complete |
+| `npm run test:a11y` | PASS; 254 tests, 12 files; 18 form and 6 shared async browser tests retained |
+| `npm run build` | PASS; existing large-chunk warning retained |
+| `npm run budget` | PASS; initial JS/CSS, every route chunk and total growth within unchanged limits |
+| `npm run test:budget` | PASS; 9 tests, 3 files |
+| `npm run lint` | PASS |
+| `git diff --check`; conflict-marker scan over all tracked files | PASS; no markers |
+| Protected-path diffs against HEAD and origin/main; byte comparison of locked bindings to MERGE_HEAD | Empty diffs; bindings identical |
+
+Final logs are `/tmp/kix-form-merge-final-unit.log`, `/tmp/kix-form-merge-final-e2e.log`, `/tmp/kix-form-merge-final-a11y.log` and `/tmp/kix-form-merge-final-browser-budget.log`; build, lint and static budget logs use `/tmp/kix-form-merge-{build,lint,budget}.log`. The final browser/a11y/budget records are `/tmp/kix-form-merge-final-{browser,a11y,budget}-record.json`. All three browser ledgers record zero non-loopback requests, zero non-GET requests and zero application network calls. Normal, empty, invalid and pending screenshots under `/tmp/kix-form-merge-final-screenshots/` were visually inspected. These are local artifacts, not published evidence. Live-gate behavior and real integration remain unverified; existing unrelated accessibility findings and acceptance/release limits remain unchanged.
+
+No `git add`, commit, merge, rebase, reset, checkout or push was run. Git's index still reports the five paths as unmerged because the supervisor must stage the edited resolutions and commit the merge.

@@ -35,7 +35,7 @@ describe("booking journey (stub, headless Chrome)", () => {
     await page.close();
   });
 
-  it("REJECT: quantity 7 keeps the typed value and returns focus; an unknown performance shows an alert", async () => {
+  it("REJECT: quantity 7 keeps the typed value and returns focus; a missing performance is empty", async () => {
     const page = await openBooking();
     const quantity = page.getByLabel("Quantity");
     await quantity.fill("7");
@@ -51,7 +51,10 @@ describe("booking journey (stub, headless Chrome)", () => {
     await suite.quiet(page, "booking quantity reject");
 
     await page.goto(`${suite.origin}/booking/evt_missing`);
-    await page.getByRole("alert").filter({ hasText: "That performance is not on this adapter." }).waitFor();
+    const missing = page.locator('[data-async-state="empty"]').filter({ hasText: "That performance is not on this adapter." });
+    await missing.waitFor();
+    expect(await missing.getAttribute("role")).toBe("status");
+    expect(await alertTexts(page)).toEqual([]);
     await expectText(page, "Back to the window");
     await suite.pass(page, "booking.REJECT");
     await page.close();

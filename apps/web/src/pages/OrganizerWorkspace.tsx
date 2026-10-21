@@ -1,8 +1,9 @@
 import type { ValidationHandle } from "../forms/useFormValidation";
 import { ValidatedForm } from "../forms/ValidatedForm";
 import { field } from "../forms/validation";
+import { AsyncState } from "../components/AsyncState";
 import { useEffect, useRef } from "react";
-import { ORGANIZER_COMPOSED, type OrganizerStep } from "@kix/protocol-adapter";
+import { COMMERCE_COMMAND_BINDINGS, ORGANIZER_COMPOSED, type OrganizerStep } from "@kix/protocol-adapter";
 import { focusControl } from "../a11y/focus";
 import { AmountNotice, StatusMark } from "../a11y/marks";
 import {
@@ -67,10 +68,11 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
           {model.path.kind === "unavailable" && model.path.code ? ` Code ${model.path.code}.` : ""}
         </p>
       ) : null}
-      <p className="organizer-ws-status" role="status">
-        {model.submitting ? <StatusMark kind="loading" /> : null}{" "}
-        {model.submitting ? "Submitting. One attempt each." : model.results ? model.results.summary : "No results yet."}
-      </p>
+      {model.submitting || !model.results ? (
+        <AsyncState kind={model.submitting ? "loading" : "empty"} label="Organizer results" className="organizer-ws-status">
+          <p>{model.submitting ? "Submitting. One attempt each." : "No results yet."}</p>
+        </AsyncState>
+      ) : <p className="organizer-ws-status" role="status">{model.results.summary}</p>}
       <ValidatedForm id="organizer-workspace-form" validationRef={validation} submitFields={[]} fields={[
           field("organizer-ws-event-id", "validation.label.eventId"),
           field("organizer-ws-seats", "validation.label.seats", { kind: "seats" }),
@@ -316,7 +318,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
             <div key={entry.method}>
               <dt>{entry.method}</dt>
               <dd>
-                {entry.consideredAction ?? "none"} · not-bound. {entry.reason}
+                <AsyncState kind="not-bound" label="Organizer desk" binding={{ method: entry.method, record: COMMERCE_COMMAND_BINDINGS[entry.method] }} />
               </dd>
             </div>
           ))}

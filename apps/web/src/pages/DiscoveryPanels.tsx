@@ -1,4 +1,5 @@
 import { ValidatedForm } from "../forms/ValidatedForm";
+import { AsyncState } from "../components/AsyncState";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -66,33 +67,16 @@ export function DiscoveryBanner({ model }: { model: DiscoveryModel }) {
 
 export function CatalogNotice({ model, onReadAgain }: { model: DiscoveryModel; onReadAgain: () => void }) {
   if (model.catalog.kind === "loading") {
-    return (
-      <p className="muted" role="status">
-        <StatusMark kind="loading" /> Loading performances.
-      </p>
-    );
+    return <AsyncState kind="loading" label="Catalogue"><p>Loading performances.</p></AsyncState>;
   }
   if (model.catalog.kind === "error") {
-    return (
-      <div>
-        <p className="alert" role="alert">
-          <StatusMark kind="blocked" /> {model.catalog.message}
-        </p>
-        <button type="button" className="discovery-action" onClick={() => onReadAgain()}>
-          Read again
-        </button>
-      </div>
-    );
+    return <AsyncState kind="error" label="Catalogue" read={{ label: "Read again", onRead: onReadAgain }}><p>{model.catalog.message}</p></AsyncState>;
   }
   if (model.catalog.kind === "not-bound") {
-    return (
-      <p className="alert" role="alert" data-state="not-bound" data-source="none">
-        <StatusMark kind="blocked" /> {model.catalog.reason}
-      </p>
-    );
+    return <AsyncState kind="not-bound" label="Catalogue" data-state="not-bound" data-source="none"><p>{model.catalog.reason}</p></AsyncState>;
   }
   if (model.catalog.kind === "empty") {
-    return <p className="empty">No performances on this adapter.</p>;
+    return <AsyncState kind="empty" label="Catalogue"><p className="empty">No performances on this adapter.</p></AsyncState>;
   }
   return <p>source {model.catalogSource}</p>;
 }
@@ -702,7 +686,7 @@ export function ResultSection({
       ) : null}
       {model.result.state === "empty" ? (
         <div>
-          <p className="empty">No matching synthetic rows.</p>
+          <AsyncState kind="empty" label="Discovery results"><p className="empty">No matching synthetic rows.</p></AsyncState>
           <button type="button" className="discovery-action" onClick={() => onQuery(clearFilters(query))}>
             Clear filters
           </button>

@@ -1,5 +1,6 @@
 import { ValidatedForm } from "../forms/ValidatedForm";
 import { field } from "../forms/validation";
+import { AsyncState } from "../components/AsyncState";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ProtocolError, type Booking, type Hold, type Performance } from "@kix/protocol-adapter";
@@ -149,9 +150,7 @@ export function BookingPage() {
   if (!performance && !error && !resolved) {
     return (
       <section>
-        <p className="muted" role="status">
-          <StatusMark kind="loading" /> Loading the performance.
-        </p>
+        <AsyncState kind="loading" label="Booking"><p>Loading the performance.</p></AsyncState>
         <JourneyPanel variant="booking" model={journey} />
         <RefundReturnPanel live={refundDesk} variant="booking" />
       </section>
@@ -161,9 +160,9 @@ export function BookingPage() {
   if (!performance) {
     return (
       <section>
-        <p className="alert" role="alert">
-          <StatusMark kind="blocked" /> {error ?? "That performance is not on this adapter."}
-        </p>
+        <AsyncState kind={error ? "error" : "empty"} label="Booking">
+          <p>{error ?? "That performance is not on this adapter."}</p>
+        </AsyncState>
         <p className="muted">
           Requested performance: <SafeText value={eventId} />
         </p>
@@ -195,9 +194,7 @@ export function BookingPage() {
         </p>
       ) : null}
       {error ? (
-        <p id="booking-error" className="alert" role="alert">
-          <StatusMark kind="blocked" /> {error}
-        </p>
+        <AsyncState id="booking-error" kind="error" label="Booking"><p>{error}</p></AsyncState>
       ) : null}
       {booking ? (
         <article className="ticket">
