@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { GIFT_DESK_NOT_BOUND, GIFT_NOT_COMPOSED, JOURNEY_RULING } from "@kix/protocol-adapter";
 import { StatusMark } from "../a11y/marks";
 import type { GiftPanelModel, GiftRowStatus } from "../gift-desk";
@@ -103,9 +104,9 @@ export function GiftPanel({ model }: { model: GiftPanelModel }) {
               </dl>
             ) : null}
             <div className="row-actions">
-              <button type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
+              <ConnectivityWriteButton type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
                 Send {row.step}
-              </button>
+              </ConnectivityWriteButton>
             </div>
           </li>
         ))}

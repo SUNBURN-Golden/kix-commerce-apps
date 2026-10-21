@@ -4,7 +4,7 @@ import { ProtocolError, type Performance, type SettlementCaseView } from "@kix/p
 import { capacityLine } from "../a11y/present";
 import { StatusMark } from "../a11y/marks";
 import { useFormatWhen } from "../i18n/locale-context";
-import { protocol } from "../protocol";
+import { protocol } from "../connectivity/desk-protocol";
 import { useJourneyDesk } from "../journey-desk";
 import { useRefundReturnDesk } from "../refund-return";
 import { runSettlementCommand, settlementIdFor } from "../settlement-desk";

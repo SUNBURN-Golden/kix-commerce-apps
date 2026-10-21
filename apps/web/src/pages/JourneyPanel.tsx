@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { Link } from "react-router-dom";
 import {
   JOURNEY_DESK_NOT_BOUND,
@@ -100,9 +101,9 @@ export function JourneyPanel({ variant, model }: { variant: "booking" | "box-off
             ) : null}
             {variant === "booking" ? (
               <div className="row-actions">
-                <button type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
+                <ConnectivityWriteButton type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
                   Send {row.step}
-                </button>
+                </ConnectivityWriteButton>
               </div>
             ) : (
               <p className="muted">Planned step. Writes happen on the booking screen.</p>

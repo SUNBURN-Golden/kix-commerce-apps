@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
 import { useState, type FormEvent } from "react";
 import { COUPON_FIXTURES } from "../../marketing/desk";
 import { marketingSession } from "../../marketing/session";
@@ -24,7 +25,7 @@ export function M03Page() {
   }
 
   return (
-    <MarketingChrome id="M03">
+    <MarketingChrome id="M03" onReadAgain={refresh}>
       {error ? (
         <p className="alert" role="alert">
           {error}
@@ -37,7 +38,7 @@ export function M03Page() {
         </label>
         <p className="muted">A marker is a session label. It has no price, no balance, and no tender.</p>
         <div className="row-actions">
-          <button type="submit">Apply demo code</button>
+          <ConnectivityWriteButton type="submit">Apply demo code</ConnectivityWriteButton>
         </div>
       </form>
       <ul className="program">

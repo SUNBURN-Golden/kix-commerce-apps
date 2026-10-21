@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
 import { useState, type FormEvent } from "react";
 import { emptyConsentDraft, useConsentDesk, type ConsentDraft, type ConsentPanelModel, type ConsentRowStatus } from "../../consent-desk";
 import { useFormatWhen } from "../../i18n/locale-context";
@@ -30,7 +31,7 @@ export function M05Page() {
   }
 
   return (
-    <MarketingChrome id="M05">
+    <MarketingChrome id="M05" onReadAgain={refresh}>
       <form className="panel" onSubmit={onSubmit}>
         {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- The input is nested inside the label and the visible text is in the sibling span; the control is therefore labeled. */}
         <label className="check" htmlFor="performance-notes">
@@ -64,10 +65,10 @@ export function M05Page() {
           {MARKETING_CONTRACT_ALIGNMENT.M05.missingFromStub.join(", ")}. channelSend: {consent.channelSend}.
         </p>
         <div className="row-actions">
-          <button type="submit">Save consent flags</button>
-          <button type="button" className="ghost" onClick={withdraw}>
+          <ConnectivityWriteButton type="submit">Save consent flags</ConnectivityWriteButton>
+          <ConnectivityWriteButton type="button" className="ghost" onClick={withdraw}>
             Withdraw flags
-          </button>
+          </ConnectivityWriteButton>
         </div>
       </form>
       <article className="stamp">
@@ -223,9 +224,9 @@ function ConsentBindPanel({
               </dl>
             ) : null}
             <div className="row-actions">
-              <button type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
+              <ConnectivityWriteButton type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
                 Send {row.step}
-              </button>
+              </ConnectivityWriteButton>
             </div>
           </li>
         ))}

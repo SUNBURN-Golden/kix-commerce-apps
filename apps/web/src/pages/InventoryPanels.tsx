@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { INVENTORY_SCENARIOS, type InventoryScenario } from "@kix/protocol-adapter";
@@ -84,9 +85,9 @@ export function InventoryControls({
             ))}
           </select>
         </label>
-        <button type="button" className="discovery-action" onClick={() => actions.advanceGeneration()}>
+        <ConnectivityWriteButton requiresFresh={false} type="button" className="discovery-action" onClick={() => actions.advanceGeneration()}>
           {INVENTORY_ADVANCE_LABEL}
-        </button>
+        </ConnectivityWriteButton>
         <button type="button" className="discovery-action" onClick={() => actions.readSummaryAgain()}>
           Read summary again
         </button>

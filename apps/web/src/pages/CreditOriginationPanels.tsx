@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { ReactNode } from "react";
 import { ORIGINATION_SCENARIOS, type OriginationScenario } from "@kix/protocol-adapter";
 import { AmountNotice, StatusMark } from "../a11y/marks";
@@ -54,7 +55,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
   const reasonId = `${id}-reason`;
   return (
     <>
-      <button
+      <ConnectivityWriteButton
         type="button"
         id={id}
         className="discovery-action"
@@ -64,7 +65,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
         onClick={control.enabled ? onPress : undefined}
       >
         {label}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word="Blocked." /> {control.reason}
@@ -144,27 +145,27 @@ export function OriginationControls({
         <button type="button" id="origination-switch" className="discovery-action" onClick={() => actions.switchScope()}>
           Switch applicant scope
         </button>
-        <button type="button" id="origination-advance-review" className="discovery-action" onClick={() => actions.advanceReview()}>
+        <ConnectivityWriteButton type="button" id="origination-advance-review" className="discovery-action" onClick={() => actions.advanceReview()}>
           Advance review
-        </button>
-        <button type="button" id="origination-advance-policy" className="discovery-action" onClick={() => actions.advancePolicy()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="origination-advance-policy" className="discovery-action" onClick={() => actions.advancePolicy()}>
           Advance policy
-        </button>
-        <button type="button" id="origination-withdraw-consent" className="discovery-action" onClick={() => actions.withdrawConsent()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="origination-withdraw-consent" className="discovery-action" onClick={() => actions.withdrawConsent()}>
           Withdraw consent
-        </button>
-        <button type="button" id="origination-expire-document" className="discovery-action" onClick={() => actions.expireDocument()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="origination-expire-document" className="discovery-action" onClick={() => actions.expireDocument()}>
           Expire document
-        </button>
-        <button type="button" id="origination-rival-request" className="discovery-action" onClick={() => actions.rivalRequest()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="origination-rival-request" className="discovery-action" onClick={() => actions.rivalRequest()}>
           Rival request
-        </button>
-        <button type="button" id="origination-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="origination-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
           Revoke grant
-        </button>
-        <button type="button" id="origination-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="origination-new-session" className="discovery-action" onClick={() => actions.newSession()}>
           Start a new synthetic session
-        </button>
+        </ConnectivityWriteButton>
       </div>
       <p className="muted" data-scenario-note={scenario}>
         {ORIGINATION_SCENARIO_NOTES[scenario]} Changing the scenario starts a new synthetic session.

@@ -1,3 +1,4 @@
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The tenant permissions desk on top of the adapter's synthetic permissions
  * source. Stub scope: the default port is the synthetic source. On
@@ -44,7 +45,7 @@ import {
   type TenantScenario,
   type TenantSyntheticControl,
 } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const TENANT_PAGE_TITLE = "Tenant permissions desk (synthetic)";
 
@@ -841,8 +842,8 @@ function createSession(
   actorRef: string,
   role: TenantRole,
 ): Session {
-  const port = tenantPermissionsPortFor(environment, { scenario });
-  return { port, controller: new TenantPermissionsController(port, { actorRef, role }) };
+  const port = connectivityPort(tenantPermissionsPortFor(environment, { scenario }), "tenant-permissions");
+  return { port, controller: connectivityController(new TenantPermissionsController(port, { actorRef, role }), port) };
 }
 
 export function useTenantPermissions(): {
@@ -1056,7 +1057,7 @@ export function useTenantPermissions(): {
     actorRef,
     role,
     model: buildTenantModel({ controller: session.controller, last }),
-    actions,
+    actions: connectedActions(actions, ['openResource', 'proposeAccountChange', 'proposeRoleRevoke', 'approveProposal', 'revokeRole', 'rotateRole', 'applyApproved', 'setScenario', 'newSession'], sessionRef.current?.port),
   };
 }
 

@@ -1,3 +1,4 @@
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The synthetic journey context desk on top of the adapter's identity source.
  * Stub scope: the default port is the synthetic source. On integration-http
@@ -35,7 +36,7 @@ import {
   type JourneyRole,
   type ObservationVerdict,
 } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const IDENTITY_TITLE = "Journey context (synthetic)";
 
@@ -392,11 +393,12 @@ export interface IdentitySession {
 
 /** Applies a scenario by rebinding the same session to a fresh synthetic source, so the journal and its unknown fences stay. */
 export function applyIdentityScenario(session: IdentitySession, environment: "stub" | "integration-http", scenario: JourneyIdentityScenario) {
-  return resetIdentitySession(session, journeyIdentityPortFor(environment, { scenario }));
+  return resetIdentitySession(session, connectivityPort(journeyIdentityPortFor(environment, { scenario }), "journey-identity"));
 }
 
 /** Rebinds the page and its controller to one new source, so page actions never act on a discarded source. */
 export function resetIdentitySession(session: IdentitySession, port: JourneyIdentityPort) {
+  connectivityController(session.controller, port);
   const next = session.controller.resetSource(port);
   session.port = port;
   return next;
@@ -423,8 +425,8 @@ export function useJourneyIdentityDesk(): {
 
   const wantedKey = environment;
   if (sessionKeyRef.current !== wantedKey) {
-    const port = journeyIdentityPortFor(environment, { scenario });
-    sessionRef.current = { port, controller: new JourneyIdentityController(port, { actorRef: actorRef.current, role: roleRef.current }) };
+    const port = connectivityPort(journeyIdentityPortFor(environment, { scenario }), "journey-identity");
+    sessionRef.current = { port, controller: connectivityController(new JourneyIdentityController(port, { actorRef: actorRef.current, role: roleRef.current }), port) };
     sessionKeyRef.current = wantedKey;
   }
 
@@ -551,6 +553,6 @@ export function useJourneyIdentityDesk(): {
     model: buildIdentityModel({ controller: session?.controller ?? null, last }),
     heldSupported: scenario === "held-response",
     lateSupported: scenario === "attach-lost",
-    actions,
+    actions: connectedActions(actions, ['attach', 'rotateCut', 'resetSource', 'setScenario'], sessionRef.current?.port),
   };
 }

@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { DELEGATION_SCENARIOS, type DelegationScenario } from "@kix/protocol-adapter";
 import { StatusMark } from "../a11y/marks";
@@ -67,7 +68,7 @@ function GuardedButton({
   const reasonId = `${id}-reason`;
   return (
     <>
-      <button
+      <ConnectivityWriteButton
         type="button"
         id={id}
         className="discovery-action"
@@ -77,7 +78,7 @@ function GuardedButton({
         onClick={control.enabled ? onPress : undefined}
       >
         {label}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word="Blocked." /> {control.reason}
@@ -160,7 +161,7 @@ export function AssistantControls({
             ))}
           </select>
         </label>
-        <button
+        <ConnectivityWriteButton
           type="button"
           id="dlg-apply-scenario"
           className="discovery-action"
@@ -169,16 +170,16 @@ export function AssistantControls({
           onClick={simulated ? () => actions.setScenario(picked) : undefined}
         >
           Start a session with this scenario
-        </button>
+        </ConnectivityWriteButton>
         <button type="button" id="dlg-refresh" className="discovery-action" onClick={() => actions.refresh()}>
           Read again
         </button>
         <button type="button" id="dlg-switch" className="discovery-action" onClick={() => actions.switchScope()}>
           Switch principal scope
         </button>
-        <button type="button" id="dlg-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+        <ConnectivityWriteButton type="button" id="dlg-new-session" className="discovery-action" onClick={() => actions.newSession()}>
           Start a new synthetic session
-        </button>
+        </ConnectivityWriteButton>
         <button
           type="button"
           id="dlg-deliver-held"
@@ -205,7 +206,7 @@ export function AssistantControls({
       </p>
       <div className="discovery-controls" role="group" aria-label="Simulated producer events">
         {(Object.keys(CONTROL_LABELS) as (keyof typeof CONTROL_LABELS)[]).map((controlName) => (
-          <button
+          <ConnectivityWriteButton
             key={controlName}
             type="button"
             id={`dlg-simulate-${controlName}`}
@@ -216,7 +217,7 @@ export function AssistantControls({
             onClick={simulated ? () => actions.simulate(controlName) : undefined}
           >
             {CONTROL_LABELS[controlName]}
-          </button>
+          </ConnectivityWriteButton>
         ))}
       </div>
       <p className="muted" id="dlg-simulate-note">
@@ -277,9 +278,9 @@ export function AssistantRequest({ actions }: { actions: DelegationAssistantActi
             aria-describedby="dlg-request-note"
           />
         </label>
-        <button type="submit" id="dlg-ask" className="discovery-action">
+        <ConnectivityWriteButton type="submit" id="dlg-ask" className="discovery-action">
           Ask
-        </button>
+        </ConnectivityWriteButton>
       </form>
       <p className="muted" id="dlg-request-note">
         Instruction-like words refuse the whole request. A sentence can never approve a proposal, send a command, raise a mode, or create

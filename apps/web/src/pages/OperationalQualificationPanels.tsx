@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { QUALIFICATION_SCENARIOS, type QualificationScenario } from "@kix/protocol-adapter";
 import { StatusMark } from "../a11y/marks";
 import {
@@ -75,7 +76,7 @@ export function QualificationControls({
             </option>
           ))}
         </select>
-        <button
+        <ConnectivityWriteButton
           type="button"
           id="oq-run"
           className="discovery-action"
@@ -85,7 +86,7 @@ export function QualificationControls({
           onClick={model.runControl.enabled ? () => actions.run() : undefined}
         >
           Run the qualification once
-        </button>
+        </ConnectivityWriteButton>
         {model.runControl.reason ? (
           <p id="oq-run-reason" className="muted">
             {model.runControl.reason}
@@ -108,9 +109,9 @@ export function QualificationControls({
         <button type="button" id="oq-switch-actor" className="discovery-action" onClick={() => actions.switchActor()}>
           Switch the actor
         </button>
-        <button type="button" id="oq-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+        <ConnectivityWriteButton type="button" id="oq-new-session" className="discovery-action" onClick={() => actions.newSession()}>
           New synthetic session
-        </button>
+        </ConnectivityWriteButton>
       </div>
     </section>
   );

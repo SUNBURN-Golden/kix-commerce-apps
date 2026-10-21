@@ -24,7 +24,7 @@ import {
   type FeatureRow,
   type HandoffView,
 } from "../handoff/packet";
-import { protocol } from "../protocol";
+import { protocol } from "../connectivity/desk-protocol";
 import { WORKSPACE_ROLES, type WorkspaceRole } from "../workspace/registry";
 
 const ROLE_LABEL: Record<WorkspaceRole, string> = {

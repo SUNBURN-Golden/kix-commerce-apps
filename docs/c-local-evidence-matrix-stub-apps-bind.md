@@ -377,3 +377,7 @@ Run on 2026-10-18 at base main `f570c84c6a969bb88642eecf534e68c60ffee853` plus t
 | `KIX_REQUIRE_GATE=0 npm test`, web | 54 files passed (695 tests passed), including `local-evidence-matrix.test.ts` |
 
 The pinned-checkout live-gate run and the browser suites (`browser-e2e`, `a11y-observation`, `bundle-budget`) were not re-run locally at this base.
+
+## App-wide connectivity evidence (local stub)
+
+The route/screen and outcome denominators above are unchanged. [c-offline-connectivity-ux-stub](c-offline-connectivity-ux-stub-apps-bind.md) adds app-wide offline/cached-read observations and blocked-write checks on all 37 independent screens plus 404. `apps/web/test/offline-connectivity.test.tsx`, `apps/web/test/connectivity-write-guard.test.ts`, `apps/e2e/tests/offline-connectivity.e2e.test.ts`, and `apps/e2e/tests/a11y/connectivity.a11y.test.ts` keep this separate from protocol integration, qualification, acceptance and release. Reconnect does not replay; service-worker registration attempts remain zero. No existing table cell is promoted by these observations.

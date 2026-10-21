@@ -287,3 +287,10 @@ describe("local evidence matrix: the bind doc equals the sources", () => {
     expect(doc).toContain("contract_change=NO");
   });
 });
+
+it("links connectivity evidence without changing route/screen denominators or promoting integration claims", () => {
+  expect(doc).toContain("c-offline-connectivity-ux-stub-apps-bind.md");
+  expect(doc).toContain("offline-connectivity.e2e.test.ts");
+  expect(doc).toContain("connectivity.a11y.test.ts");
+  expect(doc).toContain("No existing table cell is promoted");
+});

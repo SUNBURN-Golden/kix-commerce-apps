@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -494,9 +495,9 @@ export function LiveReadSection({
             ))}
           </select>
         </label>
-        <button type="button" className="discovery-action" onClick={() => handlers.rebuildProjection()}>
+        <ConnectivityWriteButton requiresFresh={false} type="button" className="discovery-action" onClick={() => handlers.rebuildProjection()}>
           {LIVE_READ_REBUILD_LABEL}
-        </button>
+        </ConnectivityWriteButton>
         {model.actionLabel ? (
           <button type="button" className="discovery-action" onClick={() => handlers.runReturn()}>
             {model.actionLabel}

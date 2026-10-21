@@ -1,3 +1,5 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { connectedHandler } from "../connectivity/write-guard";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ProtocolError, type Booking, type Hold, type Performance } from "@kix/protocol-adapter";
@@ -5,7 +7,7 @@ import { focusControl, heldAfterError } from "../a11y/focus";
 import { AmountNotice, DeadlineLine, StatusMark } from "../a11y/marks";
 import { bookingQuantityNumber, capacityLine, presentQuantityLine } from "../a11y/present";
 import { useFormatWhen } from "../i18n/locale-context";
-import { protocol } from "../protocol";
+import { protocol } from "../connectivity/desk-protocol";
 import { SafeText } from "../safe-text";
 import { useAdmissionDesk } from "../admission-desk";
 import { useJourneyDesk } from "../journey-desk";
@@ -91,6 +93,7 @@ export function BookingPage() {
   }
 
   async function placeHold() {
+    if (!connectedHandler()) return;
     const count = bookingQuantityNumber(quantity);
     if (count === null) {
       keepQuantity("Quantity must be a whole number from 1 to 6. The typed value was kept.");
@@ -109,6 +112,7 @@ export function BookingPage() {
   }
 
   async function releaseHold() {
+    if (!connectedHandler()) return;
     if (!hold) {
       return;
     }
@@ -128,6 +132,7 @@ export function BookingPage() {
   }
 
   async function confirm() {
+    if (!connectedHandler()) return;
     if (!hold) {
       return;
     }
@@ -268,7 +273,7 @@ export function BookingPage() {
           <div className="row-actions">
             {hold ? (
               <>
-                <button
+                <ConnectivityWriteButton
                   id="booking-release"
                   type="button"
                   className="ghost"
@@ -276,15 +281,15 @@ export function BookingPage() {
                   onClick={() => void releaseHold()}
                 >
                   Release hold
-                </button>
-                <button id="booking-confirm" type="submit" disabled={pending}>
+                </ConnectivityWriteButton>
+                <ConnectivityWriteButton id="booking-confirm" type="submit" disabled={pending}>
                   Confirm booking
-                </button>
+                </ConnectivityWriteButton>
               </>
             ) : (
-              <button id="booking-place" type="submit" disabled={pending}>
+              <ConnectivityWriteButton id="booking-place" type="submit" disabled={pending}>
                 Place hold
-              </button>
+              </ConnectivityWriteButton>
             )}
           </div>
         </form>

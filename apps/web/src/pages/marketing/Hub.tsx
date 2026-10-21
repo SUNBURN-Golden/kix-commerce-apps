@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
 import { Link } from "react-router-dom";
 import { MARKETING_CONTRACT_IDS, marketingPublishedLine } from "../../marketing/contracts";
 import { MARKETING_SURFACES } from "../../marketing/labels";
@@ -11,7 +12,7 @@ export function MarketingHubPage() {
   const tier = snapshot.membership?.tier ?? "guest";
 
   return (
-    <MarketingChrome>
+    <MarketingChrome onReadAgain={refresh}>
       <header className="section-head">
         <p className="eyebrow">Wave 7 · ORIGINAL_32</p>
         <h2>Marketing desk</h2>
@@ -68,7 +69,7 @@ export function MarketingHubPage() {
           </div>
         </dl>
         <div className="row-actions">
-          <button
+          <ConnectivityWriteButton
             type="button"
             className="ghost"
             onClick={() => {
@@ -77,7 +78,7 @@ export function MarketingHubPage() {
             }}
           >
             Reset marketing session
-          </button>
+          </ConnectivityWriteButton>
         </div>
       </article>
       <article className="panel" aria-label="Published contract">

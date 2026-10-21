@@ -1580,3 +1580,9 @@ nav a[aria-current="page"] {
     font-weight: normal;
   }
 }
+
+.connectivity { margin: .75rem auto; max-width: 76rem; overflow-wrap: anywhere; }
+.connectivity p { margin: .35rem 0; }
+.connectivity-button-reason { font-size: .85em; }
+button[data-connectivity-write][aria-disabled="true"] { cursor: not-allowed; }
+.cached-read { overflow-wrap: anywhere; }

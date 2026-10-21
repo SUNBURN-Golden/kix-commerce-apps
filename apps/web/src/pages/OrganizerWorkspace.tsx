@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useEffect, useRef } from "react";
 import { ORGANIZER_COMPOSED, type OrganizerStep } from "@kix/protocol-adapter";
 import { focusControl } from "../a11y/focus";
@@ -250,9 +251,9 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
               </table>
             </div>
           ) : null}
-          <button type="submit" className="organizer-ws-button" disabled={!model.canSubmit}>
+          <ConnectivityWriteButton type="submit" className="organizer-ws-button" disabled={!model.canSubmit}>
             Submit
-          </button>
+          </ConnectivityWriteButton>
         </fieldset>
       </form>
       <div className="panel organizer-ws-results">

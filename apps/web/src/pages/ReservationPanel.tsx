@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { ReservationCaseView } from "@kix/protocol-adapter";
 import { DeadlineLine, StatusMark } from "../a11y/marks";
 import { formatWhen } from "../format";
@@ -167,7 +168,7 @@ export function ReservationPanel({
       </dl>
       <div className="row-actions">
         {controls.map((control) => (
-          <button
+          <ConnectivityWriteButton
             key={control.command}
             type="button"
             className={control.command === "register_show" || control.command === "authorize_admission" ? undefined : "ghost"}
@@ -175,7 +176,7 @@ export function ReservationPanel({
             onClick={() => onCommand(control.command)}
           >
             {control.label}
-          </button>
+          </ConnectivityWriteButton>
         ))}
       </div>
     </aside>

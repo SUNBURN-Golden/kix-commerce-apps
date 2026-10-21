@@ -102,6 +102,8 @@ const TRANSPORT: Record<string, Omit<StatusWordGuideEntry, "word" | "kind">> = {
     doText: "Nothing to check; the synthetic adapter answers.",
     dontText: "Not an offline fault. The stub is the default, not a failure.",
   },
+  offline: { meaning: "The browser reports lost connectivity; retained values are cached history.", doText: "Inspect retained values and reconnect, then explicitly read again before writing.", dontText: "Not an empty result or a determination of an interrupted write." },
+  online: { meaning: "The browser is online and a current-epoch loopback probe answered.", doText: "Read the cached-data notice and the controller's own fences.", dontText: "Not production readiness, a replay, or a fresh business read." },
 };
 
 const BINDING: Record<(typeof ROUTE_BINDINGS)[number], Omit<StatusWordGuideEntry, "word" | "kind">> = {
@@ -233,6 +235,7 @@ const JOURNEY_WORDS: Record<string, Omit<StatusWordGuideEntry, "word" | "kind">>
 };
 
 const CODE_WORDS: Record<string, Omit<StatusWordGuideEntry, "word" | "kind">> = {
+  CONNECTIVITY_BLOCKED: { meaning: "The app refused a new write before dispatch because connectivity or its read is unavailable.", doText: "Restore connectivity and explicitly read again. Nothing is queued.", dontText: "Not UNKNOWN; an already dispatched interruption stays UNKNOWN separately." },
   GATE_UNAVAILABLE: { meaning: "The loopback gate could not be reached.", doText: "Check the gate, then reload.", dontText: "Not a fallback to stub." },
   STALE_RESPONSE: { meaning: "The gate's reply was older than the request expected.", doText: "Treat the value as STALE.", dontText: "Not a fresh answer." },
   REQUEST_TIMEOUT: { meaning: "The one attempt ran out of time.", doText: "Outcome is UNKNOWN until a fence or receipt says otherwise.", dontText: "Not retried; there is no retry." },
