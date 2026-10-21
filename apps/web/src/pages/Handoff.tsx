@@ -1,3 +1,4 @@
+import { ValidatedForm } from "../forms/ValidatedForm";
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Link } from "react-router-dom";
 import { StatusMark } from "../a11y/marks";
@@ -208,7 +209,7 @@ function HandoffBody({
         </ul>
       </section>
 
-      <form className="panel" onSubmit={onQuery} aria-label="Handoff filter">
+      <ValidatedForm id="handoff-filter-form" fields={[]} reportedIssues={view.focusId ? [{ fieldId: view.focusId, labelKey: "validation.label.filter", messageKey: "validation.filter", params: { max: 0 } }] : []} className="panel" onSubmit={onQuery} aria-label="Handoff filter">
         <label htmlFor="handoff-query">
           Filter features
           <input
@@ -231,7 +232,7 @@ function HandoffBody({
         </label>
         <button type="submit">Apply filter</button>
         <p className="muted">Enter applies the text already in the fields. This page does not post.</p>
-      </form>
+      </ValidatedForm>
 
       {view.error ? (
         <p id="handoff-error" className="alert" role="alert" data-focus={view.focusId ?? ""}>

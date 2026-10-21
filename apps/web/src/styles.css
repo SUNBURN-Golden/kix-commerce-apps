@@ -1580,3 +1580,20 @@ nav a[aria-current="page"] {
     font-weight: normal;
   }
 }
+
+/* App-local input-format errors; outcome panels keep their own status words. */
+.error-summary {
+  border: 2px solid var(--stamp);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-block: 0 1rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  grid-column: 1 / -1;
+}
+.error-summary:focus { outline: 3px solid currentColor; outline-offset: 3px; }
+.error-summary h3 { margin-top: 0; }
+.field-error { display: block; color: var(--stamp); overflow-wrap: anywhere; }
+input[aria-invalid="true"], select[aria-invalid="true"] { border: 2px solid var(--stamp); }
+
+.error-summary a { display: block; min-height: 24px; padding-block: 0.25rem; }

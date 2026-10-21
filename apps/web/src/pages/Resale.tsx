@@ -1,3 +1,5 @@
+import { ValidatedForm } from "../forms/ValidatedForm";
+import { field } from "../forms/validation";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import type { Booking, Performance, ResaleListing } from "@kix/protocol-adapter";
@@ -91,14 +93,14 @@ export function ResalePage() {
           marketplace.
         </p>
       </header>
-      <form className="panel" onSubmit={(event) => void openListing(event)}>
+      <ValidatedForm id="resale-form" busy={pending} fields={[field("resale-booking", "validation.label.bookingId"), field("resale-ask", "validation.label.askLabel", { maxLength: 40 })]} className="panel" onSubmit={(event) => void openListing(event)}>
         <label>
           Booking id
-          <input value={bookingId} onChange={(event) => setBookingId(event.target.value)} autoComplete="off" />
+          <input id="resale-booking" value={bookingId} onChange={(event) => setBookingId(event.target.value)} autoComplete="off" />
         </label>
         <label>
           Ask label
-          <input
+          <input id="resale-ask"
             value={askLabel}
             maxLength={40}
             onChange={(event) => setAskLabel(event.target.value)}
@@ -109,7 +111,7 @@ export function ResalePage() {
         <button type="submit" disabled={pending}>
           Open listing
         </button>
-      </form>
+      </ValidatedForm>
       {error ? (
         <p className="alert" role="alert">
           {error}

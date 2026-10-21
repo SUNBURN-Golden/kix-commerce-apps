@@ -1,3 +1,5 @@
+import { ValidatedForm } from "../forms/ValidatedForm";
+import { field } from "../forms/validation";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ProtocolError, type Booking, type Hold, type Performance } from "@kix/protocol-adapter";
@@ -233,7 +235,7 @@ export function BookingPage() {
           </div>
         </article>
       ) : (
-        <form
+        <ValidatedForm id="booking-form" busy={pending} fields={[field("booking-quantity", "validation.label.quantity", { kind: "bookingQuantity" })]}
           className="panel"
           onSubmit={(event) => {
             event.preventDefault();
@@ -287,7 +289,7 @@ export function BookingPage() {
               </button>
             )}
           </div>
-        </form>
+        </ValidatedForm>
       )}
       <JourneyPanel variant="booking" model={journey} />
       <ReservationPanel

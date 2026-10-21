@@ -1,3 +1,5 @@
+import { ValidatedForm } from "../forms/ValidatedForm";
+import { field } from "../forms/validation";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { INVENTORY_SCENARIOS, type InventoryScenario } from "@kix/protocol-adapter";
@@ -293,7 +295,7 @@ function GaPool({
       <p>{row.noteLine}</p>
       <p>{row.observedLine}</p>
       {row.capacityLine ? <p>{row.capacityLine}</p> : null}
-      <form
+      <ValidatedForm id="inventory-ga-form" fields={[field("inventory-quantity", "validation.label.quantity", { kind: "positiveInteger" })]}
         className="discovery-controls"
         aria-label="GA quantity"
         onSubmit={(event) => {
@@ -315,7 +317,7 @@ function GaPool({
         <button type="submit" className="discovery-action">
           Select quantity
         </button>
-      </form>
+      </ValidatedForm>
       <p id="inventory-quantity-hint" className="muted">
         {INVENTORY_QUANTITY_HINT}
       </p>
