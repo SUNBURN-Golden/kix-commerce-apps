@@ -26,7 +26,10 @@ const DRIVERS: Record<string, Driver> = {
     return formProblems(page, "booking-quantity");
   },
   "booking:missing": async (page) => {
-    await page.getByRole("alert").first().waitFor();
+    const empty = page.locator('[data-async-state="empty"]');
+    await empty.first().waitFor();
+    expect(await empty.first().getAttribute("role")).toBe("status");
+    expect(await page.getByRole("alert").count()).toBe(0);
     return [];
   },
   "discovery:empty": async (page) => {

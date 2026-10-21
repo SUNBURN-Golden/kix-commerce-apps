@@ -1,3 +1,4 @@
+import { AsyncState } from "../components/AsyncState";
 import { useState } from "react";
 import { useRestoreFocus } from "../a11y/focus";
 import { CROSS_SURFACE_SCENARIOS, type CrossSurfaceFilter, type CrossSurfaceScenario } from "@kix/protocol-adapter";
@@ -194,12 +195,12 @@ export function CrossSurfaceStatus({ model }: { model: XsModel }) {
   return (
     <section id="xs-status" className="discovery-section" aria-labelledby="xs-status-head" tabIndex={-1}>
       <h3 id="xs-status-head">Status</h3>
-      <p role="status" data-screen-state={model.state}>
-        <StatusMark kind={model.state === "ready" ? "selected" : model.state === "in-progress" ? "loading" : "blocked"} /> {model.statusLine}
-      </p>
+      {model.state === "in-progress" || model.state === "empty" || model.state === "not-bound" ? (
+        <AsyncState kind={model.state === "in-progress" ? "loading" : model.state} label="Journeys" data-screen-state={model.state}><p>{model.statusLine}</p></AsyncState>
+      ) : <p role="status" data-screen-state={model.state}><StatusMark kind={model.state === "ready" ? "selected" : "blocked"} /> {model.statusLine}</p>}
       {model.detailLine ? <p className="muted">{model.detailLine}</p> : null}
       {model.lastLine ? (
-        <p role="status" data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
+        <p role="status" aria-live="polite" aria-busy={false} data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
           {model.lastLine}
         </p>
       ) : null}
@@ -217,6 +218,7 @@ function RowView({ row }: { row: XsRowModel }) {
         <span className="muted">{row.branch}</span>
       </th>
       <td>
+        {row.status === "unknown" ? <AsyncState kind="unknown" label="Journey" announcement="parent" /> : null}
         <span className="status-word">{row.statusWord}</span>
         <br />
         <span className="muted">{row.basis}</span>

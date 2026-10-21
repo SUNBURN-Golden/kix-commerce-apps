@@ -19,6 +19,26 @@ export const protocol = new Proxy(real, {
         throw new Error("Bearer sk_live_FAKE0123456789abcdef shell describe failed");
       };
     }
+    if (key === "listPerformances") {
+      const fixture = window as unknown as {
+        __kixAsyncReadMode?: "held" | "error" | "empty" | "normal";
+        __kixAsyncReads?: number;
+        __kixAsyncReleaseRead?: () => void;
+      };
+      if (fixture.__kixAsyncReadMode) {
+        return () => {
+          fixture.__kixAsyncReads = (fixture.__kixAsyncReads ?? 0) + 1;
+          if (fixture.__kixAsyncReadMode === "held") {
+            return new Promise((_resolve, reject) => {
+              fixture.__kixAsyncReleaseRead = () => reject(new Error("Synthetic catalogue read fault"));
+            });
+          }
+          if (fixture.__kixAsyncReadMode === "error") return Promise.reject(new Error("Synthetic catalogue read fault"));
+          if (fixture.__kixAsyncReadMode === "empty") return Promise.resolve([]);
+          return target.listPerformances();
+        };
+      }
+    }
     const value = Reflect.get(target, key, receiver);
     return typeof value === "function" ? value.bind(target) : value;
   },
