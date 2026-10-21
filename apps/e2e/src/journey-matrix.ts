@@ -1,3 +1,4 @@
+export { DEV_SCREENS, GALLERY_CHECK_IDS } from "./gallery-matrix";
 /**
  * The journey x outcome matrix this suite answers for. App-internal; not a public schema.
  *

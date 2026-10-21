@@ -377,3 +377,11 @@ Run on 2026-10-18 at base main `f570c84c6a969bb88642eecf534e68c60ffee853` plus t
 | `KIX_REQUIRE_GATE=0 npm test`, web | 54 files passed (695 tests passed), including `local-evidence-matrix.test.ts` |
 
 The pinned-checkout live-gate run and the browser suites (`browser-e2e`, `a11y-observation`, `bundle-budget`) were not re-run locally at this base.
+
+## Development-only route coverage
+
+Separate from the production screen and business-surface denominators. No integration, qualification, acceptance or release is implied.
+
+| Route | Mode | Node evidence | Browser evidence | qualification_state | acceptance_state | release_state |
+| --- | --- | --- | --- | --- | --- | --- |
+| /dev/gallery | development stub only | component-gallery.test.tsx; gallery-production-exclusion.test.ts | gallery.production-absent; gallery.cases-axe; gallery.keyboard-states; gallery.locale-preferences (apps/e2e/tests/a11y/gallery.a11y.test.ts) | UNQUALIFIED | PENDING | NOT_AUTHORIZED |

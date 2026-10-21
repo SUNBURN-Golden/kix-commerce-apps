@@ -537,6 +537,14 @@ export function LiveReadSection({
               id={`discovery-live-row-${row.rowId}`}
               role="option"
               aria-selected={index === safeFocus}
+              onClick={() => onOpen(row.rowId)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onOpen(row.rowId);
+                }
+              }}
               data-kind={row.kind}
               data-status={row.statusLabel}
               data-provenance="synthetic"
@@ -557,9 +565,7 @@ export function LiveReadSection({
               <p className="when">
                 <time dateTime={row.watermark}>{formatWhen(row.watermark)}</time>
               </p>
-              <button type="button" className="discovery-action" onClick={() => onOpen(row.rowId)}>
-                Open detail
-              </button>
+              <span>Open detail (Enter or Space on the selected row)</span>
             </li>
           ))}
         </ul>

@@ -20,9 +20,10 @@ export interface Suite {
 export function useBrowser(): Suite {
   const origin = inject("origin");
   const faultOrigin = (inject as (key: string) => unknown)("faultOrigin") as string | undefined;
+  const galleryOrigin = (inject as (key: string) => unknown)("galleryOrigin") as string | undefined;
   let current: Session | null = null;
   beforeAll(async () => {
-    current = await openSession(origin, faultOrigin ? [faultOrigin] : []);
+    current = await openSession(origin, [faultOrigin, galleryOrigin].filter((value): value is string => value !== undefined));
   });
   afterAll(async () => {
     if (!current) {

@@ -30,7 +30,12 @@ export async function buildShellFaultApp(): Promise<BuiltApp> {
   return buildApp(true);
 }
 
-async function buildApp(withFaults: boolean): Promise<BuiltApp> {
+/** Test-only build that retains development branches. Never used as production evidence. */
+export async function buildGalleryApp(): Promise<BuiltApp> {
+  return buildApp(false, true);
+}
+
+async function buildApp(withFaults: boolean, gallery = false): Promise<BuiltApp> {
   for (const key of Object.keys(process.env)) {
     if (key.startsWith("VITE_")) {
       // Intentional dynamic delete: the e2e harness scrubs every VITE_* env var
@@ -43,22 +48,30 @@ async function buildApp(withFaults: boolean): Promise<BuiltApp> {
   const envDir = path.join(scratch, "env");
   const outDir = path.join(scratch, "dist");
   fs.mkdirSync(envDir);
-  await build({
-    root: webRoot,
-    configFile: path.join(webRoot, "vite.config.ts"),
-    envDir,
-    mode: "production",
-    logLevel: "warn",
-    resolve: withFaults
-      ? {
-          alias: [
-            { find: /^\.\/pages\/Receipts$/, replacement: path.resolve(here, "../shell-fixtures/receipts-fault.ts") },
-            { find: /^(\.\.?\/)+protocol$/, replacement: path.resolve(here, "../shell-fixtures/protocol-fault.ts") },
-          ],
-        }
-      : undefined,
-    build: { outDir, emptyOutDir: true, minify: true },
-  });
+  const priorNodeEnv = process.env.NODE_ENV;
+  process.env.NODE_ENV = "production";
+  try {
+    await build({
+      root: webRoot,
+      configFile: path.join(webRoot, "vite.config.ts"),
+      envDir,
+      mode: "production",
+      define: gallery ? { "import.meta.env.DEV": "true" } : undefined,
+      logLevel: "warn",
+      resolve: withFaults
+        ? {
+            alias: [
+              { find: /^\.\/pages\/Receipts$/, replacement: path.resolve(here, "../shell-fixtures/receipts-fault.ts") },
+              { find: /^(\.\.?\/)+protocol$/, replacement: path.resolve(here, "../shell-fixtures/protocol-fault.ts") },
+            ],
+          }
+        : undefined,
+      build: { outDir, emptyOutDir: true, minify: true },
+    });
+  } finally {
+    if (priorNodeEnv === undefined) Reflect.deleteProperty(process.env, "NODE_ENV");
+    else process.env.NODE_ENV = priorNodeEnv;
+  }
   if (process.env.KIX_E2E_AXE_SOURCE) {
     fs.copyFileSync(process.env.KIX_E2E_AXE_SOURCE, path.join(outDir, "axe.min.js"));
   }

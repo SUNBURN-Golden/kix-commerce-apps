@@ -97,6 +97,10 @@ describe("discovery live read section", () => {
     expect(html).toContain('data-source="synthetic-projection"');
     expect(html).toContain('role="listbox"');
     expect(html).toContain('aria-label="Synthetic projection rows"');
+    const options = [...html.matchAll(/<li[^>]*role="option"[\s\S]*?<\/li>/g)];
+    expect(options.length).toBeGreaterThan(0);
+    for (const option of options) expect(option[0]).not.toContain("<button");
+    expect(html).toContain("Enter or Space on the selected row");
     expect(html).toContain("sequence 1");
     expect(html).toContain("Next page");
     expect(html).toContain(LIVE_READ_REBUILD_LABEL);

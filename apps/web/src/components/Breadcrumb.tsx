@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
-import { useT } from "../i18n/locale-context";
-import { routeKey } from "../i18n/use-page-identity";
+import { useLocale } from "../i18n/locale-context";
+import { routeLabel } from "../i18n/use-page-identity";
 import { ROUTE_GROUPS, breadcrumbFor, routeFor } from "../shell/route-registry";
 
 /**
@@ -9,7 +9,7 @@ import { ROUTE_GROUPS, breadcrumbFor, routeFor } from "../shell/route-registry";
  */
 export function Breadcrumb() {
   const { pathname } = useLocation();
-  const t = useT();
+  const { t, locale } = useLocale();
   const crumbs = breadcrumbFor(pathname);
   const route = routeFor(pathname);
   if (!route || crumbs.length === 0) {
@@ -19,7 +19,7 @@ export function Breadcrumb() {
   const labelOf = (crumb: (typeof crumbs)[number]): string => {
     const target = crumb.current ? route : crumb.to ? routeFor(crumb.to) : null;
     if (target) {
-      return t(routeKey(target));
+      return routeLabel(target, t, locale);
     }
     const group = ROUTE_GROUPS.find((item) => item.label === crumb.label);
     return group ? t(`nav.group.${group.id}`) : crumb.label;

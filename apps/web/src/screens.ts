@@ -1,4 +1,4 @@
-import type { RouteId } from "./shell/route-registry";
+import type { AppRouteId, RouteId } from "./shell/route-registry";
 import { createScreenLoader, type ScreenImport } from "./shell/screen-loader";
 
 /**
@@ -45,4 +45,9 @@ const SCREEN_IMPORTS: Record<RouteId, ScreenImport> = {
   help: () => import("./pages/Help").then((m) => ({ default: m.HelpPage })),
 };
 
-export const screens = createScreenLoader<RouteId>(SCREEN_IMPORTS);
+export const screens = createScreenLoader<AppRouteId>({
+  ...SCREEN_IMPORTS,
+  ...(import.meta.env.DEV ? {
+    "component-gallery": () => import("./dev/gallery/ComponentGallery").then((m) => ({ default: m.ComponentGallery })),
+  } : {}),
+} as Record<AppRouteId, ScreenImport>);
