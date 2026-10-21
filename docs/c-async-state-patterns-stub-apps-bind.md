@@ -176,6 +176,44 @@ Browser failures observed and fixed: duplicate `p.empty` selectors introduced by
 
 Final browser reruns also supplied `KIX_E2E_RECORD_OUT=/tmp/kix-async-e2e-record.json` and `KIX_A11Y_RECORD_OUT=/tmp/kix-async-a11y-record.json` respectively. These record paths add no product behavior and are not committed.
 
+## PR fix round 1 — initial bundle budget
+
+Repair base: `c8893047c718106965f8dff862d1642594d30c30` on `agent/kixc-c-async-state-patterns-stub`. The repair is an uncommitted working-tree change over that SHA; no new delivery HEAD is claimed. No commit, push or external post was made.
+
+The supplied CI failure is reproduced exactly by building an isolated `git archive HEAD` with Node 22.23.3 and measuring it with the unchanged budget script: initial JS is **290563 B gzip**, above **290000 B**. The earlier local figures above used Node 20.19.2 (zlib 1.3.1); Node 22.23.3 uses zlib 1.3.1-e00f703 and produces different gzip sizes. A Node 20 pass therefore did not establish that the CI budget would pass.
+
+`AsyncStateFrame` now owns the shared markup, visible state mark and role/live/busy attributes. `ScreenLoading` imports this small frame directly, so the full `AsyncState` action and binding presentation loads with the existing screen chunks. Screen-only English/Korean copy is in the app-internal `async-state/messages.ts`, with both locales and all five non-loading states required by TypeScript. Loading reuses the existing `status.loading.word` and `status.loading.meaning` translations. Non-loading words, notes and action labels are unchanged. The existing locale tests combine both catalogues and retain their key, placeholder, wording, length and currency assertions; the source scan also covers the deferred copy file.
+
+The Node 22 final build measures **289961 B initial JS gzip**, **4912 B initial CSS gzip**, **625140 B total gzip**, and **21714 B** for the largest route chunk. Initial JS decreased by **602 B**; **39 B** remain below its limit. The shared screen chunk increases the file/chunk counts from 62/60 to 63/61. Every existing size limit passes; the budget file, checker and CI are unchanged. Future changes still need the Node 22 size check.
+
+Repair files:
+
+- `apps/web/src/components/AsyncStateFrame.tsx` (new shared frame)
+- `apps/web/src/components/AsyncState.tsx`
+- `apps/web/src/components/ScreenLoading.tsx`
+- `apps/web/src/async-state/messages.ts` (new deferred copy)
+- `apps/web/src/i18n/catalogue.ts`
+- `apps/web/test/i18n.test.tsx`
+- `docs/c-async-state-patterns-stub-apps-bind.md`
+
+Validation commands use `npm exec --yes --package=node@22 -- <command>` from the repository root; the resolved tool is Node 22.23.3. This temporary test tool changes no dependency manifest or lockfile. Browser commands also set `KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1` and use the existing loopback-only harness. Logs and browser records are under `/tmp/kix-async-fix-*`.
+
+| Evidence | Result |
+|---|---|
+| Isolated original-HEAD build + unchanged size checker | Expected failure reproduced: initial JS 290563 B > 290000 B. |
+| `npm run build`, `npm run budget` | Pass with Node 22; all unchanged size limits pass. |
+| `npm run typecheck`, `npm run typecheck:e2e`, `npm run lint` | Pass. |
+| `KIX_REQUIRE_GATE=0 npm run coverage:check` | Adapter: 1306 passed, 23 live-gate tests explicitly skipped. Web: 890 passed, including the 37-route / 222-cell matrix. All existing coverage floors pass. |
+| `npm test -w @kix/web -- i18n.test.tsx async-state-patterns.test.tsx screen-loader.test.tsx` | Pass: 50 tests, including the extended deferred-copy source scan. |
+| `npm run test:e2e` | Pass on the final source: 51 real-Chrome journey/fault tests. The browser record reports zero non-loopback, non-GET or application network calls. |
+| `npm run test:a11y` | Pass on the final source: 236 tests, 37 screen records, 232 required check ids including all six async checks. Normal/held-loading/error/empty states, one keyboard read, STALE, UNKNOWN fencing, dark mode and forced colours pass against the unchanged findings ratchet. The browser record reports zero non-loopback, non-GET or application network calls. |
+| `npm run test:budget` | Pass on the final source: 9 real-Chrome split, render and chunk-failure tests, including held loading and UNKNOWN-fence preservation. The browser record reports zero non-loopback, non-GET or application network calls. |
+| `npm run cycle-check`, `npm run deps:check` | Pass; no circular imports or dependency changes. |
+| Locked bindings and protected files | SHA256 remains `83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249`; no adapter, pin, CI, `.aiops/` or `docs/aiops/` edit. |
+| `git diff --check` | Pass after the evidence update. |
+
+M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. `contract_change=NO`; the original fail-closed boundaries and unresolved session TTL remain in force. Hosted exact-head CI and independent review of the repaired tree remain for the supervisor; these local results do not claim either one ran.
+
 ## Not verified
 
 The authenticated live protocol gate (`KIX_REQUIRE_GATE=0` deliberately skips it), hosted CI, HTTP mode in a browser, real producers/providers/SDKs, real devices, screen readers and user acceptance. Nothing authorizes payment, credit disbursement, venue scanning, a public deployment or production operation. The a11y target standard and session TTL remain UNDETERMINED.

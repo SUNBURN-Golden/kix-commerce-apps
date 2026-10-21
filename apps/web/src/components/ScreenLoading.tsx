@@ -1,4 +1,4 @@
-import { AsyncState } from "./AsyncState";
+import { AsyncStateFrame } from "./AsyncStateFrame";
 import { useT } from "../i18n/locale-context";
 import { routeKey } from "../i18n/use-page-identity";
 import { ROUTES } from "../shell/route-registry";
@@ -9,8 +9,8 @@ export function ScreenLoading({ label }: { label: string }) {
   // The caller passes the registry label; a label no route owns is shown as given.
   const route = ROUTES.find((entry) => entry.label === label);
   return (
-    <AsyncState kind="loading" label="" className="screen-loading" data-screen-loading>
+    <AsyncStateFrame kind="loading" label="" word={t("status.loading.word")} note={t("status.loading.meaning")} className="screen-loading" data-screen-loading>
       {t("screen.loading", { label: route ? t(routeKey(route)) : label })}
-    </AsyncState>
+    </AsyncStateFrame>
   );
 }

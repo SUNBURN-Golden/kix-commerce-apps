@@ -9,21 +9,6 @@
  * Text that the adapter packages own (CREDIT_BOUNDARY.note, observation.detail, meta values) is not translated here.
  */
 const en = {
-  "async.loading.word": "Loading",
-  "async.loading.note": "Still in progress. Nothing is confirmed by this display.",
-  "async.empty.word": "Empty",
-  "async.empty.note": "No item in this view.",
-  "async.error.word": "Error",
-  "async.error.note": "This view encountered an error. Read the details and the next action; an earlier business outcome is unchanged.",
-  "async.unknown.word": "UNKNOWN",
-  "async.unknown.note": "Unconfirmed; it may have applied. No authoritative receipt establishes the outcome. Keep the fence and inspect the record before any next write.",
-  "async.stale.word": "STALE",
-  "async.stale.note": "Treat this read as history. Reading again does not resolve an UNKNOWN outcome.",
-  "async.not-bound.word": "NOT_BOUND",
-  "async.not-bound.note": "No command is bound here. The recorded reason is not a request.",
-  "async.help": "Help with this state",
-  "async.fence": "Inspect the fence and receipts",
-
   "locale.label": "Language",
   "locale.en": "English",
   "locale.ko": "한국어",
@@ -161,21 +146,6 @@ export type RouteMessageKey = Extract<MessageKey, `route.${string}`>;
 
 /** Korean for the same keys. A missing key is a type error; the test also diffs the key sets at run time. */
 const ko: Record<MessageKey, string> = {
-  "async.loading.word": "불러오는 중",
-  "async.loading.note": "진행 중입니다. 이 표시로 결과가 확정되지 않습니다.",
-  "async.empty.word": "빈 값",
-  "async.empty.note": "이 보기에 항목이 없습니다.",
-  "async.error.word": "오류",
-  "async.error.note": "이 보기에 오류가 발생했습니다. 상세 내용과 다음 행동을 확인하세요. 앞선 업무 결과는 바뀌지 않습니다.",
-  "async.unknown.word": "UNKNOWN",
-  "async.unknown.note": "결과 미확인입니다. 적용되었을 수도 있습니다. 차단을 유지하고 다음 쓰기 전에 기록을 확인하세요.",
-  "async.stale.word": "STALE",
-  "async.stale.note": "이 읽기를 과거 기록으로 취급하세요. 다시 읽어도 UNKNOWN 결과가 확정되지 않습니다.",
-  "async.not-bound.word": "NOT_BOUND",
-  "async.not-bound.note": "연결된 명령이 없습니다. 기록된 사유는 요청이 아닙니다.",
-  "async.help": "상태 도움말",
-  "async.fence": "차단과 영수증 기록 확인",
-
   "locale.label": "표시 언어",
   "locale.en": "English",
   "locale.ko": "한국어",
