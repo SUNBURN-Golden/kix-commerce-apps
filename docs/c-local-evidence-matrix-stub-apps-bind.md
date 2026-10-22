@@ -8,12 +8,12 @@ M2: the adapter composes nothing past `accept_trade`. `capture` and `settle_capt
 
 ## What did not change
 
-- Base main is `f570c84c6a969bb88642eecf534e68c60ffee853`. This document is a snapshot at that base. Node merge status was typed from `git log --first-parent --merges` there, and the test reads repo files, not git history. A node merged later shows `NOT_STARTED` until the table is regenerated at a newer base. `audit-5-fix` is not a program node and has no row. The exact PR head is stated in the PR body.
+- Base main is `20fa67b6dfee56ec33247774932aea3756f2a352`. This document is a snapshot at that base. Node merge status was typed from `git log --first-parent --merges` there, and the test reads repo files, not git history. A node merged later shows `NOT_STARTED` until the table is regenerated at a newer base. `audit-5-fix` and `audit-6-fix` are not program nodes and have no row. The exact PR head is stated in the PR body.
 - `packages/protocol-adapter/src/commerce-bindings.ts` is byte-identical. Its sha256 is `83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249`, and a test checks it.
-- Both vendored OpenAPI pins, `PINNED_ACTIONS`, the CI `KIX_PROTOCOL_GATE_SHA`, and `protocolMergeSha` do not move. `packages/protocol-adapter/src`, `apps/web/src`, `apps/e2e`, `.github/`, `.aiops/`, and `docs/aiops/` are untouched. The base refresh edits only the README, this document, and the two evidence-matrix test files. Nothing changes in kix-protocol.
+- Both vendored OpenAPI pins, `PINNED_ACTIONS`, the CI `KIX_PROTOCOL_GATE_SHA`, and `protocolMergeSha` do not move. `packages/protocol-adapter/src`, `packages/protocol-adapter/vendor`, `apps/e2e`, `.github/`, `.aiops/`, and `docs/aiops/` are untouched. This refresh edits the README, this document, the two evidence-matrix test files, the handoff packet and its page, the handoff test, and the closeout doc. Nothing changes in kix-protocol.
 - `contract_change=NO`. The row ids, the facet words, and the record format here are app-internal. They are not a public schema, operation, capability, or identifier.
 
-Count note: the node brief says the program file has 18 nodes. At this base `.aiops/program.json` holds 51 program nodes and `docs/aiops/PENDING_NODES.json` holds 42. The tests count from the files and never hardcode a number.
+Count note: the node brief says the program file has 18 nodes. At this base `.aiops/program.json` holds 60 program nodes and `docs/aiops/PENDING_NODES.json` holds 42. The tests count from the files and never hardcode a number.
 
 ## Facets
 
@@ -40,12 +40,12 @@ Every row points at this one block. A test checks it against the live pins, the 
 | gateOpenApiSha256 | 2a2af554cb1a8b128f2cf1b1d5b8cf6b1c8fa90adf30865dbc3e64932b3bd13f |
 | protocolMergeSha | 52a9b5cbf7777df55d2d2062cb8d99d862b423bb |
 | ciGateSha | 52a9b5cbf7777df55d2d2062cb8d99d862b423bb |
-| sdkDigest | null |
-| manifestDigest | null |
-| vectorDigest | null |
-| consumedProducerChange | false |
+| sdkDigest | 891ddd65f29262603bd0f76746a9308c810a71d4afd717b0f4d2e3f7d46dbaa2 |
+| manifestDigest | 1cce4ee5a9aa64ef40825c0e6dedf920050e594cf20ea0aaf087ecbde46f0cca |
+| vectorDigest | canonical-encoding:3446c13847bb153df06c1d5d3b7f09cd3b1648ac10bb0cc76d7b65c7014e99c2 mixed-input:9e2441ddefc22a2f8c7be230436620908b735b128b9445b7a5a916e4d86a2e19 |
+| consumedProducerChange | true |
 
-The SDK, manifest, and vector digests stay null. No producer change is consumed.
+The SDK, manifest, and vector digests come from the vendored p-sdk-0 BOOTSTRAP tuple (kix-protocol PR #123, merge `a74e7c459d3be6754ac3cf24503e43c7bc312358`), consumed by `consume-p-sdk-0` (PR #86). `consumedProducerChange` records that the SDK tuple was consumed; the catalogue, the gate, and the five pins did not move. BOOTSTRAP grants catalogue-schema binding only; this is not semantic conformance.
 
 ## Surface matrix
 
@@ -232,19 +232,19 @@ One row per node in `.aiops/program.json` and one per node in `docs/aiops/PENDIN
 | c-app-shell-resilience-stub | program | MERGED_RECORDED(PR #78) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
 | c-route-registry-navigation-stub | program | MERGED_RECORDED(PR #79) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
 | c-bundle-performance-budget-stub | program | MERGED_RECORDED(PR #80) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| c-locale-ko-en-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| c-display-preferences-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| c-untrusted-render-csp-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| c-quality-gates-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| c-user-guides-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| consume-p-sdk-0 | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-locale-ko-en-stub | program | MERGED_RECORDED(PR #82) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-display-preferences-stub | program | MERGED_RECORDED(PR #83) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-untrusted-render-csp-stub | program | MERGED_RECORDED(PR #84) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-quality-gates-stub | program | MERGED_RECORDED(PR #85) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-user-guides-stub | program | MERGED_RECORDED(PR #87) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| consume-p-sdk-0 | program | MERGED_RECORDED(PR #86) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
 | c-i18n-coverage-completion-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| c-async-state-patterns-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| c-form-validation-ux-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| c-offline-connectivity-ux-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| c-sdk0-mock-scenario-kit-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| c-component-gallery-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
-| c-web-coverage-uplift-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-async-state-patterns-stub | program | MERGED_RECORDED(PR #90) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-form-validation-ux-stub | program | MERGED_RECORDED(PR #91) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-offline-connectivity-ux-stub | program | MERGED_RECORDED(PR #92) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-sdk0-mock-scenario-kit-stub | program | MERGED_RECORDED(PR #93) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-component-gallery-stub | program | MERGED_RECORDED(PR #94) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
+| c-web-coverage-uplift-stub | program | MERGED_RECORDED(PR #95) | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
 | c-visual-regression-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
 | c-first-run-onboarding-stub | program | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | none |
 | consume-p-sdk-0 | pending | NOT_STARTED | NOT_EVALUATED | UNQUALIFIED | PENDING | NOT_AUTHORIZED | promoted to program (plan revision 20261017) |
@@ -308,11 +308,11 @@ Each line has its own count. Nothing is summed, nothing is subtracted, and there
 - D12 release page user acceptance: PENDING_USER_DECISION, 1 packet; realUserAcceptance false
 - D13 release decisions: install awaiting-user-decision, publish not-open, operate not-open; taken 0
 - D14 release NOT_AUTHORIZED rows: surfaces 43 of 43, journeys 10 of 10, nodes 102 of 102; RELEASED 0
-- D15 active program nodes: 60; MERGED_RECORDED 45, NOT_STARTED 15; central DONE not evaluated
+- D15 active program nodes: 60; MERGED_RECORDED 57, NOT_STARTED 3; central DONE not evaluated
 - D16 pending catalogue nodes: 42; WAITING 40, NOT_STARTED 2; counted as done 0
 - D17 distinct external prerequisites named by pending nodes: 26; completion not verified here; subtracted 0
 - D18 release page area denominators: scope 29 of 29, acceptance 3 of 3, environment 3 of 3, operations 4 of 4, gate 3 of 3 (own denominators, not merged)
-- D19 pending producers on the handoff packet: 32; connected 0
+- D19 pending producers on the handoff packet: 31; connected 0
 
 ### Adapter test files behind D01
 
@@ -362,21 +362,21 @@ Named by pending nodes. None is subtracted from the denominator, and none is sho
 
 This matrix does not replace the `/handoff` or `/release` records and does not approve what they leave open.
 
-- `/handoff` (`apps/web/src/handoff/packet.ts`) keeps `HANDOFF_NON_CLAIMS` (`releaseState` `NOT_AUTHORIZED`, `qualificationState` `UNQUALIFIED`, every completion claim false) and the `PENDING_PRODUCERS` list. D19 repeats its count.
+- `/handoff` (`apps/web/src/handoff/packet.ts`) keeps `HANDOFF_NON_CLAIMS` (`releaseState` `NOT_AUTHORIZED`, `qualificationState` `UNQUALIFIED`, every completion claim false) and the `PENDING_PRODUCERS` list. The consumed p-sdk-0 producer sits on `CONSUMED_PRODUCERS`, not in that list. D19 repeats the pending count.
 - `/release` (`packages/protocol-adapter/src/platform-release.ts`) keeps `RELEASE_DECISIONS` (install awaiting the user decision, publish and operate not open) and its five area denominators. D13 and D18 repeat them as they are, on their own denominators.
 - The a11y screen list (`apps/e2e/src/a11y-matrix.ts`) and the browser journeys matrix (`apps/e2e/src/journey-matrix.ts`) are read for browser evidence. Their records stay in `docs/c-a11y-acceptance-stub-apps-bind.md` and `docs/c-browser-e2e-stub-apps-bind.md`. The fault results stay in `docs/c-fault-injection-stub-apps-bind.md`.
 
 ## Local runs observed
 
-Run on 2026-10-18 at base main `f570c84c6a969bb88642eecf534e68c60ffee853` plus the base refresh, in a local worktree. These are local results, not CI results, and the exact PR head is in the PR body.
+Run on 2026-10-22 at base main `20fa67b6dfee56ec33247774932aea3756f2a352` plus this refresh, in a local worktree. These are local results, not CI results, and the exact PR head is in the PR body.
 
 | Run | Result |
 | --- | --- |
 | `npm ci`, `npm run typecheck`, `npm run build` | exit 0 |
-| `KIX_REQUIRE_GATE=0 npm test`, adapter | 62 files passed, 5 files skipped (1293 tests passed, 23 skipped) |
-| `KIX_REQUIRE_GATE=0 npm test`, web | 54 files passed (695 tests passed), including `local-evidence-matrix.test.ts` |
+| `KIX_REQUIRE_GATE=0 npm test`, adapter | 64 files passed, 5 files skipped (1317 tests passed, 23 skipped) |
+| `KIX_REQUIRE_GATE=0 npm test`, web | 78 files passed (1044 tests passed), including `local-evidence-matrix.test.ts` |
 
-The pinned-checkout live-gate run and the browser suites (`browser-e2e`, `a11y-observation`, `bundle-budget`) were not re-run locally at this base.
+The browser suites were run locally at this base and passed: `browser-e2e` 15 files (54 tests), `a11y-observation` 14 files (263 tests), `bundle-budget` 3 files (9 tests). The pinned-checkout live-gate run was not re-run locally (no kix-protocol checkout); a skipped live gate is not a live-gate pass.
 
 ## Development-only route coverage
 
@@ -392,7 +392,7 @@ The route/screen and outcome denominators above are unchanged. [c-offline-connec
 
 ## Combined merge snapshot
 
-The historical node matrix above remains tied to its stated base; its NOT_STARTED entries are not the current implementation inventory. The current merge joins gallery branch source `e65ee0f52d100a5e9e8eb7b08f810b311a00c45e` with main source `1ef36841d4a93ea7886550a5745584fc2f8fe33d`. Main already combined async states, form validation and connectivity (earlier sources `e7d865566acc47085ea88c2f4dc616cf3d66b704` and `57cbc3e26d9882c5b8294ef8c2b5288a2004eec1`). These local features are present together; production routes and business denominators are unchanged, while development gallery coverage is recorded separately above:
+The node matrix above is regenerated at base `20fa67b6dfee56ec33247774932aea3756f2a352`; its three `NOT_STARTED` entries are the program nodes with no merge on main at that base. The gallery merge joined gallery branch source `e65ee0f52d100a5e9e8eb7b08f810b311a00c45e` with main source `1ef36841d4a93ea7886550a5745584fc2f8fe33d`. Main already combined async states, form validation and connectivity (earlier sources `e7d865566acc47085ea88c2f4dc616cf3d66b704` and `57cbc3e26d9882c5b8294ef8c2b5288a2004eec1`). These local features are present together; production routes and business denominators are unchanged, while development gallery coverage is recorded separately above:
 
 | Local feature | Combined implementation evidence | qualification_state | acceptance_state | release_state |
 | --- | --- | --- | --- | --- |

@@ -9,6 +9,7 @@ import {
   COMMERCE_COMMAND_BINDINGS,
   JOURNEY_COMPOSED,
   JOURNEY_NOT_COMPOSED,
+  KIX_SDK_0_PIN,
   mapOperationalError,
   OPENAPI_CONTRACT_PIN,
   OPENAPI_INTEGRATION_GATE_PIN,
@@ -18,6 +19,7 @@ import { PROMOTED_FROM_PENDING } from "./support/local-evidence-matrix";
 import {
   buildHandoffView,
   claimRefused,
+  CONSUMED_PRODUCERS,
   FEATURE_ROWS,
   FEATURE_STATUSES,
   filterFeatures,
@@ -179,8 +181,15 @@ describe("local handoff packet", () => {
       expect(row.confirmsSuccess).toBe(false);
     }
     expect(FIRST_RUN.ciSkip).toContain("not a live-gate pass");
-    expect(HANDOFF_PINS.consumedProducerChange).toBe(false);
-    expect(HANDOFF_PINS.sdkDigest).toBeNull();
+    expect(HANDOFF_PINS.consumedProducerChange).toBe(true);
+    expect(HANDOFF_PINS.sdkDigest).toBe(KIX_SDK_0_PIN.catalogueSha256);
+    expect(HANDOFF_PINS.manifestDigest).toBe(KIX_SDK_0_PIN.manifestSha256);
+    // The vector digest is checked against the vendored files themselves, in the manifest's order, not against the value the packet was built from.
+    const vectorDigest = (name: string) =>
+      createHash("sha256")
+        .update(readFileSync(path.join(repoRoot, "packages/protocol-adapter/vendor/kix-sdk-0/conformance/vectors", `${name}.vectors.json`)))
+        .digest("hex");
+    expect(HANDOFF_PINS.vectorDigest).toBe(`canonical-encoding:${vectorDigest("canonical-encoding")} mixed-input:${vectorDigest("mixed-input")}`);
     expect(HANDOFF_PINS.contractOpenApiSha256).toBe(OPENAPI_CONTRACT_PIN.openApiFileSha256);
     expect(HANDOFF_PINS.gateOpenApiSha256).toBe(OPENAPI_INTEGRATION_GATE_PIN.openApiFileSha256);
     expect(HANDOFF_PINS.protocolMergeSha).toBe(OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha);
@@ -211,6 +220,27 @@ describe("local handoff packet", () => {
       if (row.waitingSurface) {
         expect(FEATURE_ROWS.map((feature) => feature.id)).toContain(row.waitingSurface);
       }
+    }
+
+    // The consumed p-sdk-0 producer left the pending list and records its own tuple, derived from the adapter pin.
+    expect(PENDING_PRODUCERS.map((row) => row.id)).not.toContain("consume-p-sdk-0");
+    expect(programIds).toContain("consume-p-sdk-0");
+    expect(CONSUMED_PRODUCERS.map((row) => row.id)).toEqual(["consume-p-sdk-0"]);
+    const consumed = CONSUMED_PRODUCERS[0];
+    expect(consumed.catalogue).toBe("program");
+    expect(consumed.pr).toBe(86);
+    expect(consumed.producerRepo).toBe(KIX_SDK_0_PIN.producerRepo);
+    expect(consumed.producerMergeSha).toBe(KIX_SDK_0_PIN.producerMergeSha);
+    expect(consumed.manifestSha256).toBe(KIX_SDK_0_PIN.manifestSha256);
+    expect(consumed.catalogueSha256).toBe(KIX_SDK_0_PIN.catalogueSha256);
+    expect(consumed.profileSha256).toBe(KIX_SDK_0_PIN.profileSha256);
+    expect(consumed.profileKind).toBe("BOOTSTRAP");
+    expect(consumed.profileRevision).toBe("bootstrap-1");
+    expect(consumed.grants).toBe("catalogue-schema-binding only");
+    expect(consumed.connected).toBe(false);
+    expect(consumed.implementedHere).toBe(true);
+    for (const flag of ["semanticConformance", "liveHttpServer", "productionEndpoint", "protocolTruth", "productionConformance"] as const) {
+      expect(consumed[flag], flag).toBe(false);
     }
 
     for (const item of [...ORIGINAL10_EVIDENCE, ...LOCAL_SURFACE_EVIDENCE]) {
@@ -250,6 +280,9 @@ describe("local handoff packet", () => {
       const surface = row.waitingSurface === null ? "none" : `\`${row.waitingSurface}\``;
       expect(doc, row.id).toContain(`| \`${row.id}\` | ${surface} |`);
     }
+    expect(doc).not.toContain("| `consume-p-sdk-0` | none |");
+    expect(doc).toContain("## Consumed producer");
+    expect(doc).toContain("| `consume-p-sdk-0` | program | PR #86 | catalogue-schema-binding only |");
     for (const item of LOCAL_SURFACE_EVIDENCE) {
       expect(doc, item.id).toContain(item.doc);
     }
@@ -317,6 +350,12 @@ describe("local handoff packet", () => {
     expect(ready).toContain("w6a-journey-map");
     expect(ready).toContain("bind-admission-fsm");
     expect(ready).toContain("not complete");
+    expect(ready).not.toContain("SDK digest is null");
+    expect(ready).toContain("Consumed producer consume-p-sdk-0 (PR #86");
+    expect(ready).toContain(KIX_SDK_0_PIN.manifestSha256.slice(0, 12));
+    expect(ready).toContain(KIX_SDK_0_PIN.catalogueSha256.slice(0, 12));
+    expect(ready).toContain("catalogue-schema-binding only");
+    expect(ready).toContain("not semantic conformance");
     expect(ready).not.toContain("settle_capture");
     expect(ready).not.toContain("invokeLocalCall");
     expect(ready).not.toMatch(/[$₩]|KRW|USD/);
@@ -370,6 +409,16 @@ describe("local handoff packet", () => {
     expect(doc).toContain("A screen does not complete protocol integration.");
     expect(doc).toContain("Browser run");
     expect(readme).toContain("docs/c-local-workspace-closeout-apps-bind.md");
+    // README no longer contradicts the vendored p-sdk-0 tuple.
+    expect(readme).not.toContain("The rest of kix-protocol is not vendored. These pins");
+    expect(readme).not.toContain("rest of kix-protocol is not vendored");
+    expect(readme).toContain("packages/protocol-adapter/vendor/kix-sdk-0");
+    expect(readme).toContain(KIX_SDK_0_PIN.producerMergeSha);
+    expect(readme).toContain(KIX_SDK_0_PIN.manifestSha256);
+    expect(readme).toContain(KIX_SDK_0_PIN.catalogueSha256);
+    expect(readme).toContain(KIX_SDK_0_PIN.profileSha256);
+    expect(readme).toContain("bootstrap-1");
+    expect(readme).toContain("catalogue-schema-binding only");
     for (const item of ORIGINAL10_EVIDENCE) {
       expect(doc).toContain(item.id);
       expect(doc).toContain(item.doc);
