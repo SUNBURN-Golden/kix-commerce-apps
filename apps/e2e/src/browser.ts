@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { chromium, type Browser, type BrowserContext, type Page } from "playwright-core";
+import { chromium, type Browser, type BrowserContext, type BrowserContextOptions, type Page } from "playwright-core";
 
 export interface Ledger {
   /** Requests the browser tried to send to any origin other than the loopback server. Blocked. */
@@ -52,14 +52,35 @@ const COUNTER = `
 })();
 `;
 
-export async function openSession(origin: string, extraOrigins: readonly string[] = []): Promise<Session> {
-  const allowed = new Set([origin, ...extraOrigins]);
-  const args = ["--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE 127.0.0.1", "--no-proxy-server"];
+/** Launch flags that keep the browser on the loopback server. A caller can add flags, never remove or override these. */
+export const LOOPBACK_ARGS = ["--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE 127.0.0.1", "--no-proxy-server"] as const;
+
+const RESERVED_ARG_PREFIXES = ["--host-resolver-rules", "--no-proxy-server", "--proxy-", "--no-sandbox", "--remote-debugging", "--disable-web-security", "--user-data-dir"];
+
+/** Extra launch flags and fixed context settings a suite may pin. Everything else about the session stays fixed. */
+export interface SessionOptions {
+  args?: readonly string[];
+  context?: Pick<BrowserContextOptions, "timezoneId" | "locale" | "deviceScaleFactor" | "reducedMotion">;
+}
+
+/** The final launch flags. A caller flag that touches the network, proxy, sandbox or profile is refused, not merged. */
+export function launchArgs(extra: readonly string[] = []): string[] {
+  for (const arg of extra) {
+    if (RESERVED_ARG_PREFIXES.some((prefix) => arg.startsWith(prefix))) {
+      throw new Error(`Launch flag is reserved by the harness: ${arg}`);
+    }
+  }
+  const args = [...LOOPBACK_ARGS, ...extra];
   if (process.env.KIX_E2E_NO_SANDBOX === "1") {
     args.push("--no-sandbox");
   }
-  const browser = await chromium.launch({ executablePath: chromePath(), headless: true, args });
-  const context = await browser.newContext({ serviceWorkers: "block", acceptDownloads: false });
+  return args;
+}
+
+export async function openSession(origin: string, extraOrigins: readonly string[] = [], options: SessionOptions = {}): Promise<Session> {
+  const allowed = new Set([origin, ...extraOrigins]);
+  const browser = await chromium.launch({ executablePath: chromePath(), headless: true, args: launchArgs(options.args) });
+  const context = await browser.newContext({ ...options.context, serviceWorkers: "block", acceptDownloads: false });
   const ledger: Ledger = { nonLoopback: [], nonGet: [], appNetworkCalls: 0 };
   await context.route("**/*", (route) => {
     const request = route.request();

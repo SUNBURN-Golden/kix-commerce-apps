@@ -1,2 +1,3 @@
 packages/protocol-adapter/vendor/kix-protocol.contract-only.openapi.json -text
 packages/protocol-adapter/vendor/kix-protocol.integration-gate.openapi.json -text
+apps/e2e/visual-baselines/**/*.png binary
