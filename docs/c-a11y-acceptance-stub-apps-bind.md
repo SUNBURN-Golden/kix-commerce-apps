@@ -189,3 +189,13 @@ KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 KIX_A11Y_RECORD_OUT=/
 | Tool and version recorded, automation is not acceptance | `A11Y_BASELINE`, `baseline` test, record `claims` |
 | Per-screen matrix is PENDING only, and holds references only | `acceptance` test, `assertNoAcceptance` |
 | CI, observation, acceptance and release not merged | separate CI job, no CI field, `release: NOT_AUTHORIZED` |
+
+## Development gallery observations
+
+`c-component-gallery-stub` adds separate development-only coverage for `/dev/gallery`; it does not change the production SCREENS denominator or inherit any acceptance. The existing tool/version/tags and UNDETERMINED target standard are retained. Its index and 22 isolated specimens are scanned in en/ko at desktop/320px, with keyboard and display-preference probes; exact checks are in [the gallery bind](c-component-gallery-stub-apps-bind.md) and the development row of the local evidence matrix.
+
+| Route | Mode | qualification_state | acceptance_state | release_state |
+| --- | --- | --- | --- | --- |
+| /dev/gallery | development stub only | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
+
+The gallery node also fixes an inherited nested-control defect in discovery's independent projection listbox, observed in the empty/conflict search states. Projection rows retain mouse and keyboard detail opening. The original discovery results list still has the recorded OPEN nested-interactive finding; no finding exemption or existing check was relaxed.

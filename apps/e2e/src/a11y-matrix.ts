@@ -1,3 +1,4 @@
+import { GALLERY_CHECK_IDS } from "./gallery-matrix";
 /**
  * The accessibility observation matrix. App-internal; not a public schema, operation, capability or ID.
  *
@@ -171,6 +172,7 @@ export const STATIC_CHECK_IDS: readonly string[] = [
   "a11y.kbd.tablist.handoff",
   "a11y.kbd.tablist.receipts",
   "a11y.kbd.listbox.discovery",
+  "a11y.kbd.listbox.projection",
   "a11y.kbd.listbox.inventory",
   "a11y.kbd.details.journeys",
   "a11y.kbd.escape-noop",
@@ -205,7 +207,7 @@ export const STATIC_CHECK_IDS: readonly string[] = [
 ];
 
 export function expectedCheckIds(): string[] {
-  const ids = [...STATIC_CHECK_IDS, ...ALT_STATES.map((state) => altCheckId(state.id))];
+  const ids = [...STATIC_CHECK_IDS, ...GALLERY_CHECK_IDS, ...ALT_STATES.map((state) => altCheckId(state.id))];
   for (const screen of SCREENS) {
     ids.push(kbdCheckId(screen.screenId), reflowCheckId(screen.screenId), structCheckId(screen.screenId));
     for (const viewport of Object.keys(VIEWPORTS) as ViewportName[]) {

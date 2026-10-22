@@ -378,18 +378,28 @@ Run on 2026-10-18 at base main `f570c84c6a969bb88642eecf534e68c60ffee853` plus t
 
 The pinned-checkout live-gate run and the browser suites (`browser-e2e`, `a11y-observation`, `bundle-budget`) were not re-run locally at this base.
 
+## Development-only route coverage
+
+Separate from the production screen and business-surface denominators. No integration, qualification, acceptance or release is implied.
+
+| Route | Mode | Node evidence | Browser evidence | qualification_state | acceptance_state | release_state |
+| --- | --- | --- | --- | --- | --- | --- |
+| /dev/gallery | development stub only | component-gallery.test.tsx; gallery-production-exclusion.test.ts | gallery.production-absent; gallery.cases-axe; gallery.keyboard-states; gallery.locale-preferences (apps/e2e/tests/a11y/gallery.a11y.test.ts) | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
+
 ## App-wide connectivity evidence (local stub)
 
 The route/screen and outcome denominators above are unchanged. [c-offline-connectivity-ux-stub](c-offline-connectivity-ux-stub-apps-bind.md) adds app-wide offline/cached-read observations and blocked-write checks on all 37 independent screens plus 404. `apps/web/test/offline-connectivity.test.tsx`, `apps/web/test/connectivity-write-guard.test.ts`, `apps/e2e/tests/offline-connectivity.e2e.test.ts`, and `apps/e2e/tests/a11y/connectivity.a11y.test.ts` keep this separate from protocol integration, qualification, acceptance and release. Reconnect does not replay; service-worker registration attempts remain zero. No existing table cell is promoted by these observations.
 
 ## Combined merge snapshot
 
-The historical node matrix above remains tied to its stated base; its NOT_STARTED entries are not the current implementation inventory. The combined working tree joins branch source `e7d865566acc47085ea88c2f4dc616cf3d66b704` with main source `57cbc3e26d9882c5b8294ef8c2b5288a2004eec1`. These three local features are present together, with no route or screen added and no change to the existing denominators:
+The historical node matrix above remains tied to its stated base; its NOT_STARTED entries are not the current implementation inventory. The current merge joins gallery branch source `e65ee0f52d100a5e9e8eb7b08f810b311a00c45e` with main source `1ef36841d4a93ea7886550a5745584fc2f8fe33d`. Main already combined async states, form validation and connectivity (earlier sources `e7d865566acc47085ea88c2f4dc616cf3d66b704` and `57cbc3e26d9882c5b8294ef8c2b5288a2004eec1`). These local features are present together; production routes and business denominators are unchanged, while development gallery coverage is recorded separately above:
 
 | Local feature | Combined implementation evidence | qualification_state | acceptance_state | release_state |
 | --- | --- | --- | --- | --- |
 | Shared async states | Main implementation retained; [binding and screen/state matrix](c-async-state-patterns-stub-apps-bind.md) | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
 | Form validation | Main implementation retained on all 16 forms, alongside connectivity write guards; [binding](c-form-validation-ux-stub-apps-bind.md) | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
-| App-wide connectivity | Branch implementation retained; [binding and merge verification](c-offline-connectivity-ux-stub-apps-bind.md) | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
+| App-wide connectivity | Main implementation retained; [binding and merge verification](c-offline-connectivity-ux-stub-apps-bind.md) | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
+| SDK0 mock scenarios | Main implementation retained; [binding](c-sdk0-mock-scenario-kit-stub-apps-bind.md) | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
+| Development component gallery | Branch implementation retained and expanded for main's shared components; [binding and merge verification](c-component-gallery-stub-apps-bind.md) | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
 
-This implementation inventory does not evaluate central completion or promote a pending producer. Both shared browser check registries retain all entries from main and the connectivity branch. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+This implementation inventory does not evaluate central completion or promote a pending producer. Both shared browser check registries retain main's async/form/connectivity entries and the branch's development gallery entries. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.

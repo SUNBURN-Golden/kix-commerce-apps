@@ -8,7 +8,7 @@ import { useBrowser } from "../../src/suite";
 import { openScreen } from "./helpers";
 
 const NAV = 'nav[aria-label="Surfaces"]';
-const EXPECTED_LINKS = navGroups().flatMap((group) => group.links.map((link) => link.path));
+const EXPECTED_LINKS = navGroups(ROUTES).flatMap((group) => group.links.map((link) => link.path));
 
 interface Focus {
   tag: string;
@@ -66,7 +66,7 @@ describe("grouped navigation by keyboard: wide, 320px menu, Escape, focus return
     await openScreen(page, suite.origin, "/buyer");
     expect(await page.locator(".nav-toggle").isVisible()).toBe(false);
     expect(await navLinksVisible(page)).toBe(EXPECTED_LINKS.length);
-    expect(await page.locator(`${NAV} .nav-group-label`).allTextContents()).toEqual(navGroups().map((group) => group.label));
+    expect(await page.locator(`${NAV} .nav-group-label`).allTextContents()).toEqual(navGroups(ROUTES).map((group) => group.label));
     expect(await tabThroughNav(page, false)).toEqual(EXPECTED_LINKS);
     // Exactly one link is current, by aria-current and not by colour alone: bold and a thicker rule.
     const current = page.locator(`${NAV} a[aria-current="page"]`);
