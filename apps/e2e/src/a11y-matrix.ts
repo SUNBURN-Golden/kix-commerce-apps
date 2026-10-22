@@ -166,6 +166,10 @@ export const kbdCheckId = (screenId: string) => `a11y.kbd.${screenId}`;
 
 export const STATIC_CHECK_IDS: readonly string[] = [
   "a11y.baseline",
+  "a11y.onboarding.first-visit",
+  "a11y.onboarding.role-keys",
+  "a11y.onboarding.demo-mark",
+  "a11y.onboarding.ko",
   "a11y.dialog.not-applicable",
   "a11y.accept.pending",
   "a11y.kbd.tablist.handoff",

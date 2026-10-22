@@ -41,6 +41,7 @@ The runtime audit found no web-app `localStorage`, IndexedDB, or cookie writes. 
 | `kix-session-journal` | unresolved/confirmed synthetic session journal | bounded versioned JSON written by `SessionJournal` |
 | `kix-session-journal-quarantine` | corrupt/lost journal evidence | bounded versioned JSON quarantine record |
 | `kix-locale` | display-language preference | the literal `en` or `ko` |
+| `kix-onboarding` | first-run guide dismissal preference | the literal `dismissed` |
 | `kix-reservation-attempt:` | reservation attempt counter | non-negative integer text |
 | `kix-resale-attempt:` | resale attempt counter | non-negative integer text |
 | `kix-organizer-attempt:` | organizer attempt counter | non-negative integer text |

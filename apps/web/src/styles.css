@@ -212,6 +212,23 @@ nav a[aria-current="page"] {
   border-color: var(--stamp);
 }
 
+.demo-mark {
+  flex-basis: 100%;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.first-run {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+
+.first-run > :first-child { margin-top: 0; }
+.first-run-roles { padding-left: 1.25rem; }
+.first-run-roles li { margin: 0.75rem 0; }
+
 .help-line {
   flex-basis: 100%;
   margin: 0;
@@ -1556,6 +1573,8 @@ nav a[aria-current="page"] {
   .crumb-row,
   .locale-switch,
   .skip,
+  .first-run,
+  #first-run-show,
   .receipt-nav {
     display: none;
   }

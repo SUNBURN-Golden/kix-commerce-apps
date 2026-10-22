@@ -10,6 +10,14 @@ English summary: how to install, run and test the stub desk locally, which port 
 
 stub이 기본 환경이다. stub 모드에서 base URL을 넣어도 HTTP가 열리지 않는다. `integration-http`는 opt-in이며 `http://127.0.0.1` 루프백 게이트만 상대한다. 이 저장소는 게이트를 시작하지 않는다. 게이트는 별도 kix-protocol checkout에서 `python3 -m integration_gate --port 8765`로 시작한다(한 번의 시도, 재시도 없음, Idempotency-Key 없음, 리다이렉트 추적 없음, stub fallback 없음, 브라우저 CORS 닫힘).
 
+## 처음 열었을 때
+
+첫 방문 안내는 합성 stub 데이터를 사용한다는 설명과 역할별 시작 링크를 보여 준다. 구매자는 `/buyer`, 주최자는 `/organizer/workspace`, 운영자는 `/receipts`에서 시작한다. Tab으로 링크와 ‘안내 건너뛰기’에 접근하고 Enter로 선택할 수 있다. 안내는 창을 막지 않으며 처음 열었을 때 초점을 옮기지 않는다.
+
+역할을 선택하거나 안내를 건너뛰면 이 탭에서 숨겨진다. 헤더의 ‘첫 방문 안내 다시 보기’로 다시 열 수 있다. 표시 언어는 헤더에서 English / 한국어를 선택한다. 상태 단어는 `/help`에서 확인한다. 모든 앱 화면의 ‘합성 데모 데이터’ 표시는 안내를 숨겨도 남으며 실제 판매·결제·권리·입장을 뜻하지 않는다.
+
+안내 표시 여부는 허용된 `kix-onboarding` 키에 `dismissed`라는 값만 저장한다. 저장소가 막히면 현재 페이지 메모리에서만 유지된다. 탭을 닫으면 사라지고, 새 탭에서는 다시 안내가 보인다. 보존 기간(TTL)은 UNDETERMINED이며 여기서 값을 정하거나 만료 시간을 추가하지 않는다. 세션 복구 저널의 증거와는 별개다.
+
 ## CI 작업과 로컬 명령 대응
 
 | CI 작업 | 로컬 명령 |
