@@ -1,3 +1,4 @@
+import { assertConnected, connectivityProtocol } from "./connectivity/write-guard";
 import type { CommerceProtocol } from "@kix/protocol-adapter";
 import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 import type { SettlementDeskCommand } from "./pages/SettlementPanel";
@@ -30,6 +31,8 @@ export async function runSettlementCommand(
   eventId: string,
   attempts: AttemptStore = sessionAttempts,
 ): Promise<void> {
+  assertConnected();
+  protocol = connectivityProtocol(protocol);
   const settlementId = settlementIdFor(eventId);
   const attempt = attempts.read(settlementId);
   const idempotencyKey = settlementCommandKey(command, settlementId, attempt);

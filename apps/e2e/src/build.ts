@@ -66,7 +66,8 @@ async function buildApp(withFaults: boolean, gallery = false): Promise<BuiltApp>
             ],
           }
         : undefined,
-      build: { outDir, emptyOutDir: true, minify: true },
+      // Use the same configured minifier as npm run build.
+      build: { outDir, emptyOutDir: true },
     });
   } finally {
     if (priorNodeEnv === undefined) Reflect.deleteProperty(process.env, "NODE_ENV");

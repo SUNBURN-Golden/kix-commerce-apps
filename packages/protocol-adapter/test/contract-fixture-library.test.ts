@@ -34,33 +34,15 @@ import {
   fixtureById,
   generateFixture,
   liveTupleKey,
-  type ContractFixture,
-  type FixtureObservation,
 } from "../src/contract-fixtures.js";
 import type { LocalCallInput } from "../src/local-call.js";
+import { fixtureObservationFor } from "../src/sdk0-mock-scenarios.js";
 import { SHOW_POLICY } from "./support/journey-fixture.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function matching(fixture: ContractFixture, patch: Partial<FixtureObservation> = {}): FixtureObservation {
-  return {
-    tupleKey: liveTupleKey(),
-    klass: fixture.klass,
-    operationId: fixture.identity?.operationId,
-    actor: fixture.identity?.actor,
-    action: fixture.identity?.action,
-    method: fixture.method ?? undefined,
-    code: fixture.code ?? undefined,
-    presentFields: fixture.resultKeys,
-    callSucceeded: fixture.klass === "SUCCESS",
-    substituteStub: false,
-    compute: "none",
-    ...patch,
-  };
 }
 
 function resultKeys(outcome: { kind: string; receipt?: Record<string, unknown> }): string[] {
@@ -93,7 +75,7 @@ describe("contract fixture catalogue", () => {
     ).map((fixture) => fixture.identity?.action);
     expect(bookingSuccess).toEqual(["create_event", "prepare_trade", "accept_trade"]);
     for (const fixture of CONTRACT_FIXTURES) {
-      const projected = classifyAgainstFixture(fixture.id, matching(fixture));
+      const projected = classifyAgainstFixture(fixture.id, fixtureObservationFor(fixture));
       expect(projected.ok, fixture.id).toBe(true);
       if (projected.ok) {
         expect(projected.klass).toBe(fixture.klass);
@@ -129,50 +111,50 @@ describe("contract fixture catalogue", () => {
 
   it("rejects a new enum, a missing field, a different identity, and a different tuple", () => {
     const success = fixtureById("booking-journey.create_event.success");
-    expect(classifyAgainstFixture(success.id, matching(success, { klass: "CAPTURED" }))).toMatchObject({
+    expect(classifyAgainstFixture(success.id, fixtureObservationFor(success, { klass: "CAPTURED" }))).toMatchObject({
       ok: false,
       reason: "NEW_ENUM",
     });
-    expect(classifyAgainstFixture(success.id, matching(success, { action: "mint_right" }))).toMatchObject({
+    expect(classifyAgainstFixture(success.id, fixtureObservationFor(success, { action: "mint_right" }))).toMatchObject({
       ok: false,
       reason: "NEW_ENUM",
       field: "action",
     });
     expect(
-      classifyAgainstFixture(success.id, matching(success, { presentFields: success.resultKeys.filter((key) => key !== "policyHash") })),
+      classifyAgainstFixture(success.id, fixtureObservationFor(success, { presentFields: success.resultKeys.filter((key) => key !== "policyHash") })),
     ).toMatchObject({ ok: false, reason: "MISSING_FIELD", field: "policyHash" });
-    expect(classifyAgainstFixture(success.id, matching(success, { operationId: "op-other" }))).toMatchObject({
+    expect(classifyAgainstFixture(success.id, fixtureObservationFor(success, { operationId: "op-other" }))).toMatchObject({
       ok: false,
       reason: "DIFFERENT_IDENTITY",
     });
-    expect(classifyAgainstFixture(success.id, matching(success, { actor: "other-buyer" }))).toMatchObject({
+    expect(classifyAgainstFixture(success.id, fixtureObservationFor(success, { actor: "other-buyer" }))).toMatchObject({
       ok: false,
       reason: "DIFFERENT_IDENTITY",
     });
-    expect(classifyAgainstFixture(success.id, matching(success, { tupleKey: "tuple-0" }))).toMatchObject({
+    expect(classifyAgainstFixture(success.id, fixtureObservationFor(success, { tupleKey: "tuple-0" }))).toMatchObject({
       ok: false,
       reason: "DIFFERENT_TUPLE",
     });
-    expect(classifyAgainstFixture(success.id, matching(success, { presentFields: [...success.resultKeys, "feeShare"] }))).toMatchObject({
+    expect(classifyAgainstFixture(success.id, fixtureObservationFor(success, { presentFields: [...success.resultKeys, "feeShare"] }))).toMatchObject({
       ok: false,
       reason: "INVALID",
       field: "feeShare",
     });
-    expect(classifyAgainstFixture("missing-case", matching(success))).toMatchObject({ ok: false, reason: "INVALID" });
+    expect(classifyAgainstFixture("missing-case", fixtureObservationFor(success))).toMatchObject({ ok: false, reason: "INVALID" });
 
     const held = fixtureById("not-bound.placeHold");
     expect(held.consideredAction).toBe("reserve_listing");
     expect(held.consideredAction).toBe(COMMERCE_COMMAND_BINDINGS.placeHold.consideredAction);
     expect(held.mappedOntoPrepareTrade).toBe(false);
-    expect(classifyAgainstFixture(held.id, matching(held, { action: "prepare_trade" }))).toMatchObject({
+    expect(classifyAgainstFixture(held.id, fixtureObservationFor(held, { action: "prepare_trade" }))).toMatchObject({
       ok: false,
       reason: "DIFFERENT_IDENTITY",
     });
-    expect(classifyAgainstFixture(held.id, matching(held, { action: "reserve_listing" }))).toMatchObject({
+    expect(classifyAgainstFixture(held.id, fixtureObservationFor(held, { action: "reserve_listing" }))).toMatchObject({
       ok: false,
       reason: "DIFFERENT_IDENTITY",
     });
-    expect(classifyAgainstFixture(held.id, matching(held))).toMatchObject({
+    expect(classifyAgainstFixture(held.id, fixtureObservationFor(held))).toMatchObject({
       ok: true,
       klass: "NOT_BOUND",
       confirmed: false,
@@ -203,15 +185,15 @@ describe("contract fixture catalogue", () => {
     expect(() => classifyFailedLive("EVENT_EXISTS", { promoteToStubSuccess: true })).toThrow(/stub success/);
 
     const success = fixtureById("booking-journey.create_event.success");
-    expect(classifyAgainstFixture(success.id, matching(success, { callSucceeded: false }))).toMatchObject({
+    expect(classifyAgainstFixture(success.id, fixtureObservationFor(success, { callSucceeded: false }))).toMatchObject({
       ok: false,
       reason: "STUB_SUBSTITUTE",
     });
-    expect(classifyAgainstFixture(success.id, matching(success, { substituteStub: true }))).toMatchObject({
+    expect(classifyAgainstFixture(success.id, fixtureObservationFor(success, { substituteStub: true }))).toMatchObject({
       ok: false,
       reason: "STUB_SUBSTITUTE",
     });
-    expect(classifyAgainstFixture(success.id, matching(success, { compute: "finance" }))).toMatchObject({
+    expect(classifyAgainstFixture(success.id, fixtureObservationFor(success, { compute: "finance" }))).toMatchObject({
       ok: false,
       reason: "GENERATOR_BOUNDARY",
     });

@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { JOURNEY_RULING, ORGANIZER_DESK_NOT_BOUND, ORGANIZER_NOT_COMPOSED } from "@kix/protocol-adapter";
 import type { OrganizerPanelModel, OrganizerRowStatus } from "../organizer-desk";
 
@@ -88,9 +89,9 @@ export function OrganizerPanel({ model }: { model: OrganizerPanelModel }) {
               </dl>
             ) : null}
             <div className="row-actions">
-              <button type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
+              <ConnectivityWriteButton type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
                 Send {row.step}
-              </button>
+              </ConnectivityWriteButton>
             </div>
           </li>
         ))}

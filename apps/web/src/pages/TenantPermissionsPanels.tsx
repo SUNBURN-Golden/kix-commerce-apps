@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   TENANT_ACTORS,
@@ -72,7 +73,7 @@ function GuardedButton({
   const pointer = control.reason ? (describedBy ?? reasonId) : undefined;
   return (
     <>
-      <button
+      <ConnectivityWriteButton inspection={id === "tenant-export"}
         type="button"
         id={id}
         className="discovery-action"
@@ -82,7 +83,7 @@ function GuardedButton({
         onClick={control.enabled ? onPress : undefined}
       >
         {label}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason && describedBy === undefined ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word="Blocked." /> {control.reason}
@@ -233,9 +234,9 @@ export function TenantControls({
           Switch tenant ({TENANT_OWN} / {TENANT_FOREIGN})
         </button>
         <GuardedButton id="tenant-export" label="Load the sensitive export" control={model.exportControl} onPress={() => actions.loadExport()} />
-        <button type="button" id="tenant-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+        <ConnectivityWriteButton type="button" id="tenant-new-session" className="discovery-action" onClick={() => actions.newSession()}>
           Start a new synthetic session
-        </button>
+        </ConnectivityWriteButton>
       </div>
       <div className="discovery-controls" role="group" aria-label="Direct open by reference">
         <label htmlFor="tenant-focus-ref">

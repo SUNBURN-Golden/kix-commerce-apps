@@ -19,8 +19,14 @@ import {
   notBoundScreenOf,
   projectFixture,
   type ContractFixture,
-  type FixtureObservation,
 } from "../../../packages/protocol-adapter/src/contract-fixtures";
+import {
+  fixtureObservationFor,
+  createSdk0MockScenario,
+  SDK0_MOCK_SCENARIO_IDS,
+  scenarioObservation,
+  type Sdk0MockScenario,
+} from "../../../packages/protocol-adapter/src/sdk0-mock-scenarios";
 import {
   considerReceipt,
   explainReceipt,
@@ -32,14 +38,6 @@ import { WORKSPACE_SURFACES } from "../src/workspace/registry";
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = path.resolve(webRoot, "../..");
-
-const SAMPLE_IDS = [
-  "booking-journey.create_event.success",
-  "booking-journey.create_event.reject",
-  "booking-journey.create_event.unknown",
-  "booking-journey.create_event.stale",
-  "not-bound.placeHold",
-] as const;
 
 function sourceFiles(dir: string): string[] {
   const found: string[] = [];
@@ -54,23 +52,6 @@ function sourceFiles(dir: string): string[] {
     }
   }
   return found;
-}
-
-function matching(fixture: ContractFixture, patch: Partial<FixtureObservation> = {}): FixtureObservation {
-  return {
-    tupleKey: liveTupleKey(),
-    klass: fixture.klass,
-    operationId: fixture.identity?.operationId,
-    actor: fixture.identity?.actor,
-    action: fixture.identity?.action,
-    method: fixture.method ?? undefined,
-    code: fixture.code ?? undefined,
-    presentFields: fixture.resultKeys,
-    callSucceeded: fixture.klass === "SUCCESS",
-    substituteStub: false,
-    compute: "none",
-    ...patch,
-  };
 }
 
 function receiptContext(screenId: string): ReceiptContext | null {
@@ -102,7 +83,7 @@ function noteFor(fixture: ContractFixture): string {
   return "";
 }
 
-function candidateFor(fixture: ContractFixture, sessionId: string): Record<string, unknown> | null {
+function candidateFor(fixture: ContractFixture, sessionId: string, scenario?: Sdk0MockScenario): Record<string, unknown> | null {
   if (!fixture.identity) {
     return null;
   }
@@ -114,7 +95,7 @@ function candidateFor(fixture: ContractFixture, sessionId: string): Record<strin
   if (!surface || !context) {
     return null;
   }
-  const profile = profileFor(fixture.source);
+  const profile = profileFor(scenario?.source ?? fixture.source);
   return {
     sessionId,
     role: surface.role,
@@ -124,16 +105,17 @@ function candidateFor(fixture: ContractFixture, sessionId: string): Record<strin
     action: fixture.identity.action,
     operationId: fixture.identity.operationId,
     status: fixture.screenStatus,
-    source: fixture.source,
+    source: scenario?.source ?? fixture.source,
     profile: profile.profile,
     profileVersion: profile.profileVersion,
     code: fixture.code,
-    requestId: null,
-    correlationId: null,
+    requestId: scenario?.failure?.requestId ?? null,
+    correlationId: scenario?.failure?.correlationId ?? null,
     refId: "evt_fixture",
-    sequence: 1,
-    note: noteFor(fixture),
-    fields: fixture.resultKeys.map((key) => ({ key, value: "recorded" })),
+    sequence: scenario?.receipt?.sequence ?? 1,
+    note: scenario ? "Synthetic SDK0 mock scenario. Not from the gate." : noteFor(fixture),
+    fields: (scenario ? scenarioObservation(scenario).presentFields : fixture.resultKeys)
+      .map((key) => ({ key, value: scenario?.receipt ? String(scenario.receipt.result[key]) : "recorded" })),
   };
 }
 
@@ -157,9 +139,9 @@ function FixtureClassTable() {
     <table>
       <caption>Contract fixture classes for this tuple</caption>
       <tbody>
-        {SAMPLE_IDS.map((id) => {
-          const fixture = fixtureById(id);
-          const view = projectFixture(fixture);
+        {SDK0_MOCK_SCENARIO_IDS.map((id) => {
+          const scenario = createSdk0MockScenario({ fixtureId: id, seed: 7 });
+          const { fixture, projection: view } = scenario;
           return (
             <tr key={id} data-fixture={id} data-class={view.klass} data-confirmed={view.confirmed ? "true" : "false"}>
               <td>{fixture.screenId}</td>
@@ -193,8 +175,8 @@ describe("contract fixture library on the desk", () => {
       expect(surface?.deskMethods).toContain(method);
     }
     const create = fixtureById("booking-journey.create_event.success");
-    expect(classifyAgainstFixture(create.id, matching(create))).toMatchObject({ ok: true, confirmed: true });
-    expect(classifyAgainstFixture(create.id, matching(create, { tupleKey: "previous-tuple" }))).toMatchObject({
+    expect(classifyAgainstFixture(create.id, fixtureObservationFor(create))).toMatchObject({ ok: true, confirmed: true });
+    expect(classifyAgainstFixture(create.id, fixtureObservationFor(create, { tupleKey: "previous-tuple" }))).toMatchObject({
       ok: false,
       reason: "DIFFERENT_TUPLE",
     });
@@ -281,14 +263,36 @@ describe("contract fixture library on the desk", () => {
       kind: "dropped",
       reason: "DIFFERENT_SESSION",
     });
-    expect(classifyAgainstFixture(success.id, matching(success, { action: "prepare_trade" }))).toMatchObject({
+    expect(classifyAgainstFixture(success.id, fixtureObservationFor(success, { action: "prepare_trade" }))).toMatchObject({
       ok: false,
       reason: "DIFFERENT_IDENTITY",
     });
-    expect(classifyAgainstFixture("not-bound.placeHold", matching(fixtureById("not-bound.placeHold"), { method: undefined, action: "prepare_trade" }))).toMatchObject({
+    expect(classifyAgainstFixture("not-bound.placeHold", fixtureObservationFor(fixtureById("not-bound.placeHold"), { method: undefined, action: "prepare_trade" }))).toMatchObject({
       ok: false,
       reason: "DIFFERENT_IDENTITY",
     });
+  });
+
+  it("also projects seeded kit output with synthetic provenance through the explorer", () => {
+    const sessionId = "page:fixture01";
+    for (const fixtureId of SDK0_MOCK_SCENARIO_IDS) {
+      const scenario = createSdk0MockScenario({ fixtureId, seed: 7 });
+      const raw = candidateFor(scenario.fixture, sessionId, scenario);
+      if (scenario.klass === "NOT_BOUND") {
+        expect(raw).toBeNull();
+        continue;
+      }
+      expect(raw).toMatchObject({ source: "stub-shape", status: scenario.fixture.screenStatus });
+      if (scenario.receipt) {
+        expect(raw?.fields).toEqual(Object.entries(scenario.receipt.result).map(([key, value]) => ({ key, value: String(value) })));
+      }
+      const kept = considerReceipt(screenFor(scenario.fixture, sessionId), raw);
+      expect(kept.kind, fixtureId).toBe("kept");
+      if (kept.kind !== "kept") throw new Error("kit candidate was refused");
+      const explained = explainReceipt(kept.receipt);
+      expect(explained.status).toBe(scenario.fixture.screenStatus);
+      expect(explained.confirmed).toBe(scenario.klass === "SUCCESS");
+    }
   });
 
   it("keeps the catalogue out of screen source and names every screen in the mapping doc", () => {
@@ -296,6 +300,7 @@ describe("contract fixture library on the desk", () => {
       .map((file) => readFileSync(file, "utf8"))
       .join("\n");
     expect(combined).not.toContain("contract-fixtures");
+    expect(combined).not.toContain("sdk0-mock-scenarios");
     expect(combined).not.toContain("generateFixture");
     expect(combined).not.toContain("fetch(");
 

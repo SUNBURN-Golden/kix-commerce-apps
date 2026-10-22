@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { ReactNode } from "react";
 import { PROVIDER_SCENARIOS, type ProviderScenario } from "@kix/protocol-adapter";
 import { AmountNotice, StatusMark } from "../a11y/marks";
@@ -60,7 +61,7 @@ function GuardedButton({
   const reasonId = `${id}-reason`;
   return (
     <>
-      <button
+      <ConnectivityWriteButton
         type="button"
         id={id}
         className="discovery-action"
@@ -70,7 +71,7 @@ function GuardedButton({
         onClick={control.enabled ? onPress : undefined}
       >
         {label}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word="Blocked." /> {control.reason}
@@ -152,9 +153,9 @@ export function ProviderControls({
         <button type="button" id="provider-switch" className="discovery-action" onClick={() => actions.switchContext()}>
           Switch session context
         </button>
-        <button type="button" id="provider-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+        <ConnectivityWriteButton type="button" id="provider-new-session" className="discovery-action" onClick={() => actions.newSession()}>
           Start a new synthetic session
-        </button>
+        </ConnectivityWriteButton>
         <button
           type="button"
           id="provider-deliver-held"
@@ -278,7 +279,7 @@ function OrderCard({ order, actions }: { order: OrderModel; actions: ProviderAct
       {order.events.length > 0 ? (
         <div className="discovery-controls" data-source-events="true">
           {order.events.map((item) => (
-            <button
+            <ConnectivityWriteButton
               key={item.id}
               type="button"
               id={`provider-event-${item.id}-${order.orderRef}`}
@@ -296,7 +297,7 @@ function OrderCard({ order, actions }: { order: OrderModel; actions: ProviderAct
               }
             >
               {item.label}
-            </button>
+            </ConnectivityWriteButton>
           ))}
           <p className="muted">Source events, not writes. A return landing is never a payment observation.</p>
         </div>

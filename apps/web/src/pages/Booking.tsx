@@ -1,3 +1,8 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { connectedHandler } from "../connectivity/write-guard";
+import { ValidatedForm } from "../forms/ValidatedForm";
+import { field } from "../forms/validation";
+import { AsyncState } from "../components/AsyncState";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ProtocolError, type Booking, type Hold, type Performance } from "@kix/protocol-adapter";
@@ -5,7 +10,7 @@ import { focusControl, heldAfterError } from "../a11y/focus";
 import { AmountNotice, DeadlineLine, StatusMark } from "../a11y/marks";
 import { bookingQuantityNumber, capacityLine, presentQuantityLine } from "../a11y/present";
 import { useFormatWhen } from "../i18n/locale-context";
-import { protocol } from "../protocol";
+import { protocol } from "../connectivity/desk-protocol";
 import { SafeText } from "../safe-text";
 import { useAdmissionDesk } from "../admission-desk";
 import { useJourneyDesk } from "../journey-desk";
@@ -91,6 +96,7 @@ export function BookingPage() {
   }
 
   async function placeHold() {
+    if (!connectedHandler()) return;
     const count = bookingQuantityNumber(quantity);
     if (count === null) {
       keepQuantity("Quantity must be a whole number from 1 to 6. The typed value was kept.");
@@ -109,6 +115,7 @@ export function BookingPage() {
   }
 
   async function releaseHold() {
+    if (!connectedHandler()) return;
     if (!hold) {
       return;
     }
@@ -128,6 +135,7 @@ export function BookingPage() {
   }
 
   async function confirm() {
+    if (!connectedHandler()) return;
     if (!hold) {
       return;
     }
@@ -147,9 +155,7 @@ export function BookingPage() {
   if (!performance && !error && !resolved) {
     return (
       <section>
-        <p className="muted" role="status">
-          <StatusMark kind="loading" /> Loading the performance.
-        </p>
+        <AsyncState kind="loading" label="Booking"><p>Loading the performance.</p></AsyncState>
         <JourneyPanel variant="booking" model={journey} />
         <RefundReturnPanel live={refundDesk} variant="booking" />
       </section>
@@ -159,9 +165,9 @@ export function BookingPage() {
   if (!performance) {
     return (
       <section>
-        <p className="alert" role="alert">
-          <StatusMark kind="blocked" /> {error ?? "That performance is not on this adapter."}
-        </p>
+        <AsyncState kind={error ? "error" : "empty"} label="Booking">
+          <p>{error ?? "That performance is not on this adapter."}</p>
+        </AsyncState>
         <p className="muted">
           Requested performance: <SafeText value={eventId} />
         </p>
@@ -193,9 +199,7 @@ export function BookingPage() {
         </p>
       ) : null}
       {error ? (
-        <p id="booking-error" className="alert" role="alert">
-          <StatusMark kind="blocked" /> {error}
-        </p>
+        <AsyncState id="booking-error" kind="error" label="Booking"><p>{error}</p></AsyncState>
       ) : null}
       {booking ? (
         <article className="ticket">
@@ -233,7 +237,7 @@ export function BookingPage() {
           </div>
         </article>
       ) : (
-        <form
+        <ValidatedForm id="booking-form" busy={pending} fields={[field("booking-quantity", "validation.label.quantity", { kind: "bookingQuantity" })]}
           className="panel"
           onSubmit={(event) => {
             event.preventDefault();
@@ -268,7 +272,7 @@ export function BookingPage() {
           <div className="row-actions">
             {hold ? (
               <>
-                <button
+                <ConnectivityWriteButton
                   id="booking-release"
                   type="button"
                   className="ghost"
@@ -276,18 +280,18 @@ export function BookingPage() {
                   onClick={() => void releaseHold()}
                 >
                   Release hold
-                </button>
-                <button id="booking-confirm" type="submit" disabled={pending}>
+                </ConnectivityWriteButton>
+                <ConnectivityWriteButton id="booking-confirm" type="submit" disabled={pending}>
                   Confirm booking
-                </button>
+                </ConnectivityWriteButton>
               </>
             ) : (
-              <button id="booking-place" type="submit" disabled={pending}>
+              <ConnectivityWriteButton id="booking-place" type="submit" disabled={pending}>
                 Place hold
-              </button>
+              </ConnectivityWriteButton>
             )}
           </div>
-        </form>
+        </ValidatedForm>
       )}
       <JourneyPanel variant="booking" model={journey} />
       <ReservationPanel

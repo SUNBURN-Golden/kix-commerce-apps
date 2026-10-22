@@ -147,7 +147,7 @@ export const ROUTES = [
 ] as const satisfies readonly RouteEntry[];
 
 /** Production matrices intentionally keep ROUTES. The development extension is compile-time removed. */
-export const APP_ROUTES = import.meta.env.DEV
+export const APP_ROUTES = import.meta.env?.DEV
   ? [...ROUTES, route("component-gallery", "/dev/gallery", "Component gallery", "verification", "stub-only", null, {
       note: "Development-only synthetic component coverage; no business surface or economic outcome.",
     })]

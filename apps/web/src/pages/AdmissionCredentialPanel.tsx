@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { AdmissionPresentation } from "@kix/protocol-adapter";
 import { SafeText } from "../safe-text";
 
@@ -92,7 +93,7 @@ export function AdmissionCredentialPanel({
       {commands ? (
         <div className="row-actions">
           {CONTROLS.map((control) => (
-            <button
+            <ConnectivityWriteButton
               key={control.command}
               type="button"
               className={control.command === "adopt_issued" ? undefined : "ghost"}
@@ -100,7 +101,7 @@ export function AdmissionCredentialPanel({
               onClick={() => onCommand?.(control.command)}
             >
               {control.label}
-            </button>
+            </ConnectivityWriteButton>
           ))}
         </div>
       ) : (

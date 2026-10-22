@@ -1,4 +1,7 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useConnectivity } from "../connectivity/ConnectivityProvider";
+import { connectivity } from "../connectivity/store";
+
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { CREDIT_BOUNDARY, ProtocolError, type TransportObservation } from "@kix/protocol-adapter";
 import { transportStatusWord } from "../a11y/marks";
@@ -12,7 +15,9 @@ import { SurfaceNav } from "./SurfaceNav";
 import { useRouteFocus } from "../shell/route-focus";
 import type { Translate } from "../i18n/translate";
 import { protocol } from "../protocol";
-import { preferFresh, transportBannerText, type HeldObservation } from "../transport-status";
+import { transportBannerText } from "../transport-status";
+
+const CachedReadNotice = lazy(() => import("./CachedReadNotice").then((module) => ({ default: module.CachedReadNotice })));
 
 /** How often integration HTTP reads the loopback probes again. The stub is not polled. */
 const TRANSPORT_PROBE_MS = 15_000;
@@ -31,7 +36,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const onMarketing = location.pathname === "/marketing" || location.pathname.startsWith("/marketing/");
   const marketingLabel = marketingChromeLabel(location.pathname);
-  const [held, setHeld] = useState<HeldObservation | null>(null);
+  const connection = useConnectivity();
   // The user's stop control for the one timed update on this desk.
   const [motionPaused, setMotionPaused] = useState(motionReduced);
   const generation = useRef(0);
@@ -66,13 +71,14 @@ export function Shell({ children }: { children: ReactNode }) {
       }
       probing.current = true;
       const ticket = ++generation.current;
+      const epoch = connectivity.getSnapshot().epoch;
       protocol
         .observeTransport()
         .then((observation) => {
           if (cancelled) {
             return;
           }
-          setHeld((current) => preferFresh(current, { generation: ticket, observation }));
+          connectivity.observeTransport({ epoch, held: { generation: ticket, observation } });
         })
         .catch((error: unknown) => {
           if (cancelled) {
@@ -95,7 +101,7 @@ export function Shell({ children }: { children: ReactNode }) {
             code,
             detail: "Integration HTTP stayed selected. The desk did not fall back to the stub.",
           };
-          setHeld((current) => preferFresh(current, { generation: ticket, observation }));
+          connectivity.observeTransport({ epoch, held: { generation: ticket, observation } });
         })
         .finally(() => {
           // Only the newest probe clears the flag. An older one finishing
@@ -120,7 +126,7 @@ export function Shell({ children }: { children: ReactNode }) {
     };
   }, [meta.environment, location.pathname, motionPaused]);
 
-  const transport = transportBannerText(meta.environment, held?.observation ?? null, t, motionPaused);
+  const transport = transportBannerText(meta.environment, connection.transport?.observation ?? null, t, motionPaused);
 
   const transportWord = transportStatusWord(transport.state, t);
 
@@ -152,6 +158,7 @@ export function Shell({ children }: { children: ReactNode }) {
         <span className="status-word">{transportWord}</span> {transport.text}
       </p>
       <main id="desk-main" tabIndex={-1}>
+        <Suspense fallback={connection.writesBlocked || connection.disconnected ? <p data-cached-read="true">STALE · cached</p> : null}><CachedReadNotice path={location.pathname} /></Suspense>
         {children}
       </main>
     </div>

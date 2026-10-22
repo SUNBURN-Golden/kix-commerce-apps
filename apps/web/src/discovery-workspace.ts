@@ -23,7 +23,7 @@ import {
   type RowFacts,
 } from "./discovery/model";
 import { type DiscoveryRow } from "./discovery/fixture";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 import { WORKSPACE_RULING } from "./workspace/registry";
 
 export const DISCOVERY_SAMPLE_NOTE =

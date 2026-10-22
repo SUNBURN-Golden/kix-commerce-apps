@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Performance } from "@kix/protocol-adapter";
 import { useCreditDesk } from "../credit-desk";
-import { protocol } from "../protocol";
+import { protocol } from "../connectivity/desk-protocol";
 import { CreditPanel } from "./CreditPanel";
 
 export function CreditPage() {

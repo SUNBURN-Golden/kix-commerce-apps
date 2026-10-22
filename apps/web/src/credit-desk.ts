@@ -1,6 +1,7 @@
+import { connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useState } from "react";
 import { ProtocolError, type CreditCaseView } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 import type { CreditDeskCommand } from "./pages/CreditPanel";
 import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 
@@ -60,6 +61,7 @@ export function useCreditDesk(eventId: string) {
   }, [refresh]);
 
   async function run(command: CreditDeskCommand) {
+    if (!connectedHandler()) return;
     const trimmed = eventId.trim();
     if (!trimmed || pending) {
       return;

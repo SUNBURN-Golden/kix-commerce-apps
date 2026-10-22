@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
+import { ScreenLoading } from "../src/components/ScreenLoading";
 import { App } from "../src/App";
 import { protocol } from "../src/protocol";
 import { ComponentGallery } from "../src/dev/gallery/ComponentGallery";
@@ -70,6 +71,16 @@ describe("development component gallery", () => {
       expect(render(<ComponentGallery />, "/dev/gallery?specimen=", locale)).toContain('role="status"');
     });
   }
+
+  it("combines async loading semantics with development labels and unknown caller labels", () => {
+    for (const locale of ["en", "ko"] as const) {
+      const loading = render(<ScreenLoading label="Component gallery" />, "/dev/gallery", locale);
+      expect(loading).toContain('data-async-state="loading"');
+      expect(loading).toContain('aria-busy="true"');
+      expect(loading).toContain(locale === "ko" ? "컴포넌트 갤러리" : "Component gallery");
+      expect(render(<ScreenLoading label="Synthetic caller" />, "/unmatched", locale)).toContain("Synthetic caller");
+    }
+  });
 
   it("keeps production routes separate, and tracks development coverage in both matrices and docs", () => {
     expect(ROUTES.some((entry) => entry.path === "/dev/gallery")).toBe(false);

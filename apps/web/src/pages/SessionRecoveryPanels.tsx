@@ -1,3 +1,5 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { AsyncState } from "../components/AsyncState";
 import { useState } from "react";
 import { useRestoreFocus } from "../a11y/focus";
 import {
@@ -31,7 +33,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
   const reasonId = `${id}-reason`;
   return (
     <span className="refund-guard">
-      <button
+      <ConnectivityWriteButton
         id={id}
         type="button"
         aria-disabled={control.enabled ? undefined : true}
@@ -43,7 +45,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
         }}
       >
         {label}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <span id={reasonId} className="muted">
           {control.reason}
@@ -73,7 +75,10 @@ export function SessionRecoveryPanel({ live }: { live: SessionDeskLive }) {
       </p>
       <p className="muted">{SESSION_RETENTION_NOTE}</p>
 
-      <div role="status" id="session-status" tabIndex={-1} aria-live="polite" data-testid="session-status">
+      <div role="status" id="session-status" tabIndex={-1} aria-live="polite" aria-busy={model.state === "in-progress"} data-testid="session-status">
+        {model.state === "in-progress" || model.state === "empty" || model.state === "recovered" || model.state === "not-bound" ? (
+          <AsyncState kind={model.state === "in-progress" ? "loading" : model.state === "recovered" ? "unknown" : model.state} label="Session" announcement="parent" />
+        ) : null}
         <p data-field="status">{model.statusLine}</p>
         {model.detailLine ? <p className="muted">{model.detailLine}</p> : null}
         {model.lastLine ? <p data-field="last">{model.lastLine}</p> : null}
@@ -119,7 +124,7 @@ export function SessionRecoveryPanel({ live }: { live: SessionDeskLive }) {
         <ul>
           {model.records.map((row) => (
             <li key={row.seq} data-outcome={row.outcome} data-kind={row.kind} data-scope={row.scope} data-load={row.loadNo}>
-              {row.line}
+              {row.kind === "unknown" || row.kind === "recovered-unknown" ? <AsyncState kind="unknown" label="Session record" announcement="parent"><p>{row.line}</p></AsyncState> : row.line}
             </li>
           ))}
           {model.observationLines.map((line) => (
@@ -143,9 +148,9 @@ export function SessionRecoveryPanel({ live }: { live: SessionDeskLive }) {
             ))}
           </select>
         </label>
-        <button type="button" disabled={pendingScenario === live.scenario} onClick={() => actions.setScenario(pendingScenario)}>
+        <ConnectivityWriteButton type="button" disabled={pendingScenario === live.scenario} onClick={() => actions.setScenario(pendingScenario)}>
           Start new source with this scenario
-        </button>
+        </ConnectivityWriteButton>
         <p className="muted">{SESSION_SCENARIO_NOTES[pendingScenario]}</p>
         <p className="muted">A new source keeps this tab&apos;s journal. An unknown write keeps blocking its subject.</p>
         <button type="button" onClick={() => actions.refresh()}>

@@ -1,6 +1,7 @@
+import { connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useState } from "react";
 import { type AdmissionPresentation } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 import type { AdmissionDeskCommand } from "./pages/AdmissionCredentialPanel";
 import { reservationIds } from "./reservation-desk";
 import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
@@ -51,6 +52,7 @@ export function useAdmissionDesk(eventId: string, gateId: string) {
   }, [refresh]);
 
   async function run(command: AdmissionDeskCommand) {
+    if (!connectedHandler()) return;
     const trimmed = eventId.trim();
     if (!trimmed || pending) {
       return;

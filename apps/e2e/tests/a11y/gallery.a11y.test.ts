@@ -62,7 +62,7 @@ describe("development-only component gallery", () => {
     await suite.quiet(page, "gallery locale keys");
     for (const value of ["", "missing", "breadcrumb-empty", "safe-text-empty", "error-render-error", "error-screen-load-error", "screen-loading"]) {
       await openScreen(page, origin, `/dev/gallery?specimen=${value}&lang=en`);
-      if (value === "" || value === "missing") expect(await page.getByRole("status").innerText()).toContain("No specimen matches");
+      if (value === "" || value === "missing") expect(await page.locator("[data-gallery-specimen]").getByRole("status").innerText()).toContain("No specimen matches");
       if (value.startsWith("error-")) {
         expect(await page.locator("#shell-error-title").evaluate((el) => el === document.activeElement)).toBe(true);
         await page.locator("#shell-error-again").focus();
@@ -71,6 +71,38 @@ describe("development-only component gallery", () => {
       }
       if (value === "screen-loading") expect(await page.locator("[data-screen-loading]").count()).toBe(1);
       await suite.quiet(page, value);
+    }
+    await openScreen(page, origin, "/dev/gallery?specimen=form-errors");
+    await page.locator('.error-summary a').focus();
+    await page.keyboard.press("Enter");
+    expect(await page.locator("#gallery-quantity").evaluate((el) => el === document.activeElement)).toBe(true);
+    await suite.quiet(page, "gallery form error link");
+    await openScreen(page, origin, "/dev/gallery?specimen=connectivity-write");
+    // Load the existing local axe script before disconnecting; the offline scan uses it in memory.
+    expect((await runAxe(page, A11Y_BASELINE.tags)).violations).toEqual([]);
+    await suite.session().context.setOffline(true);
+    try {
+      await page.locator('[data-connectivity-state="offline"]').waitFor();
+      const button = page.locator('[data-connectivity-write="true"]');
+      expect(await button.getAttribute("aria-disabled")).toBe("true");
+      await button.focus();
+      await page.keyboard.press("Enter");
+      expect(await button.evaluate((el) => el === document.activeElement)).toBe(true);
+      expect((await runAxe(page, A11Y_BASELINE.tags)).violations).toEqual([]);
+      await suite.quiet(page, "gallery blocked offline write");
+    } finally {
+      await suite.session().context.setOffline(false);
+    }
+    await openScreen(page, origin, "/dev/gallery?specimen=cached-read");
+    // Load the existing local axe script before disconnecting; the offline scan uses it in memory.
+    expect((await runAxe(page, A11Y_BASELINE.tags)).violations).toEqual([]);
+    await suite.session().context.setOffline(true);
+    try {
+      await page.locator('[data-gallery-specimen] [data-cached-read]').waitFor();
+      expect((await runAxe(page, A11Y_BASELINE.tags)).violations).toEqual([]);
+      await suite.quiet(page, "gallery cached read");
+    } finally {
+      await suite.session().context.setOffline(false);
     }
     await suite.pass(page, "gallery.keyboard-states");
     await page.close();

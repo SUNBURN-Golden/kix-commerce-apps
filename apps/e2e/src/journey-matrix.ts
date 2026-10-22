@@ -79,12 +79,12 @@ export const MATRIX: readonly MatrixCell[] = [
   browser("credit", "NOT_BOUND"),
 
   browser("gift", "SUCCESS"),
-  browser("gift", "REJECT", "gift.REJECT", "A not-sent screen: the desk refuses to send an incomplete body. It is not a gate rejection."),
+  browser("gift", "REJECT", "gift.REJECT", "Local input-format rejection: the form refuses an incomplete body before creating a controller attempt. It is not a gate rejection."),
   tableReference("gift", "gift"),
   browser("gift", "NOT_BOUND"),
 
   browser("organizer", "SUCCESS"),
-  browser("organizer", "REJECT", "organizer.REJECT", "A not-sent screen: the desk refuses to send an incomplete body. It is not a gate rejection."),
+  browser("organizer", "REJECT", "organizer.REJECT", "Local input-format rejection: the form refuses an incomplete body before creating a controller attempt. It is not a gate rejection."),
   tableReference("organizer", "organizer"),
   browser("organizer", "NOT_BOUND"),
 
@@ -102,6 +102,7 @@ export const MATRIX: readonly MatrixCell[] = [
 ];
 
 export const SHARED_CHECKS = [
+  "connectivity.all-screens", "connectivity.no-service-worker", "connectivity.form-and-refresh", "connectivity.no-replay",
   "harness.server",
   "harness.paths",
   "harness.external-blocked",

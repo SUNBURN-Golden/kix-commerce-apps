@@ -1,5 +1,11 @@
 import type { ReactNode } from "react";
 import { AmountNotice, DeadlineLine, STATUS_MARKS, StatusMark, type StatusMarkKind } from "../../a11y/marks";
+import { ASYNC_STATES, AsyncState } from "../../components/AsyncState";
+import { AsyncStateFrame } from "../../components/AsyncStateFrame";
+import { CachedReadNotice } from "../../components/CachedReadNotice";
+import { ConnectivityBanner } from "../../components/ConnectivityBanner";
+import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
+import { ErrorSummary } from "../../components/ErrorSummary";
 import { Breadcrumb } from "../../components/Breadcrumb";
 import { ScreenLoading } from "../../components/ScreenLoading";
 import { Shell } from "../../components/Shell";
@@ -42,6 +48,17 @@ export const GALLERY_CASES: readonly GalleryCase[] = [
   item("safe-text", "SafeText", "untrusted text", () => <SafeText value={'<script>synthetic</script>'} />),
   item("safe-text-empty", "SafeText", "empty", () => <SafeText value="" />),
   item("safe-text-shortened", "SafeText", "shortened with copyable original", () => <SafeText value="Synthetic text with an inspectable original" maxDisplay={12} />),
+  ...ASYNC_STATES.map((kind) => item(`async-${kind}`, "AsyncState", kind, () => <AsyncState kind={kind} label="Synthetic" />)),
+  item("async-parent", "AsyncStateFrame", "parent owns announcement", () => <div role="status"><AsyncStateFrame kind="loading" label="Synthetic" word="Loading" note="Nothing sent" announcement="parent" /></div>),
+  item("connectivity-banner", "ConnectivityBanner", "local; offline follows browser", () => <ConnectivityBanner reasonId="gallery-connectivity-reason" label="Synthetic connectivity specimen" />),
+  item("cached-read", "CachedReadNotice", "hidden while local; retained reads after disconnect", () => <CachedReadNotice path="/buyer" />),
+  item("connectivity-write", "ConnectivityWriteButton", "inert; blocked while offline", () => <ConnectivityWriteButton type="button" onClick={noop}>Synthetic write specimen (inert)</ConnectivityWriteButton>),
+  item("form-errors-empty", "ErrorSummary", "no issues (empty)", () => <ErrorSummary id="gallery-form-empty" issues={[]} summaryRef={null} />),
+  item("form-errors", "ErrorSummary", "required field; keyboard link", () => <>
+    <h2>Synthetic form / 합성 양식</h2>
+    <ErrorSummary id="gallery-form-errors" issues={[{ fieldId: "gallery-quantity", labelKey: "validation.label.quantity", messageKey: "validation.required", params: { max: 0 } }]} summaryRef={null} />
+    <label htmlFor="gallery-quantity">Quantity / 수량</label><input id="gallery-quantity" aria-invalid="true" />
+  </>),
 ];
 
 export function galleryCaseProblems(cases: readonly GalleryCase[]): string[] {
@@ -51,7 +68,7 @@ export function galleryCaseProblems(cases: readonly GalleryCase[]): string[] {
     if (ids.has(entry.id)) problems.push(`duplicate case ${entry.id}`);
     ids.add(entry.id);
   }
-  for (const component of ["Shell", "SurfaceNav", "Breadcrumb", "ScreenLoading", "StatusMark", "AmountNotice", "DeadlineLine", "LocaleSwitch", "ErrorPanel", "SafeText"]) {
+  for (const component of ["Shell", "SurfaceNav", "Breadcrumb", "ScreenLoading", "StatusMark", "AmountNotice", "DeadlineLine", "LocaleSwitch", "ErrorPanel", "SafeText", "AsyncState", "AsyncStateFrame", "ConnectivityBanner", "CachedReadNotice", "ConnectivityWriteButton", "ErrorSummary"]) {
     if (!cases.some((entry) => entry.component === component)) problems.push(`missing component ${component}`);
   }
   return problems;
