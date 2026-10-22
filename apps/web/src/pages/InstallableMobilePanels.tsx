@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { ReactNode } from "react";
 import { MOBILE_SCENARIOS, type MobileScenario } from "@kix/protocol-adapter";
 import { AmountNotice, StatusMark } from "../a11y/marks";
@@ -69,7 +70,7 @@ function GuardedButton({
   const reasonId = `${id}-reason`;
   return (
     <>
-      <button
+      <ConnectivityWriteButton
         type="button"
         id={id}
         className="discovery-action"
@@ -79,7 +80,7 @@ function GuardedButton({
         onClick={control.enabled ? onPress : undefined}
       >
         {label}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word="Blocked." /> {control.reason}
@@ -174,18 +175,18 @@ export function MobileControls({
         <button type="button" id="mobile-resume" className="discovery-action" onClick={() => actions.resume()}>
           Resume app
         </button>
-        <button type="button" id="mobile-drop" className="discovery-action" onClick={() => actions.dropConnection()}>
+        <ConnectivityWriteButton type="button" id="mobile-drop" className="discovery-action" onClick={() => actions.dropConnection()}>
           Drop connection
-        </button>
-        <button type="button" id="mobile-restore" className="discovery-action" onClick={() => actions.restoreConnection()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="mobile-restore" className="discovery-action" onClick={() => actions.restoreConnection()}>
           Restore connection
-        </button>
-        <button type="button" id="mobile-offer-update" className="discovery-action" onClick={() => actions.offerUpdate()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="mobile-offer-update" className="discovery-action" onClick={() => actions.offerUpdate()}>
           Offer shell update
-        </button>
-        <button type="button" id="mobile-expire" className="discovery-action" onClick={() => actions.expireSession()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="mobile-expire" className="discovery-action" onClick={() => actions.expireSession()}>
           Expire session
-        </button>
+        </ConnectivityWriteButton>
         <button type="button" id="mobile-deliver-held" className="discovery-action" onClick={() => actions.deliverHeld()}>
           Deliver held response
         </button>
@@ -195,9 +196,9 @@ export function MobileControls({
         <button type="button" id="mobile-switch" className="discovery-action" onClick={() => actions.switchContext()}>
           Re-login as another actor
         </button>
-        <button type="button" id="mobile-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+        <ConnectivityWriteButton type="button" id="mobile-new-session" className="discovery-action" onClick={() => actions.newSession()}>
           Start a new synthetic session
-        </button>
+        </ConnectivityWriteButton>
       </div>
       <p className="muted" data-scenario-note={scenario}>
         {SCENARIO_NOTES[scenario]} Changing the scenario starts a new synthetic session.

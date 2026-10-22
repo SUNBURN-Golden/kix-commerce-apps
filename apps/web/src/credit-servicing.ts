@@ -1,3 +1,4 @@
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The credit servicing desk on top of the adapter's synthetic servicing source.
  * Stub scope: the default port is the synthetic source. On integration-http the
@@ -60,7 +61,7 @@ import {
   type ServicingScenario,
   type ServicingSyntheticControl,
 } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const SERVICING_PAGE_TITLE = "Credit servicing (synthetic)";
 
@@ -936,8 +937,8 @@ interface Session {
 }
 
 function createSession(environment: "stub" | "integration-http", scenario: ServicingScenario, obligationRef: string, actorRef: string): Session {
-  const port = creditServicingPortFor(environment, { scenario });
-  return { port, controller: new CreditServicingController(port, { actorRef, obligationRef }) };
+  const port = connectivityPort(creditServicingPortFor(environment, { scenario }), "credit-servicing");
+  return { port, controller: connectivityController(new CreditServicingController(port, { actorRef, obligationRef }), port) };
 }
 
 function nextActor(actorRef: string): string {
@@ -1135,7 +1136,7 @@ export function useCreditServicing(): {
     obligationRef,
     actorRef,
     model: buildServicingModel({ controller: session.controller, last }),
-    actions,
+    actions: connectedActions(actions, ['proposeAllocation', 'proposeAdjustment', 'proposeCaseTransition', 'approveProposal', 'observeDraw', 'receivePayment', 'reverseAllocation', 'markOverdue', 'advanceSchedule', 'revokeGrant', 'setScenario', 'newSession'], sessionRef.current?.port),
   };
 }
 

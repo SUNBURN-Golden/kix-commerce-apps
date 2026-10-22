@@ -33,12 +33,12 @@ describe("mounted organizer workspace", () => {
     expect(container.querySelectorAll('[data-result="RECEIPT"]')).toHaveLength(1);
   });
 
-  it("keeps empty caller input and focuses the invalid row without sending", async () => {
+  it("keeps empty caller input, adds no row, and sends nothing", async () => {
     const { container } = await renderDom(<OrganizerWorkspacePage />);
     await click(button(container, "Add to change list"));
-    await click(button(container, "Prepare preview"));
-    expect(element(container, '[role="alert"]').textContent).toContain("Empty event id");
-    expect(document.activeElement?.id).toBe("organizer-ws-event-id");
+    expect(container.querySelector(".error-summary")).not.toBeNull();
+    expect(container.textContent).toContain("No commands in the change list.");
+    expect(button(container, "Prepare preview").disabled).toBe(true);
     expect(button(container, "Submit").disabled).toBe(true);
     expect(container.querySelector("[data-result]")).toBeNull();
     await change(element(container, "select"), "issue_invitation");

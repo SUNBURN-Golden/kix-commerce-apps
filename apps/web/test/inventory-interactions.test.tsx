@@ -36,12 +36,12 @@ describe("mounted synthetic inventory", () => {
     expect(element(container, "#inventory-summary").textContent).toContain("Stale inventory watermark");
   });
 
-  it("keeps invalid GA input, focuses it, and selects a count only after correction", async () => {
+  it("blocks invalid GA input in the form, keeps it, and selects a count only after correction", async () => {
     const { container } = await renderDom(<MemoryRouter initialEntries={["/inventory?section=sec-pit"]}><InventoryPage /></MemoryRouter>);
     await change(element(container, "#inventory-quantity"), "1.5");
     await click(button(container, "Select quantity"));
-    expect(element(container, "#inventory-selection").getAttribute("data-inventory-state")).toBe("invalid-request");
-    expect(document.activeElement?.id).toBe("inventory-quantity");
+    expect(container.querySelector(".error-summary")).not.toBeNull();
+    expect(container.querySelector("#inventory-selection")).toBeNull();
     expect(element<HTMLInputElement>(container, "#inventory-quantity").value).toBe("1.5");
     await change(element(container, "#inventory-quantity"), "2");
     await click(button(container, "Select quantity"));
@@ -49,5 +49,12 @@ describe("mounted synthetic inventory", () => {
     expect(container.textContent).toContain("Nothing was reserved, held, sold, or paid");
     await click(button(container, "Clear selection"));
     expect(container.querySelector("#inventory-selection")).toBeNull();
+  });
+
+  it("focuses the quantity input when the location carries an invalid GA count", async () => {
+    const { container } = await renderDom(<MemoryRouter initialEntries={["/inventory?section=sec-pit&unit=sec-pit-pool&quantity=1.5"]}><InventoryPage /></MemoryRouter>);
+    expect(element(container, "#inventory-selection").getAttribute("data-inventory-state")).toBe("invalid-request");
+    expect(document.activeElement?.id).toBe("inventory-quantity");
+    expect(element<HTMLInputElement>(container, "#inventory-quantity").value).toBe("1.5");
   });
 });

@@ -104,3 +104,7 @@ A screen reader, a real device, HTTP mode in a browser, the hosted-runner pass, 
 ## Hold
 
 Nothing here is a qualification, an acceptance or a release. A real producer, SDK or provider connection, a real payment, a public deployment and a retention value each need their own authority.
+
+## Development gallery extension
+
+`c-component-gallery-stub` adds `/dev/gallery` only to the compile-time development extension `APP_ROUTES`. The route table above and `ROUTES` remain the production route set. The development entry is stub-only, has no workspace surface, and is covered separately in the [gallery bind](c-component-gallery-stub-apps-bind.md) and the local evidence matrix. Its metadata, screen import, fixtures and CSS are excluded from production artifacts; production answers not-found at this address. Both `/dev/gallery` and `/dev/gallery/` own one Shell/main in development. The original node's unchanged-screen statements above describe its historical scope.

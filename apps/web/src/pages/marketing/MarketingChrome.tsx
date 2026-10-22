@@ -1,3 +1,4 @@
+import { useConnectivityCopy } from "../../connectivity/copy";
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { marketingPublishedLine } from "../../marketing/contracts";
@@ -6,10 +7,13 @@ import { MARKETING_SURFACES, marketingSurface, type MarketingId } from "../../ma
 export function MarketingChrome({
   id,
   children,
+  onReadAgain,
 }: {
   id?: MarketingId;
   children: ReactNode;
+  onReadAgain?: () => void;
 }) {
+  const copy = useConnectivityCopy();
   const surface = id ? marketingSurface(id) : null;
 
   return (
@@ -38,6 +42,7 @@ export function MarketingChrome({
           <p className="muted">{marketingPublishedLine(surface.id)}</p>
         </header>
       ) : null}
+      {onReadAgain ? <button type="button" onClick={onReadAgain}>{copy.readAgain}</button> : null}
       {children}
     </section>
   );

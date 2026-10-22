@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { ReactNode } from "react";
 import {
   SERVICING_ACTORS,
@@ -60,7 +61,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
   const reasonId = `${id}-reason`;
   return (
     <>
-      <button
+      <ConnectivityWriteButton
         type="button"
         id={id}
         className="discovery-action"
@@ -70,7 +71,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
         onClick={control.enabled ? onPress : undefined}
       >
         {label}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word="Blocked." /> {control.reason}
@@ -165,27 +166,27 @@ export function ServicingControls({
         <button type="button" id="servicing-switch-actor" className="discovery-action" onClick={() => actions.switchActor()}>
           Switch desk actor
         </button>
-        <button type="button" id="servicing-observe-draw" className="discovery-action" onClick={() => actions.observeDraw()}>
+        <ConnectivityWriteButton type="button" id="servicing-observe-draw" className="discovery-action" onClick={() => actions.observeDraw()}>
           Observe draw
-        </button>
-        <button type="button" id="servicing-receive-payment" className="discovery-action" onClick={() => actions.receivePayment()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="servicing-receive-payment" className="discovery-action" onClick={() => actions.receivePayment()}>
           Receive payment
-        </button>
-        <button type="button" id="servicing-reverse-allocation" className="discovery-action" onClick={() => actions.reverseAllocation()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="servicing-reverse-allocation" className="discovery-action" onClick={() => actions.reverseAllocation()}>
           Reverse allocation
-        </button>
-        <button type="button" id="servicing-mark-overdue" className="discovery-action" onClick={() => actions.markOverdue()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="servicing-mark-overdue" className="discovery-action" onClick={() => actions.markOverdue()}>
           Mark overdue
-        </button>
-        <button type="button" id="servicing-advance-schedule" className="discovery-action" onClick={() => actions.advanceSchedule()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="servicing-advance-schedule" className="discovery-action" onClick={() => actions.advanceSchedule()}>
           Advance schedule
-        </button>
-        <button type="button" id="servicing-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="servicing-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
           Revoke grant
-        </button>
-        <button type="button" id="servicing-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="servicing-new-session" className="discovery-action" onClick={() => actions.newSession()}>
           Start a new synthetic session
-        </button>
+        </ConnectivityWriteButton>
       </div>
       <p className="muted" data-scenario-note={scenario}>
         {SERVICING_SCENARIO_NOTES[scenario]} Changing the scenario starts a new synthetic session.

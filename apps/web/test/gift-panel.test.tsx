@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
-import { GIFT_NOT_COMPOSED, JOURNEY_RULING, GateRejectedError, ProtocolError, createStubGiftInvoker } from "@kix/protocol-adapter";
+import { GIFT_DESK_NOT_BOUND, GIFT_NOT_COMPOSED, JOURNEY_RULING, GateRejectedError, ProtocolError, createStubGiftInvoker } from "@kix/protocol-adapter";
 import { App } from "../src/App";
 import {
   GIFT_DEFAULT_RECIPIENT,
@@ -144,6 +144,10 @@ describe("gift panel", () => {
     const html = renderPanel(unavailableModel());
     expect(html).toContain("integration-http · unavailable");
     expect(html).toContain("Gift path unavailable.");
+    for (const entry of GIFT_DESK_NOT_BOUND) {
+      expect(html).toContain(entry.reason);
+      expect(html).toContain(`${entry.consideredAction ?? "none"} · not-bound.`);
+    }
     expect(html).toContain("does not fall back to the stub");
     expect(html).toContain("Code GATE_UNAVAILABLE.");
     expect(html).not.toContain("stub-shape");

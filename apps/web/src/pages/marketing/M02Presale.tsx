@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Performance } from "@kix/protocol-adapter";
@@ -5,7 +6,7 @@ import { useFormatWhen } from "../../i18n/locale-context";
 import { presaleWindowFor } from "../../marketing/desk";
 import { marketingSession } from "../../marketing/session";
 import { useMarketingSnapshot } from "../../marketing/useMarketingSnapshot";
-import { protocol } from "../../protocol";
+import { protocol } from "../../connectivity/desk-protocol";
 import { errorText, MarketingChrome } from "./MarketingChrome";
 
 export function M02Page() {
@@ -46,7 +47,7 @@ export function M02Page() {
   }
 
   return (
-    <MarketingChrome id="M02">
+    <MarketingChrome id="M02" onReadAgain={refresh}>
       {error ? (
         <p className="alert" role="alert">
           {error}
@@ -85,13 +86,13 @@ export function M02Page() {
                   ) : null}
                 </div>
                 <div className="row-actions">
-                  <button
+                  <ConnectivityWriteButton
                     type="button"
                     disabled={windowState !== "open-demo" || Boolean(interest)}
                     onClick={() => record(item.eventId)}
                   >
                     {interest ? "Interest recorded" : "Record demo interest"}
-                  </button>
+                  </ConnectivityWriteButton>
                 </div>
               </article>
             </li>

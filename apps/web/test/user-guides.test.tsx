@@ -90,6 +90,11 @@ describe("guide word list", () => {
 });
 
 describe("glossary document", () => {
+  it("distinguishes a connectivity block before dispatch from an interrupted UNKNOWN write", () => {
+    const word = STATUS_WORD_GUIDE.find((item) => item.word === "CONNECTIVITY_BLOCKED")!;
+    expect(word.meaning).toContain("before dispatch");
+    expect(word.dontText).toContain("already dispatched interruption stays UNKNOWN");
+  });
   it("carries exactly the guide words, in the same order", () => {
     expect(glossaryWords()).toEqual(STATUS_WORD_GUIDE.map((item) => item.word));
   });

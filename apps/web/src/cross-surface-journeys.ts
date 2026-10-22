@@ -37,7 +37,7 @@ import {
   type CrossSurfaceScenario,
   type CrossSurfaceStatus,
 } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const XS_TITLE = "Cross-surface journeys (synthetic)";
 

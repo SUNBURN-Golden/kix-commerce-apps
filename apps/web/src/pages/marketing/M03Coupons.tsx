@@ -1,3 +1,6 @@
+import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
+import { ValidatedForm } from "../../forms/ValidatedForm";
+import { field } from "../../forms/validation";
 import { useState, type FormEvent } from "react";
 import { COUPON_FIXTURES } from "../../marketing/desk";
 import { marketingSession } from "../../marketing/session";
@@ -24,22 +27,22 @@ export function M03Page() {
   }
 
   return (
-    <MarketingChrome id="M03">
+    <MarketingChrome id="M03" onReadAgain={refresh}>
       {error ? (
         <p className="alert" role="alert">
           {error}
         </p>
       ) : null}
-      <form className="panel" onSubmit={onSubmit}>
+      <ValidatedForm id="coupon-form" fields={[field("coupon-code", "validation.label.code")]} className="panel" onSubmit={onSubmit}>
         <label>
           Demo code
-          <input value={code} onChange={(event) => setCode(event.target.value)} autoComplete="off" />
+          <input id="coupon-code" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="off" />
         </label>
         <p className="muted">A marker is a session label. It has no price, no balance, and no tender.</p>
         <div className="row-actions">
-          <button type="submit">Apply demo code</button>
+          <ConnectivityWriteButton type="submit">Apply demo code</ConnectivityWriteButton>
         </div>
-      </form>
+      </ValidatedForm>
       <ul className="program">
         {COUPON_FIXTURES.map((item) => {
           const applied = snapshot.coupons.find((row) => row.code === item.code);

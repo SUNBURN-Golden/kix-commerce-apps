@@ -15,18 +15,28 @@ async function key(page: Page, selector: string, name: string): Promise<void> {
   await page.keyboard.press(name);
 }
 
+async function summaryToField(page: Page) {
+  await page.locator(".error-summary").waitFor();
+  expect(await page.locator(".error-summary").evaluate((el) => el === document.activeElement)).toBe(true);
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Enter");
+}
+
 const DRIVERS: Record<string, Driver> = {
   "booking:invalid": async (page) => {
     expect(await tabTo(page, "#booking-quantity")).toBe(true);
     await page.keyboard.press("Control+A");
     await page.keyboard.type("1.5");
     await page.keyboard.press("Enter");
-    await page.locator("#booking-error").waitFor();
+    await summaryToField(page);
     expect(await page.locator("#booking-quantity").inputValue(), "the typed value is kept").toBe("1.5");
     return formProblems(page, "booking-quantity");
   },
   "booking:missing": async (page) => {
-    await page.getByRole("alert").first().waitFor();
+    const empty = page.locator('[data-async-state="empty"]');
+    await empty.first().waitFor();
+    expect(await empty.first().getAttribute("role")).toBe("status");
+    expect(await page.getByRole("alert").count()).toBe(0);
     return [];
   },
   "discovery:empty": async (page) => {
@@ -51,14 +61,15 @@ const DRIVERS: Record<string, Driver> = {
   "organizer-workspace:empty-id": async (page) => {
     await page.locator("#organizer-ws-event-id").fill("");
     await key(page, "button.organizer-ws-button:has-text('Add to change list')", "Enter");
-    await key(page, "button.organizer-ws-button:has-text('Prepare preview')", "Enter");
-    await page.locator("#organizer-ws-preview-error").waitFor();
+    await summaryToField(page);
+    expect(await page.locator(".organizer-ws-row").count()).toBe(0);
     return formProblems(page, "organizer-ws-event-id");
   },
   "gift:not-sent": async (page) => {
     await page.locator("#gift-id").fill("gift_blank");
     await key(page, "button:has-text('Send offer_gift')", "Enter");
-    await page.locator("li.journey-step[data-status='not-sent']").first().waitFor();
+    await summaryToField(page);
+    expect(await page.locator("li.journey-step[data-status='not-sent']").count()).toBe(0);
     return formProblems(page, "gift-ticket-id");
   },
   "inventory:section-page": async (page) => {

@@ -1,3 +1,4 @@
+import { connectivityInvoker, connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import {
   GiftTransfer,
@@ -10,7 +11,7 @@ import {
 import type { GiftInvokerSource, GiftSource } from "@kix/protocol-adapter";
 import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 import { giftSource } from "./gift-source";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 /**
  * M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
@@ -238,7 +239,7 @@ export class GiftDesk {
       attempt,
       pending: false,
       localHalt: false,
-      transfer: this.deps.source ? new GiftTransfer(this.deps.source.invoker) : null,
+      transfer: this.deps.source ? new GiftTransfer(connectivityInvoker(this.deps.source.invoker)) : null,
       steps: blankSteps(),
       recipient: GIFT_DEFAULT_RECIPIENT,
     };
@@ -247,6 +248,7 @@ export class GiftDesk {
   }
 
   async send(giftId: string, step: GiftStep, draft: GiftDraft): Promise<void> {
+    if (!connectedHandler()) return;
     if (giftId.length === 0) {
       return;
     }

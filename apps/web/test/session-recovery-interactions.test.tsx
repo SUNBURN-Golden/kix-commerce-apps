@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import { button, change, click, dispatch, element, renderDom } from "./support/render-dom";
 
 // The production controller intentionally lasts for one page load. Each case is a new load.
@@ -7,7 +8,7 @@ beforeEach(() => { vi.resetModules(); });
 
 async function mountRecovery() {
   const { SessionRecoveryPage } = await import("../src/pages/SessionRecovery");
-  return renderDom(<SessionRecoveryPage />);
+  return renderDom(<MemoryRouter><SessionRecoveryPage /></MemoryRouter>);
 }
 
 describe("mounted session recovery", () => {
