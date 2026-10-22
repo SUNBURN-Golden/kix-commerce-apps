@@ -4,7 +4,19 @@
  * A matching screenshot says the layout did not move against a recorded picture on the same render profile.
  * It does not say the layout is right, accessible, accepted or released. Those are separate facets.
  */
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { SessionOptions } from "./browser";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+
+/**
+ * The suite launches Chrome with FONTCONFIG_FILE pointing here, so the only fonts a picture can
+ * resolve are the four OFL files vendored in `apps/e2e/fonts/`. A machine's installed fonts never
+ * reach a screenshot, which is what lets one committed profile match every Linux runner.
+ */
+export const VISUAL_FONTS_CONF = path.resolve(here, "../fonts/fonts.conf");
+export const VISUAL_FONT_FILES = ["NanumGothic-Regular.ttf", "NanumGothic-Bold.ttf", "NanumMyeongjo-Regular.ttf", "NanumMyeongjo-Bold.ttf"] as const;
 
 export const VISUAL_VIEWPORTS = {
   phone: { width: 390, height: 844 },
@@ -67,9 +79,10 @@ export const FIXED_TIME_ISO = "2026-10-21T00:00:00.000Z";
  */
 export const TOLERANCE = { channelDelta: 8, maxDiffPpm: 200 } as const;
 
-/** Pinned in the harness, not in product code. Text rendering, colour profile and scale are fixed. */
+/** Pinned in the harness, not in product code. Fonts, text rendering, colour profile and scale are fixed. */
 export const VISUAL_SESSION: SessionOptions = {
   args: ["--font-render-hinting=none", "--disable-font-subpixel-positioning", "--disable-lcd-text", "--force-color-profile=srgb", "--force-device-scale-factor=1"],
+  env: { FONTCONFIG_FILE: VISUAL_FONTS_CONF },
   // The app reads only `?lang=` and the tab's saved choice, never the browser language, so this value decides nothing on screen.
   context: { timezoneId: "UTC", locale: "en-US", deviceScaleFactor: 1, reducedMotion: "reduce" },
 };
@@ -109,6 +122,7 @@ export const VISUAL_STATIC_CHECK_IDS: readonly string[] = [
   "visual.harness.update-refused-in-ci",
   "visual.harness.baseline-set",
   "visual.harness.launch-flags",
+  "visual.harness.fonts",
   "visual.harness.profile",
   "visual.harness.record-redaction",
 ];

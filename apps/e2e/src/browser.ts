@@ -57,9 +57,13 @@ export const LOOPBACK_ARGS = ["--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE 1
 
 const RESERVED_ARG_PREFIXES = ["--host-resolver-rules", "--no-proxy-server", "--proxy-", "--no-sandbox", "--remote-debugging", "--disable-web-security", "--user-data-dir"];
 
-/** Extra launch flags and fixed context settings a suite may pin. Everything else about the session stays fixed. */
+/** Environment names a suite may not set on the browser: anything that could reroute traffic or load outside code. */
+const RESERVED_ENV_NAMES = /proxy|^LD_|^DYLD_/i;
+
+/** Extra launch flags, environment and fixed context settings a suite may pin. Everything else about the session stays fixed. */
 export interface SessionOptions {
   args?: readonly string[];
+  env?: Record<string, string>;
   context?: Pick<BrowserContextOptions, "timezoneId" | "locale" | "deviceScaleFactor" | "reducedMotion">;
 }
 
@@ -77,9 +81,19 @@ export function launchArgs(extra: readonly string[] = []): string[] {
   return args;
 }
 
+/** The browser process environment: the caller's merged over this process's. A reserved name is refused, not merged. */
+export function launchEnv(extra: Record<string, string> = {}): Record<string, string> {
+  for (const name of Object.keys(extra)) {
+    if (RESERVED_ENV_NAMES.test(name)) {
+      throw new Error(`Launch environment is reserved by the harness: ${name}`);
+    }
+  }
+  return { ...(process.env as Record<string, string>), ...extra };
+}
+
 export async function openSession(origin: string, extraOrigins: readonly string[] = [], options: SessionOptions = {}): Promise<Session> {
   const allowed = new Set([origin, ...extraOrigins]);
-  const browser = await chromium.launch({ executablePath: chromePath(), headless: true, args: launchArgs(options.args) });
+  const browser = await chromium.launch({ executablePath: chromePath(), headless: true, args: launchArgs(options.args), env: launchEnv(options.env) });
   const context = await browser.newContext({ ...options.context, serviceWorkers: "block", acceptDownloads: false });
   const ledger: Ledger = { nonLoopback: [], nonGet: [], appNetworkCalls: 0 };
   await context.route("**/*", (route) => {

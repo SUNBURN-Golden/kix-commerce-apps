@@ -30,7 +30,7 @@ export interface VisualRecord {
 }
 
 export const VISUAL_NOT_RUN = [
-  "a render profile other than the one named above: baselines are bound to the fonts the browser resolved",
+  "a render profile other than the one named above: baselines are bound to the vendored fonts the browser resolved (a non-Linux runner needs its own)",
   "a Chrome version other than the one named above: a rendering change beyond the tolerance fails with diff pictures",
   "Firefox, Safari, a real device, a printer or a screen reader",
   "HTTP mode in a browser (needs a kix-protocol gate change)",

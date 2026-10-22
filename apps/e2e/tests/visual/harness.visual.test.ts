@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { LOOPBACK_ARGS, launchArgs } from "../../src/browser";
+import { LOOPBACK_ARGS, launchArgs, launchEnv } from "../../src/browser";
 import { findSensitiveInRecord } from "../../src/redact";
 import { recordCheck } from "../../src/run-record";
 import { useBrowser } from "../../src/suite";
@@ -19,7 +19,7 @@ import {
   settleShot,
   type BaselineManifest,
 } from "../../src/visual-compare";
-import { FIXED_TIME_ISO, TOLERANCE, VISUAL_SESSION, VISUAL_STATIC_CHECK_IDS, expectedVisualCheckIds, idOf, visualShots } from "../../src/visual-matrix";
+import { FIXED_TIME_ISO, TOLERANCE, VISUAL_FONTS_CONF, VISUAL_FONT_FILES, VISUAL_SESSION, VISUAL_STATIC_CHECK_IDS, expectedVisualCheckIds, idOf, visualShots } from "../../src/visual-matrix";
 import { VISUAL_NOT_RUN, koreanLayoutNote, renderVisualRecord, type VisualRecord } from "../../src/visual-record";
 import { useVisual } from "./helpers";
 
@@ -142,6 +142,46 @@ describe("visual harness self-checks (stub, headless Chrome)", () => {
     expect(probe).toEqual({ zone: "UTC", ratio: 1, reduced: true, now: FIXED_TIME_ISO, width: 390 });
     await page.close();
     recordCheck("visual.harness.launch-flags");
+  });
+
+  it("the session pins the vendored font set, so no machine font reaches a picture", async () => {
+    expect(VISUAL_SESSION.env?.FONTCONFIG_FILE).toBe(VISUAL_FONTS_CONF);
+    const fontsDir = path.dirname(VISUAL_FONTS_CONF);
+    for (const file of [...VISUAL_FONT_FILES, "fonts.conf", "OFL.txt"]) {
+      expect(fs.existsSync(path.join(fontsDir, file)), file).toBe(true);
+    }
+    for (const bad of ["HTTP_PROXY", "https_proxy", "LD_PRELOAD"].map((name) => ({ [name]: "x" }) as Record<string, string>)) {
+      expect(() => launchEnv(bad), Object.keys(bad).join(",")).toThrow(/reserved by the harness/);
+    }
+    // document.fonts.check cannot tell a system family apart, so this measures widths: a family that is
+    // not vendored must land on the vendored file, not on whatever the machine would have offered.
+    const widths = await visual.helper().evaluate(() => {
+      const pen = document.createElement("canvas").getContext("2d");
+      if (!pen) {
+        throw new Error("No 2d canvas.");
+      }
+      const measure = (font: string, text: string): number => {
+        pen.font = font;
+        return pen.measureText(text).width;
+      };
+      const latin = "Box office 0123456789";
+      const korean = "박스오피스 영수증 가나다";
+      return {
+        vendored: measure('16px "NanumGothic"', latin),
+        arial: measure("16px Arial", latin),
+        dejavu: measure('16px "DejaVu Sans"', latin),
+        serif: measure("16px Palatino,Georgia,serif", latin),
+        vendoredSerif: measure('16px "NanumMyeongjo"', latin),
+        koreanInSansStack: measure('16px "Avenir Next","Segoe UI",sans-serif', korean),
+        koreanInVendored: measure('16px "NanumGothic"', korean),
+      };
+    });
+    expect(widths.arial).toBe(widths.vendored);
+    expect(widths.dejavu).toBe(widths.vendored);
+    expect(widths.serif).toBe(widths.vendoredSerif);
+    expect(widths.serif).not.toBe(widths.vendored);
+    expect(widths.koreanInSansStack).toBe(widths.koreanInVendored);
+    recordCheck("visual.harness.fonts");
   });
 
   it("the render profile is stable, carries no Chrome version, and says whether Korean glyphs are drawn", async () => {
