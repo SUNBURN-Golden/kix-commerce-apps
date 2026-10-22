@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { chromium, type Browser, type BrowserContext, type Page } from "playwright-core";
+import { chromium, type Browser, type BrowserContext, type BrowserContextOptions, type Page } from "playwright-core";
 
 export interface Ledger {
   /** Requests the browser tried to send to any origin other than the loopback server. Blocked. */
@@ -52,14 +52,49 @@ const COUNTER = `
 })();
 `;
 
-export async function openSession(origin: string, extraOrigins: readonly string[] = []): Promise<Session> {
-  const allowed = new Set([origin, ...extraOrigins]);
-  const args = ["--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE 127.0.0.1", "--no-proxy-server"];
+/** Launch flags that keep the browser on the loopback server. A caller can add flags, never remove or override these. */
+export const LOOPBACK_ARGS = ["--host-resolver-rules=MAP * ~NOTFOUND , EXCLUDE 127.0.0.1", "--no-proxy-server"] as const;
+
+const RESERVED_ARG_PREFIXES = ["--host-resolver-rules", "--no-proxy-server", "--proxy-", "--no-sandbox", "--remote-debugging", "--disable-web-security", "--user-data-dir"];
+
+/** Environment names a suite may not set on the browser: anything that could reroute traffic or load outside code. */
+const RESERVED_ENV_NAMES = /proxy|^LD_|^DYLD_/i;
+
+/** Extra launch flags, environment and fixed context settings a suite may pin. Everything else about the session stays fixed. */
+export interface SessionOptions {
+  args?: readonly string[];
+  env?: Record<string, string>;
+  context?: Pick<BrowserContextOptions, "timezoneId" | "locale" | "deviceScaleFactor" | "reducedMotion">;
+}
+
+/** The final launch flags. A caller flag that touches the network, proxy, sandbox or profile is refused, not merged. */
+export function launchArgs(extra: readonly string[] = []): string[] {
+  for (const arg of extra) {
+    if (RESERVED_ARG_PREFIXES.some((prefix) => arg.startsWith(prefix))) {
+      throw new Error(`Launch flag is reserved by the harness: ${arg}`);
+    }
+  }
+  const args = [...LOOPBACK_ARGS, ...extra];
   if (process.env.KIX_E2E_NO_SANDBOX === "1") {
     args.push("--no-sandbox");
   }
-  const browser = await chromium.launch({ executablePath: chromePath(), headless: true, args });
-  const context = await browser.newContext({ serviceWorkers: "block", acceptDownloads: false });
+  return args;
+}
+
+/** The browser process environment: the caller's merged over this process's. A reserved name is refused, not merged. */
+export function launchEnv(extra: Record<string, string> = {}): Record<string, string> {
+  for (const name of Object.keys(extra)) {
+    if (RESERVED_ENV_NAMES.test(name)) {
+      throw new Error(`Launch environment is reserved by the harness: ${name}`);
+    }
+  }
+  return { ...(process.env as Record<string, string>), ...extra };
+}
+
+export async function openSession(origin: string, extraOrigins: readonly string[] = [], options: SessionOptions = {}): Promise<Session> {
+  const allowed = new Set([origin, ...extraOrigins]);
+  const browser = await chromium.launch({ executablePath: chromePath(), headless: true, args: launchArgs(options.args), env: launchEnv(options.env) });
+  const context = await browser.newContext({ ...options.context, serviceWorkers: "block", acceptDownloads: false });
   const ledger: Ledger = { nonLoopback: [], nonGet: [], appNetworkCalls: 0 };
   await context.route("**/*", (route) => {
     const request = route.request();
