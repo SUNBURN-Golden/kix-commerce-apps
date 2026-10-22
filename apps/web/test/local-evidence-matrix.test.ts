@@ -7,6 +7,7 @@ import {
   COMMERCE_METHODS,
   composeCrossSurfaceRows,
   CROSS_SURFACE_JOURNEYS,
+  KIX_SDK_0_PIN,
   OPENAPI_CONTRACT_PIN,
   OPENAPI_INTEGRATION_GATE_PIN,
   RELEASE_DECISIONS,
@@ -175,13 +176,25 @@ describe("local evidence matrix: facets stay separate and approve nothing", () =
       expect(row.centralDone).toBe("NOT_EVALUATED");
     }
     for (const row of pending) expect(["WAITING", "NOT_STARTED"]).toContain(row.nodeState);
-    for (const [id, pr] of [["c-local-evidence-matrix-stub", 76], ["c-app-shell-resilience-stub", 78], ["c-route-registry-navigation-stub", 79], ["c-bundle-performance-budget-stub", 80]] as const) {
+    for (const [id, pr] of [
+      ["c-local-evidence-matrix-stub", 76],
+      ["c-app-shell-resilience-stub", 78],
+      ["c-route-registry-navigation-stub", 79],
+      ["c-bundle-performance-budget-stub", 80],
+      ["c-locale-ko-en-stub", 82],
+      ["consume-p-sdk-0", 86],
+      ["c-user-guides-stub", 87],
+      ["c-component-gallery-stub", 94],
+      ["c-web-coverage-uplift-stub", 95],
+    ] as const) {
       expect(rows.find((row) => row.rowId === id && row.catalogue === "program")?.nodeState, id).toBe(`MERGED_RECORDED(PR #${pr})`);
     }
     for (const row of rows) expect(row.nodeState).not.toBe("IN_PROGRESS");
     const prs = Object.values(NODE_PRS);
     expect(new Set(prs).size).toBe(prs.length);
     for (const pr of prs) expect(Number.isInteger(pr) && pr > 0).toBe(true);
+    // At this base exactly the three nodes with no merge on main stay NOT_STARTED.
+    expect(postBaseProgramNodes()).toEqual(["c-i18n-coverage-completion-stub", "c-visual-regression-stub", "c-first-run-onboarding-stub"]);
     for (const node of PROGRAM_NODES) {
       if (postBaseProgramNodes().includes(node.id)) expect(rows.find((row) => row.rowId === node.id && row.catalogue === "program")?.nodeState, node.id).toBe("NOT_STARTED");
       else expect(NODE_PRS[node.id], node.id).toBeGreaterThan(0);
@@ -241,8 +254,12 @@ describe("local evidence matrix: contract tuple and locks", () => {
     expect(ciGateSha()).toBe(OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha);
     expect(tuple.contractOpenApiSha256).toBe(HANDOFF_PINS.contractOpenApiSha256);
     expect(tuple.gateOpenApiSha256).toBe(HANDOFF_PINS.gateOpenApiSha256);
-    expect([tuple.sdkDigest, tuple.manifestDigest, tuple.vectorDigest]).toEqual([null, null, null]);
-    expect(tuple.consumedProducerChange).toBe(false);
+    expect(tuple.sdkDigest).toBe(KIX_SDK_0_PIN.catalogueSha256);
+    expect(tuple.manifestDigest).toBe(KIX_SDK_0_PIN.manifestSha256);
+    expect(tuple.vectorDigest).toBe(HANDOFF_PINS.vectorDigest);
+    expect(tuple.vectorDigest.startsWith("canonical-encoding:")).toBe(true);
+    expect(tuple.vectorDigest).toContain(" mixed-input:");
+    expect(tuple.consumedProducerChange).toBe(true);
   });
 
   it("leaves commerce-bindings.ts byte-identical and placeHold not-bound with reserve_listing", () => {

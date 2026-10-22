@@ -91,7 +91,7 @@ The organizer workspace at `/organizer/workspace` edits the caller fields those 
 
 ## Protocol pin
 
-The adapter vendors two OpenAPI files from [kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol). The command catalogue is unchanged. The integration-gate file is the loopback transport description from feature `c7238bc24a399a6cabbab87ac23dbfd7e9c252dd`, merged as `52a9b5cbf7777df55d2d2062cb8d99d862b423bb`. Those two commits share one tree. Apps tests start that process from either checkout. The contract-only bytes are unchanged.
+The adapter vendors two OpenAPI files plus the p-sdk-0 BOOTSTRAP tuple (below) from [kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol). The command catalogue is unchanged. The integration-gate file is the loopback transport description from feature `c7238bc24a399a6cabbab87ac23dbfd7e9c252dd`, merged as `52a9b5cbf7777df55d2d2062cb8d99d862b423bb`. Those two commits share one tree. Apps tests start that process from either checkout. The contract-only bytes are unchanged.
 
 Contract-only catalogue, path `docs/contracts/openapi/kix-protocol.contract-only.openapi.json`, recorded at main `a744b0a036d7e1edb48416871af20cd182f23df4`. Those bytes are the same at the integration-gate merge.
 
@@ -117,7 +117,20 @@ Integration-gate transport, path `docs/contracts/openapi/kix-protocol.integratio
 | `x-kix-production-conformance` | false |
 | In-flight cap | 8. `durableAcrossRestart` stays false. The optional file journal defaults off |
 
-The rest of kix-protocol is not vendored. These pins are not a production-conformance claim. Load time checks the file bytes. The settlement FSM dependency baseline is protocol main `85145eb33799a7c712890ff81708def8a7d61ee5` (feature commit `838370d9ce8e8aeeceeb94f3b4d212204e7ecf19`). The reservation FSM dependency baseline is protocol main `a47828dd4517c5a7397e09eb6b563a64e4265c82` (feature commit `2183d0b5b5010ec2692c43c277e99926ad9250db`). The resale FSM dependency baseline is protocol main `ef942b7713c7468e8851c6b372b64d42b5333ad8` (feature commit `70c6d52d4289e23d0d4141b7f3a6b310eea236f2`). The credit FSM dependency baseline is protocol main `8c1a4db7cfe70b0e772a2ef0f24492967c84f7f1` (feature commit `4608460ba1fe57165e88e74f6e8d8c23e8e53277`). Those lifecycle names are not catalogue commands. How to run the gate is in [docs/http-integration-gate-apps-bind.md](docs/http-integration-gate-apps-bind.md).
+Vendored p-sdk-0 tuple, path `packages/protocol-adapter/vendor/kix-sdk-0`, from kix-protocol PR #123 (merge `a74e7c459d3be6754ac3cf24503e43c7bc312358`), consumed by PR #86 (`consume-p-sdk-0`). `KIX_SDK_0_PIN` in `packages/protocol-adapter/src/sdk-pin.ts` asserts these digests and the vendored bytes at load time. BOOTSTRAP grants catalogue-schema binding only; this pin is not a conformance claim.
+
+| Pin | Value |
+| --- | --- |
+| Manifest sha256 (`manifest.bootstrap-1.json`) | `1cce4ee5a9aa64ef40825c0e6dedf920050e594cf20ea0aaf087ecbde46f0cca` |
+| Catalogue sha256 (`generated/catalogue.ts`) | `891ddd65f29262603bd0f76746a9308c810a71d4afd717b0f4d2e3f7d46dbaa2` |
+| Profile sha256 (`bootstrap-1.profile.json`) | `4c92cf6d905f83fb3f5cd52e166dbadf057451ae46441fce1f91baaaa4367d34` |
+| Profile | `BOOTSTRAP` / `bootstrap-1` |
+| Grants | `catalogue-schema-binding only` |
+| Vector `canonical-encoding` sha256 | `3446c13847bb153df06c1d5d3b7f09cd3b1648ac10bb0cc76d7b65c7014e99c2` |
+| Vector `mixed-input` sha256 | `9e2441ddefc22a2f8c7be230436620908b735b128b9445b7a5a916e4d86a2e19` |
+| Conformance flags | `semanticConformance`, `liveHttpServer`, `productionEndpoint`, `protocolTruth`, `productionConformance` all false |
+
+Apart from those two OpenAPI files and the p-sdk-0 tuple above, nothing else from kix-protocol is vendored. These pins are not a production-conformance claim, and the SDK tuple did not move the five pins. Load time checks the file bytes. The settlement FSM dependency baseline is protocol main `85145eb33799a7c712890ff81708def8a7d61ee5` (feature commit `838370d9ce8e8aeeceeb94f3b4d212204e7ecf19`). The reservation FSM dependency baseline is protocol main `a47828dd4517c5a7397e09eb6b563a64e4265c82` (feature commit `2183d0b5b5010ec2692c43c277e99926ad9250db`). The resale FSM dependency baseline is protocol main `ef942b7713c7468e8851c6b372b64d42b5333ad8` (feature commit `70c6d52d4289e23d0d4141b7f3a6b310eea236f2`). The credit FSM dependency baseline is protocol main `8c1a4db7cfe70b0e772a2ef0f24492967c84f7f1` (feature commit `4608460ba1fe57165e88e74f6e8d8c23e8e53277`). Those lifecycle names are not catalogue commands. How to run the gate is in [docs/http-integration-gate-apps-bind.md](docs/http-integration-gate-apps-bind.md).
 
 ## Settlement depth
 
@@ -217,7 +230,7 @@ The platform release page at `/release` is a synthetic release candidate record 
 
 ## Contract fixture catalogue
 
-Catalogue version `1` classifies the current pin tuple into `SUCCESS`, `REJECT`, `UNKNOWN`, `NOT_BOUND`, and `STALE`. Adapter tests and UI tests both import `packages/protocol-adapter/src/contract-fixtures.ts`. A recorded pass names one case on this tuple. It does not verify a different case or a different tuple. A failed live call is not replaced with a stub success. The generator copies result key names and does not compute finance or rights. `placeHold` stays not-bound with `consideredAction` `reserve_listing`. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. The mapping table is [docs/c-contract-fixture-library-apps-bind.md](docs/c-contract-fixture-library-apps-bind.md). No catalogue, gate, or SDK change is consumed.
+Catalogue version `1` classifies the current pin tuple into `SUCCESS`, `REJECT`, `UNKNOWN`, `NOT_BOUND`, and `STALE`. Adapter tests and UI tests both import `packages/protocol-adapter/src/contract-fixtures.ts`. A recorded pass names one case on this tuple. It does not verify a different case or a different tuple. A failed live call is not replaced with a stub success. The generator copies result key names and does not compute finance or rights. `placeHold` stays not-bound with `consideredAction` `reserve_listing`. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. The mapping table is [docs/c-contract-fixture-library-apps-bind.md](docs/c-contract-fixture-library-apps-bind.md). The c-contract-fixture-library node consumed no catalogue, gate, or SDK change.
 
 The [SDK0 mock scenario kit](docs/c-sdk0-mock-scenario-kit-stub-apps-bind.md) provides deterministic, seeded offline snapshots for local demo harnesses and the adapter/web tests. It reuses catalogue case identities and validates command envelopes against the vendored p-sdk-0 BOOTSTRAP schema. It stays outside runtime screen imports and opens no network connection. BOOTSTRAP grants catalogue-schema binding only; synthetic results are locally guarded, not generated SDK result types or semantic conformance. Catalogue v1's historical null digests remain unchanged.
 

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { StatusMark } from "../a11y/marks";
 import {
   buildHandoffView,
+  CONSUMED_PRODUCERS,
   FEATURE_ROWS,
   FIRST_RUN,
   GATE_START,
@@ -372,8 +373,18 @@ function HandoffBody({
         </ul>
         <p>
           Pins stay on contract {HANDOFF_PINS.contractOpenApiSha256.slice(0, 12)} and gate {HANDOFF_PINS.gateOpenApiSha256.slice(0, 12)}.
-          Merge {HANDOFF_PINS.protocolMergeSha.slice(0, 12)}. SDK digest is null. No producer change is consumed. Feature rows{" "}
-          {FEATURE_ROWS.length}. Journey roles {Object.keys(ROLE_JOURNEYS).join(", ")}.
+          Merge {HANDOFF_PINS.protocolMergeSha.slice(0, 12)}. Feature rows {FEATURE_ROWS.length}. Journey roles{" "}
+          {Object.keys(ROLE_JOURNEYS).join(", ")}.
+        </p>
+        <p>
+          {CONSUMED_PRODUCERS.map((producer) => (
+            <span key={producer.id}>
+              Consumed producer {producer.id} (PR #{producer.pr}, merge {producer.producerMergeSha.slice(0, 12)}): SDK
+              catalogue {producer.catalogueSha256.slice(0, 12)}, manifest {producer.manifestSha256.slice(0, 12)}, profile{" "}
+              {producer.profileRevision}. The SDK tuple was consumed; the catalogue, the gate, and the five pins did not
+              move. BOOTSTRAP grants {producer.grants} only; not semantic conformance.
+            </span>
+          ))}
         </p>
       </section>
     </div>

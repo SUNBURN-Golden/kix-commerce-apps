@@ -31,7 +31,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, "../../../..");
 export const DOC_PATH = "docs/c-local-evidence-matrix-stub-apps-bind.md";
 
-export const BASE_MAIN_SHA = "f570c84c6a969bb88642eecf534e68c60ffee853";
+export const BASE_MAIN_SHA = "20fa67b6dfee56ec33247774932aea3756f2a352";
 export const LOCKED_BINDINGS_SHA256 = "83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249";
 export const RULING_LINE = "M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce";
 
@@ -156,6 +156,18 @@ export const NODE_PRS: Readonly<Record<string, number>> = {
   "c-app-shell-resilience-stub": 78,
   "c-route-registry-navigation-stub": 79,
   "c-bundle-performance-budget-stub": 80,
+  "c-locale-ko-en-stub": 82,
+  "c-display-preferences-stub": 83,
+  "c-untrusted-render-csp-stub": 84,
+  "c-quality-gates-stub": 85,
+  "consume-p-sdk-0": 86,
+  "c-user-guides-stub": 87,
+  "c-async-state-patterns-stub": 90,
+  "c-form-validation-ux-stub": 91,
+  "c-offline-connectivity-ux-stub": 92,
+  "c-sdk0-mock-scenario-kit-stub": 93,
+  "c-component-gallery-stub": 94,
+  "c-web-coverage-uplift-stub": 95,
 };
 
 /** Surface -> existing tests. Existence is checked by the test. "none" means no file of that kind exists for the surface. */
