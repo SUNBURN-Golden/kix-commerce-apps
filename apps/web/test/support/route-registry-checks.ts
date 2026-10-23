@@ -120,3 +120,9 @@ export function registryRows(routes: readonly RouteEntry[] = ROUTES): string[] {
     return `| \`${item.path}\` | ${item.label} | ${group} | ${item.binding} | ${item.nav} | ${item.a11y ?? "-"} | ${item.e2e ?? "-"} | ${item.evidence} |`;
   });
 }
+
+/** A surface row must name its browser journey or explain the gap. */
+export function surfaceRowE2eProblems(routes: readonly RouteEntry[]): string[] {
+  return routes.filter((route) => route.evidence === "surface-row" && route.e2e === null && !route.note?.trim())
+    .map((route) => route.id + ": surface-row without e2e or note");
+}
