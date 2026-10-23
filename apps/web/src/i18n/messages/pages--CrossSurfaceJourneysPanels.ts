@@ -1,3 +1,4 @@
+import { c141 } from "./shared-copy";
 export const messages = {
   en: {
     "sz": "Actions never composed",
@@ -25,7 +26,7 @@ export const messages = {
     "svw": "No leg was run here.",
     "sy7": "No row to show.",
     "sz4": "No table is held, so there is no row to show.",
-    "sw7": "Non-claims, each a literal false:",
+    "sw7": c141,
     "swb": "None of these controls sends a command. The filter works on the rows already held and does not read again.",
     "s13t": "of",
     "s1cw": "Read the table",

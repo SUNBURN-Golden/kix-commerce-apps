@@ -1,3 +1,5 @@
+import { c261 } from "./shared-copy";
+import { c135, c134, c13, c133 } from "./shared-copy";
 export const messages = {
   en: {
     "s29": "A grant is the source's own record of scope, deadline, target, budget, allowed actions, and the requested and adopted modes. This page copies them and decides none of them.",
@@ -11,7 +13,7 @@ export const messages = {
     "s91": "Attention.",
     "say": "cancel draft drf-0001",
     "sbo": "Catalogue commands this page never sends",
-    "sbx": "Changing the scenario starts a new synthetic session.",
+    "sbx": c133,
     "sdf": "Concept",
     "sec": "Contract register",
     "sfw": "Delegation concepts and the pin",
@@ -62,9 +64,9 @@ export const messages = {
     "s1fw": "Requests and turns",
     "s1js": "Session record",
     "s1kn": "Simulated producer events",
-    "s1m2": "Start a new synthetic session",
+    "s1m2": c13,
     "s1m3": "Start a new synthetic session clears every intent and proposal, as a reload does, and resolves nothing at a producer. Deliver held response works only in the held-response scenario.",
-    "s1m5": "Start a session with this scenario",
+    "s1m5": c134,
     "s1mj": "Status",
     "s1mn": "Step",
     "s1nx": "Switch principal scope",
@@ -73,7 +75,7 @@ export const messages = {
     "s1pe": "Target",
     "s1sw": "The four lanes",
     "s1u2": "The listings the last read reported. Only a listing under a grant's target event is in scope, and the assistant never searches for or infers a grant.",
-    "s1zl": "The source has rejected no write of this page in this session.",
+    "s1zl": c261,
     "s22r": "). The words are intent, not authority. A proposal they produce is recorded and sends nothing until its own approve control is pressed.",
     "s24s": "Turn",
     "s24u": "Turns in this session",
@@ -97,7 +99,7 @@ export const messages = {
     "s91": "주의.",
     "say": "초안 drf-0001 취소",
     "sbo": "이 화면이 전송하지 않는 명령",
-    "sbx": "시나리오 변경 시 새 합성 세션을 시작합니다.",
+    "sbx": c135,
     "sdf": "개념",
     "sec": "계약 등록부",
     "sfw": "위임 개념과 고정 계약",

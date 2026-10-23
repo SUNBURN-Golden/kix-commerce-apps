@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/operational-qualification";
 import { sourceMessage } from "./i18n/source-message";
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The platform operational qualification screen on top of the adapter's synthetic
  * qualification runner. Stub scope: the default port is the synthetic runner. On
@@ -38,7 +39,7 @@ import {
   type QualificationScenario,
 } from "@kix/protocol-adapter";
 import { PENDING_PRODUCERS } from "./handoff/packet";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const QUALIFICATION_TITLE = sourceCopy.en["s18g"];
 
@@ -314,8 +315,8 @@ interface Session {
 }
 
 function createSession(environment: "stub" | "integration-http", scenario: QualificationScenario): Session {
-  const port = qualificationRunnerPortFor(environment, { scenario });
-  return { port, controller: new OperationalQualificationController(port, { actorRef: QUALIFICATION_DESK_ACTOR }) };
+  const port = connectivityPort(qualificationRunnerPortFor(environment, { scenario }), "operational-qualification");
+  return { port, controller: connectivityController(new OperationalQualificationController(port, { actorRef: QUALIFICATION_DESK_ACTOR }), port) };
 }
 
 export interface QualificationActions {
@@ -419,7 +420,7 @@ export function useOperationalQualification(): {
     scenario,
     model: { ...model, heldSupported: sessionRef.current.port.scenario === "held" },
     heldSupported: sessionRef.current.port.scenario === "held",
-    actions,
+    actions: connectedActions(actions, ['run', 'setScenario', 'newSession'], sessionRef.current?.port),
   };
 }
 

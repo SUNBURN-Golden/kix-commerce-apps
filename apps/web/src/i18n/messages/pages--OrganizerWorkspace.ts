@@ -1,3 +1,5 @@
+import { c270, c260, c269 } from "./shared-copy";
+import { c10, c7, c6 } from "./shared-copy";
 export const messages = {
   en: {
     "sy": "Action",
@@ -6,7 +8,7 @@ export const messages = {
     "sa4": "Blank uses the desk organizer id",
     "sac": "Body",
     "sas": "Caller-supplied integer",
-    "sat": "Caller-supplied integer, or leave blank",
+    "sat": c269,
     "sau": "Caller-supplied inventory id",
     "sbu": "Change list",
     "sd4": "Code {code}.",
@@ -43,17 +45,17 @@ export const messages = {
     "s1gl": "Results",
     "s1hq": "Row editor",
     "s1ir": "Seats",
-    "s1ly": "Stale selection. The local selection changed. Nothing was sent.",
+    "s1ly": c260,
     "s1mi": "State",
     "s1mn": "Step",
     "s1na": "Submit",
     "s1nd": "Submitting. One attempt each.",
     "s1qu": "The change list was edited. Prepare preview again.",
     "s21x": "The synthetic show policy is a fixture, not a policy. It is inside the create_event body.",
-    "s253": "Unconfirmed: sent, no authoritative receipt. May have applied. Not a rejection.",
+    "s253": c6,
     "e.24": "Not sent",
     "e.33": "Receipt.",
-    "p.t4": "Rejected by the gate ({v1}).",
+    "p.t4": c7,
     "p.t6": "Not sent. {v1}",
   },
   ko: {
@@ -88,7 +90,7 @@ export const messages = {
     "s14e": "명령별 한 행입니다. 본문은 전송 시 사용할 본문입니다.",
     "s15j": "작업",
     "s167": "주최자 식별자",
-    "s16a": "주최자 경로를 사용할 수 없습니다. 검토된 게이트가 CORS 사전 요청에 응답하지 않습니다. integration HTTP를 유지하며 stub 대체하지 않습니다. Node 시험은 실제 게이트를 검증합니다. 브라우저 경로에는 kix-protocol 게이트 변경이 필요합니다.",
+    "s16a": c270,
     "s18q": "미리보기 준비",
     "s191": "미리보기",
     "s1d5": "{reason}",
@@ -107,7 +109,7 @@ export const messages = {
     "s1nd": "제출 중. 각각 한 번 시도합니다.",
     "s1qu": "변경 목록이 편집되었습니다. 미리보기를 다시 준비하세요.",
     "s21x": "합성 공연 정책은 fixture이며 실제 정책이 아닙니다. create_event 본문 안에 있습니다.",
-    "s253": "미확인: 전송했으나 권위 있는 영수증이 없습니다. 반영되었을 수 있으며 거부가 아닙니다.",
+    "s253": c10,
     "e.24": "전송 안 됨",
     "e.33": "영수증.",
     "p.t4": "게이트에서 거부됨 ({v1}).",

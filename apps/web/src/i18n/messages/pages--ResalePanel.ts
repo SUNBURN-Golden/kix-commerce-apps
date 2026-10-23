@@ -1,6 +1,7 @@
+import { c140, c139 } from "./shared-copy";
 export const messages = {
   en: {
-    "si7": "Economic finality claimed",
+    "si7": c139,
     "sia": "ELIGIBLE",
     "skp": "External marketplace",
     "sne": "Holder and version",
@@ -14,7 +15,7 @@ export const messages = {
     "sst": "Mock clock",
     "st0": "Mock phase",
     "st1": "Mock resale case",
-    "st7": "Mock settlement commit observed",
+    "st7": c140,
     "ssr": "MOCK_GATE_ONLY",
     "st8": "Mode",
     "str": "No",

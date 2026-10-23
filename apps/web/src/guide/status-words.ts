@@ -50,7 +50,7 @@ const OUTCOME: Record<(typeof OUTCOME_WORDS)[number], Omit<StatusWordGuideEntry,
   UNKNOWN: {
     meaning: sourceCopy.en["s1x4"],
     doText: sourceCopy.en["s1ck"],
-    dontText: "Not a failure and not a success. Never read it as 'did not happen' — it may have applied.",
+    dontText: sourceCopy.en["merge.unknownDont"],
   },
   NOT_BOUND: {
     meaning: sourceCopy.en["sx3"],
@@ -103,6 +103,8 @@ const TRANSPORT: Record<string, Omit<StatusWordGuideEntry, "word" | "kind">> = {
     doText: sourceCopy.en["s11d"],
     dontText: sourceCopy.en["szp"],
   },
+  offline: { meaning: sourceCopy.en["merge.offlineMeaning"], doText: sourceCopy.en["merge.offlineDo"], dontText: sourceCopy.en["merge.offlineDont"] },
+  online: { meaning: sourceCopy.en["merge.onlineMeaning"], doText: sourceCopy.en["merge.onlineDo"], dontText: sourceCopy.en["merge.onlineDont"] },
 };
 
 const BINDING: Record<(typeof ROUTE_BINDINGS)[number], Omit<StatusWordGuideEntry, "word" | "kind">> = {
@@ -191,12 +193,12 @@ const ADMISSION_STATE: Record<(typeof ADMISSION_DESK_STATES)[number], Omit<Statu
 
 const ADMISSION_PHASE: Record<(typeof ADMISSION_PHASES)[number], Omit<StatusWordGuideEntry, "word" | "kind">> = {
   ELIGIBLE: {
-    meaning: "Credential FSM phase: the synthetic credential may be authorized. P03 stays 설계중.",
+    meaning: sourceCopy.en["merge.eligiblePhase"],
     doText: sourceCopy.en["s1bt"],
     dontText: sourceCopy.en["szn"],
   },
   AUTHORIZED: {
-    meaning: "Credential FSM phase: the synthetic credential was authorized. P03 stays 설계중.",
+    meaning: sourceCopy.en["merge.authorizedPhase"],
     doText: sourceCopy.en["s1bt"],
     dontText: sourceCopy.en["s10u"],
   },
@@ -227,13 +229,14 @@ const FACET_WORDS: Record<string, Omit<StatusWordGuideEntry, "word" | "kind">> =
 const JOURNEY_WORDS: Record<string, Omit<StatusWordGuideEntry, "word" | "kind">> = {
   RECEIPT: { meaning: sourceCopy.en["s2n"], doText: sourceCopy.en["s1cp"], dontText: sourceCopy.en["s107"] },
   REJECTED: { meaning: sourceCopy.en["s1tu"], doText: sourceCopy.en["s1cu"], dontText: sourceCopy.en["s12u"] },
-  NOT_SENT: { meaning: "The leg was never sent — not-bound, gated open, or observation only.", doText: sourceCopy.en["s1cr"], dontText: sourceCopy.en["s11y"] },
+  NOT_SENT: { meaning: sourceCopy.en["merge.unsentLeg"], doText: sourceCopy.en["s1cr"], dontText: sourceCopy.en["s11y"] },
   FENCED: { meaning: sourceCopy.en["s1x3"], doText: sourceCopy.en["s1mp"], dontText: sourceCopy.en["sz6"] },
   NONE_NEEDED: { meaning: sourceCopy.en["s1r3"], doText: sourceCopy.en["s11e"], dontText: sourceCopy.en["sz8"] },
   COMPENSATION_UNDEFINED: { meaning: sourceCopy.en["s2m"], doText: sourceCopy.en["sio"], dontText: sourceCopy.en["s100"] },
 };
 
 const CODE_WORDS: Record<string, Omit<StatusWordGuideEntry, "word" | "kind">> = {
+  CONNECTIVITY_BLOCKED: { meaning: sourceCopy.en["merge.connectivityMeaning"], doText: sourceCopy.en["merge.connectivityDo"], dontText: sourceCopy.en["merge.connectivityDont"] },
   GATE_UNAVAILABLE: { meaning: sourceCopy.en["s1u5"], doText: sourceCopy.en["sc6"], dontText: sourceCopy.en["szh"] },
   STALE_RESPONSE: { meaning: sourceCopy.en["s1t3"], doText: sourceCopy.en["s24q"], dontText: sourceCopy.en["szi"] },
   REQUEST_TIMEOUT: { meaning: sourceCopy.en["s1uo"], doText: sourceCopy.en["s16h"], dontText: sourceCopy.en["s12h"] },

@@ -1,10 +1,12 @@
+import { c268, c267 } from "./shared-copy";
+import { c134, c13 } from "./shared-copy";
 export const messages = {
   en: {
     "s4v": "A pasted reference is a direct open, like a typed URL. The source answers a ref outside this tenant or addressed to another subject with denied — never a row of another tenant, never a row of another subject.",
     "s7l": "A row reports what the source recorded. An arrival confirms no economic effect. A stale-issued row keeps its place but its offered action resolves nothing.",
     "s3t": "and look up",
     "s91": "Attention.",
-    "sba": "Capabilities and the roles that hold them",
+    "sba": c267,
     "sbb": "Capability",
     "scd": "Choosing a scenario does nothing until you start a session with it, and starting one clears earlier reads, material, and requests.",
     "sd2": "({code})",
@@ -24,7 +26,7 @@ export const messages = {
     "ss3": "Marking read is off:",
     "ss9": "Material for notification",
     "swf": "No notification in this read.",
-    "sxr": "No request has been sent from this session.",
+    "sxr": c268,
     "s11o": "Notification",
     "s11p": "Notification fields",
     "s11q": "Notification inbox",
@@ -49,8 +51,8 @@ export const messages = {
     "s1kd": "Simulate a late delivery",
     "s1kh": "Simulate a revoked grant",
     "s1ki": "Simulate a rotated grant generation",
-    "s1m2": "Start a new synthetic session",
-    "s1m5": "Start a session with this scenario",
+    "s1m2": c13,
+    "s1m5": c134,
     "s1mj": "Status",
     "s1nm": "Support material",
     "s1o3": "Switch tenant (",

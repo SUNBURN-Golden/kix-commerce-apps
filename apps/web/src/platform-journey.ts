@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/platform-journey";
 import { sourceMessage } from "./i18n/source-message";
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The multi-channel trade screen on top of the adapter's synthetic platform source.
  * Stub scope: the default port is the synthetic source. On integration-http the same
@@ -43,7 +44,7 @@ import {
   type PlatformTradeProjection,
   type PlatformTradeShape,
 } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const PLATFORM_TITLE = sourceCopy.en["s24i"];
 
@@ -589,8 +590,8 @@ interface Session {
 }
 
 function createSession(environment: "stub" | "integration-http", scenario: PlatformScenario): Session {
-  const port = platformJourneyPortFor(environment, { scenario });
-  return { port, controller: new PlatformJourneyController(port, { actorRef: PLATFORM_DESK_ACTOR }) };
+  const port = connectivityPort(platformJourneyPortFor(environment, { scenario }), "platform-journey");
+  return { port, controller: connectivityController(new PlatformJourneyController(port, { actorRef: PLATFORM_DESK_ACTOR }), port) };
 }
 
 export function usePlatformJourney(): {
@@ -729,6 +730,6 @@ export function usePlatformJourney(): {
     model: buildPlatformModel({ controller: session.controller, last }),
     heldSupported: scenario === "held-response",
     lateSupported: scenario === "transfer-late",
-    actions,
+    actions: connectedActions(actions, ['book', 'transfer', 'reprice', 'setScenario', 'newSession'], sessionRef.current?.port),
   };
 }

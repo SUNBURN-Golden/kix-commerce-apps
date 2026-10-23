@@ -91,8 +91,8 @@ describe("full route body catalogue (stub, Korean, headless Chrome)", () => {
         let node: Node | null;
         while ((node = walk.nextNode())) {
           const text = node.textContent?.trim();
-          // Code and receipt fields are data, as are the verbatim glossary words.
-          if (text && !node.parentElement?.closest("code, pre, [data-word]")) values.push(text);
+          // Code and receipt fields are data; glossary explanations still require translation.
+          if (text && !node.parentElement?.closest("code, pre")) values.push(text);
         }
         for (const element of Array.from(root.querySelectorAll("[aria-label], [title], [placeholder]"))) {
           for (const attribute of ["aria-label", "title", "placeholder"]) {

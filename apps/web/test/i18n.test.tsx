@@ -8,7 +8,9 @@ import { App } from "../src/App";
 import { AmountNotice, DeadlineLine, StatusMark, transportStatusWord } from "../src/a11y/marks";
 import { LocaleProvider } from "../src/i18n/LocaleProvider";
 import { LocaleSwitch } from "../src/i18n/LocaleSwitch";
-import { MESSAGES, type MessageKey } from "../src/i18n/catalogue";
+import { MESSAGES, type MessageKey as ShellMessageKey } from "../src/i18n/catalogue";
+import { STATE_ACTION_MESSAGES, STATE_MESSAGES } from "../src/async-state/messages";
+import type { AsyncStateKind } from "../src/async-state/kinds";
 import { LOCALES, htmlLang, intlTag, parseLocale } from "../src/i18n/locales";
 import { LOCALE_STORAGE_KEY, initialLocale, localeFromSearch, readStoredLocale, writeStoredLocale } from "../src/i18n/locale-store";
 import { OUTCOME_WORDS, interpolate, makeTranslate, outcomeLabel, placeholdersOf } from "../src/i18n/translate";
@@ -23,8 +25,17 @@ const web = path.resolve(here, "..");
 const root = path.resolve(web, "../..");
 const read = (file: string) => readFileSync(path.join(web, file), "utf8");
 
-const EN = MESSAGES.en as Record<MessageKey, string>;
-const KO = MESSAGES.ko;
+type MessageKey = ShellMessageKey | `async.${Exclude<AsyncStateKind, "loading">}.${"word" | "note"}` | "async.help" | "async.fence";
+// Keep the existing catalogue assertions over deferred screen copy as well as shell copy.
+function allMessages(locale: "en" | "ko"): Record<MessageKey, string> {
+  const states = Object.entries(STATE_MESSAGES[locale]).flatMap(([kind, copy]) =>
+    Object.entries(copy).map(([part, text]) => [`async.${kind}.${part}`, text]),
+  );
+  const actions = Object.entries(STATE_ACTION_MESSAGES[locale]).map(([key, text]) => [`async.${key}`, text]);
+  return { ...MESSAGES[locale], ...Object.fromEntries([...states, ...actions]) } as Record<MessageKey, string>;
+}
+const EN = allMessages("en");
+const KO = allMessages("ko");
 const KEYS = Object.keys(EN) as MessageKey[];
 
 const draw = (node: React.ReactNode, locale: "en" | "ko", at = "/") =>
@@ -327,12 +338,13 @@ describe("source", () => {
     const catalogueFiles = (base: string): string[] => readdirSync(base, { withFileTypes: true }).flatMap((entry) =>
       entry.isDirectory() ? catalogueFiles(path.join(base, entry.name)).map((child) => `${entry.name}/${child}`) : [entry.name],
     );
-    for (const file of catalogueFiles(dir)) {
-      const source = readFileSync(path.join(dir, file), "utf8");
+    const files = [...catalogueFiles(dir).map((file) => path.join(dir, file)), path.join(web, "src/async-state/messages.ts")];
+    for (const file of files) {
+      const source = readFileSync(file, "utf8");
       for (const word of ["fetch(", "localStorage", "navigator", "invokeLocalCall", "capture", "settle_capture", "placeHold", "Date.now(", "Math.random(", "127.0.0.1"]) {
         expect(source.includes(word), `${file} contains ${word}`).toBe(false);
       }
-      expect(source.includes("sessionStorage"), file).toBe(file === "locale-store.ts");
+      expect(source.includes("sessionStorage"), file).toBe(path.basename(file) === "locale-store.ts");
     }
     const html = readFileSync(path.join(web, "index.html"), "utf8");
     expect(html).toContain('<html lang="en">');

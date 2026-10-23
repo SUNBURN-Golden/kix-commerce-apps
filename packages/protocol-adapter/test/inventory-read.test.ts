@@ -1,3 +1,4 @@
+import { KIX_SDK_0_CONSUMPTION_DIGESTS } from "../src/sdk-consumption-tuple.js";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -88,7 +89,7 @@ const SIX_SECTIONS_WITH_SEAT: readonly InventorySectionSpec[] = [
 ];
 
 describe("inventory read tuple and binding", () => {
-  it("records the ruling, keeps the hold desk method not-bound, and consumes no SDK", () => {
+  it("records the ruling, keeps the hold desk method not-bound, and binds consumed app digests", () => {
     expect(INVENTORY_READ_RULING).toBe("M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce");
     expect(INVENTORY_HOLD_NOT_BOUND).toEqual({
       method: "placeHold",
@@ -98,9 +99,25 @@ describe("inventory read tuple and binding", () => {
       mappedOntoPrepareTrade: false,
     });
     expect(INVENTORY_HOLD_NOT_BOUND.status).toBe("not-bound");
-    expect(DISCOVERY_READ_TUPLE_LITERALS.sdkDigest).toBeNull();
-    expect(DISCOVERY_READ_TUPLE_LITERALS.manifestDigest).toBeNull();
-    expect(DISCOVERY_READ_TUPLE_LITERALS.vectorDigest).toBeNull();
+    expect(DISCOVERY_READ_TUPLE_LITERALS.sdkDigest).toBe(KIX_SDK_0_CONSUMPTION_DIGESTS.sdkDigest);
+    expect(DISCOVERY_READ_TUPLE_LITERALS.manifestDigest).toBe(KIX_SDK_0_CONSUMPTION_DIGESTS.manifestDigest);
+    expect(DISCOVERY_READ_TUPLE_LITERALS.vectorDigest).toBe(KIX_SDK_0_CONSUMPTION_DIGESTS.vectorDigest);
+  });
+
+  it.each(["sdkDigest", "manifestDigest", "vectorDigest"] as const)("fences %s drift before inventory work", async (field) => {
+    for (const value of ["changed", null]) {
+      let materialized = 0;
+      const port = createStubInventoryRead({
+        expectedTuple: { ...DISCOVERY_READ_TUPLE_LITERALS, [field]: value as unknown as string },
+        seatAt: () => { materialized += 1; throw new Error("no rows after digest drift"); },
+      });
+      const outcomes = [
+        await port.readSummary({ scope: INVENTORY_DESK_SCOPE, watermarkFloor: null }),
+        await port.readPage(pageOf()), await port.readSelection(selectionOf()),
+      ];
+      for (const outcome of outcomes) expect(outcome).toMatchObject({ kind: "tuple-changed", field: "sdkTuple" });
+      expect(materialized).toBe(0);
+    }
   });
 
   it("detects a changed projection tuple before any row is materialized", async () => {

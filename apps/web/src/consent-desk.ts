@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/consent-desk";
 import { sourceMessage } from "./i18n/source-message";
+import { connectivityInvoker, connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import {
   ConsentBind,
@@ -15,7 +16,7 @@ import {
 import type { ConsentInvokerSource, ConsentSource } from "@kix/protocol-adapter";
 import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 import { consentSource } from "./consent-source";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 /**
  * M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
@@ -251,7 +252,7 @@ export class ConsentDesk {
       attempt,
       pending: false,
       localHalt: false,
-      bind: this.deps.source ? new ConsentBind(this.deps.source.invoker) : null,
+      bind: this.deps.source ? new ConsentBind(connectivityInvoker(this.deps.source.invoker)) : null,
       steps: blankSteps(),
     };
     this.records.set(eventId, record);
@@ -259,6 +260,7 @@ export class ConsentDesk {
   }
 
   async send(eventId: string, step: ConsentStep, draft: ConsentDraft): Promise<void> {
+    if (!connectedHandler()) return;
     if (eventId.length === 0) {
       return;
     }

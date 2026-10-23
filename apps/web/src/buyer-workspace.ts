@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { COMMERCE_COMMAND_BINDINGS, JOURNEY_NOT_COMPOSED, type Performance } from "@kix/protocol-adapter";
 import { giftDesk, type GiftDeskSnapshot, type GiftRowStatus } from "./gift-desk";
 import { journeyDesk, type JourneyDeskSnapshot, type JourneyRowStatus } from "./journey-desk";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 import { useResaleDesk } from "./resale-desk";
 import { useReservationDesk } from "./reservation-desk";
 import { PLACE_HOLD_RECORD, WORKSPACE_RULING, type OutcomeTrack, type TrackState } from "./workspace/registry";

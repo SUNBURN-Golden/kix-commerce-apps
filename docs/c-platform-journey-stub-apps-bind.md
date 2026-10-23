@@ -1,5 +1,11 @@
 # Platform journey stub apps bind
 
+## Consumption evidence correction — 2026-10-23
+
+Recorded option (b) now binds the consumed p-sdk-0 BOOTSTRAP SDK, manifest, and vector digests into fixture catalogue v2, discovery's shared synthetic-port checks, release, qualification, and handoff. See [audit-6-decision-apps-bind.md](audit-6-decision-apps-bind.md) for the owner ruling, current tuple, historical v1, consumer mapping, verification, and boundaries. Unavailable domain producer tuples retain nulls and NOT_BOUND. BOOTSTRAP remains `catalogue-schema-binding only`; this grants no qualification or release authority.
+
+The original delivery description and run records below are historical. Any statement there that consumption digests stay null describes v1 at that delivery, not the current app evidence tuple. Both OpenAPI pins, `PINNED_ACTIONS`, the CI gate SHA, `protocolMergeSha`, and locked desk bindings are unchanged.
+
 This bind is the stub-scoped multi-channel trade page at `/platform`. It is the synthetic reduction of pending node `c-platform-journey`: the real connection stays pending on `kix-protocol:ps-03-resale-contract`, `ps-04-execution-partitions`, and `ps-05-query-projections`, and on the unpromoted `bind-resale-fsm`, `refund-surface`, and `c-async-session-fence`. This node wires the trade-tracking seam — many listings on many channels, a price change, a booking, a payment observation, a right transfer, and a refund explanation, with a write fence that holds through an unknown or late result — onto a deterministic synthetic source. It is not a producer connection and does not claim one.
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.

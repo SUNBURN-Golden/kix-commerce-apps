@@ -1,7 +1,8 @@
 import { messages as sourceCopy } from "./i18n/messages/reservation-desk";
+import { connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useState } from "react";
 import { ProtocolError, type ReservationCaseView } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 import type { ReservationDeskCommand } from "./pages/ReservationPanel";
 import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 
@@ -77,6 +78,7 @@ export function useReservationDesk(eventId: string) {
   }, [refresh]);
 
   async function run(command: ReservationDeskCommand) {
+    if (!connectedHandler()) return;
     const trimmed = eventId.trim();
     if (!trimmed || pending) {
       return;

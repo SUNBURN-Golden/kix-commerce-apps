@@ -4,6 +4,7 @@ import { messages as copy2 } from "../i18n/messages/handoff--packet";
 import { messages as copy3 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { RELEASE_SCENARIOS, type ReleaseScenario } from "@kix/protocol-adapter";
 import { StatusMark } from "../a11y/marks";
 import {
@@ -85,7 +86,7 @@ export function ReleaseControls({
             </option>
           )))}
         </select>
-        <button
+        <ConnectivityWriteButton
           type="button"
           id="rel-run"
           className="discovery-action"
@@ -94,7 +95,7 @@ export function ReleaseControls({
           data-enabled={model.runControl.enabled ? "true" : "false"}
           onClick={model.runControl.enabled ? () => actions.run() : undefined}
         >
-          {t("s8a")}</button>
+          {t("s8a")}</ConnectivityWriteButton>
         {model.runControl.reason ? (
           <p id="rel-run-reason" className="muted">
             {deskText(t, model.runControl.reason)}
@@ -114,8 +115,8 @@ export function ReleaseControls({
           {t("sn6")}</p>
         <button type="button" id="rel-switch-actor" className="discovery-action" onClick={() => actions.switchActor()}>
           {t("s1o4")}</button>
-        <button type="button" id="rel-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          {t("sto")}</button>
+        <ConnectivityWriteButton type="button" id="rel-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+          {t("sto")}</ConnectivityWriteButton>
       </div>
     </section>
   );

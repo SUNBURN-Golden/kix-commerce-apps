@@ -1,3 +1,4 @@
+import { c1, c0 } from "./shared-copy";
 export const messages = {
   en: {
     "s6t": "A reload clears page-load state and re-sends nothing.",
@@ -13,7 +14,7 @@ export const messages = {
     "s1g3": "Resale right",
     "s1g5": "Reservation case",
     "s1iw": "Selection",
-    "s1n0": "Stub-shape receipts are not from the gate.",
+    "s1n0": c0,
     "s243": "Ticket read",
     "p.t457": "{v1} stays {v2}. consideredAction {v3}. mappedOntoPrepareTrade {v4}. {v5}",
   },
@@ -31,7 +32,7 @@ export const messages = {
     "s1g3": "재판매 권리",
     "s1g5": "예약 사례",
     "s1iw": "선택",
-    "s1n0": "stub 형식 영수증은 게이트 응답이 아닙니다.",
+    "s1n0": c1,
     "s243": "티켓 조회",
     "p.t457": "{v1}은(는) {v2} 유지. consideredAction {v3}. mappedOntoPrepareTrade {v4}. {v5}",
   },

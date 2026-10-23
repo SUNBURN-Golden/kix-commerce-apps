@@ -1,3 +1,4 @@
+import { GALLERY_CHECK_IDS } from "./gallery-matrix";
 /**
  * The accessibility observation matrix. App-internal; not a public schema, operation, capability or ID.
  *
@@ -132,8 +133,8 @@ export const KNOWN_FINDINGS: readonly KnownFinding[] = [
   ...open("provider", "landmark-unique", LANDMARK),
   ...open("mobile", "landmark-unique", LANDMARK),
   single("booking:missing", "desktop", "heading-order", "The unknown-event view starts at a lower heading level than the page expects. Not fixed here."),
-  single("gift:not-sent", "desktop", "form.error-not-linked", "The ticket id is marked invalid but no message is linked to it by aria-describedby. Not fixed here."),
-  single("gift:not-sent", "desktop", "struct.invalid-unlinked", "Same defect seen by the structure probe: aria-invalid without a linked message. Not fixed here."),
+  { screenId: "gift:not-sent", viewport: "desktop", ruleId: "form.error-not-linked", status: "FIXED", note: "c-form-validation-ux-stub links local input errors and focuses the summary before the keyboard link moves to the ticket field." },
+  { screenId: "gift:not-sent", viewport: "desktop", ruleId: "struct.invalid-unlinked", status: "FIXED", note: "c-form-validation-ux-stub links local input errors and focuses the summary before the keyboard link moves to the ticket field." },
   single("booking", "desktop", "status.disabled-no-reason", "Disabled booking buttons (such as Confirm before a hold) carry no reason that aria-describedby reaches. Not fixed here."),
   single("gift", "desktop", "status.disabled-no-reason", "Disabled gift buttons carry no reason that aria-describedby reaches. Not fixed here."),
   single("inventory:section-page", "desktop", "nested-interactive", "A control sits inside the seat listbox option. Same rule as on /discovery. Not fixed here."),
@@ -166,11 +167,16 @@ export const kbdCheckId = (screenId: string) => `a11y.kbd.${screenId}`;
 
 export const STATIC_CHECK_IDS: readonly string[] = [
   "a11y.baseline",
+  "a11y.onboarding.first-visit",
+  "a11y.onboarding.role-keys",
+  "a11y.onboarding.demo-mark",
+  "a11y.onboarding.ko",
   "a11y.dialog.not-applicable",
   "a11y.accept.pending",
   "a11y.kbd.tablist.handoff",
   "a11y.kbd.tablist.receipts",
   "a11y.kbd.listbox.discovery",
+  "a11y.kbd.listbox.projection",
   "a11y.kbd.listbox.inventory",
   "a11y.kbd.details.journeys",
   "a11y.kbd.escape-noop",
@@ -191,14 +197,21 @@ export const STATIC_CHECK_IDS: readonly string[] = [
   "a11y.locale.switch-keys",
   "a11y.locale.persist",
   "a11y.locale.reflow-320",
+  "a11y.connectivity.keyboard-cached",
   "a11y.display.dark",
   "a11y.display.forced-colors",
   "a11y.display.reduced-motion",
   "a11y.display.print",
+  "a11y.async.read-states",
+  "a11y.async.catalogue-empty",
+  "a11y.async.unknown-fence",
+  "a11y.async.refund-stale",
+  "a11y.async.dark",
+  "a11y.async.forced-colors",
 ];
 
 export function expectedCheckIds(): string[] {
-  const ids = [...STATIC_CHECK_IDS, ...ALT_STATES.map((state) => altCheckId(state.id))];
+  const ids = [...STATIC_CHECK_IDS, ...GALLERY_CHECK_IDS, ...ALT_STATES.map((state) => altCheckId(state.id))];
   for (const screen of SCREENS) {
     ids.push(kbdCheckId(screen.screenId), reflowCheckId(screen.screenId), structCheckId(screen.screenId));
     for (const viewport of Object.keys(VIEWPORTS) as ViewportName[]) {

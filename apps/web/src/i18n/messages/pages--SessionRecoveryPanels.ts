@@ -1,3 +1,4 @@
+import { c266, c265 } from "./shared-copy";
 export const messages = {
   en: {
     "s43": "A new source keeps this tab's journal. An unknown write keeps blocking its subject.",
@@ -17,7 +18,7 @@ export const messages = {
     "s1n5": "Subjects",
     "s1n7": "Subjects, scrollable",
     "s1o9": "Synthetic controls",
-    "s1y1": "These stand in for events a real producer would cause. A real producer offers none of them.",
+    "s1y1": c265,
     "s25y": "Verdict",
   },
   ko: {
@@ -38,7 +39,7 @@ export const messages = {
     "s1n5": "대상 목록",
     "s1n7": "대상 목록, 스크롤 가능",
     "s1o9": "합성 제어",
-    "s1y1": "실제 제공자 사건의 대역입니다. 실제 제공자는 이 제어를 제공하지 않습니다.",
+    "s1y1": c266,
     "s25y": "판정",
   },
 } as const;

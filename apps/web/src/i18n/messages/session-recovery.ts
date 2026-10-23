@@ -1,3 +1,5 @@
+import { c218, c217 } from "./shared-copy";
+import { c61, c55 } from "./shared-copy";
 export const messages = {
   en: {
     "s9d": "A write is in flight. Nothing is confirmed yet.",
@@ -13,7 +15,7 @@ export const messages = {
     "spb": "It was sent in an earlier page load.",
     "spd": "Journal budget not in use.",
     "sup": "no code",
-    "svq": "No held response to deliver.",
+    "svq": c55,
     "svt": "No journal load.",
     "s118": "Nothing is evicted, because an eviction could drop a fence.",
     "s1jq": "Session journal ready.",
@@ -27,8 +29,8 @@ export const messages = {
     "s21i": "The stored journal was damaged. It was set aside and nothing in it is trusted.",
     "s22t": "The write on this page is a synthetic attach on an in-process source. It is not a producer write, not a protocol receipt, and never a proof of payment, issuance, or admission.",
     "s23o": "This tab's session storage is not usable. Every write is held.",
-    "p.t130": "Delivered {v1} held response{v2}.",
-    "p.t237": "Another write on this subject is in flight ({v1}). Wait for its answer.",
+    "p.t130": c61,
+    "p.t237": c217,
     "p.t242": "Attach not sent. {v1}",
     "p.t412": "Retention is {v1}. No record expires, and nothing on this page removes a fence.",
     "p.t413": "{v1} ({v2}). {v3} Every write is held and no new reference is issued.",
@@ -81,7 +83,7 @@ export const messages = {
     "s22t": "이 화면의 쓰기는 프로세스 내부 원본의 합성 연결입니다. 실제 제공자 쓰기·프로토콜 영수증·결제·발급·입장 증명이 아닙니다.",
     "s23o": "이 탭의 세션 저장소를 사용할 수 없습니다. 모든 쓰기를 보류합니다.",
     "p.t130": "보관 응답 {v1}{v2}개를 전달했습니다.",
-    "p.t237": "이 대상의 다른 쓰기가 진행 중입니다 ({v1}). 응답을 기다리세요.",
+    "p.t237": c218,
     "p.t242": "연결 미전송. {v1}",
     "p.t412": "보존 기간 {v1}. 기록을 만료시키거나 차단을 제거하지 않습니다.",
     "p.t413": "{v1} ({v2}). {v3} 모든 쓰기를 보류하며 새 참조를 발급하지 않습니다.",

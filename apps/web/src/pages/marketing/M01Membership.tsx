@@ -2,6 +2,9 @@ import { messages as copy0 } from "../../i18n/messages/pages--marketing--M01Memb
 import { messages as copy1 } from "../../i18n/messages/marketing--desk";
 import { deskText } from "../../i18n/desk-translate";
 import { useT } from "../../i18n/desk-context";
+import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
+import { ValidatedForm } from "../../forms/ValidatedForm";
+import { field } from "../../forms/validation";
 import { useState, type FormEvent } from "react";
 import type { MemberTier } from "../../marketing/desk";
 import { marketingSession } from "../../marketing/session";
@@ -34,15 +37,15 @@ export function M01Page() {
   }
 
   return (
-    <MarketingChrome id="M01">
+    <MarketingChrome id="M01" onReadAgain={refresh}>
       {error ? (
         <p className="alert" role="alert">
           {deskText(t, error)}
         </p>
       ) : null}
-      <form className="panel" onSubmit={onSubmit}>
+      <ValidatedForm id="membership-form" fields={[field("membership-name", "validation.label.displayName", { maxLength: 40 })]} className="panel" onSubmit={onSubmit}>
         <label>
-          {t("sgx")}<input
+          {t("sgx")}<input id="membership-name"
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
             autoComplete="off"
@@ -57,11 +60,11 @@ export function M01Page() {
         </label>
         <p className="muted">{t("s1qr")}</p>
         <div className="row-actions">
-          <button type="submit">{t("sow")}</button>
-          <button type="button" className="ghost" onClick={leave} disabled={!card}>
-            {t("sco")}</button>
+          <ConnectivityWriteButton type="submit">{t("sow")}</ConnectivityWriteButton>
+          <ConnectivityWriteButton type="button" className="ghost" onClick={leave} disabled={!card}>
+            {t("sco")}</ConnectivityWriteButton>
         </div>
-      </form>
+      </ValidatedForm>
       {card ? (
         <article className="ticket">
           <p className="eyebrow">{t("s1jm")}{" "}{card.status}</p>

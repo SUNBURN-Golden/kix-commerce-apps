@@ -21,11 +21,19 @@
     },
     "localized": {
       "sourceSha": "f7cd60c565416094d55fcf41533a3c4c23877bf3 plus PR fix round 1 working tree",
-      "note": "Node 22.20.0 observation of full ko/en route catalogue. Does not change the original limits. FAILS initial JS and total budget; see DECISION_REQUIRED.md.",
+      "note": "Historical PR fix round 1 observation before the 2026-10-23 owner ruling; superseded by combined below.",
       "initialJsGzip": 290543,
       "initialCssGzip": 4758,
       "totalGzip": 781123,
       "fileCount": 66
+    },
+    "combined": {
+      "sourceSha": "8eac25aa6f0b2b0a14ce9e40848cfc56d2e5102e + f1a44dfd6d36b39ecdbb72deac36e60f565b99d8 + unstaged merge resolution",
+      "note": "Node 22.20.0, shared identical ko/en display sentences; recorded 2026-10-23 owner ruling authorizes total gzip <= 790000 while preserving initial and route caps.",
+      "initialJsGzip": 289481,
+      "initialCssGzip": 4965,
+      "totalGzip": 789063,
+      "fileCount": 74
     }
   },
   "limits": {
@@ -34,8 +42,8 @@
     "chunkJsGzip": 30000,
     "landingJsGzip": 400000,
     "totalGrowth": {
-      "base": 527526,
-      "maxRatio": 1.2
+      "base": 790000,
+      "maxRatio": 1
     },
     "render": {
       "discoveryReadyMs": 5000,
@@ -63,6 +71,26 @@
       },
       "reason": "First budget. Limits sit about 12% over the post-split initial JS, 18% over the landing set and initial CSS, 38% over the largest chunk, and 20% over the pre-split total; render caps are about 10 times the local median of 5 cold loads.",
       "evidence": "docs/c-bundle-performance-budget-stub-apps-bind.md section Numbers: pre-split and post-split reports from scripts/check-bundle-budget.mjs, and the test:budget record."
+    },
+    {
+      "date": "2026-10-23",
+      "limits": {
+        "initialJsGzip": 290000,
+        "initialCssGzip": 5000,
+        "chunkJsGzip": 30000,
+        "landingJsGzip": 400000,
+        "totalGrowth": {
+          "base": 790000,
+          "maxRatio": 1
+        },
+        "render": {
+          "discoveryReadyMs": 5000,
+          "discoveryPage50Ms": 5000,
+          "inventorySectionMs": 5000
+        }
+      },
+      "reason": "Recorded c-i18n-coverage-completion-stub bundle-budget & copy scope ruling (2026-10-23 KST, KIX Commerce under 2026-10-15 standing delegation). Shared sentence deduplication retains exact copy and protocol words. Both ko/en catalogues plus merged connectivity, async and form UI require a total gzip ceiling of 790000; initial JS remains 290000 and every route cap remains strict.",
+      "evidence": "docs/c-i18n-coverage-completion-stub-apps-bind.md, merge reconciliation evidence; Node 22.20.0 clean build: initial JS 289481, CSS 4965, total 789063, largest route 28279 gzip bytes."
     }
   ]
 }

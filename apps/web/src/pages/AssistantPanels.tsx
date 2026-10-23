@@ -3,6 +3,9 @@ import { messages as copy1 } from "../i18n/messages/delegated-assistant";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { ValidatedForm } from "../forms/ValidatedForm";
+import { field } from "../forms/validation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { DELEGATION_SCENARIOS, type DelegationScenario } from "@kix/protocol-adapter";
 import { StatusMark } from "../a11y/marks";
@@ -75,7 +78,7 @@ function GuardedButton({
   const reasonId = `${id}-reason`;
   return (
     <>
-      <button
+      <ConnectivityWriteButton
         type="button"
         id={id}
         className="discovery-action"
@@ -85,7 +88,7 @@ function GuardedButton({
         onClick={control.enabled ? onPress : undefined}
       >
         {deskText(t, label)}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word={t("status.transport.blocked")} /> {deskText(t, control.reason)}
@@ -169,7 +172,7 @@ export function AssistantControls({
             )))}
           </select>
         </label>
-        <button
+        <ConnectivityWriteButton
           type="button"
           id="dlg-apply-scenario"
           className="discovery-action"
@@ -177,13 +180,13 @@ export function AssistantControls({
           aria-describedby={simulated ? undefined : "dlg-scenario-off"}
           onClick={simulated ? () => actions.setScenario(picked) : undefined}
         >
-          {t("s1m5")}</button>
+          {t("s1m5")}</ConnectivityWriteButton>
         <button type="button" id="dlg-refresh" className="discovery-action" onClick={() => actions.refresh()}>
           {t("s1ax")}</button>
         <button type="button" id="dlg-switch" className="discovery-action" onClick={() => actions.switchScope()}>
           {t("s1nx")}</button>
-        <button type="button" id="dlg-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          {t("s1m2")}</button>
+        <ConnectivityWriteButton type="button" id="dlg-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+          {t("s1m2")}</ConnectivityWriteButton>
         <button
           type="button"
           id="dlg-deliver-held"
@@ -206,7 +209,7 @@ export function AssistantControls({
         {t("s195")}{" "}{deskText(t, principalRef)}. {deskText(t, DELEGATION_ALT_PRINCIPAL_NOTE)} {t("s1m3")}</p>
       <div className="discovery-controls" role="group" aria-label={t("s1kn")}>
         {deskText(t, (Object.keys(CONTROL_LABELS) as (keyof typeof CONTROL_LABELS)[]).map((controlName) => (
-          <button
+          <ConnectivityWriteButton
             key={controlName}
             type="button"
             id={`dlg-simulate-${controlName}`}
@@ -217,7 +220,7 @@ export function AssistantControls({
             onClick={simulated ? () => actions.simulate(controlName) : undefined}
           >
             {deskText(t, CONTROL_LABELS[controlName])}
-          </button>
+          </ConnectivityWriteButton>
         )))}
       </div>
       <p className="muted" id="dlg-simulate-note">
@@ -263,7 +266,7 @@ export function AssistantRequest({ actions }: { actions: DelegationAssistantActi
       <p className="muted">
         {t("s24w")}{" "}
         <code>{t("sha")}</code> {t("s15r")}{" "}<code>{t("say")}</code>{t("s22r")}</p>
-      <form onSubmit={onSubmit} className="discovery-controls">
+      <ValidatedForm id="assistant-request-form" fields={[field("dlg-request-text", "validation.label.request")]} onSubmit={onSubmit} className="discovery-controls">
         <label htmlFor="dlg-request-text">
           {t("s1fx")}<input
             id="dlg-request-text"
@@ -274,9 +277,9 @@ export function AssistantRequest({ actions }: { actions: DelegationAssistantActi
             aria-describedby="dlg-request-note"
           />
         </label>
-        <button type="submit" id="dlg-ask" className="discovery-action">
-          {t("s85")}</button>
-      </form>
+        <ConnectivityWriteButton type="submit" id="dlg-ask" className="discovery-action">
+          {t("s85")}</ConnectivityWriteButton>
+      </ValidatedForm>
       <p className="muted" id="dlg-request-note">
         {t("soa")}</p>
     </section>

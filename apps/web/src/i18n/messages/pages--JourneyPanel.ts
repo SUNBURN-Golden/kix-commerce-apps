@@ -1,3 +1,4 @@
+import { c1, c146, c145, c144, c143, c0, c142 } from "./shared-copy";
 export const messages = {
   en: {
     "s6x": "A reload clears this page-load journey and uses a new attempt id.",
@@ -6,7 +7,7 @@ export const messages = {
     "sd4": "Code {code}.",
     "sek": "Correlation",
     "sge": "Desk methods not bound",
-    "sim": "Environment integration-http. Loopback status is not loaded yet.",
+    "sim": c142,
     "spk": "Journey path unavailable. The reviewed gate answers no CORS preflight; the desk stays on integration HTTP and does not fall back to the stub. Node tests exercise the live gate. A browser path needs a kix-protocol gate change.",
     "spo": "Journeys opened on this page load",
     "ssz": "Mock: no funds, no admission.",
@@ -23,7 +24,7 @@ export const messages = {
     "s1fq": "Request",
     "s1j5": "Send",
     "s1mj": "Status",
-    "s1n0": "Stub-shape receipts are not from the gate.",
+    "s1n0": c0,
     "s24z": "Unavailable",
     "s271": "Writes happen on the booking screen.",
     "e.19": "Ready",
@@ -32,9 +33,9 @@ export const messages = {
     "e.22": "Rejected by the gate",
     "e.23": "Unconfirmed",
     "e.24": "Not sent",
-    "e.26": "integration-http · unavailable",
-    "e.27": "integration-http · checking",
-    "e.28": "integration-http · available",
+    "e.26": c143,
+    "e.27": c144,
+    "e.28": c145,
     "e.30": "wave6a.journey · stub-shape receipts",
   },
   ko: {
@@ -44,7 +45,7 @@ export const messages = {
     "sd4": "코드 {code}.",
     "sek": "연관 관계",
     "sge": "연결되지 않은 데스크 메서드",
-    "sim": "환경 integration-http. 루프백 상태를 아직 불러오지 않았습니다.",
+    "sim": c146,
     "spk": "여정 경로를 사용할 수 없습니다. 검토된 게이트가 CORS 사전 요청에 응답하지 않습니다. integration HTTP를 유지하며 stub 대체하지 않습니다. Node 시험은 실제 게이트를 검증합니다. 브라우저 경로에는 kix-protocol 게이트 변경이 필요합니다.",
     "spo": "이번 페이지 로드에서 연 여정",
     "ssz": "모의: 자금·입장 없음.",
@@ -61,7 +62,7 @@ export const messages = {
     "s1fq": "요청",
     "s1j5": "전송",
     "s1mj": "상태",
-    "s1n0": "stub 형식 영수증은 게이트 응답이 아닙니다.",
+    "s1n0": c1,
     "s24z": "사용 불가",
     "s271": "쓰기는 예매 화면에서 수행합니다.",
     "e.19": "준비됨",

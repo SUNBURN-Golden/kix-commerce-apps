@@ -163,7 +163,7 @@ describe("inbox reads", () => {
 
   it("reports a tuple change before any read row is trusted", async () => {
     const port = createStubNotificationInbox({
-      expectedTuple: { ...DISCOVERY_READ_TUPLE_LITERALS, sdkDigest: "sha256:x" as unknown as null },
+      expectedTuple: { ...DISCOVERY_READ_TUPLE_LITERALS, sdkDigest: "sha256:x" },
     });
     const outcome = await port.read(readRequest(NOTIFY_BUYER_ACTOR, SCOPE_BUYER));
     expect(outcome.kind).toBe("tuple-changed");

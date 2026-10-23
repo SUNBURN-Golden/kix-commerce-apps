@@ -1,3 +1,4 @@
+import { c190 } from "./shared-copy";
 export const messages = {
   en: {
     "s61": "A projection row confirms no sale, no ownership, and no payment. Trade commands re-check on their own path.",
@@ -14,7 +15,7 @@ export const messages = {
     "s1lu": "Stale projection watermark.",
     "s1me": "Start over",
     "s25d": "Unknown read.",
-    "p.t136": "Access scope {v1}. The subject string is not an authentication result.",
+    "p.t136": c190,
     "p.t137": "One bounded page per click, at most {v1} rows. The stream never arrives as one response.",
     "p.t138": "Gap in the synthetic stream ({v1}).",
     "p.t139": "Cursor invalid ({v1}).",

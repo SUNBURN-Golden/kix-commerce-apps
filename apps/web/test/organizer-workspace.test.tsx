@@ -152,6 +152,7 @@ describe("organizer workspace", () => {
     const result = await new OrganizerBatchRun(plan, rows, desk).submit();
     expect(result.items[0]?.status).toBe("STALE");
     expect(result.items[0]?.note).toContain("Stale selection");
+    expect(renderModel(screenModel({ results: result }))).toContain('data-result="STALE"');
     expect(result.items[0]?.note).not.toContain("UNKNOWN");
     expect(result.items[0]?.note).not.toContain("NOT_BOUND");
     expect(calls).toHaveLength(1);

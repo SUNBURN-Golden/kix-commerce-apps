@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/organizer-workspace";
 import { sourceMessage } from "./i18n/source-message";
+import { connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   JOURNEY_RULING,
@@ -410,6 +411,7 @@ export function useOrganizerWorkspace(): OrganizerWorkspaceModel {
   }, []);
 
   const submit = useCallback(() => {
+    if (!connectedHandler()) return;
     const currentPlan = planRef.current;
     const currentRows = rowsRef.current;
     if (currentPlan && usedRef.current === currentPlan.planId && runRef.current) {

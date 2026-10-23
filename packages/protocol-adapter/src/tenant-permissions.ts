@@ -16,7 +16,7 @@ import { PLATFORM_HOLD_NOT_BOUND, PLATFORM_NOT_COMPOSED } from "./platform-journ
  * The contract-only catalogue has no read command for an organization, a role
  * assignment, an account, a support case, an audit entry, or a sensitive export,
  * and no command that grants or revokes a permission. No producer tuple exists, so
- * the desk is NOT_BOUND on integration-http. No SDK, manifest, or vector is
+ * the desk is NOT_BOUND on integration-http. No domain producer SDK, manifest, or vector is
  * consumed, and this module sends nothing over a network.
  *
  * Nothing here composes a catalogue command: no money posting is sent, and the

@@ -1,3 +1,4 @@
+import { c190 } from "./shared-copy";
 export const messages = {
   en: {
     "s22": "A free label is an observation. It is not a hold, not a sale, and not an approval from the economic writer. Trade commands re-check on their own path.",
@@ -53,7 +54,7 @@ export const messages = {
     "s25n": "unsupported",
     "s25o": "Unsupported mode.",
     "s25p": "Unsupported. The policy is undetermined, so this desk neither offers nor hides these seats.",
-    "p.t136": "Access scope {v1}. The subject string is not an authentication result.",
+    "p.t136": c190,
     "p.t139": "Cursor invalid ({v1}).",
     "p.t140": "Projection tuple changed ({v1}).",
     "p.t141": "Blocked read ({v1}).",

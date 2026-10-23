@@ -1,13 +1,16 @@
+import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { messages as copy0 } from "../i18n/messages/pages--Handoff";
 import { messages as copy1 } from "../i18n/messages/handoff--packet";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ValidatedForm } from "../forms/ValidatedForm";
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Link } from "react-router-dom";
 import { StatusMark } from "../a11y/marks";
 import {
   buildHandoffView,
+  CONSUMED_PRODUCERS,
   FEATURE_ROWS,
   FIRST_RUN,
   GATE_START,
@@ -29,7 +32,7 @@ import {
   type FeatureRow,
   type HandoffView,
 } from "../handoff/packet";
-import { protocol } from "../protocol";
+import { protocol } from "../connectivity/desk-protocol";
 import { WORKSPACE_ROLES, type WorkspaceRole } from "../workspace/registry";
 
 const ROLE_LABEL: Record<WorkspaceRole, string> = {
@@ -74,7 +77,7 @@ export function HandoffScreen({
   initialCode?: string;
   initialRole?: WorkspaceRole;
 }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   const [query, setQuery] = useState(initialQuery);
   const [code, setCode] = useState(initialCode);
   const [role, setRole] = useState<WorkspaceRole>(initialRole);
@@ -170,7 +173,7 @@ function HandoffBody({
   onRole: (role: WorkspaceRole) => void;
   onTabKey: (event: KeyboardEvent<HTMLButtonElement>, role: WorkspaceRole) => void;
 }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   const queryInvalid = view.focusId === "handoff-query";
   const codeInvalid = view.focusId === "handoff-code";
   return (
@@ -209,7 +212,7 @@ function HandoffBody({
         </ul>
       </section>
 
-      <form className="panel" onSubmit={onQuery} aria-label={t("sn0")}>
+      <ValidatedForm id="handoff-filter-form" fields={[]} reportedIssues={view.focusId ? [{ fieldId: view.focusId, labelKey: "validation.label.filter", messageKey: "validation.filter", params: { max: 0 } }] : []} className="panel" onSubmit={onQuery} aria-label={t("sn0")}>
         <label htmlFor="handoff-query">
           {t("sl9")}<input
             id="handoff-query"
@@ -230,7 +233,7 @@ function HandoffBody({
         </label>
         <button type="submit">{t("s5m")}</button>
         <p className="muted">{t("sii")}</p>
-      </form>
+      </ValidatedForm>
 
       {view.error ? (
         <p id="handoff-error" className="alert" role="alert" data-focus={view.focusId ?? ""}>
@@ -362,8 +365,14 @@ function HandoffBody({
           )))}
         </ul>
         <p>
-          {t("s187")}{" "}{deskText(t, HANDOFF_PINS.contractOpenApiSha256.slice(0, 12))} {t("s3s")}{" "}{deskText(t, HANDOFF_PINS.gateOpenApiSha256.slice(0, 12))}{t("ssn")}{" "}{deskText(t, HANDOFF_PINS.protocolMergeSha.slice(0, 12))}{t("s1im")}{" "}
-          {deskText(t, FEATURE_ROWS.length)}{t("spl")}{" "}{deskText(t, Object.keys(ROLE_JOURNEYS).join(", "))}.
+          {t("s187")}{" "}{deskText(t, HANDOFF_PINS.contractOpenApiSha256.slice(0, 12))} {t("s3s")}{" "}{deskText(t, HANDOFF_PINS.gateOpenApiSha256.slice(0, 12))}{t("ssn")}{" "}{deskText(t, HANDOFF_PINS.protocolMergeSha.slice(0, 12))}{". "}{t("merge.featureRows")} {deskText(t, FEATURE_ROWS.length)}{t("spl")}{" "}{deskText(t, Object.keys(ROLE_JOURNEYS).join(", "))}.
+        </p>
+        <p>
+          {CONSUMED_PRODUCERS.map((producer) => (
+            <span key={producer.id}>
+              {t("merge.consumedProducer", { id: producer.id, pr: producer.pr, sha: producer.producerMergeSha.slice(0, 12), catalogue: producer.catalogueSha256.slice(0, 12), manifest: producer.manifestSha256.slice(0, 12), profile: producer.profileRevision, grants: producer.grants })}
+            </span>
+          ))}
         </p>
       </section>
     </div>
@@ -371,7 +380,7 @@ function HandoffBody({
 }
 
 function FeatureTable({ rows }: { rows: readonly FeatureRow[] }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <div className="handoff-scroll" role="region" aria-label={t("skx")} tabIndex={0}>
       <table>

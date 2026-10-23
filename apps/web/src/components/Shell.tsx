@@ -1,4 +1,7 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useConnectivity } from "../connectivity/ConnectivityProvider";
+import { connectivity } from "../connectivity/store";
+
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { CREDIT_BOUNDARY, ProtocolError, type TransportObservation } from "@kix/protocol-adapter";
 import { transportStatusWord } from "../a11y/marks";
@@ -9,10 +12,15 @@ import { useLocale } from "../i18n/locale-context";
 import { usePageIdentity } from "../i18n/use-page-identity";
 import { Breadcrumb } from "./Breadcrumb";
 import { SurfaceNav } from "./SurfaceNav";
-import { useRouteFocus } from "../shell/route-focus";
+import { DemoMark } from "../onboarding/DemoMark";
+import { FirstRunGuide } from "../onboarding/FirstRunGuide";
+import { clearOnboardingDismissed, readOnboardingDismissed, writeOnboardingDismissed } from "../onboarding/onboarding-store";
+import { focusPrimaryHeading, useRouteFocus } from "../shell/route-focus";
 import type { Translate } from "../i18n/translate";
 import { protocol } from "../protocol";
-import { preferFresh, transportBannerText, type HeldObservation } from "../transport-status";
+import { transportBannerText } from "../transport-status";
+
+const CachedReadNotice = lazy(() => import("./CachedReadNotice").then((module) => ({ default: module.CachedReadNotice })));
 
 /** How often integration HTTP reads the loopback probes again. The stub is not polled. */
 const TRANSPORT_PROBE_MS = 15_000;
@@ -29,9 +37,25 @@ export function Shell({ children }: { children: ReactNode }) {
   const meta = protocol.describe();
   const { t } = useLocale();
   const location = useLocation();
+  const [onboardingDismissed, setOnboardingDismissed] = useState(readOnboardingDismissed);
+  const onboardingFocus = useRef<"show" | "title" | "main" | null>(null);
+  useEffect(() => {
+    const target = onboardingFocus.current;
+    onboardingFocus.current = null;
+    if (target === "main") {
+      focusPrimaryHeading();
+    } else if (target) {
+      document.getElementById(target === "show" ? "first-run-show" : "first-run-title")?.focus();
+    }
+  }, [onboardingDismissed]);
+  const dismissOnboarding = (path?: string) => {
+    writeOnboardingDismissed();
+    onboardingFocus.current = path === undefined ? "show" : path === location.pathname ? "main" : null;
+    setOnboardingDismissed(true);
+  };
   const onMarketing = location.pathname === "/marketing" || location.pathname.startsWith("/marketing/");
   const marketingLabel = marketingChromeLabel(location.pathname);
-  const [held, setHeld] = useState<HeldObservation | null>(null);
+  const connection = useConnectivity();
   // The user's stop control for the one timed update on this desk.
   const [motionPaused, setMotionPaused] = useState(motionReduced);
   const generation = useRef(0);
@@ -66,13 +90,14 @@ export function Shell({ children }: { children: ReactNode }) {
       }
       probing.current = true;
       const ticket = ++generation.current;
+      const epoch = connectivity.getSnapshot().epoch;
       protocol
         .observeTransport()
         .then((observation) => {
           if (cancelled) {
             return;
           }
-          setHeld((current) => preferFresh(current, { generation: ticket, observation }));
+          connectivity.observeTransport({ epoch, held: { generation: ticket, observation } });
         })
         .catch((error: unknown) => {
           if (cancelled) {
@@ -95,7 +120,7 @@ export function Shell({ children }: { children: ReactNode }) {
             code,
             detail: "Integration HTTP stayed selected. The desk did not fall back to the stub.",
           };
-          setHeld((current) => preferFresh(current, { generation: ticket, observation }));
+          connectivity.observeTransport({ epoch, held: { generation: ticket, observation } });
         })
         .finally(() => {
           // Only the newest probe clears the flag. An older one finishing
@@ -120,7 +145,7 @@ export function Shell({ children }: { children: ReactNode }) {
     };
   }, [meta.environment, location.pathname, motionPaused]);
 
-  const transport = transportBannerText(meta.environment, held?.observation ?? null, t, motionPaused);
+  const transport = transportBannerText(meta.environment, connection.transport?.observation ?? null, t, motionPaused);
 
   const transportWord = transportStatusWord(transport.state, t);
 
@@ -137,10 +162,18 @@ export function Shell({ children }: { children: ReactNode }) {
             <h1>{onMarketing ? t("shell.title.marketing") : t("shell.title.boxOffice")}</h1>
           </div>
         </div>
+        <DemoMark />
         <SurfaceNav />
         <LocaleSwitch />
         <p className="help-line">
-          {t("guide.hint")} <Link to="/help">{t("guide.link")}</Link>
+          {t("guide.hint")} <Link to="/help">{t("guide.link")}</Link>{" "}
+          {onboardingDismissed ? (
+            <button type="button" id="first-run-show" onClick={() => {
+              clearOnboardingDismissed();
+              onboardingFocus.current = "title";
+              setOnboardingDismissed(false);
+            }}>{t("onboarding.showAgain")}</button>
+          ) : null}
         </p>
       </header>
       <Breadcrumb />
@@ -151,7 +184,9 @@ export function Shell({ children }: { children: ReactNode }) {
       <p className="banner transport" role="status" data-transport-state={transport.state} data-status-mark={transport.state}>
         <span className="status-word">{transportWord}</span> {transport.text}
       </p>
+      {!onboardingDismissed ? <FirstRunGuide onDismiss={dismissOnboarding} /> : null}
       <main id="desk-main" tabIndex={-1}>
+        <Suspense fallback={connection.writesBlocked || connection.disconnected ? <p data-cached-read="true">{t("connectivity.cached")}</p> : null}><CachedReadNotice path={location.pathname} /></Suspense>
         {children}
       </main>
     </div>

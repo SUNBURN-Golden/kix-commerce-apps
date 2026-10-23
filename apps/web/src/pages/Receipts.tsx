@@ -1,3 +1,4 @@
+import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
 import { messages as copy0 } from "../i18n/messages/pages--Receipts";
 import { messages as copy1 } from "../i18n/messages/receipt-explorer";
@@ -9,6 +10,8 @@ import { messages as copy6 } from "../i18n/messages/organizer-desk";
 import { messages as copy7 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { COMMERCE_COMMAND_BINDINGS } from "@kix/protocol-adapter";
+import { AsyncState } from "../components/AsyncState";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { Link } from "react-router-dom";
 import { StatusMark } from "../a11y/marks";
@@ -41,7 +44,7 @@ export function ReceiptScreen({
   role: WorkspaceRole;
   onRole: (role: WorkspaceRole) => void;
 }) {
-  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
+  const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
   const entries = flatEntries(model);
   const [selected, setSelected] = useState<string | null>(null);
   const current = entries.find((entry) => entry.id === selected) ?? entries[0] ?? null;
@@ -191,7 +194,7 @@ export function ReceiptScreen({
                 </ol>
               </div>
             ) : null}
-            {model.groups.length === 0 ? <p className="empty">{t("desk.buyer.empty")}</p> : null}
+            {model.groups.length === 0 ? <AsyncState kind="empty" label={t("merge.receipts")}><p className="empty">{t("desk.buyer.empty")}</p></AsyncState> : null}
             {deskText(t, model.groups.map((group) => (
               <GroupBlock key={group.id} group={group} selectedId={current?.id ?? null} onSelect={setSelected} onKeyDown={onTimelineKey} />
             )))}
@@ -205,7 +208,7 @@ export function ReceiptScreen({
             aria-live="polite"
           >
             <h3 id="receipt-detail-title">{t("sgf")}</h3>
-            {current ? <Detail entry={current} /> : <p className="empty">{t("desk.buyer.empty")}</p>}
+            {current ? <Detail entry={current} /> : <AsyncState kind="empty" label={t("merge.receiptDetail")} announcement="parent"><p className="empty">{t("desk.buyer.empty")}</p></AsyncState>}
           </section>
           <section
             id="receipt-quarantine"
@@ -230,6 +233,7 @@ export function ReceiptScreen({
             <h3>{t("desk.buyer.recorded")}</h3>
             <ul className="receipt-list">
               <li data-state="not-bound" data-source="none">
+                <AsyncState kind="not-bound" label={t("merge.hold")} binding={{ method: "placeHold", record: COMMERCE_COMMAND_BINDINGS.placeHold }} />
                 <p>
                   {model.placeHold.method} {t("s1mm")}{" "}{model.placeHold.consideredAction}{t("srq")}</p>
                 <p>{deskText(t, model.placeHold.reason)}</p>
@@ -286,7 +290,7 @@ function GroupBlock({
   onSelect: (id: string) => void;
   onKeyDown: (event: KeyboardEvent<HTMLOListElement>) => void;
 }) {
-  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
+  const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
   return (
     <div data-group={group.id}>
       <h4>{deskText(t, group.heading)}</h4>
@@ -311,7 +315,7 @@ function EntryButton({
   selected: boolean;
   onSelect: (id: string) => void;
 }) {
-  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
+  const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
   return (
     <li
       className="receipt-entry"
@@ -339,9 +343,11 @@ function EntryButton({
 }
 
 function Detail({ entry }: { entry: ReceiptEntry }) {
-  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
+  const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
   return (
     <div data-action={entry.action} data-state={entry.status} data-confirmed={entry.confirmed ? "true" : "false"}>
+      {entry.status === "unknown" ? <AsyncState kind="unknown" label={t("merge.receipt")} announcement="parent" /> : null}
+      {entry.status === "stale" ? <AsyncState kind="stale" label={t("merge.receipt")} announcement="parent" /> : null}
       <dl className="receipt-detail">
         <dt>{t("s15j")}</dt>
         <dd>{entry.operationId ?? t("common.empty")}</dd>

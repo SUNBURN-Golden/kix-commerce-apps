@@ -1,3 +1,4 @@
+import { c52, c51, c50, c49, c48, c47 } from "./shared-copy";
 export const messages = {
   en: {
     "st": "A confirmed leg is not a close. Closed means the last leg of a synthetic run was confirmed and nothing before it was unconfirmed. UNKNOWN is never shown as done and never shown as lost. A pointer row was not run here. A missing branch stays visible and is never counted as a success.",
@@ -12,7 +13,7 @@ export const messages = {
     "skh": "Explicit rejection",
     "sl6": "Filter applied to the rows already held. Nothing was read again.",
     "sl7": "Filter cleared.",
-    "sn7": "Held answers exist only in the held scenario. Nothing was delivered.",
+    "sn7": c47,
     "sru": "Marketing benefit",
     "stn": "newer read was applied",
     "sy2": "No row matches the filter. The table itself holds rows; clear the filter to see them.",
@@ -51,7 +52,7 @@ export const messages = {
     "s257": "UNDETERMINED: whether a marketing reclaim restores a usage count or a budget, the refund and cancel policy values, and how long a fence is kept.",
     "s25f": "Unknown: unconfirmed",
     "p.t485": "Source: {v1}.",
-    "p.t487": "Environment {v1}. Actor {v2}. Session {v3}.",
+    "p.t487": c48,
     "p.t70": "Table read applied ({v1}).",
     "p.t71": "A table answer arrived after the {v1}. It was dropped and applied nowhere.",
     "p.t72": "Pinned by {v1}, test \"{v2}\"{v3}.",
@@ -59,9 +60,9 @@ export const messages = {
     "p.t74": "{v1} rows. {v2} closed, {v3} partial, {v4} unknown, {v5} rejected, {v6} blocked, {v7} pointers or missing branches (not counted as closed).",
     "p.t75": "{v1} is {v2}. Its considered action stays {v3} and it is never mapped onto prepare_trade. {v4}",
     "p.t76": "Read {v1}. Not sent {v2}. Dropped {v3}.",
-    "p.t77": "Delivered {v1} held answer(s).",
+    "p.t77": c49,
     "p.t78": "Session context switched (incarnation {v1}). A read still in flight is dropped when it arrives.",
-    "p.t79": "New synthetic session under scenario {v1}. {v2}",
+    "p.t79": c50,
   },
   ko: {
     "st": "개별 단계의 confirmed는 종료가 아닙니다. 합성 실행의 마지막 단계까지 미확인 없이 확인되어야 종료됩니다. UNKNOWN은 종료나 유실로 표시하지 않습니다. 참조 행은 여기서 실행하지 않았으며 누락 분기도 그대로 남깁니다.",
@@ -76,7 +77,7 @@ export const messages = {
     "skh": "명시적 거부",
     "sl6": "보관된 행에 필터를 적용했습니다. 다시 조회하지 않았습니다.",
     "sl7": "필터를 지웠습니다.",
-    "sn7": "보관 응답은 보관 시나리오에서만 존재합니다. 전달한 응답이 없습니다.",
+    "sn7": c51,
     "sru": "마케팅 혜택",
     "stn": "더 최신 조회가 반영됨",
     "sy2": "필터에 맞는 행이 없습니다. 표에 행은 있으며 필터를 지우면 표시됩니다.",
@@ -115,7 +116,7 @@ export const messages = {
     "s257": "UNDETERMINED: 마케팅 회수의 사용량·예산 복원 여부, 환불·취소 정책 값, 차단 보존 기간.",
     "s25f": "미확인: 확인 전",
     "p.t485": "원본: {v1}.",
-    "p.t487": "환경 {v1}. 행위자 {v2}. 세션 {v3}.",
+    "p.t487": c52,
     "p.t70": "표 조회 반영됨 ({v1}).",
     "p.t71": "{v1} 후 표 응답이 도착했습니다. 버렸으며 적용하지 않았습니다.",
     "p.t72": "{v1}의 시험 \"{v2}\"{v3}에서 고정함.",

@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/organizer-desk";
 import { sourceMessage } from "./i18n/source-message";
+import { connectivityInvoker, connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import {
   OrganizerConsole,
@@ -16,7 +17,7 @@ import type { OrganizerInvokerSource, OrganizerSource } from "@kix/protocol-adap
 import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 import { SYNTHETIC_SHOW_POLICY } from "./journey-desk";
 import { organizerSource } from "./organizer-source";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 /**
  * M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
@@ -281,7 +282,7 @@ export class OrganizerDesk {
       attempt,
       pending: false,
       localHalt: false,
-      console: this.deps.source ? new OrganizerConsole(this.deps.source.invoker) : null,
+      console: this.deps.source ? new OrganizerConsole(connectivityInvoker(this.deps.source.invoker)) : null,
       steps: blankSteps(),
       issued: [],
     };
@@ -294,6 +295,7 @@ export class OrganizerDesk {
   }
 
   async sendItem(eventId: string, step: OrganizerStep, draft: OrganizerDraft): Promise<OrganizerSendItemResult> {
+    if (!connectedHandler()) return fencedResult("path-not-open", "Connection unavailable. Nothing sent.");
     if (eventId.length === 0) {
       return fencedResult("empty-event-id", sourceCopy.en["sih"]);
     }

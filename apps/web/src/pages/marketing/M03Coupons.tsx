@@ -1,6 +1,9 @@
 import { messages as copy0 } from "../../i18n/messages/pages--marketing--M03Coupons";
 import { messages as copy1 } from "../../i18n/messages/marketing--desk";
 import { deskText } from "../../i18n/desk-translate";
+import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
+import { ValidatedForm } from "../../forms/ValidatedForm";
+import { field } from "../../forms/validation";
 import { useState, type FormEvent } from "react";
 import { COUPON_FIXTURES } from "../../marketing/desk";
 import { marketingSession } from "../../marketing/session";
@@ -29,21 +32,21 @@ export function M03Page() {
   }
 
   return (
-    <MarketingChrome id="M03">
+    <MarketingChrome id="M03" onReadAgain={refresh}>
       {error ? (
         <p className="alert" role="alert">
           {deskText(t, error)}
         </p>
       ) : null}
-      <form className="panel" onSubmit={onSubmit}>
+      <ValidatedForm id="coupon-form" fields={[field("coupon-code", "validation.label.code")]} className="panel" onSubmit={onSubmit}>
         <label>
-          {t("sg6")}<input value={code} onChange={(event) => setCode(event.target.value)} autoComplete="off" />
+          {t("sg6")}<input id="coupon-code" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="off" />
         </label>
         <p className="muted">{t("s32")}</p>
         <div className="row-actions">
-          <button type="submit">{t("s5l")}</button>
+          <ConnectivityWriteButton type="submit">{t("s5l")}</ConnectivityWriteButton>
         </div>
-      </form>
+      </ValidatedForm>
       <ul className="program">
         {deskText(t, COUPON_FIXTURES.map((item) => {
           const applied = snapshot.coupons.find((row) => row.code === item.code);

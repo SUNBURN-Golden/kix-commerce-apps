@@ -4,6 +4,7 @@ import { messages as copy2 } from "../../i18n/messages/marketing--labels";
 import { messages as copy3 } from "../../i18n/messages/marketing--desk";
 import { deskText } from "../../i18n/desk-translate";
 import { useT } from "../../i18n/desk-context";
+import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
 import { Link } from "react-router-dom";
 import { MARKETING_CONTRACT_IDS, marketingPublishedLine } from "../../marketing/contracts";
 import { MARKETING_SURFACES } from "../../marketing/labels";
@@ -18,7 +19,7 @@ export function MarketingHubPage() {
   const tier = snapshot.membership?.tier ?? "guest";
 
   return (
-    <MarketingChrome>
+    <MarketingChrome onReadAgain={refresh}>
       <header className="section-head">
         <p className="eyebrow">{t("s26f")}</p>
         <h2>{t("shell.eyebrow.marketing")}</h2>
@@ -72,7 +73,7 @@ export function MarketingHubPage() {
           </div>
         </dl>
         <div className="row-actions">
-          <button
+          <ConnectivityWriteButton
             type="button"
             className="ghost"
             onClick={() => {
@@ -80,7 +81,7 @@ export function MarketingHubPage() {
               refresh();
             }}
           >
-            {t("s1gb")}</button>
+            {t("s1gb")}</ConnectivityWriteButton>
         </div>
       </article>
       <article className="panel" aria-label={t("s1ac")}>

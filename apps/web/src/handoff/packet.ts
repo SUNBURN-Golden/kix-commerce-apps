@@ -2,8 +2,10 @@ import { messages as sourceCopy } from "../i18n/messages/handoff--packet";
 import { sourceMessage } from "../i18n/source-message";
 import {
   INTEGRATION_GATE_LOOPBACK_HOST,
+  KIX_SDK_0_PIN,
   OPENAPI_CONTRACT_PIN,
   OPENAPI_INTEGRATION_GATE_PIN,
+  KIX_SDK_0_CONSUMPTION_DIGESTS,
 } from "@kix/protocol-adapter";
 import {
   BUYER_FLOW_STAGES,
@@ -51,10 +53,8 @@ export const HANDOFF_PINS = {
   contractOpenApiSha256: OPENAPI_CONTRACT_PIN.openApiFileSha256,
   gateOpenApiSha256: OPENAPI_INTEGRATION_GATE_PIN.openApiFileSha256,
   protocolMergeSha: OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha,
-  sdkDigest: null,
-  manifestDigest: null,
-  vectorDigest: null,
-  consumedProducerChange: false,
+  ...KIX_SDK_0_CONSUMPTION_DIGESTS,
+  consumedProducerChange: true,
 } as const;
 
 export const INTEGRATION_REASON = sourceCopy.en["s7x"];
@@ -284,6 +284,59 @@ export interface PendingProducer {
   readonly note: string;
 }
 
+/**
+ * A producer change this repo consumed. The p-sdk-0 BOOTSTRAP tuple is vendored
+ * under packages/protocol-adapter/vendor/kix-sdk-0 and pin-checked at load time
+ * (consume-p-sdk-0, PR #86). Consuming it moved no catalogue, gate, or OpenAPI
+ * pin. BOOTSTRAP grants catalogue-schema binding only; it is not semantic
+ * conformance, not a live HTTP server, and not production qualification.
+ */
+export interface ConsumedProducer {
+  readonly id: "consume-p-sdk-0";
+  readonly catalogue: "program";
+  readonly pr: 86;
+  readonly producerRepo: string;
+  readonly producerMergeSha: string;
+  readonly manifestSha256: string;
+  readonly catalogueSha256: string;
+  readonly profileSha256: string;
+  readonly profileKind: string;
+  readonly profileRevision: string;
+  readonly grants: string;
+  readonly connected: false;
+  readonly implementedHere: true;
+  readonly semanticConformance: false;
+  readonly liveHttpServer: false;
+  readonly productionEndpoint: false;
+  readonly protocolTruth: false;
+  readonly productionConformance: false;
+  readonly note: string;
+}
+
+export const CONSUMED_PRODUCERS = [
+  {
+    id: "consume-p-sdk-0",
+    catalogue: "program",
+    pr: 86,
+    producerRepo: KIX_SDK_0_PIN.producerRepo,
+    producerMergeSha: KIX_SDK_0_PIN.producerMergeSha,
+    manifestSha256: KIX_SDK_0_PIN.manifestSha256,
+    catalogueSha256: KIX_SDK_0_PIN.catalogueSha256,
+    profileSha256: KIX_SDK_0_PIN.profileSha256,
+    profileKind: KIX_SDK_0_PIN.profileKind,
+    profileRevision: KIX_SDK_0_PIN.profileRevision,
+    grants: KIX_SDK_0_PIN.grants,
+    connected: false,
+    implementedHere: true,
+    semanticConformance: false,
+    liveHttpServer: false,
+    productionEndpoint: false,
+    protocolTruth: false,
+    productionConformance: false,
+    note: sourceCopy.en["merge.sdkNote"],
+  },
+] as const satisfies readonly ConsumedProducer[];
+
 export const PENDING_PRODUCERS = [
   {
     id: "bind-list-read",
@@ -452,14 +505,6 @@ export const PENDING_PRODUCERS = [
     implementedHere: false,
     waitingSurface: "marketing-journey",
     note: sourceCopy.en["s1qh"],
-  },
-  {
-    id: "consume-p-sdk-0",
-    catalogue: "pending",
-    connected: false,
-    implementedHere: false,
-    waitingSurface: null,
-    note: sourceCopy.en["syd"],
   },
   {
     id: "c-delegated-assistant",

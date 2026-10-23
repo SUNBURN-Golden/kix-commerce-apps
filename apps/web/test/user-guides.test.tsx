@@ -90,6 +90,11 @@ describe("guide word list", () => {
 });
 
 describe("glossary document", () => {
+  it("distinguishes a connectivity block before dispatch from an interrupted UNKNOWN write", () => {
+    const word = STATUS_WORD_GUIDE.find((item) => item.word === "CONNECTIVITY_BLOCKED")!;
+    expect(word.meaning).toContain("before dispatch");
+    expect(word.dontText).toContain("already dispatched interruption stays UNKNOWN");
+  });
   it("carries exactly the guide words, in the same order", () => {
     expect(glossaryWords()).toEqual(STATUS_WORD_GUIDE.map((item) => item.word));
   });
@@ -176,6 +181,17 @@ describe("in-app help", () => {
       expect(html, item.word).toContain(`<code>${item.word}</code>`);
     }
     expect(html).toContain("glossary");
+  });
+
+  it("translates glossary explanations in Korean while retaining each protocol word", () => {
+    const html = page("/help", "ko");
+    for (const item of STATUS_WORD_GUIDE) {
+      expect(html, item.word).toContain(`<code>${item.word}</code>`);
+      for (const text of [item.meaning, item.doText, item.dontText]) {
+        const escaped = renderToStaticMarkup(<span>{text}</span>).slice(6, -7);
+        expect(html, `${item.word}: ${text}`).not.toContain(escaped);
+      }
+    }
   });
 
   it("the help page states it is a glossary, not a status surface", () => {

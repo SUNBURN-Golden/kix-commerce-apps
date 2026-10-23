@@ -1,8 +1,11 @@
+import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { messages as copy0 } from "../i18n/messages/pages--NotificationsPanels";
 import { messages as copy1 } from "../i18n/messages/notification-inbox";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { AsyncState } from "../components/AsyncState";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -14,7 +17,6 @@ import {
   type NotifyRole,
   type NotifyScenario,
 } from "@kix/protocol-adapter";
-import { StatusMark } from "../a11y/marks";
 import {
   NOTIFY_ACTION_NOTE,
   NOTIFY_ACTOR_NOTE,
@@ -41,7 +43,7 @@ import { WORKSPACE_RULING } from "../workspace/registry";
 
 /** A word, not only a color. */
 function WordMark({ word }: { word: string }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <span className="status-mark" data-status-mark="blocked">
       <span className="status-word">{deskText(t, word)}</span>
@@ -51,7 +53,7 @@ function WordMark({ word }: { word: string }) {
 
 /** A wide table scrolls inside its own region, so the page does not scroll sideways. */
 function ScrollTable({ label, children }: { label: string; children: ReactNode }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <div className="finance-scroll" role="region" aria-label={deskText(t, label)} tabIndex={0}>
       {deskText(t, children)}
@@ -78,12 +80,12 @@ function GuardedButton({
   describedBy?: string;
   onPress: () => void;
 }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   const reasonId = `${id}-reason`;
   const pointer = control.reason ? (describedBy ?? reasonId) : undefined;
   return (
     <>
-      <button
+      <ConnectivityWriteButton inspection={id === "notify-open-inquiry"}
         type="button"
         id={id}
         className="discovery-action"
@@ -93,7 +95,7 @@ function GuardedButton({
         onClick={control.enabled ? onPress : undefined}
       >
         {deskText(t, label)}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason && describedBy === undefined ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word={t("status.transport.blocked")} /> {deskText(t, control.reason)}
@@ -120,7 +122,7 @@ export function NotifyBanner({
   scenario: NotifyScenario;
   model: NotifyModel;
 }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <header
       className="section-head discovery-section"
@@ -173,7 +175,7 @@ function PickAndApply({
   applyLabel: string;
   onApply: (next: string) => void;
 }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   const [choice, setChoice] = useState(value);
   useEffect(() => {
     setChoice(value);
@@ -208,7 +210,7 @@ export function NotifyControls({
   role: NotifyRole;
   actions: NotifyActions;
 }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   const [focusText, setFocusText] = useState("");
   return (
     <section id="notify-controls" className="discovery-section" aria-label={t("s1o9")}>
@@ -245,8 +247,8 @@ export function NotifyControls({
         <button type="button" id="notify-switch-tenant" className="discovery-action" onClick={() => actions.switchTenant()}>
           {t("s1o3")}{deskText(t, NOTIFY_OWN)} / {deskText(t, NOTIFY_FOREIGN)})
         </button>
-        <button type="button" id="notify-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          {t("s1m2")}</button>
+        <ConnectivityWriteButton type="button" id="notify-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+          {t("s1m2")}</ConnectivityWriteButton>
       </div>
       <div className="discovery-controls" role="group" aria-label={t("sgn")}>
         <label htmlFor="notify-focus-ref">
@@ -263,10 +265,10 @@ export function NotifyControls({
           {t("s15h")}</button>
       </div>
       <div className="discovery-controls" role="group" aria-label={t("s1p9")}>
-        <button type="button" id="notify-revoke-grant" className="discovery-action" onClick={() => actions.revokeGrant()}>
-          {t("s1kh")}</button>
-        <button type="button" id="notify-rotate-grant" className="discovery-action" onClick={() => actions.rotateGrant()}>
-          {t("s1ki")}</button>
+        <ConnectivityWriteButton type="button" id="notify-revoke-grant" className="discovery-action" onClick={() => actions.revokeGrant()}>
+          {t("s1kh")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="notify-rotate-grant" className="discovery-action" onClick={() => actions.rotateGrant()}>
+          {t("s1ki")}</ConnectivityWriteButton>
         <button type="button" id="notify-deliver-late" className="discovery-action" onClick={() => actions.deliverLate()}>
           {t("s1kd")}</button>
       </div>
@@ -280,14 +282,15 @@ export function NotifyControls({
 }
 
 export function NotifyStatus({ model }: { model: NotifyModel }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <section id="notify-status" className="discovery-section" tabIndex={-1} data-notify-state={model.state}>
       <h3>{t("s1mj")}</h3>
-      <p role="status" data-status={model.state}>
-        {model.state === "loading" ? <StatusMark kind="loading" /> : null} {deskText(t, model.statusLine)}
+      {model.state === "loading" || model.state === "empty" || model.state === "stale" || model.state === "not-bound" ? (
+        <AsyncState kind={model.state} label={t("merge.inbox")} data-status={model.state}><p>{deskText(t, model.statusLine)} {deskText(t, model.detailLine)}</p></AsyncState>
+      ) : <p role="status" data-status={model.state}>{deskText(t, model.statusLine)}
         {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
-      </p>
+      </p>}
       <p className="muted">{deskText(t, model.freshnessWord)}</p>
       <p className="muted">{deskText(t, model.scopeLine)}</p>
       <p className="muted">{deskText(t, model.generationLine)}</p>
@@ -299,7 +302,7 @@ export function NotifyStatus({ model }: { model: NotifyModel }) {
         {deskText(t, model.dedupeLine)}
       </p>
       {model.lastLine ? (
-        <p role="status" data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
+        <p role="status" aria-live="polite" aria-busy={false} data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
           {model.lastNeedsFocus ? <WordMark word={t("s91")} /> : null} {deskText(t, model.lastLine)}
         </p>
       ) : null}
@@ -308,7 +311,7 @@ export function NotifyStatus({ model }: { model: NotifyModel }) {
 }
 
 export function NotifyAuthoritySection({ model }: { model: NotifyModel }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <section id="notify-authority" className="discovery-section" aria-label={t("s26m")}>
       <h3>{t("s26m")}</h3>
@@ -341,7 +344,7 @@ export function NotifyAuthoritySection({ model }: { model: NotifyModel }) {
 }
 
 export function NotifyFocusSection({ model }: { model: NotifyModel }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   if (model.focus === null) {
     return null;
   }
@@ -356,7 +359,7 @@ export function NotifyFocusSection({ model }: { model: NotifyModel }) {
 }
 
 export function NotifyInboxSection({ model, actions }: { model: NotifyModel; actions: NotifyActions }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <section id="notify-inbox" className="discovery-section" aria-label={t("snt")} data-row-count={model.rows.length}>
       <h3>{t("snt")}</h3>
@@ -447,7 +450,7 @@ export function NotifyInboxSection({ model, actions }: { model: NotifyModel; act
 }
 
 export function NotifyInquirySection({ model, actions }: { model: NotifyModel; actions: NotifyActions }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   const inquiry = model.inquiry;
   const destination = model.request?.destination ?? null;
   return (
@@ -493,7 +496,7 @@ export function NotifyInquirySection({ model, actions }: { model: NotifyModel; a
 }
 
 export function NotifyRequestsSection({ model }: { model: NotifyModel }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <section id="notify-requests" className="discovery-section" aria-label={t("s1fv")}>
       <h3>{t("s1fv")}</h3>
@@ -506,6 +509,7 @@ export function NotifyRequestsSection({ model }: { model: NotifyModel }) {
       {model.request === null ? <p data-state="empty">{t("sxr")}</p> : null}
       {model.request !== null ? (
         <div data-request-seq={model.request.seq} data-request-phase={model.request.phase}>
+          {model.request.phase === "unknown" ? <AsyncState kind="unknown" label={t("merge.notifyRequest")} announcement="parent" /> : null}
           <p>
             {t("s1fq")}{" "}{deskText(t, model.request.seq)}: {deskText(t, model.request.kindWord)}. {deskText(t, model.request.phaseWord)}
             {model.request.code ? (" " + t("sd2", { code: model.request.code })) : ""}.
@@ -523,7 +527,7 @@ export function NotifyRequestsSection({ model }: { model: NotifyModel }) {
 }
 
 export function NotifySessionSection({ session }: { session: NotifySessionModel }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <section id="notify-session" className="discovery-section" aria-label={t("s1js")}>
       <h3>{t("s1js")}</h3>

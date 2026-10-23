@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/session-recovery";
 import { sourceMessage } from "./i18n/source-message";
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The synthetic session recovery desk. A write is recorded in a tab-session
  * journal before it is sent. After a reload or a tab resume, an intent that
@@ -34,7 +35,7 @@ import {
   type SessionRunResult,
 } from "@kix/protocol-adapter";
 import { identityFenceLine } from "./journey-identity";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 import { pageSessionStore } from "./session-store";
 
 export const SESSION_TITLE = sourceCopy.en["s1jt"];
@@ -388,8 +389,8 @@ export function useSessionRecoveryDesk(): {
 
   const wantedKey = `${environment}|${scenario}`;
   if (keyRef.current !== wantedKey) {
-    const port = journeyIdentityPortFor(environment, { scenario });
-    const identity = new JourneyIdentityController(port, { actorRef: JOURNEY_IDENTITY_DESK_ACTOR, role: "operator" });
+    const port = connectivityPort(journeyIdentityPortFor(environment, { scenario }), "session-recovery");
+    const identity = connectivityController(new JourneyIdentityController(port, { actorRef: JOURNEY_IDENTITY_DESK_ACTOR, role: "operator" }), port);
     deskRef.current = { port, identity };
     recoveryRef.current = recoveryFor(deskRef.current, environment === "stub");
     keyRef.current = wantedKey;
@@ -472,6 +473,6 @@ export function useSessionRecoveryDesk(): {
     scenario,
     model: buildSessionModel({ environment, recovery, identity: desk?.identity ?? null, last }),
     heldSupported: scenario === "held-response",
-    actions,
+    actions: connectedActions(actions, ['attach', 'setScenario'], deskRef.current?.port),
   };
 }

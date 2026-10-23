@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useT } from "../i18n/desk-context";
 import type { Performance } from "@kix/protocol-adapter";
 import { useCreditDesk } from "../credit-desk";
-import { protocol } from "../protocol";
+import { protocol } from "../connectivity/desk-protocol";
 import { deskText } from "../i18n/desk-translate";
 import { CreditPanel } from "./CreditPanel";
 

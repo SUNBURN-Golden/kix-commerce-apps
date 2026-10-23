@@ -146,6 +146,15 @@ export const ROUTES = [
   }),
 ] as const satisfies readonly RouteEntry[];
 
+/** Production matrices intentionally keep ROUTES. The development extension is compile-time removed. */
+export const APP_ROUTES = import.meta.env?.DEV
+  ? [...ROUTES, route("component-gallery", "/dev/gallery", "Component gallery", "verification", "stub-only", null, {
+      note: "Development-only synthetic component coverage; no business surface or economic outcome.",
+    })]
+  : ROUTES;
+
+export type AppRouteId = (typeof APP_ROUTES)[number]["id"];
+
 export type RouteId = (typeof ROUTES)[number]["id"];
 
 /** Extra route patterns that draw the same page as a registry route. They carry no label, so they cannot repeat one. */
@@ -157,7 +166,7 @@ type Routes = readonly RouteEntry[];
 type Aliases = readonly { path: string; of: string }[];
 
 /** The entry whose pattern (or alias pattern) matches the pathname, or null when the catch-all draws the page. */
-export function routeFor(pathname: string, routes: Routes = ROUTES, aliases: Aliases = ROUTE_ALIASES): RouteEntry | null {
+export function routeFor(pathname: string, routes: Routes = APP_ROUTES, aliases: Aliases = ROUTE_ALIASES): RouteEntry | null {
   const hit = routes.find((item) => matchPath({ path: item.path, end: true }, pathname));
   if (hit) {
     return hit;
@@ -167,7 +176,7 @@ export function routeFor(pathname: string, routes: Routes = ROUTES, aliases: Ali
 }
 
 /** The path of the one nav link marked current for this pathname, or null. */
-export function currentNavPath(pathname: string, routes: Routes = ROUTES): string | null {
+export function currentNavPath(pathname: string, routes: Routes = APP_ROUTES): string | null {
   const hit = routeFor(pathname, routes);
   if (!hit || hit.nav === "hidden") {
     return null;
@@ -181,7 +190,7 @@ export interface NavGroup {
   links: readonly RouteEntry[];
 }
 
-export function navGroups(routes: Routes = ROUTES): NavGroup[] {
+export function navGroups(routes: Routes = APP_ROUTES): NavGroup[] {
   return ROUTE_GROUPS.map((group) => ({
     id: group.id,
     label: group.label,
@@ -197,7 +206,7 @@ export interface Crumb {
 }
 
 /** Group text, then the parent link, then the current page. A group crumb that repeats the next label is left out. Empty on a path no route matches. */
-export function breadcrumbFor(pathname: string, routes: Routes = ROUTES): Crumb[] {
+export function breadcrumbFor(pathname: string, routes: Routes = APP_ROUTES): Crumb[] {
   const hit = routeFor(pathname, routes);
   if (!hit) {
     return [];

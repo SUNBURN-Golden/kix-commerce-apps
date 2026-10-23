@@ -1,6 +1,7 @@
 import { messages as copy0 } from "../i18n/messages/pages--SettlementPanel";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { SettlementCaseView } from "@kix/protocol-adapter";
 
 export const SETTLEMENT_DESK_COMMANDS = [
@@ -94,7 +95,7 @@ export function SettlementPanel({
       </dl>
       <div className="row-actions">
         {deskText(t, CONTROLS.map((control) => (
-          <button
+          <ConnectivityWriteButton
             key={control.command}
             type="button"
             className={control.command === "initiate" ? undefined : "ghost"}
@@ -102,7 +103,7 @@ export function SettlementPanel({
             onClick={() => onCommand(control.command)}
           >
             {deskText(t, control.label)}
-          </button>
+          </ConnectivityWriteButton>
         )))}
         <button type="button" className="ghost" disabled={pending} onClick={onClose}>
           {t("scs")}</button>

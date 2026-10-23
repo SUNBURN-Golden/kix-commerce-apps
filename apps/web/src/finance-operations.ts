@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/finance-operations";
 import { sourceMessage } from "./i18n/source-message";
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The finance desk screen on top of the adapter's synthetic finance source. Stub scope:
  * the default port is the synthetic source. On integration-http the same port is
@@ -54,7 +55,7 @@ import {
   type FinanceSyntheticControl,
   type FinanceVerdict,
 } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const FINANCE_PAGE_TITLE = sourceCopy.en["slb"];
 
@@ -1047,8 +1048,8 @@ interface Session {
 }
 
 function createSession(environment: "stub" | "integration-http", scenario: FinanceScenario, bookRef: string, actorRef: string): Session {
-  const port = financeOperationsPortFor(environment, { scenario });
-  return { port, controller: new FinanceOperationsController(port, { actorRef, bookRef }) };
+  const port = connectivityPort(financeOperationsPortFor(environment, { scenario }), "finance-operations");
+  return { port, controller: connectivityController(new FinanceOperationsController(port, { actorRef, bookRef }), port) };
 }
 
 export function useFinanceOperations(): {
@@ -1233,7 +1234,7 @@ export function useFinanceOperations(): {
     bookRef,
     actorRef,
     model: buildFinanceModel({ controller: session.controller, last }),
-    actions,
+    actions: connectedActions(actions, ['proposeCorrection', 'approveProposal', 'revokeGrant', 'advanceCut', 'postSourceCorrection', 'setScenario', 'newSession'], sessionRef.current?.port),
   };
 }
 

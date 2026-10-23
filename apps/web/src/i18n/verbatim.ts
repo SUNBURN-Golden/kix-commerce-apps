@@ -1,5 +1,9 @@
 /** Exact catalogue keys allowed to keep source spelling in Korean; no English-prose wildcard. */
 export const VERBATIM_MESSAGES: Readonly<Record<string, string>> = {
+  "merge.none": "Null consideredAction sentinel copied from the binding record",
+  "merge.considered": "Existing protocol field name",
+  "merge.statesSample": "Exact outcome and policy enum specimen",
+  "merge.specimenTitle": "Interpolation-only component and state identifiers",
   "s7n": "Keyboard key name",
   "s7o": "Keyboard key name",
   "s7p": "Keyboard key name",

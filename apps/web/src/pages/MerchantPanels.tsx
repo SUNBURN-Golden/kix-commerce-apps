@@ -4,6 +4,7 @@ import { messages as copy1 } from "../i18n/messages/merchant-operations";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { ReactNode } from "react";
 import { MERCHANT_SCENARIOS, type MerchantScenario } from "@kix/protocol-adapter";
 import { AmountNotice, StatusMark } from "../a11y/marks";
@@ -145,12 +146,12 @@ export function MerchantControls({
         <GuardedButton id="merchant-export" label={t("srf")} control={model.exportControl} onPress={() => actions.loadExport()} />
         <button type="button" id="merchant-switch" className="discovery-action" onClick={() => actions.switchScope()}>
           {t("s1nv")}</button>
-        <button type="button" id="merchant-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
-          {t("s1h6")}</button>
-        <button type="button" id="merchant-advance" className="discovery-action" onClick={() => actions.advanceCut()}>
-          {t("s1y")}</button>
-        <button type="button" id="merchant-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          {t("s1m2")}</button>
+        <ConnectivityWriteButton type="button" id="merchant-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
+          {t("s1h6")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="merchant-advance" className="discovery-action" onClick={() => actions.advanceCut()}>
+          {t("s1y")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="merchant-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+          {t("s1m2")}</ConnectivityWriteButton>
       </div>
       <p className="muted" data-scenario-note={scenario}>
         {deskText(t, SCENARIO_NOTES[scenario])} {t("sbx")}</p>

@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/provider-journey";
 import { sourceMessage } from "./i18n/source-message";
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The synthetic provider-connected journey screen on top of the adapter's
  * synthetic provider sandbox source. Stub scope: the default port is the
@@ -43,7 +44,7 @@ import {
   type ProviderStepInput,
   type ProviderStepResult,
 } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const PROVIDER_TITLE = sourceCopy.en["s1a5"];
 
@@ -624,8 +625,8 @@ interface Session {
 }
 
 function createSession(environment: "stub" | "integration-http", scenario: ProviderScenario): Session {
-  const port = providerJourneyPortFor(environment, { scenario });
-  return { port, controller: new ProviderJourneyController(port, { actorRef: PROVIDER_DESK_ACTOR }) };
+  const port = connectivityPort(providerJourneyPortFor(environment, { scenario }), "provider-journey");
+  return { port, controller: connectivityController(new ProviderJourneyController(port, { actorRef: PROVIDER_DESK_ACTOR }), port) };
 }
 
 export function useProviderJourney(): {
@@ -809,6 +810,6 @@ export function useProviderJourney(): {
     model: buildProviderModel({ controller: session.controller, last }),
     heldSupported: scenario === "held-response",
     lateSupported: scenario === "observe-late",
-    actions,
+    actions: connectedActions(actions, ['begin', 'observe', 'issue', 'refund', 'landReturn', 'deliverReport', 'abandon', 'newSession', 'setScenario'], sessionRef.current?.port),
   };
 }

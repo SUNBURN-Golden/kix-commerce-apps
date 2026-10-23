@@ -2,6 +2,7 @@ import { messages as copy0 } from "../i18n/messages/pages--ResalePanel";
 import { messages as copy1 } from "../i18n/messages/a11y--present";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { ResaleCaseView, ResaleRightView } from "@kix/protocol-adapter";
 import { formatWhen } from "../format";
 import { useLocale } from "../i18n/locale-context";
@@ -161,7 +162,7 @@ export function ResalePanel({
       </dl>
       <div className="row-actions">
         {deskText(t, CONTROLS.map((control) => (
-          <button
+          <ConnectivityWriteButton
             key={control.command}
             type="button"
             className={control.command === "adopt" || control.command === "list" ? undefined : "ghost"}
@@ -169,7 +170,7 @@ export function ResalePanel({
             onClick={() => onCommand(control.command)}
           >
             {deskText(t, control.label)}
-          </button>
+          </ConnectivityWriteButton>
         )))}
       </div>
     </aside>

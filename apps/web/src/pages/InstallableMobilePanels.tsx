@@ -3,6 +3,7 @@ import { messages as copy1 } from "../i18n/messages/installable-mobile";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { ReactNode } from "react";
 import { MOBILE_SCENARIOS, type MobileScenario } from "@kix/protocol-adapter";
 import { AmountNotice, StatusMark } from "../a11y/marks";
@@ -77,7 +78,7 @@ function GuardedButton({
   const reasonId = `${id}-reason`;
   return (
     <>
-      <button
+      <ConnectivityWriteButton
         type="button"
         id={id}
         className="discovery-action"
@@ -87,7 +88,7 @@ function GuardedButton({
         onClick={control.enabled ? onPress : undefined}
       >
         {deskText(t, label)}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word={t("status.transport.blocked")} /> {deskText(t, control.reason)}
@@ -180,22 +181,22 @@ export function MobileControls({
           {t("s1ax")}</button>
         <button type="button" id="mobile-resume" className="discovery-action" onClick={() => actions.resume()}>
           {t("s1gm")}</button>
-        <button type="button" id="mobile-drop" className="discovery-action" onClick={() => actions.dropConnection()}>
-          {t("shi")}</button>
-        <button type="button" id="mobile-restore" className="discovery-action" onClick={() => actions.restoreConnection()}>
-          {t("s1gk")}</button>
-        <button type="button" id="mobile-offer-update" className="discovery-action" onClick={() => actions.offerUpdate()}>
-          {t("s13y")}</button>
-        <button type="button" id="mobile-expire" className="discovery-action" onClick={() => actions.expireSession()}>
-          {t("ske")}</button>
+        <ConnectivityWriteButton type="button" id="mobile-drop" className="discovery-action" onClick={() => actions.dropConnection()}>
+          {t("shi")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="mobile-restore" className="discovery-action" onClick={() => actions.restoreConnection()}>
+          {t("s1gk")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="mobile-offer-update" className="discovery-action" onClick={() => actions.offerUpdate()}>
+          {t("s13y")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="mobile-expire" className="discovery-action" onClick={() => actions.expireSession()}>
+          {t("ske")}</ConnectivityWriteButton>
         <button type="button" id="mobile-deliver-held" className="discovery-action" onClick={() => actions.deliverHeld()}>
           {t("sg2")}</button>
         <button type="button" id="mobile-deliver-late" className="discovery-action" onClick={() => actions.deliverLate()}>
           {t("sg4")}</button>
         <button type="button" id="mobile-switch" className="discovery-action" onClick={() => actions.switchContext()}>
           {t("s1ff")}</button>
-        <button type="button" id="mobile-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          {t("s1m2")}</button>
+        <ConnectivityWriteButton type="button" id="mobile-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+          {t("s1m2")}</ConnectivityWriteButton>
       </div>
       <p className="muted" data-scenario-note={scenario}>
         {deskText(t, SCENARIO_NOTES[scenario])} {t("sbx")}</p>

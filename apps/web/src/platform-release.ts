@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/platform-release";
 import { sourceMessage } from "./i18n/source-message";
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The platform release candidate screen on top of the adapter's synthetic
  * release runner. Stub scope: the default port is the synthetic runner. On
@@ -40,7 +41,7 @@ import {
   type ReleaseScenario,
 } from "@kix/protocol-adapter";
 import { PENDING_PRODUCERS } from "./handoff/packet";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const RELEASE_TITLE = sourceCopy.en["s18i"];
 
@@ -288,8 +289,8 @@ interface Session {
 }
 
 function createSession(environment: "stub" | "integration-http", scenario: ReleaseScenario): Session {
-  const port = releaseRunnerPortFor(environment, { scenario });
-  return { port, controller: new PlatformReleaseController(port, { actorRef: RELEASE_DESK_ACTOR }) };
+  const port = connectivityPort(releaseRunnerPortFor(environment, { scenario }), "platform-release");
+  return { port, controller: connectivityController(new PlatformReleaseController(port, { actorRef: RELEASE_DESK_ACTOR }), port) };
 }
 
 export interface ReleaseActions {
@@ -393,7 +394,7 @@ export function usePlatformRelease(): {
     scenario,
     model: { ...model, heldSupported: sessionRef.current.port.scenario === "held" },
     heldSupported: sessionRef.current.port.scenario === "held",
-    actions,
+    actions: connectedActions(actions, ['run', 'setScenario', 'newSession'], sessionRef.current?.port),
   };
 }
 

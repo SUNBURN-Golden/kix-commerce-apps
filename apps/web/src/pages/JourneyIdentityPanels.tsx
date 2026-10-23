@@ -2,6 +2,7 @@ import { messages as copy0 } from "../i18n/messages/pages--JourneyIdentityPanels
 import { messages as copy1 } from "../i18n/messages/journey-identity";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useState } from "react";
 import { useRestoreFocus } from "../a11y/focus";
 import {
@@ -36,7 +37,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
   const reasonId = `${id}-reason`;
   return (
     <span className="refund-guard">
-      <button
+      <ConnectivityWriteButton
         id={id}
         type="button"
         aria-disabled={control.enabled ? undefined : true}
@@ -48,7 +49,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
         }}
       >
         {deskText(t, label)}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <span id={reasonId} className="muted">
           {deskText(t, control.reason)}
@@ -189,8 +190,8 @@ export function JourneyIdentityPanel({ live }: { live: IdentityDeskLive }) {
             )))}
           </select>
         </label>
-        <button type="button" disabled={pendingScenario === live.scenario} onClick={() => actions.setScenario(pendingScenario)}>
-          {t("s5q")}</button>
+        <ConnectivityWriteButton type="button" disabled={pendingScenario === live.scenario} onClick={() => actions.setScenario(pendingScenario)}>
+          {t("s5q")}</ConnectivityWriteButton>
         <p className="muted">{deskText(t, IDENTITY_SCENARIO_NOTES[pendingScenario])}</p>
         <p className="muted">{t("s5n")}</p>
         <button type="button" onClick={() => actions.refresh()}>
@@ -199,10 +200,10 @@ export function JourneyIdentityPanel({ live }: { live: IdentityDeskLive }) {
           {t("s1nr")}</button>
         <button type="button" onClick={() => actions.switchRole()}>
           {t("s1ny")}</button>
-        <button type="button" onClick={() => actions.rotateCut()}>
-          {t("s1hn")}</button>
-        <button type="button" onClick={() => actions.resetSource()}>
-          {t("s1gc")}</button>
+        <ConnectivityWriteButton type="button" onClick={() => actions.rotateCut()}>
+          {t("s1hn")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" onClick={() => actions.resetSource()}>
+          {t("s1gc")}</ConnectivityWriteButton>
         {live.heldSupported ? (
           <button type="button" onClick={() => actions.deliverHeld()}>
             {t("sg2")}</button>

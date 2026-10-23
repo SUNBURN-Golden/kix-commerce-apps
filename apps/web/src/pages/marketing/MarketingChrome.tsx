@@ -3,6 +3,7 @@ import { messages as copy1 } from "../../i18n/messages/marketing--contracts";
 import { messages as copy2 } from "../../i18n/messages/marketing--labels";
 import { deskText } from "../../i18n/desk-translate";
 import { useT } from "../../i18n/desk-context";
+import { useConnectivityCopy } from "../../connectivity/copy";
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import { marketingPublishedLine } from "../../marketing/contracts";
@@ -11,10 +12,13 @@ import { MARKETING_SURFACES, marketingSurface, type MarketingId } from "../../ma
 export function MarketingChrome({
   id,
   children,
+  onReadAgain,
 }: {
   id?: MarketingId;
   children: ReactNode;
+  onReadAgain?: () => void;
 }) {
+  const copy = useConnectivityCopy();
   const t = useT(copy0, copy1, copy2);
   const surface = id ? marketingSurface(id) : null;
 
@@ -43,6 +47,7 @@ export function MarketingChrome({
           <p className="muted">{deskText(t, marketingPublishedLine(surface.id))}</p>
         </header>
       ) : null}
+      {onReadAgain ? <button type="button" onClick={onReadAgain}>{copy.readAgain}</button> : null}
       {deskText(t, children)}
     </section>
   );

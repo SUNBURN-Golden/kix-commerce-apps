@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/marketing-journey";
 import { sourceMessage } from "./i18n/source-message";
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The marketing benefit journey screen on top of the adapter's synthetic marketing source.
  * Stub scope: the default port is the synthetic source. On integration-http the same
@@ -49,7 +50,7 @@ import {
   type MarketingSyntheticControl,
   type MarketingVerdict,
 } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const MARKETING_JOURNEY_TITLE = sourceCopy.en["srv"];
 
@@ -762,10 +763,10 @@ interface Session {
 }
 
 function createSession(environment: "stub" | "integration-http", scenario: MarketingScenario): Session {
-  const port = marketingJourneyPortFor(environment, { scenario });
+  const port = connectivityPort(marketingJourneyPortFor(environment, { scenario }), "marketing-journey");
   return {
     port,
-    controller: new MarketingJourneyController(port, { actorRef: MARKETING_DESK_ACTOR, subjectRef: MARKETING_OWN_SUBJECT }),
+    controller: connectivityController(new MarketingJourneyController(port, { actorRef: MARKETING_DESK_ACTOR, subjectRef: MARKETING_OWN_SUBJECT }), port),
   };
 }
 
@@ -919,6 +920,6 @@ export function useMarketingJourney(): {
     scenario,
     model: buildMarketingJourneyModel({ controller: session.controller, environment, last }),
     heldSupported: scenario === "held-response",
-    actions,
+    actions: connectedActions(actions, ['apply', 'reclaim', 'setScenario', 'newSession', 'simulate'], sessionRef.current?.port),
   };
 }

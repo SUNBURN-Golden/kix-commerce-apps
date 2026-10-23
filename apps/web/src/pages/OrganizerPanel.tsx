@@ -4,6 +4,7 @@ import { messages as copy2 } from "../i18n/messages/storage-allow-list";
 import { messages as copy3 } from "../i18n/messages/journey-desk";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { JOURNEY_RULING, ORGANIZER_DESK_NOT_BOUND, ORGANIZER_NOT_COMPOSED } from "@kix/protocol-adapter";
 import type { OrganizerPanelModel, OrganizerRowStatus } from "../organizer-desk";
 
@@ -90,9 +91,9 @@ export function OrganizerPanel({ model }: { model: OrganizerPanelModel }) {
               </dl>
             ) : null}
             <div className="row-actions">
-              <button type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
+              <ConnectivityWriteButton type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
                 {t("s1j5")}{" "}{deskText(t, row.step)}
-              </button>
+              </ConnectivityWriteButton>
             </div>
           </li>
         )))}

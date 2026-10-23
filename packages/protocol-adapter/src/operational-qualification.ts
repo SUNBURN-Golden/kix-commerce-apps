@@ -1,6 +1,7 @@
+import { KIX_SDK_0_CONSUMPTION_DIGESTS } from "./sdk-consumption-tuple.js";
 import { JOURNEY_NOT_COMPOSED, type JourneyNotComposed } from "./booking-journey.js";
 import { COMMERCE_COMMAND_BINDINGS } from "./commerce-bindings.js";
-import { FIXTURE_SCREENS } from "./contract-fixtures.js";
+import { FIXTURE_CATALOGUE_VERSION, FIXTURE_SCREENS } from "./contract-fixtures.js";
 import {
   DISCOVERY_PROJECTION_AS_OF,
   DISCOVERY_READ_TUPLE_LITERALS,
@@ -47,9 +48,9 @@ import { isRecord } from "./record.js";
  * c-platform-operational-qualification (plan revision 2026-10-13, 준태님 승인).
  * The real qualification waits on kix-protocol:ps-07-scale-qualification and
  * kix-protocol:cr-10-credit-qualification, on the unpromoted
- * commerce-integration-closeout, and on the real producer tuple. No producer
- * SDK, manifest, or vector is consumed, so those digests stay null and this
- * module sends nothing over a network.
+ * commerce-integration-closeout, and on the real producer tuple. The app
+ * records consumed p-sdk-0 BOOTSTRAP digests, which grant no qualification
+ * authority. This module sends nothing over a network.
  *
  * A run drives the sibling synthetic sources — the platform trade page, the
  * provider checkout page, the installable mobile shell, and the marketplace
@@ -313,10 +314,10 @@ export interface QualificationPins {
   contractOpenApiSha256: string;
   gateOpenApiSha256: string;
   protocolMergeSha: string;
-  sdkDigest: null;
-  manifestDigest: null;
-  vectorDigest: null;
-  consumedProducerChange: false;
+  sdkDigest: string;
+  manifestDigest: string;
+  vectorDigest: string;
+  consumedProducerChange: true;
 }
 
 export interface QualificationPacket {
@@ -521,7 +522,7 @@ export function qualificationOpsBundle(): QualificationOpsBundle {
       note: "The handoff packet's own pending-producer list is the operator-facing pending list. This packet names the module and the list; the screen renders the count from the module itself so the number can never drift from it.",
     },
     uiReviewMaterial: {
-      fixtureVersion: "1",
+      fixtureVersion: FIXTURE_CATALOGUE_VERSION,
       fixtureScreens: FIXTURE_SCREENS.length,
       surfacesDocumented: QUALIFICATION_REVIEW_CANDIDATES.length,
       note: "The contract fixture library records the synthetic rows per screen; no row owns a pass and none substitutes a stub for a failed live call. The review candidates above are the current UI review material.",
@@ -1641,10 +1642,10 @@ async function bindingChecks(): Promise<QualificationBindingCheck[]> {
   });
   checks.push({
     id: "bindings.pin-tuple",
-    expected: "both OpenAPI pins and protocolMergeSha recorded; SDK, manifest, and vector digests null",
-    observed: `contract ${OPENAPI_CONTRACT_PIN.openApiFileSha256.slice(0, 12)}…, gate ${OPENAPI_INTEGRATION_GATE_PIN.openApiFileSha256.slice(0, 12)}…, merge ${OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha.slice(0, 12)}…, sdk/manifest/vector null`,
+    expected: "both OpenAPI pins and protocolMergeSha recorded; consumed p-sdk-0 digests recorded",
+    observed: `contract ${OPENAPI_CONTRACT_PIN.openApiFileSha256.slice(0, 12)}…, gate ${OPENAPI_INTEGRATION_GATE_PIN.openApiFileSha256.slice(0, 12)}…, merge ${OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha.slice(0, 12)}…, p-sdk-0 SDK/manifest/vectors recorded in packet`,
     verdict: "recorded",
-    note: "No producer change is consumed: the pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA, and protocolMergeSha stay where they were.",
+    note: "Consumed p-sdk-0 BOOTSTRAP recorded; OpenAPI pins, PINNED_ACTIONS, CI gate SHA, and protocolMergeSha unchanged.",
   });
   return checks;
 }
@@ -1693,10 +1694,8 @@ function buildQualificationPacket(
       contractOpenApiSha256: OPENAPI_CONTRACT_PIN.openApiFileSha256,
       gateOpenApiSha256: OPENAPI_INTEGRATION_GATE_PIN.openApiFileSha256,
       protocolMergeSha: OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha,
-      sdkDigest: null,
-      manifestDigest: null,
-      vectorDigest: null,
-      consumedProducerChange: false,
+      ...KIX_SDK_0_CONSUMPTION_DIGESTS,
+      consumedProducerChange: true,
     },
     promotion: {
       promoted: false,

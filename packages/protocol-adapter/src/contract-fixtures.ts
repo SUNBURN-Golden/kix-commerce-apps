@@ -1,3 +1,4 @@
+import { KIX_SDK_0_CONSUMPTION_DIGESTS, type SdkConsumptionDigests } from "./sdk-consumption-tuple.js";
 import {
   COMMERCE_COMMAND_BINDINGS,
   COMMERCE_METHODS,
@@ -22,12 +23,12 @@ import { ProtocolError } from "./types.js";
  * copied. This module does not compute finance or rights, does not send, and
  * does not retry.
  *
- * No SDK, manifest, or vector is consumed. Those digests stay null until a
- * producer change moves both OpenAPI pins, PINNED_ACTIONS, the CI gate SHA,
- * and protocolMergeSha together with that SDK tuple.
+ * Catalogue v2 records the already-consumed p-sdk-0 BOOTSTRAP digests.
+ * The v1 tuple remains historical and cannot pass as current evidence.
+ * No protocol catalogue or gate change is consumed.
  */
 
-export const FIXTURE_CATALOGUE_VERSION = "1" as const;
+export const FIXTURE_CATALOGUE_VERSION = "2" as const;
 
 export const FIXTURE_RULING =
   "M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce";
@@ -66,7 +67,7 @@ export const FIXTURE_NEVER_SUCCESS_ACTIONS = [
 ] as const;
 
 /**
- * Copy of PINNED_ACTIONS for catalogue version 1.
+ * Copy of PINNED_ACTIONS, unchanged between catalogue versions 1 and 2.
  * assertCatalogueBound refuses the catalogue when the live list differs.
  */
 export const FIXTURE_PINNED_ACTIONS_LITERAL = [
@@ -123,13 +124,14 @@ export interface FixtureTupleParts {
   sourceProtocolContractSha256: string;
   domain: string;
   pinnedActions: readonly string[];
-  sdkDigest: null;
-  manifestDigest: null;
-  vectorDigest: null;
+  sdkDigest: string | null;
+  manifestDigest: string | null;
+  vectorDigest: string | null;
 }
 
-export const FIXTURE_TUPLE_LITERALS: FixtureTupleParts = {
-  catalogueVersion: FIXTURE_CATALOGUE_VERSION,
+/** Original v1 literals: historical evidence only. */
+export const FIXTURE_V1_TUPLE_LITERALS: FixtureTupleParts = {
+  catalogueVersion: "1",
   contractOpenApiSha256: "fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e",
   contractInfoVersion: "0.3-rc1+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
   contractMainSha: "a744b0a036d7e1edb48416871af20cd182f23df4",
@@ -142,6 +144,23 @@ export const FIXTURE_TUPLE_LITERALS: FixtureTupleParts = {
   sdkDigest: null,
   manifestDigest: null,
   vectorDigest: null,
+};
+
+/** Independently recorded v2 expectations, checked against the verified live pins. */
+export const FIXTURE_TUPLE_LITERALS: FixtureTupleParts & SdkConsumptionDigests = {
+  catalogueVersion: FIXTURE_CATALOGUE_VERSION,
+  contractOpenApiSha256: "fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e",
+  contractInfoVersion: "0.3-rc1+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
+  contractMainSha: "a744b0a036d7e1edb48416871af20cd182f23df4",
+  gateOpenApiSha256: "2a2af554cb1a8b128f2cf1b1d5b8cf6b1c8fa90adf30865dbc3e64932b3bd13f",
+  protocolMergeSha: "52a9b5cbf7777df55d2d2062cb8d99d862b423bb",
+  protocolFeatureSha: "c7238bc24a399a6cabbab87ac23dbfd7e9c252dd",
+  sourceProtocolContractSha256: "ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
+  domain: "kix:fixture:lifecycle:0.3",
+  pinnedActions: FIXTURE_PINNED_ACTIONS_LITERAL,
+  sdkDigest: "891ddd65f29262603bd0f76746a9308c810a71d4afd717b0f4d2e3f7d46dbaa2",
+  manifestDigest: "1cce4ee5a9aa64ef40825c0e6dedf920050e594cf20ea0aaf087ecbde46f0cca",
+  vectorDigest: "canonical-encoding:3446c13847bb153df06c1d5d3b7f09cd3b1648ac10bb0cc76d7b65c7014e99c2 mixed-input:9e2441ddefc22a2f8c7be230436620908b735b128b9445b7a5a916e4d86a2e19",
 };
 
 export interface FixtureIdentity {
@@ -271,6 +290,9 @@ const SCALAR_TUPLE_FIELDS = [
   "protocolFeatureSha",
   "sourceProtocolContractSha256",
   "domain",
+  "sdkDigest",
+  "manifestDigest",
+  "vectorDigest",
 ] as const;
 
 export const FIXTURE_SCREENS = [
@@ -586,9 +608,11 @@ export function tupleKeyFrom(parts: FixtureTupleParts): string {
   ].join("|");
 }
 
+export const FIXTURE_V1_TUPLE_KEY = tupleKeyFrom(FIXTURE_V1_TUPLE_LITERALS);
+
 export const FIXTURE_TUPLE_KEY = tupleKeyFrom(FIXTURE_TUPLE_LITERALS);
 
-export function liveTupleParts(): FixtureTupleParts {
+export function liveTupleParts(): FixtureTupleParts & SdkConsumptionDigests {
   return {
     catalogueVersion: FIXTURE_CATALOGUE_VERSION,
     contractOpenApiSha256: OPENAPI_CONTRACT_PIN.openApiFileSha256,
@@ -600,9 +624,7 @@ export function liveTupleParts(): FixtureTupleParts {
     sourceProtocolContractSha256: OPENAPI_CONTRACT_PIN.sourceProtocolContractSha256,
     domain: PINNED_PROTOCOL_DOMAIN,
     pinnedActions: PINNED_ACTIONS,
-    sdkDigest: null,
-    manifestDigest: null,
-    vectorDigest: null,
+    ...KIX_SDK_0_CONSUMPTION_DIGESTS,
   };
 }
 
@@ -2967,13 +2989,6 @@ export function assertCatalogueBound(): void {
   }
   if (!sameList(live.pinnedActions, FIXTURE_TUPLE_LITERALS.pinnedActions)) {
     throw new ProtocolError("Fixture catalogue PINNED_ACTIONS do not match the live pin.", "DIFFERENT_TUPLE");
-  }
-  if (
-    FIXTURE_TUPLE_LITERALS.sdkDigest !== null ||
-    FIXTURE_TUPLE_LITERALS.manifestDigest !== null ||
-    FIXTURE_TUPLE_LITERALS.vectorDigest !== null
-  ) {
-    throw new ProtocolError("This catalogue does not consume an SDK, manifest, or vector.", "DIFFERENT_TUPLE");
   }
   if (OPENAPI_INTEGRATION_GATE_PIN.contractOnlyOpenApiFileSha256 !== OPENAPI_CONTRACT_PIN.openApiFileSha256) {
     throw new ProtocolError("Contract-only sha on the gate pin does not match the catalogue pin.", "DIFFERENT_TUPLE");

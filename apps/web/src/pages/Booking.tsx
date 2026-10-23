@@ -1,3 +1,4 @@
+import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
 import { messages as copy0 } from "../i18n/messages/pages--Booking";
 import { messages as copy1 } from "../i18n/messages/a11y--present";
@@ -7,6 +8,11 @@ import { messages as copy4 } from "../i18n/messages/storage-allow-list";
 import { messages as copy5 } from "../i18n/messages/journey-desk";
 import { messages as copy6 } from "../i18n/messages/refund-return";
 import { messages as copy7 } from "../i18n/messages/workspace--registry";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { connectedHandler } from "../connectivity/write-guard";
+import { ValidatedForm } from "../forms/ValidatedForm";
+import { field } from "../forms/validation";
+import { AsyncState } from "../components/AsyncState";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ProtocolError, type Booking, type Hold, type Performance } from "@kix/protocol-adapter";
@@ -15,7 +21,7 @@ import { AmountNotice, DeadlineLine, StatusMark } from "../a11y/marks";
 import { bookingQuantityNumber, capacityLine, presentQuantityLine } from "../a11y/present";
 import { useT } from "../i18n/desk-context";
 import { useFormatWhen } from "../i18n/locale-context";
-import { protocol } from "../protocol";
+import { protocol } from "../connectivity/desk-protocol";
 import { deskText } from "../i18n/desk-translate";
 import { SafeText } from "../safe-text";
 import { useAdmissionDesk } from "../admission-desk";
@@ -28,7 +34,7 @@ import { RefundReturnPanel } from "./RefundReturnPanel";
 import { ReservationPanel } from "./ReservationPanel";
 
 export function BookingPage() {
-  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
+  const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
   const formatWhen = useFormatWhen();
   const { eventId = "" } = useParams();
   const [performance, setPerformance] = useState<Performance | null>(null);
@@ -103,6 +109,7 @@ export function BookingPage() {
   }
 
   async function placeHold() {
+    if (!connectedHandler()) return;
     const count = bookingQuantityNumber(quantity);
     if (count === null) {
       keepQuantity(deskCopy.en["desk.booking.quantityError"]);
@@ -121,6 +128,7 @@ export function BookingPage() {
   }
 
   async function releaseHold() {
+    if (!connectedHandler()) return;
     if (!hold) {
       return;
     }
@@ -140,6 +148,7 @@ export function BookingPage() {
   }
 
   async function confirm() {
+    if (!connectedHandler()) return;
     if (!hold) {
       return;
     }
@@ -159,9 +168,8 @@ export function BookingPage() {
   if (!performance && !error && !resolved) {
     return (
       <section>
-        <p className="muted" role="status">
-          <StatusMark kind="loading" /> {t("desk.performance.singleLoading")}
-        </p>
+        <AsyncState kind="loading" label={t("merge.booking")}><p>{t("desk.performance.singleLoading")}
+        </p></AsyncState>
         <JourneyPanel variant="booking" model={journey} />
         <RefundReturnPanel live={refundDesk} variant="booking" />
       </section>
@@ -171,9 +179,9 @@ export function BookingPage() {
   if (!performance) {
     return (
       <section>
-        <p className="alert" role="alert">
-          <StatusMark kind="blocked" /> {error ? deskText(t, error) : t("desk.performance.missing")}
-        </p>
+        <AsyncState kind={error ? "error" : "empty"} label={t("merge.booking")}>
+          <p>{error ? deskText(t, error) : t("desk.performance.missing")}</p>
+        </AsyncState>
         <p className="muted">
           {t("desk.performance.requested")} <SafeText value={eventId} />
         </p>
@@ -201,9 +209,7 @@ export function BookingPage() {
           <StatusMark kind="loading" /> {t("desk.booking.oneAttempt")}</p>
       ) : null}
       {error ? (
-        <p id="booking-error" className="alert" role="alert">
-          <StatusMark kind="blocked" /> {deskText(t, error)}
-        </p>
+        <AsyncState id="booking-error" kind="error" label={t("merge.booking")}><p>{deskText(t, error)}</p></AsyncState>
       ) : null}
       {booking ? (
         <article className="ticket">
@@ -241,7 +247,7 @@ export function BookingPage() {
           </div>
         </article>
       ) : (
-        <form
+        <ValidatedForm id="booking-form" busy={pending} fields={[field("booking-quantity", "validation.label.quantity", { kind: "bookingQuantity" })]}
           className="panel"
           onSubmit={(event) => {
             event.preventDefault();
@@ -276,7 +282,7 @@ export function BookingPage() {
           <div className="row-actions">
             {hold ? (
               <>
-                <button
+                <ConnectivityWriteButton
                   id="booking-release"
                   type="button"
                   className="ghost"
@@ -284,18 +290,18 @@ export function BookingPage() {
                   onClick={() => void releaseHold()}
                 >
                   {t("desk.booking.release")}
-                </button>
-                <button id="booking-confirm" type="submit" disabled={pending}>
+                </ConnectivityWriteButton>
+                <ConnectivityWriteButton id="booking-confirm" type="submit" disabled={pending}>
                   {t("desk.booking.confirm")}
-                </button>
+                </ConnectivityWriteButton>
               </>
             ) : (
-              <button id="booking-place" type="submit" disabled={pending}>
+              <ConnectivityWriteButton id="booking-place" type="submit" disabled={pending}>
                 {t("desk.booking.place")}
-              </button>
+              </ConnectivityWriteButton>
             )}
           </div>
-        </form>
+        </ValidatedForm>
       )}
       <JourneyPanel variant="booking" model={journey} />
       <ReservationPanel

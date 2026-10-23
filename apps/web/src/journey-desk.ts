@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/journey-desk";
 import { sourceMessage } from "./i18n/source-message";
+import { connectivityInvoker, connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 import {
   BookingJourney,
@@ -12,7 +13,7 @@ import {
 import type { JourneyInvokerSource, JourneySource } from "@kix/protocol-adapter";
 import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 import { journeySource } from "./journey-source";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 /**
  * M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
@@ -241,7 +242,7 @@ export class JourneyDesk {
       attempt,
       pending: false,
       localHalt: false,
-      journey: this.deps.source ? new BookingJourney(this.deps.source.invoker) : null,
+      journey: this.deps.source ? new BookingJourney(connectivityInvoker(this.deps.source.invoker)) : null,
       steps: blankSteps(),
     };
     this.records.set(eventId, record);
@@ -249,6 +250,7 @@ export class JourneyDesk {
   }
 
   async send(eventId: string, step: JourneyStep): Promise<void> {
+    if (!connectedHandler()) return;
     if (eventId.length === 0) {
       return;
     }

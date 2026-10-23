@@ -3,7 +3,10 @@ import { messages as copy0 } from "../i18n/messages/pages--Admission";
 import { messages as copy1 } from "../i18n/messages/admission-desk";
 import { messages as copy2 } from "../i18n/messages/reservation-desk";
 import { messages as copy3 } from "../i18n/messages/storage-allow-list";
-import { useState, type FormEvent } from "react";
+import type { ValidationHandle } from "../forms/useFormValidation";
+import { ValidatedForm } from "../forms/ValidatedForm";
+import { field } from "../forms/validation";
+import { useRef, useState, type FormEvent } from "react";
 import { useT } from "../i18n/desk-context";
 import { useSearchParams } from "react-router-dom";
 import { useAdmissionDesk } from "../admission-desk";
@@ -13,6 +16,8 @@ import { SafeText } from "../safe-text";
 import { ReservationPanel } from "./ReservationPanel";
 
 export function AdmissionPage() {
+  const gateValidation = useRef<ValidationHandle>(null);
+  const eventValidation = useRef<ValidationHandle>(null);
   const t = useT(deskCopy, copy0, copy1, copy2, copy3);
   const [params] = useSearchParams();
   const [gateId, setGateId] = useState("gate-main");
@@ -27,10 +32,10 @@ export function AdmissionPage() {
         <h2>{t("desk.admission.title")}</h2>
         <p className="muted">{t("desk.admission.note")}</p>
       </header>
-      <form className="panel" onSubmit={(event: FormEvent) => event.preventDefault()}>
+      <ValidatedForm id="admission-gate-form" validationRef={gateValidation} fields={[field("admission-gate", "validation.label.gate")]} className="panel" onSubmit={(event: FormEvent) => event.preventDefault()}>
         <label>
           {t("desk.admission.gate")}
-          <input value={gateId} onChange={(event) => setGateId(event.target.value)} autoComplete="off" />
+          <input id="admission-gate" value={gateId} onChange={(event) => setGateId(event.target.value)} autoComplete="off" />
         </label>
         <p className="muted">{t("desk.admission.gateNote")}</p>
         {params.get("rightsRef") ? (
@@ -38,24 +43,24 @@ export function AdmissionPage() {
             {t("desk.admission.linked")} <SafeText value={params.get("rightsRef")} />{t("desk.admission.linkedNote")}
           </p>
         ) : null}
-      </form>
-      <form className="panel" onSubmit={(event) => {
+      </ValidatedForm>
+      <ValidatedForm id="admission-event-form" validationRef={eventValidation} fields={[field("admission-event", "validation.label.eventId")]} className="panel" onSubmit={(event) => {
         event.preventDefault();
         setEventId(eventId.trim());
       }}>
         <label>
           {t("desk.performance.id")}
-          <input value={eventId} onChange={(event) => setEventId(event.target.value)} autoComplete="off" />
+          <input id="admission-event" value={eventId} onChange={(event) => setEventId(event.target.value)} autoComplete="off" />
         </label>
         <button type="submit">{t("desk.performance.loadCase")}</button>
-      </form>
+      </ValidatedForm>
       <AdmissionCredentialPanel
         title={eventId.trim() || t("desk.performance.none")}
         presentation={admission.presentation}
         error={admission.error}
         pending={admission.pending}
         commands
-        onCommand={(command) => void admission.run(command)}
+        onCommand={(command) => { if (gateValidation.current?.validate() && eventValidation.current?.validate()) void admission.run(command); }}
       />
       <ReservationPanel
         variant="admission"
@@ -65,7 +70,7 @@ export function AdmissionPage() {
         eventReady={eventId.trim().length > 0}
         error={reservation.error}
         pending={reservation.pending}
-        onCommand={(command) => void reservation.run(command)}
+        onCommand={(command) => { if (eventValidation.current?.validate()) void reservation.run(command); }}
       />
     </section>
   );

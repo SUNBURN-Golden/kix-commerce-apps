@@ -89,6 +89,7 @@ export function ErrorPanel({
   if (fault.kind === "screen-load-error") {
     return (
       <section className="shell-error" role="alert" aria-labelledby="shell-error-title" data-scope={scope} data-cause={fault.kind}>
+        {scope === "app" ? <p className="demo-mark" data-demo="synthetic">{t("demo.mark")}</p> : null}
         <h2 id="shell-error-title" ref={heading} tabIndex={-1}>
           {t("error.load.title")}
         </h2>
@@ -119,6 +120,7 @@ export function ErrorPanel({
   }
   return (
     <section className="shell-error" role="alert" aria-labelledby="shell-error-title" data-scope={scope} data-cause={fault.kind}>
+      {scope === "app" ? <p className="demo-mark" data-demo="synthetic">{t("demo.mark")}</p> : null}
       <h2 id="shell-error-title" ref={heading} tabIndex={-1}>
         {t("error.render.title")}
       </h2>

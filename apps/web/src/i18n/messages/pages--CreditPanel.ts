@@ -1,9 +1,10 @@
+import { c140, c139 } from "./shared-copy";
 export const messages = {
   en: {
     "s99": "Available credit",
     "s9a": "Available credit, a pending draw, outstanding exposure, and repayment are mock phase amounts. Economic finality claimed stays false. Funds executed stays false. A bound draw waits for a mock COMMITTED settlement view. A failed mock settlement does not move funds. Reconcile matched is process-local. This case does not change a booking or a resale holder.",
     "s9o": "Bank debit observed",
-    "si7": "Economic finality claimed",
+    "si7": c139,
     "sko": "External credit",
     "sm9": "Funds executed",
     "snm": "Idempotency key",
@@ -13,7 +14,7 @@ export const messages = {
     "ss7": "Matched (process-local)",
     "ssp": "mock",
     "st0": "Mock phase",
-    "st7": "Mock settlement commit observed",
+    "st7": c140,
     "ssq": "MOCK_CREDIT_F04_ONLY",
     "st8": "Mode",
     "str": "No",

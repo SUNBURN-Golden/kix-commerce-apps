@@ -1,8 +1,10 @@
+import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { messages as copy0 } from "../i18n/messages/pages--CrossSurfaceJourneysPanels";
 import { messages as copy1 } from "../i18n/messages/cross-surface-journeys";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { AsyncState } from "../components/AsyncState";
 import { useState } from "react";
 import { useRestoreFocus } from "../a11y/focus";
 import { CROSS_SURFACE_SCENARIOS, type CrossSurfaceFilter, type CrossSurfaceScenario } from "@kix/protocol-adapter";
@@ -41,7 +43,7 @@ function Synthetic() {
  * skipped by the keyboard, so its reason would never be reached.
  */
 function GuardedButton({ id, label, control, onPress }: { id: string; label: string; control: XsControl; onPress: () => void }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   const reasonId = `${id}-reason`;
   return (
     <span className="refund-guard">
@@ -84,7 +86,7 @@ function Select({
   anyLabel: string;
   onChange: (next: string) => void;
 }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <label htmlFor={id}>
       {deskText(t, label)}
@@ -109,7 +111,7 @@ export function CrossSurfaceBanner({
   scenario: CrossSurfaceScenario;
   model: XsModel;
 }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   const stub = environment === "stub";
   return (
     <header className="section-head discovery-section" data-adapter-environment={environment} data-scenario={scenario}>
@@ -141,7 +143,7 @@ export function CrossSurfaceControls({
   model: XsModel;
   actions: XsActions;
 }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   const [draftScenario, setDraftScenario] = useState<CrossSurfaceScenario>(scenario);
   const [journey, setJourney] = useState<string>(filter.journey ?? "");
   const [branch, setBranch] = useState<string>(filter.branch ?? "");
@@ -196,16 +198,16 @@ export function CrossSurfaceControls({
 }
 
 export function CrossSurfaceStatus({ model }: { model: XsModel }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <section id="xs-status" className="discovery-section" aria-labelledby="xs-status-head" tabIndex={-1}>
       <h3 id="xs-status-head">{t("s1mj")}</h3>
-      <p role="status" data-screen-state={model.state}>
-        <StatusMark kind={model.state === "ready" ? "selected" : model.state === "in-progress" ? "loading" : "blocked"} /> {deskText(t, model.statusLine)}
-      </p>
+      {model.state === "in-progress" || model.state === "empty" || model.state === "not-bound" ? (
+        <AsyncState kind={model.state === "in-progress" ? "loading" : model.state} label={t("merge.journeys")} data-screen-state={model.state}><p>{deskText(t, model.statusLine)}</p></AsyncState>
+      ) : <p role="status" data-screen-state={model.state}><StatusMark kind={model.state === "ready" ? "selected" : "blocked"} /> {deskText(t, model.statusLine)}</p>}
       {model.detailLine ? <p className="muted">{deskText(t, model.detailLine)}</p> : null}
       {model.lastLine ? (
-        <p role="status" data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
+        <p role="status" aria-live="polite" aria-busy={false} data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
           {deskText(t, model.lastLine)}
         </p>
       ) : null}
@@ -215,7 +217,7 @@ export function CrossSurfaceStatus({ model }: { model: XsModel }) {
 }
 
 function RowView({ row }: { row: XsRowModel }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <tr data-row={row.id} data-status={row.status} data-compensation={row.compensationState}>
       <th scope="row">
@@ -224,6 +226,7 @@ function RowView({ row }: { row: XsRowModel }) {
         <span className="muted">{deskText(t, row.branch)}</span>
       </th>
       <td>
+        {row.status === "unknown" ? <AsyncState kind="unknown" label={t("merge.journey")} announcement="parent" /> : null}
         <span className="status-word">{deskText(t, row.statusWord)}</span>
         <br />
         <span className="muted">{deskText(t, row.basis)}</span>
@@ -268,7 +271,7 @@ function RowView({ row }: { row: XsRowModel }) {
 }
 
 export function CrossSurfaceTableSection({ model }: { model: XsModel }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <section id="xs-table" className="discovery-section" aria-labelledby="xs-table-head">
       <h3 id="xs-table-head">{t("spm")}</h3>
@@ -306,7 +309,7 @@ export function CrossSurfaceTableSection({ model }: { model: XsModel }) {
 }
 
 export function CrossSurfaceNotComposed({ model }: { model: XsModel }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <section id="xs-not-composed" className="discovery-section" aria-labelledby="xs-not-composed-head">
       <h3 id="xs-not-composed-head">{t("s1ds")}</h3>
@@ -324,7 +327,7 @@ export function CrossSurfaceNotComposed({ model }: { model: XsModel }) {
 }
 
 export function CrossSurfaceSession({ model }: { model: XsModel }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <section id="xs-session" className="discovery-section" aria-labelledby="xs-session-head">
       <h3 id="xs-session-head">{t("s1js")}</h3>
@@ -343,7 +346,7 @@ export interface CrossSurfaceLive {
 
 /** The whole screen. It reads what the model holds and sends no command. */
 export function CrossSurfacePanel({ live }: { live: CrossSurfaceLive }) {
-  const t = useT(copy0, copy1, copy2);
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   const model = live.model;
   // A dropped, refused, or unavailable read takes focus to the status region.
   useRestoreFocus(model.lastNeedsFocus && model.lastSeq !== null ? String(model.lastSeq) : null, "xs-status");

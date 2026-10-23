@@ -3,6 +3,7 @@ import { messages as copy1 } from "../i18n/messages/tenant-permissions";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   TENANT_ACTORS,
@@ -80,7 +81,7 @@ function GuardedButton({
   const pointer = control.reason ? (describedBy ?? reasonId) : undefined;
   return (
     <>
-      <button
+      <ConnectivityWriteButton inspection={id === "tenant-export"}
         type="button"
         id={id}
         className="discovery-action"
@@ -90,7 +91,7 @@ function GuardedButton({
         onClick={control.enabled ? onPress : undefined}
       >
         {deskText(t, label)}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason && describedBy === undefined ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word={t("status.transport.blocked")} /> {deskText(t, control.reason)}
@@ -243,8 +244,8 @@ export function TenantControls({
           {t("s1o3")}{deskText(t, TENANT_OWN)} / {deskText(t, TENANT_FOREIGN)})
         </button>
         <GuardedButton id="tenant-export" label={t("srg")} control={model.exportControl} onPress={() => actions.loadExport()} />
-        <button type="button" id="tenant-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          {t("s1m2")}</button>
+        <ConnectivityWriteButton type="button" id="tenant-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+          {t("s1m2")}</ConnectivityWriteButton>
       </div>
       <div className="discovery-controls" role="group" aria-label={t("sgn")}>
         <label htmlFor="tenant-focus-ref">

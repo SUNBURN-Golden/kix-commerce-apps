@@ -15,7 +15,7 @@ import { consentDesk, type ConsentDeskSnapshot } from "./consent-desk";
 import { giftDesk, type GiftDeskSnapshot } from "./gift-desk";
 import { journeyDesk, type JourneyDeskSnapshot } from "./journey-desk";
 import { organizerDesk, type OrganizerDeskSnapshot } from "./organizer-desk";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 import {
   PLACE_HOLD_RECORD,
   TRACK_STATE_CONTRACT,

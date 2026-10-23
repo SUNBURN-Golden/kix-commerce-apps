@@ -57,7 +57,7 @@ export function HelpPage() {
                 {STATUS_WORD_GUIDE.filter((item) => item.kind === kind).map((item) => (
                   <tr key={item.word} data-word={item.word}>
                     <td>
-                      <code>{deskText(t, item.word)}</code>
+                      <code>{item.word}</code>
                     </td>
                     <td>{deskText(t, item.meaning)}</td>
                     <td>{deskText(t, item.doText)}</td>

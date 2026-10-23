@@ -538,7 +538,7 @@ describe("a changed producer tuple", () => {
     expect(outcome).toMatchObject({ kind: "tuple-changed", field: "protocolMergeSha", expected: "0".repeat(40) });
     expect(Object.keys(outcome)).not.toContain("snapshot");
     expect(await port.readExport(exportRequest())).toMatchObject({ kind: "tuple-changed", field: "protocolMergeSha" });
-    const sdk = createStubMerchantOperations({ expectedTuple: { ...DISCOVERY_READ_TUPLE_LITERALS, sdkDigest: "sha256:x" as unknown as null } });
+    const sdk = createStubMerchantOperations({ expectedTuple: { ...DISCOVERY_READ_TUPLE_LITERALS, sdkDigest: "sha256:x" } });
     expect(await sdk.read(readRequest())).toMatchObject({ kind: "tuple-changed", field: "sdkTuple" });
   });
 });

@@ -4,6 +4,7 @@ import { messages as copy1 } from "../i18n/messages/platform-journey";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useState, type ReactNode } from "react";
 import { PLATFORM_SCENARIOS, PLATFORM_TIERS, type PlatformScenario, type PlatformTier } from "@kix/protocol-adapter";
 import { AmountNotice, StatusMark } from "../a11y/marks";
@@ -69,7 +70,7 @@ function GuardedButton({
   const reasonId = `${id}-reason`;
   return (
     <>
-      <button
+      <ConnectivityWriteButton
         type="button"
         id={id}
         className="discovery-action"
@@ -79,7 +80,7 @@ function GuardedButton({
         onClick={control.enabled ? onPress : undefined}
       >
         {deskText(t, label)}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word={t("status.transport.blocked")} /> {deskText(t, control.reason)}
@@ -157,8 +158,8 @@ export function PlatformControls({
           {t("s1ax")}</button>
         <button type="button" id="platform-switch" className="discovery-action" onClick={() => actions.switchContext()}>
           {t("s1nz")}</button>
-        <button type="button" id="platform-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          {t("s1m2")}</button>
+        <ConnectivityWriteButton type="button" id="platform-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+          {t("s1m2")}</ConnectivityWriteButton>
         <button
           type="button"
           id="platform-deliver-held"

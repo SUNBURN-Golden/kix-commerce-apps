@@ -4,6 +4,7 @@ import { messages as copy2 } from "../i18n/messages/handoff--packet";
 import { messages as copy3 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { QUALIFICATION_SCENARIOS, type QualificationScenario } from "@kix/protocol-adapter";
 import { StatusMark } from "../a11y/marks";
 import {
@@ -83,7 +84,7 @@ export function QualificationControls({
             </option>
           )))}
         </select>
-        <button
+        <ConnectivityWriteButton
           type="button"
           id="oq-run"
           className="discovery-action"
@@ -92,7 +93,7 @@ export function QualificationControls({
           data-enabled={model.runControl.enabled ? "true" : "false"}
           onClick={model.runControl.enabled ? () => actions.run() : undefined}
         >
-          {t("s1i0")}</button>
+          {t("s1i0")}</ConnectivityWriteButton>
         {model.runControl.reason ? (
           <p id="oq-run-reason" className="muted">
             {deskText(t, model.runControl.reason)}
@@ -112,8 +113,8 @@ export function QualificationControls({
           {t("sn5")}</p>
         <button type="button" id="oq-switch-actor" className="discovery-action" onClick={() => actions.switchActor()}>
           {t("s1o4")}</button>
-        <button type="button" id="oq-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          {t("sto")}</button>
+        <ConnectivityWriteButton type="button" id="oq-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+          {t("sto")}</ConnectivityWriteButton>
       </div>
     </section>
   );

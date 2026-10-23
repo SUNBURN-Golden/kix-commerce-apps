@@ -1,0 +1,21 @@
+{
+  "profile": "linux-d29b2e9b",
+  "platform": "linux",
+  "chrome": "155.0.8059.84",
+  "fontWidths": {
+    "stack0.latin": "175.12",
+    "stack0.korean": "174.40",
+    "stack1.latin": "160.78",
+    "stack1.korean": "175.98",
+    "stack2.latin": "160.78",
+    "stack2.korean": "175.98"
+  },
+  "cjkGlyphs": "present",
+  "tolerance": {
+    "channelDelta": 8,
+    "maxDiffPpm": 200
+  },
+  "appHead": "8eac25aa6f0b2b0a14ce9e40848cfc56d2e5102e",
+  "recordedOn": "2026-10-23",
+  "shots": 32
+}

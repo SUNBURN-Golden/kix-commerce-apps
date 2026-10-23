@@ -1,3 +1,4 @@
+import { KIX_SDK_0_CONSUMPTION_DIGESTS } from "../src/sdk-consumption-tuple.js";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -48,7 +49,7 @@ async function readOnce(outcome: Promise<DiscoveryReadOutcome>): Promise<Discove
 }
 
 describe("discovery read tuple", () => {
-  it("binds the read to the live pin tuple and consumes no SDK", () => {
+  it("binds the read to the live pin tuple and consumed SDK", () => {
     expect(DISCOVERY_READ_RULING).toBe(
       "M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce",
     );
@@ -59,15 +60,31 @@ describe("discovery read tuple", () => {
     expect(live.gateOpenApiSha256).toBe(DISCOVERY_READ_TUPLE_LITERALS.gateOpenApiSha256);
     expect(live.protocolMergeSha).toBe(DISCOVERY_READ_TUPLE_LITERALS.protocolMergeSha);
     expect(live.pinnedActions).toEqual(DISCOVERY_READ_TUPLE_LITERALS.pinnedActions);
-    expect(DISCOVERY_READ_TUPLE_LITERALS.sdkDigest).toBeNull();
-    expect(DISCOVERY_READ_TUPLE_LITERALS.manifestDigest).toBeNull();
-    expect(DISCOVERY_READ_TUPLE_LITERALS.vectorDigest).toBeNull();
+    expect(DISCOVERY_READ_TUPLE_LITERALS.sdkDigest).toBe(KIX_SDK_0_CONSUMPTION_DIGESTS.sdkDigest);
+    expect(DISCOVERY_READ_TUPLE_LITERALS.manifestDigest).toBe(KIX_SDK_0_CONSUMPTION_DIGESTS.manifestDigest);
+    expect(DISCOVERY_READ_TUPLE_LITERALS.vectorDigest).toBe(KIX_SDK_0_CONSUMPTION_DIGESTS.vectorDigest);
     const workflow = readFileSync(path.join(repoRoot, ".github/workflows/ci.yml"), "utf8");
     const pinned = workflow.match(/KIX_PROTOCOL_GATE_SHA: ([0-9a-f]{40})/);
     expect(pinned?.[1]).toBe(DISCOVERY_READ_TUPLE_LITERALS.protocolMergeSha);
     expect(OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha).toBe(
       DISCOVERY_READ_TUPLE_LITERALS.protocolMergeSha,
     );
+  });
+
+  it.each(["sdkDigest", "manifestDigest", "vectorDigest"] as const)("fences %s drift before rows", async (field) => {
+    for (const value of ["changed", null]) {
+      let materialized = 0;
+      const expectedTuple = { ...DISCOVERY_READ_TUPLE_LITERALS, [field]: value as unknown as string };
+      const mismatch = checkDiscoveryReadTuple(expectedTuple);
+      expect(mismatch).toEqual({ field: "sdkTuple", expected: `${field}:${value}`, actual: `${field}:${KIX_SDK_0_CONSUMPTION_DIGESTS[field]}` });
+      const port = createStubDiscoveryRead({ expectedTuple, rowCount: 100, rowAt: (index) => {
+        materialized += 1;
+        return lazyDiscoveryRow(index);
+      } });
+      expect(await port.readPage(requestOf())).toMatchObject({ kind: "tuple-changed", field: "sdkTuple" });
+      expect(await port.readRow("pro-0001", SCOPE)).toMatchObject({ kind: "tuple-changed", field: "sdkTuple" });
+      expect(materialized).toBe(0);
+    }
   });
 
   it("detects a changed projection tuple before any row is read", async () => {

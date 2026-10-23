@@ -1,3 +1,5 @@
+import { DISCOVERY_READ_TUPLE_LITERALS } from "../src/discovery-read.js";
+import { KIX_SDK_0_CONSUMPTION_DIGESTS } from "../src/sdk-consumption-tuple.js";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -50,10 +52,10 @@ describe("platform release packet", () => {
     expect(packet.candidate.producer.contractOpenApiSha256.length).toBeGreaterThan(0);
     expect(packet.candidate.producer.gateOpenApiSha256.length).toBeGreaterThan(0);
     expect(packet.candidate.producer.protocolMergeSha.length).toBeGreaterThan(0);
-    expect(packet.candidate.producer.sdkDigest).toBeNull();
-    expect(packet.candidate.producer.manifestDigest).toBeNull();
-    expect(packet.candidate.producer.vectorDigest).toBeNull();
-    expect(packet.candidate.producer.consumedProducerChange).toBe(false);
+    expect(packet.candidate.producer.sdkDigest).toBe(KIX_SDK_0_CONSUMPTION_DIGESTS.sdkDigest);
+    expect(packet.candidate.producer.manifestDigest).toBe(KIX_SDK_0_CONSUMPTION_DIGESTS.manifestDigest);
+    expect(packet.candidate.producer.vectorDigest).toBe(KIX_SDK_0_CONSUMPTION_DIGESTS.vectorDigest);
+    expect(packet.candidate.producer.consumedProducerChange).toBe(true);
     expect(packet.candidate.consumer.fixtureScreens).toBe(FIXTURE_SCREENS.length);
     expect(packet.candidate.artifact.digest).toBeNull();
     expect(packet.candidate.artifact.deployed).toBe(false);
@@ -246,6 +248,13 @@ describe("platform release packet", () => {
     expect(releaseRunnerPortFor("stub").source).toBe("synthetic-release");
   });
 
+  it.each(["sdkDigest", "manifestDigest", "vectorDigest"] as const)("refuses %s drift before building a packet", async (field) => {
+    for (const value of ["changed", null]) {
+      const port = createStubReleaseRunner({ expectedTuple: { ...DISCOVERY_READ_TUPLE_LITERALS, [field]: value as unknown as string } });
+      expect(await port.run({ contextKey: CTX, intentRef: "digest-drift" })).toMatchObject({ kind: "tuple-changed", field: "sdkTuple" });
+    }
+  });
+
   it("fails closed when the pin tuple changes", async () => {
     const port = createStubReleaseRunner({
       expectedTuple: {
@@ -258,9 +267,7 @@ describe("platform release packet", () => {
         sourceProtocolContractSha256: "x",
         domain: "kix:fixture:lifecycle:0.3",
         pinnedActions: [],
-        sdkDigest: null,
-        manifestDigest: null,
-        vectorDigest: null,
+        ...KIX_SDK_0_CONSUMPTION_DIGESTS,
       },
     });
     const outcome = await port.run({ contextKey: CTX, intentRef: "rel-tuple" });

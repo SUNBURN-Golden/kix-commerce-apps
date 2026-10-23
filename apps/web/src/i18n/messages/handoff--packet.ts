@@ -1,5 +1,7 @@
 export const messages = {
   en: {
+    "merge.sdkNote": "The p-sdk-0 BOOTSTRAP tuple is vendored and pin-checked. The SDK tuple was consumed; the catalogue, the gate, and the five pins did not move. BOOTSTRAP grants catalogue-schema binding only. No live connection and no semantic conformance.",
+
     "sa": "a case closure is not an extinguished debt",
     "s1z": "A failed live call is not replaced with a stub success.",
     "s2c": "a hidden control is never enforcement",
@@ -136,6 +138,8 @@ export const messages = {
     "p.t184": "{v1}{v2} Retry is off. Stub fallback is off.",
   },
   ko: {
+    "merge.sdkNote": "p-sdk-0 BOOTSTRAP 튜플을 저장하고 pin을 검사했습니다. SDK 튜플을 소비했으며 목록·게이트·다섯 pin은 바뀌지 않았습니다. BOOTSTRAP은 catalogue-schema binding만 부여합니다. 실제 연결이나 의미 적합성을 뜻하지 않습니다.",
+
     "sa": "사례 종료는 채무 소멸이 아닙니다",
     "s1z": "실제 호출의 오류를 stub의 정상 결과로 대체하지 않습니다.",
     "s2c": "제어 숨김은 권한 집행이 아닙니다",

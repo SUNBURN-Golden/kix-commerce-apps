@@ -1,5 +1,11 @@
 # Notification inbox stub apps bind
 
+## Consumption evidence correction — 2026-10-23
+
+Recorded option (b) now binds the consumed p-sdk-0 BOOTSTRAP SDK, manifest, and vector digests into fixture catalogue v2, discovery's shared synthetic-port checks, release, qualification, and handoff. See [audit-6-decision-apps-bind.md](audit-6-decision-apps-bind.md) for the owner ruling, current tuple, historical v1, consumer mapping, verification, and boundaries. Unavailable domain producer tuples retain nulls and NOT_BOUND. BOOTSTRAP remains `catalogue-schema-binding only`; this grants no qualification or release authority.
+
+The original delivery description and run records below are historical. Any statement there that consumption digests stay null describes v1 at that delivery, not the current app evidence tuple. Both OpenAPI pins, `PINNED_ACTIONS`, the CI gate SHA, `protocolMergeSha`, and locked desk bindings are unchanged.
+
 This bind is the stub-scoped notification inbox at `/notifications`. It is the synthetic reduction of pending node `c-notification-inbox`: the real connection stays pending on `kix-protocol:k-operator-contract`, and the pending node stays unimplemented. This node wires the notification seam — a feed of producer-contracted event kinds only, dedupe on the source's own key, read state, notification grants with generations and revocation, watermark and generation currentness, sensitive detail shown only under `read-sensitive`, offered actions that move the person to the current authority query or the support material, and the redacted inquiry material itself — onto a deterministic synthetic source. It is not a producer connection and does not claim one, an arrival confirms no economic effect, and a hidden control is never enforcement: the source checks every read, inquiry, and request on its own, and the tests send calls straight to the port to prove the screen is not the boundary.
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.

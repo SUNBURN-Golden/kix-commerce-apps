@@ -1,3 +1,4 @@
+import { KIX_SDK_0_CONSUMPTION_DIGESTS } from "../src/sdk-consumption-tuple.js";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -349,9 +350,7 @@ describe("cross-surface port", () => {
         sourceProtocolContractSha256: "x",
         domain: "kix:fixture:lifecycle:0.3",
         pinnedActions: [],
-        sdkDigest: null,
-        manifestDigest: null,
-        vectorDigest: null,
+        ...KIX_SDK_0_CONSUMPTION_DIGESTS,
       },
     });
     const outcome = await port.read({ contextKey: CTX, intentRef: "xs-t" });

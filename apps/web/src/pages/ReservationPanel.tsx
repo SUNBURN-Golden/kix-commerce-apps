@@ -3,6 +3,7 @@ import { messages as copy0 } from "../i18n/messages/pages--ReservationPanel";
 import { messages as copy1 } from "../i18n/messages/a11y--present";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { ReservationCaseView } from "@kix/protocol-adapter";
 import { DeadlineLine, StatusMark } from "../a11y/marks";
 import { useFormatWhen } from "../i18n/locale-context";
@@ -167,7 +168,7 @@ export function ReservationPanel({
       </dl>
       <div className="row-actions">
         {deskText(t, controls.map((control) => (
-          <button
+          <ConnectivityWriteButton
             key={control.command}
             type="button"
             className={control.command === "register_show" || control.command === "authorize_admission" ? undefined : "ghost"}
@@ -175,7 +176,7 @@ export function ReservationPanel({
             onClick={() => onCommand(control.command)}
           >
             {deskText(t, control.label)}
-          </button>
+          </ConnectivityWriteButton>
         )))}
       </div>
     </aside>

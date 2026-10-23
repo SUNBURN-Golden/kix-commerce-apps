@@ -1,6 +1,7 @@
 import { messages as copy0 } from "../i18n/messages/pages--AdmissionCredentialPanel";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { AdmissionPresentation } from "@kix/protocol-adapter";
 import { SafeText } from "../safe-text";
 
@@ -94,7 +95,7 @@ export function AdmissionCredentialPanel({
       {commands ? (
         <div className="row-actions">
           {deskText(t, CONTROLS.map((control) => (
-            <button
+            <ConnectivityWriteButton
               key={control.command}
               type="button"
               className={control.command === "adopt_issued" ? undefined : "ghost"}
@@ -102,7 +103,7 @@ export function AdmissionCredentialPanel({
               onClick={() => onCommand?.(control.command)}
             >
               {deskText(t, control.label)}
-            </button>
+            </ConnectivityWriteButton>
           )))}
         </div>
       ) : (

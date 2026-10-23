@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/notification-inbox";
 import { sourceMessage } from "./i18n/source-message";
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The notification inbox on top of the adapter's synthetic inbox source. Stub
  * scope: the default port is the synthetic source. On integration-http the same
@@ -43,7 +44,7 @@ import {
   type NotifyScenario,
   type NotifySyntheticControl,
 } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const NOTIFY_PAGE_TITLE = sourceCopy.en["s11s"];
 
@@ -643,8 +644,8 @@ function createSession(
   actorRef: string,
   role: NotifyRole,
 ): Session {
-  const port = notificationInboxPortFor(environment, { scenario });
-  return { port, controller: new NotificationInboxController(port, { actorRef, role }) };
+  const port = connectivityPort(notificationInboxPortFor(environment, { scenario }), "notification-inbox");
+  return { port, controller: connectivityController(new NotificationInboxController(port, { actorRef, role }), port) };
 }
 
 export function useNotificationInbox(): {
@@ -862,6 +863,6 @@ export function useNotificationInbox(): {
     actorRef,
     role,
     model: buildNotifyModel({ controller: sessionRef.current.controller, last }),
-    actions,
+    actions: connectedActions(actions, ['markRead', 'revokeGrant', 'rotateGrant', 'deliverLate', 'setScenario', 'newSession'], sessionRef.current?.port),
   };
 }

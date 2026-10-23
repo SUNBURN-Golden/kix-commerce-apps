@@ -1,3 +1,4 @@
+import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { sourceMessage } from "../i18n/source-message";
 import { messages as copy0 } from "../i18n/messages/pages--OrganizerWorkspace";
 import { messages as copy1 } from "../i18n/messages/organizer-workspace";
@@ -6,8 +7,13 @@ import { messages as copy3 } from "../i18n/messages/storage-allow-list";
 import { messages as copy4 } from "../i18n/messages/journey-desk";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import type { ValidationHandle } from "../forms/useFormValidation";
+import { ValidatedForm } from "../forms/ValidatedForm";
+import { field } from "../forms/validation";
+import { AsyncState } from "../components/AsyncState";
 import { useEffect, useRef } from "react";
-import { ORGANIZER_COMPOSED, type OrganizerStep } from "@kix/protocol-adapter";
+import { COMMERCE_COMMAND_BINDINGS, ORGANIZER_COMPOSED, type OrganizerStep } from "@kix/protocol-adapter";
 import { focusControl } from "../a11y/focus";
 import { AmountNotice, StatusMark } from "../a11y/marks";
 import {
@@ -26,7 +32,8 @@ export function OrganizerWorkspacePage() {
 }
 
 export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceModel }) {
-  const t = useT(copy0, copy1, copy2, copy3, copy4);
+  const t = useT(mergedCopy, copy0, copy1, copy2, copy3, copy4);
+  const validation = useRef<ValidationHandle>(null);
   const resultsRef = useRef<HTMLHeadingElement>(null);
   const previewFault = model.plan?.items.find((item) => item.state !== "ready") ?? null;
   useEffect(() => {
@@ -69,11 +76,20 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
           <StatusMark kind="blocked" /> {t("s16a")}{model.path.kind === "unavailable" && model.path.code ? t("sd4", { code: model.path.code }) : ""}
         </p>
       ) : null}
-      <p className="organizer-ws-status" role="status">
-        {model.submitting ? <StatusMark kind="loading" /> : null}{" "}
-        {model.submitting ? t("s1nd") : model.results ? deskText(t, model.results.summary) : t("sxv")}
-      </p>
-      <form
+      {model.submitting || !model.results ? (
+        <AsyncState kind={model.submitting ? "loading" : "empty"} label={t("merge.organizerResults")} className="organizer-ws-status">
+          <p>{model.submitting ? t("s1nd") : t("sxv")}</p>
+        </AsyncState>
+      ) : <p className="organizer-ws-status" role="status">{deskText(t, model.results.summary)}</p>}
+      <ValidatedForm id="organizer-workspace-form" validationRef={validation} submitFields={[]} fields={[
+          field("organizer-ws-event-id", "validation.label.eventId"),
+          field("organizer-ws-seats", "validation.label.seats", { kind: "seats" }),
+          field("organizer-ws-quota", "validation.label.quota", { kind: "integer", optional: true }),
+          field("organizer-ws-seconds", "validation.label.seconds", { kind: "integer", optional: true }),
+          field("organizer-ws-inventory-id", "validation.label.inventoryId"),
+          field("organizer-ws-version", "validation.label.version", { kind: "integer" }),
+          field("organizer-ws-recipient", "validation.label.recipient"),
+        ]}
         className="organizer-ws-form"
         onSubmit={(event) => {
           event.preventDefault();
@@ -110,7 +126,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
             {createFields ? (
               <>
                 <label>
-                  {t("s1ir")}<input
+                  {t("s1ir")}<input id="organizer-ws-seats"
                     value={model.editor.draft.seats}
                     autoComplete="off"
                     placeholder={t("sd8")}
@@ -119,7 +135,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
                 </label>
                 <p>{deskText(t, seatsTypedLine(model.editor.draft.seats))}</p>
                 <label>
-                  {t("soq")}<input
+                  {t("soq")}<input id="organizer-ws-quota"
                     value={model.editor.draft.invitationQuota}
                     inputMode="numeric"
                     autoComplete="off"
@@ -128,7 +144,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
                   />
                 </label>
                 <label>
-                  {t("s1g8")}<input
+                  {t("s1g8")}<input id="organizer-ws-seconds"
                     value={model.editor.draft.reservationSeconds ?? ""}
                     inputMode="numeric"
                     autoComplete="off"
@@ -151,7 +167,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
             {inviteFields ? (
               <>
                 <label>
-                  {t("son")}<input
+                  {t("son")}<input id="organizer-ws-inventory-id"
                     value={model.editor.draft.inventoryId}
                     list="organizer-ws-inventory"
                     autoComplete="off"
@@ -168,7 +184,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
                   <p>{t("s1dd")}</p>
                 ) : null}
                 <label>
-                  {t("sk7")}<input
+                  {t("sk7")}<input id="organizer-ws-version"
                     value={model.editor.draft.expectedInventoryVersion}
                     inputMode="numeric"
                     autoComplete="off"
@@ -177,7 +193,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
                   />
                 </label>
                 <label>
-                  {t("s1di")}<input
+                  {t("s1di")}<input id="organizer-ws-recipient"
                     value={model.editor.draft.recipient}
                     autoComplete="off"
                     onChange={(event) => model.setEditor({ draft: { recipient: event.target.value } })}
@@ -186,7 +202,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
               </>
             ) : null}
             <p className="muted">{t("s21x")}</p>
-            <button type="button" className="organizer-ws-button" onClick={model.addRow}>
+            <button type="button" className="organizer-ws-button" onClick={() => { if (validation.current?.validate()) model.addRow(); }}>
               {t("s17")}</button>
           </div>
           <div className="panel organizer-ws-list">
@@ -244,10 +260,10 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
               </table>
             </div>
           ) : null}
-          <button type="submit" className="organizer-ws-button" disabled={!model.canSubmit}>
-            {t("s1na")}</button>
+          <ConnectivityWriteButton type="submit" className="organizer-ws-button" disabled={!model.canSubmit}>
+            {t("s1na")}</ConnectivityWriteButton>
         </fieldset>
-      </form>
+      </ValidatedForm>
       <div className="panel organizer-ws-results">
         <h3 id="organizer-ws-results" tabIndex={-1} ref={resultsRef}>
           {t("s1gl")}</h3>
@@ -296,7 +312,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
             <div key={entry.method}>
               <dt>{deskText(t, entry.method)}</dt>
               <dd>
-                {deskText(t, entry.consideredAction) ?? t("common.empty")} {t("s10b")}{" "}{deskText(t, entry.reason)}
+                <AsyncState kind="not-bound" label={t("merge.organizerDesk")} binding={{ method: entry.method, record: COMMERCE_COMMAND_BINDINGS[entry.method] }} />
               </dd>
             </div>
           )))}

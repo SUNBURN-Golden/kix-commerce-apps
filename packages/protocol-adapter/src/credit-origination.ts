@@ -16,7 +16,7 @@ import { PLATFORM_HOLD_NOT_BOUND, PLATFORM_NOT_COMPOSED } from "./platform-journ
  * c-finance-projection, and c-journey-identity. The contract-only catalogue has no
  * credit command and no read command for a claim basis, a policy revision, a consent,
  * a document, a review decision, a commitment, or a drawdown permission. No producer
- * tuple exists, so the desk is NOT_BOUND on integration-http. No SDK, manifest, or
+ * tuple exists, so the desk is NOT_BOUND on integration-http. No domain producer SDK, manifest, or
  * vector is consumed, and this module sends nothing over a network.
  *
  * Nothing here composes a catalogue command: no money posting is sent, and the

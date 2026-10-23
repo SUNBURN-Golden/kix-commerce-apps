@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, expect, inject } from "vitest";
 import type { Page } from "playwright-core";
-import { networkCalls, openSession, type Session } from "./browser";
+import { networkCalls, openSession, type Session, type SessionOptions } from "./browser";
 import { recordCheck, recordLedger } from "./run-record";
 
 export interface Suite {
@@ -17,12 +17,13 @@ export interface Suite {
 }
 
 /** One browser per test file. At the end the ledger must show no external request and no non-GET request. */
-export function useBrowser(): Suite {
+export function useBrowser(options: SessionOptions = {}): Suite {
   const origin = inject("origin");
   const faultOrigin = (inject as (key: string) => unknown)("faultOrigin") as string | undefined;
+  const galleryOrigin = (inject as (key: string) => unknown)("galleryOrigin") as string | undefined;
   let current: Session | null = null;
   beforeAll(async () => {
-    current = await openSession(origin, faultOrigin ? [faultOrigin] : []);
+    current = await openSession(origin, [faultOrigin, galleryOrigin].filter((value): value is string => value !== undefined), options);
   });
   afterAll(async () => {
     if (!current) {

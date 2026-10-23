@@ -16,7 +16,7 @@ import { PLATFORM_HOLD_NOT_BOUND, PLATFORM_NOT_COMPOSED } from "./platform-journ
  * credit command and no read command for a draw instruction, a disbursement
  * observation, a reservation, an exposure, a repayment schedule, a payment
  * allocation, a reversal, an adjustment, or a servicing case. No producer tuple
- * exists, so the desk is NOT_BOUND on integration-http. No SDK, manifest, or vector
+ * exists, so the desk is NOT_BOUND on integration-http. No domain producer SDK, manifest, or vector
  * is consumed, and this module sends nothing over a network.
  *
  * Nothing here composes a catalogue command: no money posting is sent, and the

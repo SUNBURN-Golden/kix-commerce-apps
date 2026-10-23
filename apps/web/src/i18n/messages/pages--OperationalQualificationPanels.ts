@@ -1,3 +1,4 @@
+import { c141 } from "./shared-copy";
 export const messages = {
   en: {
     "s2g": "A journey closes on the terminal state of its whole leg sequence. A per-call confirmed inside it never closes it.",
@@ -20,7 +21,7 @@ export const messages = {
     "sto": "New synthetic session",
     "sxd": "No quarantined answer.",
     "sy9": "No run sent in this session.",
-    "sw7": "Non-claims, each a literal false:",
+    "sw7": c141,
     "s10r": "Note",
     "s13j": "Observed",
     "s15k": "Operational support, incident handoff, and UI review material",

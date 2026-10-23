@@ -79,6 +79,27 @@ describe("widget keyboard behaviour, disabled reasons, Escape and route change (
     await listbox("/discovery", "Discovery results", "a11y.kbd.listbox.discovery");
   });
 
+  it("projection listbox: keyboard and mouse open detail without nested controls", async () => {
+    const page = await suite.newPage();
+    for (const method of ["keyboard", "mouse"] as const) {
+      await openScreen(page, suite.origin, "/discovery");
+      const list = page.getByRole("listbox", { name: "Synthetic projection rows" });
+      await list.waitFor();
+      expect(await list.locator("button").count()).toBe(0);
+      if (method === "keyboard") {
+        await list.focus();
+        await page.keyboard.press("ArrowDown");
+        await page.keyboard.press("Enter");
+      } else {
+        await list.getByRole("option").first().click();
+      }
+      await page.waitForURL(/\/discovery\/[^/?]+/);
+      await suite.quiet(page, `projection detail by ${method}`);
+    }
+    await suite.pass(page, "a11y.kbd.listbox.projection");
+    await page.close();
+  });
+
   it("inventory listbox: ArrowDown and ArrowUp move aria-activedescendant", async () => {
     await listbox("/inventory", "Seats on this page", "a11y.kbd.listbox.inventory");
   });

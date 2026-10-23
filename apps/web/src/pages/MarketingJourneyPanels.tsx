@@ -3,6 +3,7 @@ import { messages as copy1 } from "../i18n/messages/marketing-journey";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { MARKETING_SCENARIOS, type MarketingScenario } from "@kix/protocol-adapter";
@@ -76,7 +77,7 @@ function GuardedButton({
   const reasonId = `${id}-reason`;
   return (
     <>
-      <button
+      <ConnectivityWriteButton
         type="button"
         id={id}
         className="discovery-action"
@@ -86,7 +87,7 @@ function GuardedButton({
         onClick={control.enabled ? onPress : undefined}
       >
         {deskText(t, label)}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word={t("status.transport.blocked")} /> {deskText(t, control.reason)}
@@ -171,7 +172,7 @@ export function MarketingControls({
             )))}
           </select>
         </label>
-        <button
+        <ConnectivityWriteButton
           type="button"
           id="mkj-apply-scenario"
           className="discovery-action"
@@ -179,13 +180,13 @@ export function MarketingControls({
           aria-describedby={simulated ? undefined : "mkj-scenario-off"}
           onClick={simulated ? () => actions.setScenario(picked) : undefined}
         >
-          {t("s1m5")}</button>
+          {t("s1m5")}</ConnectivityWriteButton>
         <button type="button" id="mkj-refresh" className="discovery-action" onClick={() => actions.refresh()}>
           {t("s1ax")}</button>
         <button type="button" id="mkj-switch" className="discovery-action" onClick={() => actions.switchScope()}>
           {t("s1o2")}</button>
-        <button type="button" id="mkj-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          {t("s1m2")}</button>
+        <ConnectivityWriteButton type="button" id="mkj-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+          {t("s1m2")}</ConnectivityWriteButton>
         <button
           type="button"
           id="mkj-deliver-held"
@@ -208,7 +209,7 @@ export function MarketingControls({
         {t("s1n6")}{" "}{deskText(t, subjectRef)}. {deskText(t, MARKETING_ALT_SUBJECT_NOTE)} {t("s1m4")}</p>
       <div className="discovery-controls" role="group" aria-label={t("s1kn")}>
         {deskText(t, (Object.keys(CONTROL_LABELS) as (keyof typeof CONTROL_LABELS)[]).map((control) => (
-          <button
+          <ConnectivityWriteButton
             key={control}
             type="button"
             id={`mkj-simulate-${control}`}
@@ -219,7 +220,7 @@ export function MarketingControls({
             onClick={simulated ? () => actions.simulate(control) : undefined}
           >
             {deskText(t, CONTROL_LABELS[control])}
-          </button>
+          </ConnectivityWriteButton>
         )))}
       </div>
       <p className="muted" id="mkj-simulate-note">

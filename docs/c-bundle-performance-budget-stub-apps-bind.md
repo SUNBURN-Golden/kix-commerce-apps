@@ -68,7 +68,7 @@ The largest route chunk is `CreditOrigination`, 21649 gzip bytes.
 | `initialCssGzip` | 5000 | gzip bytes of the stylesheets in `index.html` |
 | `chunkJsGzip` | 30000 | gzip bytes of any one JS file that is not initial |
 | `landingJsGzip` | 400000 | gzip bytes of the JS a browser requests on a first load of `/` (the browser suite checks it) |
-| `totalGrowth` | base 527526, ratio 1.2 | all emitted JS and CSS together may not exceed base times ratio (the pre-split total) |
+| `totalGrowth` | base 790000, ratio 1 | all emitted JS and CSS together may not exceed 790000 gzip bytes; recorded 2026-10-23 owner ruling for dual ko/en catalogue coverage after shared-copy deduplication |
 | `render.discoveryReadyMs` | 5000 | `/discovery`, 20 rows, cold load until all rows exist |
 | `render.discoveryPage50Ms` | 5000 | `/discovery?pageSize=50`, 50 rows |
 | `render.inventorySectionMs` | 5000 | `/inventory` section page, 25 seats |

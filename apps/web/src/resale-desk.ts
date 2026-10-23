@@ -1,7 +1,8 @@
 import { messages as sourceCopy } from "./i18n/messages/resale-desk";
+import { connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useState } from "react";
 import { ProtocolError, type ResaleCaseView, type ResaleRightView } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 import type { ResaleDeskCommand } from "./pages/ResalePanel";
 import { DESK_EXPIRES_AT, reservationIds } from "./reservation-desk";
 import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
@@ -75,6 +76,7 @@ export function useResaleDesk(eventId: string) {
   }, [refresh]);
 
   async function run(command: ResaleDeskCommand) {
+    if (!connectedHandler()) return;
     const trimmed = eventId.trim();
     if (!trimmed || pending) {
       return;

@@ -3,6 +3,7 @@ import { messages as copy1 } from "../i18n/messages/marketplace-performance";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import {
   MARKETPLACE_DEVICE_PROFILES,
   MARKETPLACE_SCENARIOS,
@@ -133,12 +134,12 @@ export function BenchControls({
         </select>
         <button type="button" id="mperf-second-tab" className="discovery-action" onClick={() => actions.openSecondTab()}>
           {t("s14x")}</button>
-        <button type="button" id="mperf-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          {t("sto")}</button>
+        <ConnectivityWriteButton type="button" id="mperf-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+          {t("sto")}</ConnectivityWriteButton>
       </div>
       <div className="discovery-controls" aria-label={t("s1o9")}>
         {deskText(t, MARKETPLACE_SYNTHETIC_CONTROLS.map((control) => (
-          <button
+          <ConnectivityWriteButton
             key={control}
             type="button"
             id={`mperf-sim-${control}`}
@@ -146,7 +147,7 @@ export function BenchControls({
             onClick={() => actions.synthetic(control)}
           >
             {t("s1kc")}{" "}{deskText(t, control)}
-          </button>
+          </ConnectivityWriteButton>
         )))}
       </div>
     </section>
@@ -190,8 +191,8 @@ export function BenchQueue({ model, actions }: { model: MarketplaceBenchModel; a
       {model.queue.admittedLine ? <p className="muted">{deskText(t, model.queue.admittedLine)}</p> : null}
       {model.queue.detailLine ? <p className="muted">{deskText(t, model.queue.detailLine)}</p> : null}
       <div className="discovery-controls">
-        <button type="button" id="mperf-join" className="discovery-action" onClick={() => actions.joinQueue()}>
-          {t("spc")}</button>
+        <ConnectivityWriteButton type="button" id="mperf-join" className="discovery-action" onClick={() => actions.joinQueue()}>
+          {t("spc")}</ConnectivityWriteButton>
         <button type="button" id="mperf-poll" className="discovery-action" onClick={() => actions.pollQueue()}>
           {t("sc7")}</button>
       </div>

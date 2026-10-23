@@ -4,7 +4,11 @@ import { messages as copy2 } from "../../i18n/messages/storage-allow-list";
 import { messages as copy3 } from "../../i18n/messages/marketing--contracts";
 import { messages as copy4 } from "../../i18n/messages/marketing--desk";
 import { deskText } from "../../i18n/desk-translate";
-import { useState, type FormEvent } from "react";
+import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
+import type { ValidationHandle } from "../../forms/useFormValidation";
+import { ValidatedForm } from "../../forms/ValidatedForm";
+import { field } from "../../forms/validation";
+import { useRef, useState, type FormEvent } from "react";
 import { emptyConsentDraft, useConsentDesk, type ConsentDraft, type ConsentPanelModel, type ConsentRowStatus } from "../../consent-desk";
 import { useT } from "../../i18n/desk-context";
 import { useFormatWhen } from "../../i18n/locale-context";
@@ -38,8 +42,8 @@ export function M05Page() {
   }
 
   return (
-    <MarketingChrome id="M05">
-      <form className="panel" onSubmit={onSubmit}>
+    <MarketingChrome id="M05" onReadAgain={refresh}>
+      <ValidatedForm id="consent-flags-form" fields={[]} className="panel" onSubmit={onSubmit}>
         {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- The input is nested inside the label and the visible text is in the sibling span; the control is therefore labeled. */}
         <label className="check" htmlFor="performance-notes">
           <input
@@ -71,11 +75,11 @@ export function M05Page() {
           {deskText(t, MARKETING_CONTRACT_ALIGNMENT.M05.missingFromStub.join(", "))}{t("sbz")}{" "}{deskText(t, consent.channelSend)}.
         </p>
         <div className="row-actions">
-          <button type="submit">{t("s1i7")}</button>
-          <button type="button" className="ghost" onClick={withdraw}>
-            {t("s26r")}</button>
+          <ConnectivityWriteButton type="submit">{t("s1i7")}</ConnectivityWriteButton>
+          <ConnectivityWriteButton type="button" className="ghost" onClick={withdraw}>
+            {t("s26r")}</ConnectivityWriteButton>
         </div>
-      </form>
+      </ValidatedForm>
       <article className="stamp">
         <p className="stamp-word">{consent.state}</p>
         <p>
@@ -119,6 +123,7 @@ function ConsentBindPanel({
   onEventId: (value: string) => void;
   onDraft: (partial: Partial<ConsentDraft>) => void;
 }) {
+  const validation = useRef<ValidationHandle>(null);
   const t = useT(copy0, copy1, copy2, copy3, copy4);
   const unavailable = model.path.kind === "unavailable";
   return (
@@ -140,33 +145,41 @@ function ConsentBindPanel({
           {t("sdx")}{model.path.kind === "unavailable" && model.path.code ? t("sd4", { code: model.path.code }) : ""}
         </p>
       ) : null}
-      <form
+      <ValidatedForm id="consent-bind-form" validationRef={validation} fields={[
+          field("consent-event", "validation.label.eventId"),
+          field("consent-subject", "validation.label.subject"),
+          field("consent-business", "validation.label.business"),
+          field("consent-channel", "validation.label.channel"),
+          field("consent-purpose", "validation.label.purpose"),
+          field("consent-version", "validation.label.version", { kind: "integer" }),
+          field("consent-allowed", "validation.label.allowed"),
+        ]}
         className="panel"
         onSubmit={(event) => {
           event.preventDefault();
         }}
       >
         <label>
-          {t("sis")}<input value={eventId} onChange={(event) => onEventId(event.target.value)} autoComplete="off" />
+          {t("sis")}<input id="consent-event" value={eventId} onChange={(event) => onEventId(event.target.value)} autoComplete="off" />
         </label>
         <label>
-          {t("s1n3")}<input value={draft.subject} onChange={(event) => onDraft({ subject: event.target.value })} autoComplete="off" />
+          {t("s1n3")}<input id="consent-subject" value={draft.subject} onChange={(event) => onDraft({ subject: event.target.value })} autoComplete="off" />
         </label>
         <label>
-          {t("saq")}<input
+          {t("saq")}<input id="consent-business"
             value={draft.business}
             onChange={(event) => onDraft({ business: event.target.value })}
             autoComplete="off"
           />
         </label>
         <label>
-          {t("sby")}<input value={draft.channel} onChange={(event) => onDraft({ channel: event.target.value })} autoComplete="off" />
+          {t("sby")}<input id="consent-channel" value={draft.channel} onChange={(event) => onDraft({ channel: event.target.value })} autoComplete="off" />
         </label>
         <label>
-          {t("s1ag")}<input value={draft.purpose} onChange={(event) => onDraft({ purpose: event.target.value })} autoComplete="off" />
+          {t("s1ag")}<input id="consent-purpose" value={draft.purpose} onChange={(event) => onDraft({ purpose: event.target.value })} autoComplete="off" />
         </label>
         <label>
-          {t("sk6")}<input
+          {t("sk6")}<input id="consent-version"
             value={draft.expectedConsentVersion}
             inputMode="numeric"
             placeholder={t("sas")}
@@ -175,13 +188,13 @@ function ConsentBindPanel({
           />
         </label>
         <label>
-          {t("s2y")}<select value={draft.allowed} onChange={(event) => onDraft({ allowed: event.target.value })}>
+          {t("s2y")}<select id="consent-allowed" value={draft.allowed} onChange={(event) => onDraft({ allowed: event.target.value })}>
             <option value="">{t("sca")}</option>
             <option value="true">true</option>
             <option value="false">false</option>
           </select>
         </label>
-      </form>
+      </ValidatedForm>
       <p>{deskText(t, model.lastConfirmed)}</p>
       <p>{deskText(t, model.unconfirmed)}</p>
       <ol className="journey-steps">
@@ -219,9 +232,12 @@ function ConsentBindPanel({
               </dl>
             ) : null}
             <div className="row-actions">
-              <button type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
+              <ConnectivityWriteButton type="button" disabled={!row.canSend} onClick={() => {
+                const ids = row.step === "set_consent" ? undefined : ["consent-event", "consent-subject", "consent-business", "consent-channel", "consent-purpose", "consent-version"];
+                if (validation.current?.validate(ids)) model.send(row.step);
+              }}>
                 {t("s1j5")}{" "}{deskText(t, row.step)}
-              </button>
+              </ConnectivityWriteButton>
             </div>
           </li>
         )))}

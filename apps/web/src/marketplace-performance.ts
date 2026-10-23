@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/marketplace-performance";
 import { sourceMessage } from "./i18n/source-message";
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The marketplace scale bench on top of the adapter's synthetic bench port.
  * Stub scope: the default port is the synthetic lazy stream. On
@@ -38,7 +39,7 @@ import {
   type MarketplaceSyntheticControl,
   type MarketplaceWorkload,
 } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const MARKETPLACE_BENCH_TITLE = sourceCopy.en["ss1"];
 
@@ -382,8 +383,8 @@ function createSession(
   environment: "stub" | "integration-http",
   scenario: MarketplaceScenario,
 ): Session {
-  const port = marketplaceBenchPortFor(environment, { scenario });
-  return { port, controller: new MarketplaceBenchController(port, {}) };
+  const port = connectivityPort(marketplaceBenchPortFor(environment, { scenario }), "marketplace-performance");
+  return { port, controller: connectivityController(new MarketplaceBenchController(port, {}), port) };
 }
 
 export function useMarketplaceBench(): {
@@ -475,7 +476,7 @@ export function useMarketplaceBench(): {
     scenario,
     workload,
     model: buildMarketplaceModel({ controller: sessionRef.current.controller }),
-    actions,
+    actions: connectedActions(actions, ['joinQueue', 'synthetic', 'newSession', 'setScenario'], sessionRef.current?.port),
   };
 }
 

@@ -1,7 +1,8 @@
+import { c269 } from "./shared-copy";
 export const messages = {
   en: {
     "sas": "Caller-supplied integer",
-    "sat": "Caller-supplied integer, or leave blank",
+    "sat": c269,
     "sau": "Caller-supplied inventory id",
     "sd8": "Comma-separated seat ids",
     "sis": "Event id",

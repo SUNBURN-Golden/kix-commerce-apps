@@ -4,6 +4,7 @@ import { messages as copy1 } from "../i18n/messages/journey-desk";
 import { messages as copy2 } from "../i18n/messages/storage-allow-list";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { Link } from "react-router-dom";
 import {
   JOURNEY_DESK_NOT_BOUND,
@@ -104,9 +105,9 @@ export function JourneyPanel({ variant, model }: { variant: "booking" | "box-off
             ) : null}
             {variant === "booking" ? (
               <div className="row-actions">
-                <button type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
+                <ConnectivityWriteButton type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
                   {t("s1j5")}{" "}{deskText(t, row.step)}
-                </button>
+                </ConnectivityWriteButton>
               </div>
             ) : (
               <p className="muted">{t("s18f")}</p>

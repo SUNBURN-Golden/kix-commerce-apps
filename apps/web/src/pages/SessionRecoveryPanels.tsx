@@ -1,9 +1,12 @@
+import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { messages as copy0 } from "../i18n/messages/pages--SessionRecoveryPanels";
 import { messages as copy1 } from "../i18n/messages/session-recovery";
 import { messages as copy2 } from "../i18n/messages/journey-identity";
 import { messages as copy3 } from "../i18n/messages/storage-allow-list";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { AsyncState } from "../components/AsyncState";
 import { useState } from "react";
 import { useRestoreFocus } from "../a11y/focus";
 import {
@@ -34,11 +37,11 @@ export interface SessionDeskLive {
  * skipped by the keyboard, so its reason would never be reached.
  */
 function GuardedButton({ id, label, control, onPress }: { id: string; label: string; control: SessionControl; onPress: () => void }) {
-  const t = useT(copy0, copy1, copy2, copy3);
+  const t = useT(mergedCopy, copy0, copy1, copy2, copy3);
   const reasonId = `${id}-reason`;
   return (
     <span className="refund-guard">
-      <button
+      <ConnectivityWriteButton
         id={id}
         type="button"
         aria-disabled={control.enabled ? undefined : true}
@@ -50,7 +53,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
         }}
       >
         {deskText(t, label)}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <span id={reasonId} className="muted">
           {deskText(t, control.reason)}
@@ -65,7 +68,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
  * was sent. It is not proof that anything applied, and not an exactly-once guarantee.
  */
 export function SessionRecoveryPanel({ live }: { live: SessionDeskLive }) {
-  const t = useT(copy0, copy1, copy2, copy3);
+  const t = useT(mergedCopy, copy0, copy1, copy2, copy3);
   const { model, actions } = live;
   const [pendingScenario, setPendingScenario] = useState<SessionScenario>(live.scenario);
   useRestoreFocus(model.lastNeedsFocus && model.lastSeq !== null ? `session:${model.lastSeq}` : null, "session-status");
@@ -81,7 +84,10 @@ export function SessionRecoveryPanel({ live }: { live: SessionDeskLive }) {
       </p>
       <p className="muted">{deskText(t, SESSION_RETENTION_NOTE)}</p>
 
-      <div role="status" id="session-status" tabIndex={-1} aria-live="polite" data-testid="session-status">
+      <div role="status" id="session-status" tabIndex={-1} aria-live="polite" aria-busy={model.state === "in-progress"} data-testid="session-status">
+        {model.state === "in-progress" || model.state === "empty" || model.state === "recovered" || model.state === "not-bound" ? (
+          <AsyncState kind={model.state === "in-progress" ? "loading" : model.state === "recovered" ? "unknown" : model.state} label={t("merge.session")} announcement="parent" />
+        ) : null}
         <p data-field="status">{deskText(t, model.statusLine)}</p>
         {model.detailLine ? <p className="muted">{deskText(t, model.detailLine)}</p> : null}
         {model.lastLine ? <p data-field="last">{deskText(t, model.lastLine)}</p> : null}
@@ -127,7 +133,7 @@ export function SessionRecoveryPanel({ live }: { live: SessionDeskLive }) {
         <ul>
           {deskText(t, model.records.map((row) => (
             <li key={row.seq} data-outcome={row.outcome} data-kind={row.kind} data-scope={row.scope} data-load={row.loadNo}>
-              {deskText(t, row.line)}
+              {deskText(t, row.kind === "unknown" || row.kind === "recovered-unknown" ? <AsyncState kind="unknown" label={t("merge.sessionRecord")} announcement="parent"><p>{deskText(t, row.line)}</p></AsyncState> : row.line)}
             </li>
           )))}
           {deskText(t, model.observationLines.map((line) => (
@@ -151,8 +157,8 @@ export function SessionRecoveryPanel({ live }: { live: SessionDeskLive }) {
             )))}
           </select>
         </label>
-        <button type="button" disabled={pendingScenario === live.scenario} onClick={() => actions.setScenario(pendingScenario)}>
-          {t("s1md")}</button>
+        <ConnectivityWriteButton type="button" disabled={pendingScenario === live.scenario} onClick={() => actions.setScenario(pendingScenario)}>
+          {t("s1md")}</ConnectivityWriteButton>
         <p className="muted">{deskText(t, SESSION_SCENARIO_NOTES[pendingScenario])}</p>
         <p className="muted">{t("s43")}</p>
         <button type="button" onClick={() => actions.refresh()}>

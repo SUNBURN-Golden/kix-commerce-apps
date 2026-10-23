@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/delegated-assistant";
 import { sourceMessage } from "./i18n/source-message";
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The delegated-assistant screen on top of the adapter's synthetic delegation source.
  * Stub scope: the default port is the synthetic source. On integration-http the same
@@ -52,7 +53,7 @@ import {
   type DelegationSyntheticControl,
   type DelegationTurn,
 } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const DELEGATION_TITLE = sourceCopy.en["sfv"];
 
@@ -698,10 +699,10 @@ interface Session {
 }
 
 function createSession(environment: "stub" | "integration-http", scenario: DelegationScenario): Session {
-  const port = delegationPortFor(environment, { scenario });
+  const port = connectivityPort(delegationPortFor(environment, { scenario }), "delegated-assistant");
   return {
     port,
-    controller: new DelegationAssistantController(port, { actorRef: DELEGATION_DESK_ACTOR, principalRef: DELEGATION_OWN_PRINCIPAL }),
+    controller: connectivityController(new DelegationAssistantController(port, { actorRef: DELEGATION_DESK_ACTOR, principalRef: DELEGATION_OWN_PRINCIPAL }), port),
   };
 }
 
@@ -898,6 +899,6 @@ export function useDelegationAssistant(): {
     scenario,
     model: buildDelegationAssistantModel({ controller: session.controller, environment, last }),
     heldSupported: scenario === "held-response",
-    actions,
+    actions: connectedActions(actions, ['ask', 'approve', 'dismiss', 'setScenario', 'newSession', 'simulate'], sessionRef.current?.port),
   };
 }

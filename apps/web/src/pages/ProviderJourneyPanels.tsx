@@ -3,6 +3,7 @@ import { messages as copy1 } from "../i18n/messages/provider-journey";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { ReactNode } from "react";
 import { PROVIDER_SCENARIOS, type ProviderScenario } from "@kix/protocol-adapter";
 import { AmountNotice, StatusMark } from "../a11y/marks";
@@ -68,7 +69,7 @@ function GuardedButton({
   const reasonId = `${id}-reason`;
   return (
     <>
-      <button
+      <ConnectivityWriteButton
         type="button"
         id={id}
         className="discovery-action"
@@ -78,7 +79,7 @@ function GuardedButton({
         onClick={control.enabled ? onPress : undefined}
       >
         {deskText(t, label)}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word={t("status.transport.blocked")} /> {deskText(t, control.reason)}
@@ -159,8 +160,8 @@ export function ProviderControls({
           {t("s1ax")}</button>
         <button type="button" id="provider-switch" className="discovery-action" onClick={() => actions.switchContext()}>
           {t("s1nz")}</button>
-        <button type="button" id="provider-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          {t("s1m2")}</button>
+        <ConnectivityWriteButton type="button" id="provider-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+          {t("s1m2")}</ConnectivityWriteButton>
         <button
           type="button"
           id="provider-deliver-held"
@@ -281,7 +282,7 @@ function OrderCard({ order, actions }: { order: OrderModel; actions: ProviderAct
       {order.events.length > 0 ? (
         <div className="discovery-controls" data-source-events="true">
           {deskText(t, order.events.map((item) => (
-            <button
+            <ConnectivityWriteButton
               key={item.id}
               type="button"
               id={`provider-event-${item.id}-${order.orderRef}`}
@@ -299,7 +300,7 @@ function OrderCard({ order, actions }: { order: OrderModel; actions: ProviderAct
               }
             >
               {deskText(t, item.label)}
-            </button>
+            </ConnectivityWriteButton>
           )))}
           <p className="muted">{t("s1l9")}</p>
         </div>

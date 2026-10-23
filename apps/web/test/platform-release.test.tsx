@@ -1,3 +1,4 @@
+import { KIX_SDK_0_CONSUMPTION_DIGESTS } from "@kix/protocol-adapter";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -125,6 +126,10 @@ describe("platform release screen", () => {
     expect(markup).toContain(`Release state ${RELEASE_STATE}`);
     expect(markup).toContain("STUB_CANDIDATE_RECORDED");
     expect(markup).toContain("data-packet=");
+    expect(markup).toContain("fixture catalogue v2");
+    for (const digest of Object.values(KIX_SDK_0_CONSUMPTION_DIGESTS)) {
+      expect(markup).toContain(digest);
+    }
     expect(markup).toContain("Released false");
     expect(markup).toContain("publicDeploy false");
     expect(markup).toContain("realMoneyApproval false");

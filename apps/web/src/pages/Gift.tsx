@@ -3,7 +3,10 @@ import { messages as copy1 } from "../i18n/messages/gift-desk";
 import { messages as copy2 } from "../i18n/messages/storage-allow-list";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
-import { useState } from "react";
+import type { ValidationHandle } from "../forms/useFormValidation";
+import { ValidatedForm } from "../forms/ValidatedForm";
+import { field } from "../forms/validation";
+import { useRef, useState } from "react";
 import { useRestoreFocus } from "../a11y/focus";
 import { GIFT_DEFAULT_RECIPIENT, GIFT_DONOR, emptyDraft, useGiftDesk, type GiftDraft } from "../gift-desk";
 import { GiftPanel } from "./GiftPanel";
@@ -12,11 +15,12 @@ export function GiftPage() {
   const t = useT(copy0, copy1, copy2);
   const [giftId, setGiftId] = useState("");
   const [draft, setDraft] = useState<GiftDraft>(emptyDraft());
+  const validation = useRef<ValidationHandle>(null);
   const model = useGiftDesk(giftId, draft);
   const fault = model.rows.find(
     (row) => row.status === "rejected" || row.status === "not-sent" || row.status === "unconfirmed",
   );
-  useRestoreFocus(fault ? `${fault.step}:${fault.status}:${fault.note}` : null, "gift-ticket-id");
+  useRestoreFocus(fault ? `${fault.step}:${fault.status}:${deskText(t, fault.note)}` : null, "gift-ticket-id");
   const offer = model.rows.find((row) => row.step === "offer_gift");
   const offerLocked = offer !== undefined && offer.status !== "ready" && offer.status !== "not-started";
 
@@ -32,7 +36,13 @@ export function GiftPage() {
         <p className="muted">
           {t("s13v")}</p>
       </header>
-      <form
+      <ValidatedForm id="gift-form" validationRef={validation} fields={[
+          field("gift-id", "validation.label.giftId"),
+          field("gift-ticket-id", "validation.label.ticketId"),
+          field("gift-expected-version", "validation.label.version", { kind: "integer" }),
+          field("gift-expires-at", "validation.label.expiresAt", { kind: "integer" }),
+          field("gift-recipient", "validation.label.recipient"),
+        ]}
         className="panel"
         onSubmit={(event) => {
           event.preventDefault();
@@ -48,6 +58,7 @@ export function GiftPage() {
             disabled={offerLocked && fault === undefined}
             readOnly={fault !== undefined}
             aria-invalid={fault !== undefined}
+            aria-describedby={fault ? "gift-outcome-note" : undefined}
             onChange={(event) => patch({ ticketId: event.target.value })}
             autoComplete="off"
           />
@@ -86,8 +97,12 @@ export function GiftPage() {
           />
         </label>
         <p className="muted">{t("sh5")}{" "}{deskText(t, GIFT_DONOR)}{t("sfr")}{" "}{deskText(t, GIFT_DEFAULT_RECIPIENT)}.</p>
-      </form>
-      <GiftPanel model={model} />
+        {fault ? <p id="gift-outcome-note">{deskText(t, fault.note)}</p> : null}
+      </ValidatedForm>
+      <GiftPanel model={{ ...model, send: (step) => {
+        const ids = step === "offer_gift" ? undefined : ["gift-id"];
+        if (validation.current?.validate(ids)) model.send(step);
+      } }} />
     </section>
   );
 }

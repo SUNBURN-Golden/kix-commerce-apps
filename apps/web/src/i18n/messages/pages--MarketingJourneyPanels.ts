@@ -1,3 +1,5 @@
+import { c261 } from "./shared-copy";
+import { c135, c134, c13, c148, c133 } from "./shared-copy";
 export const messages = {
   en: {
     "s2o": "A listed benefit is not an applied benefit, and an apply is the source's decision at send time. The verdict, the figures, and the rank are the source's own words.",
@@ -13,7 +15,7 @@ export const messages = {
     "s9v": "Benefits",
     "s9w": "Benefits: discover and apply",
     "s9y": "Benefits in the last read",
-    "sbx": "Changing the scenario starts a new synthetic session.",
+    "sbx": c133,
     "sdf": "Concept",
     "sdo": "Consent",
     "sdq": "Consent as consumed here",
@@ -34,7 +36,7 @@ export const messages = {
     "sub": "No benefit is listed in this read.",
     "suv": "No consent is read. See the status.",
     "swl": "No order is listed in this read.",
-    "s137": "No write has been sent in this session.",
+    "s137": c148,
     "s10r": "Note",
     "s13u": "off",
     "s140": "on",
@@ -58,9 +60,9 @@ export const messages = {
     "s1ks": "Simulate: {orderRef} is cancelled at the order source",
     "s1kn": "Simulated producer events",
     "s1le": "Source verdict",
-    "s1m2": "Start a new synthetic session",
+    "s1m2": c13,
     "s1m4": "Start a new synthetic session clears every intent, as a reload does, and resolves nothing at a producer. Deliver held response works only in the held-response scenario.",
-    "s1m5": "Start a session with this scenario",
+    "s1m5": c134,
     "s1mj": "Status",
     "s1n6": "Subject scope is",
     "s1o2": "Switch subject scope",
@@ -68,7 +70,7 @@ export const messages = {
     "s1p5": "Synthetic scenario",
     "s1pe": "Target",
     "s1sx": "The four stages",
-    "s1zl": "The source has rejected no write of this page in this session.",
+    "s1zl": c261,
     "s24b": "to set consent or authorize marketing. This journey posts neither.",
     "s26i": "What this journey takes from the CRM scope, and what it leaves out",
     "s26k": "Which concept has a named field in the pinned catalogue",
@@ -89,7 +91,7 @@ export const messages = {
     "s9v": "혜택",
     "s9w": "혜택: 탐색과 적용",
     "s9y": "마지막 조회의 혜택",
-    "sbx": "시나리오 변경 시 새 합성 세션을 시작합니다.",
+    "sbx": c135,
     "sdf": "개념",
     "sdo": "동의",
     "sdq": "여기서 소비하는 동의",

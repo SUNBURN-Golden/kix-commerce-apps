@@ -4,6 +4,7 @@ import { messages as copy1 } from "../i18n/messages/finance-operations";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { FINANCE_ACTORS, FINANCE_SCENARIOS, type FinanceScenario } from "@kix/protocol-adapter";
@@ -75,7 +76,7 @@ function GuardedButton({
   const pointer = control.reason ? (describedBy ?? reasonId) : undefined;
   return (
     <>
-      <button
+      <ConnectivityWriteButton
         type="button"
         id={id}
         className="discovery-action"
@@ -85,7 +86,7 @@ function GuardedButton({
         onClick={control.enabled ? onPress : undefined}
       >
         {deskText(t, label)}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason && describedBy === undefined ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word={t("status.transport.blocked")} /> {deskText(t, control.reason)}
@@ -181,14 +182,14 @@ export function FinanceControls({
         <GuardedButton id="finance-export" label={t("srf")} control={model.exportControl} onPress={() => actions.loadExport()} />
         <button type="button" id="finance-switch" className="discovery-action" onClick={() => actions.switchScope()}>
           {t("s1nt")}</button>
-        <button type="button" id="finance-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
-          {t("s1ky")}</button>
-        <button type="button" id="finance-advance" className="discovery-action" onClick={() => actions.advanceCut()}>
-          {t("s1kw")}</button>
-        <button type="button" id="finance-post-correction" className="discovery-action" onClick={() => actions.postSourceCorrection()}>
-          {t("s1kx")}</button>
-        <button type="button" id="finance-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          {t("s1m2")}</button>
+        <ConnectivityWriteButton type="button" id="finance-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
+          {t("s1ky")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="finance-advance" className="discovery-action" onClick={() => actions.advanceCut()}>
+          {t("s1kw")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="finance-post-correction" className="discovery-action" onClick={() => actions.postSourceCorrection()}>
+          {t("s1kx")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="finance-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+          {t("s1m2")}</ConnectivityWriteButton>
       </div>
       <p className="muted" data-scenario-note={scenario}>
         {deskText(t, SCENARIO_NOTES[scenario])} {t("scc")}</p>

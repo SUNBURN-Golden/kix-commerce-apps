@@ -1,5 +1,21 @@
 export const messages = {
   en: {
+    "merge.eligiblePhase": "Credential FSM phase: the synthetic credential may be authorized. P03 stays 설계중.",
+    "merge.authorizedPhase": "Credential FSM phase: the synthetic credential was authorized. P03 stays 설계중.",
+    "merge.unsentLeg": "The leg was never sent — not-bound, gated open, or observation only.",
+
+    "merge.unknownDont": "Not a failure and not a success. Never read it as 'did not happen' — it may have applied.",
+    "merge.offlineMeaning": "The browser reports lost connectivity; retained values are cached history.",
+    "merge.offlineDo": "Inspect retained values and reconnect, then explicitly read again before writing.",
+    "merge.offlineDont": "Not an empty result or a determination of an interrupted write.",
+    "merge.onlineMeaning": "The browser is online and a current-epoch loopback probe answered.",
+    "merge.onlineDo": "Read the cached-data notice and the controller's own fences.",
+    "merge.onlineDont": "Not production readiness, a replay, or a fresh business read.",
+
+    "merge.connectivityMeaning": "The app refused a new write before dispatch because connectivity or its read is unavailable.",
+    "merge.connectivityDo": "Restore connectivity and explicitly read again. Nothing is queued.",
+    "merge.connectivityDont": "Not UNKNOWN; an already dispatched interruption stays UNKNOWN separately.",
+
     "s19": "A decision belongs to the user and has not been taken.",
     "s2m": "A leg landed and a later one did not, and no compensation path is approved.",
     "s2n": "A leg landed and a receipt was recorded.",
@@ -209,6 +225,22 @@ export const messages = {
     "s263": "Wait for the named decider.",
   },
   ko: {
+    "merge.eligiblePhase": "Credential FSM 단계: 합성 자격 증명을 인가할 수 있습니다. P03은 설계중입니다.",
+    "merge.authorizedPhase": "Credential FSM 단계: 합성 자격 증명이 인가되었습니다. P03은 설계중입니다.",
+    "merge.unsentLeg": "이 구간은 전송하지 않았습니다. not-bound, gated open 또는 관찰 전용입니다.",
+
+    "merge.unknownDont": "실패나 성공을 뜻하지 않습니다. 적용되었을 수도 있으므로 '일어나지 않았다'고 읽지 마세요.",
+    "merge.offlineMeaning": "브라우저가 연결 끊김을 알렸습니다. 보관한 값은 캐시된 과거 기록입니다.",
+    "merge.offlineDo": "보관한 값을 확인하고 다시 연결한 뒤, 쓰기 전에 명시적으로 다시 읽으세요.",
+    "merge.offlineDont": "빈 결과나 중단된 쓰기의 결과 판정이 아닙니다.",
+    "merge.onlineMeaning": "브라우저가 온라인이며 현재 세대의 loopback 확인 요청이 응답했습니다.",
+    "merge.onlineDo": "캐시 데이터 안내와 컨트롤러의 차단 기록을 확인하세요.",
+    "merge.onlineDont": "프로덕션 준비·재실행·새 업무 읽기를 뜻하지 않습니다.",
+
+    "merge.connectivityMeaning": "연결이나 읽기를 사용할 수 없어 앱이 전송 전에 새 쓰기를 차단했습니다.",
+    "merge.connectivityDo": "연결을 복구한 뒤 명시적으로 다시 읽으세요. 대기열에 저장된 작업은 없습니다.",
+    "merge.connectivityDont": "UNKNOWN이 아닙니다. 이미 전송한 요청의 중단은 별도의 UNKNOWN으로 유지됩니다.",
+
     "s19": "사용자의 결정 사항이며 아직 결정되지 않았습니다.",
     "s2m": "앞 단계만 반영되었으며 인가된 보상 경로가 없습니다.",
     "s2n": "단계가 반영되고 영수증이 기록되었습니다.",

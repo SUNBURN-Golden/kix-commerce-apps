@@ -1,3 +1,4 @@
+import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
 import { messages as copy0 } from "../i18n/messages/pages--DiscoveryPanels";
 import { messages as copy1 } from "../i18n/messages/discovery-live";
@@ -13,6 +14,9 @@ import { messages as copy10 } from "../i18n/messages/resale-desk";
 import { messages as copy11 } from "../i18n/messages/reservation-desk";
 import { messages as copy12 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { ValidatedForm } from "../forms/ValidatedForm";
+import { AsyncState } from "../components/AsyncState";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -62,7 +66,7 @@ import { useT } from "../i18n/desk-context";
 import { useFormatWhen } from "../i18n/locale-context";
 
 export function DiscoveryBanner({ model }: { model: DiscoveryModel }) {
-  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
+  const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   return (
     <header className="section-head discovery-section" data-adapter-environment={model.environment}>
       <p className="eyebrow">{t("sgs")}</p>
@@ -80,33 +84,18 @@ export function DiscoveryBanner({ model }: { model: DiscoveryModel }) {
 }
 
 export function CatalogNotice({ model, onReadAgain }: { model: DiscoveryModel; onReadAgain: () => void }) {
-  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
+  const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   if (model.catalog.kind === "loading") {
-    return (
-      <p className="muted" role="status">
-        <StatusMark kind="loading" /> {t("desk.performance.loading")}</p>
-    );
+    return <AsyncState kind="loading" label={t("merge.catalogue")}><p>{t("desk.performance.loading")}</p></AsyncState>;
   }
   if (model.catalog.kind === "error") {
-    return (
-      <div>
-        <p className="alert" role="alert">
-          <StatusMark kind="blocked" /> {deskText(t, model.catalog.message)}
-        </p>
-        <button type="button" className="discovery-action" onClick={() => onReadAgain()}>
-          {t("s1ax")}</button>
-      </div>
-    );
+    return <AsyncState kind="error" label={t("merge.catalogue")} read={{ label: t("s1ax"), onRead: onReadAgain }}><p>{deskText(t, model.catalog.message)}</p></AsyncState>;
   }
   if (model.catalog.kind === "not-bound") {
-    return (
-      <p className="alert" role="alert" data-state="not-bound" data-source="none">
-        <StatusMark kind="blocked" /> {deskText(t, model.catalog.reason)}
-      </p>
-    );
+    return <AsyncState kind="not-bound" label={t("merge.catalogue")} data-state="not-bound" data-source="none"><p>{deskText(t, model.catalog.reason)}</p></AsyncState>;
   }
   if (model.catalog.kind === "empty") {
-    return <p className="empty">{t("desk.performance.empty")}</p>;
+    return <AsyncState kind="empty" label={t("merge.catalogue")}><p className="empty">{t("desk.performance.empty")}</p></AsyncState>;
   }
   return <p>{t("desk.buyer.source")}{" "}{deskText(t, model.catalogSource)}</p>;
 }
@@ -120,10 +109,10 @@ export function DiscoveryForm({
   onQuery: (next: DiscoveryQuery) => void;
   invalidControlId?: string | null;
 }) {
-  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
+  const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   const invalid = invalidControlId ?? null;
   return (
-    <form
+    <ValidatedForm fields={[]} reportedIssues={invalid ? [{ fieldId: invalid, labelKey: "validation.label.filter", messageKey: "validation.filter", params: { max: 0 } }] : []}
       id="discovery-filters"
       className="discovery-form"
       aria-label={t("sgr")}
@@ -262,7 +251,7 @@ export function DiscoveryForm({
       </label>
       <button type="button" className="discovery-action" onClick={() => onQuery(clearFilters(query))}>
         {t("scq")}</button>
-    </form>
+    </ValidatedForm>
   );
 }
 
@@ -279,7 +268,7 @@ export function DiscoveryRowCard({
   active: boolean;
   onOpen: (rowId: string) => void;
 }) {
-  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
+  const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   const formatWhen = useFormatWhen();
   return (
     <li
@@ -340,7 +329,7 @@ export function ResultList({
   onFocus: (index: number) => void;
   onOpen: (rowId: string) => void;
 }) {
-  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
+  const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   const rows = model.result.rows;
   const active = rows[focus];
   return (
@@ -378,7 +367,7 @@ export function ResultList({
 }
 
 export function ScaleList({ onOpen, scaleTotal }: { onOpen: (rowId: string) => void; scaleTotal: number }) {
-  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
+  const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   const [scrollTop, setScrollTop] = useState(0);
   const [focus, setFocus] = useState(0);
   const windowed = scaleWindow({ scrollTop });
@@ -440,7 +429,7 @@ export function LiveReadSection({
   handlers: LiveListHandlers;
   onOpen: (rowId: string) => void;
 }) {
-  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
+  const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   const formatWhen = useFormatWhen();
   const [focus, setFocus] = useState(0);
   const rows = model.rows;
@@ -502,9 +491,9 @@ export function LiveReadSection({
             )))}
           </select>
         </label>
-        <button type="button" className="discovery-action" onClick={() => handlers.rebuildProjection()}>
+        <ConnectivityWriteButton requiresFresh={false} type="button" className="discovery-action" onClick={() => handlers.rebuildProjection()}>
           {deskText(t, LIVE_READ_REBUILD_LABEL)}
-        </button>
+        </ConnectivityWriteButton>
         {model.actionLabel ? (
           <button type="button" className="discovery-action" onClick={() => handlers.runReturn()}>
             {deskText(t, model.actionLabel)}
@@ -544,6 +533,14 @@ export function LiveReadSection({
               id={`discovery-live-row-${row.rowId}`}
               role="option"
               aria-selected={index === safeFocus}
+              onClick={() => onOpen(row.rowId)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onOpen(row.rowId);
+                }
+              }}
               data-kind={row.kind}
               data-status={row.statusLabel}
               data-provenance="synthetic"
@@ -564,8 +561,7 @@ export function LiveReadSection({
               <p className="when">
                 <time dateTime={row.watermark}>{formatWhen(row.watermark)}</time>
               </p>
-              <button type="button" className="discovery-action" onClick={() => onOpen(row.rowId)}>
-                {t("s152")}</button>
+              <span>{t("merge.openDetail")}</span>
             </li>
           )))}
         </ul>
@@ -581,7 +577,7 @@ export function LiveReadDetail({
   model: LiveDetailModel;
   handlers: LiveDetailHandlers;
 }) {
-  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
+  const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   const formatWhen = useFormatWhen();
   const row = model.row;
   return (
@@ -629,7 +625,7 @@ export function LiveReadDetail({
 }
 
 export function PurchasePathView({ purchase }: { purchase: PurchaseDecision }) {
-  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
+  const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   if (purchase.kind === "booking") {
     return (
       <p data-purchase="booking">
@@ -677,7 +673,7 @@ export function ResultSection({
   onQuery: (next: DiscoveryQuery) => void;
   onOpen: (rowId: string) => void;
 }) {
-  const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
+  const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
   return (
     <section id="discovery-results" className="discovery-section" data-state={model.result.state}>
       <h3>{t("s1gl")}</h3>
@@ -705,7 +701,7 @@ export function ResultSection({
       ) : null}
       {model.result.state === "empty" ? (
         <div>
-          <p className="empty">{t("sw4")}</p>
+          <AsyncState kind="empty" label={t("merge.discoveryResults")}><p className="empty">{t("sw4")}</p></AsyncState>
           <button type="button" className="discovery-action" onClick={() => onQuery(clearFilters(query))}>
             {t("scq")}</button>
         </div>

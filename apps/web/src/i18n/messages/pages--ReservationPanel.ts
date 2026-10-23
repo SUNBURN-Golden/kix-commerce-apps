@@ -1,10 +1,11 @@
+import { c140, c139 } from "./shared-copy";
 export const messages = {
   en: {
     "s44": "An expired mock hold stays in its phase until release. Economic finality claimed stays false. A bound issue waits for a mock COMMITTED settlement view. Reconcile matched is process-local.",
     "sbg": "Case holds slot",
     "se7": "Consume status",
     "sfh": "Deadline",
-    "si7": "Economic finality claimed",
+    "si7": c139,
     "sk9": "Expired",
     "snm": "Idempotency key",
     "soz": "Issue status",
@@ -15,7 +16,7 @@ export const messages = {
     "ssu": "Mock consumed once",
     "st0": "Mock phase",
     "st3": "Mock reservation case",
-    "st7": "Mock settlement commit observed",
+    "st7": c140,
     "ssr": "MOCK_GATE_ONLY",
     "st8": "Mode",
     "str": "No",

@@ -431,6 +431,23 @@ describe("tenant permissions maker/checker and export on screen", () => {
   });
 });
 
+describe("tenant permissions async matrix gaps", () => {
+  it("renders empty, stale and unknown requests on the permissions screen", async () => {
+    for (const scenario of ["empty", "stale"] as const) {
+      const r = rig(scenario);
+      await r.controller.read();
+      expect(pageHtml(modelOf(r), scenario)).toContain(`data-status="${scenario}"`);
+    }
+    const r = rig("act-lost", TENANT_SETTLER_ACTOR, "settler");
+    await ready(r);
+    const result = await r.controller.proposeAccountChange("acc-0001", "Synthetic proposal");
+    expect(result.kind).toBe("UNKNOWN");
+    const markup = pageHtml(modelOf(r), "act-lost", "stub", TENANT_SETTLER_ACTOR, "settler");
+    expect(markup).toContain('data-request-phase="unknown"');
+    expect(markup).toContain('data-fence="true"');
+  });
+});
+
 describe("tenant permissions not-bound and registry", () => {
   it("a not-bound port shows NOT_BOUND and sends nothing", async () => {
     const controller = new TenantPermissionsController(createNotBoundTenantPermissions());

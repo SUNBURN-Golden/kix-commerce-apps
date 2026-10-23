@@ -1,3 +1,5 @@
+import { c260, c259, c258 } from "./shared-copy";
+import { c1, c0 } from "./shared-copy";
 export const messages = {
   en: {
     "s2z": "Already sent.",
@@ -17,13 +19,13 @@ export const messages = {
     "s108": "not attempted",
     "s109": "Not attempted.",
     "s12m": "not sent",
-    "s15q": "Operator is a local-call actor string, not an authentication result.",
+    "s15q": c258,
     "s17c": "Path not open.",
-    "s1fc": "Reload clears page-load state. A reload uses a new attempt id.",
+    "s1fc": c259,
     "s1jz": "Settlement and funds",
     "s1k0": "Settlement and funds stay unconnected. No funds.",
-    "s1ly": "Stale selection. The local selection changed. Nothing was sent.",
-    "s1n0": "Stub-shape receipts are not from the gate.",
+    "s1ly": c260,
+    "s1n0": c0,
     "s1r0": "The command is invalid.",
     "p.t353": "seats typed: {v1}, caller input; the gate decides inventory",
     "p.t559": "Fenced. {v1}",
@@ -52,7 +54,7 @@ export const messages = {
     "s1jz": "정산과 자금",
     "s1k0": "정산과 자금은 미연결입니다. 자금 이동이 없습니다.",
     "s1ly": "오래된 선택. 로컬 선택이 바뀌었으며 전송하지 않았습니다.",
-    "s1n0": "stub 형식 영수증은 게이트 응답이 아닙니다.",
+    "s1n0": c1,
     "s1r0": "유효하지 않은 명령입니다.",
     "p.t353": "입력 좌석: {v1}, 호출자 입력이며 게이트가 재고를 판단합니다",
     "p.t559": "차단됨. {v1}",

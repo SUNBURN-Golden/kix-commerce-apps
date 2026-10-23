@@ -4,6 +4,7 @@ import { messages as copy1 } from "../i18n/messages/credit-servicing";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { ReactNode } from "react";
 import {
   SERVICING_ACTORS,
@@ -69,7 +70,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
   const reasonId = `${id}-reason`;
   return (
     <>
-      <button
+      <ConnectivityWriteButton
         type="button"
         id={id}
         className="discovery-action"
@@ -79,7 +80,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
         onClick={control.enabled ? onPress : undefined}
       >
         {deskText(t, label)}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word={t("status.transport.blocked")} /> {deskText(t, control.reason)}
@@ -171,20 +172,20 @@ export function ServicingControls({
           {t("s1nw")}</button>
         <button type="button" id="servicing-switch-actor" className="discovery-action" onClick={() => actions.switchActor()}>
           {t("s1nu")}</button>
-        <button type="button" id="servicing-observe-draw" className="discovery-action" onClick={() => actions.observeDraw()}>
-          {t("s13r")}</button>
-        <button type="button" id="servicing-receive-payment" className="discovery-action" onClick={() => actions.receivePayment()}>
-          {t("s1dh")}</button>
-        <button type="button" id="servicing-reverse-allocation" className="discovery-action" onClick={() => actions.reverseAllocation()}>
-          {t("s1gy")}</button>
-        <button type="button" id="servicing-mark-overdue" className="discovery-action" onClick={() => actions.markOverdue()}>
-          {t("ss5")}</button>
-        <button type="button" id="servicing-advance-schedule" className="discovery-action" onClick={() => actions.advanceSchedule()}>
-          {t("s1x")}</button>
-        <button type="button" id="servicing-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
-          {t("s1h6")}</button>
-        <button type="button" id="servicing-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          {t("s1m2")}</button>
+        <ConnectivityWriteButton type="button" id="servicing-observe-draw" className="discovery-action" onClick={() => actions.observeDraw()}>
+          {t("s13r")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="servicing-receive-payment" className="discovery-action" onClick={() => actions.receivePayment()}>
+          {t("s1dh")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="servicing-reverse-allocation" className="discovery-action" onClick={() => actions.reverseAllocation()}>
+          {t("s1gy")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="servicing-mark-overdue" className="discovery-action" onClick={() => actions.markOverdue()}>
+          {t("ss5")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="servicing-advance-schedule" className="discovery-action" onClick={() => actions.advanceSchedule()}>
+          {t("s1x")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="servicing-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
+          {t("s1h6")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="servicing-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+          {t("s1m2")}</ConnectivityWriteButton>
       </div>
       <p className="muted" data-scenario-note={scenario}>
         {deskText(t, SERVICING_SCENARIO_NOTES[scenario])} {t("sbx")}</p>

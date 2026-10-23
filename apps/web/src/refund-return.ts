@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/refund-return";
 import { sourceMessage } from "./i18n/source-message";
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The synthetic refund-and-return desk on top of the adapter's synthetic
  * source. Stub scope: the default port is the synthetic source. On
@@ -39,7 +40,7 @@ import {
   type RefundStep,
   type RefundStepResult,
 } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 import type { OutcomeTrack } from "./workspace/registry";
 
 export const REFUND_TITLE = sourceCopy.en["s1gn"];
@@ -515,8 +516,8 @@ export function useRefundReturnDesk(eventId: string): {
 
   const wantedKey = `${environment}|${scenario}|${orderRef ?? ""}`;
   if (orderRef !== null && sessionKeyRef.current !== wantedKey) {
-    const port = refundReturnPortFor(environment, { scenario });
-    sessionRef.current = { port, controller: new RefundReturnController(port, { actorRef: REFUND_RETURN_DESK_ACTOR, orderRef }) };
+    const port = connectivityPort(refundReturnPortFor(environment, { scenario }), "refund-return");
+    sessionRef.current = { port, controller: connectivityController(new RefundReturnController(port, { actorRef: REFUND_RETURN_DESK_ACTOR, orderRef }), port) };
     sessionKeyRef.current = wantedKey;
   }
   if (orderRef === null) {
@@ -619,10 +620,10 @@ export function useRefundReturnDesk(eventId: string): {
         return;
       }
       sessionKeyRef.current = null;
-      const port = refundReturnPortFor(environment, { scenario });
+      const port = connectivityPort(refundReturnPortFor(environment, { scenario }), "refund-return");
       sessionRef.current = {
         port,
-        controller: new RefundReturnController(port, { actorRef: REFUND_RETURN_DESK_ACTOR, orderRef: current.controller.state().context.orderRef }),
+        controller: connectivityController(new RefundReturnController(port, { actorRef: REFUND_RETURN_DESK_ACTOR, orderRef: current.controller.state().context.orderRef }), port),
       };
       intentCounter.current = 0;
       note(sourceCopy.en["s1ma"]);
@@ -642,6 +643,6 @@ export function useRefundReturnDesk(eventId: string): {
     model: buildRefundReturnModel({ controller: session?.controller ?? null, last, hasOrder: orderRef !== null }),
     heldSupported: scenario === "held-response",
     lateSupported: scenario === "refund-lost",
-    actions,
+    actions: connectedActions(actions, ['write', 'markReturnRequired', 'newSession', 'setScenario'], sessionRef.current?.port),
   };
 }

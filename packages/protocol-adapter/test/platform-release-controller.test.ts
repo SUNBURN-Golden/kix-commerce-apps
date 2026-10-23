@@ -1,3 +1,4 @@
+import { KIX_SDK_0_CONSUMPTION_DIGESTS } from "../src/sdk-consumption-tuple.js";
 import { describe, expect, it } from "vitest";
 import {
   PlatformReleaseController,
@@ -192,9 +193,7 @@ describe("platform release controller", () => {
         sourceProtocolContractSha256: "x",
         domain: "kix:fixture:lifecycle:0.3",
         pinnedActions: [],
-        sdkDigest: null,
-        manifestDigest: null,
-        vectorDigest: null,
+        ...KIX_SDK_0_CONSUMPTION_DIGESTS,
       },
     });
     const tupleCtl = controller(tuplePort);

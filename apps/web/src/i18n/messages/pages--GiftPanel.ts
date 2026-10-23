@@ -1,3 +1,4 @@
+import { c1, c146, c145, c144, c143, c0, c142 } from "./shared-copy";
 export const messages = {
   en: {
     "s6w": "A reload clears this page-load transfer and uses a new attempt id.",
@@ -5,7 +6,7 @@ export const messages = {
     "sd4": "Code {code}.",
     "sek": "Correlation",
     "sge": "Desk methods not bound",
-    "sim": "Environment integration-http. Loopback status is not loaded yet.",
+    "sim": c142,
     "skc": "expiresAt and expectedVersion are caller-supplied. This desk does not default them.",
     "smh": "Gift offer is not a credit draw.",
     "smk": "Gift path unavailable. The reviewed gate answers no CORS preflight; the desk stays on integration HTTP and does not fall back to the stub. Node tests exercise the live gate. A browser path needs a kix-protocol gate change.",
@@ -20,7 +21,7 @@ export const messages = {
     "s1fq": "Request",
     "s1j5": "Send",
     "s1mj": "Status",
-    "s1n0": "Stub-shape receipts are not from the gate.",
+    "s1n0": c0,
     "s1ry": "The donor and recipient are caller-supplied strings. They are not an authentication result.",
     "s1xd": "The right must already be held. The booking journey does not produce a giftable right.",
     "s1xn": "The same gift id after a reload is a new attempt. It is not a confirmation of the earlier request.",
@@ -32,9 +33,9 @@ export const messages = {
     "e.23": "Unconfirmed",
     "e.24": "Not sent",
     "e.25": "P02 transfer · stub-shape receipts",
-    "e.26": "integration-http · unavailable",
-    "e.27": "integration-http · checking",
-    "e.28": "integration-http · available",
+    "e.26": c143,
+    "e.27": c144,
+    "e.28": c145,
   },
   ko: {
     "s6w": "새로고침은 이 로드의 이전 상태를 비우고 새 시도 식별자를 사용합니다.",
@@ -42,7 +43,7 @@ export const messages = {
     "sd4": "코드 {code}.",
     "sek": "연관 관계",
     "sge": "연결되지 않은 데스크 메서드",
-    "sim": "환경 integration-http. 루프백 상태를 아직 불러오지 않았습니다.",
+    "sim": c146,
     "skc": "expiresAt과 expectedVersion은 호출자 입력입니다. 데스크는 기본값을 정하지 않습니다.",
     "smh": "선물 제안은 크레딧 인출이 아닙니다.",
     "smk": "선물 경로를 사용할 수 없습니다. 검토된 게이트가 CORS 사전 요청에 응답하지 않습니다. integration HTTP를 유지하며 stub 대체하지 않습니다. Node 시험은 실제 게이트를 검증합니다. 브라우저 경로에는 kix-protocol 게이트 변경이 필요합니다.",
@@ -57,7 +58,7 @@ export const messages = {
     "s1fq": "요청",
     "s1j5": "전송",
     "s1mj": "상태",
-    "s1n0": "stub 형식 영수증은 게이트 응답이 아닙니다.",
+    "s1n0": c1,
     "s1ry": "증여자·수신자는 호출자 지정 문자열이며 인증 결과가 아닙니다.",
     "s1xd": "이미 보유한 권리여야 합니다. 예매 여정은 증여 가능한 권리를 만들지 않습니다.",
     "s1xn": "새로고침 후 같은 선물 식별자도 새 시도이며 이전 요청의 확인이 아닙니다.",

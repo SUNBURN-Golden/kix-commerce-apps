@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/installable-mobile";
 import { sourceMessage } from "./i18n/source-message";
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The synthetic installable-mobile shell screen on top of the adapter's
  * synthetic shell source. Stub scope: the default port is the synthetic
@@ -41,7 +42,7 @@ import {
   type MobileSupportRow,
   type MobileVaultView,
 } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const MOBILE_TITLE = sourceCopy.en["so1"];
 
@@ -696,14 +697,14 @@ export function useMobileShell(): {
   const clockRef = useRef<MobileClockMode>("in-step");
   const sessionRef = useRef<Session | null>(null);
   if (sessionRef.current === null) {
-    const port = mobileShellPortFor(environment, { scenario: "clean" });
+    const port = connectivityPort(mobileShellPortFor(environment, { scenario: "clean" }), "installable-mobile");
     sessionRef.current = {
       port,
-      controller: new MobileShellController(port, {
+      controller: connectivityController(new MobileShellController(port, {
         actorRef: MOBILE_DESK_ACTOR,
         deviceNow: () =>
           clockRef.current === "in-step" ? MOBILE_AS_OF : clockRef.current === "skewed" ? "2026-10-14T00:00:00.000Z" : null,
-      }),
+      }), port),
     };
   }
   const [scenario, setScenarioState] = useState<MobileScenario>("clean");
@@ -756,14 +757,14 @@ export function useMobileShell(): {
 
   const startSession = useCallback(
     (next: MobileScenario, text: string) => {
-      const port = mobileShellPortFor(environment, { scenario: next });
+      const port = connectivityPort(mobileShellPortFor(environment, { scenario: next }), "installable-mobile");
       sessionRef.current = {
         port,
-        controller: new MobileShellController(port, {
+        controller: connectivityController(new MobileShellController(port, {
           actorRef: MOBILE_DESK_ACTOR,
           deviceNow: () =>
             clockRef.current === "in-step" ? MOBILE_AS_OF : clockRef.current === "skewed" ? "2026-10-14T00:00:00.000Z" : null,
-        }),
+        }), port),
       };
       intentCounter.current = 0;
       setScenarioState(next);
@@ -893,6 +894,6 @@ export function useMobileShell(): {
     scenario,
     clockMode,
     model: buildMobileModel({ controller: session.controller, last }),
-    actions,
+    actions: connectedActions(actions, ['install', 'update', 'present', 'confirm', 'withdraw', 'dropConnection', 'restoreConnection', 'offerUpdate', 'expireSession', 'newSession', 'setScenario'], sessionRef.current?.port),
   };
 }

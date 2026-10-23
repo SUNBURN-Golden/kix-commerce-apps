@@ -27,14 +27,14 @@ afterEach(() => {
 
 describe("browser storage allow-list", () => {
   it("allows only the exact keys and named attempt prefixes", () => {
-    for (const key of STORAGE_ALLOW_LIST.slice(0, 3)) {
+    for (const key of STORAGE_ALLOW_LIST.slice(0, 4)) {
       expect(isAllowedStorageKey(key)).toBe(true);
     }
-    for (const prefix of STORAGE_ALLOW_LIST.slice(3)) {
+    for (const prefix of STORAGE_ALLOW_LIST.slice(4)) {
       expect(isAllowedStorageKey(`${prefix}fixture`)).toBe(true);
       expect(isAllowedStorageKey(prefix)).toBe(false);
     }
-    for (const key of ["unknown", "kix-session-journal-copy", "kix-unknown-attempt:id"]) {
+    for (const key of ["kix-onboarding-x", "unknown", "kix-session-journal-copy", "kix-unknown-attempt:id"]) {
       expect(() => assertAllowedStorageKey(key)).toThrow(/not allowed/);
     }
   });

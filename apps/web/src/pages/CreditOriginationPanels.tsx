@@ -3,6 +3,7 @@ import { messages as copy1 } from "../i18n/messages/credit-origination";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { ReactNode } from "react";
 import { ORIGINATION_SCENARIOS, type OriginationScenario } from "@kix/protocol-adapter";
 import { AmountNotice, StatusMark } from "../a11y/marks";
@@ -62,7 +63,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
   const reasonId = `${id}-reason`;
   return (
     <>
-      <button
+      <ConnectivityWriteButton
         type="button"
         id={id}
         className="discovery-action"
@@ -72,7 +73,7 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
         onClick={control.enabled ? onPress : undefined}
       >
         {deskText(t, label)}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word={t("status.transport.blocked")} /> {deskText(t, control.reason)}
@@ -151,20 +152,20 @@ export function OriginationControls({
           {t("s1ax")}</button>
         <button type="button" id="origination-switch" className="discovery-action" onClick={() => actions.switchScope()}>
           {t("s1ns")}</button>
-        <button type="button" id="origination-advance-review" className="discovery-action" onClick={() => actions.advanceReview()}>
-          {t("s1v")}</button>
-        <button type="button" id="origination-advance-policy" className="discovery-action" onClick={() => actions.advancePolicy()}>
-          {t("s1u")}</button>
-        <button type="button" id="origination-withdraw-consent" className="discovery-action" onClick={() => actions.withdrawConsent()}>
-          {t("s26q")}</button>
-        <button type="button" id="origination-expire-document" className="discovery-action" onClick={() => actions.expireDocument()}>
-          {t("ska")}</button>
-        <button type="button" id="origination-rival-request" className="discovery-action" onClick={() => actions.rivalRequest()}>
-          {t("s1hd")}</button>
-        <button type="button" id="origination-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
-          {t("s1h6")}</button>
-        <button type="button" id="origination-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          {t("s1m2")}</button>
+        <ConnectivityWriteButton type="button" id="origination-advance-review" className="discovery-action" onClick={() => actions.advanceReview()}>
+          {t("s1v")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="origination-advance-policy" className="discovery-action" onClick={() => actions.advancePolicy()}>
+          {t("s1u")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="origination-withdraw-consent" className="discovery-action" onClick={() => actions.withdrawConsent()}>
+          {t("s26q")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="origination-expire-document" className="discovery-action" onClick={() => actions.expireDocument()}>
+          {t("ska")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="origination-rival-request" className="discovery-action" onClick={() => actions.rivalRequest()}>
+          {t("s1hd")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="origination-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
+          {t("s1h6")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="origination-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+          {t("s1m2")}</ConnectivityWriteButton>
       </div>
       <p className="muted" data-scenario-note={scenario}>
         {deskText(t, ORIGINATION_SCENARIO_NOTES[scenario])} {t("sbx")}</p>

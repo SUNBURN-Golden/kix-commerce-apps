@@ -11,7 +11,7 @@ import { capacityLine } from "../a11y/present";
 import { StatusMark } from "../a11y/marks";
 import { useT } from "../i18n/desk-context";
 import { useFormatWhen } from "../i18n/locale-context";
-import { protocol } from "../protocol";
+import { protocol } from "../connectivity/desk-protocol";
 import { deskText } from "../i18n/desk-translate";
 import { useJourneyDesk } from "../journey-desk";
 import { useRefundReturnDesk } from "../refund-return";

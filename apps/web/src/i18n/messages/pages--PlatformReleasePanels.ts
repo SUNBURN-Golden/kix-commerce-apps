@@ -1,3 +1,4 @@
+import { c141 } from "./shared-copy";
 export const messages = {
   en: {
     "s8a": "Assemble the release candidate once",
@@ -20,7 +21,7 @@ export const messages = {
     "sto": "New synthetic session",
     "sxd": "No quarantined answer.",
     "sy9": "No run sent in this session.",
-    "sw7": "Non-claims, each a literal false:",
+    "sw7": c141,
     "s10r": "Note",
     "s13k": "; observed",
     "s15o": "Operations checklist and support/update handoffs",

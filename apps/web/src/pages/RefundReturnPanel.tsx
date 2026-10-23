@@ -4,6 +4,7 @@ import { messages as copy1 } from "../i18n/messages/refund-return";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useRestoreFocus } from "../a11y/focus";
 import { AmountNotice } from "../a11y/marks";
 import {
@@ -51,7 +52,7 @@ function GuardedButton({
   const reasonId = `${id}-reason`;
   return (
     <span className="refund-guard">
-      <button
+      <ConnectivityWriteButton
         id={id}
         type="button"
         aria-disabled={control.enabled ? undefined : true}
@@ -63,7 +64,7 @@ function GuardedButton({
         }}
       >
         {deskText(t, label)}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <span id={reasonId} className="muted">
           {deskText(t, control.reason)}
@@ -184,8 +185,8 @@ export function RefundReturnPanel({
           <div className="row-actions">
             <button type="button" className="ghost" onClick={() => live.actions.refresh()}>
               {t("s1ax")}</button>
-            <button type="button" className="ghost" onClick={() => live.actions.markReturnRequired()}>
-              {t("srr")}</button>
+            <ConnectivityWriteButton type="button" className="ghost" onClick={() => live.actions.markReturnRequired()}>
+              {t("srr")}</ConnectivityWriteButton>
             <GuardedButton
               id={`${baseId}-held`}
               label={t("sg2")}
@@ -208,8 +209,8 @@ export function RefundReturnPanel({
             />
             <button type="button" className="ghost" onClick={() => live.actions.switchContext()}>
               {t("s1nz")}</button>
-            <button type="button" className="ghost" onClick={() => live.actions.newSession()}>
-              {t("sto")}</button>
+            <ConnectivityWriteButton type="button" className="ghost" onClick={() => live.actions.newSession()}>
+              {t("sto")}</ConnectivityWriteButton>
           </div>
           {live.environment === "stub" ? (
             <label className="refund-scenario">

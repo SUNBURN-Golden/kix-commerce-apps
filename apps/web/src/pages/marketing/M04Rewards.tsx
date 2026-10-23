@@ -2,6 +2,9 @@ import { messages as copy0 } from "../../i18n/messages/pages--marketing--M04Rewa
 import { messages as copy1 } from "../../i18n/messages/marketing--desk";
 import { deskText } from "../../i18n/desk-translate";
 import { useT } from "../../i18n/desk-context";
+import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
+import { ValidatedForm } from "../../forms/ValidatedForm";
+import { field } from "../../forms/validation";
 import { useState, type FormEvent } from "react";
 import { PARTNER_REFERRAL_CODES } from "../../marketing/desk";
 import { marketingSession } from "../../marketing/session";
@@ -27,7 +30,7 @@ export function M04Page() {
   }
 
   return (
-    <MarketingChrome id="M04">
+    <MarketingChrome id="M04" onReadAgain={refresh}>
       {error ? (
         <p className="alert" role="alert">
           {deskText(t, error)}
@@ -48,15 +51,15 @@ export function M04Page() {
         </dl>
         <p className="muted">{t("srt")}</p>
       </article>
-      <form className="panel" onSubmit={onSubmit}>
+      <ValidatedForm id="referral-form" fields={[field("referral-code", "validation.label.code")]} className="panel" onSubmit={onSubmit}>
         <label>
-          {t("s17a")}<input value={code} onChange={(event) => setCode(event.target.value)} autoComplete="off" />
+          {t("s17a")}<input id="referral-code" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="off" />
         </label>
         <p className="muted">{t("slm")}{" "}{deskText(t, PARTNER_REFERRAL_CODES.join(", "))}.</p>
         <div className="row-actions">
-          <button type="submit">{t("sem")}</button>
+          <ConnectivityWriteButton type="submit">{t("sem")}</ConnectivityWriteButton>
         </div>
-      </form>
+      </ValidatedForm>
       {snapshot.acceptedReferrals.length > 0 ? (
         <p className="panel">{t("seo")}{" "}{deskText(t, snapshot.acceptedReferrals.join(", "))}</p>
       ) : (

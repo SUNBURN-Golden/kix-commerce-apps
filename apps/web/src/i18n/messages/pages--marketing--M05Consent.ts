@@ -1,3 +1,4 @@
+import { c146, c145, c144, c143, c142 } from "./shared-copy";
 export const messages = {
   en: {
     "s12": "Actor",
@@ -11,7 +12,7 @@ export const messages = {
     "sds": "Consent bind",
     "sdx": "Consent path unavailable. The reviewed gate answers no CORS preflight; the desk stays on integration HTTP and does not fall back to the stub.",
     "sge": "Desk methods not bound",
-    "sim": "Environment integration-http. Loopback status is not loaded yet.",
+    "sim": c142,
     "sis": "Event id",
     "sk6": "Expected consent version",
     "ssi": "Membership-note flag. No address is collected.",
@@ -47,9 +48,9 @@ export const messages = {
     "e.22": "Rejected by the gate",
     "e.23": "Unconfirmed",
     "e.24": "Not sent",
-    "e.26": "integration-http · unavailable",
-    "e.27": "integration-http · checking",
-    "e.28": "integration-http · available",
+    "e.26": c143,
+    "e.27": c144,
+    "e.28": c145,
     "e.66": "Consent bind · stub-shape receipts",
   },
   ko: {
@@ -64,7 +65,7 @@ export const messages = {
     "sds": "동의 연결",
     "sdx": "동의 경로를 사용할 수 없습니다. 검토된 게이트가 CORS 사전 요청에 응답하지 않습니다. integration HTTP를 유지하며 stub으로 되돌아가지 않습니다.",
     "sge": "연결되지 않은 데스크 메서드",
-    "sim": "환경 integration-http. 루프백 상태를 아직 불러오지 않았습니다.",
+    "sim": c146,
     "sis": "행사 식별자",
     "sk6": "예상 동의 버전",
     "ssi": "회원 메모 플래그입니다. 주소를 수집하지 않습니다.",

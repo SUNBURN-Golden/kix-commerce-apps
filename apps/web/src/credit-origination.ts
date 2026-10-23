@@ -1,5 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/credit-origination";
 import { sourceMessage } from "./i18n/source-message";
+import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The credit origination screen on top of the adapter's synthetic origination
  * source. Stub scope: the default port is the synthetic source. On
@@ -51,7 +52,7 @@ import {
   type OriginationScenario,
   type OriginationSyntheticControl,
 } from "@kix/protocol-adapter";
-import { protocol } from "./protocol";
+import { protocol } from "./connectivity/desk-protocol";
 
 export const ORIGINATION_PAGE_TITLE = sourceCopy.en["sez"];
 
@@ -896,8 +897,8 @@ interface Session {
 }
 
 function createSession(environment: "stub" | "integration-http", scenario: OriginationScenario, applicantRef: string): Session {
-  const port = creditOriginationPortFor(environment, { scenario });
-  return { port, controller: new CreditOriginationController(port, { actorRef: ORIGINATION_DESK_ACTOR, applicantRef }) };
+  const port = connectivityPort(creditOriginationPortFor(environment, { scenario }), "credit-origination");
+  return { port, controller: connectivityController(new CreditOriginationController(port, { actorRef: ORIGINATION_DESK_ACTOR, applicantRef }), port) };
 }
 
 export function useCreditOrigination(): {
@@ -1077,6 +1078,6 @@ export function useCreditOrigination(): {
     scenario,
     applicantRef,
     model: buildOriginationModel({ controller: session.controller, last }),
-    actions,
+    actions: connectedActions(actions, ['submit', 'amend', 'provideDocument', 'renewConsent', 'rereview', 'acceptCommitment', 'requestDrawdown', 'advanceReview', 'advancePolicy', 'withdrawConsent', 'expireDocument', 'rivalRequest', 'revokeGrant', 'setScenario', 'newSession'], sessionRef.current?.port),
   };
 }

@@ -1,3 +1,4 @@
+import { c266, c265 } from "./shared-copy";
 export const messages = {
   en: {
     "s1c": "Adjudicated observations",
@@ -28,7 +29,7 @@ export const messages = {
     "s1nr": "Switch actor",
     "s1ny": "Switch role",
     "s1o9": "Synthetic controls",
-    "s1y1": "These stand in for events a real producer would cause. A real producer offers none of them.",
+    "s1y1": c265,
     "s25y": "Verdict",
   },
   ko: {
@@ -60,7 +61,7 @@ export const messages = {
     "s1nr": "행위자 전환",
     "s1ny": "역할 전환",
     "s1o9": "합성 제어",
-    "s1y1": "실제 제공자 사건의 대역입니다. 실제 제공자는 이 제어를 제공하지 않습니다.",
+    "s1y1": c266,
     "s25y": "판정",
   },
 } as const;

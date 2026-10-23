@@ -7,6 +7,9 @@ import { messages as copy4 } from "../i18n/messages/inventory-venue";
 import { messages as copy5 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { ValidatedForm } from "../forms/ValidatedForm";
+import { field } from "../forms/validation";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { INVENTORY_SCENARIOS, type InventoryScenario } from "@kix/protocol-adapter";
@@ -94,9 +97,9 @@ export function InventoryControls({
             )))}
           </select>
         </label>
-        <button type="button" className="discovery-action" onClick={() => actions.advanceGeneration()}>
+        <ConnectivityWriteButton requiresFresh={false} type="button" className="discovery-action" onClick={() => actions.advanceGeneration()}>
           {deskText(t, INVENTORY_ADVANCE_LABEL)}
-        </button>
+        </ConnectivityWriteButton>
         <button type="button" className="discovery-action" onClick={() => actions.readSummaryAgain()}>
           {t("s1ca")}</button>
       </div>
@@ -302,7 +305,7 @@ function GaPool({
       <p>{deskText(t, row.noteLine)}</p>
       <p>{deskText(t, row.observedLine)}</p>
       {row.capacityLine ? <p>{deskText(t, row.capacityLine)}</p> : null}
-      <form
+      <ValidatedForm id="inventory-ga-form" fields={[field("inventory-quantity", "validation.label.quantity", { kind: "positiveInteger" })]}
         className="discovery-controls"
         aria-label={t("smc")}
         onSubmit={(event) => {
@@ -322,7 +325,7 @@ function GaPool({
         </label>
         <button type="submit" className="discovery-action">
           {t("s1j1")}</button>
-      </form>
+      </ValidatedForm>
       <p id="inventory-quantity-hint" className="muted">
         {deskText(t, INVENTORY_QUANTITY_HINT)}
       </p>
