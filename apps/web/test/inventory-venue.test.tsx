@@ -115,11 +115,11 @@ function selectionRequest(patch: Partial<InventorySelectionRequest> = {}): Inven
 }
 
 function summaryModelFor(outcome: SummaryState, held: number | null = INVENTORY_GENERATION, served = INVENTORY_GENERATION, scenario: InventoryScenario = "clean") {
-  return buildSummaryModel({ outcome, scenario, servedGeneration: served, heldGeneration: held });
+  return buildSummaryModel({ locale: "en-GB", outcome, scenario, servedGeneration: served, heldGeneration: held });
 }
 
 function pageModelFor(outcome: PageState, sectionId = "sec-orch", freeOnly = false) {
-  return buildPageModel({ outcome, sectionId, section: null, freeOnly });
+  return buildPageModel({ locale: "en-GB", outcome, sectionId, section: null, freeOnly });
 }
 
 function html(node: React.ReactNode): string {
@@ -148,7 +148,7 @@ function renderPage(outcome: PageState, extra: { selectedUnitId?: string | null;
 function renderSelection(outcome: SelectionState, sectionId = "sec-orch", unitId = "sec-orch-s000003"): string {
   return html(
     <SelectionSection
-      model={buildSelectionModel({ outcome })}
+      model={buildSelectionModel({ locale: "en-GB", outcome })}
       sectionId={sectionId}
       unitId={unitId}
       actions={NO_ACTIONS}
@@ -392,7 +392,7 @@ describe("inventory selection screen", () => {
     const outcome = await stub("clean").readSelection(
       selectionRequest({ sectionId: "sec-pit", expectedMode: "ga", unitId: "sec-pit-pool", quantity: 99 }),
     );
-    const model = buildSelectionModel({ outcome });
+    const model = buildSelectionModel({ locale: "en-GB", outcome });
     expect(model.invalidCode).toBe("QUANTITY");
     expect(model.selected).toBe(false);
     const markup = renderSelection(outcome, "sec-pit", "sec-pit-pool");
@@ -689,14 +689,14 @@ describe("inventory return actions", () => {
   it("marks a unit selected only after a ready selection read", async () => {
     const port = stub("hot");
     const ready = await stub("clean").readSelection(selectionRequest());
-    expect(selectedUnitFor(buildSelectionModel({ outcome: ready }), "sec-orch-s000003")).toBe("sec-orch-s000003");
+    expect(selectedUnitFor(buildSelectionModel({ locale: "en-GB", outcome: ready }), "sec-orch-s000003")).toBe("sec-orch-s000003");
     await port.readPage(pageRequest());
     const unfree = await port.readSelection(selectionRequest());
     expect(unfree.kind).toBe("unit-unavailable");
-    expect(selectedUnitFor(buildSelectionModel({ outcome: unfree }), "sec-orch-s000003")).toBeNull();
-    expect(selectedUnitFor(buildSelectionModel({ outcome: { kind: "loading" } }), "sec-orch-s000003")).toBeNull();
+    expect(selectedUnitFor(buildSelectionModel({ locale: "en-GB", outcome: unfree }), "sec-orch-s000003")).toBeNull();
+    expect(selectedUnitFor(buildSelectionModel({ locale: "en-GB", outcome: { kind: "loading" } }), "sec-orch-s000003")).toBeNull();
     expect(selectedUnitFor(null, "sec-orch-s000003")).toBeNull();
-    const markup = renderPage(await port.readPage(pageRequest()), { selectedUnitId: selectedUnitFor(buildSelectionModel({ outcome: unfree }), "sec-orch-s000003") });
+    const markup = renderPage(await port.readPage(pageRequest()), { selectedUnitId: selectedUnitFor(buildSelectionModel({ locale: "en-GB", outcome: unfree }), "sec-orch-s000003") });
     expect(markup).not.toContain('aria-selected="true"');
   });
 

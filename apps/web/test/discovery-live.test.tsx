@@ -51,7 +51,7 @@ async function secondPage(stream: DiscoveryStreamKind): Promise<DiscoveryReadOut
 }
 
 function modelFor(outcome: DiscoveryReadOutcome, stream: DiscoveryStreamKind = "clean"): LiveListModel {
-  return buildLiveListModel({
+  return buildLiveListModel({ locale: "en-GB",
     stream,
     revision: DISCOVERY_PROJECTION_REVISION,
     filter: FILTER,
@@ -79,7 +79,7 @@ function renderList(model: LiveListModel): string {
 function renderDetail(outcome: DiscoveryRowOutcome): string {
   return renderToStaticMarkup(
     <MemoryRouter>
-      <LiveReadDetail model={buildLiveDetailModel({ outcome })} handlers={{ readAgain() {} }} />
+      <LiveReadDetail model={buildLiveDetailModel({ locale: "en-GB", outcome })} handlers={{ readAgain() {} }} />
     </MemoryRouter>,
   );
 }

@@ -1,3 +1,4 @@
+import { formatWhen } from "../format";
 import { messages as copy0 } from "../i18n/messages/pages--Discovery";
 import { messages as copy1 } from "../i18n/messages/discovery--model";
 import { messages as copy2 } from "../i18n/messages/discovery--fixture";
@@ -16,7 +17,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { conflictControlId, focusControl } from "../a11y/focus";
 import { useT } from "../i18n/desk-context";
-import { useFormatWhen } from "../i18n/locale-context";
+import { useDisplayLocale } from "../i18n/locale-context";
 import { paramsFromQuery, queryFromParams, searchSuffix, type DiscoveryQuery } from "../discovery/model";
 import {
   useDiscoveryLiveRead,
@@ -154,7 +155,7 @@ export function DiscoveryDetail({
   live: { model: LiveDetailModel; handlers: LiveDetailHandlers };
 }) {
   const t = useT(copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
-  const formatWhen = useFormatWhen();
+  const clock = useDisplayLocale();
   const detail = model.detail;
   return (
     <div className="discovery" data-adapter-environment={model.environment}>
@@ -189,7 +190,7 @@ export function DiscoveryDetail({
               </span>
             </p>
             <p className="when">
-              <time dateTime={detail.row.startsAt}>{deskText(t, formatWhen(detail.row.startsAt))}</time>
+              <time dateTime={detail.row.startsAt}>{deskText(t, formatWhen(detail.row.startsAt, clock))}</time>
             </p>
             <h3>{deskText(t, detail.row.title)}</h3>
             <p className="muted">{deskText(t, detail.row.venueLabel)}</p>
@@ -204,7 +205,7 @@ export function DiscoveryDetail({
                 <span className="discovery-badge" data-state="stale">
                   STALE
                 </span>{" "}
-                <time dateTime={detail.row.priceAsOf}>{deskText(t, formatWhen(detail.row.priceAsOf))}</time>
+                <time dateTime={detail.row.priceAsOf}>{deskText(t, formatWhen(detail.row.priceAsOf, clock))}</time>
               </p>
             ) : null}
             {detail.row.kind === "resale" ? (

@@ -1,3 +1,4 @@
+import { formatWhen } from "../format";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
 import { messages as copy0 } from "../i18n/messages/pages--ReservationPanel";
 import { messages as copy1 } from "../i18n/messages/a11y--present";
@@ -6,7 +7,7 @@ import { useT } from "../i18n/desk-context";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { ReservationCaseView } from "@kix/protocol-adapter";
 import { DeadlineLine, StatusMark } from "../a11y/marks";
-import { useFormatWhen } from "../i18n/locale-context";
+import { useDisplayLocale } from "../i18n/locale-context";
 
 export const RESERVATION_DESK_COMMANDS = [
   "register_show",
@@ -62,7 +63,7 @@ export function ReservationPanel({
   pending: boolean;
   onCommand: (command: ReservationDeskCommand) => void;
 }) {
-  const formatWhen = useFormatWhen();
+  const clock = useDisplayLocale();
   const t = useT(deskCopy, copy0, copy1);
   const controls = variant === "booking" ? BOOKING_CONTROLS : ADMISSION_CONTROLS;
   const surface =
@@ -152,7 +153,7 @@ export function ReservationPanel({
           <dd>
             {view && view.logicalTimeMs > 0 ? (
               <time dateTime={new Date(view.logicalTimeMs).toISOString()}>
-                {deskText(t, formatWhen(new Date(view.logicalTimeMs).toISOString()))}
+                {deskText(t, formatWhen(new Date(view.logicalTimeMs).toISOString(), clock))}
               </time>
             ) : (t("sze"))}
           </dd>

@@ -1,3 +1,4 @@
+import { formatWhen } from "../format";
 import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
 import { messages as copy0 } from "../i18n/messages/pages--DiscoveryPanels";
@@ -63,7 +64,7 @@ import {
 import { AmountNotice, StatusMark } from "../a11y/marks";
 import type { DiscoveryModel, PurchaseDecision } from "../discovery-workspace";
 import { useT } from "../i18n/desk-context";
-import { useFormatWhen } from "../i18n/locale-context";
+import { useDisplayLocale } from "../i18n/locale-context";
 
 export function DiscoveryBanner({ model }: { model: DiscoveryModel }) {
   const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
@@ -269,7 +270,7 @@ export function DiscoveryRowCard({
   onOpen: (rowId: string) => void;
 }) {
   const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
-  const formatWhen = useFormatWhen();
+  const clock = useDisplayLocale();
   return (
     <li
       id={`discovery-result-${row.rowId}`}
@@ -288,7 +289,7 @@ export function DiscoveryRowCard({
         </span>
       </p>
       <p className="when">
-        <time dateTime={row.startsAt}>{deskText(t, formatWhen(row.startsAt))}</time>
+        <time dateTime={row.startsAt}>{deskText(t, formatWhen(row.startsAt, clock))}</time>
       </p>
       {active ? <StatusMark kind="selected" /> : null}
       <h3>{deskText(t, row.title)}</h3>
@@ -304,7 +305,7 @@ export function DiscoveryRowCard({
           <span className="discovery-badge" data-state="stale">
             STALE
           </span>{" "}
-          <time dateTime={row.priceAsOf}>{deskText(t, formatWhen(row.priceAsOf))}</time>
+          <time dateTime={row.priceAsOf}>{deskText(t, formatWhen(row.priceAsOf, clock))}</time>
         </p>
       ) : null}
       {row.kind === "resale" && resaleReason ? (
@@ -430,7 +431,7 @@ export function LiveReadSection({
   onOpen: (rowId: string) => void;
 }) {
   const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
-  const formatWhen = useFormatWhen();
+  const clock = useDisplayLocale();
   const [focus, setFocus] = useState(0);
   const rows = model.rows;
   const safeFocus = rows.length === 0 ? 0 : Math.min(focus, rows.length - 1);
@@ -559,7 +560,7 @@ export function LiveReadSection({
               </p>
               <p className="muted">{deskText(t, row.venueLabel)}</p>
               <p className="when">
-                <time dateTime={row.watermark}>{formatWhen(row.watermark)}</time>
+                <time dateTime={row.watermark}>{formatWhen(row.watermark, clock)}</time>
               </p>
               <span>{t("merge.openDetail")}</span>
             </li>
@@ -578,7 +579,7 @@ export function LiveReadDetail({
   handlers: LiveDetailHandlers;
 }) {
   const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
-  const formatWhen = useFormatWhen();
+  const clock = useDisplayLocale();
   const row = model.row;
   return (
     <article
@@ -599,10 +600,10 @@ export function LiveReadDetail({
           </p>
           <p className="muted">{deskText(t, row.venueLabel)}</p>
           <p className="when">
-            <time dateTime={row.startsAt}>{deskText(t, formatWhen(row.startsAt))}</time>
+            <time dateTime={row.startsAt}>{deskText(t, formatWhen(row.startsAt, clock))}</time>
           </p>
           <p className="when">
-            {t("s26a")}{" "}<time dateTime={row.watermark}>{deskText(t, formatWhen(row.watermark))}</time>
+            {t("s26a")}{" "}<time dateTime={row.watermark}>{deskText(t, formatWhen(row.watermark, clock))}</time>
           </p>
           <p>{deskText(t, LIVE_READ_BOUNDARY)}</p>
           <p className="muted">{t("sx7")}</p>
