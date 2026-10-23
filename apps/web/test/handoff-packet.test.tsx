@@ -1,3 +1,4 @@
+import { KIX_SDK_0_CONSUMPTION_DIGESTS } from "@kix/protocol-adapter";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -182,6 +183,7 @@ describe("local handoff packet", () => {
     }
     expect(FIRST_RUN.ciSkip).toContain("not a live-gate pass");
     expect(HANDOFF_PINS.consumedProducerChange).toBe(true);
+    expect(HANDOFF_PINS).toMatchObject(KIX_SDK_0_CONSUMPTION_DIGESTS);
     expect(HANDOFF_PINS.sdkDigest).toBe(KIX_SDK_0_PIN.catalogueSha256);
     expect(HANDOFF_PINS.manifestDigest).toBe(KIX_SDK_0_PIN.manifestSha256);
     // The vector digest is checked against the vendored files themselves, in the manifest's order, not against the value the packet was built from.

@@ -1,5 +1,6 @@
+import { KIX_SDK_0_CONSUMPTION_DIGESTS } from "./sdk-consumption-tuple.js";
 import { COMMERCE_COMMAND_BINDINGS } from "./commerce-bindings.js";
-import { FIXTURE_SCREENS, liveTupleKey } from "./contract-fixtures.js";
+import { FIXTURE_CATALOGUE_VERSION, FIXTURE_SCREENS, liveTupleKey } from "./contract-fixtures.js";
 import {
   DISCOVERY_PROJECTION_AS_OF,
   DISCOVERY_READ_TUPLE_LITERALS,
@@ -24,9 +25,9 @@ import { isRecord } from "./record.js";
  * revision 2026-10-13, 준태님 승인). The real final review and operations
  * handoff stays pending on that node, which is not promoted, waits on the
  * external kix-protocol:k-platform-release, and carries a RELEASE gate plus
- * the user RELEASE decision. No producer SDK, manifest, or vector is
- * consumed, so those digests stay null and this module sends nothing over a
- * network.
+ * the user RELEASE decision. The app records consumed p-sdk-0 BOOTSTRAP
+ * digests, which grant no release authority. This module sends nothing over
+ * a network.
  *
  * A run records one release candidate packet: the producer/consumer source
  * and the synthetic artifact and config tuple it was built under, the
@@ -177,10 +178,10 @@ export interface ReleaseProducerPin {
   sourceProtocolContractSha256: string;
   domain: string;
   pinnedActionCount: number;
-  sdkDigest: null;
-  manifestDigest: null;
-  vectorDigest: null;
-  consumedProducerChange: false;
+  sdkDigest: string;
+  manifestDigest: string;
+  vectorDigest: string;
+  consumedProducerChange: true;
 }
 
 /** The consumer side: which working tree and which surface set this candidate covers. */
@@ -487,7 +488,6 @@ export const RELEASE_DENOMINATORS: readonly ReleaseDenominator[] = [
     { id: "c-marketplace-performance", blockedBy: "c-marketplace-performance + kix-protocol:ps-07-scale-qualification", note: "The scale bench is synthetic. A real large-marketplace read, queue, device measurement, and producer load qualification stays on that pending node." },
     { id: "c-installable-mobile", blockedBy: "c-installable-mobile", note: "The mobile shell is synthetic. A real packaging, install, update, session, vault, presentation, and device read model stays on that pending node." },
     { id: "c-platform-operational-qualification", blockedBy: "c-platform-operational-qualification + kix-protocol:ps-07-scale-qualification, cr-10-credit-qualification + commerce-integration-closeout", note: "The qualification record this packet cites is synthetic. A real platform, finance, and marketing operational qualification stays on that pending node." },
-    { id: "consume-p-sdk-0", blockedBy: "consume-p-sdk-0", note: "No SDK is consumed. SDK, manifest, and vector digests stay null." },
     { id: "c-platform-release", blockedBy: "c-platform-release + kix-protocol:k-platform-release", note: "The real final review and operations handoff stays on that pending node. This packet is its stub-scope stand-in." },
   ]),
   unresolved("acceptance", [
@@ -596,10 +596,10 @@ async function bindingChecks(tupleKey: string): Promise<ReleaseBindingCheck[]> {
   });
   checks.push({
     id: "bindings.pin-tuple",
-    expected: "both OpenAPI pins, protocolMergeSha, and protocolFeatureSha recorded; SDK, manifest, and vector digests null",
-    observed: `contract ${OPENAPI_CONTRACT_PIN.openApiFileSha256.slice(0, 12)}…, gate ${OPENAPI_INTEGRATION_GATE_PIN.openApiFileSha256.slice(0, 12)}…, merge ${OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha.slice(0, 12)}…, feature ${OPENAPI_INTEGRATION_GATE_PIN.protocolFeatureSha.slice(0, 12)}…, sdk/manifest/vector null`,
+    expected: "both OpenAPI pins, protocolMergeSha, and protocolFeatureSha recorded; consumed p-sdk-0 digests recorded",
+    observed: `contract ${OPENAPI_CONTRACT_PIN.openApiFileSha256.slice(0, 12)}…, gate ${OPENAPI_INTEGRATION_GATE_PIN.openApiFileSha256.slice(0, 12)}…, merge ${OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha.slice(0, 12)}…, feature ${OPENAPI_INTEGRATION_GATE_PIN.protocolFeatureSha.slice(0, 12)}…, p-sdk-0 SDK/manifest/vectors recorded in packet`,
     verdict: "recorded",
-    note: "No producer change is consumed: the pins, PINNED_ACTIONS, the CI KIX_PROTOCOL_GATE_SHA, and protocolMergeSha stay where they were.",
+    note: "Consumed p-sdk-0 BOOTSTRAP recorded; OpenAPI pins, PINNED_ACTIONS, CI gate SHA, and protocolMergeSha unchanged.",
   });
   checks.push({
     id: "bindings.approval-scope",
@@ -822,15 +822,13 @@ function buildReleasePacket(
         sourceProtocolContractSha256: OPENAPI_CONTRACT_PIN.sourceProtocolContractSha256,
         domain: PINNED_PROTOCOL_DOMAIN,
         pinnedActionCount: PINNED_ACTIONS.length,
-        sdkDigest: null,
-        manifestDigest: null,
-        vectorDigest: null,
-        consumedProducerChange: false,
+        ...KIX_SDK_0_CONSUMPTION_DIGESTS,
+        consumedProducerChange: true,
       },
       consumer: {
         descriptor: "The working tree under review on this branch. The exact source commit SHA is the reviewer's PR record; this packet mints none.",
         surfaces: FIXTURE_SCREENS.length,
-        fixtureCatalogueVersion: "1",
+        fixtureCatalogueVersion: FIXTURE_CATALOGUE_VERSION,
         fixtureScreens: FIXTURE_SCREENS.length,
       },
       artifact: {

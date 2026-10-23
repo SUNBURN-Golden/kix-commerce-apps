@@ -1,3 +1,4 @@
+import { KIX_SDK_0_CONSUMPTION_DIGESTS } from "../src/sdk-consumption-tuple.js";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -161,7 +162,7 @@ describe("what the desk records and keeps locked", () => {
     ]);
     expect(ORIGINATION_NOT_BOUND_REASON).toContain("kix-protocol:cr-08-producer-sdk");
     expect(ORIGINATION_NOT_BOUND_REASON).toContain("NOT_BOUND");
-    expect(DISCOVERY_READ_TUPLE_LITERALS.sdkDigest).toBeNull();
+    expect(DISCOVERY_READ_TUPLE_LITERALS.sdkDigest).toBe(KIX_SDK_0_CONSUMPTION_DIGESTS.sdkDigest);
   });
 });
 
@@ -548,7 +549,7 @@ describe("read outcomes", () => {
     const changed = createStubCreditOrigination({ expectedTuple: { ...DISCOVERY_READ_TUPLE_LITERALS, protocolMergeSha: "0".repeat(40) } });
     expect(await changed.read(readRequest())).toMatchObject({ kind: "tuple-changed", field: "protocolMergeSha" });
     expect(await changed.act(actRequest(SUBMIT))).toMatchObject({ kind: "tuple-changed", field: "protocolMergeSha" });
-    const sdk = createStubCreditOrigination({ expectedTuple: { ...DISCOVERY_READ_TUPLE_LITERALS, sdkDigest: "sha256:x" as unknown as null } });
+    const sdk = createStubCreditOrigination({ expectedTuple: { ...DISCOVERY_READ_TUPLE_LITERALS, sdkDigest: "sha256:x" } });
     expect(await sdk.read(readRequest())).toMatchObject({ kind: "tuple-changed", field: "sdkTuple" });
   });
 

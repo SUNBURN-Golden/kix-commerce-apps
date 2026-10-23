@@ -1,3 +1,5 @@
+import { DISCOVERY_READ_TUPLE_LITERALS } from "../src/discovery-read.js";
+import { KIX_SDK_0_CONSUMPTION_DIGESTS } from "../src/sdk-consumption-tuple.js";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -161,10 +163,10 @@ describe("operational qualification packet", () => {
     expect(packet.pins.contractOpenApiSha256.length).toBeGreaterThan(0);
     expect(packet.pins.gateOpenApiSha256.length).toBeGreaterThan(0);
     expect(packet.pins.protocolMergeSha.length).toBeGreaterThan(0);
-    expect(packet.pins.sdkDigest).toBeNull();
-    expect(packet.pins.manifestDigest).toBeNull();
-    expect(packet.pins.vectorDigest).toBeNull();
-    expect(packet.pins.consumedProducerChange).toBe(false);
+    expect(packet.pins.sdkDigest).toBe(KIX_SDK_0_CONSUMPTION_DIGESTS.sdkDigest);
+    expect(packet.pins.manifestDigest).toBe(KIX_SDK_0_CONSUMPTION_DIGESTS.manifestDigest);
+    expect(packet.pins.vectorDigest).toBe(KIX_SDK_0_CONSUMPTION_DIGESTS.vectorDigest);
+    expect(packet.pins.consumedProducerChange).toBe(true);
   });
 
   it("bundles the review candidates and the operations material", async () => {
@@ -203,6 +205,13 @@ describe("operational qualification packet", () => {
     expect(qualificationRunnerPortFor("stub").source).toBe("synthetic-qualification");
   });
 
+  it.each(["sdkDigest", "manifestDigest", "vectorDigest"] as const)("refuses %s drift before building a packet", async (field) => {
+    for (const value of ["changed", null]) {
+      const port = createStubQualificationRunner({ expectedTuple: { ...DISCOVERY_READ_TUPLE_LITERALS, [field]: value as unknown as string } });
+      expect(await port.run({ contextKey: CTX, intentRef: "digest-drift" })).toMatchObject({ kind: "tuple-changed", field: "sdkTuple" });
+    }
+  });
+
   it("fails closed when the pin tuple changes", async () => {
     const port = createStubQualificationRunner({
       expectedTuple: {
@@ -215,9 +224,7 @@ describe("operational qualification packet", () => {
         sourceProtocolContractSha256: "x",
         domain: "kix:fixture:lifecycle:0.3",
         pinnedActions: [],
-        sdkDigest: null,
-        manifestDigest: null,
-        vectorDigest: null,
+        ...KIX_SDK_0_CONSUMPTION_DIGESTS,
       },
     });
     const outcome = await port.run({ contextKey: CTX, intentRef: "oq-tuple" });

@@ -32,7 +32,7 @@ export type Sdk0MockScenarioId = (typeof SDK0_MOCK_SCENARIO_IDS)[number];
 type MockCommand = Extract<CommandName, "create_event" | "prepare_trade" | "accept_trade">;
 
 const pin = requireSdkPin();
-/** Separate from catalogue v1's historical null SDK/manifest/vector digests. */
+/** BOOTSTRAP provenance complements the current v2 consumption tuple; v1 stays history. */
 export const SDK0_MOCK_PROVENANCE = Object.freeze({
   producerMergeSha: pin.producerMergeSha,
   producerSourceCommit: pin.producerSourceCommit,

@@ -1,5 +1,11 @@
 # Local evidence matrix (stub) apps bind
 
+## Consumption evidence correction — 2026-10-23
+
+Recorded option (b) now binds the consumed p-sdk-0 BOOTSTRAP SDK, manifest, and vector digests into fixture catalogue v2, discovery's shared synthetic-port checks, release, qualification, and handoff. See [audit-6-decision-apps-bind.md](audit-6-decision-apps-bind.md) for the owner ruling, current tuple, historical v1, consumer mapping, verification, and boundaries. Unavailable domain producer tuples retain nulls and NOT_BOUND. BOOTSTRAP remains `catalogue-schema-binding only`; this grants no qualification or release authority.
+
+The shared tuple and release scope denominator below reflect current consumption; original delivery descriptions and run records remain historical. Any statement there that consumption digests stay null describes v1 at that delivery, not the current app evidence tuple. Both OpenAPI pins, `PINNED_ACTIONS`, the CI gate SHA, `protocolMergeSha`, and locked desk bindings are unchanged.
+
 This bind records one evidence matrix over every local, stub-scope surface and journey, and one final denominator table. It is the stub-scoped reduction of pending node `commerce-integration-closeout`, which stays in `docs/aiops/PENDING_NODES.json`. A real connection waits on its producer prerequisites and becomes a separate follow-up node. The matrix is a document plus a test. There is no new screen, because a screen would invite a reading that the surface is integrated.
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
@@ -311,7 +317,7 @@ Each line has its own count. Nothing is summed, nothing is subtracted, and there
 - D15 active program nodes: 60; MERGED_RECORDED 57, NOT_STARTED 3; central DONE not evaluated
 - D16 pending catalogue nodes: 42; WAITING 40, NOT_STARTED 2; counted as done 0
 - D17 distinct external prerequisites named by pending nodes: 26; completion not verified here; subtracted 0
-- D18 release page area denominators: scope 29 of 29, acceptance 3 of 3, environment 3 of 3, operations 4 of 4, gate 3 of 3 (own denominators, not merged)
+- D18 release page area denominators: scope 28 of 28, acceptance 3 of 3, environment 3 of 3, operations 4 of 4, gate 3 of 3 (own denominators, not merged)
 - D19 pending producers on the handoff packet: 31; connected 0
 
 ### Adapter test files behind D01

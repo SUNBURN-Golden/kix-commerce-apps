@@ -1,5 +1,11 @@
 # Platform operational qualification stub apps bind
 
+## Consumption evidence correction — 2026-10-23
+
+Recorded option (b) now binds the consumed p-sdk-0 BOOTSTRAP SDK, manifest, and vector digests into fixture catalogue v2, discovery's shared synthetic-port checks, release, qualification, and handoff. See [audit-6-decision-apps-bind.md](audit-6-decision-apps-bind.md) for the owner ruling, current tuple, historical v1, consumer mapping, verification, and boundaries. Unavailable domain producer tuples retain nulls and NOT_BOUND. BOOTSTRAP remains `catalogue-schema-binding only`; this grants no qualification or release authority.
+
+The original delivery description and run records below are historical. Any statement there that consumption digests stay null describes v1 at that delivery, not the current app evidence tuple. Both OpenAPI pins, `PINNED_ACTIONS`, the CI gate SHA, `protocolMergeSha`, and locked desk bindings are unchanged.
+
 This bind is the stub-scoped operational qualification screen at `/qualification`. It is the synthetic reduction of pending node `c-platform-operational-qualification` (plan revision 2026-10-13, 준태님 승인): the real platform, finance, and marketing operational qualification stays pending on that node, which is not promoted and stays in `docs/aiops/PENDING_NODES.json`, and which waits on `kix-protocol:ps-07-scale-qualification`, `kix-protocol:cr-10-credit-qualification`, and the unpromoted `commerce-integration-closeout`. This node composes the sibling synthetic sources — the platform trade page, the provider checkout page, the installable mobile shell, and the marketplace scale bench — through their own controllers into one recorded qualification packet and one set of real-user review candidates. It is not a service qualification, not a real-user review, not a public deployment approval, not a real-money approval, and not a producer qualification receipt, and it does not claim one.
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.

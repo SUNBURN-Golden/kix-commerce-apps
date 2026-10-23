@@ -255,7 +255,7 @@ describe("denied and refused reads", () => {
   });
 
   it("reports a tuple change before any read row is trusted", async () => {
-    const port = createStubTenantPermissions({ expectedTuple: { ...DISCOVERY_READ_TUPLE_LITERALS, sdkDigest: "sha256:x" as unknown as null } });
+    const port = createStubTenantPermissions({ expectedTuple: { ...DISCOVERY_READ_TUPLE_LITERALS, sdkDigest: "sha256:x" } });
     const outcome = await port.read(readRequest(TENANT_ORGANIZER_ACTOR, SCOPE_ORGANIZER));
     expect(outcome.kind).toBe("tuple-changed");
   });

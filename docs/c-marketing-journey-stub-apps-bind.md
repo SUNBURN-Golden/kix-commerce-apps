@@ -1,5 +1,11 @@
 # Marketing journey stub apps bind
 
+## Consumption evidence correction — 2026-10-23
+
+Recorded option (b) now binds the consumed p-sdk-0 BOOTSTRAP SDK, manifest, and vector digests into fixture catalogue v2, discovery's shared synthetic-port checks, release, qualification, and handoff. See [audit-6-decision-apps-bind.md](audit-6-decision-apps-bind.md) for the owner ruling, current tuple, historical v1, consumer mapping, verification, and boundaries. Unavailable domain producer tuples retain nulls and NOT_BOUND. BOOTSTRAP remains `catalogue-schema-binding only`; this grants no qualification or release authority.
+
+The original delivery description and run records below are historical. Any statement there that consumption digests stay null describes v1 at that delivery, not the current app evidence tuple. Both OpenAPI pins, `PINNED_ACTIONS`, the CI gate SHA, `protocolMergeSha`, and locked desk bindings are unchanged.
+
 This bind is the stub-scoped marketing benefit journey at `/marketing/journey`. It is the synthetic reduction of pending node `c-marketing-journey`: the real connection stays pending on `kix-protocol:wave7-marketing-contracts` and on the unpromoted `w7-m01-membership`, `w7-m02-presale`, `w7-m03-coupon`, and `w7-m04-referral` nodes. This node wires the benefit seam — a fan finds a benefit, applies it to an order, is rejected or accepted by the source, and has it reclaimed — onto a deterministic synthetic source, and it consumes consent as an observation. It is not a producer connection and does not claim one. A benefit notice confirms no purchase, and an application confirms no purchase and pays no reward.
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.

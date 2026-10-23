@@ -144,6 +144,7 @@ export {
   requireSdkPin,
   type SdkPinInputs,
 } from "./sdk-pin.js";
+export { KIX_SDK_0_CONSUMPTION_DIGESTS, type SdkConsumptionDigests } from "./sdk-consumption-tuple.js";
 export {
   DISCOVERY_CURSOR_VERSION,
   DISCOVERY_DESK_SCOPE,

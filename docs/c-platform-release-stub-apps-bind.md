@@ -1,5 +1,11 @@
 # Platform release stub apps bind
 
+## Consumption evidence correction — 2026-10-23
+
+Recorded option (b) now binds the consumed p-sdk-0 BOOTSTRAP SDK, manifest, and vector digests into fixture catalogue v2, discovery's shared synthetic-port checks, release, qualification, and handoff. See [audit-6-decision-apps-bind.md](audit-6-decision-apps-bind.md) for the owner ruling, current tuple, historical v1, consumer mapping, verification, and boundaries. Unavailable domain producer tuples retain nulls and NOT_BOUND. BOOTSTRAP remains `catalogue-schema-binding only`; this grants no qualification or release authority.
+
+The original delivery description and run records below are historical. Any statement there that consumption digests stay null describes v1 at that delivery, not the current app evidence tuple. Both OpenAPI pins, `PINNED_ACTIONS`, the CI gate SHA, `protocolMergeSha`, and locked desk bindings are unchanged.
+
 This bind is the stub-scoped release candidate and user review screen at `/release`. It is the synthetic reduction of pending node `c-platform-release` (plan revision 2026-10-13, 준태님 승인): the real final review, user acceptance, RELEASE gate, and operations handoff stays pending on that node, which is not promoted and stays in `docs/aiops/PENDING_NODES.json`, and which waits on the external `kix-protocol:k-platform-release` and the user RELEASE decision. This node assembles one release candidate packet: the producer/consumer source, the synthetic artifact descriptor, and the config tuple pinned under the live tuple key; the sibling qualification record re-run as technical evidence only; the install, publish, and operate decisions presented and never taken; the support, incident, privacy, accessibility, and update/rollback handoffs; and the deferred scope and unresolved items on five separate denominators. It is not a release, not a public deployment, not a real-money approval, not real operations, and not a real-user acceptance, and it does not claim one.
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.

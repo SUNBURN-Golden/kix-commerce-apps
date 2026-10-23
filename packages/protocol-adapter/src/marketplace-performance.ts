@@ -15,8 +15,8 @@ import { sha256Hex } from "./sha256.js";
  *
  * This is the stub-scope stand-in for the producer read contract the pending
  * node c-marketplace-performance waits on (kix-protocol:ps-07-scale-qualification
- * is not merged). No producer SDK, manifest, or vector is consumed, so those
- * digests stay null. The contract-only catalogue has no marketplace read,
+ * is not merged). The shared discovery tuple records consumed app SDK digests;
+ * it does not bind the unavailable marketplace producer. The contract-only catalogue has no marketplace read,
  * queue, or search command, so the same port stays not-bound on
  * integration-http.
  *

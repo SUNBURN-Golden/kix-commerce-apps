@@ -16,7 +16,7 @@ import { PLATFORM_HOLD_NOT_BOUND, PLATFORM_NOT_COMPOSED } from "./platform-journ
  * the unpromoted refund-surface. The contract-only catalogue has no read command for a
  * reconciliation case, a source cut, a payee allocation, an unapplied remainder, or an
  * accounting export, and no command that corrects a ledger. No producer tuple exists,
- * so the desk is NOT_BOUND on integration-http. No SDK, manifest, or vector is
+ * so the desk is NOT_BOUND on integration-http. No domain producer SDK, manifest, or vector is
  * consumed, and this module sends nothing over a network.
  *
  * Nothing here composes a catalogue command: no money posting is sent, and the

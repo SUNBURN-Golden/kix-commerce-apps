@@ -1,3 +1,4 @@
+import { KIX_SDK_0_CONSUMPTION_DIGESTS } from "./sdk-consumption-tuple.js";
 import { OPENAPI_INTEGRATION_GATE_PIN } from "./integration-gate-pin.js";
 import { OPENAPI_CONTRACT_PIN, PINNED_ACTIONS, PINNED_PROTOCOL_DOMAIN } from "./openapi-contract-pin.js";
 import { isRecord } from "./record.js";
@@ -9,8 +10,8 @@ import { ProtocolError } from "./types.js";
  *
  * This is the stub-scope stand-in for the producer read contract. The real
  * producer read stays pending on kix-protocol:ps-05-query-projections,
- * bind-list-read, and c-journey-identity. No producer SDK, manifest, or
- * vector is consumed, so those digests stay null.
+ * bind-list-read, and c-journey-identity. The app consumption tuple records
+ * the verified p-sdk-0 BOOTSTRAP digests; it binds no projection producer.
  *
  * Rows are synthetic projection labels. A row confirms no sale, no
  * ownership, and no payment. This module sends nothing, retries nothing,
@@ -74,7 +75,7 @@ export type DiscoveryRowStatus = (typeof DISCOVERY_ROW_STATUSES)[number];
  * The pin tuple this read is recorded against. The same producer-change rule
  * applies: a catalogue or gate change moves both OpenAPI pins, PINNED_ACTIONS,
  * the CI gate SHA, protocolMergeSha, and the SDK/manifest/vector tuple
- * together. The SDK, manifest, and vector digests stay null; none is consumed.
+ * together. The app already consumes the p-sdk-0 BOOTSTRAP tuple.
  */
 export interface DiscoveryReadTuple {
   contractOpenApiSha256: string;
@@ -86,9 +87,9 @@ export interface DiscoveryReadTuple {
   sourceProtocolContractSha256: string;
   domain: string;
   pinnedActions: readonly string[];
-  sdkDigest: null;
-  manifestDigest: null;
-  vectorDigest: null;
+  sdkDigest: string;
+  manifestDigest: string;
+  vectorDigest: string;
 }
 
 export const DISCOVERY_READ_TUPLE_LITERALS: DiscoveryReadTuple = {
@@ -101,9 +102,9 @@ export const DISCOVERY_READ_TUPLE_LITERALS: DiscoveryReadTuple = {
   sourceProtocolContractSha256: "ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
   domain: "kix:fixture:lifecycle:0.3",
   pinnedActions: PINNED_ACTIONS,
-  sdkDigest: null,
-  manifestDigest: null,
-  vectorDigest: null,
+  sdkDigest: "891ddd65f29262603bd0f76746a9308c810a71d4afd717b0f4d2e3f7d46dbaa2",
+  manifestDigest: "1cce4ee5a9aa64ef40825c0e6dedf920050e594cf20ea0aaf087ecbde46f0cca",
+  vectorDigest: "canonical-encoding:3446c13847bb153df06c1d5d3b7f09cd3b1648ac10bb0cc76d7b65c7014e99c2 mixed-input:9e2441ddefc22a2f8c7be230436620908b735b128b9445b7a5a916e4d86a2e19",
 };
 
 export interface DiscoveryProjectionRow {
@@ -247,9 +248,7 @@ export function liveDiscoveryReadTuple(): DiscoveryReadTuple {
     sourceProtocolContractSha256: OPENAPI_CONTRACT_PIN.sourceProtocolContractSha256,
     domain: PINNED_PROTOCOL_DOMAIN,
     pinnedActions: PINNED_ACTIONS,
-    sdkDigest: null,
-    manifestDigest: null,
-    vectorDigest: null,
+    ...KIX_SDK_0_CONSUMPTION_DIGESTS,
   };
 }
 
@@ -273,11 +272,10 @@ export function checkDiscoveryReadTuple(expected: DiscoveryReadTuple = DISCOVERY
   if (!sameList(live.pinnedActions, expected.pinnedActions)) {
     return { field: "pinnedActions", expected: expected.pinnedActions.join(","), actual: live.pinnedActions.join(",") };
   }
-  if (expected.sdkDigest !== null || expected.manifestDigest !== null || expected.vectorDigest !== null) {
-    return { field: "sdkTuple", expected: "null digests", actual: "consumed digests" };
-  }
-  if (live.sdkDigest !== expected.sdkDigest || live.manifestDigest !== expected.manifestDigest || live.vectorDigest !== expected.vectorDigest) {
-    return { field: "sdkTuple", expected: "null digests", actual: "live digests differ" };
+  for (const field of ["sdkDigest", "manifestDigest", "vectorDigest"] as const) {
+    if (live[field] !== expected[field]) {
+      return { field: "sdkTuple", expected: `${field}:${expected[field]}`, actual: `${field}:${live[field]}` };
+    }
   }
   return null;
 }

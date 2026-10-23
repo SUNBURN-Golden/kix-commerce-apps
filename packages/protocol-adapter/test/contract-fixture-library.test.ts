@@ -1,3 +1,4 @@
+import { KIX_SDK_0_CONSUMPTION_DIGESTS } from "../src/sdk-consumption-tuple.js";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -53,14 +54,14 @@ function resultKeys(outcome: { kind: string; receipt?: Record<string, unknown> }
 }
 
 describe("contract fixture catalogue", () => {
-  it("binds version 1 to the live pin tuple and consumes no SDK", () => {
-    expect(FIXTURE_CATALOGUE_VERSION).toBe("1");
+  it("binds version 2 to the live pin tuple and consumed SDK", () => {
+    expect(FIXTURE_CATALOGUE_VERSION).toBe("2");
     expect(FIXTURE_RULING).toBe("M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce");
     expect(() => assertCatalogueBound()).not.toThrow();
     expect(liveTupleKey()).toBe(FIXTURE_TUPLE_KEY);
-    expect(FIXTURE_TUPLE_LITERALS.sdkDigest).toBeNull();
-    expect(FIXTURE_TUPLE_LITERALS.manifestDigest).toBeNull();
-    expect(FIXTURE_TUPLE_LITERALS.vectorDigest).toBeNull();
+    expect(FIXTURE_TUPLE_LITERALS.sdkDigest).toBe(KIX_SDK_0_CONSUMPTION_DIGESTS.sdkDigest);
+    expect(FIXTURE_TUPLE_LITERALS.manifestDigest).toBe(KIX_SDK_0_CONSUMPTION_DIGESTS.manifestDigest);
+    expect(FIXTURE_TUPLE_LITERALS.vectorDigest).toBe(KIX_SDK_0_CONSUMPTION_DIGESTS.vectorDigest);
     expect(FIXTURE_TUPLE_LITERALS.protocolMergeSha).toBe(OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha);
     expect(FIXTURE_TUPLE_LITERALS.pinnedActions).toEqual([...PINNED_ACTIONS]);
     const workflow = readFileSync(path.join(repoRoot, ".github/workflows/ci.yml"), "utf8");

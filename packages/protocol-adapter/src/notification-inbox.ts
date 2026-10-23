@@ -34,7 +34,7 @@ import {
  * keeps it. The contract-only catalogue has no notification read, no dedupe or
  * read-state command, no offered-action resolve, and no support-inquiry
  * command. No producer tuple exists, so the inbox is NOT_BOUND on
- * integration-http. No SDK, manifest, or vector is consumed, no external send
+ * integration-http. No domain producer SDK, manifest, or vector is consumed, no external send
  * or provider API is wired, and this module sends nothing over a network.
  *
  * Nothing here composes a catalogue command: no money posting is sent, and the

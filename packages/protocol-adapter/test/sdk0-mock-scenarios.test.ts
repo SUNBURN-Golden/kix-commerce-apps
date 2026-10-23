@@ -1,3 +1,4 @@
+import { KIX_SDK_0_CONSUMPTION_DIGESTS } from "../src/sdk-consumption-tuple.js";
 import { readFileSync } from "node:fs";
 import type { LocalCallEnvelope } from "#kix-sdk-0/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -37,7 +38,7 @@ describe("p-sdk-0 offline scenario kit", () => {
       profileKind: "BOOTSTRAP", profileRevision: "bootstrap-1", grants: "catalogue-schema-binding only",
       semanticConformance: false, productionEndpoint: false, protocolTruth: false,
     });
-    expect(FIXTURE_TUPLE_LITERALS).toMatchObject({ sdkDigest: null, manifestDigest: null, vectorDigest: null });
+    expect(FIXTURE_TUPLE_LITERALS).toMatchObject(KIX_SDK_0_CONSUMPTION_DIGESTS);
     for (const scenario of scenarios) {
       expect(scenario.fixture).toEqual(fixtureById(scenario.fixtureId));
       expect(scenario.source).toBe("stub-shape");
