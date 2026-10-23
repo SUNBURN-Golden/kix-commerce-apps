@@ -117,3 +117,34 @@ The first test attempt exposed the two stale Shell snapshots and missing install
 | `git diff --exit-code -- packages/ .github/ .aiops/ docs/aiops/ package.json package-lock.json` | Exit 0 against the merge index; no conflict-resolution edit in these paths. Main's already-staged merged changes are retained. |
 
 Final observations remain local synthetic evidence. Live gate, HTTP/browser integration, real-device/screen-reader observation, production qualification and user acceptance are unverified; release remains NOT_AUTHORIZED. No GitHub comment, staging, commit, merge command, rebase, reset, checkout or push was performed by the builder.
+
+## PR fix round 1 — CSS budget
+
+Source: branch `agent/kixc-c-first-run-onboarding-stub`, HEAD `39ef137537538f1b5b8743b62910df3bb41e0c7e`, plus this uncommitted fix. The tested `apps/web/src/styles.css` sha256 is `a73fe0338f565bce22d44cb4e1b568deba9e097df9a93feaaadcd8ac4af2c1ce`. The only runtime file changed in this round is that stylesheet; this document records the evidence. No blocking review finding was supplied. The supplied CI failure was initial CSS gzip 5058 > 5000; a local unchanged-source build reproduced it at 5069 > 5000.
+
+Repeated status-attribute and keyboard-focus selector prefixes now use `:is()`. Each alternative has the same specificity as its original selector; declarations and rule order are preserved. The discovery scroll-region focus selector stays separate because it has a different specificity from the form controls. No screen, route, copy, state, storage or transport changes. No budget, baseline, test, dependency, CI or protected-path change.
+
+M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. The locked bindings still match `origin/main` (`376042e5761753e577510abb1c61df4791ff98dd`) byte for byte, sha256 `83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249`. Session TTL remains UNDETERMINED. No catalogue or gate change is consumed. The other supplied owner rulings require no implementation in this CSS fix.
+
+Local tools remain Node `v20.19.2`, Google Chrome `155.0.8059.84`, and Playwright core `1.58.2`. Browser suites use clean stub builds and loopback only. Evidence applies to HEAD plus the stylesheet digest above, not a new commit.
+
+| Command actually run | Result |
+| --- | --- |
+| `npm run build` then `npm run budget` before the fix | Build succeeded; size check reproduced the failure: initial JS 286911, CSS 5069, total gzip 631902. Log: `/tmp/kix-onboarding-fix-budget-before.log`. |
+| `npm run build` then `npm run budget` after the fix | Passed: initial JS 286916, CSS 4974, total gzip 631859, 68 files / 66 chunks; largest route chunk gzip 21504. All existing limits pass without adjustment. Logs: `/tmp/kix-onboarding-fix-{build,budget}.log`. |
+| `npm run test -w @kix/web` | 79 files / 1052 tests passed, including onboarding, storage, guides, snapshots and the evidence matrix. Log: `/tmp/kix-onboarding-fix-web-tests.log`. |
+| `npm run typecheck` | Passed for adapter and web. Log: `/tmp/kix-onboarding-fix-typecheck.log`. |
+| `npm run typecheck:e2e` and `npm run lint` | Both passed. Logs: `/tmp/kix-onboarding-fix-{typecheck-e2e,lint}.log`. |
+| `KIX_REQUIRE_GATE=0 KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 KIX_BUDGET_RECORD_OUT=/tmp/kix-onboarding-fix-browser-budget.json npm run test:budget` | 3 files / 9 tests passed, including loading, missing/stale chunks, UNKNOWN preservation, route splitting and long lists. Network ledger all zero. |
+
+The first visual comparison attempt passed 41 / 42 tests; `help.phone.en.light` timed out at the existing 60000ms limit. No pixel mismatch was reported, and no timeout, retry, baseline or assertion was changed. A complete comparison rerun supplies the final evidence below.
+
+| Final browser command actually run | Result |
+| --- | --- |
+| `KIX_REQUIRE_GATE=0 KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 KIX_VISUAL_RECORD_OUT=/tmp/kix-onboarding-fix-visual-final.json KIX_VISUAL_OUT=/tmp/kix-onboarding-fix-visual-final npm run test:visual` | 3 files / 42 tests passed on complete rerun. All 32 existing baselines MATCH with diffPixels=0, including the previously timed-out Help case, ko/en, phone/desktop, dark mode and forced colours. Network ledger all zero. |
+| `KIX_REQUIRE_GATE=0 KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 KIX_A11Y_RECORD_OUT=/tmp/kix-onboarding-fix-a11y.json npm run test:a11y` | 15 files / 267 tests passed. Includes all four onboarding checks, every screen's keyboard/structure/reflow and axe probes, empty/error/pending states, blocked storage, UNKNOWN fences, dark mode, forced colours and print. Network ledger all zero. |
+| `git diff --check` | Passed. |
+| `git diff --exit-code HEAD -- packages/ .aiops/ docs/aiops/ .github/ apps/web/bundle-budget.json package.json package-lock.json` | Passed: protected areas, budget, CI and dependencies unchanged in this fix round. |
+| `git diff --exit-code origin/main -- packages/protocol-adapter/src/commerce-bindings.ts` | Passed: locked bindings byte-identical to main. |
+
+Only `apps/web/src/styles.css` and this binding document changed in fix round 1. No commit, push, staging or external post was performed. These are local synthetic observations; live gate, HTTP/browser integration, real device, screen reader, production qualification and user acceptance remain unverified. Release remains NOT_AUTHORIZED.
