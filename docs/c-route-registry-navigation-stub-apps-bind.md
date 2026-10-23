@@ -36,41 +36,41 @@ The rows below are generated from the registry by a test and compared with this 
 | Path | Label | Group | Binding | Nav | A11y | E2E | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `/` | Box office | Buyer | stub-only | link | box-office | box-office | surface-row |
-| `/buyer` | Buyer | Buyer | stub-only | link | buyer | - | surface-row |
-| `/discovery` | Discover | Buyer | stub-only | link | discovery | - | surface-row |
-| `/inventory` | Seats and GA | Buyer | stub-only | link | inventory | - | surface-row |
+| `/buyer` | Buyer | Buyer | stub-only | link | buyer | buyer | surface-row |
+| `/discovery` | Discover | Buyer | stub-only | link | discovery | discovery | surface-row |
+| `/inventory` | Seats and GA | Buyer | stub-only | link | inventory | inventory | surface-row |
 | `/booking/:eventId` | Booking | Buyer | published-bound | hidden | booking | booking | surface-row |
 | `/admission` | Admission | Buyer | stub-only | link | admission | admission | surface-row |
 | `/resale` | Resale | Buyer | stub-only | link | resale | resale | surface-row |
 | `/gift` | Gift | Buyer | published-bound | link | gift | gift | surface-row |
-| `/mobile` | Mobile shell | Buyer | stub-only | link | mobile | - | surface-row |
-| `/assistant` | Assistant | Buyer | stub-only | link | assistant | - | surface-row |
+| `/mobile` | Mobile shell | Buyer | stub-only | link | mobile | mobile | surface-row |
+| `/assistant` | Assistant | Buyer | stub-only | link | assistant | assistant | surface-row |
 | `/organizer` | Organizer | Organizer | published-bound | link | organizer | organizer | surface-row |
-| `/organizer/workspace` | Organizer workspace | Organizer | published-bound | link | organizer-workspace | - | surface-row |
-| `/merchant` | Merchant | Organizer | stub-only | link | merchant | - | surface-row |
-| `/finance` | Finance | Finance | stub-only | link | finance | - | surface-row |
-| `/provider` | Provider journey | Finance | stub-only | link | provider | - | surface-row |
+| `/organizer/workspace` | Organizer workspace | Organizer | published-bound | link | organizer-workspace | organizer-workspace | surface-row |
+| `/merchant` | Merchant | Organizer | stub-only | link | merchant | merchant | surface-row |
+| `/finance` | Finance | Finance | stub-only | link | finance | finance | surface-row |
+| `/provider` | Provider journey | Finance | stub-only | link | provider | provider | surface-row |
 | `/credit` | Credit | Credit | stub-only | link | credit | credit | surface-row |
-| `/credit/origination` | Credit origination | Credit | stub-only | link | credit-origination | - | surface-row |
-| `/credit/servicing` | Credit servicing | Credit | stub-only | link | credit-servicing | - | surface-row |
-| `/marketing` | Marketing | Marketing | no-published-command | link | marketing | - | surface-row |
-| `/marketing/journey` | Benefit journey | Marketing | stub-only | link | marketing-journey | - | surface-row |
-| `/marketing/m01` | Marketing M01 | Marketing | no-published-command | section | marketing-m01 | - | surface-row |
-| `/marketing/m02` | Marketing M02 | Marketing | no-published-command | section | marketing-m02 | - | surface-row |
-| `/marketing/m03` | Marketing M03 | Marketing | no-published-command | section | marketing-m03 | - | surface-row |
-| `/marketing/m04` | Marketing M04 | Marketing | no-published-command | section | marketing-m04 | - | surface-row |
-| `/marketing/m05` | Marketing M05 | Marketing | published-bound | section | marketing-m05 | - | surface-row |
-| `/platform` | Trading platform | Platform | stub-only | link | platform | - | surface-row |
-| `/marketplace-performance` | Marketplace bench | Platform | stub-only | link | marketplace-performance | - | surface-row |
-| `/permissions` | Permissions | Platform | stub-only | link | permissions | - | surface-row |
-| `/notifications` | Notifications | Platform | stub-only | link | notifications | - | surface-row |
-| `/identity` | Journey context | Platform | stub-only | link | identity | - | surface-row |
-| `/session` | Session recovery | Platform | stub-only | link | session | - | surface-row |
+| `/credit/origination` | Credit origination | Credit | stub-only | link | credit-origination | credit-origination | surface-row |
+| `/credit/servicing` | Credit servicing | Credit | stub-only | link | credit-servicing | credit-servicing | surface-row |
+| `/marketing` | Marketing | Marketing | no-published-command | link | marketing | marketing | surface-row |
+| `/marketing/journey` | Benefit journey | Marketing | stub-only | link | marketing-journey | marketing-journey | surface-row |
+| `/marketing/m01` | Marketing M01 | Marketing | no-published-command | section | marketing-m01 | marketing-m01 | surface-row |
+| `/marketing/m02` | Marketing M02 | Marketing | no-published-command | section | marketing-m02 | marketing-m02 | surface-row |
+| `/marketing/m03` | Marketing M03 | Marketing | no-published-command | section | marketing-m03 | marketing-m03 | surface-row |
+| `/marketing/m04` | Marketing M04 | Marketing | no-published-command | section | marketing-m04 | marketing-m04 | surface-row |
+| `/marketing/m05` | Marketing M05 | Marketing | published-bound | section | marketing-m05 | marketing-m05 | surface-row |
+| `/platform` | Trading platform | Platform | stub-only | link | platform | platform | surface-row |
+| `/marketplace-performance` | Marketplace bench | Platform | stub-only | link | marketplace-performance | marketplace-performance | surface-row |
+| `/permissions` | Permissions | Platform | stub-only | link | permissions | permissions | surface-row |
+| `/notifications` | Notifications | Platform | stub-only | link | notifications | notifications | surface-row |
+| `/identity` | Journey context | Platform | stub-only | link | identity | identity | surface-row |
+| `/session` | Session recovery | Platform | stub-only | link | session | session | surface-row |
 | `/receipts` | Receipts | Verification | stub-only | link | receipts | receipts | surface-row |
 | `/handoff` | Local handoff | Verification | stub-only | link | handoff | - | none |
-| `/journeys` | Journeys | Verification | stub-only | link | journeys | - | surface-row |
-| `/qualification` | Qualification | Verification | stub-only | link | qualification | - | surface-row |
-| `/release` | Release | Verification | stub-only | link | release | - | surface-row |
+| `/journeys` | Journeys | Verification | stub-only | link | journeys | journeys | surface-row |
+| `/qualification` | Qualification | Verification | stub-only | link | qualification | qualification | surface-row |
+| `/release` | Release | Verification | stub-only | link | release | release | surface-row |
 | `/help` | Help | Verification | stub-only | link | help | - | none |
 
 `/handoff` has no workspace surface row, so the evidence matrix has none for it (the registry carries that as a note). `/help` was added later by `c-user-guides-stub` and has no surface row for the same reason.

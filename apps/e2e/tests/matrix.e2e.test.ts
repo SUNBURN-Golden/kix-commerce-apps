@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { JOURNEYS, MATRIX, OUTCOMES, expectedCheckIds, matrixProblems } from "../src/journey-matrix";
+import { JOURNEYS, MATRIX, OUTCOMES, expectedCheckIds, matrixProblems, SEND_CONTROL_JOURNEYS, oneAttemptCheckIds } from "../src/journey-matrix";
 import { NOT_RUN, renderRecord, type RunRecord } from "../src/run-record";
 
 describe("journey matrix", () => {
@@ -17,7 +17,14 @@ describe("journey matrix", () => {
   it("marks only honestly unreachable UNKNOWN cells as not reachable, each owned by the fault-injection node", () => {
     const unreachable = MATRIX.filter((cell) => cell.kind === "NOT_REACHABLE");
     expect(unreachable.every((cell) => cell.outcome === "UNKNOWN" && cell.owner === "c-fault-injection-stub")).toBe(true);
-    expect(unreachable.map((cell) => cell.journey).sort()).toEqual(["admission", "box-office", "credit"]);
+    expect(unreachable.map((cell) => cell.journey).sort()).toEqual(["admission", "box-office", "credit", "marketing", "marketing-m01", "marketing-m02", "marketing-m03", "marketing-m04"]);
+  });
+
+  it("requires every send journey one-attempt check, including the existing booking checks", () => {
+    for (const journey of SEND_CONTROL_JOURNEYS) {
+      expect(expectedCheckIds()).toEqual(expect.arrayContaining([...oneAttemptCheckIds(journey)]));
+    }
+    expect(oneAttemptCheckIds("booking")).toEqual(["one-attempt.double-click", "one-attempt.keyboard", "one-attempt.reload"]);
   });
 
   it("renders a run record that claims no HTTP-mode pass, no production qualification and no payment", () => {
