@@ -219,6 +219,7 @@ describe("local evidence matrix: denominators equal their sources", () => {
     expect(bindings.length).toBe(COMMERCE_METHODS.length);
     expect(text).toContain(`D01 live-gate skipped under KIX_REQUIRE_GATE=0: ${liveGateFiles().length} adapter`);
     expect(liveGateFiles().length).toBeGreaterThan(0);
+    expect(liveGateFiles()).not.toContain("loopback-replay-conformance.test.ts");
     expect(text).toContain(`D02 NOT_BOUND desk methods: ${bindings.filter((item) => item.status === "not-bound").length} of ${COMMERCE_METHODS.length}`);
     const by = (binding: string) => WORKSPACE_SURFACES.filter((surface) => surface.binding === binding).length;
     expect(text).toContain(`D05 stub-only surfaces: ${by("stub-only")} of ${WORKSPACE_SURFACES.length}`);

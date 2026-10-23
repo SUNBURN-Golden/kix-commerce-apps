@@ -234,6 +234,8 @@ Catalogue version `2` classifies the current pin tuple into `SUCCESS`, `REJECT`,
 
 The [SDK0 mock scenario kit](docs/c-sdk0-mock-scenario-kit-stub-apps-bind.md) provides deterministic, seeded offline snapshots for local demo harnesses and the adapter/web tests. It reuses catalogue case identities and validates command envelopes against the vendored p-sdk-0 BOOTSTRAP schema. It stays outside runtime screen imports and opens no network connection. BOOTSTRAP grants catalogue-schema binding only; synthetic results are locally guarded, not generated SDK result types or semantic conformance. Current scenarios use catalogue v2's verified SDK consumption tuple. Catalogue v1's historical null digests remain unchanged.
 
+The [offline loopback replay sweep](docs/c-plan-c-loopback-replay-conformance-stub-apps-bind.md) replays every SDK0 mock scenario through the HTTP adapter and checks per-field rejection using a test-only fetch double; it is BOOTSTRAP catalogue-schema binding only, not live-gate or semantic conformance evidence.
+
 ## Run locally
 
 ```bash
