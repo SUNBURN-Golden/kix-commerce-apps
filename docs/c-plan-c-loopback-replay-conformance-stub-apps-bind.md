@@ -274,6 +274,30 @@ The existing journey result readers were moved unchanged into `src/journey-recei
 
 ## Verification
 
+### PR fix round 1 (2026-10-24)
+
+The three CI incomplete-string-escaping annotations at the original replay-test lines 228, 230 and 233 are addressed by constructing the root-member fixtures directly with a raw prefix and `raw.slice(1)`. Those inputs deliberately insert hostile JSON members at the root; they do not escape or sanitize text. The three first-occurrence brace replacements are removed. Nested-member, duplicate-key and surrogate cases retain their targeted replacements. A local Node comparison of the original and updated fixture constructors confirms that all twelve raw inputs are byte-identical. The existing rejection, single-fetch and unchanged-Object.prototype assertions remain intact.
+
+This round changes only the replay test and this evidence document. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. No journey composition, desk binding, runtime guard, pin, vendor byte, coverage floor or CI configuration changes. CodeQL is not installed locally, so the hosted analysis result is not claimed as verified. The offline double remains BOOTSTRAP catalogue-schema-binding evidence only, not semantic conformance or live-gate evidence.
+
+Rechecks used the cached **Node v22.23.4** binary via the PATH prefix recorded below, with existing dependencies. Logs are `/tmp/kix-loopback-fix-round1-{targeted,typecheck,build,stub,lint,budget}.log`. These are local results; hosted CI and the live gate were not run in this round.
+
+| Round 1 check actually run | Result |
+| --- | --- |
+| **adapter cwd** `KIX_REQUIRE_GATE=0 ../../node_modules/.bin/vitest run test/loopback-replay-conformance.test.ts test/booking-journey.test.ts test/http-transport-hardening.test.ts test/no-bypass.test.ts test/gate-requirement.test.ts test/prod-readiness.test.ts` | Exit 0; six files, 80 passed, one live-gate test skipped. Includes all 27 seeded replays, 210 sweep rows with the exact doc-table comparison, 12 hostile JSON cases, zero-fetch NOT_BOUND assertions and the test-only import boundary. |
+| Node comparison of fixture constructors read from `git show HEAD:packages/protocol-adapter/test/loopback-replay-conformance.test.ts` and the working tree | Exit 0; all twelve hostile JSON strings byte-identical before/after. |
+| `npm run typecheck` | Exit 0; adapter and web. |
+| `npm run build` | Exit 0; existing large-chunk advisory only. |
+| `KIX_REQUIRE_GATE=0 npm test` | Exit 0; adapter 66 files / 1,367 passed, 23 skipped; web 81 files / 1,068 passed. |
+| `npm run lint` | Exit 0. |
+| `npm run budget` | Exit 0; initial JS gzip 289,989 / 290,000; CSS 4,965 / 5,000; total 789,939 / 790,000; largest lazy chunk 28,279 / 30,000. |
+| Locked-file comparison against `origin/main` using the path list recorded in the original verification below | Exit 0; no differences. Both commerce-bindings blob hashes remain `47ab5e10cbf5f8f10bed718b4dd5190fe5dfe76f`. |
+| `git diff --check` | Exit 0. |
+
+Browser suites, coverage, dependency/audit and cycle checks were not repeated for this test-fixture-only fix; their original results remain separately recorded below. No commit, push, post or protected marker was created.
+
+### Original implementation verification
+
 Local verification used **Node v22.23.4** (`npm exec --yes --package=node@22 -- node -p process.execPath` resolved the binary), with `PATH=/home/box/.npm/_npx/52027bd8fc0022aa/node_modules/node/bin:$PATH` prefixed to npm/npx commands. A preliminary install/typecheck/replay ran on the host Node v20.19.2 before switching to CI's Node 22 major. Browser commands used `KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1` (Google Chrome 156.0.8078.47). Every job stayed in a managed foreground process and was awaited. Coverage floors and CI configuration are unchanged.
 
 Commands are relative to the repository root unless marked **adapter cwd** (`packages/protocol-adapter`). Exit 0 means the command passed locally, not a GitHub CI or live-gate attestation.

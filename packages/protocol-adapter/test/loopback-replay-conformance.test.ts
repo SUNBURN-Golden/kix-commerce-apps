@@ -224,13 +224,15 @@ it("rejects every serialization-safe mutation at the adapter, once, and fences t
 it("rejects isolated hostile raw JSON without prototype pollution, once", async () => {
   const scenario = success("create_event");
   const raw = JSON.stringify(scenario.receipt);
+  // Insert raw members at the root only; preserve duplicate keys verbatim.
+  const withRootMembers = (members: string) => `{${members},${raw.slice(1)}`;
   const cases = [
-    raw.replace('{', '{"__proto__":{"polluted":true},'),
+    withRootMembers('"__proto__":{"polluted":true}'),
     raw.replace('"result":{', '"result":{"__proto__":{"polluted":true},'),
-    raw.replace('{', '{"constructor":{"prototype":{"polluted":true}},'),
+    withRootMembers('"constructor":{"prototype":{"polluted":true}}'),
     raw.replace('"result":{', '"result":{"constructor":{"polluted":true},'),
     raw.replace('"result":{', '"result":{"prototype":{"polluted":true},'),
-    raw.replace('{', '{"__proto__":{},"__proto__":{"polluted":true},'),
+    withRootMembers('"__proto__":{},"__proto__":{"polluted":true}'),
     raw.replace('"action":"create_event"', '"action":"create_event","action":"create_event"'),
     raw.replace('"policyHash":"policy-hash"', '"policyHash":"first","policyHash":"policy-hash"'),
     raw.replace('"policyHash":"policy-hash"', '"policyHash":"\\uD800"'),
