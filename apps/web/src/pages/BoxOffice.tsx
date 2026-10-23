@@ -1,3 +1,4 @@
+import { formatWhen } from "../format";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
 import { messages as copy0 } from "../i18n/messages/a11y--present";
 import { messages as copy1 } from "../i18n/messages/journey-desk";
@@ -10,7 +11,7 @@ import { ProtocolError, type Performance, type SettlementCaseView } from "@kix/p
 import { capacityLine } from "../a11y/present";
 import { StatusMark } from "../a11y/marks";
 import { useT } from "../i18n/desk-context";
-import { useFormatWhen } from "../i18n/locale-context";
+import { useDisplayLocale } from "../i18n/locale-context";
 import { protocol } from "../connectivity/desk-protocol";
 import { deskText } from "../i18n/desk-translate";
 import { useJourneyDesk } from "../journey-desk";
@@ -22,7 +23,7 @@ import { SettlementPanel, type SettlementDeskCommand } from "./SettlementPanel";
 
 export function BoxOfficePage() {
   const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4);
-  const formatWhen = useFormatWhen();
+  const clock = useDisplayLocale();
   const [performances, setPerformances] = useState<Performance[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
@@ -126,7 +127,7 @@ export function BoxOfficePage() {
             <article className="row">
               <div>
                 <p className="when">
-                  <time dateTime={item.startsAt}>{formatWhen(item.startsAt)}</time>
+                  <time dateTime={item.startsAt}>{formatWhen(item.startsAt, clock)}</time>
                 </p>
                 <h3>{deskText(t, item.title)}</h3>
                 <p className="muted">

@@ -1,3 +1,4 @@
+import { formatWhen } from "../../format";
 import { messages as deskCopy } from "../../i18n/desk-catalogue";
 import { messages as copy0 } from "../../i18n/messages/pages--marketing--M02Presale";
 import { messages as copy1 } from "../../i18n/messages/marketing--desk";
@@ -7,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Performance } from "@kix/protocol-adapter";
 import { useT } from "../../i18n/desk-context";
-import { useFormatWhen } from "../../i18n/locale-context";
+import { useDisplayLocale } from "../../i18n/locale-context";
 import { presaleWindowFor } from "../../marketing/desk";
 import { marketingSession } from "../../marketing/session";
 import { useMarketingSnapshot } from "../../marketing/useMarketingSnapshot";
@@ -16,7 +17,7 @@ import { errorText, MarketingChrome } from "./MarketingChrome";
 
 export function M02Page() {
   const t = useT(deskCopy, copy0, copy1);
-  const formatWhen = useFormatWhen();
+  const clock = useDisplayLocale();
   const { snapshot, refresh } = useMarketingSnapshot();
   const [performances, setPerformances] = useState<Performance[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -75,13 +76,13 @@ export function M02Page() {
             <li key={item.eventId}>
               <article className="row">
                 <div>
-                  <p className="when">{formatWhen(item.startsAt)}</p>
+                  <p className="when">{formatWhen(item.startsAt, clock)}</p>
                   <h3>{deskText(t, item.title)}</h3>
                   <p className="muted">
                     {deskText(t, item.venue)} · {deskText(t, item.remainingCapacity)} {t("s1mo")}</p>
                   {interest ? (
                     <p>
-                      {t("soj")}{" "}{formatWhen(interest.recordedAt)} · {deskText(t, interest.window)}
+                      {t("soj")}{" "}{formatWhen(interest.recordedAt, clock)} · {deskText(t, interest.window)}
                     </p>
                   ) : null}
                 </div>
