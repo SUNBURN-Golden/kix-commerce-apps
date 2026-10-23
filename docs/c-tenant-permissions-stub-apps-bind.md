@@ -1,5 +1,11 @@
 # Tenant permissions stub apps bind
 
+## Consumption evidence correction — 2026-10-23
+
+Recorded option (b) now binds the consumed p-sdk-0 BOOTSTRAP SDK, manifest, and vector digests into fixture catalogue v2, discovery's shared synthetic-port checks, release, qualification, and handoff. See [audit-6-decision-apps-bind.md](audit-6-decision-apps-bind.md) for the owner ruling, current tuple, historical v1, consumer mapping, verification, and boundaries. Unavailable domain producer tuples retain nulls and NOT_BOUND. BOOTSTRAP remains `catalogue-schema-binding only`; this grants no qualification or release authority.
+
+The original delivery description and run records below are historical. Any statement there that consumption digests stay null describes v1 at that delivery, not the current app evidence tuple. Both OpenAPI pins, `PINNED_ACTIONS`, the CI gate SHA, `protocolMergeSha`, and locked desk bindings are unchanged.
+
 This bind is the stub-scoped tenant permissions desk at `/permissions`. It is the synthetic reduction of pending node `c-tenant-permissions`: the real connection stays pending on `kix-protocol:k-operator-contract`. This node wires the organization seam — four role workspaces (buyer, organizer, settler, support) over one tenant, tenant/actor/role/resource scope decided at the adapter boundary, a maker/checker pair for account changes and role revokes, role-assignment generations that make a stale write a role-stale rejection, a same-person role switch that is a new session and never a mixing of the two, a source-side audit record, and a judged sensitive export — onto a deterministic synthetic source. It is not a producer connection and does not claim one, and a hidden control is never enforcement: the source checks every read, export, and request on its own, and the tests send calls straight to the port to prove the screen is not the boundary. A recorded proposal is not an applied change, a recorded approval changes no resource, and nothing on this desk grants a real permission.
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.

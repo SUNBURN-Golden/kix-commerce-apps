@@ -1,5 +1,11 @@
 # Marketplace performance stub apps bind
 
+## Consumption evidence correction — 2026-10-23
+
+Recorded option (b) now binds the consumed p-sdk-0 BOOTSTRAP SDK, manifest, and vector digests into fixture catalogue v2, discovery's shared synthetic-port checks, release, qualification, and handoff. See [audit-6-decision-apps-bind.md](audit-6-decision-apps-bind.md) for the owner ruling, current tuple, historical v1, consumer mapping, verification, and boundaries. Unavailable domain producer tuples retain nulls and NOT_BOUND. BOOTSTRAP remains `catalogue-schema-binding only`; this grants no qualification or release authority.
+
+The original delivery description and run records below are historical. Any statement there that consumption digests stay null describes v1 at that delivery, not the current app evidence tuple. Both OpenAPI pins, `PINNED_ACTIONS`, the CI gate SHA, `protocolMergeSha`, and locked desk bindings are unchanged.
+
 This bind is the stub-scoped marketplace scale bench at `/marketplace-performance`. It is the synthetic reduction of pending node `c-marketplace-performance` (plan revision 2026-10-13, 준태님 승인): the real connection stays pending on `kix-protocol:ps-07-scale-qualification`, and the pending node stays unimplemented. This node wires the scale seam — a lazy 150000-row listing stream served only as bounded windows, a synthetic queue in front of the contended page, rapid search transitions, cancellation, stale and late answers, permission and context changes, a fixed memory denominator, and per-workload per-device browser-boundary measurements — onto a deterministic synthetic source. It is not a producer connection and does not claim one, a row confirms no price, no right, no sale, and no ownership, a fast page never confirms a stale price or a stale right, an emulated device is never real mobile evidence, and no producer load figure is mixed into the browser measurement denominator.
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.

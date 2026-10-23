@@ -1,6 +1,12 @@
 # Contract fixture library apps bind
 
-This bind is Catalogue version `1` of the shared fixture library. Adapter tests and UI tests import `packages/protocol-adapter/src/contract-fixtures.ts`. A recorded pass names one case on the current pin tuple. It does not verify a different case or a different tuple. A failed live call is not replaced with a stub success. The generator copies result key names and does not compute finance or rights.
+## Consumption evidence correction — 2026-10-23
+
+Recorded option (b) now binds the consumed p-sdk-0 BOOTSTRAP SDK, manifest, and vector digests into fixture catalogue v2, discovery's shared synthetic-port checks, release, qualification, and handoff. See [audit-6-decision-apps-bind.md](audit-6-decision-apps-bind.md) for the owner ruling, current tuple, historical v1, consumer mapping, verification, and boundaries. Unavailable domain producer tuples retain nulls and NOT_BOUND. BOOTSTRAP remains `catalogue-schema-binding only`; this grants no qualification or release authority.
+
+The tuple table below is current v2; original delivery descriptions and run records remain historical. Any statement there that consumption digests stay null describes v1 at that delivery, not the current app evidence tuple. Both OpenAPI pins, `PINNED_ACTIONS`, the CI gate SHA, `protocolMergeSha`, and locked desk bindings are unchanged.
+
+This bind is Catalogue version `2` of the shared fixture library. Adapter tests and UI tests import `packages/protocol-adapter/src/contract-fixtures.ts`. A recorded pass names one case on the current pin tuple. It does not verify a different case or a different tuple. A failed live call is not replaced with a stub success. The generator copies result key names and does not compute finance or rights.
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
@@ -12,15 +18,15 @@ No catalogue, gate, or SDK change is consumed. SDK, manifest, and vector digests
 
 | Field | Literal |
 | --- | --- |
-| Catalogue version | `1` |
+| Catalogue version | `2` |
 | Contract-only OpenAPI sha256 | `fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e` |
 | Integration-gate OpenAPI sha256 | `2a2af554cb1a8b128f2cf1b1d5b8cf6b1c8fa90adf30865dbc3e64932b3bd13f` |
 | `protocolMergeSha` / CI `KIX_PROTOCOL_GATE_SHA` | `52a9b5cbf7777df55d2d2062cb8d99d862b423bb` |
 | Domain | `kix:fixture:lifecycle:0.3` |
 | `PINNED_ACTIONS` | the 40 names copied in `FIXTURE_PINNED_ACTIONS_LITERAL` |
-| SDK digest | null. Not consumed |
-| Manifest digest | null. Not consumed |
-| Vector digest | null. Not consumed |
+| SDK digest | `891ddd65f29262603bd0f76746a9308c810a71d4afd717b0f4d2e3f7d46dbaa2` |
+| Manifest digest | `1cce4ee5a9aa64ef40825c0e6dedf920050e594cf20ea0aaf087ecbde46f0cca` |
+| Vector digest | `canonical-encoding:3446c13847bb153df06c1d5d3b7f09cd3b1648ac10bb0cc76d7b65c7014e99c2 mixed-input:9e2441ddefc22a2f8c7be230436620908b735b128b9445b7a5a916e4d86a2e19` |
 
 ## Classes
 

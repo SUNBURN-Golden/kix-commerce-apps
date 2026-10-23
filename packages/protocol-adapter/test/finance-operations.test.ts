@@ -1022,7 +1022,7 @@ describe("a changed producer tuple", () => {
     expect(await port.act(actRequest({ kind: "approve-proposal", proposalRef: "prp-0001" }, OWN, FINANCE_APPROVER_ACTOR))).toMatchObject({
       kind: "tuple-changed",
     });
-    const sdk = createStubFinanceOperations({ expectedTuple: { ...DISCOVERY_READ_TUPLE_LITERALS, sdkDigest: "sha256:x" as unknown as null } });
+    const sdk = createStubFinanceOperations({ expectedTuple: { ...DISCOVERY_READ_TUPLE_LITERALS, sdkDigest: "sha256:x" } });
     expect(await sdk.read(readRequest())).toMatchObject({ kind: "tuple-changed", field: "sdkTuple" });
   });
 });

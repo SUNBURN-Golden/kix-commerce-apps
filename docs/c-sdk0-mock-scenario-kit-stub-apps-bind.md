@@ -1,5 +1,11 @@
 # SDK0 mock scenario kit (stub)
 
+## Consumption evidence correction — 2026-10-23
+
+Recorded option (b) now binds the consumed p-sdk-0 BOOTSTRAP SDK, manifest, and vector digests into fixture catalogue v2, discovery's shared synthetic-port checks, release, qualification, and handoff. See [audit-6-decision-apps-bind.md](audit-6-decision-apps-bind.md) for the owner ruling, current tuple, historical v1, consumer mapping, verification, and boundaries. Unavailable domain producer tuples retain nulls and NOT_BOUND. BOOTSTRAP remains `catalogue-schema-binding only`; this grants no qualification or release authority.
+
+The original delivery description and run records below are historical. Any statement there that consumption digests stay null describes v1 at that delivery, not the current app evidence tuple. Both OpenAPI pins, `PINNED_ACTIONS`, the CI gate SHA, `protocolMergeSha`, and locked desk bindings are unchanged.
+
 ## Scope and ruling
 
 `contract_change=NO`. This is app-internal offline demo/test material over the already-vendored p-sdk-0 BOOTSTRAP SDK and contract-fixture catalogue v1. It introduces no public schema, operation, capability, identifier format, route, screen, runtime adapter, or dependency.

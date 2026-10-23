@@ -1,3 +1,4 @@
+import { KIX_SDK_0_CONSUMPTION_DIGESTS } from "@kix/protocol-adapter";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -260,6 +261,7 @@ describe("local evidence matrix: contract tuple and locks", () => {
     expect(tuple.vectorDigest.startsWith("canonical-encoding:")).toBe(true);
     expect(tuple.vectorDigest).toContain(" mixed-input:");
     expect(tuple.consumedProducerChange).toBe(true);
+    expect(tuple).toMatchObject(KIX_SDK_0_CONSUMPTION_DIGESTS);
   });
 
   it("leaves commerce-bindings.ts byte-identical and placeHold not-bound with reserve_listing", () => {

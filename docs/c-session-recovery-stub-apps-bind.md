@@ -1,5 +1,11 @@
 # Session recovery stub apps bind
 
+## Consumption evidence correction — 2026-10-23
+
+Recorded option (b) now binds the consumed p-sdk-0 BOOTSTRAP SDK, manifest, and vector digests into fixture catalogue v2, discovery's shared synthetic-port checks, release, qualification, and handoff. See [audit-6-decision-apps-bind.md](audit-6-decision-apps-bind.md) for the owner ruling, current tuple, historical v1, consumer mapping, verification, and boundaries. Unavailable domain producer tuples retain nulls and NOT_BOUND. BOOTSTRAP remains `catalogue-schema-binding only`; this grants no qualification or release authority.
+
+The original delivery description and run records below are historical. Any statement there that consumption digests stay null describes v1 at that delivery, not the current app evidence tuple. Both OpenAPI pins, `PINNED_ACTIONS`, the CI gate SHA, `protocolMergeSha`, and locked desk bindings are unchanged.
+
 This bind is the stub-scoped session recovery desk at `/session`, the synthetic reduction of pending node `c-async-session-fence`. That pending node stays in `docs/aiops/PENDING_NODES.json` and waits on its kix-protocol prerequisites. This node records an intent and its conflict scope in a tab-session journal before a synthetic write is sent, recovers an unsettled intent as `UNKNOWN` after a reload, and shows lost evidence as `SESSION_EVIDENCE_LOST`. It is not a producer connection and does not claim one. The journal format is app-internal and is never an external schema, operation, capability, or identifier.
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.

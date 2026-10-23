@@ -3,7 +3,7 @@ import {
   KIX_SDK_0_PIN,
   OPENAPI_CONTRACT_PIN,
   OPENAPI_INTEGRATION_GATE_PIN,
-  VENDORED_SDK_PIN_INPUTS,
+  KIX_SDK_0_CONSUMPTION_DIGESTS,
 } from "@kix/protocol-adapter";
 import {
   BUYER_FLOW_STAGES,
@@ -47,23 +47,11 @@ export const HANDOFF_NON_CLAIMS = {
   qualificationState: "UNQUALIFIED",
 } as const;
 
-/**
- * The vendored p-sdk-0 BOOTSTRAP tuple, in the manifest's own vector order.
- * Every value is derived from the adapter pin; nothing is retyped here.
- */
-const SDK_MANIFEST_VECTORS = (
-  JSON.parse(VENDORED_SDK_PIN_INPUTS.manifestRaw) as {
-    vectors: readonly { name: string; sha256: string }[];
-  }
-).vectors;
-
 export const HANDOFF_PINS = {
   contractOpenApiSha256: OPENAPI_CONTRACT_PIN.openApiFileSha256,
   gateOpenApiSha256: OPENAPI_INTEGRATION_GATE_PIN.openApiFileSha256,
   protocolMergeSha: OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha,
-  sdkDigest: KIX_SDK_0_PIN.catalogueSha256,
-  manifestDigest: KIX_SDK_0_PIN.manifestSha256,
-  vectorDigest: SDK_MANIFEST_VECTORS.map((vector) => `${vector.name}:${vector.sha256}`).join(" "),
+  ...KIX_SDK_0_CONSUMPTION_DIGESTS,
   consumedProducerChange: true,
 } as const;
 

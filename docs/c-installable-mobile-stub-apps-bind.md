@@ -1,5 +1,11 @@
 # Installable mobile stub apps bind
 
+## Consumption evidence correction — 2026-10-23
+
+Recorded option (b) now binds the consumed p-sdk-0 BOOTSTRAP SDK, manifest, and vector digests into fixture catalogue v2, discovery's shared synthetic-port checks, release, qualification, and handoff. See [audit-6-decision-apps-bind.md](audit-6-decision-apps-bind.md) for the owner ruling, current tuple, historical v1, consumer mapping, verification, and boundaries. Unavailable domain producer tuples retain nulls and NOT_BOUND. BOOTSTRAP remains `catalogue-schema-binding only`; this grants no qualification or release authority.
+
+The original delivery description and run records below are historical. Any statement there that consumption digests stay null describes v1 at that delivery, not the current app evidence tuple. Both OpenAPI pins, `PINNED_ACTIONS`, the CI gate SHA, `protocolMergeSha`, and locked desk bindings are unchanged.
+
 This bind is the stub-scoped installable mobile shell at `/mobile`. It is the synthetic reduction of pending node `c-installable-mobile` (plan revision 2026-10-13, 준태님 승인): the real installable web/mobile packaging, the real producer connection, and the real device session stay pending on that node, which is not promoted and stays in `docs/aiops/PENDING_NODES.json`. This node wires the install and revisit seam — installable-web packaging and in-place update support, a session that reconnects, stored items kept as copies, a link that drops and restores, a device clock that reports but decides nothing, an app resume that re-executes nothing, and a pending order whose confirm and withdraw are separate one-shot writes — onto a deterministic synthetic source. It is not a device attestation, not an authentication result, not a store listing, not a payment, not an admission grant, and not a producer read, and it does not claim one.
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.

@@ -1,3 +1,4 @@
+import { KIX_SDK_0_CONSUMPTION_DIGESTS } from "@kix/protocol-adapter";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -126,6 +127,10 @@ describe("operational qualification screen", () => {
     expect(markup).toContain(`Qualification state ${QUALIFICATION_STATE}`);
     expect(markup).toContain("STUB_RUN_RECORDED");
     expect(markup).toContain("data-packet=");
+    expect(markup).toContain("fixture catalogue v2");
+    for (const digest of Object.values(KIX_SDK_0_CONSUMPTION_DIGESTS)) {
+      expect(markup).toContain(digest);
+    }
     expect(markup).toContain("data-journey=");
     expect(markup).toContain("data-verdict=\"closed\"");
     expect(markup).toContain("data-verdict=\"open\"");
