@@ -1,9 +1,10 @@
 Source parent: 288c8ef8b58dec52093cfbc0a9cbca6b65deeab3
-Uncommitted implementation/test/config manifest SHA-256: 81e6d2c809e0d684071e07880dbc5100b7c8b206f37c0874bcd1999c7b98b1bd
+Reviewed implementation HEAD: f7cd60c565416094d55fcf41533a3c4c23877bf3 plus PR fix round 1 working tree
+Uncommitted implementation/test/config manifest SHA-256: 5ab668b9df96546a8cee3b95d774538eeae41ff0dd5ee2febf25eb865adb1209
 Digest input: the SHA-256/path lines below, sorted by path, joined with LF and one final LF. Documentation is excluded to avoid self-reference.
 
 62ad56d90bdb695718b4d0aea24588640471c7d3e0e5babc97826b60808c0772  apps/e2e/tests/a11y/locale.a11y.test.ts
-49dc9d4bf20ef1442974c57f4b471a425e7ffd2d462e31f102da99b3f0227547  apps/web/bundle-budget.json
+70113802329560ec1d2a2c350e9be767b780928ee5bfa52227775325594cbc3a  apps/web/bundle-budget.json
 c1562d83ff544a878899c2b7a06a16f652e9d0bb3c20dfa82b9a69598e0dd20f  apps/web/src/a11y/present.ts
 141fa770da51dec5dd82560c45f834653d00ce1cd02f2ff205d10e5bbb119bb5  apps/web/src/admission-desk.ts
 ede5bbb02b6c7c9559eba74fc12705e02252c7239ad528b4fb749fd8a71b8d8c  apps/web/src/buyer-workspace.ts
@@ -225,7 +226,7 @@ a7c6937e426a0a810ad058a60ecf112554e38db9db6c42a98c4f05221f41bd16  apps/web/src/r
 0bfcbea24596f71653bf5592e9f3658d7d479b58a55786f322d9f0703d4899ab  apps/web/src/storage-allow-list.ts
 43e566494bc04d8b3122ae38cdcbe8fe0a9670142b152ffffc8a5b3a7921ff9b  apps/web/src/tenant-permissions.ts
 449fbeb52700a57ae74b3a9446e95df17f71277144a6e98026e445b50cc8766c  apps/web/src/workspace/registry.ts
-6d2366228e861f4d3a92fff1af774b77c55593b75b01025b1a9658d4d99c7ff5  apps/web/test/bundle-budget.test.ts
+083b05c5a81fea568848266f43416ac9dddf3a3a5c8ebb29dcdef6ad3ce0dcf8  apps/web/test/bundle-budget.test.ts
 e880c482e6ad7dda3682c31aa0997c24cdb2ac333db0321f19745942d4e84ff9  apps/web/test/credit-panel.test.tsx
 5d4f9c239d5fd50d33ce71f5f43988a3c944466c697234365bb385349ee86fb0  apps/web/test/display-preferences.test.tsx
 73e7b455c135807ea9e399d78fb821e43c298e0e9d102958851426cbd36da26f  apps/web/test/i18n-coverage.test.ts
@@ -235,7 +236,8 @@ c2793dc50ea41ffda2fe22e8c0f7d9656e49645dc41e92661cf8a93f5f243349  apps/web/test/
 e5c5d9686c1f1fc6a66e4a81d3c08f482a2225b71ad5e2854999ee6c283aa57e  scripts/i18n-audit.d.mts
 3adeee7b46e7a48b4f0491a51110e152f5199b7a0bb697466022842c5bdefac4  scripts/i18n-audit.mjs
 
-Documentation changed (excluded from implementation digest):
+Documentation (excluded from digest):
+DECISION_REQUIRED.md
 docs/c-bundle-performance-budget-stub-apps-bind.md
 docs/c-i18n-coverage-completion-stub-apps-bind.md
 docs/c-i18n-coverage-completion-stub-files.txt

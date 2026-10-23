@@ -20,11 +20,11 @@
       "landingJsGzip": 338270
     },
     "localized": {
-      "sourceSha": "288c8ef8b58dec52093cfbc0a9cbca6b65deeab3 plus the c-i18n-coverage-completion-stub working tree",
-      "note": "Full ko/en route catalogue. Same 37 screens; local stub only. Measurements in docs/c-i18n-coverage-completion-stub-apps-bind.md.",
-      "initialJsGzip": 289267,
-      "initialCssGzip": 4768,
-      "totalGzip": 774384,
+      "sourceSha": "f7cd60c565416094d55fcf41533a3c4c23877bf3 plus PR fix round 1 working tree",
+      "note": "Node 22.20.0 observation of full ko/en route catalogue. Does not change the original limits. FAILS initial JS and total budget; see DECISION_REQUIRED.md.",
+      "initialJsGzip": 290543,
+      "initialCssGzip": 4758,
+      "totalGzip": 781123,
       "fileCount": 66
     }
   },
@@ -34,8 +34,8 @@
     "chunkJsGzip": 30000,
     "landingJsGzip": 400000,
     "totalGrowth": {
-      "base": 774384,
-      "maxRatio": 1.02
+      "base": 527526,
+      "maxRatio": 1.2
     },
     "render": {
       "discoveryReadyMs": 5000,
@@ -63,26 +63,6 @@
       },
       "reason": "First budget. Limits sit about 12% over the post-split initial JS, 18% over the landing set and initial CSS, 38% over the largest chunk, and 20% over the pre-split total; render caps are about 10 times the local median of 5 cold loads.",
       "evidence": "docs/c-bundle-performance-budget-stub-apps-bind.md section Numbers: pre-split and post-split reports from scripts/check-bundle-budget.mjs, and the test:budget record."
-    },
-    {
-      "date": "2026-10-21",
-      "limits": {
-        "initialJsGzip": 290000,
-        "initialCssGzip": 5000,
-        "chunkJsGzip": 30000,
-        "landingJsGzip": 400000,
-        "totalGrowth": {
-          "base": 774384,
-          "maxRatio": 1.02
-        },
-        "render": {
-          "discoveryReadyMs": 5000,
-          "discoveryPage50Ms": 5000,
-          "inventorySectionMs": 5000
-        }
-      },
-      "reason": "Rebaseline total assets for the complete Korean and English screen catalogues. Latest main measured 621730 total gzip bytes; bilingual copy adds 152654. Lazy route bundles, a separate screen resolver, and compact internal keys reduced the first implementation from 803231 to 774384 bytes. Keep initial JS, initial CSS, route chunk, landing and render limits unchanged; allow only 2% further total growth from this measured bilingual baseline. No runtime SLO or acceptance claim.",
-      "evidence": "docs/c-i18n-coverage-completion-stub-apps-bind.md: Bundle measurements and validation commands, source 288c8ef8b58dec52093cfbc0a9cbca6b65deeab3 plus working tree."
     }
   ]
 }

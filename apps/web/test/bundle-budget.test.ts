@@ -180,10 +180,9 @@ describe("the repo budget file", () => {
     expect(budget.limits.initialJsGzip).toBeLessThan(budget.baseline.preSplit.initialJsGzip);
     expect(budget.baseline.postSplit.landingJsGzip).toBeLessThan(budget.baseline.preSplit.initialJsGzip);
     expect(budget.baseline.preSplit.totalGzip).toBe(527526);
-    expect(budget.limits.totalGrowth.base).toBe(budget.baseline.localized.totalGzip);
-    expect(budget.baseline.localized.initialJsGzip).toBeLessThan(budget.limits.initialJsGzip);
-    expect(budget.baseline.localized.sourceSha).toContain("288c8ef8b58dec52093cfbc0a9cbca6b65deeab3");
-    expect(budget.limits.totalGrowth.maxRatio).toBe(1.02);
+    expect(budget.limits.totalGrowth.base).toBe(budget.baseline.preSplit.totalGzip);
+    expect(budget.baseline.localized.sourceSha).toContain("f7cd60c");
+    expect(budget.limits.totalGrowth.maxRatio).toBe(1.2);
   });
 
   it("keeps every limit above the post-split measurement, so the budget is a tripwire and not already broken", () => {

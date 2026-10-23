@@ -1,6 +1,6 @@
 # c-i18n-coverage-completion-stub — local display coverage
 
-Source parent: `288c8ef8b58dec52093cfbc0a9cbca6b65deeab3` on `agent/kixc-c-i18n-coverage-completion-stub`, plus this uncommitted working tree. No commit, push, PR, issue, or comment was created. The [complete changed-file manifest](c-i18n-coverage-completion-stub-files.txt) lists every modified/new file and hashes the implementation, tests, and configuration. Its SHA-256 is `81e6d2c809e0d684071e07880dbc5100b7c8b206f37c0874bcd1999c7b98b1bd`. `contract_change=NO`.
+Source parent: `288c8ef8b58dec52093cfbc0a9cbca6b65deeab3`. Reviewed implementation HEAD: `f7cd60c565416094d55fcf41533a3c4c23877bf3`, plus this PR fix round 1 working tree. The [complete changed-file manifest](c-i18n-coverage-completion-stub-files.txt) records the feature and fixes against the source parent. No commit, push, PR, issue or comment was created during this fix round. `contract_change=NO`. Current outcome: **DECISION_REQUIRED**, because the original size gate still fails; see [the root decision record](../DECISION_REQUIRED.md).
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
@@ -36,42 +36,43 @@ Protocol names in display-only catalogue strings use Unicode escapes where neede
 - Session storage behavior is unchanged. Retention TTL is UNDETERMINED (legal/designated user); no fence expires because of this work.
 - All evidence is local stub/synthetic evidence. Live producer/gate, payment, KYC, credit disbursement, venue admission, real mobile devices, production, human acceptance, qualification, and release remain unverified or outside scope.
 
-## Bundle measurements and deviation
+## PR fix round 1 — blocking review and size evidence
 
-A clean archive of the source parent was built with the same installed lockfile dependencies: initial JS 288,517 gzip bytes; total JS/CSS 621,730; largest route chunk 21,649. Its existing budget passed.
+The blocking finding is valid: the original total-growth limit was `floor(527526 × 1.2) = 633031`; the proposed rebaseline would have allowed `floor(774384 × 1.02) = 789871`. The revised base, ratio and history entry have been removed. **Every current limit and the history equal the source parent's configuration.** The repository budget tests again require base 527526 and ratio 1.2. `baseline.localized` records an observation only and grants no headroom.
 
-The first full catalogue build measured 293,036 initial JS, 803,231 total, and a 30,934-byte largest route chunk. Splitting route bundles, avoiding eager Korean formatter copy, and using compact internal keys reduced these figures. The final build measured initial JS 289,267, CSS 4,768, total 774,384 gzip bytes, 66 files, and a 29,093-byte largest route chunk. The total increase over the source parent is 152,654 bytes.
+This fixes the configuration relaxation, but the requested overhead reduction and CI remain unresolved. With Node 22.20.0, the current build reproduces CI: initial JS **290543** against **290000**; CSS **4758** against **5000**; total **781123** against **633031**; largest route chunk **29372** against **30000**; 66 JS/CSS assets. The size command exits 1 for both the initial-JS and total-growth overages. Neither is waived. The browser split/render/fault tests are independent checks and do not override that failed size check.
 
-The previous total-size cap was 633,031 bytes and had only 11,301 bytes of headroom over the current main. The full bilingual catalogue necessarily exceeds it. `bundle-budget.json` therefore records an explicit measured bilingual baseline and a dated history entry, allowing only 2% subsequent total growth. Initial JS (290,000), CSS (5,000), individual chunk (30,000), landing (400,000), and all three render caps are unchanged. No CI job, check implementation, test, or test skip was removed or weakened. This total-baseline revision is the implementation deviation; it is a local regression tripwire, not a product policy or SLO.
+The previous builder measured Node 20.19.2 initial JS 289267 and total 774384. Re-measuring the same assets with Node 22 reproduces the CI overage, so the earlier Node 20 size PASS is not CI evidence. A clean archive of the source parent rebuilt locally measured 288517 initial JS and 621730 total under Node 20; no parent source was changed.
 
-Legacy source-copy tests now include the moved catalogue strings in their production-wording guards or inspect rendered accessible labels. The locale source guard was strengthened to recurse into bundle directories. The shell registry retains its original minimal imports and resolves navigation copy through the existing shell catalogue.
+Unsuccessful optimization experiments were run in scratch and discarded:
 
-## Validation record
+| Experiment | Observed result | Disposition |
+| --- | --- | --- |
+| Rollup unused-module elimination | Initial 169961, total 791473, largest chunk 35442 (Node 20 gzip bytes) | Total increased and a route chunk exceeded 30000; not retained. |
+| Limit unused-module elimination to the adapter export barrel | Initial 169961, total 791556, largest chunk 35441 (Node 20) | Same failures; not retained. |
+| More aggressive tree shaking | Total 791048, largest chunk 35440 (Node 20) | Failed; not retained. |
+| Terser 5.44.0, scratch-only JS recompression | JS total fell from 786280 to 776395, before CSS (Node 20) | Still over 633031; no dependency or build change retained. |
+| Separate eager English marketing labels from their Korean screen bundle | Initial 290308, total 781507 (Node 22) | Initial remained 308 over and total increased; not retained. |
 
-Local tools: Node 20.19.2, npm 11.21.0, Google Chrome 155.0.8059.84, Playwright Core 1.58.2, axe-core 4.14.0, Vitest 3.2.7. CI uses Node 22; the local Node version is a verification deviation, and the project supports Node >=20.
+These attempts do not prove further optimization impossible. They also do not justify changing the cap. No Vite configuration, application code, package manifest, lockfile, CI workflow or checker change survives this fix round. A scope or budget exception requires an owner decision; no exception has been applied.
 
-Commands were run in the foreground; longer tool sessions were awaited. Logs are local scratch evidence under `/tmp/kix-i18n/`, not committed artifacts. The required stub command leaves the existing gate-only cases skipped; they are never counted as a live-gate pass.
+## Validation record — PR fix round 1
 
-| Command actually run | Result |
+Tools: Node 22.20.0, npm 11.21.0, installed lockfile dependencies, local Google Chrome, Vitest 3.2.7. All current checks below use Node 22 except the standalone literal audit. Logs are local scratch evidence under `/tmp/kix-i18n-fix/`. The source is the exact reviewed HEAD above plus the uncommitted configuration/test/documentation changes in the manifest; no new HEAD is claimed.
+
+| Command actually run | Current result |
 | --- | --- |
-| `npm ci` | PASS; 493 packages installed. npm reported the existing 5 audit findings (2 moderate, 1 high, 2 critical), deprecation warnings, and an esbuild install-script advisory; no dependency was changed. |
-| `npm run test -w @kix/web -- test/i18n.test.tsx test/i18n-coverage.test.ts test/finance-operations.test.tsx test/user-guides.test.tsx test/journey-panel.test.tsx test/credit-panel.test.tsx test/resale-panel.test.tsx test/reservation-panel.test.tsx test/display-preferences.test.tsx` | PASS: 9 files, 112 tests. |
-| `node scripts/i18n-audit.mjs` | PASS: zero findings over the full source tree. |
-| `npm run typecheck` | PASS. |
-| `npm run build` | PASS; Vite reports its pre-existing large-entry warning. |
-| `KIX_REQUIRE_GATE=0 npm test` | PASS: adapter 63 files / 1,306 tests, web 62 files / 763 tests. The live-gate cases remain explicitly skipped by this required mode, not passed. |
-| `npm run typecheck:e2e` | PASS. |
-| `KIX_E2E_NO_SANDBOX=1 npm run test:a11y` | PASS: 10 files, 232 tests, including every registry route in Korean and normal/empty/unavailable/pending keyboard probes. |
+| `npm run build` | PASS, including adapter and web typechecks; existing large-entry warning. |
+| `KIX_REQUIRE_GATE=0 npm test` | PASS: adapter 63 files / 1306 passed tests, 5 files / 23 tests explicitly skipped; web 62 files / 763 passed tests. Skipped live-gate cases are not passes. Includes the restored budget assertions and catalogue/audit tests. |
+| `npm run test -w @kix/web -- test/bundle-budget.test.ts test/i18n-coverage.test.ts` | PASS: 2 files / 30 tests after the final budget metadata and evidence documentation update. |
+| `node scripts/i18n-audit.mjs` | PASS: zero findings. |
 | `npm run lint` | PASS. |
-| `npm run deps:check` | PASS: 4 manifests and 589 lockfile entries. |
-| `npm run cycle-check` | PASS: no circular dependency. |
-| `KIX_REQUIRE_GATE=0 npm run coverage:check` | PASS: all existing floors. Web lines/statements 88.06, functions 60.84, branches 84.62; adapter lines/statements 91.18, functions 97.44, branches 84.52 (percent). |
-| `npm run budget` | PASS after the documented total-baseline revision; final initial 289267 / total 774384 / largest chunk 29093 gzip bytes. |
-| `KIX_E2E_NO_SANDBOX=1 npm run test:e2e` | PASS: 14 files, 51 journey/fault/fixture tests. |
-| `KIX_E2E_NO_SANDBOX=1 npm run test:budget` | PASS: 3 files, 9 split/chunk-failure/render tests. |
-| `npm run test -w @kix/web -- test/bundle-budget.test.ts` | PASS: 17 tests after final budget metadata/documentation update. |
+| `npm run typecheck:e2e` | PASS. |
+| `npm run budget` | **FAIL (exit 1)**: initial JS 290543 > 290000; total 781123 > 633031. |
+| `KIX_E2E_NO_SANDBOX=1 npm run test:budget` | PASS: 3 files / 9 browser split, chunk-failure and render tests. Does not waive the failed static size command. |
+| `KIX_E2E_NO_SANDBOX=1 npm run test:a11y` | PASS: 10 files / 232 tests, including all Korean routes and normal/empty/unavailable/pending keyboard probes. |
 | `git diff --check` | PASS. |
 
-Earlier failing attempts were retained as local logs and corrected: nullable message interpolation, literal type narrowing after moving constants, preserved JSX spacing/entities, the recursive locale-file scan, source guards that needed the moved copy, an internal key accidentally containing a forbidden lexical token, one missing common-label bundle on credit servicing, and the browser test's held-write trigger. The initial browser run detected the untranslated Payment label and the incorrect pending-state trigger; both are corrected and rerun. Initial bundle overages are recorded above, not hidden. The final browser test also corrected a selector to use the source enum `IN_FLIGHT`/`CONFIRMED` verbatim; no application state was renamed.
+No protocol checkout, live gate, payment, production runtime, human acceptance, qualification or release was verified. The existing browser a11y suite covers all registry routes in Korean, normal/empty/unavailable/pending display, and keyboard behavior; its result is reported separately from the size failure. The 37-screen journey/a11y/evidence matrices are unchanged.
 
-Final review moved 14 remaining desk fallback literals to the same English catalogue references; their values and rendering are unchanged. The 112 focused tests, required typecheck/build/stub suite, lint, and size budget were rerun after this value-preserving cleanup. The browser suites above exercise the same display values and interaction behavior.
+The locked bindings hash was rechecked as `83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249`, identical to the source parent. `git diff` against that parent is empty for locked bindings, both restricted aiops trees, CI, package manifests and lockfile. No forbidden node was implemented and no external message was sent.
