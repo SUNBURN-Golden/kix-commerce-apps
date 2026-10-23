@@ -9,6 +9,17 @@
  * Text that the adapter packages own (CREDIT_BOUNDARY.note, observation.detail, meta values) is not translated here.
  */
 const en = {
+  "demo.mark": "Synthetic demo data. Stub fixtures only: no real payment, no credit disbursement, no venue entry, no public service.",
+  "onboarding.title": "First visit: this desk runs on synthetic stub data",
+  "onboarding.body": "Nothing shown is a real sale, payment, right or entry. Choose where to start, or skip this guide.",
+  "onboarding.role.buyer": "Start as a buyer → Buyer workspace",
+  "onboarding.role.organizer": "Start as an organizer → Organizer workspace",
+  "onboarding.role.operator": "Start as an operator → Receipts",
+  "onboarding.skip": "Skip the guide",
+  "onboarding.showAgain": "Show the first-run guide again",
+  "onboarding.help": "Status words are explained on the help page.",
+  "onboarding.guideDoc": "Local run guide: docs/guide/local-run-ko.md",
+
   "locale.label": "Language",
   "locale.en": "English",
   "locale.ko": "한국어",
@@ -146,6 +157,17 @@ export type RouteMessageKey = Extract<MessageKey, `route.${string}`>;
 
 /** Korean for the same keys. A missing key is a type error; the test also diffs the key sets at run time. */
 const ko: Record<MessageKey, string> = {
+  "demo.mark": "합성 데모 데이터입니다. stub fixture만 사용하며 실제 결제·여신 지급·현장 입장·공개 서비스는 없습니다.",
+  "onboarding.title": "첫 방문 안내: 이 데스크는 합성 stub 데이터로 동작합니다",
+  "onboarding.body": "표시된 내용은 실제 판매·결제·권리·입장이 아닙니다. 시작할 작업실을 선택하거나 안내를 건너뛰세요.",
+  "onboarding.role.buyer": "구매자로 시작 → 구매자 작업실",
+  "onboarding.role.organizer": "주최자로 시작 → 주최자 작업실",
+  "onboarding.role.operator": "운영자로 시작 → 영수증",
+  "onboarding.skip": "안내 건너뛰기",
+  "onboarding.showAgain": "첫 방문 안내 다시 보기",
+  "onboarding.help": "도움말에서 상태 단어의 뜻을 확인하세요.",
+  "onboarding.guideDoc": "로컬 실행 안내: docs/guide/local-run-ko.md",
+
   "locale.label": "표시 언어",
   "locale.en": "English",
   "locale.ko": "한국어",

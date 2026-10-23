@@ -12,7 +12,10 @@ import { useLocale } from "../i18n/locale-context";
 import { usePageIdentity } from "../i18n/use-page-identity";
 import { Breadcrumb } from "./Breadcrumb";
 import { SurfaceNav } from "./SurfaceNav";
-import { useRouteFocus } from "../shell/route-focus";
+import { DemoMark } from "../onboarding/DemoMark";
+import { FirstRunGuide } from "../onboarding/FirstRunGuide";
+import { clearOnboardingDismissed, readOnboardingDismissed, writeOnboardingDismissed } from "../onboarding/onboarding-store";
+import { focusPrimaryHeading, useRouteFocus } from "../shell/route-focus";
 import type { Translate } from "../i18n/translate";
 import { protocol } from "../protocol";
 import { transportBannerText } from "../transport-status";
@@ -34,6 +37,22 @@ export function Shell({ children }: { children: ReactNode }) {
   const meta = protocol.describe();
   const { t } = useLocale();
   const location = useLocation();
+  const [onboardingDismissed, setOnboardingDismissed] = useState(readOnboardingDismissed);
+  const onboardingFocus = useRef<"show" | "title" | "main" | null>(null);
+  useEffect(() => {
+    const target = onboardingFocus.current;
+    onboardingFocus.current = null;
+    if (target === "main") {
+      focusPrimaryHeading();
+    } else if (target) {
+      document.getElementById(target === "show" ? "first-run-show" : "first-run-title")?.focus();
+    }
+  }, [onboardingDismissed]);
+  const dismissOnboarding = (path?: string) => {
+    writeOnboardingDismissed();
+    onboardingFocus.current = path === undefined ? "show" : path === location.pathname ? "main" : null;
+    setOnboardingDismissed(true);
+  };
   const onMarketing = location.pathname === "/marketing" || location.pathname.startsWith("/marketing/");
   const marketingLabel = marketingChromeLabel(location.pathname);
   const connection = useConnectivity();
@@ -143,10 +162,18 @@ export function Shell({ children }: { children: ReactNode }) {
             <h1>{onMarketing ? t("shell.title.marketing") : t("shell.title.boxOffice")}</h1>
           </div>
         </div>
+        <DemoMark />
         <SurfaceNav />
         <LocaleSwitch />
         <p className="help-line">
-          {t("guide.hint")} <Link to="/help">{t("guide.link")}</Link>
+          {t("guide.hint")} <Link to="/help">{t("guide.link")}</Link>{" "}
+          {onboardingDismissed ? (
+            <button type="button" id="first-run-show" onClick={() => {
+              clearOnboardingDismissed();
+              onboardingFocus.current = "title";
+              setOnboardingDismissed(false);
+            }}>{t("onboarding.showAgain")}</button>
+          ) : null}
         </p>
       </header>
       <Breadcrumb />
@@ -157,6 +184,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <p className="banner transport" role="status" data-transport-state={transport.state} data-status-mark={transport.state}>
         <span className="status-word">{transportWord}</span> {transport.text}
       </p>
+      {!onboardingDismissed ? <FirstRunGuide onDismiss={dismissOnboarding} /> : null}
       <main id="desk-main" tabIndex={-1}>
         <Suspense fallback={connection.writesBlocked || connection.disconnected ? <p data-cached-read="true">STALE · cached</p> : null}><CachedReadNotice path={location.pathname} /></Suspense>
         {children}
