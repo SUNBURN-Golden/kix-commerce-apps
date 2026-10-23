@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "../i18n/messages/workspace--registry";
+import { sourceMessage } from "../i18n/source-message";
 /**
  * Information architecture for the buyer, organizer, and operator desks.
  * Field names and recorded status only. This module does not import the
@@ -55,7 +57,7 @@ export const TRACK_STATES = [
 
 export type TrackState = (typeof TRACK_STATES)[number];
 
-export const WORKSPACE_SENDERS = ["BookingJourney", "OrganizerConsole", "GiftTransfer", "ConsentBind"] as const;
+export const WORKSPACE_SENDERS = [sourceCopy.en["sae"], sourceCopy.en["s162"], sourceCopy.en["sml"], sourceCopy.en["sdr"]] as const;
 
 export type WorkspaceSender = (typeof WORKSPACE_SENDERS)[number];
 
@@ -97,7 +99,7 @@ export const PLACE_HOLD_RECORD = {
   consideredAction: "reserve_listing",
   mappedOntoPrepareTrade: false,
   reason:
-    "placeHold({ eventId, quantity }) does not match reserve_listing, which requires domain, expiresAt, listingHash, listingId, and tradeId.",
+    sourceCopy.en["s18a"],
 } as const;
 
 export interface TrackStateContract {
@@ -109,64 +111,64 @@ export interface TrackStateContract {
 /** Same contract for every surface. Apply it once per outcome track. */
 export const TRACK_STATE_CONTRACT = {
   loading: {
-    copy: "This track is loading.",
+    copy: sourceCopy.en["s23u"],
     writes: "disabled",
-    provenance: "No receipt on this track.",
+    provenance: sourceCopy.en["sxm"],
   },
   empty: {
-    copy: "This track has no receipt yet.",
+    copy: sourceCopy.en["s23q"],
     writes: "supported-action-on-this-track-only",
-    provenance: "No receipt on this track.",
+    provenance: sourceCopy.en["sxm"],
   },
   error: {
-    copy: "This track hit a local error.",
+    copy: sourceCopy.en["s23s"],
     writes: "disabled",
-    provenance: "No new receipt.",
+    provenance: sourceCopy.en["swd"],
   },
   "in-flight": {
-    copy: "This track has one request in flight.",
+    copy: sourceCopy.en["s23r"],
     writes: "disabled",
     provenance: "One attempt. No retry.",
   },
   confirmed: {
-    copy: "This track has a confirmed receipt for its own action.",
+    copy: sourceCopy.en["s23p"],
     writes: "disabled",
-    provenance: "Receipt for this action only. Stub-shape receipts are not from the gate.",
+    provenance: sourceCopy.en["s1dc"],
   },
   rejected: {
-    copy: "This track was rejected.",
+    copy: sourceCopy.en["s240"],
     writes: "disabled",
-    provenance: "A rejection stays on this track.",
+    provenance: sourceCopy.en["s6q"],
   },
   unknown: {
-    copy: "This track is unknown.",
+    copy: sourceCopy.en["s23y"],
     writes: "disabled",
-    provenance: "Unknown stays on this track. It is a separate state from rejected.",
+    provenance: sourceCopy.en["s25e"],
   },
   "not-sent": {
-    copy: "This track was not sent.",
+    copy: sourceCopy.en["s23z"],
     writes: "disabled",
-    provenance: "Nothing was posted.",
+    provenance: sourceCopy.en["s11k"],
   },
   fenced: {
-    copy: "This track is fenced.",
+    copy: sourceCopy.en["s23t"],
     writes: "disabled",
-    provenance: "A later write waits for a new page load.",
+    provenance: sourceCopy.en["s2l"],
   },
   "not-bound": {
-    copy: "This track is not-bound.",
+    copy: sourceCopy.en["s23v"],
     writes: "disabled",
-    provenance: "The desk method stays not-bound.",
+    provenance: sourceCopy.en["s1rs"],
   },
   stale: {
-    copy: "This track is stale.",
+    copy: sourceCopy.en["s23w"],
     writes: "disabled",
-    provenance: "A stale response does not update this track.",
+    provenance: sourceCopy.en["s8f"],
   },
   unavailable: {
-    copy: "This track is unavailable.",
+    copy: sourceCopy.en["s23x"],
     writes: "disabled",
-    provenance: "The desk stays on the selected adapter. There is no stub fallback.",
+    provenance: sourceCopy.en["s1rv"],
   },
 } as const satisfies Record<TrackState, TrackStateContract>;
 
@@ -194,7 +196,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: ["listPerformances"],
     provenanceNote:
-      "Stub catalog. The contract-only catalogue has no list or read command. listPerformances stays on the stub. Booking, resale, credit, and M02 also read this list. That read is not a catalogue command.",
+      sourceCopy.en["s1mv"],
     taskId: "readme-box-office",
     implemented: true,
     pageControl: true,
@@ -208,7 +210,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Read-only view of journeys opened on this page load. This route does not send the booking journey. A journey receipt shown here is not a new post.",
+      sourceCopy.en["s1c0"],
     taskId: "w6a-ui-skeleton",
     implemented: true,
     pageControl: true,
@@ -241,11 +243,11 @@ export const WORKSPACE_SURFACES = [
     role: "buyer",
     route: "/booking/:eventId",
     binding: "published-bound",
-    sender: "BookingJourney",
+    sender: sourceCopy.en["sae"],
     actions: SENDER_ACTIONS.BookingJourney,
     deskMethods: ["placeHold", "releaseHold", "confirmBooking"],
     provenanceNote:
-      "BookingJourney posts create_event, then prepare_trade, then accept_trade. Nothing past accept_trade is composed. placeHold stays not-bound with consideredAction reserve_listing. placeHold({ eventId, quantity }) is not mapped onto prepare_trade. confirmBooking stays not-bound and does not send capture. Desk methods stay not-bound.",
+      sourceCopy.en["saf"],
     taskId: "w6a-journey-adapter",
     implemented: true,
     pageControl: true,
@@ -295,7 +297,7 @@ export const WORKSPACE_SURFACES = [
       "presentAdmission",
     ],
     provenanceNote:
-      "Mock credential labels: valid, invalid, stale, already-consumed, transferred, cancelled, unavailable-server. The adapter assigns the label. presentAdmission does not post admit. A loopback health probe is not entry.",
+      sourceCopy.en["ssv"],
     taskId: "admission-harden",
     implemented: true,
     pageControl: true,
@@ -337,11 +339,11 @@ export const WORKSPACE_SURFACES = [
     role: "buyer",
     route: "/gift",
     binding: "published-bound",
-    sender: "GiftTransfer",
+    sender: sourceCopy.en["sml"],
     actions: SENDER_ACTIONS.GiftTransfer,
     deskMethods: [],
     provenanceNote:
-      "GiftTransfer posts offer_gift, then accept_gift or cancel_gift. offer_gift is not a credit draw. ticketId is caller input. The journey does not produce the giftable right. Stub-shape receipts are not from the gate.",
+      sourceCopy.en["smn"],
     taskId: "gift-surface",
     implemented: true,
     pageControl: true,
@@ -368,7 +370,7 @@ export const WORKSPACE_SURFACES = [
       "rejectUnsupportedCredit",
     ],
     provenanceNote:
-      "Mock F04 case. drawCredit is not a disbursement. rejectUnsupportedCredit refuses a disburse shape. The catalogue has no credit command. offer_gift is not a draw.",
+      sourceCopy.en["ssy"],
     taskId: "credit-depth",
     implemented: true,
     pageControl: true,
@@ -378,11 +380,11 @@ export const WORKSPACE_SURFACES = [
     role: "organizer",
     route: "/organizer",
     binding: "published-bound",
-    sender: "OrganizerConsole",
+    sender: sourceCopy.en["s162"],
     actions: SENDER_ACTIONS.OrganizerConsole,
     deskMethods: [],
     provenanceNote:
-      "OrganizerConsole posts create_event, close_sales, open_admission, complete_event, cancel_event, and issue_invitation. BookingJourney still does not compose open_admission. Seats and inventory ids are caller input. This record does not compute capacity. The operator actor string is not an authentication result. Stub-shape receipts are not from the gate.",
+      sourceCopy.en["s164"],
     taskId: "organizer-admin-console",
     implemented: true,
     pageControl: true,
@@ -396,7 +398,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Shell banner on every route. Route changes and the 15 second probe compare generation. A probe is liveness, not payment, issuance, or admission. Browser HTTP stays unavailable. There is no proxy and no stub fallback. UNKNOWN fences the next write.",
+      sourceCopy.en["s1k7"],
     taskId: "http-integration-gate",
     implemented: true,
     pageControl: true,
@@ -418,7 +420,7 @@ export const WORKSPACE_SURFACES = [
       "viewResalePresentation",
     ],
     provenanceNote:
-      "Protocol methods with no page control. checkAdmission stays not-bound and the admission page does not call it. settlementPreview stays a mock pointer and does not send the monetary posting. rejectExternalSettlement, rejectExternalReservation, and rejectExternalAdmission are in-memory refusals. getBooking and viewResalePresentation have no catalogue read.",
+      sourceCopy.en["s1a0"],
     taskId: "readme-operator-desk",
     implemented: true,
     pageControl: false,
@@ -495,7 +497,7 @@ export const WORKSPACE_SURFACES = [
     role: "buyer",
     route: "/marketing/m05",
     binding: "published-bound",
-    sender: "ConsentBind",
+    sender: sourceCopy.en["sdr"],
     actions: SENDER_ACTIONS.ConsentBind,
     deskMethods: [],
     provenanceNote:
@@ -513,7 +515,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Synthetic marketing benefit journey on one page: benefits discovered with the source's own eligibility verdict, priority rank, usage figures, coupon budget in redemptions, and referral attribution, applied to an order as a synthetic write, rejected by the source with a code and one return action, and reclaimed on request. Discover, apply, rejected, and reclaim are four separate lines. A benefit notice and an application confirm no purchase, pay no reward, and apply no discount. Consent is read as the source reports it and is set and authorized only on the consent page, where an earlier authorization is not reused after a withdrawal. CRM stays the independent M05 scope: this page selects no audience, sends no message, and completes no CRM product. Whether a reclaim restores a usage count or a budget is UNDETERMINED. On integration-http the read and the writes stay not-bound because no current producer tuple exists and the contract-only catalogue has no eligibility, usage, budget, attribution, apply, or reclaim command. Synthetic rows are not a producer receipt.",
+      sourceCopy.en["s1ol"],
     taskId: "c-marketing-journey-stub",
     implemented: true,
     pageControl: true,
@@ -527,7 +529,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Synthetic fixture for search, filters, sort, paging, and a scale window. Counts and tiers are synthetic labels. The one catalogue read is listPerformances. Stub-shape receipts are not from the gate.",
+      sourceCopy.en["s1oj"],
     taskId: "c-discovery-prototype",
     implemented: true,
     pageControl: true,
@@ -541,7 +543,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Synthetic projection read on the same page. The adapter validates a bounded cursor, filter, watermark, and access scope before a row returns, and checks the pin tuple before the first row. A row confirms no sale, no ownership, and no payment. On integration-http the read stays not-bound because the contract-only catalogue has no read command. Synthetic rows are not a producer receipt.",
+      sourceCopy.en["s1os"],
     taskId: "c-discovery-live-stub",
     implemented: true,
     pageControl: true,
@@ -555,7 +557,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Synthetic seat and GA selection on one page: summary, one bounded page, then a selection detail, with explicit refresh. The adapter checks the pin tuple before the first row and refuses a read under another generation or a different mode. An observed hold shows its expiry from the adapter flag. Queue admission is selection access only. Accessible seating stays unsupported. A selection is local: it reserves, sells, and pays nothing, and the hold desk method stays not-bound. On integration-http the read stays not-bound because the contract-only catalogue has no inventory read command. Synthetic rows are not a producer receipt.",
+      sourceCopy.en["s1p7"],
     taskId: "c-inventory-venue-stub",
     implemented: true,
     pageControl: true,
@@ -569,7 +571,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Synthetic multi-channel trade on one page: two channels list one right, a price change supersedes a listing, and a booking, a payment observation, a right transfer, and a refund explanation each keep their own state. One write is sent at a time per right. A lost or late result keeps that right blocked, a result from an earlier session is quarantined, and a read never resolves an unknown write. On integration-http the read and the writes stay not-bound because the contract-only catalogue has no listing, trade, payment, transfer, or refund command. Synthetic rows are not a producer receipt.",
+      sourceCopy.en["s1op"],
     taskId: "c-platform-journey-stub",
     implemented: true,
     pageControl: true,
@@ -583,7 +585,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Synthetic merchant read and export on one page: events, listings, trades, and settlement-obligation lines stay four lenses on their own source cuts, an unpaid, a held, and a refund-burden line keeps its own kind and state, and every line states settled, fundsAvailable, and lendable as false. A payload that breaks that stays refused before a row shows. Figures on different cuts are never merged into one balance, and the export is the producer's own file, shown only while it is one complete export of the cut the last read saw. On integration-http the read and the export stay not-bound because the contract-only catalogue has no merchant read or export command. Synthetic rows are not a producer receipt.",
+      sourceCopy.en["s1on"],
     taskId: "c-merchant-operations-stub",
     implemented: true,
     pageControl: true,
@@ -597,7 +599,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Synthetic credit origination on one page: the application, the review decision, the commitment, and the drawdown permission stay four lanes, a submitted application and an assistant explanation are never a decision, and every payload states its five lane non-claims as false or is refused whole. Rate, limit, and schedule figures are the source's own text, shown as UNDETERMINED when the source sent none, and never computed here. A lane built under an older policy revision stays flagged, a withdrawn consent or an expired document suspends permission, and a shared limit keeps the source's own order. On integration-http the read and the requests stay not-bound because no current producer tuple exists and the contract-only catalogue has no credit command. Synthetic rows are not a producer receipt.",
+      sourceCopy.en["s1oc"],
     taskId: "c-credit-origination-stub",
     implemented: true,
     pageControl: true,
@@ -611,7 +613,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Synthetic credit servicing on one page: the draw instruction, the disbursement observation, the reservation, and the exposure stay four facts, the repayment schedule, payments, allocations, unapplied remainders, reversals, adjustments, and the case history stay linked to the same obligation, and every payload states its eight lane non-claims as false or is refused whole. A partial repayment keeps its unapplied remainder and restores no commitment limit, a charge-off or recovery-case closure extinguishes no debt, and a payment observed after the case closed reopens nothing by itself. View, proposal, and approval stay three capabilities and an actor may not approve its own proposal. On integration-http the read and the requests stay not-bound because no current producer tuple exists and the contract-only catalogue has no credit command. Synthetic rows are not a producer receipt.",
+      sourceCopy.en["s1oe"],
     taskId: "c-credit-servicing-journey-stub",
     implemented: true,
     pageControl: true,
@@ -625,7 +627,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Synthetic finance operations on one page: a reconciliation queue of unmatched, duplicate, late, several-payee, residual, and balance cases, each linked to its original trade, with facts, payee allocations, and unapplied remainders kept as the source's own rows. Totals, differences, and shares are the source's own text and are never computed here. A case whose two sides sit on source cuts at different positions is flagged timing-uncertain, and the export is the producer's own synthetic file, shown as current only when it is one complete export of the cut set the last read saw. A correction is a proposal, an approval is a record that changes no economic state, no actor holds the authority to change economic state, and nothing forces a ledger to match. On integration-http the read, the export, and the requests stay not-bound because no current producer tuple exists and the contract-only catalogue has no finance command. Synthetic rows are not a producer receipt.",
+      sourceCopy.en["s1oh"],
     taskId: "c-finance-operations-stub",
     implemented: true,
     pageControl: true,
@@ -639,7 +641,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Synthetic delegation assistant on one page: a request, a proposal, an approval, and a command stay four separate lines. Request text is untrusted intent and is never authority: instruction-like text refuses the whole request, an ambiguous goal infers no grant, scope, action, or budget, and only the approve control on a recorded open proposal sends one synthetic command once under the caller's intent reference. A grant's scope, deadline, target, budget, allowed actions, and requested and adopted modes are the source's own fields, copied and never raised; an unadopted execution delegation stays in query/propose mode. A revoke, a stale grant version, or a lost answer keeps the grant's writes blocked, a late result after a context change is quarantined, and a read never resolves an unknown write. Every payload states seven non-claims as false or is refused whole. On integration-http the read and the writes stay not-bound because no current producer tuple exists, the delegation-surface node is not promoted, and the contract-only catalogue has no delegation read or command. Synthetic rows are not a producer receipt, and nothing here moves funds, transfers a right, or signs.",
+      sourceCopy.en["s1of"],
     taskId: "c-delegated-assistant-stub",
     implemented: true,
     pageControl: true,
@@ -653,7 +655,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Synthetic provider checkout on one page: the checkout redirect, the buyer's return landing, the provider's own report, the issuance record, and the refund record stay five separate lines on each order. The environment and the account are checked on every read: the desk serves the sandbox only, a declared production environment refuses the read, a write that does not declare sandbox is refused, and an unqualified actor fences every write. A return landing is a source event and is never a payment observation; issuance and refund stay fenced until a provider report is recorded and observed. One write is sent at a time per order, a lost or late result keeps that order blocked, a result from an earlier session is quarantined, and a read never resolves an unknown write. Every payload states six non-claims as false or is refused whole, and a confirmed answer that breaks them leaves the write unknown. On integration-http the read and the writes stay not-bound because kix-protocol:k-provider-sandbox and kix-protocol:k-authority-qualification are not merged and the contract-only catalogue has no checkout, payment-observation read, issuance, or provider-refund command. Synthetic rows are not a provider receipt, a sandbox success is not a real payment, an issuance record is not a real right, and a refund record executes nothing.",
+      sourceCopy.en["s1ou"],
     taskId: "c-provider-connected-journey-stub",
     implemented: true,
     pageControl: true,
@@ -737,7 +739,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Synthetic release candidate on one page: one run re-pins the producer and consumer source, the synthetic artifact, and the config tuple under the live tuple key, re-runs the sibling qualification record as technical evidence only, and presents install, publish, and operate as user decisions it never takes. A packet recorded under a different source or contract tuple is refused whole and an approval under another tuple is never reused; real user acceptance stays PENDING_USER_DECISION and distinct from the technical qualification. The support, incident, privacy, accessibility, and update/rollback lanes are handoff documents, not operating channels, and deferred scope and unresolved items stay on five separate denominators that never merge into one readiness figure. The packet only ever states STUB_CANDIDATE_RECORDED and every non-claim is a literal false. On integration-http the run stays not-bound because pending node c-platform-release is not promoted, kix-protocol:k-platform-release is not merged, the RELEASE gate has not run, and the contract-only catalogue has no release command. Synthetic rows are not a release receipt.",
+      sourceCopy.en["s1oy"],
     taskId: "c-platform-release-stub",
     implemented: true,
     pageControl: true,
@@ -751,7 +753,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Synthetic refund-and-return desk on one in-process source, mounted on the booking page and the box-office settlement panel, and read-only on the buyer workspace. Reservation, payment observation, issuance, return-required, and refund-done stay five separate cells, and a return-required marker is not a refund pre-stage. Cancel, void, PG-cancel adjustment, return observation, and refund stay five separate lines: refund_ticket, void_unissued, adjust_pg_cancel, and observe_return are recorded and never sent, and the catalogue has no booking-cancel command. A recorded line executes nothing. On integration-http the read and the writes stay not-bound because the contract-only catalogue has no order read or refund command. Synthetic rows are not a producer receipt.",
+      sourceCopy.en["s1ox"],
     taskId: "c-refund-return-states-stub",
     implemented: true,
     pageControl: true,
@@ -779,7 +781,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Synthetic session recovery desk on one page: an intent and its conflict scope are recorded in a versioned journal in this tab's session storage before the synthetic attach is sent, and the answer is recorded after. After a reload or a tab resume, an intent that was not settled is UNKNOWN, nothing is sent again, and no new write or compensation goes out for that subject. A confirmed record from an earlier page load is history only. A corrupt, unsupported, or lost journal is quarantined and shown as SESSION_EVIDENCE_LOST, every write is held, and no new reference is issued. Browser storage can be cleared, lost, or copied, so this is not an exactly-once guarantee; retention is UNDETERMINED and nothing expires a fence. The journal format is app-internal and is not a public schema, operation, capability, or identifier. On integration-http the attach stays not-bound because pending node c-async-session-fence is not promoted and the contract-only catalogue has no journey read or evidence command. Synthetic rows are not a producer receipt.",
+      sourceCopy.en["s1p8"],
     taskId: "c-session-recovery-stub",
     implemented: true,
     pageControl: true,
@@ -793,7 +795,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Synthetic read-only table of journeys on one page: for each journey and branch (normal, explicit rejection, response lost, partly landed) the last confirmed step, the unconfirmed request, the blocked next action, and the compensation cell. Rows come from the synthetic sources that already exist, driven in this process, from the operational qualification packet, or as a pointer to the test that already pins the branch. UNKNOWN is never shown as done or lost, a branch no source reproduces stays visible and is never counted as a success, and the compensation cell has three words (NONE_NEEDED, FENCED, COMPENSATION_UNDEFINED) and names no command. The page sends no command and composes no opposite or compensating command. Whether a marketing reclaim restores a usage count or a budget is UNDETERMINED. On integration-http the table stays not-bound because pending node c-cross-surface-journeys is not promoted and no producer contract for it is merged. The table format is app-internal and is not a public schema, operation, capability, or identifier. Synthetic rows are not a producer receipt.",
+      sourceCopy.en["s1ow"],
     taskId: "c-cross-surface-journeys-stub",
     implemented: true,
     pageControl: true,
@@ -807,7 +809,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Read-only page over receipts already opened on this page load. Selection, reservation, order, and issuance stay separate rows. Writes stay on /booking/:eventId and /gift. A reload clears page-load state and re-sends nothing. Stub-shape receipts are not from the gate.",
+      sourceCopy.en["s1bz"],
     taskId: "c-buyer-workspace",
     implemented: true,
     pageControl: true,
@@ -817,11 +819,11 @@ export const WORKSPACE_SURFACES = [
     role: "organizer",
     route: "/organizer/workspace",
     binding: "published-bound",
-    sender: "OrganizerConsole",
+    sender: sourceCopy.en["s162"],
     actions: SENDER_ACTIONS.OrganizerConsole,
     deskMethods: [],
     provenanceNote:
-      "Organizer workspace edits caller fields for the six lifecycle commands and previews each command before one send. Each command is its own request. The shared OrganizerConsole is the sender. Stub-shape receipts are not from the gate. The operator actor string is not an authentication result.",
+      sourceCopy.en["s16b"],
     taskId: "c-organizer-workspace",
     implemented: true,
     pageControl: true,
@@ -835,7 +837,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Read-only explanation of receipts already on this page load. Operation, status, source, and profile stay with the receipt. An unknown outcome stays unknown. The support export redacts tokens, personal data, and account numbers. A receipt from another session is not shown. This page does not send. Stub-shape receipts are not from the gate.",
+      sourceCopy.en["s1by"],
     taskId: "c-receipt-explorer",
     implemented: true,
     pageControl: true,
@@ -849,7 +851,7 @@ export const WORKSPACE_SURFACES = [
     actions: [],
     deskMethods: [],
     provenanceNote:
-      "Presentation baseline for amount, quantity, deadline, keyboard, and non-color status on the existing buyer, organizer, and operator screens. This row adds no route and no command. Price and fee display stays UNDETERMINED. Display locale does not decide expiry.",
+      sourceCopy.en["s18v"],
     taskId: "c-accessibility-baseline",
     implemented: true,
     pageControl: false,
@@ -933,28 +935,28 @@ const STAGE_INDEX = new Map<string, BuyerFlowStage>(BUYER_FLOW_STAGES.map((stage
 export function surfaceBindingLine(id: string): string {
   const surface = SURFACE_INDEX.get(id);
   if (!surface) {
-    return `Surface ${id} is absent from the workspace registry.`;
+    return sourceMessage(sourceCopy.en["p.t449"], { v1: id });
   }
   const sender = surface.sender ?? "none";
   const actions = surface.actions.length > 0 ? surface.actions.join(", ") : "none";
   const desk =
     surface.deskMethods.length > 0
-      ? ` Desk methods stay not-bound: ${surface.deskMethods.join(", ")}.`
+      ? sourceMessage(sourceCopy.en["p.t450"], { v1: surface.deskMethods.join(", ") })
       : "";
-  const presence = !surface.implemented ? "NOT_IMPLEMENTED." : surface.pageControl ? "Current route." : "No added route.";
-  const control = surface.pageControl ? "Page control." : "No page control.";
-  return `${surface.id} role ${surface.role} route ${surface.route}. Binding ${surface.binding}. Sender ${sender}. Actions ${actions}.${desk} ${presence} ${control} ${surface.provenanceNote}`;
+  const presence = !surface.implemented ? "NOT_IMPLEMENTED." : surface.pageControl ? sourceCopy.en["sfd"] : sourceCopy.en["stw"];
+  const control = surface.pageControl ? sourceCopy.en["s16v"] : sourceCopy.en["swq"];
+  return sourceMessage(sourceCopy.en["p.t591"], { v1: surface.id, v2: surface.role, v3: surface.route, v4: surface.binding, v5: sender, v6: actions, v7: desk, v8: presence, v9: control, v10: surface.provenanceNote });
 }
 
 /** One badge line for the stage's own tracks. */
 export function stageLine(id: string): string {
   const stage = STAGE_INDEX.get(id);
   if (!stage) {
-    return `Stage ${id} is absent from the buyer flow.`;
+    return sourceMessage(sourceCopy.en["p.t451"], { v1: id });
   }
   const badges =
     stage.tracks.length === 0
-      ? "No outcome track on this stage."
-      : stage.tracks.map((track) => `${track} stays its own badge`).join(". ") + ".";
-  return `Stage ${stage.id}. ${badges} ${stage.note}`;
+      ? sourceCopy.en["swp"]
+      : stage.tracks.map((track) => sourceMessage(sourceCopy.en["p.t452"], { v1: track })).join(". ") + ".";
+  return sourceMessage(sourceCopy.en["p.t592"], { v1: stage.id, v2: badges, v3: stage.note });
 }

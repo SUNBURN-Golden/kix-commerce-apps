@@ -1,3 +1,6 @@
+import { messages as mergedCopy } from "../../i18n/messages/gallery";
+import { useT } from "../../i18n/desk-context";
+import type { Translate } from "../../i18n/translate";
 import type { ReactNode } from "react";
 import { AmountNotice, DeadlineLine, STATUS_MARKS, StatusMark, type StatusMarkKind } from "../../a11y/marks";
 import { ASYNC_STATES, AsyncState } from "../../components/AsyncState";
@@ -23,20 +26,24 @@ export interface GalleryCase {
   ownsShell?: boolean;
   render: () => ReactNode;
 }
-const item = (id: string, component: string, state: string, render: () => ReactNode, samplePath = "/buyer"): GalleryCase =>
-  ({ id, component, state, render, samplePath });
+const item = (id: string, component: string, state: string, render: (t: Translate) => ReactNode, samplePath = "/buyer"): GalleryCase =>
+  ({ id, component, state, render: () => <GallerySpecimen render={render} />, samplePath });
+function GallerySpecimen({ render }: { render: (t: Translate) => ReactNode }) {
+  const t = useT(mergedCopy);
+  return render(t);
+}
 const noop = () => undefined;
 const deadline = "2026-10-01T00:00:00.000Z";
 
 export const GALLERY_CASES: readonly GalleryCase[] = [
-  { ...item("shell-stub", "Shell", "stub", () => <Shell><h2>Synthetic Shell specimen</h2><p>UNKNOWN · NOT_BOUND · STALE · UNDETERMINED</p></Shell>), ownsShell: true },
+  { ...item("shell-stub", "Shell", "stub", (t) => <Shell><h2>{t("merge.shellSample")}</h2><p>{t("merge.statesSample")}</p></Shell>), ownsShell: true },
   item("nav-current", "SurfaceNav", "current link; desktop or narrow closed/open", () => <SurfaceNav />),
   item("nav-no-current", "SurfaceNav", "no current link; desktop or narrow closed/open", () => <SurfaceNav />, "/unmatched-specimen"),
   item("breadcrumb-root", "Breadcrumb", "root", () => <Breadcrumb />, "/"),
   item("breadcrumb-child", "Breadcrumb", "parent and child", () => <Breadcrumb />, "/credit/servicing"),
   item("breadcrumb-parameter", "Breadcrumb", "parameterized", () => <Breadcrumb />, "/booking/evt_gallery_synthetic"),
   item("breadcrumb-empty", "Breadcrumb", "unmatched (empty)", () => <Breadcrumb />, "/unmatched-specimen"),
-  item("screen-loading", "ScreenLoading", "progress; nothing sent", () => <ScreenLoading label="Buyer" />),
+  item("screen-loading", "ScreenLoading", "progress; nothing sent", (t) => <ScreenLoading label={t("merge.buyer")} />),
   ...Object.keys(STATUS_MARKS).map((kind) => item(`status-${kind}`, "StatusMark", kind, () => <StatusMark kind={kind as StatusMarkKind} />)),
   item("amount-undetermined", "AmountNotice", "UNDETERMINED", () => <AmountNotice />),
   ...([true, false, null] as const).map((expired) => item(`deadline-${String(expired)}`, "DeadlineLine", `expired ${String(expired)}`, () => <DeadlineLine expiresAt={deadline} expired={expired} />)),
@@ -48,16 +55,16 @@ export const GALLERY_CASES: readonly GalleryCase[] = [
   item("safe-text", "SafeText", "untrusted text", () => <SafeText value={'<script>synthetic</script>'} />),
   item("safe-text-empty", "SafeText", "empty", () => <SafeText value="" />),
   item("safe-text-shortened", "SafeText", "shortened with copyable original", () => <SafeText value="Synthetic text with an inspectable original" maxDisplay={12} />),
-  ...ASYNC_STATES.map((kind) => item(`async-${kind}`, "AsyncState", kind, () => <AsyncState kind={kind} label="Synthetic" />)),
-  item("async-parent", "AsyncStateFrame", "parent owns announcement", () => <div role="status"><AsyncStateFrame kind="loading" label="Synthetic" word="Loading" note="Nothing sent" announcement="parent" /></div>),
-  item("connectivity-banner", "ConnectivityBanner", "local; offline follows browser", () => <ConnectivityBanner reasonId="gallery-connectivity-reason" label="Synthetic connectivity specimen" />),
+  ...ASYNC_STATES.map((kind) => item(`async-${kind}`, "AsyncState", kind, (t) => <AsyncState kind={kind} label={t("merge.synthetic")} />)),
+  item("async-parent", "AsyncStateFrame", "parent owns announcement", (t) => <div role="status"><AsyncStateFrame kind="loading" label={t("merge.synthetic")} word={t("merge.loading")} note={t("merge.nothingSent")} announcement="parent" /></div>),
+  item("connectivity-banner", "ConnectivityBanner", "local; offline follows browser", (t) => <ConnectivityBanner reasonId="gallery-connectivity-reason" label={t("merge.connectivitySample")} />),
   item("cached-read", "CachedReadNotice", "hidden while local; retained reads after disconnect", () => <CachedReadNotice path="/buyer" />),
-  item("connectivity-write", "ConnectivityWriteButton", "inert; blocked while offline", () => <ConnectivityWriteButton type="button" onClick={noop}>Synthetic write specimen (inert)</ConnectivityWriteButton>),
+  item("connectivity-write", "ConnectivityWriteButton", "inert; blocked while offline", (t) => <ConnectivityWriteButton type="button" onClick={noop}>{t("merge.writeSample")}</ConnectivityWriteButton>),
   item("form-errors-empty", "ErrorSummary", "no issues (empty)", () => <ErrorSummary id="gallery-form-empty" issues={[]} summaryRef={null} />),
-  item("form-errors", "ErrorSummary", "required field; keyboard link", () => <>
-    <h2>Synthetic form / 합성 양식</h2>
+  item("form-errors", "ErrorSummary", "required field; keyboard link", (t) => <>
+    <h2>{t("merge.formSample")}</h2>
     <ErrorSummary id="gallery-form-errors" issues={[{ fieldId: "gallery-quantity", labelKey: "validation.label.quantity", messageKey: "validation.required", params: { max: 0 } }]} summaryRef={null} />
-    <label htmlFor="gallery-quantity">Quantity / 수량</label><input id="gallery-quantity" aria-invalid="true" />
+    <label htmlFor="gallery-quantity">{t("merge.quantitySample")}</label><input id="gallery-quantity" aria-invalid="true" />
   </>),
 ];
 

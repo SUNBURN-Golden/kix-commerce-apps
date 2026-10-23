@@ -1,3 +1,10 @@
+import { messages as copy0 } from "../i18n/messages/pages--Help";
+import { messages as copy1 } from "../i18n/messages/guide--status-words";
+import { messages as copy3 } from "../i18n/messages/marketing--labels";
+import { messages as copy4 } from "../i18n/messages/handoff--packet";
+import { messages as copy5 } from "../i18n/messages/workspace--registry";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { GUIDE_KIND_LABELS, STATUS_WORD_GUIDE, type StatusWordGuideEntry } from "../guide/status-words";
 
 const KIND_ORDER: readonly StatusWordGuideEntry["kind"][] = [
@@ -18,36 +25,32 @@ const KIND_ORDER: readonly StatusWordGuideEntry["kind"][] = [
 /**
  * The help page is a glossary copy of docs/guide/status-glossary-ko.md (English). It explains words;
  * it is not a status surface, and nothing on it is sent, recorded or decided. The Korean-first text
- * lives in the guide documents; this page stays English like the other unmigrated screen bodies.
+ * lives in the guide documents; the screen uses the selected display locale and keeps each glossary word verbatim.
  */
 export function HelpPage() {
+  const t = useT(copy0, copy1, copy3, copy4, copy5);
   return (
-    <section className="help" data-guide="status-words" aria-label="Help">
+    <section className="help" data-guide="status-words" aria-label={t("route.help")}>
       <header className="section-head">
-        <p className="eyebrow">Help</p>
-        <h2>Status words and what they mean</h2>
+        <p className="eyebrow">{t("route.help")}</p>
+        <h2>{t("s1ml")}</h2>
         <p>
-          This page is a glossary. Reading a word here changes nothing: no request is sent, no record is written, and no
-          result is decided. The same list, Korean first, is in <code>docs/guide/status-glossary-ko.md</code>, and a test
-          holds the two equal.
-        </p>
+          {t("s239")}{" "}<code>{t("sh0")}</code>{t("s3r")}</p>
         <p>
-          UNKNOWN means the result is not known. It is not a failure and not a success; the request may have applied. No
-          word on this page claims integration, qualification, acceptance or release.
-        </p>
+          {t("s25b")}</p>
       </header>
-      {KIND_ORDER.map((kind) => (
+      {deskText(t, KIND_ORDER.map((kind) => (
         <section className="panel" key={kind}>
-          <h3>{GUIDE_KIND_LABELS[kind]}</h3>
-          <div className="handoff-scroll" role="region" aria-label={GUIDE_KIND_LABELS[kind]} tabIndex={0}>
+          <h3>{deskText(t, GUIDE_KIND_LABELS[kind])}</h3>
+          <div className="handoff-scroll" role="region" aria-label={deskText(t, GUIDE_KIND_LABELS[kind])} tabIndex={0}>
             <table>
-              <caption>{GUIDE_KIND_LABELS[kind]}. Each word is printed verbatim and is never translated.</caption>
+              <caption>{deskText(t, GUIDE_KIND_LABELS[kind])}{t("si6")}</caption>
               <thead>
                 <tr>
-                  <th>Word</th>
-                  <th>Meaning</th>
-                  <th>What to do</th>
-                  <th>Do not read it as</th>
+                  <th>{t("s26w")}</th>
+                  <th>{t("ssd")}</th>
+                  <th>{t("s26j")}</th>
+                  <th>{t("sh8")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -56,16 +59,16 @@ export function HelpPage() {
                     <td>
                       <code>{item.word}</code>
                     </td>
-                    <td>{item.meaning}</td>
-                    <td>{item.doText}</td>
-                    <td>{item.dontText}</td>
+                    <td>{deskText(t, item.meaning)}</td>
+                    <td>{deskText(t, item.doText)}</td>
+                    <td>{deskText(t, item.dontText)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </section>
-      ))}
+      )))}
     </section>
   );
 }

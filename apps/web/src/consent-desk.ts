@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/consent-desk";
+import { sourceMessage } from "./i18n/source-message";
 import { connectivityInvoker, connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import {
@@ -22,8 +24,8 @@ import { protocol } from "./connectivity/desk-protocol";
  * set_consent before authorize_marketing is desk behavior for this page.
  */
 const STEP_LABEL: Record<ConsentStep, string> = {
-  set_consent: "Set consent",
-  authorize_marketing: "Authorize marketing",
+  set_consent: sourceCopy.en["s1jw"],
+  authorize_marketing: sourceCopy.en["s98"],
 };
 
 export type ConsentRowStatus =
@@ -180,15 +182,15 @@ export function selectConsentView(
       ...row,
       status: "not-started" as const,
       canSend: false,
-      note: "Enter an event id. The desk does not mint one.",
+      note: sourceCopy.en["sih"],
     };
   });
   return {
     source: snapshot.source,
     path: snapshot.path,
     rows,
-    lastConfirmed: found?.lastConfirmed ?? "Last confirmed receipt: none",
-    unconfirmed: found?.unconfirmed ?? "Unconfirmed request: none",
+    lastConfirmed: found?.lastConfirmed ?? sourceCopy.en["sq8"],
+    unconfirmed: found?.unconfirmed ?? sourceCopy.en["s252"],
     pending: found?.pending ?? false,
     opened: snapshot.events.map((item) => ({
       eventId: item.eventId,
@@ -282,7 +284,7 @@ export class ConsentDesk {
     current.phase = "in-flight";
     current.operationId = operationId;
     current.actor = actorFor(step, draft);
-    current.note = "In flight. One attempt.";
+    current.note = sourceCopy.en["snx"];
     record.pending = true;
     this.publish();
     try {
@@ -295,7 +297,7 @@ export class ConsentDesk {
       const stepRecord = record.steps.find((item) => item.step === step);
       if (stepRecord && stepRecord.phase === "in-flight") {
         stepRecord.phase = "not-sent";
-        stepRecord.note = "Not sent.";
+        stepRecord.note = sourceCopy.en["s12l"];
         record.localHalt = true;
       }
       this.publish();
@@ -323,7 +325,7 @@ export class ConsentDesk {
       this.path = {
         kind: "unavailable",
         code,
-        detail: "Integration HTTP stayed selected. The desk did not fall back to the stub.",
+        detail: sourceCopy.en["sod"],
       };
     }
     this.publish();
@@ -336,7 +338,7 @@ export class ConsentDesk {
     draft: ConsentDraft,
   ): Promise<ConsentStepOutcome> {
     if (this.deps.source === null || record.bind === null) {
-      throw new ProtocolError("Consent invoker is not selected.");
+      throw new ProtocolError(sourceCopy.en["sdv"]);
     }
     const shared = {
       business: draft.business,
@@ -373,8 +375,8 @@ export class ConsentDesk {
       current.receipt = receiptFields(outcome.receipt);
       current.note =
         this.deps.source?.source === "stub-shape"
-          ? "Confirmed stub-shape receipt. Not from the gate."
-          : "Confirmed receipt.";
+          ? sourceCopy.en["sdk"]
+          : sourceCopy.en["sdj"];
       if (step === "set_consent") {
         const authorize = record.steps.find((item) => item.step === "authorize_marketing");
         if (authorize) {
@@ -396,7 +398,7 @@ export class ConsentDesk {
       current.code = outcome.code;
       current.requestId = outcome.identity.requestId ?? null;
       current.correlationId = outcome.identity.correlationId ?? null;
-      current.note = `Rejected by the gate (${outcome.code}).`;
+      current.note = sourceMessage(sourceCopy.en["p.t4"], { v1: outcome.code });
       return;
     }
     if (outcome.kind === "UNKNOWN") {
@@ -405,12 +407,12 @@ export class ConsentDesk {
       current.code = outcome.code;
       current.requestId = outcome.identity.requestId ?? null;
       current.correlationId = outcome.identity.correlationId ?? null;
-      current.note = "Unconfirmed: sent, no authoritative receipt. May have applied. Not a rejection.";
+      current.note = sourceCopy.en["s253"];
       return;
     }
     current.phase = "pending";
     current.operationId = null;
-    current.note = `Fenced (${outcome.blockedBy.reason}). Nothing was sent.`;
+    current.note = sourceMessage(sourceCopy.en["p.t5"], { v1: outcome.blockedBy.reason });
     if (outcome.blockedBy.reason !== "out-of-order") {
       record.localHalt = true;
     }
@@ -429,7 +431,7 @@ export class ConsentDesk {
       current.code = stopped.identity.code ?? "UNKNOWN";
       current.requestId = stopped.identity.requestId ?? null;
       current.correlationId = stopped.identity.correlationId ?? null;
-      current.note = "Unconfirmed: sent, no authoritative receipt. May have applied. Not a rejection.";
+      current.note = sourceCopy.en["s253"];
       return;
     }
     current.phase = "not-sent";
@@ -437,8 +439,8 @@ export class ConsentDesk {
     current.code = stopped?.identity.code ?? null;
     current.requestId = stopped?.identity.requestId ?? null;
     current.correlationId = stopped?.identity.correlationId ?? null;
-    const message = error instanceof Error ? error.message : "The step was not sent.";
-    current.note = `Not sent. ${message}`;
+    const message = error instanceof Error ? error.message : sourceCopy.en["s21f"];
+    current.note = sourceMessage(sourceCopy.en["p.t6"], { v1: message });
     record.localHalt = stopped === null;
   }
 
@@ -456,8 +458,8 @@ export class ConsentDesk {
         eventId: record.eventId,
         pending: record.pending,
         rows,
-        lastConfirmed: summaryLine("Last confirmed receipt", lastRow(rows, "confirmed")),
-        unconfirmed: summaryLine("Unconfirmed request", rows.find((row) => row.status === "unconfirmed")),
+        lastConfirmed: summaryLine(sourceCopy.en["sq7"], lastRow(rows, "confirmed")),
+        unconfirmed: summaryLine(sourceCopy.en["s251"], rows.find((row) => row.status === "unconfirmed")),
       };
     });
     return {
@@ -612,7 +614,7 @@ function deriveRows(record: ConsentRecord, path: ConsentPathStatus): ConsentRow[
 
 function summaryLine(label: string, row: ConsentRow | undefined): string {
   if (!row?.operationId) {
-    return `${label}: none`;
+    return sourceMessage(sourceCopy.en["p.t464"], { v1: label });
   }
   return `${label}: ${row.step} · ${row.operationId}`;
 }

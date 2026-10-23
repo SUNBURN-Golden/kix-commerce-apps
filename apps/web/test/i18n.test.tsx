@@ -335,7 +335,10 @@ describe("migrated surfaces", () => {
 describe("source", () => {
   it("only locale-store.ts names the storage; no fetch, no browser-language sniffing, no real currency", () => {
     const dir = path.join(web, "src/i18n");
-    const files = [...readdirSync(dir).map((file) => path.join(dir, file)), path.join(web, "src/async-state/messages.ts")];
+    const catalogueFiles = (base: string): string[] => readdirSync(base, { withFileTypes: true }).flatMap((entry) =>
+      entry.isDirectory() ? catalogueFiles(path.join(base, entry.name)).map((child) => `${entry.name}/${child}`) : [entry.name],
+    );
+    const files = [...catalogueFiles(dir).map((file) => path.join(dir, file)), path.join(web, "src/async-state/messages.ts")];
     for (const file of files) {
       const source = readFileSync(file, "utf8");
       for (const word of ["fetch(", "localStorage", "navigator", "invokeLocalCall", "capture", "settle_capture", "placeHold", "Date.now(", "Math.random(", "127.0.0.1"]) {

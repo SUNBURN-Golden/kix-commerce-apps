@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/marketplace-performance";
+import { sourceMessage } from "./i18n/source-message";
 import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The marketplace scale bench on top of the adapter's synthetic bench port.
@@ -39,58 +41,58 @@ import {
 } from "@kix/protocol-adapter";
 import { protocol } from "./connectivity/desk-protocol";
 
-export const MARKETPLACE_BENCH_TITLE = "Marketplace scale bench (synthetic)";
+export const MARKETPLACE_BENCH_TITLE = sourceCopy.en["ss1"];
 
 export const MARKETPLACE_BENCH_SOURCE_LINE =
-  "Listing rows, the queue view, the terms references, and the offered latencies come from a synthetic lazy stream of 150000 rows on this page load. They are not a producer read, not a marketplace receipt, and not a load test.";
+  sourceCopy.en["sr5"];
 
 export const MARKETPLACE_BENCH_BOUNDARY =
-  "A row is a label set. It confirms no price, no right, no sale, and no ownership, and a fast page never confirms a stale price or a stale right: a read that stops being ready clears every row.";
+  sourceCopy.en["s7k"];
 
-export const MARKETPLACE_BENCH_BOUND_NOTE = `A read asks for at most ${MARKETPLACE_PAGE_BOUND} rows and a filter of at most 64 characters. A larger ask is refused, never clamped. The page keeps only the last ready window.`;
+export const MARKETPLACE_BENCH_BOUND_NOTE = sourceMessage(sourceCopy.en["p.t288"], { v1: MARKETPLACE_PAGE_BOUND });
 
 export const MARKETPLACE_BENCH_QUEUE_NOTE =
   "The contended page is behind a synthetic queue. Join and check are each one explicit call; nothing polls. Queue admission is browse access to that page only — never a hold, a payment, an issued right, or entry — and an expired admission grants nothing.";
 
 export const MARKETPLACE_BENCH_READ_NOTE =
-  "A read, a search, and a page are each one call. A cancelled read is never sent again and its late answer is counted, not applied. An answer older than the newest read, or one that lands after the actor, the device profile, or the session incarnation changed, is dropped and counted. A lost answer stays unknown.";
+  sourceCopy.en["s6c"];
 
-export const MARKETPLACE_BENCH_MEMORY_NOTE = `The memory denominator is the held window: at most ${MARKETPLACE_PAGE_BOUND} rows against the source's own total estimate of ${MARKETPLACE_TOTAL_LISTINGS}. The bound is the page size, not the stream length, and this denominator is never a producer load figure.`;
+export const MARKETPLACE_BENCH_MEMORY_NOTE = sourceMessage(sourceCopy.en["p.t289"], { v1: MARKETPLACE_PAGE_BOUND, v2: MARKETPLACE_TOTAL_LISTINGS });
 
 export const MARKETPLACE_BENCH_DEVICE_NOTE =
-  "The desktop browser profile is the real device this page ran in. The small-viewport profile is emulation: it is never reported as real mobile evidence. No real handset or tablet ran in this session, so those classes stay unverified and are never filled with a desktop measurement.";
+  sourceCopy.en["s1rw"];
 
 export const MARKETPLACE_BENCH_MEASURE_NOTE =
-  "Every settled call is measured once at the browser boundary under its own workload and device labels. The denominator is browser-boundary-measurement only: the source's offeredMs is a separate label, no producer load figure is mixed in, and no row claims real-device evidence.";
+  sourceCopy.en["sjo"];
 
 export const MARKETPLACE_BENCH_HIDE_NOTE =
-  "A hidden or greyed control is not enforcement. The source checks every read and queue call against the scope, the bounds, the cursor, the queue, and the terms, and the tests send requests straight to the port to prove a hidden control is never the check.";
+  sourceCopy.en["s2d"];
 
 export const MARKETPLACE_BENCH_SESSION_NOTE =
-  "Reads, queue calls, and measurements live in this page load only. A reload or a new synthetic session clears them and resolves nothing at a producer.";
+  sourceCopy.en["s1c8"];
 
 export const MARKETPLACE_BENCH_SYNTHETIC_CONTROL_NOTE =
-  "The Simulate controls are synthetic controls a real producer does not offer. They stand in for a held answer delivered late, a lapsed queue admission, a permission revocation, and a terms move on the catalogue side.";
+  sourceCopy.en["s1y5"];
 
 export const MARKETPLACE_BENCH_CLAIM_NOTE =
-  "Every ready outcome states realDeviceEvidence and producerLoadMeasurement as false, and every row states confirmsPrice, confirmsRight, confirmsSale, and confirmsOwnership as false. A payload that says otherwise is refused whole before a row is shown.";
+  sourceCopy.en["sjk"];
 
 export const MARKETPLACE_BENCH_TUPLE_NOTE =
-  "The port checks the pin tuple before the first row. A drifted tuple returns tuple-changed and clears the view; it is never shown as ready.";
+  sourceCopy.en["s1vd"];
 
 export const MARKETPLACE_BENCH_SCENARIO_NOTES: Readonly<Record<MarketplaceScenario, string>> = {
-  clean: "Every call is answered.",
-  empty: "The source lists no listing for this scope.",
-  stale: "The source serves a watermark older than the floor this page holds.",
-  slow: "The source declares a long offered latency on every answer.",
-  held: "Every answer waits for the synthetic deliver control.",
-  contended: "The queue admits one position at a time.",
-  "queue-lapsed": "The queue admission is already expired at the source.",
-  "permission-lost": "The browse permission is revoked at the source.",
-  "terms-moved": "The listing terms move under every read.",
-  "read-lost": "The answer to a call never arrives.",
-  "claims-price": "The source sends a payload that claims a row confirms a price. It is refused.",
-  "claims-device": "The source sends a payload that claims real-device evidence. It is refused.",
+  clean: sourceCopy.en["sj0"],
+  empty: sourceCopy.en["s1zs"],
+  stale: sourceCopy.en["s21a"],
+  slow: sourceCopy.en["s1yq"],
+  held: sourceCopy.en["siy"],
+  contended: sourceCopy.en["s1vv"],
+  "queue-lapsed": sourceCopy.en["s1vu"],
+  "permission-lost": sourceCopy.en["s1qj"],
+  "terms-moved": sourceCopy.en["s1u4"],
+  "read-lost": sourceCopy.en["s1q2"],
+  "claims-price": sourceCopy.en["s20z"],
+  "claims-device": sourceCopy.en["s210"],
 };
 
 export const MARKETPLACE_BENCH_ACTORS = ["marketplace-bench", "marketplace-bench-2"] as const;
@@ -165,15 +167,15 @@ export interface MarketplaceBenchModel {
 }
 
 const PHASE_WORDS: Readonly<Record<string, string>> = {
-  none: "No queue call yet",
-  waiting: "Waiting",
-  admitted: "Admitted",
-  expired: "Expired",
-  denied: "Denied",
-  invalid: "Refused",
-  "tuple-changed": "Tuple changed",
-  "not-bound": "Not bound",
-  unavailable: "Unavailable",
+  none: sourceCopy.en["sxe"],
+  waiting: sourceCopy.en["s265"],
+  admitted: sourceCopy.en["s1q"],
+  expired: sourceCopy.en["sk9"],
+  denied: sourceCopy.en["sga"],
+  invalid: sourceCopy.en["s1et"],
+  "tuple-changed": sourceCopy.en["s24r"],
+  "not-bound": sourceCopy.en["s10c"],
+  unavailable: sourceCopy.en["s24z"],
 };
 
 function statusFor(
@@ -184,51 +186,51 @@ function statusFor(
   const suffix = code ? ` (${code})` : "";
   switch (state) {
     case "loading":
-      return { statusLine: "Reading the synthetic bench source. Nothing is shown yet.", detailLine: "" };
+      return { statusLine: sourceCopy.en["s1bc"], detailLine: "" };
     case "ready":
-      return { statusLine: "Bench window read.", detailLine: "" };
+      return { statusLine: sourceCopy.en["s9t"], detailLine: "" };
     case "empty":
       return {
-        statusLine: "The source lists no listing for this scope in this read.",
-        detailLine: detail ?? "An empty read is not denied and not unknown.",
+        statusLine: sourceCopy.en["s1zt"],
+        detailLine: detail ?? sourceCopy.en["s3z"],
       };
     case "stale":
-      return { statusLine: "Stale read.", detailLine: detail ?? "" };
+      return { statusLine: sourceCopy.en["s1lw"], detailLine: detail ?? "" };
     case "terms-moved":
-      return { statusLine: "The listing terms moved under this view.", detailLine: detail ?? "" };
+      return { statusLine: sourceCopy.en["s1u3"], detailLine: detail ?? "" };
     case "queue-blocked":
-      return { statusLine: "The contended page is behind the queue.", detailLine: detail ?? "" };
+      return { statusLine: sourceCopy.en["s1r4"], detailLine: detail ?? "" };
     case "queue-expired":
-      return { statusLine: "The queue admission expired at the source.", detailLine: detail ?? "" };
+      return { statusLine: sourceCopy.en["s1vt"], detailLine: detail ?? "" };
     case "denied":
       return {
-        statusLine: `The source denied this call${suffix}.`,
-        detailLine: `${detail ?? ""} No row is shown, and a hidden control was not what denied it.`,
+        statusLine: sourceMessage(sourceCopy.en["p.t290"], { v1: suffix }),
+        detailLine: sourceMessage(sourceCopy.en["p.t291"], { v1: detail ?? "" }),
       };
     case "refused":
       return {
-        statusLine: `The source sent a payload this page does not trust${suffix}.`,
-        detailLine: `${detail ?? ""} No row from it is shown.`,
+        statusLine: sourceMessage(sourceCopy.en["p.t11"], { v1: suffix }),
+        detailLine: sourceMessage(sourceCopy.en["p.t12"], { v1: detail ?? "" }),
       };
     case "gap":
       return {
-        statusLine: `The stream broke its own sequence${suffix}.`,
-        detailLine: `${detail ?? ""} No row from a gapped window is shown.`,
+        statusLine: sourceMessage(sourceCopy.en["p.t292"], { v1: suffix }),
+        detailLine: sourceMessage(sourceCopy.en["p.t293"], { v1: detail ?? "" }),
       };
     case "cursor-invalid":
-      return { statusLine: `The cursor was refused${suffix}.`, detailLine: detail ?? "" };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t294"], { v1: suffix }), detailLine: detail ?? "" };
     case "invalid":
-      return { statusLine: `The request was refused before it read${suffix}.`, detailLine: detail ?? "" };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t13"], { v1: suffix }), detailLine: detail ?? "" };
     case "tuple-changed":
       return {
-        statusLine: "The pin tuple changed. Nothing was read and nothing was applied.",
+        statusLine: sourceCopy.en["s1v8"],
         detailLine: detail ?? "",
       };
     case "not-bound":
       return { statusLine: MARKETPLACE_NOT_BOUND_REASON, detailLine: "" };
     case "unavailable":
       return {
-        statusLine: "The source did not answer. This is not an empty market.",
+        statusLine: sourceCopy.en["s1z5"],
         detailLine: detail ?? "",
       };
     default: {
@@ -248,30 +250,30 @@ export function buildMarketplaceModel(input: { controller: MarketplaceBenchContr
 
   const freshnessWord =
     state.freshness === "CURRENT"
-      ? "The last read is current."
+      ? sourceCopy.en["s1tn"]
       : state.freshness === "STALE"
-        ? "The last read is stale or moved. No row under it is shown."
-        : "There is no usable read.";
+        ? sourceCopy.en["s1to"]
+        : sourceCopy.en["s1wv"];
 
   const context = state.context;
-  const contextLine = `Environment ${context.environment}. Domain ${context.domain}. Actor ${context.actorRef} (a context label, not an authentication result). Tenant ${context.scope.tenantId}, subject ${context.scope.subject}. Device ${context.deviceClass}. Session incarnation ${context.incarnation}.`;
+  const contextLine = sourceMessage(sourceCopy.en["p.t295"], { v1: context.environment, v2: context.domain, v3: context.actorRef, v4: context.scope.tenantId, v5: context.scope.subject, v6: context.deviceClass, v7: context.incarnation });
 
   const filterLine = snapshot
-    ? `Filter "${snapshot.filter.text}" — the text the applied call carried, kept with this window.`
-    : "No applied window. No filter is held.";
+    ? sourceMessage(sourceCopy.en["p.t296"], { v1: snapshot.filter.text })
+    : sourceCopy.en["su4"];
 
   const watermarkLine = snapshot
-    ? `Watermark ${snapshot.watermark}. Revision ${snapshot.revision}. Terms ${snapshot.termsRef}.`
-    : "No watermark is held.";
+    ? sourceMessage(sourceCopy.en["p.t541"], { v1: snapshot.watermark, v2: snapshot.revision, v3: snapshot.termsRef })
+    : sourceCopy.en["s133"];
 
-  const memoryLine = `Held rows ${state.memory.heldRows} of an estimated ${state.memory.totalEstimate}. Page bound ${state.memory.pageBound}.`;
+  const memoryLine = sourceMessage(sourceCopy.en["p.t297"], { v1: state.memory.heldRows, v2: state.memory.totalEstimate, v3: state.memory.pageBound });
 
   const inFlightLine =
     state.inFlight.length === 0
-      ? "No call in flight."
-      : `${state.inFlight.length} call${state.inFlight.length === 1 ? "" : "s"} in flight: ${state.inFlight
+      ? sourceCopy.en["sue"]
+      : sourceMessage(sourceCopy.en["p.t298"], { v1: state.inFlight.length, v2: state.inFlight.length === 1 ? "" : "s", v3: state.inFlight
           .map((flight) => `${flight.call} seq ${flight.seq} (${flight.workload}, ${flight.deviceClass})`)
-          .join("; ")}.`;
+          .join("; ") });
 
   const rows: MarketplaceBenchRowModel[] = (snapshot?.rows ?? []).map((row) => ({
     sequence: row.sequence,
@@ -286,18 +288,18 @@ export function buildMarketplaceModel(input: { controller: MarketplaceBenchContr
 
   const queue: MarketplaceBenchQueueModel = {
     phaseWord: PHASE_WORDS[state.queuePhase] ?? state.queuePhase,
-    stateWord: state.queue === null ? "No queue state" : PHASE_WORDS[state.queue.state] ?? state.queue.state,
+    stateWord: state.queue === null ? sourceCopy.en["sxf"] : PHASE_WORDS[state.queue.state] ?? state.queue.state,
     positionLine:
       state.queue?.position !== null && state.queue?.position !== undefined
-        ? `Position ${state.queue.position}.`
+        ? sourceMessage(sourceCopy.en["p.t543"], { v1: state.queue.position })
         : null,
-    admittedLine: state.queue?.admittedUntil ? `Admitted until ${state.queue.admittedUntil}.` : null,
+    admittedLine: state.queue?.admittedUntil ? sourceMessage(sourceCopy.en["p.t299"], { v1: state.queue.admittedUntil }) : null,
     grantsLine:
       state.queue === null
-        ? "No admission is held."
+        ? sourceCopy.en["stz"]
         : state.queue.grantsBrowseAccess
-          ? "Grants browse access to the contended page. Never a hold, a payment, a right, or entry."
-          : "Grants nothing. An expired or waiting admission is not browse access.",
+          ? sourceCopy.en["smu"]
+          : sourceCopy.en["smx"],
     detailLine: state.queueDetail,
   };
 
@@ -306,7 +308,7 @@ export function buildMarketplaceModel(input: { controller: MarketplaceBenchContr
     realDevice: row.realDevice,
     workload: row.workload,
     calls: row.calls,
-    outcomeLine: `ready ${row.ready} · empty ${row.empty} · stale ${row.stale} · denied ${row.denied} · refused ${row.refused} · unknown ${row.unknown} · not-bound ${row.notBound} · dropped ${row.dropped} · cancelled ${row.cancelled} · other ${row.other}`,
+    outcomeLine: sourceMessage(sourceCopy.en["p.t544"], { v1: row.ready, v2: row.empty, v3: row.stale, v4: row.denied, v5: row.refused, v6: row.unknown, v7: row.notBound, v8: row.dropped, v9: row.cancelled, v10: row.other }),
     lastMeasuredMs: row.lastMeasuredMs,
     maxMeasuredMs: row.maxMeasuredMs,
     maxOfferedMs: row.maxOfferedMs,
@@ -317,12 +319,12 @@ export function buildMarketplaceModel(input: { controller: MarketplaceBenchContr
     last === null
       ? null
       : last.kind === "applied"
-        ? `Call ${last.seq} (${last.call}) applied with outcome ${last.outcomeKind}.`
+        ? sourceMessage(sourceCopy.en["p.t300"], { v1: last.seq, v2: last.call, v3: last.outcomeKind })
         : last.kind === "dropped"
-          ? `Call ${last.seq} (${last.call}) dropped: ${last.cause}. Its answer was never applied.`
+          ? sourceMessage(sourceCopy.en["p.t301"], { v1: last.seq, v2: last.call, v3: last.cause })
           : last.kind === "cancelled"
-            ? `Call ${last.seq} (${last.call}) cancelled. Its late answer was counted, not applied.`
-            : `Call ${last.seq} (${last.call}) not sent: ${last.reason}.`;
+            ? sourceMessage(sourceCopy.en["p.t302"], { v1: last.seq, v2: last.call })
+            : sourceMessage(sourceCopy.en["p.t303"], { v1: last.seq, v2: last.call, v3: last.reason });
 
   const focusToken =
     last !== null && last.kind !== "applied" ? `mperf-${last.seq}-${last.kind}` : null;
@@ -342,15 +344,15 @@ export function buildMarketplaceModel(input: { controller: MarketplaceBenchContr
     queue,
     report: reportRows,
     unverified: report.unverified.map((row) => ({ device: row.device, note: row.note })),
-    countersLine: `reads ${state.counters.reads} · queue calls ${state.counters.queueCalls} · cancelled ${state.counters.cancelledReads} · dropped-context ${state.counters.droppedContext} · dropped-older ${state.counters.droppedOlder} · denied ${state.counters.denied} · refused ${state.counters.refused} · unknown ${state.counters.unknowns} · not-sent ${state.counters.notSent}`,
+    countersLine: sourceMessage(sourceCopy.en["p.t304"], { v1: state.counters.reads, v2: state.counters.queueCalls, v3: state.counters.cancelledReads, v4: state.counters.droppedContext, v5: state.counters.droppedOlder, v6: state.counters.denied, v7: state.counters.refused, v8: state.counters.unknowns, v9: state.counters.notSent }),
     lastLine,
     sessionLines: [
       MARKETPLACE_BENCH_SESSION_NOTE,
       MARKETPLACE_BENCH_HIDE_NOTE,
       MARKETPLACE_BENCH_CLAIM_NOTE,
       MARKETPLACE_BENCH_TUPLE_NOTE,
-      `Ruling: ${MARKETPLACE_RULING}`,
-      `Device classes ${MARKETPLACE_DEVICE_PROFILES.map((profile) => profile.deviceClass).join(", ")}. Unverified: ${MARKETPLACE_UNVERIFIED_DEVICES.join(", ")}.`,
+      sourceMessage(sourceCopy.en["p.t545"], { v1: MARKETPLACE_RULING }),
+      sourceMessage(sourceCopy.en["p.t305"], { v1: MARKETPLACE_DEVICE_PROFILES.map((profile) => profile.deviceClass).join(", "), v2: MARKETPLACE_UNVERIFIED_DEVICES.join(", ") }),
     ],
     focusToken,
   };

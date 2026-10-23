@@ -1,3 +1,4 @@
+import { messages as sourceCopy } from "./i18n/messages/reservation-desk";
 import { connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useState } from "react";
 import { ProtocolError, type ReservationCaseView } from "@kix/protocol-adapter";
@@ -194,7 +195,7 @@ export function useReservationDesk(eventId: string) {
 }
 
 function message(reason: unknown): string {
-  return reason instanceof Error ? reason.message : "Mock reservation command was rejected.";
+  return reason instanceof Error ? reason.message : sourceCopy.en["st4"];
 }
 
 function readAttempt(eventId: string): number {

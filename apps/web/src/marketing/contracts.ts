@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "../i18n/messages/marketing--contracts";
+import { sourceMessage } from "../i18n/source-message";
 /**
  * Recorded alignment of the M01–M05 stub with the vendored contract-only catalogue.
  * Field names only. No values, no policy, and no amounts.
@@ -158,11 +160,11 @@ export function marketingPublishedLine(id: MarketingContractId): string {
   if (row.state === "no-published-command") {
     const read =
       "displayRead" in row
-        ? ` The display read is ${row.displayRead}. That name is not a catalogue command.`
+        ? sourceMessage(sourceCopy.en["p.t252"], { v1: row.displayRead })
         : "";
-    return `Published contract: none. Recorded state: no published command. Pending contract: ${row.pendingContract}.${read}`;
+    return sourceMessage(sourceCopy.en["p.t253"], { v1: row.pendingContract, v2: read });
   }
   const fields = row.missingFromStub.join(", ");
   const stubFields = row.stubFieldsNotTheBody.join(", ");
-  return `Published contract: ${row.published.join(", ")}. Recorded state: published-bound. Stub fields ${stubFields} are not the set_consent body. Missing field names: ${fields}.`;
+  return sourceMessage(sourceCopy.en["p.t254"], { v1: row.published.join(", "), v2: stubFields, v3: fields });
 }

@@ -165,7 +165,7 @@ describe("the repo budget file", () => {
   const budgetFile = path.join(here, "../bundle-budget.json");
   const budget = JSON.parse(readFileSync(budgetFile, "utf8")) as {
     limits: Limits;
-    baseline: { preSplit: { initialJsGzip: number; totalGzip: number }; postSplit: { initialJsGzip: number; totalGzip: number; landingJsGzip: number } };
+    baseline: { preSplit: { initialJsGzip: number; totalGzip: number }; postSplit: { initialJsGzip: number; totalGzip: number; landingJsGzip: number }; localized: { initialJsGzip: number; totalGzip: number; sourceSha: string } };
     history: { limits: Limits; reason: string; evidence: string }[];
   };
   const doc = readFileSync(path.join(repo, "docs/c-bundle-performance-budget-stub-apps-bind.md"), "utf8");
@@ -179,7 +179,13 @@ describe("the repo budget file", () => {
     expect(budget.baseline.postSplit.initialJsGzip).toBeLessThan(budget.baseline.preSplit.initialJsGzip);
     expect(budget.limits.initialJsGzip).toBeLessThan(budget.baseline.preSplit.initialJsGzip);
     expect(budget.baseline.postSplit.landingJsGzip).toBeLessThan(budget.baseline.preSplit.initialJsGzip);
-    expect(budget.limits.totalGrowth.base).toBe(budget.baseline.preSplit.totalGzip);
+    expect(budget.baseline.preSplit.totalGzip).toBe(527526);
+    expect(budget.limits.totalGrowth.base).toBe(790000);
+    expect(budget.limits.initialJsGzip).toBe(290000);
+    expect(budget.limits.chunkJsGzip).toBe(30000);
+    expect(budget.history.at(-1)?.reason).toContain("2026-10-23");
+    expect(budget.baseline.localized.sourceSha).toContain("f7cd60c");
+    expect(budget.limits.totalGrowth.maxRatio).toBe(1);
   });
 
   it("keeps every limit above the post-split measurement, so the budget is a tripwire and not already broken", () => {

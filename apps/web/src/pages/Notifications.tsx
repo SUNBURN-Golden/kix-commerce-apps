@@ -1,3 +1,7 @@
+import { messages as copy0 } from "../i18n/messages/pages--Notifications";
+import { messages as copy1 } from "../i18n/messages/notification-inbox";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { useRestoreFocus } from "../a11y/focus";
 import { useNotificationInbox } from "../notification-inbox";
 import {
@@ -13,6 +17,7 @@ import {
 } from "./NotificationsPanels";
 
 export function NotificationsPage() {
+  const t = useT(copy0, copy1);
   const live = useNotificationInbox();
   const model = live.model;
   // A block, a refusal, a denial, a read that did not answer, or an unknown result takes focus to the status region.
@@ -20,14 +25,14 @@ export function NotificationsPage() {
 
   return (
     <div className="discovery platform finance" data-adapter-environment={live.environment}>
-      <nav className="discovery-nav" aria-label="Notification inbox sections">
-        <a href="#notify-controls">Controls</a>
-        <a href="#notify-status">Status</a>
-        <a href="#notify-authority">Who may do what</a>
-        <a href="#notify-inbox">Inbox</a>
-        <a href="#notify-inquiry">Support material</a>
-        <a href="#notify-requests">Requests</a>
-        <a href="#notify-session">Session record</a>
+      <nav className="discovery-nav" aria-label={t("s11r")}>
+        <a href="#notify-controls">{t("sed")}</a>
+        <a href="#notify-status">{t("s1mj")}</a>
+        <a href="#notify-authority">{t("s26m")}</a>
+        <a href="#notify-inbox">{t("snt")}</a>
+        <a href="#notify-inquiry">{t("s1nm")}</a>
+        <a href="#notify-requests">{t("s1fv")}</a>
+        <a href="#notify-session">{t("s1js")}</a>
       </nav>
       <div className="discovery-body">
         <NotifyBanner environment={live.environment} scenario={live.scenario} model={model} />
@@ -40,7 +45,7 @@ export function NotificationsPage() {
             className="discovery-action"
             onClick={() => (model.state === "tuple-changed" || model.state === "generation-stale" ? live.actions.newSession() : live.actions.refresh())}
           >
-            {model.actionLabel}
+            {deskText(t, model.actionLabel)}
           </button>
         ) : null}
         <NotifyAuthoritySection model={model} />

@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/cross-surface-journeys";
+import { sourceMessage } from "./i18n/source-message";
 /**
  * The cross-surface journeys screen on top of the adapter's synthetic table. Stub
  * scope: the default port builds the table in this process from the synthetic
@@ -39,70 +41,70 @@ import {
 } from "@kix/protocol-adapter";
 import { protocol } from "./connectivity/desk-protocol";
 
-export const XS_TITLE = "Cross-surface journeys (synthetic)";
+export const XS_TITLE = sourceCopy.en["sf6"];
 
 export const XS_SOURCE_LINE =
-  "This page reads one table of journeys over the synthetic sources that already exist on this page load. It is read-only and it sends no command. It is not a real integration.";
+  sourceCopy.en["s23c"];
 
 export const XS_BOUNDARY =
-  "A confirmed leg is not a close. Closed means the last leg of a synthetic run was confirmed and nothing before it was unconfirmed. UNKNOWN is never shown as done and never shown as lost. A pointer row was not run here. A missing branch stays visible and is never counted as a success.";
+  sourceCopy.en["st"];
 
 export const XS_COMPENSATION_NOTE =
-  "The compensation cell has three words. NONE_NEEDED: nothing was applied. FENCED: the request may have applied and later writes are held. COMPENSATION_UNDEFINED: a leg landed and a later one did not, and no compensation path is approved. No cell is a refund, a cancel, or an automatic command, and this page composes none.";
+  sourceCopy.en["s1r2"];
 
 export const XS_NOT_COMPOSED_NOTE =
-  "These actions are recorded and never composed. Under M2 the adapter composes nothing past accept_trade, and the opposite commands of the journeys above are not approved.";
+  sourceCopy.en["s1xr"];
 
 export const XS_PENDING_NOTE =
-  "The real cross-surface journeys stay on pending node c-cross-surface-journeys after the producer contracts they wait on are merged. This screen stands in for it at stub scope only.";
+  sourceCopy.en["s1wd"];
 
 export const XS_READ_NOTE =
-  "A table read is one request and is made once. This page does not make a second attempt for a lost answer. A lost read is shown as unavailable, not as an empty table.";
+  sourceCopy.en["s8p"];
 
 export const XS_UNDETERMINED_NOTE =
-  "UNDETERMINED: whether a marketing reclaim restores a usage count or a budget, the refund and cancel policy values, and how long a fence is kept.";
+  sourceCopy.en["s257"];
 
 export const XS_SCENARIO_NOTES: Readonly<Record<CrossSurfaceScenario, string>> = {
-  clean: "The table is built from every source and every row is shown.",
-  held: "The table's answer is held until you deliver it. Use it to switch the context while a read is in flight.",
-  "read-lost": "The answer to the read never arrives. The page shows unavailable, never an empty table.",
-  "claims-pass": "The table claims a compensation ran and an UNKNOWN resolved. The controller refuses it whole.",
-  empty: "The source answers with no rows. This is an empty table, not an unavailable one.",
+  clean: sourceCopy.en["s22e"],
+  held: sourceCopy.en["s22i"],
+  "read-lost": sourceCopy.en["s1q5"],
+  "claims-pass": sourceCopy.en["s22d"],
+  empty: sourceCopy.en["s1yc"],
 };
 
 export const XS_JOURNEY_WORDS: Readonly<Record<CrossSurfaceJourney, string>> = {
-  "purchase-booking": "Purchase: booking",
-  "purchase-provider": "Purchase: provider checkout",
-  "resale-platform": "Resale: platform trade",
+  "purchase-booking": sourceCopy.en["s1ae"],
+  "purchase-provider": sourceCopy.en["s1af"],
+  "resale-platform": sourceCopy.en["s1g2"],
   gift: "Gift",
-  refund: "Refund and return",
-  "marketing-benefit": "Marketing benefit",
-  delegation: "Delegated assistant",
+  refund: sourceCopy.en["s1en"],
+  "marketing-benefit": sourceCopy.en["sru"],
+  delegation: sourceCopy.en["sft"],
   "credit-servicing": "Credit servicing",
   organizer: "Organizer",
   "session-recovery": "Session recovery",
 };
 
 export const XS_BRANCH_WORDS: Readonly<Record<CrossSurfaceBranch, string>> = {
-  normal: "Normal",
-  "explicit-reject": "Explicit rejection",
-  "response-lost": "Response lost",
-  "partial-success": "Partly landed",
+  normal: sourceCopy.en["sy0"],
+  "explicit-reject": sourceCopy.en["skh"],
+  "response-lost": sourceCopy.en["s1gj"],
+  "partial-success": sourceCopy.en["s178"],
 };
 
 export const XS_STATUS_WORDS: Readonly<Record<CrossSurfaceStatus, string>> = {
-  closed: "Closed on the whole sequence (synthetic)",
-  rejected: "Rejected by the source",
-  unknown: "Unknown: unconfirmed",
-  partial: "Partial: some legs landed, some did not",
-  blocked: "Blocked before send",
-  reference: "Pointer: not run here",
+  closed: sourceCopy.en["scz"],
+  rejected: sourceCopy.en["s1ez"],
+  unknown: sourceCopy.en["s25f"],
+  partial: sourceCopy.en["s177"],
+  blocked: sourceCopy.en["sa5"],
+  reference: sourceCopy.en["s18k"],
 };
 
 const BASIS_WORDS: Readonly<Record<string, string>> = {
-  executed: "Run here on the sibling's own stub",
-  reused: "Reused from an existing run or test",
-  "no-source-branch": "No source reproduces this branch",
+  executed: sourceCopy.en["s1hy"],
+  reused: sourceCopy.en["s1gu"],
+  "no-source-branch": sourceCopy.en["syq"],
 };
 
 export type XsScreenState =
@@ -176,25 +178,25 @@ export const XS_BRANCH_OPTIONS: readonly XsOption[] = CROSS_SURFACE_BRANCHES.map
 export const XS_STATUS_OPTIONS: readonly XsOption[] = CROSS_SURFACE_STATUSES.map((value) => ({ value, label: XS_STATUS_WORDS[value] }));
 
 const STATE_LINES: Readonly<Record<XsScreenState, string>> = {
-  none: "No table has been read in this session.",
-  "in-progress": "A table read is in progress. Its answer is applied here only if the context did not change.",
-  ready: "The table is shown below. Each row states its own status; none of them is a promotion.",
-  empty: "There are no rows to show.",
-  unavailable: "The table is unavailable. The read was lost or unknown, and no row from an earlier read is kept.",
-  refused: "The table was refused whole. It claimed something a journey table can never claim, and no row of it is shown.",
-  "not-bound": "The table is not bound on this environment. No request was made.",
-  "tuple-changed": "The pin tuple changed under the read. Nothing was applied.",
-  invalid: "The read was refused before a table was built.",
+  none: sourceCopy.en["sz3"],
+  "in-progress": sourceCopy.en["s8o"],
+  ready: sourceCopy.en["s22g"],
+  empty: sourceCopy.en["s1wg"],
+  unavailable: sourceCopy.en["s22h"],
+  refused: sourceCopy.en["s22j"],
+  "not-bound": sourceCopy.en["s22f"],
+  "tuple-changed": sourceCopy.en["s1va"],
+  invalid: sourceCopy.en["s1wb"],
 };
 
 export function readResultLine(result: CrossSurfaceReadResult): string {
   switch (result.kind) {
     case "APPLIED":
-      return `Table read applied (${result.readState}).`;
+      return sourceMessage(sourceCopy.en["p.t70"], { v1: result.readState });
     case "DROPPED":
-      return `A table answer arrived after the ${result.cause === "context-changed" ? "context changed" : "newer read was applied"}. It was dropped and applied nowhere.`;
+      return sourceMessage(sourceCopy.en["p.t71"], { v1: result.cause === "context-changed" ? "context changed" : "newer read was applied" });
     case "NOT_SENT":
-      return "Read not sent. The table is not bound on this environment.";
+      return sourceCopy.en["s1bw"];
     default: {
       const exhaustive: never = result;
       return exhaustive;
@@ -221,11 +223,11 @@ export function rowModel(row: CrossSurfaceRow): XsRowModel {
     compensationState: row.compensation.state,
     compensationNote: row.compensation.note,
     legLines: row.legs.map((item) => legLine(item)),
-    sourceLine: `Source: ${row.source}.`,
+    sourceLine: sourceMessage(sourceCopy.en["p.t485"], { v1: row.source }),
     reuseLine:
       row.reuse === null
         ? null
-        : `Pinned by ${row.reuse.testPath}, test "${row.reuse.testTitle}"${row.reuse.qualificationJourneyId ? `, qualification journey ${row.reuse.qualificationJourneyId}` : ""}.`,
+        : sourceMessage(sourceCopy.en["p.t72"], { v1: row.reuse.testPath, v2: row.reuse.testTitle, v3: row.reuse.qualificationJourneyId ? `, qualification journey ${row.reuse.qualificationJourneyId}` : "" }),
     note: row.note,
   };
 }
@@ -276,33 +278,33 @@ export function buildCrossSurfaceModel(
     emptyReason = "filter";
   }
   const statusLine =
-    screen === "empty" && emptyReason === "filter" ? "No row matches the filter. The table itself holds rows; clear the filter to see them." : STATE_LINES[screen];
+    screen === "empty" && emptyReason === "filter" ? sourceCopy.en["sy2"] : STATE_LINES[screen];
   const stubOnly = environment === "stub";
   return {
     state: screen,
     statusLine,
     detailLine: state.readDetail,
     emptyReason,
-    readControl: inFlight ? { enabled: false, reason: "A table read is in flight. It is not sent again." } : { enabled: true, reason: null },
+    readControl: inFlight ? { enabled: false, reason: sourceCopy.en["s8n"] } : { enabled: true, reason: null },
     scenarioControl: stubOnly
       ? { enabled: true, reason: null }
-      : { enabled: false, reason: "Synthetic scenarios exist only on the stub. On integration-http the table is not bound." },
+      : { enabled: false, reason: sourceCopy.en["s1p6"] },
     heldSupported,
     summaryLine:
       state.table === null
         ? null
         : (() => {
             const sum = summarizeCrossSurfaceRows(state.table.rows);
-            return `${sum.rows} rows. ${sum.byStatus.closed} closed, ${sum.byStatus.partial} partial, ${sum.byStatus.unknown} unknown, ${sum.byStatus.rejected} rejected, ${sum.byStatus.blocked} blocked, ${sum.byStatus.reference} pointers or missing branches (not counted as closed).`;
+            return sourceMessage(sourceCopy.en["p.t74"], { v1: sum.rows, v2: sum.byStatus.closed, v3: sum.byStatus.partial, v4: sum.byStatus.unknown, v5: sum.byStatus.rejected, v6: sum.byStatus.blocked, v7: sum.byStatus.reference });
           })(),
     rows: view.map((row) => rowModel(row)),
     rowCount: view.length,
     totalRows,
     notComposedLines: (state.table?.notComposed ?? []).map((item) => `${item.action}: ${item.reason}`),
-    holdLine: `${CROSS_SURFACE_HOLD_NOT_BOUND.method} is ${CROSS_SURFACE_HOLD_NOT_BOUND.status}. Its considered action stays ${CROSS_SURFACE_HOLD_NOT_BOUND.consideredAction} and it is never mapped onto prepare_trade. ${CROSS_SURFACE_HOLD_NOT_BOUND.reason}`,
+    holdLine: sourceMessage(sourceCopy.en["p.t75"], { v1: CROSS_SURFACE_HOLD_NOT_BOUND.method, v2: CROSS_SURFACE_HOLD_NOT_BOUND.status, v3: CROSS_SURFACE_HOLD_NOT_BOUND.consideredAction, v4: CROSS_SURFACE_HOLD_NOT_BOUND.reason }),
     nonClaimsLine: CROSS_SURFACE_NON_CLAIM_FIELDS.map((field) => `${field} false`).join(". "),
-    countersLine: `Read ${state.counters.reads}. Not sent ${state.counters.notSent}. Dropped ${state.counters.droppedReads}.`,
-    contextLine: `Environment ${state.context.environment}. Actor ${state.context.actorRef}. Session ${state.context.incarnation}.`,
+    countersLine: sourceMessage(sourceCopy.en["p.t76"], { v1: state.counters.reads, v2: state.counters.notSent, v3: state.counters.droppedReads }),
+    contextLine: sourceMessage(sourceCopy.en["p.t487"], { v1: state.context.environment, v2: state.context.actorRef, v3: state.context.incarnation }),
     lastLine: last === null ? null : last.kind === "note" ? last.text : readResultLine(last.result),
     lastNeedsFocus: last !== null && last.kind === "read" && last.result.kind !== "APPLIED",
     lastSeq: last?.seq ?? null,
@@ -394,11 +396,11 @@ export function useCrossSurfaceJourneys(): {
     deliverHeld() {
       const session = sessionRef.current;
       if (session === null || session.port.scenario !== "held") {
-        note("Held answers exist only in the held scenario. Nothing was delivered.");
+        note(sourceCopy.en["sn7"]);
         return;
       }
       const released = session.port.deliverHeld();
-      note(`Delivered ${released} held answer(s).`);
+      note(sourceMessage(sourceCopy.en["p.t77"], { v1: released }));
     },
     switchContext() {
       const session = sessionRef.current;
@@ -406,14 +408,14 @@ export function useCrossSurfaceJourneys(): {
         return;
       }
       const context = session.controller.switchContext(`${CROSS_SURFACE_DESK_ACTOR}-${session.controller.state().context.incarnation + 1}`);
-      note(`Session context switched (incarnation ${context.incarnation}). A read still in flight is dropped when it arrives.`);
+      note(sourceMessage(sourceCopy.en["p.t78"], { v1: context.incarnation }));
     },
     applyScenario(next) {
       sessionRef.current = createSession(environment, next);
       setInFlight(false);
       setScenarioState(next);
       setEpoch((value) => value + 1);
-      note(`New synthetic session under scenario ${next}. ${XS_SCENARIO_NOTES[next]}`);
+      note(sourceMessage(sourceCopy.en["p.t79"], { v1: next, v2: XS_SCENARIO_NOTES[next] }));
     },
     applyFilter(next) {
       const session = sessionRef.current;
@@ -424,11 +426,11 @@ export function useCrossSurfaceJourneys(): {
       const branch = (CROSS_SURFACE_BRANCHES as readonly string[]).includes(next.branch) ? (next.branch as CrossSurfaceBranch) : null;
       const status = (CROSS_SURFACE_STATUSES as readonly string[]).includes(next.status) ? (next.status as CrossSurfaceStatus) : null;
       session.controller.setFilter({ journey, branch, status });
-      note("Filter applied to the rows already held. Nothing was read again.");
+      note(sourceCopy.en["sl6"]);
     },
     clearFilter() {
       sessionRef.current?.controller.clearFilter();
-      note("Filter cleared.");
+      note(sourceCopy.en["sl7"]);
     },
   };
 

@@ -1,0 +1,28 @@
+export const messages = {
+  en: {
+    "sbe": "Case",
+    "sed": "Controls",
+    "shd": "Draw and exposure",
+    "s17k": "Payments",
+    "s1d6": "Reasons",
+    "s1fv": "Requests",
+    "s1ie": "Schedule",
+    "s1jk": "Servicing sections",
+    "s1js": "Session record",
+    "s1mj": "Status",
+    "s248": "Timeline",
+  },
+  ko: {
+    "sbe": "사례",
+    "sed": "제어",
+    "shd": "인출과 익스포저",
+    "s17k": "결제 목록",
+    "s1d6": "사유",
+    "s1fv": "요청 목록",
+    "s1ie": "일정",
+    "s1jk": "상환 관리 영역",
+    "s1js": "세션 기록",
+    "s1mj": "상태",
+    "s248": "시간순 기록",
+  },
+} as const;

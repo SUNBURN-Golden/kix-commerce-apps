@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/organizer-desk";
+import { sourceMessage } from "./i18n/source-message";
 import { connectivityInvoker, connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import {
@@ -26,12 +28,12 @@ export const ORGANIZER_OPERATOR = "operator";
 export const ORGANIZER_DEFAULT_ID = "desk-organizer";
 
 const STEP_LABEL: Record<OrganizerStep, string> = {
-  create_event: "Create event",
-  close_sales: "Close sales",
-  open_admission: "Open admission",
-  complete_event: "Complete event",
-  cancel_event: "Cancel event",
-  issue_invitation: "Issue invitation",
+  create_event: sourceCopy.en["set"],
+  close_sales: sourceCopy.en["sd0"],
+  open_admission: sourceCopy.en["s14t"],
+  complete_event: sourceCopy.en["sde"],
+  cancel_event: sourceCopy.en["saz"],
+  issue_invitation: sourceCopy.en["soy"],
 };
 
 export type OrganizerRowStatus =
@@ -194,7 +196,7 @@ export function selectOrganizerView(
         ...row,
         status: "not-started" as const,
         canSend: false,
-        note: "Enter an event id. The desk does not mint one.",
+        note: sourceCopy.en["sih"],
       };
     }
     if (
@@ -210,7 +212,7 @@ export function selectOrganizerView(
       return {
         ...row,
         canSend: true,
-        note: "Ready to send another inventory id. One attempt each.",
+        note: sourceCopy.en["s1d0"],
       };
     }
     return row;
@@ -219,8 +221,8 @@ export function selectOrganizerView(
     source: snapshot.source,
     path: snapshot.path,
     rows,
-    lastConfirmed: found?.lastConfirmed ?? "Last confirmed receipt: none",
-    unconfirmed: found?.unconfirmed ?? "Unconfirmed request: none",
+    lastConfirmed: found?.lastConfirmed ?? sourceCopy.en["sq8"],
+    unconfirmed: found?.unconfirmed ?? sourceCopy.en["s252"],
     pending: found?.pending ?? false,
     opened: snapshot.events.map((item) => ({
       eventId: item.eventId,
@@ -295,31 +297,31 @@ export class OrganizerDesk {
   async sendItem(eventId: string, step: OrganizerStep, draft: OrganizerDraft): Promise<OrganizerSendItemResult> {
     if (!connectedHandler()) return fencedResult("path-not-open", "Connection unavailable. Nothing sent.");
     if (eventId.length === 0) {
-      return fencedResult("empty-event-id", "Enter an event id. The desk does not mint one.");
+      return fencedResult("empty-event-id", sourceCopy.en["sih"]);
     }
     this.retain(eventId);
     const record = this.records.get(eventId);
     if (!record) {
-      return fencedResult("empty-event-id", "Enter an event id. The desk does not mint one.");
+      return fencedResult("empty-event-id", sourceCopy.en["sih"]);
     }
     if (record.pending) {
-      return fencedResult("in-flight", "In flight. One attempt.");
+      return fencedResult("in-flight", sourceCopy.en["snx"]);
     }
     if (record.localHalt || record.console?.state().halted) {
-      return fencedResult("halted", "Blocked. The next write stays blocked.");
+      return fencedResult("halted", sourceCopy.en["saa"]);
     }
     if (!writesOpen(this.path)) {
-      return fencedResult("path-not-open", "Path not open. No write is sent.");
+      return fencedResult("path-not-open", sourceCopy.en["s17d"]);
     }
     const current = record.steps.find((item) => item.step === step);
     if (!current || !stepSendable(record, step, draft)) {
-      return fencedResult("already-sent", "Already sent.");
+      return fencedResult("already-sent", sourceCopy.en["s2z"]);
     }
     const operationId = organizerOperationId(eventId, record.attempt, step, draft.inventoryId);
     current.phase = "in-flight";
     current.operationId = operationId;
     current.actor = actorFor(step, draft);
-    current.note = "In flight. One attempt.";
+    current.note = sourceCopy.en["snx"];
     record.pending = true;
     this.publish();
     try {
@@ -334,7 +336,7 @@ export class OrganizerDesk {
       const stepRecord = record.steps.find((item) => item.step === step);
       if (stepRecord && stepRecord.phase === "in-flight") {
         stepRecord.phase = "not-sent";
-        stepRecord.note = "Not sent.";
+        stepRecord.note = sourceCopy.en["s12l"];
         record.localHalt = true;
       }
       this.publish();
@@ -356,7 +358,7 @@ export class OrganizerDesk {
       this.path = {
         kind: "unavailable",
         code,
-        detail: "Integration HTTP stayed selected. The desk did not fall back to the stub.",
+        detail: sourceCopy.en["sod"],
       };
     }
     this.publish();
@@ -369,7 +371,7 @@ export class OrganizerDesk {
     draft: OrganizerDraft,
   ): Promise<OrganizerStepOutcome> {
     if (this.deps.source === null || record.console === null) {
-      throw new ProtocolError("Organizer invoker is not selected.");
+      throw new ProtocolError(sourceCopy.en["s168"]);
     }
     const input = organizerCallInput(record.eventId, step, operationId, draft);
     if (step === "create_event") {
@@ -409,8 +411,8 @@ export class OrganizerDesk {
       current.receipt = receiptFields(outcome.receipt);
       current.note =
         this.deps.source?.source === "stub-shape"
-          ? "Confirmed stub-shape receipt. Not from the gate."
-          : "Confirmed receipt.";
+          ? sourceCopy.en["sdk"]
+          : sourceCopy.en["sdj"];
       if (step === "issue_invitation" && draft.inventoryId.length > 0 && !record.issued.includes(draft.inventoryId)) {
         record.issued.push(draft.inventoryId);
       }
@@ -422,7 +424,7 @@ export class OrganizerDesk {
       current.code = outcome.code;
       current.requestId = outcome.identity.requestId ?? null;
       current.correlationId = outcome.identity.correlationId ?? null;
-      current.note = `Rejected by the gate (${outcome.code}).`;
+      current.note = sourceMessage(sourceCopy.en["p.t4"], { v1: outcome.code });
       return;
     }
     if (outcome.kind === "UNKNOWN") {
@@ -431,17 +433,17 @@ export class OrganizerDesk {
       current.code = outcome.code;
       current.requestId = outcome.identity.requestId ?? null;
       current.correlationId = outcome.identity.correlationId ?? null;
-      current.note = "Unconfirmed: sent, no authoritative receipt. May have applied. Not a rejection.";
+      current.note = sourceCopy.en["s253"];
       return;
     }
     if (outcome.blockedBy.reason === "already-sent" && step === "issue_invitation") {
       current.phase = record.issued.length > 0 ? "confirmed" : "pending";
-      current.note = "Already sent for this inventory id.";
+      current.note = sourceCopy.en["s30"];
       return;
     }
     current.phase = "pending";
     current.operationId = null;
-    current.note = "Blocked. The next write stays blocked.";
+    current.note = sourceCopy.en["saa"];
     record.localHalt = true;
   }
 
@@ -458,7 +460,7 @@ export class OrganizerDesk {
       current.code = halted.identity.code ?? "UNKNOWN";
       current.requestId = halted.identity.requestId ?? null;
       current.correlationId = halted.identity.correlationId ?? null;
-      current.note = "Unconfirmed: sent, no authoritative receipt. May have applied. Not a rejection.";
+      current.note = sourceCopy.en["s253"];
       return;
     }
     current.phase = "not-sent";
@@ -466,8 +468,8 @@ export class OrganizerDesk {
     current.code = halted?.identity.code ?? null;
     current.requestId = halted?.identity.requestId ?? null;
     current.correlationId = halted?.identity.correlationId ?? null;
-    const message = error instanceof Error ? error.message : "The step was not sent.";
-    current.note = `Not sent. ${message}`;
+    const message = error instanceof Error ? error.message : sourceCopy.en["s21f"];
+    current.note = sourceMessage(sourceCopy.en["p.t6"], { v1: message });
     record.localHalt = halted === null;
   }
 
@@ -488,8 +490,8 @@ export class OrganizerDesk {
         halted: halted(record),
         issuedInventoryIds: [...record.issued],
         rows,
-        lastConfirmed: summaryLine("Last confirmed receipt", lastRow(rows, "confirmed")),
-        unconfirmed: summaryLine("Unconfirmed request", rows.find((row) => row.status === "unconfirmed")),
+        lastConfirmed: summaryLine(sourceCopy.en["sq7"], lastRow(rows, "confirmed")),
+        unconfirmed: summaryLine(sourceCopy.en["s251"], rows.find((row) => row.status === "unconfirmed")),
       };
     });
     return {
@@ -704,7 +706,7 @@ function thrownResult(record: OrganizerRecord, step: OrganizerStep, operationId:
       operationId: halted.identity.operationId || operationId,
       requestId: halted.identity.requestId ?? null,
       correlationId: halted.identity.correlationId ?? null,
-      note: current?.note ?? "Unconfirmed: sent, no authoritative receipt. May have applied. Not a rejection.",
+      note: current?.note ?? sourceCopy.en["s253"],
     };
   }
   return {
@@ -713,7 +715,7 @@ function thrownResult(record: OrganizerRecord, step: OrganizerStep, operationId:
     operationId: current?.operationId ?? operationId,
     requestId: halted?.identity.requestId ?? null,
     correlationId: halted?.identity.correlationId ?? null,
-    note: current?.note ?? "Not sent.",
+    note: current?.note ?? sourceCopy.en["s12l"],
   };
 }
 
@@ -763,26 +765,26 @@ function deriveRows(record: OrganizerRecord, path: OrganizerPathStatus): Organiz
 
 function noteFor(status: OrganizerRowStatus): string {
   if (status === "ready") {
-    return "Ready to send. One attempt.";
+    return sourceCopy.en["s1d1"];
   }
   if (status === "not-started") {
-    return "Waiting for an event id.";
+    return sourceCopy.en["s266"];
   }
   if (status === "blocked") {
-    return "Blocked. The next write stays blocked.";
+    return sourceCopy.en["saa"];
   }
   if (status === "in-flight") {
-    return "In flight. One attempt.";
+    return sourceCopy.en["snx"];
   }
   if (status === "unavailable") {
-    return "Unavailable. No write is sent.";
+    return sourceCopy.en["s250"];
   }
   return "";
 }
 
 function summaryLine(label: string, row: OrganizerRow | undefined): string {
   if (!row || !row.operationId) {
-    return `${label}: none`;
+    return sourceMessage(sourceCopy.en["p.t464"], { v1: label });
   }
   return `${label}: ${row.step} · ${row.operationId}`;
 }

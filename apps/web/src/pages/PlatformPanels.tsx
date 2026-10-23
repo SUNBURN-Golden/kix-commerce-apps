@@ -1,3 +1,9 @@
+import { messages as deskCopy } from "../i18n/desk-catalogue";
+import { messages as copy0 } from "../i18n/messages/pages--PlatformPanels";
+import { messages as copy1 } from "../i18n/messages/platform-journey";
+import { messages as copy2 } from "../i18n/messages/workspace--registry";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useState, type ReactNode } from "react";
 import { PLATFORM_SCENARIOS, PLATFORM_TIERS, type PlatformScenario, type PlatformTier } from "@kix/protocol-adapter";
@@ -27,18 +33,20 @@ import { WORKSPACE_RULING } from "../workspace/registry";
 
 /** A word, not only a color. The shared mark carries a sentence about fields that does not fit a fence. */
 function WordMark({ word }: { word: string }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
     <span className="status-mark" data-status-mark="blocked">
-      <span className="status-word">{word}</span>
+      <span className="status-word">{deskText(t, word)}</span>
     </span>
   );
 }
 
 /** A wide table scrolls inside its own region, so the page does not scroll sideways. */
 function ScrollTable({ label, children }: { label: string; children: ReactNode }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
-    <div className="platform-scroll" role="region" aria-label={label} tabIndex={0}>
-      {children}
+    <div className="platform-scroll" role="region" aria-label={deskText(t, label)} tabIndex={0}>
+      {deskText(t, children)}
     </div>
   );
 }
@@ -58,6 +66,7 @@ function GuardedButton({
   control: ControlModel;
   onPress: () => void;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   const reasonId = `${id}-reason`;
   return (
     <>
@@ -70,11 +79,11 @@ function GuardedButton({
         data-enabled={control.enabled ? "true" : "false"}
         onClick={control.enabled ? onPress : undefined}
       >
-        {label}
+        {deskText(t, label)}
       </ConnectivityWriteButton>
       {control.reason ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
-          <WordMark word="Blocked." /> {control.reason}
+          <WordMark word={t("status.transport.blocked")} /> {deskText(t, control.reason)}
         </p>
       ) : null}
     </>
@@ -90,6 +99,7 @@ export function PlatformBanner({
   scenario: PlatformScenario;
   model: PlatformModel;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
     <header
       className="section-head discovery-section"
@@ -97,21 +107,21 @@ export function PlatformBanner({
       data-scenario={scenario}
       data-freshness={model.freshnessWord}
     >
-      <p className="eyebrow">Multi-channel trade</p>
-      <h2>{PLATFORM_TITLE}</h2>
+      <p className="eyebrow">{t("ste")}</p>
+      <h2>{deskText(t, PLATFORM_TITLE)}</h2>
       <p className="discovery-banner" data-provenance="synthetic" data-source="synthetic-platform">
-        SYNTHETIC. {PLATFORM_SOURCE_LINE}
+        SYNTHETIC. {deskText(t, PLATFORM_SOURCE_LINE)}
       </p>
-      <p>{PLATFORM_BOUNDARY}</p>
+      <p>{deskText(t, PLATFORM_BOUNDARY)}</p>
       <AmountNotice />
-      <p>{PLATFORM_TIER_NOTE}</p>
-      <p>{WORKSPACE_RULING}</p>
-      <p data-hold-record="not-bound">{PLATFORM_HOLD_NOTE}</p>
-      <p data-refund-record="not-bound">{PLATFORM_REFUND_NOTE}</p>
-      <p>{PLATFORM_ACTOR_NOTE}</p>
-      <p>{PLATFORM_FENCE_NOTE}</p>
-      <p>{PLATFORM_READ_NOTE}</p>
-      <p>{PLATFORM_SESSION_NOTE}</p>
+      <p>{deskText(t, PLATFORM_TIER_NOTE)}</p>
+      <p>{deskText(t, WORKSPACE_RULING)}</p>
+      <p data-hold-record="not-bound">{deskText(t, PLATFORM_HOLD_NOTE)}</p>
+      <p data-refund-record="not-bound">{deskText(t, PLATFORM_REFUND_NOTE)}</p>
+      <p>{deskText(t, PLATFORM_ACTOR_NOTE)}</p>
+      <p>{deskText(t, PLATFORM_FENCE_NOTE)}</p>
+      <p>{deskText(t, PLATFORM_READ_NOTE)}</p>
+      <p>{deskText(t, PLATFORM_SESSION_NOTE)}</p>
     </header>
   );
 }
@@ -127,32 +137,29 @@ export function PlatformControls({
   lateSupported: boolean;
   actions: PlatformActions;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
-    <section id="platform-controls" className="discovery-section" aria-label="Synthetic controls">
+    <section id="platform-controls" className="discovery-section" aria-label={t("s1o9")}>
       <div className="discovery-controls">
         <label htmlFor="platform-scenario">
-          Synthetic scenario
-          <select
+          {t("s1p5")}<select
             id="platform-scenario"
             value={scenario}
             onChange={(event) => actions.setScenario(event.target.value as PlatformScenario)}
           >
-            {PLATFORM_SCENARIOS.map((item) => (
+            {deskText(t, PLATFORM_SCENARIOS.map((item) => (
               <option key={item} value={item}>
-                {item}
+                {deskText(t, item)}
               </option>
-            ))}
+            )))}
           </select>
         </label>
         <button type="button" id="platform-refresh" className="discovery-action" onClick={() => actions.refresh()}>
-          Read again
-        </button>
+          {t("s1ax")}</button>
         <button type="button" id="platform-switch" className="discovery-action" onClick={() => actions.switchContext()}>
-          Switch session context
-        </button>
+          {t("s1nz")}</button>
         <ConnectivityWriteButton type="button" id="platform-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          Start a new synthetic session
-        </ConnectivityWriteButton>
+          {t("s1m2")}</ConnectivityWriteButton>
         <button
           type="button"
           id="platform-deliver-held"
@@ -161,8 +168,7 @@ export function PlatformControls({
           aria-describedby="platform-deliver-note"
           onClick={heldSupported ? () => actions.deliverHeld() : undefined}
         >
-          Deliver held response
-        </button>
+          {t("sg2")}</button>
         <button
           type="button"
           id="platform-deliver-late"
@@ -171,32 +177,29 @@ export function PlatformControls({
           aria-describedby="platform-deliver-note"
           onClick={lateSupported ? () => actions.deliverLate() : undefined}
         >
-          Deliver late result
-        </button>
+          {t("sg4")}</button>
       </div>
       <p className="muted" data-scenario-note={scenario}>
-        {SCENARIO_NOTES[scenario]} Changing the scenario starts a new synthetic session.
-      </p>
+        {deskText(t, SCENARIO_NOTES[scenario])} {t("sbx")}</p>
       <p className="muted" id="platform-deliver-note">
-        Switch session context moves to another actor string and a new session number. Start a new synthetic session clears every intent, as a
-        reload does, and resolves nothing at a producer. The two deliver controls work only in the scenarios named for them.
-      </p>
+        {t("s1o0")}</p>
     </section>
   );
 }
 
 export function PlatformStatus({ model }: { model: PlatformModel }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
     <section id="platform-status" className="discovery-section" tabIndex={-1} data-platform-state={model.state}>
-      <h3>Status</h3>
+      <h3>{t("s1mj")}</h3>
       <p role="status" data-platform-status={model.state}>
-        {model.state === "loading" ? <StatusMark kind="loading" /> : null} {model.statusLine}
-        {model.detailLine ? ` ${model.detailLine}` : ""}
+        {model.state === "loading" ? <StatusMark kind="loading" /> : null} {deskText(t, model.statusLine)}
+        {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
       </p>
-      <p className="muted">{model.freshnessWord}</p>
+      <p className="muted">{deskText(t, model.freshnessWord)}</p>
       {model.lastLine ? (
         <p role="status" data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
-          {model.lastNeedsFocus ? <WordMark word="Attention." /> : null} {model.lastLine}
+          {model.lastNeedsFocus ? <WordMark word={t("s91")} /> : null} {deskText(t, model.lastLine)}
         </p>
       ) : null}
     </section>
@@ -204,6 +207,7 @@ export function PlatformStatus({ model }: { model: PlatformModel }) {
 }
 
 function ListingCard({ listing, actions }: { listing: ListingModel; actions: PlatformActions }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   const options = PLATFORM_TIERS.filter((tier) => tier !== listing.tier);
   const [tier, setTier] = useState<PlatformTier>(options[0] ?? PLATFORM_TIERS[0]);
   const selectId = `platform-tier-${listing.listingRef}`;
@@ -220,34 +224,33 @@ function ListingCard({ listing, actions }: { listing: ListingModel; actions: Pla
         <span className="discovery-badge" data-provenance="synthetic">
           SYNTHETIC
         </span>{" "}
-        <span className="discovery-badge">{listing.channelWord}</span>
+        <span className="discovery-badge">{deskText(t, listing.channelWord)}</span>
       </p>
       <h4>{listing.listingRef}</h4>
       <p>
-        {listing.tier} · terms {listing.termsRef}
+        {deskText(t, listing.tier)} {t("s1pm")}{" "}{deskText(t, listing.termsRef)}
       </p>
-      <p>{listing.statusLine}</p>
+      <p>{deskText(t, listing.statusLine)}</p>
       <GuardedButton
         id={`platform-book-${listing.listingRef}`}
-        label={`Book on ${listing.channelWord}`}
+        label={t("sag", { channelWord: listing.channelWord })}
         control={listing.book}
         onPress={() => actions.book(listing.listingRef)}
       />
       {listing.open ? (
         <div className="discovery-controls">
           <label htmlFor={selectId}>
-            Change tier
-            <select id={selectId} value={tier} onChange={(event) => setTier(event.target.value as PlatformTier)}>
-              {options.map((item) => (
+            {t("sbw")}<select id={selectId} value={tier} onChange={(event) => setTier(event.target.value as PlatformTier)}>
+              {deskText(t, options.map((item) => (
                 <option key={item} value={item}>
-                  {item}
+                  {deskText(t, item)}
                 </option>
-              ))}
+              )))}
             </select>
           </label>
           <GuardedButton
             id={`platform-reprice-${listing.listingRef}`}
-            label="Apply tier"
+            label={t("s5r")}
             control={listing.reprice}
             onPress={() => actions.reprice(listing.listingRef, tier)}
           />
@@ -258,6 +261,7 @@ function ListingCard({ listing, actions }: { listing: ListingModel; actions: Pla
 }
 
 function RightCard({ right, actions }: { right: RightModel; actions: PlatformActions }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
     <section
       className="discovery-row"
@@ -266,31 +270,33 @@ function RightCard({ right, actions }: { right: RightModel; actions: PlatformAct
       data-provenance="synthetic"
       data-source="synthetic-platform"
     >
-      <h3>Right {right.rightRef}</h3>
-      <p>{right.holderLine}</p>
-      <p>{right.transfersLine}</p>
-      <ul className="discovery-list" aria-label={`Listings of ${right.rightRef}`}>
-        {right.listings.map((listing) => (
+      <h3>{t("desk.booking.right")}{" "}{right.rightRef}</h3>
+      <p>{deskText(t, right.holderLine)}</p>
+      <p>{deskText(t, right.transfersLine)}</p>
+      <ul className="discovery-list" aria-label={t("sr7", { rightRef: right.rightRef })}>
+        {deskText(t, right.listings.map((listing) => (
           <ListingCard key={listing.listingRef} listing={listing} actions={actions} />
-        ))}
+        )))}
       </ul>
     </section>
   );
 }
 
 export function RightsSection({ model, actions }: { model: PlatformModel; actions: PlatformActions }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
-    <section id="platform-rights" className="discovery-section" aria-label="Rights and listings">
-      <h3>Rights and listings</h3>
-      {model.rights.length === 0 ? <p data-state="empty">No right is listed in this read.</p> : null}
-      {model.rights.map((right) => (
+    <section id="platform-rights" className="discovery-section" aria-label={t("s1hb")}>
+      <h3>{t("s1hb")}</h3>
+      {model.rights.length === 0 ? <p data-state="empty">{t("sxz")}</p> : null}
+      {deskText(t, model.rights.map((right) => (
         <RightCard key={right.rightRef} right={right} actions={actions} />
-      ))}
+      )))}
     </section>
   );
 }
 
 function TradeCard({ trade, actions }: { trade: TradeModel; actions: PlatformActions }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
     <li
       className="discovery-row"
@@ -305,60 +311,60 @@ function TradeCard({ trade, actions }: { trade: TradeModel; actions: PlatformAct
         <span className="discovery-badge" data-provenance="synthetic">
           SYNTHETIC
         </span>{" "}
-        <span className="discovery-badge">{trade.channelWord}</span>
+        <span className="discovery-badge">{deskText(t, trade.channelWord)}</span>
       </p>
-      <h4>Trade {trade.tradeRef}</h4>
-      <p>{trade.linkLine}</p>
-      <p data-shape-line={trade.shape}>{trade.shapeLine}</p>
-      <ScrollTable label="Identities of this trade">
+      <h4>{t("s24e")}{" "}{deskText(t, trade.tradeRef)}</h4>
+      <p>{deskText(t, trade.linkLine)}</p>
+      <p data-shape-line={trade.shape}>{deskText(t, trade.shapeLine)}</p>
+      <ScrollTable label={t("snp")}>
       <table className="platform-identities">
-        <caption>Identities, each its own kind</caption>
+        <caption>{t("snn")}</caption>
         <thead>
           <tr>
-            <th scope="col">Kind</th>
-            <th scope="col">Reference</th>
+            <th scope="col">{t("sps")}</th>
+            <th scope="col">{t("error.fact.reference")}</th>
           </tr>
         </thead>
         <tbody>
-          {trade.identities.map((item) => (
+          {deskText(t, trade.identities.map((item) => (
             <tr key={item.kind} data-identity={item.kind}>
-              <th scope="row">{item.kind}</th>
-              <td>{item.ref ?? "none"}</td>
+              <th scope="row">{deskText(t, item.kind)}</th>
+              <td>{deskText(t, item.ref) ?? t("common.empty")}</td>
             </tr>
-          ))}
+          )))}
         </tbody>
       </table>
       </ScrollTable>
-      <ScrollTable label="Four independent lines of this trade">
+      <ScrollTable label={t("slw")}>
       <table className="platform-facets">
-        <caption>Four independent lines</caption>
+        <caption>{t("slv")}</caption>
         <thead>
           <tr>
-            <th scope="col">Line</th>
-            <th scope="col">This page&apos;s write</th>
-            <th scope="col">Last read</th>
+            <th scope="col">{t("sqs")}</th>
+            <th scope="col">{t("s236")}</th>
+            <th scope="col">{t("sqe")}</th>
           </tr>
         </thead>
         <tbody>
-          {trade.facets.map((facet) => (
+          {deskText(t, trade.facets.map((facet) => (
             <tr key={facet.facet} data-facet={facet.facet} data-write={facet.writeKind} data-observed={facet.observedKind}>
-              <th scope="row">{facet.label}</th>
-              <td>{facet.writeWord}</td>
+              <th scope="row">{deskText(t, facet.label)}</th>
+              <td>{deskText(t, facet.writeWord)}</td>
               <td>
-                {facet.observedWord} {facet.note}
+                {deskText(t, facet.observedWord)} {deskText(t, facet.note)}
               </td>
             </tr>
-          ))}
+          )))}
         </tbody>
       </table>
       </ScrollTable>
-      {trade.rightLines.map((line) => (
-        <p key={line}>{line}</p>
-      ))}
-      <p data-refund-line={trade.stranded ? "undefined" : "none"}>{trade.refundLine}</p>
+      {deskText(t, trade.rightLines.map((line) => (
+        <p key={line}>{deskText(t, line)}</p>
+      )))}
+      <p data-refund-line={trade.stranded ? "undefined" : "none"}>{deskText(t, trade.refundLine)}</p>
       <GuardedButton
         id={`platform-transfer-${trade.tradeRef}`}
-        label="Transfer the right"
+        label={t("s24l")}
         control={trade.transfer}
         onPress={() => actions.transfer(trade.tradeRef)}
       />
@@ -367,15 +373,16 @@ function TradeCard({ trade, actions }: { trade: TradeModel; actions: PlatformAct
 }
 
 export function TradesSection({ model, actions }: { model: PlatformModel; actions: PlatformActions }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
-    <section id="platform-trades" className="discovery-section" aria-label="Trades">
-      <h3>Trades</h3>
-      {model.trades.length === 0 ? <p data-state="empty">No trade yet. Book a listing to start one.</p> : null}
+    <section id="platform-trades" className="discovery-section" aria-label={t("s24g")}>
+      <h3>{t("s24g")}</h3>
+      {model.trades.length === 0 ? <p data-state="empty">{t("s12b")}</p> : null}
       {model.trades.length > 0 ? (
-        <ul className="discovery-list" aria-label="Trades in the last read">
-          {model.trades.map((trade) => (
+        <ul className="discovery-list" aria-label={t("s24h")}>
+          {deskText(t, model.trades.map((trade) => (
             <TradeCard key={trade.tradeRef} trade={trade} actions={actions} />
-          ))}
+          )))}
         </ul>
       ) : null}
     </section>
@@ -383,85 +390,86 @@ export function TradesSection({ model, actions }: { model: PlatformModel; action
 }
 
 export function SessionSection({ session }: { session: SessionModel }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
-    <section id="platform-session" className="discovery-section" aria-label="Session record">
-      <h3>Session record</h3>
-      <p>{session.contextLine}</p>
-      <p data-counters="true">{session.countersLine}</p>
+    <section id="platform-session" className="discovery-section" aria-label={t("s1js")}>
+      <h3>{t("s1js")}</h3>
+      <p>{deskText(t, session.contextLine)}</p>
+      <p data-counters="true">{deskText(t, session.countersLine)}</p>
       {session.intents.length === 0 ? (
-        <p data-state="empty">No write has been sent in this session.</p>
+        <p data-state="empty">{t("s137")}</p>
       ) : (
-        <ScrollTable label="Writes in this session">
+        <ScrollTable label={t("s272")}>
         <table className="platform-intents">
-          <caption>Writes in this session</caption>
+          <caption>{t("s272")}</caption>
           <thead>
             <tr>
-              <th scope="col">Intent</th>
-              <th scope="col">Write</th>
-              <th scope="col">Target</th>
-              <th scope="col">Outcome</th>
-              <th scope="col">Code</th>
-              <th scope="col">Late</th>
+              <th scope="col">{t("soe")}</th>
+              <th scope="col">{t("s270")}</th>
+              <th scope="col">{t("s1pe")}</th>
+              <th scope="col">{t("s16g")}</th>
+              <th scope="col">{t("error.fact.code")}</th>
+              <th scope="col">{t("sqg")}</th>
             </tr>
           </thead>
           <tbody>
-            {session.intents.map((intent) => (
+            {deskText(t, session.intents.map((intent) => (
               <tr key={intent.intentRef} data-intent={intent.intentRef} data-outcome={intent.outcome}>
-                <th scope="row">{intent.intentRef}</th>
-                <td>{intent.stepWord}</td>
-                <td>{intent.targetRef}</td>
-                <td>{intent.outcome}</td>
-                <td>{intent.code}</td>
-                <td>{intent.lateLine}</td>
+                <th scope="row">{deskText(t, intent.intentRef)}</th>
+                <td>{deskText(t, intent.stepWord)}</td>
+                <td>{deskText(t, intent.targetRef)}</td>
+                <td>{deskText(t, intent.outcome)}</td>
+                <td>{deskText(t, intent.code)}</td>
+                <td>{deskText(t, intent.lateLine)}</td>
               </tr>
-            ))}
+            )))}
           </tbody>
         </table>
         </ScrollTable>
       )}
-      {session.unlinkedLines.map((line) => (
+      {deskText(t, session.unlinkedLines.map((line) => (
         <p key={line} data-unlinked="true">
-          {line}
+          {deskText(t, line)}
         </p>
-      ))}
-      {session.quarantineLines.map((line) => (
+      )))}
+      {deskText(t, session.quarantineLines.map((line) => (
         <p key={line} data-quarantined="true">
-          {line}
+          {deskText(t, line)}
         </p>
-      ))}
+      )))}
     </section>
   );
 }
 
 export function IdentitySection({ rows }: { rows: IdentityRowModel[] }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
-    <section id="platform-identity" className="discovery-section" aria-label="Identity links">
-      <h3>Identity links</h3>
+    <section id="platform-identity" className="discovery-section" aria-label={t("snr")}>
+      <h3>{t("snr")}</h3>
       <p className="muted">
-        Naming a field in the pin is not binding it. The values on this page are synthetic references, and no body is built from them.
-      </p>
-      <ScrollTable label="Identity links">
+        {t("sth")}</p>
+      <ScrollTable label={t("snr")}>
       <table className="platform-register">
-        <caption>Which identity has a named field in the pinned catalogue</caption>
+        <caption>{t("s26l")}</caption>
         <thead>
           <tr>
-            <th scope="col">Identity</th>
-            <th scope="col">Field here</th>
-            <th scope="col">Status</th>
-            <th scope="col">Pinned fields</th>
-            <th scope="col">Note</th>
+            <th scope="col">{t("snq")}</th>
+            <th scope="col">{t("sl2")}</th>
+            <th scope="col">{t("s1mj")}</th>
+            <th scope="col">{t("s186")}</th>
+            <th scope="col">{t("s10r")}</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
+          {deskText(t, rows.map((row) => (
             <tr key={row.id} data-identity-row={row.id} data-status={row.status}>
-              <th scope="row">{row.id}</th>
-              <td>{row.platformField}</td>
-              <td>{row.statusWord}</td>
-              <td>{row.bodyFields}</td>
-              <td>{row.reason}</td>
+              <th scope="row">{deskText(t, row.id)}</th>
+              <td>{deskText(t, row.platformField)}</td>
+              <td>{deskText(t, row.statusWord)}</td>
+              <td>{deskText(t, row.bodyFields)}</td>
+              <td>{deskText(t, row.reason)}</td>
             </tr>
-          ))}
+          )))}
         </tbody>
       </table>
       </ScrollTable>

@@ -1,3 +1,9 @@
+import { messages as deskCopy } from "../i18n/desk-catalogue";
+import { messages as copy0 } from "../i18n/messages/pages--FinancePanels";
+import { messages as copy1 } from "../i18n/messages/finance-operations";
+import { messages as copy2 } from "../i18n/messages/workspace--registry";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -28,18 +34,20 @@ import { WORKSPACE_RULING } from "../workspace/registry";
 
 /** A word, not only a color. */
 function WordMark({ word }: { word: string }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
     <span className="status-mark" data-status-mark="blocked">
-      <span className="status-word">{word}</span>
+      <span className="status-word">{deskText(t, word)}</span>
     </span>
   );
 }
 
 /** A wide table scrolls inside its own region, so the page does not scroll sideways. */
 function ScrollTable({ label, children }: { label: string; children: ReactNode }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
-    <div className="finance-scroll" role="region" aria-label={label} tabIndex={0}>
-      {children}
+    <div className="finance-scroll" role="region" aria-label={deskText(t, label)} tabIndex={0}>
+      {deskText(t, children)}
     </div>
   );
 }
@@ -63,6 +71,7 @@ function GuardedButton({
   describedBy?: string;
   onPress: () => void;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   const reasonId = `${id}-reason`;
   const pointer = control.reason ? (describedBy ?? reasonId) : undefined;
   return (
@@ -76,11 +85,11 @@ function GuardedButton({
         data-enabled={control.enabled ? "true" : "false"}
         onClick={control.enabled ? onPress : undefined}
       >
-        {label}
+        {deskText(t, label)}
       </ConnectivityWriteButton>
       {control.reason && describedBy === undefined ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
-          <WordMark word="Blocked." /> {control.reason}
+          <WordMark word={t("status.transport.blocked")} /> {deskText(t, control.reason)}
         </p>
       ) : null}
     </>
@@ -104,6 +113,7 @@ export function FinanceBanner({
   scenario: FinanceScenario;
   model: FinanceModel;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
     <header
       className="section-head discovery-section"
@@ -111,25 +121,25 @@ export function FinanceBanner({
       data-scenario={scenario}
       data-freshness={model.freshnessWord}
     >
-      <p className="eyebrow">Finance operations</p>
-      <h2>{FINANCE_PAGE_TITLE}</h2>
+      <p className="eyebrow">{t("slc")}</p>
+      <h2>{deskText(t, FINANCE_PAGE_TITLE)}</h2>
       <p className="discovery-banner" data-provenance="synthetic" data-source="synthetic-finance">
-        SYNTHETIC. {FINANCE_SOURCE_LINE}
+        SYNTHETIC. {deskText(t, FINANCE_SOURCE_LINE)}
       </p>
-      <p>{FINANCE_BOUNDARY}</p>
-      <p data-no-force="true">{FINANCE_NO_FORCE_NOTE}</p>
+      <p>{deskText(t, FINANCE_BOUNDARY)}</p>
+      <p data-no-force="true">{deskText(t, FINANCE_NO_FORCE_NOTE)}</p>
       <AmountNotice />
-      <p>{FINANCE_CLAIM_NOTE}</p>
-      <p>{FINANCE_CUT_NOTE}</p>
-      <p>{FINANCE_FIGURES_NOTE}</p>
-      <p>{FINANCE_EXPORT_NOTE}</p>
-      <p>{FINANCE_SCOPE_NOTE}</p>
-      <p>{FINANCE_ACTOR_NOTE}</p>
-      <p>{FINANCE_READ_NOTE}</p>
-      <p>{FINANCE_SESSION_NOTE}</p>
-      <p>{WORKSPACE_RULING}</p>
-      <p data-hold-record="not-bound">{model.session.holdLine}</p>
-      <p data-not-composed="recorded">{model.session.notComposedLine}</p>
+      <p>{deskText(t, FINANCE_CLAIM_NOTE)}</p>
+      <p>{deskText(t, FINANCE_CUT_NOTE)}</p>
+      <p>{deskText(t, FINANCE_FIGURES_NOTE)}</p>
+      <p>{deskText(t, FINANCE_EXPORT_NOTE)}</p>
+      <p>{deskText(t, FINANCE_SCOPE_NOTE)}</p>
+      <p>{deskText(t, FINANCE_ACTOR_NOTE)}</p>
+      <p>{deskText(t, FINANCE_READ_NOTE)}</p>
+      <p>{deskText(t, FINANCE_SESSION_NOTE)}</p>
+      <p>{deskText(t, WORKSPACE_RULING)}</p>
+      <p data-hold-record="not-bound">{deskText(t, model.session.holdLine)}</p>
+      <p data-not-composed="recorded">{deskText(t, model.session.notComposedLine)}</p>
     </header>
   );
 }
@@ -145,51 +155,45 @@ export function FinanceControls({
   model: FinanceModel;
   actions: FinanceActions;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
-    <section id="finance-controls" className="discovery-section" aria-label="Synthetic controls">
+    <section id="finance-controls" className="discovery-section" aria-label={t("s1o9")}>
       <div className="discovery-controls">
         <PickAndApply
           id="finance-scenario"
-          label="Synthetic scenario"
+          label={t("s1p5")}
           value={scenario}
           options={FINANCE_SCENARIOS}
           applyId="finance-apply-scenario"
-          applyLabel="Start a session with this scenario"
+          applyLabel={t("s1m5")}
           onApply={(next) => actions.setScenario(next as FinanceScenario)}
         />
         <PickAndApply
           id="finance-actor"
-          label="Desk actor"
+          label={t("sgd")}
           value={actorRef}
           options={FINANCE_ACTORS}
           applyId="finance-apply-actor"
-          applyLabel="Switch to this actor"
+          applyLabel={t("s1o6")}
           onApply={(next) => actions.switchActor(next)}
         />
         <button type="button" id="finance-refresh" className="discovery-action" onClick={() => actions.refresh()}>
-          Read again
-        </button>
-        <GuardedButton id="finance-export" label="Load the export" control={model.exportControl} onPress={() => actions.loadExport()} />
+          {t("s1ax")}</button>
+        <GuardedButton id="finance-export" label={t("srf")} control={model.exportControl} onPress={() => actions.loadExport()} />
         <button type="button" id="finance-switch" className="discovery-action" onClick={() => actions.switchScope()}>
-          Switch book scope
-        </button>
+          {t("s1nt")}</button>
         <ConnectivityWriteButton type="button" id="finance-revoke" className="discovery-action" onClick={() => actions.revokeGrant()}>
-          Simulate: withdraw the grant
-        </ConnectivityWriteButton>
+          {t("s1ky")}</ConnectivityWriteButton>
         <ConnectivityWriteButton type="button" id="finance-advance" className="discovery-action" onClick={() => actions.advanceCut()}>
-          Simulate: the source moves to its next cut
-        </ConnectivityWriteButton>
+          {t("s1kw")}</ConnectivityWriteButton>
         <ConnectivityWriteButton type="button" id="finance-post-correction" className="discovery-action" onClick={() => actions.postSourceCorrection()}>
-          Simulate: the source posts a later cut
-        </ConnectivityWriteButton>
+          {t("s1kx")}</ConnectivityWriteButton>
         <ConnectivityWriteButton type="button" id="finance-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          Start a new synthetic session
-        </ConnectivityWriteButton>
+          {t("s1m2")}</ConnectivityWriteButton>
       </div>
       <p className="muted" data-scenario-note={scenario}>
-        {SCENARIO_NOTES[scenario]} Choosing a scenario does nothing until you start a session with it, and starting one clears earlier reads, exports, and requests.
-      </p>
-      <p className="muted">{FINANCE_SYNTHETIC_CONTROL_NOTE}</p>
+        {deskText(t, SCENARIO_NOTES[scenario])} {t("scc")}</p>
+      <p className="muted">{deskText(t, FINANCE_SYNTHETIC_CONTROL_NOTE)}</p>
     </section>
   );
 }
@@ -215,6 +219,7 @@ function PickAndApply({
   applyLabel: string;
   onApply: (next: string) => void;
 }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   const [choice, setChoice] = useState(value);
   useEffect(() => {
     setChoice(value);
@@ -222,39 +227,40 @@ function PickAndApply({
   return (
     <>
       <label htmlFor={id}>
-        {label}
+        {deskText(t, label)}
         <select id={id} value={choice} onChange={(event) => setChoice(event.target.value)}>
-          {options.map((item) => (
+          {deskText(t, options.map((item) => (
             <option key={item} value={item}>
-              {item}
+              {deskText(t, item)}
             </option>
-          ))}
+          )))}
         </select>
       </label>
       <button type="button" id={applyId} className="discovery-action" onClick={() => onApply(choice)}>
-        {applyLabel}
+        {deskText(t, applyLabel)}
       </button>
     </>
   );
 }
 
 export function FinanceStatus({ model }: { model: FinanceModel }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
     <section id="finance-status" className="discovery-section" tabIndex={-1} data-finance-state={model.state}>
-      <h3>Status</h3>
+      <h3>{t("s1mj")}</h3>
       <p role="status" data-status={model.state}>
-        {model.state === "loading" ? <StatusMark kind="loading" /> : null} {model.statusLine}
-        {model.detailLine ? ` ${model.detailLine}` : ""}
+        {model.state === "loading" ? <StatusMark kind="loading" /> : null} {deskText(t, model.statusLine)}
+        {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
       </p>
-      <p className="muted">{model.freshnessWord}</p>
-      <p className="muted">{model.scopeLine}</p>
-      <p className="muted">{model.watermarkLine}</p>
+      <p className="muted">{deskText(t, model.freshnessWord)}</p>
+      <p className="muted">{deskText(t, model.scopeLine)}</p>
+      <p className="muted">{deskText(t, model.watermarkLine)}</p>
       <p className="muted" data-queue-line="true">
-        {model.queueLine}
+        {deskText(t, model.queueLine)}
       </p>
       {model.lastLine ? (
         <p role="status" data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
-          {model.lastNeedsFocus ? <WordMark word="Attention." /> : null} {model.lastLine}
+          {model.lastNeedsFocus ? <WordMark word={t("s91")} /> : null} {deskText(t, model.lastLine)}
         </p>
       ) : null}
     </section>
@@ -262,36 +268,35 @@ export function FinanceStatus({ model }: { model: FinanceModel }) {
 }
 
 export function AuthoritySection({ model }: { model: FinanceModel }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
-    <section id="finance-authority" className="discovery-section" aria-label="Who may do what">
-      <h3>Who may do what</h3>
+    <section id="finance-authority" className="discovery-section" aria-label={t("s26m")}>
+      <h3>{t("s26m")}</h3>
       <p className="muted">
-        A correction proposal and the authority to change economic state are different things. A proposal and an approval are
-        records. Only the last row moves the ledger, and no actor on this desk holds it.
-      </p>
-      <ScrollTable label="Authorities and who holds them">
+        {t("sv")}</p>
+      <ScrollTable label={t("s96")}>
         <table className="finance-authority">
-          <caption>The source&apos;s authorities for the book on this page</caption>
+          <caption>{t("s1yd")}</caption>
           <thead>
             <tr>
-              <th scope="col">Authority</th>
-              <th scope="col">Held by</th>
-              <th scope="col">Effect</th>
-              <th scope="col">Changes economic state</th>
+              <th scope="col">{t("s97")}</th>
+              <th scope="col">{t("sn9")}</th>
+              <th scope="col">{t("si9")}</th>
+              <th scope="col">{t("sbv")}</th>
             </tr>
           </thead>
           <tbody>
-            {model.authority.map((row) => (
+            {deskText(t, model.authority.map((row) => (
               <tr key={row.authority} data-authority={row.authority} data-changes-economic-state={row.changesEconomicState ? "true" : "false"} data-held-by-actor={row.heldByActor ? "true" : "false"}>
-                <th scope="row">{row.word}</th>
+                <th scope="row">{deskText(t, row.word)}</th>
                 <td>
-                  {row.heldByLine}
-                  {row.heldByActor ? " The actor on screen holds it." : ""}
+                  {deskText(t, row.heldByLine)}
+                  {row.heldByActor ? (" " + t("s1pt")) : ""}
                 </td>
-                <td>{row.effectLine}</td>
-                <td>{row.changesEconomicState ? "Yes, and nobody here holds it." : "No."}</td>
+                <td>{deskText(t, row.effectLine)}</td>
+                <td>{row.changesEconomicState ? t("s278") : t("sts")}</td>
               </tr>
-            ))}
+            )))}
           </tbody>
         </table>
       </ScrollTable>
@@ -300,34 +305,35 @@ export function AuthoritySection({ model }: { model: FinanceModel }) {
 }
 
 export function CutsSection({ model }: { model: FinanceModel }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
-    <section id="finance-cuts" className="discovery-section" aria-label="Source cuts" data-cut-alignment={model.cutAlignment}>
-      <h3>Source cuts</h3>
-      <p data-cut-line={model.cutAlignment}>{model.cutLine}</p>
-      {model.cuts.length === 0 ? <p data-state="empty">No source cut is listed in this read.</p> : null}
+    <section id="finance-cuts" className="discovery-section" aria-label={t("s1l7")} data-cut-alignment={model.cutAlignment}>
+      <h3>{t("s1l7")}</h3>
+      <p data-cut-line={model.cutAlignment}>{deskText(t, model.cutLine)}</p>
+      {model.cuts.length === 0 ? <p data-state="empty">{t("syo")}</p> : null}
       {model.cuts.length > 0 ? (
-        <ScrollTable label="Source cuts">
+        <ScrollTable label={t("s1l7")}>
           <table className="finance-cuts">
-            <caption>The position each source was read at</caption>
+            <caption>{t("s1ve")}</caption>
             <thead>
               <tr>
-                <th scope="col">Cut</th>
-                <th scope="col">Source</th>
-                <th scope="col">Generation</th>
-                <th scope="col">Watermark</th>
-                <th scope="col">Rows</th>
+                <th scope="col">{t("sfe")}</th>
+                <th scope="col">{t("s1l5")}</th>
+                <th scope="col">{t("sme")}</th>
+                <th scope="col">{t("s269")}</th>
+                <th scope="col">{t("s1hr")}</th>
               </tr>
             </thead>
             <tbody>
-              {model.cuts.map((cut) => (
+              {deskText(t, model.cuts.map((cut) => (
                 <tr key={cut.cutRef} data-cut={cut.cutRef} data-cut-source={cut.source}>
-                  <th scope="row">{cut.cutRef}</th>
-                  <td>{cut.source}</td>
-                  <td>{cut.generation}</td>
-                  <td>{cut.watermark}</td>
-                  <td>{cut.usedBy}</td>
+                  <th scope="row">{deskText(t, cut.cutRef)}</th>
+                  <td>{deskText(t, cut.source)}</td>
+                  <td>{deskText(t, cut.generation)}</td>
+                  <td>{deskText(t, cut.watermark)}</td>
+                  <td>{deskText(t, cut.usedBy)}</td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </ScrollTable>
@@ -337,6 +343,7 @@ export function CutsSection({ model }: { model: FinanceModel }) {
 }
 
 function CaseCard({ row, model, actions }: { row: FinanceCaseModel; model: FinanceModel; actions: FinanceActions }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   const blockId = `finance-case-${row.caseRef}-block`;
   return (
     <li
@@ -350,92 +357,91 @@ function CaseCard({ row, model, actions }: { row: FinanceCaseModel; model: Finan
       data-source="synthetic-finance"
     >
       <p>
-        <Synthetic /> <span className="discovery-badge">{row.categoryWord}</span>{" "}
+        <Synthetic /> <span className="discovery-badge">{deskText(t, row.categoryWord)}</span>{" "}
         <span className="discovery-badge" data-case-state={row.state}>
-          {row.stateWord}
+          {deskText(t, row.stateWord)}
         </span>
       </p>
-      <h4>{row.caseRef}</h4>
-      <p data-verdict-word={row.verdict}>{row.verdictWord}.</p>
-      {row.explanationLines.map((line) => (
+      <h4>{deskText(t, row.caseRef)}</h4>
+      <p data-verdict-word={row.verdict}>{deskText(t, row.verdictWord)}.</p>
+      {deskText(t, row.explanationLines.map((line) => (
         <p key={line} data-explanation="true">
-          {line}
+          {deskText(t, line)}
         </p>
-      ))}
+      )))}
       <p data-original-trade={row.tradeLinked ? "linked" : "unlinked"}>
-        {!row.tradeLinked ? <WordMark word="Attention." /> : null} {row.tradeLine}{" "}
-        {row.tradeLinked ? <Link to="/merchant">Open the merchant workroom</Link> : null}
+        {!row.tradeLinked ? <WordMark word={t("s91")} /> : null} {deskText(t, row.tradeLine)}{" "}
+        {row.tradeLinked ? <Link to="/merchant">{t("s15e")}</Link> : null}
       </p>
-      {row.merchantLineLine ? <p data-link="merchant-line">{row.merchantLineLine}</p> : null}
+      {row.merchantLineLine ? <p data-link="merchant-line">{deskText(t, row.merchantLineLine)}</p> : null}
       {row.paymentLine ? (
         <p data-link="servicing-payment">
-          {row.paymentLine} <Link to="/credit/servicing">Open the credit servicing desk</Link>
+          {deskText(t, row.paymentLine)} <Link to="/credit/servicing">{t("s15c")}</Link>
         </p>
       ) : null}
       <p className="finance-figures-line">
-        <span data-amount="copied">{row.expectedLine}</span> · <span data-amount="copied">{row.observedLine}</span> ·{" "}
-        <span data-amount="copied">{row.differenceLine}</span>
+        <span data-amount="copied">{deskText(t, row.expectedLine)}</span> · <span data-amount="copied">{deskText(t, row.observedLine)}</span> ·{" "}
+        <span data-amount="copied">{deskText(t, row.differenceLine)}</span>
       </p>
       <p>
-        {row.sidesLine} {row.reasonLine} Cut {row.cutRef}.
+        {deskText(t, row.sidesLine)} {deskText(t, row.reasonLine)} {t("sfe")}{" "}{deskText(t, row.cutRef)}.
       </p>
       {row.skewLine ? (
         <p data-timing-uncertain="true">
-          <WordMark word="Attention." /> {row.skewLine}
+          <WordMark word={t("s91")} /> {deskText(t, row.skewLine)}
         </p>
       ) : null}
       {row.contradictionLine ? (
         <p data-contradiction="true">
-          <WordMark word="Attention." /> {row.contradictionLine}
+          <WordMark word={t("s91")} /> {deskText(t, row.contradictionLine)}
         </p>
       ) : null}
 
       {row.facts.length > 0 ? (
         <>
-          <h5>Facts</h5>
-          <ul className="finance-facts" aria-label={`Facts of ${row.caseRef}`}>
-            {row.facts.map((fact) => (
+          <h5>{t("skq")}</h5>
+          <ul className="finance-facts" aria-label={t("skr", { caseRef: row.caseRef })}>
+            {deskText(t, row.facts.map((fact) => (
               <li key={fact.factRef} data-fact={fact.factRef} data-arrival={fact.late ? "after-cut" : "in-cut"} data-cut={fact.cutRef}>
-                <strong>{fact.factRef}</strong> {fact.kindWord}. {fact.amountLine}. {fact.arrivalWord}, cut {fact.cutRef}. {fact.label}
+                <strong>{deskText(t, fact.factRef)}</strong> {deskText(t, fact.kindWord)}. {deskText(t, fact.amountLine)}. {deskText(t, fact.arrivalWord)}{t("sff")}{" "}{deskText(t, fact.cutRef)}. {deskText(t, fact.label)}
                 {fact.late ? (
                   <>
                     {" "}
-                    <WordMark word="Late." /> It is its own fact and is not folded into the cut it missed.
-                  </>
+                    <WordMark word={t("sqf")} /> {t("sp4")}</>
                 ) : null}
               </li>
-            ))}
+            )))}
           </ul>
         </>
       ) : null}
 
       {row.allocations.length > 0 ? (
         <>
-          <h5>Payee allocations</h5>
-          <ScrollTable label={`Allocations of ${row.caseRef}`}>
+          <h5>{t("s17f")}</h5>
+          <ScrollTable label={t("s2x", { caseRef: row.caseRef })}>
             <table className="finance-allocations">
-              <caption>The source&apos;s own shares and remainder for {row.caseRef}</caption>
+              <caption>{t("s1yk")}{" "}{deskText(t, row.caseRef)}</caption>
               <thead>
                 <tr>
-                  <th scope="col">Allocation</th>
-                  <th scope="col">Kind</th>
-                  <th scope="col">Role</th>
-                  <th scope="col">Payee</th>
-                  <th scope="col">Amount</th>
-                  <th scope="col">Cut</th>
+                  <th scope="col">{t("s2s")}</th>
+                  <th scope="col">{t("sps")}</th>
+                  <th scope="col">{t("s1he")}</th>
+                  <th scope="col">{t("s17e")}</th>
+                  <th scope="col">{t("s36")}</th>
+                  <th scope="col">{t("sfe")}</th>
                 </tr>
               </thead>
               <tbody>
-                {row.allocations.map((item) => (
+                {deskText(t, row.allocations.map((item) => (
                   <tr key={item.allocationRef} data-allocation={item.allocationRef} data-remainder={item.remainder ? "true" : "false"} data-cut={item.cutRef}>
-                    <th scope="row">{item.allocationRef}</th>
-                    <td>{item.kindWord}</td>
-                    <td>{item.roleWord}</td>
-                    <td>{item.payeeLine}</td>
-                    <td data-amount="copied">{item.amountLine}</td>
-                    <td>{item.cutRef}</td>
+                    <th scope="row">{deskText(t, item.allocationRef)}</th>
+                    <td>{deskText(t, item.kindWord)}</td>
+                    <td>{deskText(t, item.roleWord)}</td>
+                    <td>{deskText(t, item.payeeLine)}</td>
+                    <td data-amount="copied">{deskText(t, item.amountLine)}</td>
+                    <td>{deskText(t, item.cutRef)}</td>
                   </tr>
-                ))}
+                )))}
               </tbody>
             </table>
           </ScrollTable>
@@ -444,32 +450,32 @@ function CaseCard({ row, model, actions }: { row: FinanceCaseModel; model: Finan
 
       {row.proposals.length > 0 ? (
         <>
-          <h5>Correction proposals</h5>
-          <ul className="finance-proposals" aria-label={`Proposals on ${row.caseRef}`}>
-            {row.proposals.map((proposal) => (
+          <h5>{t("seh")}</h5>
+          <ul className="finance-proposals" aria-label={t("s19l", { caseRef: row.caseRef })}>
+            {deskText(t, row.proposals.map((proposal) => (
               <li key={proposal.proposalRef} data-proposal={proposal.proposalRef} data-proposal-state={proposal.state}>
-                <strong>{proposal.proposalRef}</strong> {proposal.correctionWord}. Proposed by {proposal.proposedBy}. {proposal.stateWord}. Note: {proposal.note}
+                <strong>{deskText(t, proposal.proposalRef)}</strong> {deskText(t, proposal.correctionWord)}{t("s19w")}{" "}{deskText(t, proposal.proposedBy)}. {deskText(t, proposal.stateWord)}{t("s10q")}{" "}{deskText(t, proposal.note)}
                 <br />
                 <GuardedButton
                   id={`finance-approve-${proposal.proposalRef}`}
-                  label={`Record an approval of ${proposal.proposalRef}`}
+                  label={t("s1dp", { proposalRef: proposal.proposalRef })}
                   control={proposal.approve}
                   describedBy={model.approveBlock ? "finance-approve-reason" : undefined}
                   onPress={() => actions.approveProposal(proposal.proposalRef)}
                 />
               </li>
-            ))}
+            )))}
           </ul>
         </>
       ) : null}
 
       {row.corrections.length > 0 ? (
-        <div className="discovery-controls" role="group" aria-label={`Propose a correction on ${row.caseRef}`}>
-          {row.corrections.map((item) => (
+        <div className="discovery-controls" role="group" aria-label={t("s19o", { caseRef: row.caseRef })}>
+          {deskText(t, row.corrections.map((item) => (
             <GuardedButton
               key={item.correction}
               id={`finance-propose-${row.caseRef}-${item.correction}`}
-              label={item.label}
+              label={deskText(t, item.label)}
               control={item.control}
               describedBy={
                 item.control.reason !== null && item.control.reason === model.proposeBlock
@@ -480,12 +486,12 @@ function CaseCard({ row, model, actions }: { row: FinanceCaseModel; model: Finan
               }
               onPress={() => actions.proposeCorrection(row.caseRef, item.correction, noteValue())}
             />
-          ))}
+          )))}
         </div>
       ) : null}
       {row.caseBlock ? (
         <p id={blockId} className="muted" data-case-block="true" data-blocked-reason="true">
-          <WordMark word="Blocked." /> {row.caseBlock}
+          <WordMark word={t("status.transport.blocked")} /> {deskText(t, row.caseBlock)}
         </p>
       ) : null}
     </li>
@@ -502,139 +508,132 @@ function noteValue(): string {
 }
 
 export function QueueSection({ model, actions }: { model: FinanceModel; actions: FinanceActions }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
-    <section id="finance-queue" className="discovery-section" aria-label="Exception queue" data-case-count={model.cases.length}>
-      <h3>Exception queue</h3>
+    <section id="finance-queue" className="discovery-section" aria-label={t("sjz")} data-case-count={model.cases.length}>
+      <h3>{t("sjz")}</h3>
       <p className="muted">
-        Each case is a mismatch the source states, linked to its original trade. Unmatched, duplicate, late, several-payee,
-        residual, and balance cases keep their own words. A control here records a proposal; none changes the ledger.
-      </p>
+        {t("shr")}</p>
       <div className="discovery-controls">
         <label htmlFor="finance-note">
-          Note for a proposal
-          <input id="finance-note" name="finance-note" autoComplete="off" defaultValue="Reviewed against the source cuts." />
+          {t("s10s")}<input id="finance-note" name="finance-note" autoComplete="off" defaultValue="Reviewed against the source cuts." />
         </label>
       </div>
       {model.proposeBlock ? (
         <p id="finance-propose-reason" className="muted" data-blocked-reason="true" data-block="propose">
-          <WordMark word="Blocked." /> Corrections are off: {model.proposeBlock}
+          <WordMark word={t("status.transport.blocked")} /> {t("sej")}{" "}{deskText(t, model.proposeBlock)}
         </p>
       ) : null}
       {model.approveBlock ? (
         <p id="finance-approve-reason" className="muted" data-blocked-reason="true" data-block="approve">
-          <WordMark word="Blocked." /> Approvals are off: {model.approveBlock}
+          <WordMark word={t("status.transport.blocked")} /> {t("s5w")}{" "}{deskText(t, model.approveBlock)}
         </p>
       ) : null}
-      {model.cases.length === 0 ? <p data-state="empty">No case in this read.</p> : null}
+      {model.cases.length === 0 ? <p data-state="empty">{t("suh")}</p> : null}
       {model.cases.length > 0 ? (
-        <ul className="discovery-list" aria-label="Cases in the last read">
-          {model.cases.map((row) => (
+        <ul className="discovery-list" aria-label={t("sbj")}>
+          {deskText(t, model.cases.map((row) => (
             <CaseCard key={row.caseRef} row={row} model={model} actions={actions} />
-          ))}
+          )))}
         </ul>
       ) : null}
-      {model.unlinkedLines.map((line) => (
+      {deskText(t, model.unlinkedLines.map((line) => (
         <p key={line} data-unlinked="true">
-          <WordMark word="Attention." /> {line}
+          <WordMark word={t("s91")} /> {deskText(t, line)}
         </p>
-      ))}
+      )))}
     </section>
   );
 }
 
 export function FiguresSection({ model }: { model: FinanceModel }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
-    <section id="finance-figures" className="discovery-section" aria-label="Source figures" data-totals-state={model.totalsState}>
-      <h3>Source figures</h3>
+    <section id="finance-figures" className="discovery-section" aria-label={t("s1la")} data-totals-state={model.totalsState}>
+      <h3>{t("s1la")}</h3>
       <p className="muted">
-        {model.totalsState === "current"
-          ? "Each total matches the cut and the case count of this read."
-          : model.totalsState === "stale"
-            ? "A total was built at an older generation. It stays flagged and is not recomputed."
-            : model.totalsState === "mismatch"
-              ? "A total disagrees with this read. It stays flagged and is not merged."
-              : "No source total in this read."}
+        {model.totalsState === "current" ? t("si5") : model.totalsState === "stale" ? t("s8r") : model.totalsState === "mismatch" ? t("s8q") : t("syr")}
       </p>
       {model.totals.length > 0 ? (
-        <ScrollTable label="Source totals per category and cut">
+        <ScrollTable label={t("s1ld")}>
           <table className="finance-totals">
-            <caption>The source&apos;s own total per category and cut</caption>
+            <caption>{t("s1yl")}</caption>
             <thead>
               <tr>
-                <th scope="col">Category</th>
-                <th scope="col">Cut</th>
-                <th scope="col">Generation</th>
-                <th scope="col">Cases</th>
-                <th scope="col">Total</th>
-                <th scope="col">Flags</th>
+                <th scope="col">{t("sbr")}</th>
+                <th scope="col">{t("sfe")}</th>
+                <th scope="col">{t("sme")}</th>
+                <th scope="col">{t("sbh")}</th>
+                <th scope="col">{t("s24c")}</th>
+                <th scope="col">{t("slo")}</th>
               </tr>
             </thead>
             <tbody>
-              {model.totals.map((row) => (
+              {deskText(t, model.totals.map((row) => (
                 <tr key={`${row.category}|${row.cutRef}`} data-total={row.category} data-cut={row.cutRef} data-flagged={row.flagLines.length > 0 ? "true" : "false"}>
-                  <th scope="row">{row.categoryWord}</th>
-                  <td>{row.cutRef}</td>
-                  <td>{row.generation}</td>
-                  <td>{row.caseCount}</td>
-                  <td data-amount="copied">{row.amountLine}</td>
+                  <th scope="row">{deskText(t, row.categoryWord)}</th>
+                  <td>{deskText(t, row.cutRef)}</td>
+                  <td>{deskText(t, row.generation)}</td>
+                  <td>{deskText(t, row.caseCount)}</td>
+                  <td data-amount="copied">{deskText(t, row.amountLine)}</td>
                   <td>
                     {row.flagLines.length === 0
-                      ? "No flag."
+                      ? t("svj")
                       : row.flagLines.map((line) => (
                           <p key={line} data-flag="true">
-                            <WordMark word="Attention." /> {line}
+                            <WordMark word={t("s91")} /> {deskText(t, line)}
                           </p>
                         ))}
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </ScrollTable>
       ) : null}
-      <h4>Balances between sources</h4>
-      {model.balances.length === 0 ? <p data-state="empty">No balance in this read.</p> : null}
+      <h4>{t("s9n")}</h4>
+      {model.balances.length === 0 ? <p data-state="empty">{t("su9")}</p> : null}
       {model.balances.length > 0 ? (
-        <ScrollTable label="Balances between sources">
+        <ScrollTable label={t("s9n")}>
           <table className="finance-balances">
-            <caption>The source&apos;s own comparison of two sources</caption>
+            <caption>{t("s1yg")}</caption>
             <thead>
               <tr>
-                <th scope="col">Balance</th>
-                <th scope="col">Sources</th>
-                <th scope="col">Left</th>
-                <th scope="col">Right</th>
-                <th scope="col">Difference</th>
-                <th scope="col">Verdict</th>
-                <th scope="col">Flags</th>
+                <th scope="col">{t("s9l")}</th>
+                <th scope="col">{t("s1lc")}</th>
+                <th scope="col">{t("sqn")}</th>
+                <th scope="col">{t("desk.booking.right")}</th>
+                <th scope="col">{t("sgm")}</th>
+                <th scope="col">{t("s25y")}</th>
+                <th scope="col">{t("slo")}</th>
               </tr>
             </thead>
             <tbody>
-              {model.balances.map((row) => (
+              {deskText(t, model.balances.map((row) => (
                 <tr key={row.balanceRef} data-balance={row.balanceRef} data-verdict={row.verdict} data-flagged={row.flags.length > 0 ? "true" : "false"}>
-                  <th scope="row">{row.balanceRef}</th>
-                  <td>{row.label}</td>
-                  <td data-amount="copied">{row.leftLine}</td>
-                  <td data-amount="copied">{row.rightLine}</td>
-                  <td data-amount="copied">{row.differenceLine}</td>
-                  <td>{row.verdictWord}.</td>
+                  <th scope="row">{deskText(t, row.balanceRef)}</th>
+                  <td>{deskText(t, row.label)}</td>
+                  <td data-amount="copied">{deskText(t, row.leftLine)}</td>
+                  <td data-amount="copied">{deskText(t, row.rightLine)}</td>
+                  <td data-amount="copied">{deskText(t, row.differenceLine)}</td>
+                  <td>{deskText(t, row.verdictWord)}.</td>
                   <td>
                     {row.flags.length === 0
-                      ? "No flag."
+                      ? t("svj")
                       : row.flags.map((flag) =>
                           flag.kind === "contradiction" ? (
                             <p key={flag.text} data-contradiction="true">
-                              <WordMark word="Attention." /> {flag.text}
+                              <WordMark word={t("s91")} /> {deskText(t, flag.text)}
                             </p>
                           ) : (
                             <p key={flag.text} data-timing-uncertain="true">
-                              <WordMark word="Attention." /> {flag.text}
+                              <WordMark word={t("s91")} /> {deskText(t, flag.text)}
                             </p>
                           ),
                         )}
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </ScrollTable>
@@ -644,60 +643,60 @@ export function FiguresSection({ model }: { model: FinanceModel }) {
 }
 
 export function ExportSection({ model }: { model: FinanceModel }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   const exported = model.export;
   return (
-    <section id="finance-export-panel" className="discovery-section" aria-label="Export" data-export-phase={exported.phase} data-verdict={exported.verdictWord}>
-      <h3>Accounting export</h3>
+    <section id="finance-export-panel" className="discovery-section" aria-label={t("ski")} data-export-phase={exported.phase} data-verdict={exported.verdictWord}>
+      <h3>{t("sl")}</h3>
       <p role="status" data-export-status={exported.phase}>
-        {exported.statusLine}
+        {deskText(t, exported.statusLine)}
       </p>
-      {exported.detailLine ? <p className="muted">{exported.detailLine}</p> : null}
-      {exported.verdictLines.map((line) => (
+      {exported.detailLine ? <p className="muted">{deskText(t, exported.detailLine)}</p> : null}
+      {deskText(t, exported.verdictLines.map((line) => (
         <p key={line} data-verdict-reason="true">
-          {exported.verdictWord === "withheld" ? <WordMark word="Withheld." /> : null} {line}
+          {exported.verdictWord === "withheld" ? <WordMark word={t("s26v")} /> : null} {deskText(t, line)}
         </p>
-      ))}
-      {exported.exportRef ? <p>Export {exported.exportRef}.</p> : null}
+      )))}
+      {exported.exportRef ? <p>{t("ski")}{" "}{deskText(t, exported.exportRef)}.</p> : null}
       {exported.scopeLine ? (
         <p data-export-scope="synthetic">
-          <WordMark word="Synthetic." /> {exported.scopeLine} This file is not an accounting record.
-        </p>
+          <WordMark word={t("s1o8")} /> {deskText(t, exported.scopeLine)} {t("s231")}</p>
       ) : null}
-      {exported.cutLines.map((line) => (
+      {deskText(t, exported.cutLines.map((line) => (
         <p key={line} className="muted" data-export-cut="true">
-          {line}
+          {deskText(t, line)}
         </p>
-      ))}
-      {exported.rowsLine ? <p>{exported.rowsLine}</p> : null}
-      {exported.completeLine ? <p>{exported.completeLine}</p> : null}
-      {exported.digestLine ? <p className="muted">{exported.digestLine}</p> : null}
+      )))}
+      {exported.rowsLine ? <p>{deskText(t, exported.rowsLine)}</p> : null}
+      {exported.completeLine ? <p>{deskText(t, exported.completeLine)}</p> : null}
+      {exported.digestLine ? <p className="muted">{deskText(t, exported.digestLine)}</p> : null}
       {exported.rows.length > 0 ? (
-        <ScrollTable label="Export rows">
+        <ScrollTable label={t("skl")}>
           <table className="finance-export-rows">
-            <caption>Rows of the loaded export, copied</caption>
+            <caption>{t("s1hw")}</caption>
             <thead>
               <tr>
-                <th scope="col">Entry</th>
-                <th scope="col">Kind</th>
-                <th scope="col">Case</th>
-                <th scope="col">Payee</th>
-                <th scope="col">Category</th>
-                <th scope="col">Amount</th>
-                <th scope="col">Cut</th>
+                <th scope="col">{t("sij")}</th>
+                <th scope="col">{t("sps")}</th>
+                <th scope="col">{t("sbe")}</th>
+                <th scope="col">{t("s17e")}</th>
+                <th scope="col">{t("sbr")}</th>
+                <th scope="col">{t("s36")}</th>
+                <th scope="col">{t("sfe")}</th>
               </tr>
             </thead>
             <tbody>
-              {exported.rows.map((row) => (
+              {deskText(t, exported.rows.map((row) => (
                 <tr key={row.entryRef} data-export-row={row.entryRef} data-cut={row.cutRef}>
-                  <th scope="row">{row.entryRef}</th>
-                  <td>{row.kindWord}</td>
-                  <td>{row.caseRef}</td>
-                  <td>{row.payeeLine}</td>
-                  <td>{row.categoryWord}</td>
-                  <td data-amount="copied">{row.amountLine}</td>
-                  <td>{row.cutRef}</td>
+                  <th scope="row">{deskText(t, row.entryRef)}</th>
+                  <td>{deskText(t, row.kindWord)}</td>
+                  <td>{deskText(t, row.caseRef)}</td>
+                  <td>{deskText(t, row.payeeLine)}</td>
+                  <td>{deskText(t, row.categoryWord)}</td>
+                  <td data-amount="copied">{deskText(t, row.amountLine)}</td>
+                  <td>{deskText(t, row.cutRef)}</td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </ScrollTable>
@@ -707,41 +706,40 @@ export function ExportSection({ model }: { model: FinanceModel }) {
 }
 
 export function RequestsSection({ model }: { model: FinanceModel }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   const request = model.request;
   return (
-    <section id="finance-requests" className="discovery-section" aria-label="Requests">
-      <h3>Requests</h3>
+    <section id="finance-requests" className="discovery-section" aria-label={t("s1fv")}>
+      <h3>{t("s1fv")}</h3>
       <p className="muted">
-        A request is built from the last read and sent once. A control that is off is a request that never leaves, and its reason
-        is shown. The reviewer proposes; the approver approves. Both are records. Recorded is not applied.
-      </p>
+        {t("s70")}</p>
       {model.fenceLine ? (
         <p data-fence="true">
-          <WordMark word="Fenced." /> {model.fenceLine}
+          <WordMark word={t("sky")} /> {deskText(t, model.fenceLine)}
         </p>
       ) : null}
       {model.behindLine ? (
         <p data-behind="true">
-          <WordMark word="Behind." /> {model.behindLine}
+          <WordMark word={t("s9s")} /> {deskText(t, model.behindLine)}
         </p>
       ) : null}
       {request === null ? (
-        <p data-state="empty">No request sent in this session.</p>
+        <p data-state="empty">{t("sxs")}</p>
       ) : (
         <div className="discovery-detail" data-last-request={request.seq} data-phase={request.phase}>
           <h4>
-            Request {request.seq}: {request.kindWord}
+            {t("s1fq")}{" "}{deskText(t, request.seq)}: {deskText(t, request.kindWord)}
           </h4>
           <p data-phase-word={request.phase}>
-            {request.phaseWord}
-            {request.code ? ` (${request.code})` : ""}.
+            {deskText(t, request.phaseWord)}
+            {request.code ? (" " + t("sd2", { code: request.code })) : ""}.
           </p>
-          {request.detail ? <p className="muted">{request.detail}</p> : null}
-          {request.receiptLines.map((line) => (
+          {request.detail ? <p className="muted">{deskText(t, request.detail)}</p> : null}
+          {deskText(t, request.receiptLines.map((line) => (
             <p key={line} data-receipt-line="true">
-              {line}
+              {deskText(t, line)}
             </p>
-          ))}
+          )))}
         </div>
       )}
     </section>
@@ -749,15 +747,16 @@ export function RequestsSection({ model }: { model: FinanceModel }) {
 }
 
 export function FinanceSessionSection({ session }: { session: FinanceSessionModel }) {
+  const t = useT(deskCopy, copy0, copy1, copy2);
   return (
-    <section id="finance-session" className="discovery-section" aria-label="Session record">
-      <h3>Session record</h3>
-      <p>{session.contextLine}</p>
-      <p data-capabilities="true">{session.capabilityLine}</p>
-      <p data-counters="true">{session.countersLine}</p>
-      <p>{session.earlierUnknownLine}</p>
-      <p className="muted">{session.notComposedLine}</p>
-      <p className="muted">{session.holdLine}</p>
+    <section id="finance-session" className="discovery-section" aria-label={t("s1js")}>
+      <h3>{t("s1js")}</h3>
+      <p>{deskText(t, session.contextLine)}</p>
+      <p data-capabilities="true">{deskText(t, session.capabilityLine)}</p>
+      <p data-counters="true">{deskText(t, session.countersLine)}</p>
+      <p>{deskText(t, session.earlierUnknownLine)}</p>
+      <p className="muted">{deskText(t, session.notComposedLine)}</p>
+      <p className="muted">{deskText(t, session.holdLine)}</p>
     </section>
   );
 }

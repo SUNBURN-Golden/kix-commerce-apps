@@ -1,0 +1,28 @@
+export const messages = {
+  en: {
+    "sem": "Count demo marker",
+    "seo": "Counted:",
+    "sey": "Credit disbursement",
+    "sg7": "Demo markers",
+    "slm": "Fixture codes:",
+    "srt": "Markers are a count on this stub. They are not a balance and they are not F04 credit.",
+    "swr": "No partner demo code counted on this session.",
+    "s13u": "off",
+    "s17a": "Partner demo code",
+    "s1jn": "Session code",
+    "e.65": "Could not count the demo code.",
+  },
+  ko: {
+    "sem": "데모 표식 집계",
+    "seo": "집계:",
+    "sey": "크레딧 지급",
+    "sg7": "데모 표식",
+    "slm": "fixture 코드:",
+    "srt": "표식은 stub의 개수입니다. 잔고나 F04 크레딧이 아닙니다.",
+    "swr": "이 세션에서 집계한 파트너 데모 코드가 없습니다.",
+    "s13u": "꺼짐",
+    "s17a": "파트너 데모 코드",
+    "s1jn": "세션 코드",
+    "e.65": "데모 코드를 집계하지 못했습니다.",
+  },
+} as const;

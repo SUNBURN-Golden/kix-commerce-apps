@@ -8,7 +8,16 @@
  *  - amounts are the synthetic notice and "mock units" only.
  * Text that the adapter packages own (CREDIT_BOUNDARY.note, observation.detail, meta values) is not translated here.
  */
+
 const en = {
+  "connectivity.label": "Connectivity",
+  "connectivity.readOnly": "Read-only when disconnected",
+  "connectivity.writeReason": "Writes need connectivity and fresh reads. Nothing sent, queued or replayed.",
+  "connectivity.states": "UNKNOWN / NOT_BOUND / STALE · cached",
+  "connectivity.cached": "STALE · cached",
+
+  "amount.mockUnits": "mock units",
+  "safe.copyOriginal": "Copyable original",
   "demo.mark": "Synthetic demo data. Stub fixtures only: no real payment, no credit disbursement, no venue entry, no public service.",
   "onboarding.title": "First visit: this desk runs on synthetic stub data",
   "onboarding.body": "Nothing shown is a real sale, payment, right or entry. Choose where to start, or skip this guide.",
@@ -157,6 +166,14 @@ export type RouteMessageKey = Extract<MessageKey, `route.${string}`>;
 
 /** Korean for the same keys. A missing key is a type error; the test also diffs the key sets at run time. */
 const ko: Record<MessageKey, string> = {
+  "connectivity.label": "연결 상태",
+  "connectivity.readOnly": "연결 불가 시 읽기 전용",
+  "connectivity.writeReason": "연결 또는 새 읽기 없이는 쓰기 차단. 전송·큐·재실행 없음.",
+  "connectivity.states": "UNKNOWN / NOT_BOUND / STALE · 캐시",
+  "connectivity.cached": "STALE · 캐시",
+
+  "amount.mockUnits": "모의 단위",
+  "safe.copyOriginal": "복사 가능한 원문",
   "demo.mark": "합성 데모 데이터입니다. stub fixture만 사용하며 실제 결제·여신 지급·현장 입장·공개 서비스는 없습니다.",
   "onboarding.title": "첫 방문 안내: 이 데스크는 합성 stub 데이터로 동작합니다",
   "onboarding.body": "표시된 내용은 실제 판매·결제·권리·입장이 아닙니다. 시작할 작업실을 선택하거나 안내를 건너뛰세요.",
@@ -172,7 +189,7 @@ const ko: Record<MessageKey, string> = {
   "locale.en": "English",
   "locale.ko": "한국어",
   "locale.changed": "표시 언어를 한국어로 바꿨습니다.",
-  "locale.notice": "한국어 표시는 일부 화면에만 적용됩니다. 화면 본문은 아직 영어일 수 있습니다.",
+  "locale.notice": "표시 문구는 한국어로 제공됩니다. protocol 용어와 원문 데이터는 유지됩니다.",
 
   "shell.skip": "본문으로 건너뛰기",
   "shell.eyebrow.default": "커머스 데스크",

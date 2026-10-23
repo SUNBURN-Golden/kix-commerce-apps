@@ -1,3 +1,8 @@
+import { messages as deskCopy } from "../i18n/desk-catalogue";
+import { messages as copy0 } from "../i18n/messages/pages--CreditPanel";
+import { messages as copy1 } from "../i18n/messages/a11y--present";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { CreditCaseView } from "@kix/protocol-adapter";
 import { AmountNotice, StatusMark } from "../a11y/marks";
@@ -21,18 +26,18 @@ export const CREDIT_DESK_COMMANDS = [
 export type CreditDeskCommand = (typeof CREDIT_DESK_COMMANDS)[number];
 
 const CONTROLS: readonly { command: CreditDeskCommand; label: string; needs: "always" | "case" | "no-case" }[] = [
-  { command: "offer", label: "Offer mock phase", needs: "no-case" },
-  { command: "approve", label: "Approve mock phase", needs: "case" },
-  { command: "reject", label: "Reject mock phase", needs: "case" },
-  { command: "cancel", label: "Cancel mock phase", needs: "case" },
-  { command: "bind_settlement", label: "Bind mock settlement", needs: "case" },
-  { command: "draw", label: "Draw mock exposure", needs: "case" },
-  { command: "repay", label: "Note mock repayment", needs: "case" },
-  { command: "close", label: "Close mock case", needs: "case" },
-  { command: "default", label: "Mark mock default", needs: "case" },
-  { command: "reconcile", label: "Reconcile process-local", needs: "case" },
-  { command: "reject_real_funds", label: "Reject real-funds label", needs: "always" },
-  { command: "reject_undefined_product", label: "Reject undefined product", needs: "always" },
+  { command: "offer", label: copy0.en["e.7"], needs: "no-case" },
+  { command: "approve", label: copy0.en["e.8"], needs: "case" },
+  { command: "reject", label: copy0.en["e.9"], needs: "case" },
+  { command: "cancel", label: copy0.en["e.10"], needs: "case" },
+  { command: "bind_settlement", label: copy0.en["e.11"], needs: "case" },
+  { command: "draw", label: copy0.en["e.12"], needs: "case" },
+  { command: "repay", label: copy0.en["e.13"], needs: "case" },
+  { command: "close", label: copy0.en["e.14"], needs: "case" },
+  { command: "default", label: copy0.en["e.15"], needs: "case" },
+  { command: "reconcile", label: copy0.en["e.4"], needs: "case" },
+  { command: "reject_real_funds", label: copy0.en["e.16"], needs: "always" },
+  { command: "reject_undefined_product", label: copy0.en["e.17"], needs: "always" },
 ];
 
 export function CreditPanel({
@@ -48,140 +53,134 @@ export function CreditPanel({
   pending: boolean;
   onCommand: (command: CreditDeskCommand) => void;
 }) {
+  const t = useT(deskCopy, copy0, copy1);
   return (
-    <aside className="panel" aria-label="Mock credit case">
-      <p className="eyebrow">{view?.surface ?? "wave5.credit.F04.fsm"}</p>
-      <h3>Mock credit case</h3>
-      <p className="muted">{eventTitle}</p>
+    <aside className="panel" aria-label={t("desk.credit.title")}>
+      <p className="eyebrow">{deskText(t, view?.surface) ?? t("s26e")}</p>
+      <h3>{t("desk.credit.title")}</h3>
+      <p className="muted">{deskText(t, eventTitle)}</p>
       <p>
-        Simulated exposure on the adapter stub. Not live credit. F04 and E06 stay 설계중. Protocol truth remains in
-        kix-protocol. Commands on this panel call the adapter stub only.
-      </p>
+        {t("s1kj")}</p>
       <AmountNotice />
       {pending ? (
         <p className="muted" role="status">
-          <StatusMark kind="loading" /> One attempt. No retry.
-        </p>
+          <StatusMark kind="loading" /> {t("desk.booking.oneAttempt")}</p>
       ) : null}
       <p className="muted">
-        Available credit, a pending draw, outstanding exposure, and repayment are mock phase amounts. Economic finality
-        claimed stays false. Funds executed stays false. A bound draw waits for a mock COMMITTED settlement view. A
-        failed mock settlement does not move funds. Reconcile matched is process-local. This case does not change a
-        booking or a resale holder.
-      </p>
+        {t("s9a")}</p>
       {error ? (
         <p className="alert" role="alert">
-          <StatusMark kind="blocked" /> {error}
+          <StatusMark kind="blocked" /> {deskText(t, error)}
         </p>
       ) : null}
       <dl className="facts">
         <div>
-          <dt>Mock phase</dt>
-          <dd className="phase-name">{view?.phase ?? "Not opened"}</dd>
+          <dt>{t("st0")}</dt>
+          <dd className="phase-name">{view?.phase ?? t("s121")}</dd>
         </div>
         <div>
-          <dt>Terminal</dt>
-          <dd>{view?.terminal ? "Yes" : "No"}</dd>
+          <dt>{t("s1pk")}</dt>
+          <dd>{view?.terminal ? t("s276") : t("str")}</dd>
         </div>
         <div>
-          <dt>Last error</dt>
-          <dd>{view?.lastRejectCode ?? "None"}</dd>
+          <dt>{t("sqa")}</dt>
+          <dd>{deskText(t, view?.lastRejectCode) ?? t("sw8")}</dd>
         </div>
         <div>
-          <dt>Available credit</dt>
-          <dd>{units(view?.availableCredit)}</dd>
+          <dt>{t("s99")}</dt>
+          <dd>{deskText(t, units(view?.availableCredit))}</dd>
         </div>
         <div>
-          <dt>Pending draw</dt>
-          <dd>{units(view?.pendingDraw)}</dd>
+          <dt>{t("s17q")}</dt>
+          <dd>{deskText(t, units(view?.pendingDraw))}</dd>
         </div>
         <div>
-          <dt>Outstanding exposure</dt>
-          <dd>{units(view?.outstandingExposure)}</dd>
+          <dt>{t("s16m")}</dt>
+          <dd>{deskText(t, units(view?.outstandingExposure))}</dd>
         </div>
         <div>
-          <dt>Repaid exposure</dt>
-          <dd>{units(view?.repaidExposure)}</dd>
+          <dt>{t("s1fm")}</dt>
+          <dd>{deskText(t, units(view?.repaidExposure))}</dd>
         </div>
         <div>
-          <dt>Open face</dt>
-          <dd>{units(view?.openFace)}</dd>
+          <dt>{t("s153")}</dt>
+          <dd>{deskText(t, units(view?.openFace))}</dd>
         </div>
         <div>
-          <dt>Reserved open</dt>
-          <dd>{units(view?.reservedOpen)}</dd>
+          <dt>{t("s1ga")}</dt>
+          <dd>{deskText(t, units(view?.reservedOpen))}</dd>
         </div>
         <div>
-          <dt>Note status</dt>
-          <dd>{view?.noteStatus ?? "None"}</dd>
+          <dt>{t("s10x")}</dt>
+          <dd>{deskText(t, view?.noteStatus) ?? t("sw8")}</dd>
         </div>
         <div>
-          <dt>Settlement gate</dt>
-          <dd>{view?.settlementGate ?? "None"}</dd>
+          <dt>{t("s1k3")}</dt>
+          <dd>{deskText(t, view?.settlementGate) ?? t("sw8")}</dd>
         </div>
         <div>
-          <dt>Settlement failure</dt>
-          <dd>{view?.settlementFailure ? "Yes" : "No"}</dd>
+          <dt>{t("s1k2")}</dt>
+          <dd>{view?.settlementFailure ? t("s276") : t("str")}</dd>
         </div>
         <div>
-          <dt>Mock settlement commit observed</dt>
-          <dd>{view?.mockSettlementCommitObserved ? "Observed" : "Not observed"}</dd>
+          <dt>{t("st7")}</dt>
+          <dd>{view?.mockSettlementCommitObserved ? t("s13j") : t("s11z")}</dd>
         </div>
         <div>
-          <dt>Economic finality claimed</dt>
+          <dt>{t("si7")}</dt>
           <dd>false</dd>
         </div>
         <div>
-          <dt>Funds executed</dt>
+          <dt>{t("sm9")}</dt>
           <dd>false</dd>
         </div>
         <div>
-          <dt>Bank debit observed</dt>
+          <dt>{t("s9o")}</dt>
           <dd>false</dd>
         </div>
         <div>
-          <dt>Repayment observed</dt>
+          <dt>{t("s1fn")}</dt>
           <dd>false</dd>
         </div>
         <div>
-          <dt>Interest defined</dt>
+          <dt>{t("soi")}</dt>
           <dd>false</dd>
         </div>
         <div>
-          <dt>Underwriting executed</dt>
+          <dt>{t("s256")}</dt>
           <dd>false</dd>
         </div>
         <div>
-          <dt>KYC executed</dt>
+          <dt>{t("spw")}</dt>
           <dd>false</dd>
         </div>
         <div>
-          <dt>Ownership mutated</dt>
+          <dt>{t("s16o")}</dt>
           <dd>false</dd>
         </div>
         <div>
-          <dt>External credit</dt>
+          <dt>{t("sko")}</dt>
           <dd>UNSUPPORTED</dd>
         </div>
         <div>
-          <dt>Reconcile matched</dt>
-          <dd>{view?.reconcileMatched ? "Matched (process-local)" : "Not run"}</dd>
+          <dt>{t("s1dn")}</dt>
+          <dd>{view?.reconcileMatched ? t("ss7") : t("s12i")}</dd>
         </div>
         <div>
-          <dt>Idempotency key</dt>
-          <dd>{view?.idempotencyKey ?? "None"}</dd>
+          <dt>{t("snm")}</dt>
+          <dd>{deskText(t, view?.idempotencyKey) ?? t("sw8")}</dd>
         </div>
         <div>
-          <dt>Provenance</dt>
-          <dd>MOCK_CREDIT_F04_ONLY</dd>
+          <dt>{t("s1a1")}</dt>
+          <dd>{t("ssq")}</dd>
         </div>
         <div>
-          <dt>Mode</dt>
-          <dd>mock</dd>
+          <dt>{t("st8")}</dt>
+          <dd>{t("ssp")}</dd>
         </div>
       </dl>
       <div className="row-actions">
-        {CONTROLS.map((control) => (
+        {deskText(t, CONTROLS.map((control) => (
           <ConnectivityWriteButton
             key={control.command}
             type="button"
@@ -189,9 +188,9 @@ export function CreditPanel({
             disabled={pending || disabled(control.needs, view !== null)}
             onClick={() => onCommand(control.command)}
           >
-            {control.label}
+            {deskText(t, control.label)}
           </ConnectivityWriteButton>
-        ))}
+        )))}
       </div>
     </aside>
   );
@@ -199,7 +198,7 @@ export function CreditPanel({
 
 function units(value: number | undefined): string {
   if (value === undefined) {
-    return "None";
+    return copy0.en["sw8"];
   }
   return presentIntegerUnits(value, "mock units");
 }

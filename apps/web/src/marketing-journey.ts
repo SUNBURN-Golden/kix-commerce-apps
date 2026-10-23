@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/marketing-journey";
+import { sourceMessage } from "./i18n/source-message";
 import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The marketing benefit journey screen on top of the adapter's synthetic marketing source.
@@ -50,80 +52,80 @@ import {
 } from "@kix/protocol-adapter";
 import { protocol } from "./connectivity/desk-protocol";
 
-export const MARKETING_JOURNEY_TITLE = "Marketing benefit journey (synthetic)";
+export const MARKETING_JOURNEY_TITLE = sourceCopy.en["srv"];
 
 export const MARKETING_JOURNEY_ROUTE = "/marketing/journey";
 
 export const CONSENT_PAGE_ROUTE = "/marketing/m05";
 
 export const MARKETING_SOURCE_LINE =
-  "Benefits, eligibility, usage, budget, attribution, orders, and applications come from a synthetic marketing source on this page load. They are not a producer read and not a catalogue receipt.";
+  sourceCopy.en["s9x"];
 
 export const MARKETING_BOUNDARY =
-  "Discover, apply, rejected, and reclaim are four separate lines. A benefit notice confirms no purchase and pays no reward. An application confirms no purchase, pays no reward, and applies no discount. None of the four completes the next.";
+  sourceCopy.en["sgo"];
 
-export const MARKETING_NON_CLAIM_NOTE = `Every read and every answer states these seven as false, and a payload that omits one or states it otherwise is refused whole: ${MARKETING_NON_CLAIM_FIELDS.join(", ")}.`;
+export const MARKETING_NON_CLAIM_NOTE = sourceMessage(sourceCopy.en["p.t80"], { v1: MARKETING_NON_CLAIM_FIELDS.join(", ") });
 
 export const MARKETING_CONSENT_NOTE =
-  "Consent is read here as the source reports it. This page does not set consent and does not authorize marketing. Both are posted only on the consent page. After consent is withdrawn, an earlier authorization is not reused: a benefit that needs consent waits for consent to be granted again and for a new authorization at the current consent version.";
+  sourceCopy.en["sdw"];
 
 export const MARKETING_CRM_NOTE =
   "The full CRM product is the independent M05 scope, and its label stays 미착수. This journey consumes the consent state and nothing else of it. It selects no audience, sends no message (the channel is none), stores no customer profile, and exports no data-use report. A screen with no contract does not complete a CRM product.";
 
 export const MARKETING_ACTOR_NOTE =
-  "The actor string and the subject are context labels. They are not an authentication result, and the source decides scope with its own synthetic grant.";
+  sourceCopy.en["s1pv"];
 
 export const MARKETING_FENCE_NOTE =
-  "One write is sent at a time per benefit, and each is sent once. This page does not send a write again, does not mint an intent for you, and does not undo one with another.";
+  sourceCopy.en["s14l"];
 
 export const MARKETING_READ_NOTE =
-  "One read follows each settled write so the next step can use fresh evidence. Nothing polls. A read is evidence and never resolves an unknown write. A Simulate control stands in for something a real producer would do, and this page does not see its effect until it reads.";
+  sourceCopy.en["s14d"];
 
 export const MARKETING_SESSION_NOTE =
-  "Intents live in this page load only. A reload or a new synthetic session clears them and resolves nothing at a producer. After a reload an unknown write is not recovered here.";
+  sourceCopy.en["sog"];
 
-export const MARKETING_POLICY_NOTE = `Whether a reclaim restores a usage count or a coupon budget is a product policy that is not published. The source states ${MARKETING_UNDETERMINED}, and this page restores and recomputes nothing.`;
+export const MARKETING_POLICY_NOTE = sourceMessage(sourceCopy.en["p.t257"], { v1: MARKETING_UNDETERMINED });
 
-export const MARKETING_HOLD_NOTE = `Holding a seat is not available here. ${MARKETING_HOLD_NOT_BOUND.reason}`;
+export const MARKETING_HOLD_NOTE = sourceMessage(sourceCopy.en["p.t8"], { v1: MARKETING_HOLD_NOT_BOUND.reason });
 
 export const MARKETING_NOT_BOUND_BANNER =
-  "NOT BOUND. There is no source on integration-http, so no benefit, consent, order, or application is read or written here, and nothing falls back to the synthetic source.";
+  sourceCopy.en["s10f"];
 
 export const MARKETING_SCENARIO_OFF_NOTE =
-  "Scenarios and Simulate events belong to the synthetic source, which is not selected on integration-http. They are off here, and nothing falls back to the synthetic source.";
+  sourceCopy.en["s1id"];
 
-export const MARKETING_ALT_SUBJECT_NOTE = `Subject ${MARKETING_FOREIGN_SUBJECT} is a subject this desk holds no grant for. Switching to it shows the source's refusal and no row.`;
+export const MARKETING_ALT_SUBJECT_NOTE = sourceMessage(sourceCopy.en["p.t258"], { v1: MARKETING_FOREIGN_SUBJECT });
 
 export const SCENARIO_NOTES: Readonly<Record<MarketingScenario, string>> = {
-  clean: "Every step is answered. Consent is granted with a valid authorization, and the membership qualifies for four benefits, one of them with its coupon budget used up.",
-  empty: "The source lists no benefit for this subject.",
-  stale: "The source serves a watermark older than the floor this page holds.",
-  "consent-unset": "No consent is recorded. Benefits that need consent wait for it.",
-  "consent-withdrawn": "Consent was withdrawn before the first read. Benefits that need consent are blocked, and the earlier authorization is stale.",
-  "authorization-stale": "Consent was granted again after a withdrawal, and the authorization is still the older one. It is not reused.",
-  "usage-limit": "One coupon is already used up to the source's own limit by another channel.",
-  "attribution-taken": "The referral is already attributed to another referrer.",
-  "duplicate-elsewhere": "Another channel applies the same benefit to the same order first, so your apply is rejected as a duplicate.",
-  "budget-race": "The coupon budget is used up by someone else between your read and your write.",
-  "apply-lost": "An apply is recorded and its answer is lost.",
-  "reclaim-lost": "A reclaim is recorded and its answer is lost.",
-  "held-response": "Answers are held until you deliver them. Use it to switch the session while a write is in flight.",
-  "receipt-claims-reward": "The source records an apply and then answers that a reward was paid. The answer is not trusted.",
-  "snapshot-claims-crm": "The source answers a read that claims the CRM product is complete. The whole payload is refused.",
-  "scope-leak": "The source sends a row that belongs to another subject. The whole payload is refused.",
-  denied: "The synthetic grant is withdrawn at the source.",
+  clean: sourceCopy.en["sjq"],
+  empty: sourceCopy.en["s1zq"],
+  stale: sourceCopy.en["s21a"],
+  "consent-unset": sourceCopy.en["suw"],
+  "consent-withdrawn": sourceCopy.en["se1"],
+  "authorization-stale": sourceCopy.en["se0"],
+  "usage-limit": sourceCopy.en["s149"],
+  "attribution-taken": sourceCopy.en["s1wi"],
+  "duplicate-elsewhere": sourceCopy.en["s4j"],
+  "budget-race": sourceCopy.en["s1r8"],
+  "apply-lost": sourceCopy.en["s3e"],
+  "reclaim-lost": sourceCopy.en["s6h"],
+  "held-response": sourceCopy.en["s4o"],
+  "receipt-claims-reward": sourceCopy.en["s209"],
+  "snapshot-claims-crm": sourceCopy.en["s1ya"],
+  "scope-leak": sourceCopy.en["s217"],
+  denied: sourceCopy.en["s21t"],
 };
 
 export const CONTROL_LABELS: Readonly<Record<Exclude<MarketingSyntheticControl, "cancel-order" | "refund-order">, string>> = {
-  "withdraw-consent": "Simulate: the fan withdraws consent on the consent page",
-  "grant-consent": "Simulate: the fan grants consent again on the consent page",
-  "authorize-marketing": "Simulate: a new authorization is recorded at the current consent version",
-  "lapse-eligibility": "Simulate: the membership tier lapses",
+  "withdraw-consent": sourceCopy.en["s1ku"],
+  "grant-consent": sourceCopy.en["s1kt"],
+  "authorize-marketing": sourceCopy.en["s1ke"],
+  "lapse-eligibility": sourceCopy.en["s1kv"],
 };
 
-const STEP_WORDS = { apply: "Apply", reclaim: "Reclaim" } as const;
+const STEP_WORDS = { apply: sourceCopy.en["s5j"], reclaim: sourceCopy.en["s1dj"] } as const;
 
-const KIND_WORDS = { presale: "Presale (M02)", coupon: "Coupon (M03)", referral: "Referral (M04)" } as const;
+const KIND_WORDS = { presale: sourceCopy.en["s18t"], coupon: sourceCopy.en["sep"], referral: sourceCopy.en["s1ee"] } as const;
 
 export type MarketingScreenState =
   | "loading"
@@ -284,11 +286,11 @@ export interface MarketingJourneyModel {
 export function causeLine(cause: MarketingRefreshCause): string {
   switch (cause) {
     case "own-write":
-      return "Your own write landed after the last read.";
+      return sourceCopy.en["s279"];
     case "rejection":
-      return "The source rejected the last write, so the read it was built from is behind.";
+      return sourceCopy.en["s20c"];
     case "context-switch":
-      return "The session context changed.";
+      return sourceCopy.en["s1xw"];
     default: {
       const exhaustive: never = cause;
       return exhaustive;
@@ -297,25 +299,25 @@ export function causeLine(cause: MarketingRefreshCause): string {
 }
 
 export const VERDICT_LINES: Readonly<Record<MarketingVerdict, string>> = {
-  eligible: "The source says this subject is eligible for this benefit.",
-  "not-eligible": "The source says the membership does not qualify for this benefit.",
-  "consent-required": "The source has no consent for this subject. This benefit needs marketing consent.",
-  "consent-withdrawn": "Consent was withdrawn. The earlier authorization is not reused, and this benefit waits for consent and a new authorization.",
-  "authorization-stale": "The authorization was issued at an older consent version. It is not reused, and a new authorization is needed.",
-  "usage-limit-reached": "The source says this benefit reached the usage it allows.",
-  "budget-exhausted": "The source says the coupon budget is exhausted.",
-  "attribution-taken": "The source says this subject is already attributed to another referrer.",
+  eligible: sourceCopy.en["s20n"],
+  "not-eligible": sourceCopy.en["s20l"],
+  "consent-required": sourceCopy.en["s1ze"],
+  "consent-withdrawn": sourceCopy.en["se2"],
+  "authorization-stale": sourceCopy.en["s1qe"],
+  "usage-limit-reached": sourceCopy.en["s20m"],
+  "budget-exhausted": sourceCopy.en["s20k"],
+  "attribution-taken": sourceCopy.en["s20o"],
 };
 
 /** The one thing the page offers for a rejection. There is no other. */
 export function returnActionLine(action: MarketingReturnAction): string {
   switch (action) {
     case "read-again":
-      return "Read again to see what the source holds now.";
+      return sourceCopy.en["s1b5"];
     case "manage-consent":
-      return "Consent and authorization are managed on the consent page, not here.";
+      return sourceCopy.en["sdp"];
     case "none":
-      return "Nothing on this page corrects it. The source decides.";
+      return sourceCopy.en["s11b"];
     default: {
       const exhaustive: never = action;
       return exhaustive;
@@ -327,27 +329,27 @@ export function returnActionLine(action: MarketingReturnAction): string {
 export function fenceLine(fence: MarketingFence): string {
   switch (fence.reason) {
     case "in-flight":
-      return `Another write on this benefit is in flight (${fence.intentRef}). Wait for its answer.`;
+      return sourceMessage(sourceCopy.en["p.t259"], { v1: fence.intentRef });
     case "unknown-outcome": {
       const earlier = fence.earlierContext ? " It was sent in an earlier session context." : "";
-      return `An earlier write on this benefit has an unknown result (${fence.intentRef}).${earlier} Writes on this benefit stay blocked. A read does not resolve it.`;
+      return sourceMessage(sourceCopy.en["p.t260"], { v1: fence.intentRef, v2: earlier });
     }
     case "no-snapshot":
-      return "Read the benefits first.";
+      return sourceCopy.en["s1cc"];
     case "snapshot-stale":
-      return `Read again before the next write. ${causeLine(fence.cause)}`;
+      return sourceMessage(sourceCopy.en["p.t86"], { v1: causeLine(fence.cause) });
     case "duplicate-intent":
-      return `Intent ${fence.intentRef} was already used. This page does not send the same intent twice.`;
+      return sourceMessage(sourceCopy.en["p.t87"], { v1: fence.intentRef });
     case "not-listed":
-      return `${fence.ref} is not in the last read.`;
+      return sourceMessage(sourceCopy.en["p.t91"], { v1: fence.ref });
     case "verdict-blocked":
-      return `The last read says ${fence.verdict}. ${VERDICT_LINES[fence.verdict]}`;
+      return sourceMessage(sourceCopy.en["p.t261"], { v1: fence.verdict, v2: VERDICT_LINES[fence.verdict] });
     case "order-closed":
-      return `Order ${fence.orderRef} is ${fence.state} at the order source, so no benefit applies to it.`;
+      return sourceMessage(sourceCopy.en["p.t262"], { v1: fence.orderRef, v2: fence.state });
     case "already-applied":
-      return `This benefit is already applied to this order (${fence.applicationRef}).`;
+      return sourceMessage(sourceCopy.en["p.t263"], { v1: fence.applicationRef });
     case "not-reclaimable":
-      return `Application ${fence.applicationRef} is already reclaimed.`;
+      return sourceMessage(sourceCopy.en["p.t264"], { v1: fence.applicationRef });
     case "not-bound":
       return MARKETING_NOT_BOUND_REASON;
     default: {
@@ -362,20 +364,20 @@ export function stepResultLine(step: MarketingStepInput["step"], result: Marketi
   switch (result.kind) {
     case "CONFIRMED":
       return step === "apply"
-        ? `Apply recorded by the synthetic source${result.intent.receipt ? ` as ${result.intent.receipt.applicationRef}` : ""}. It confirms no purchase, pays no reward, and applies no discount. This is not a protocol receipt.`
-        : `Reclaim recorded by the synthetic source. Whether a usage count or a budget is restored is ${MARKETING_UNDETERMINED}, and this page restores nothing. This is not a protocol receipt.`;
+        ? sourceMessage(sourceCopy.en["p.t265"], { v1: result.intent.receipt ? ` as ${result.intent.receipt.applicationRef}` : "" })
+        : sourceMessage(sourceCopy.en["p.t266"], { v1: MARKETING_UNDETERMINED });
     case "REJECTED": {
       const action = returnActionLine(MARKETING_RETURN_ACTIONS[result.intent.code as MarketingRejectCode] ?? "read-again");
-      return `${word} rejected (${result.intent.code ?? "no code"}). ${result.intent.message ?? ""} The source applied nothing for this write. ${action}`.replace(/\s+/g, " ").trim();
+      return sourceMessage(sourceCopy.en["p.t100"], { v1: word, v2: result.intent.code ?? "no code", v3: result.intent.message ?? "", v4: action }).replace(/\s+/g, " ").trim();
     }
     case "UNKNOWN":
-      return `${word} result unknown (${result.intent.code ?? "no code"}). It may or may not have applied. Writes on this benefit are blocked, and a read does not resolve it.`;
+      return sourceMessage(sourceCopy.en["p.t267"], { v1: word, v2: result.intent.code ?? "no code" });
     case "QUARANTINED":
-      return `The result of the ${word.toLowerCase()} arrived after the session context changed. It was quarantined and applied nowhere. The write stays unknown.`;
+      return sourceMessage(sourceCopy.en["p.t102"], { v1: word.toLowerCase() });
     case "FENCED":
-      return `${word} not sent. ${fenceLine(result.fence)}`;
+      return sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: fenceLine(result.fence) });
     case "NOT_SENT":
-      return `${word} not sent. ${result.detail}`;
+      return sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: result.detail });
     default: {
       const exhaustive: never = result;
       return exhaustive;
@@ -432,41 +434,41 @@ function statusFor(
   const coded = code ? ` (${code})` : "";
   switch (state) {
     case "loading":
-      return { statusLine: "Reading the synthetic marketing source. Nothing is applied yet.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s1bh"], detailLine: "", actionLabel: null };
     case "unread":
       return {
-        statusLine: "The session context changed, so there is no read in this context.",
-        detailLine: "Read again to see the benefits from this context. An earlier unknown write on a benefit still blocks that benefit.",
-        actionLabel: "Read again",
+        statusLine: sourceCopy.en["s1xx"],
+        detailLine: sourceCopy.en["s1ay"],
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "ready":
-      return { statusLine: "Benefits read.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s9z"], detailLine: "", actionLabel: null };
     case "empty":
-      return { statusLine: "No benefit is listed for this subject in this read.", detailLine: "Nothing can be applied or reclaimed.", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["sua"], detailLine: sourceCopy.en["s111"], actionLabel: sourceCopy.en["s1ax"] };
     case "stale":
-      return { statusLine: "Stale benefits read.", detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["s1lj"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "denied":
       return {
-        statusLine: `The source refused this actor and subject${coded}. No benefit, no application, and no request is accepted.`,
+        statusLine: sourceMessage(sourceCopy.en["p.t268"], { v1: coded }),
         detailLine: detail ?? "",
-        actionLabel: "Read again",
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "refused":
       return {
-        statusLine: `The payload was refused${coded}. No row is shown.`,
+        statusLine: sourceMessage(sourceCopy.en["p.t104"], { v1: coded }),
         detailLine: detail ?? "",
-        actionLabel: "Read again",
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "not-bound":
       return { statusLine: MARKETING_NOT_BOUND_REASON, detailLine: "", actionLabel: null };
     case "tuple-changed":
       return {
-        statusLine: "The pin tuple changed. Nothing was read and nothing was applied.",
+        statusLine: sourceCopy.en["s1v8"],
         detailLine: detail ?? "",
-        actionLabel: "Start a new synthetic session",
+        actionLabel: sourceCopy.en["s1m2"],
       };
     case "unavailable":
-      return { statusLine: "The source did not answer. This is not an empty benefit list.", detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["s1z4"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     default: {
       const exhaustive: never = state;
       return exhaustive;
@@ -482,31 +484,31 @@ function describeBenefit(benefit: MarketingBenefit): Omit<BenefitModel, "orders"
     kind: benefit.kind,
     kindWord: KIND_WORDS[benefit.kind],
     title: benefit.title,
-    rankLine: `Source priority rank ${benefit.priorityRank}. The source's own order. This page decides nothing from it.`,
+    rankLine: sourceMessage(sourceCopy.en["p.t269"], { v1: benefit.priorityRank }),
     verdict: benefit.verdict,
     verdictLine: VERDICT_LINES[benefit.verdict],
-    consentLine: benefit.requiresConsent ? "Needs marketing consent and a valid authorization." : "Needs no marketing consent.",
-    usageLine: `Usage recorded ${benefit.usage.recorded}. Usage allowed ${benefit.usage.allowed === null ? "no limit stated" : benefit.usage.allowed}. The source's own figures, never added or subtracted here.`,
+    consentLine: benefit.requiresConsent ? sourceCopy.en["stk"] : sourceCopy.en["stl"],
+    usageLine: sourceMessage(sourceCopy.en["p.t270"], { v1: benefit.usage.recorded, v2: benefit.usage.allowed === null ? "no limit stated" : benefit.usage.allowed }),
     budgetLine:
       budget === null
         ? null
-        : `Budget in ${budget.unit}s: committed ${budget.committed}, limit ${budget.limit}, ${budget.state}. It carries no amount. The source's own figures, never added or subtracted here.`,
+        : sourceMessage(sourceCopy.en["p.t271"], { v1: budget.unit, v2: budget.committed, v3: budget.limit, v4: budget.state }),
     budgetState: budget === null ? null : budget.state,
     attributionLine:
       attribution === null
         ? null
-        : `Referrer ${attribution.referrerRef}: ${attribution.state}. An attribution records who referred. It pays no reward.`,
+        : sourceMessage(sourceCopy.en["p.t272"], { v1: attribution.referrerRef, v2: attribution.state }),
   };
 }
 
 function orderStateLine(order: MarketingOrder): string {
   switch (order.state) {
     case "open":
-      return "Open at the order source. A benefit can be applied to it.";
+      return sourceCopy.en["s14z"];
     case "cancelled":
-      return "Cancelled at the order source. This journey did not cancel it, and no benefit can be applied to it.";
+      return sourceCopy.en["sb2"];
     case "refund-observed":
-      return "A refund was observed at the order source. This journey issued none, and no benefit can be applied to it.";
+      return sourceCopy.en["s6p"];
     default: {
       const exhaustive: never = order.state;
       return exhaustive;
@@ -515,14 +517,14 @@ function orderStateLine(order: MarketingOrder): string {
 }
 
 function describeApplication(application: MarketingApplicationProjection, reclaim: ControlModel): ApplicationModel {
-  let dueLine = "Not due for reclaim.";
+  let dueLine: string = sourceCopy.en["s10p"];
   if (application.state === "reclaim-due") {
     dueLine =
       application.dueReason === "refund-observed"
-        ? "Due for reclaim: a refund was observed for the order. Nothing was reclaimed or refunded by that."
-        : "Due for reclaim: the order was cancelled. Nothing was reclaimed by that.";
+        ? sourceCopy.en["shk"]
+        : sourceCopy.en["shl"];
   } else if (application.state === "reclaimed") {
-    dueLine = "Reclaimed at the source.";
+    dueLine = sourceCopy.en["s1dm"];
   }
   return {
     applicationRef: application.applicationRef,
@@ -531,22 +533,22 @@ function describeApplication(application: MarketingApplicationProjection, reclai
     state: application.state,
     stateLine:
       application.state === "applied"
-        ? "Applied. It confirms no purchase, pays no reward, and applies no discount."
+        ? sourceCopy.en["s5i"]
         : application.state === "reclaim-due"
-          ? "Applied and due for reclaim. It confirmed no purchase and applied no discount."
-          : "Reclaimed.",
+          ? sourceCopy.en["s5c"]
+          : sourceCopy.en["s1dl"],
     dueLine,
-    channelLine: application.channel === "this-desk" ? "Applied from this desk." : "Applied by another channel.",
+    channelLine: application.channel === "this-desk" ? sourceCopy.en["s5h"] : sourceCopy.en["s5f"],
     linkLine: application.linked
-      ? "Named by a confirmed apply of this page."
-      : "Observed only. It is not named by a confirmed apply of this page, and this page does not claim it.",
+      ? sourceCopy.en["stf"]
+      : sourceCopy.en["s13q"],
     consentLine:
       application.consentVersion === null
-        ? "Relied on no consent."
+        ? sourceCopy.en["s1fa"]
         : application.consentWithdrawnSince
-          ? `Relied on consent version ${application.consentVersion}, and consent was withdrawn afterwards. Whether it must be reclaimed is ${MARKETING_UNDETERMINED}. This page does not reclaim it, and only a new apply is blocked.`
-          : `Relied on consent version ${application.consentVersion}.`,
-    restorationLine: `Usage and budget restoration on reclaim: ${application.usageRestoration}.`,
+          ? sourceMessage(sourceCopy.en["p.t273"], { v1: application.consentVersion, v2: MARKETING_UNDETERMINED })
+          : sourceMessage(sourceCopy.en["p.t274"], { v1: application.consentVersion }),
+    restorationLine: sourceMessage(sourceCopy.en["p.t275"], { v1: application.usageRestoration }),
     consentWithdrawnSince: application.consentWithdrawnSince,
     reclaim,
   };
@@ -567,10 +569,10 @@ export function buildMarketingJourneyModel(input: {
   const projection = projectMarketing(state);
   const freshnessWord =
     state.freshness === "CURRENT"
-      ? "The last read is current."
+      ? sourceCopy.en["s1tn"]
       : state.freshness === "STALE"
-        ? "The last read is behind."
-        : "There is no usable read.";
+        ? sourceCopy.en["s1ti"]
+        : sourceCopy.en["s1wv"];
 
   const benefits: BenefitModel[] = projection.benefits.map((item) => ({
     ...describeBenefit(item.benefit),
@@ -592,8 +594,8 @@ export function buildMarketingJourneyModel(input: {
     label: order.label,
     state: order.state,
     stateLine: orderStateLine(order),
-    cancel: simulated && order.state === "open" ? { enabled: true, reason: null } : { enabled: false, reason: `Order ${order.orderRef} is ${order.state}.` },
-    refund: simulated && order.state !== "refund-observed" ? { enabled: true, reason: null } : { enabled: false, reason: `Order ${order.orderRef} is ${order.state}.` },
+    cancel: simulated && order.state === "open" ? { enabled: true, reason: null } : { enabled: false, reason: sourceMessage(sourceCopy.en["p.t538"], { v1: order.orderRef, v2: order.state }) },
+    refund: simulated && order.state !== "refund-observed" ? { enabled: true, reason: null } : { enabled: false, reason: sourceMessage(sourceCopy.en["p.t538"], { v1: order.orderRef, v2: order.state }) },
   }));
 
   const applications = projection.applications.map((application) =>
@@ -603,7 +605,7 @@ export function buildMarketingJourneyModel(input: {
   const rejections: RejectionModel[] = projection.rejections.map((row) => ({
     intentRef: row.intentRef,
     stepWord: STEP_WORDS[row.step],
-    target: row.orderRef ? `${row.benefitRef} on ${row.orderRef}` : row.benefitRef,
+    target: row.orderRef ? sourceMessage(sourceCopy.en["p.t539"], { v1: row.benefitRef, v2: row.orderRef }) : row.benefitRef,
     code: row.code,
     returnAction: row.returnAction,
     returnLine: returnActionLine(row.returnAction),
@@ -618,18 +620,18 @@ export function buildMarketingJourneyModel(input: {
       : {
           stateWord: consentView.state,
           state: consentView.state,
-          versionLine: `Consent version ${consentView.version}, as the source reports it. Copied, never raised here.`,
+          versionLine: sourceMessage(sourceCopy.en["p.t276"], { v1: consentView.version }),
           authorizationLine:
             consentView.authorization.state === "valid"
-              ? `Authorization is valid at consent version ${String(consentView.authorization.atVersion)}.`
+              ? sourceMessage(sourceCopy.en["p.t277"], { v1: String(consentView.authorization.atVersion) })
               : consentView.authorization.state === "stale"
-                ? `Authorization is stale: it was issued at consent version ${String(consentView.authorization.atVersion)}, which is not the current version. It is not reused.`
-                : "No authorization exists.",
+                ? sourceMessage(sourceCopy.en["p.t278"], { v1: String(consentView.authorization.atVersion) })
+                : sourceCopy.en["su8"],
           authorization: consentView.authorization.state,
-          purposeLine: `Purpose ${consentView.purpose}. Channel ${consentView.channel}: nothing is sent.`,
+          purposeLine: sourceMessage(sourceCopy.en["p.t279"], { v1: consentView.purpose, v2: consentView.channel }),
           membershipLine: membership
-            ? `Membership tier ${membership.tier} at version ${membership.version}. The eligibility basis, copied from the source and never raised here.`
-            : "No membership read.",
+            ? sourceMessage(sourceCopy.en["p.t280"], { v1: membership.tier, v2: membership.version })
+            : sourceCopy.en["sw5"],
         };
 
   const lanes: LaneModel[] = MARKETING_LANES.map((lane): LaneModel => {
@@ -641,36 +643,36 @@ export function buildMarketingJourneyModel(input: {
           count: screen === "ready" ? benefits.length : null,
           line:
             screen === "ready"
-              ? `The source lists ${benefits.length} benefits and ${orders.length} orders. A listed benefit is not an applied benefit.`
+              ? sourceMessage(sourceCopy.en["p.t281"], { v1: benefits.length, v2: orders.length })
               : screen === "empty"
-                ? "The source lists no benefit."
-                : "No benefit is shown. See the status.",
+                ? sourceCopy.en["s1zp"]
+                : sourceCopy.en["suc"],
         };
       case "apply": {
         const confirmed = state.intents.filter((intent) => intent.step === "apply" && intent.outcome === "CONFIRMED").length;
         const unknown = state.intents.filter((intent) => intent.step === "apply" && (intent.outcome === "UNKNOWN" || intent.outcome === "IN_FLIGHT")).length;
         return {
           lane,
-          label: "Apply",
+          label: sourceCopy.en["s5j"],
           count: confirmed,
-          line: `${confirmed} apply recorded by this page, ${unknown} with no known result. An application confirms no purchase, pays no reward, and applies no discount.`,
+          line: sourceMessage(sourceCopy.en["p.t282"], { v1: confirmed, v2: unknown }),
         };
       }
       case "reject":
         return {
           lane,
-          label: "Rejected",
+          label: sourceCopy.en["s1ew"],
           count: rejections.length,
-          line: `${rejections.length} write rejected by the source. Each names its code and the one thing offered next.`,
+          line: sourceMessage(sourceCopy.en["p.t283"], { v1: rejections.length }),
         };
       case "reclaim": {
         const due = applications.filter((application) => application.state === "reclaim-due").length;
         const done = applications.filter((application) => application.state === "reclaimed").length;
         return {
           lane,
-          label: "Reclaim",
+          label: sourceCopy.en["s1dj"],
           count: applications.filter((application) => application.state !== "applied").length,
-          line: `${due} due for reclaim, ${done} reclaimed. ${MARKETING_POLICY_NOTE}`,
+          line: sourceMessage(sourceCopy.en["p.t284"], { v1: due, v2: done, v3: MARKETING_POLICY_NOTE }),
         };
       }
       default: {
@@ -684,21 +686,21 @@ export function buildMarketingJourneyModel(input: {
     seq: intent.seq,
     intentRef: intent.intentRef,
     stepWord: STEP_WORDS[intent.step],
-    targetRef: intent.applicationRef ?? `${intent.benefitRef} on ${intent.orderRef ?? "none"}`,
+    targetRef: intent.applicationRef ?? sourceMessage(sourceCopy.en["p.t539"], { v1: intent.benefitRef, v2: intent.orderRef ?? "none" }),
     outcome: intent.outcome,
     code: intent.code ?? "",
   }));
   const quarantineLines = state.quarantined.map(
-    (item) => `Result ${item.arrived} for ${item.intentRef} was quarantined (${item.cause}). It changed nothing.`,
+    (item) => sourceMessage(sourceCopy.en["p.t122"], { v1: item.arrived, v2: item.intentRef, v3: item.cause }),
   );
   const unlinkedLines = projection.unlinkedIntents.map(
     (intent) =>
-      `${STEP_WORDS[intent.step]} ${intent.intentRef} on ${intent.benefitRef} is ${intent.outcome.toLowerCase().replace("_", " ")}. No application is claimed for it, and an application seen in a read is not claimed for it.`,
+      sourceMessage(sourceCopy.en["p.t285"], { v1: STEP_WORDS[intent.step], v2: intent.intentRef, v3: intent.benefitRef, v4: intent.outcome.toLowerCase().replace("_", " ") }),
   );
   const counters = state.counters;
   const session: SessionModel = {
-    contextLine: `Actor ${state.context.actorRef}, subject ${state.context.subjectRef}, session ${state.context.incarnation}, mode ${state.context.environment}.`,
-    countersLine: `Sent ${counters.sent}. Blocked before sending ${counters.fenced}. Not sent ${counters.notSent}. Reads dropped ${counters.droppedReads}.`,
+    contextLine: sourceMessage(sourceCopy.en["p.t540"], { v1: state.context.actorRef, v2: state.context.subjectRef, v3: state.context.incarnation, v4: state.context.environment }),
+    countersLine: sourceMessage(sourceCopy.en["p.t206"], { v1: counters.sent, v2: counters.fenced, v3: counters.notSent, v4: counters.droppedReads }),
     intents,
     quarantineLines,
     unlinkedLines,
@@ -726,14 +728,14 @@ export function buildMarketingJourneyModel(input: {
       id: row.id,
       field: row.marketingField,
       status: row.status,
-      statusWord: row.status === "field-named" ? "Field named in the pin" : "Not-bound",
+      statusWord: row.status === "field-named" ? sourceCopy.en["sl3"] : sourceCopy.en["s10d"],
       bodyFields: row.bodyFields.length === 0 ? "none" : row.bodyFields.map((entry) => `${entry.action}.${entry.field}`).join(", "),
       reason: row.reason,
     })),
     crm: MARKETING_CRM_SCOPE.map((row) => ({
       id: row.id,
       scope: row.scope,
-      scopeWord: row.scope === "consumed" ? "Consumed: read only" : "Outside this journey: not built here",
+      scopeWord: row.scope === "consumed" ? sourceCopy.en["se6"] : sourceCopy.en["s16l"],
       reason: row.reason,
     })),
     consentNotPosted: MARKETING_CONSENT_NOT_POSTED.map((row) => ({ action: row.action, reason: row.reason })),
@@ -803,7 +805,7 @@ export function useMarketingJourney(): {
       }
       if (ATTENTION_READS.includes(result.readState)) {
         const state = session.controller.state();
-        note(`The read ended as ${result.readState}${state.readCode ? ` (${state.readCode})` : ""}. No benefit is shown from it.`, true);
+        note(sourceMessage(sourceCopy.en["p.t286"], { v1: result.readState, v2: state.readCode ? ` (${state.readCode})` : "" }), true);
       }
     },
     [note],
@@ -873,7 +875,7 @@ export function useMarketingJourney(): {
         note(MARKETING_SCENARIO_OFF_NOTE);
         return;
       }
-      startSession(next, `Started a new synthetic session with scenario ${next}. Earlier intents are gone, as after a reload.`);
+      startSession(next, sourceMessage(sourceCopy.en["p.t217"], { v1: next }));
     },
     deliverHeld() {
       const session = sessionRef.current;
@@ -881,7 +883,7 @@ export function useMarketingJourney(): {
         return;
       }
       const count = session.port.deliverHeld();
-      note(count === 0 ? "No held response to deliver." : `Delivered ${count} held response${count === 1 ? "" : "s"}.`);
+      note(count === 0 ? sourceCopy.en["svq"] : sourceMessage(sourceCopy.en["p.t130"], { v1: count, v2: count === 1 ? "" : "s" }));
     },
     switchScope() {
       const session = sessionRef.current;
@@ -890,11 +892,11 @@ export function useMarketingJourney(): {
       }
       const current = session.controller.state().context.subjectRef;
       const next = session.controller.switchContext({ subjectRef: current === MARKETING_OWN_SUBJECT ? MARKETING_FOREIGN_SUBJECT : MARKETING_OWN_SUBJECT });
-      note(`Subject scope switched to ${next.subjectRef}, session ${next.incarnation}. A write in flight is now unknown and its result will be quarantined.`);
+      note(sourceMessage(sourceCopy.en["p.t287"], { v1: next.subjectRef, v2: next.incarnation }));
       void read(session);
     },
     newSession() {
-      startSession(scenario, "Started a new synthetic session. Earlier intents are gone, as after a reload. Nothing was resolved at a producer.");
+      startSession(scenario, sourceCopy.en["s1ma"]);
     },
     simulate(controlName, orderRef) {
       const session = sessionRef.current;
@@ -905,8 +907,8 @@ export function useMarketingJourney(): {
       // The page does not read again: a real producer event is not seen until a read.
       note(
         result.kind === "done"
-          ? `${result.detail} This page has not read again, so it does not show this yet.`
-          : `Nothing changed: ${result.reason}`,
+          ? sourceMessage(sourceCopy.en["p.t132"], { v1: result.detail })
+          : sourceMessage(sourceCopy.en["p.t133"], { v1: result.reason }),
       );
       session.controller.notify();
     },

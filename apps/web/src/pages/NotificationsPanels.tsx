@@ -1,3 +1,9 @@
+import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
+import { messages as copy0 } from "../i18n/messages/pages--NotificationsPanels";
+import { messages as copy1 } from "../i18n/messages/notification-inbox";
+import { messages as copy2 } from "../i18n/messages/workspace--registry";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { AsyncState } from "../components/AsyncState";
 import { useEffect, useState, type ReactNode } from "react";
@@ -37,18 +43,20 @@ import { WORKSPACE_RULING } from "../workspace/registry";
 
 /** A word, not only a color. */
 function WordMark({ word }: { word: string }) {
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <span className="status-mark" data-status-mark="blocked">
-      <span className="status-word">{word}</span>
+      <span className="status-word">{deskText(t, word)}</span>
     </span>
   );
 }
 
 /** A wide table scrolls inside its own region, so the page does not scroll sideways. */
 function ScrollTable({ label, children }: { label: string; children: ReactNode }) {
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
-    <div className="finance-scroll" role="region" aria-label={label} tabIndex={0}>
-      {children}
+    <div className="finance-scroll" role="region" aria-label={deskText(t, label)} tabIndex={0}>
+      {deskText(t, children)}
     </div>
   );
 }
@@ -72,6 +80,7 @@ function GuardedButton({
   describedBy?: string;
   onPress: () => void;
 }) {
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   const reasonId = `${id}-reason`;
   const pointer = control.reason ? (describedBy ?? reasonId) : undefined;
   return (
@@ -85,11 +94,11 @@ function GuardedButton({
         data-enabled={control.enabled ? "true" : "false"}
         onClick={control.enabled ? onPress : undefined}
       >
-        {label}
+        {deskText(t, label)}
       </ConnectivityWriteButton>
       {control.reason && describedBy === undefined ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
-          <WordMark word="Blocked." /> {control.reason}
+          <WordMark word={t("status.transport.blocked")} /> {deskText(t, control.reason)}
         </p>
       ) : null}
     </>
@@ -113,6 +122,7 @@ export function NotifyBanner({
   scenario: NotifyScenario;
   model: NotifyModel;
 }) {
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <header
       className="section-head discovery-section"
@@ -120,26 +130,26 @@ export function NotifyBanner({
       data-scenario={scenario}
       data-freshness={model.freshnessWord}
     >
-      <p className="eyebrow">Notification inbox</p>
-      <h2>{NOTIFY_PAGE_TITLE}</h2>
+      <p className="eyebrow">{t("s11q")}</p>
+      <h2>{deskText(t, NOTIFY_PAGE_TITLE)}</h2>
       <p className="discovery-banner" data-provenance="synthetic" data-source="synthetic-notification-inbox">
-        SYNTHETIC. {NOTIFY_SOURCE_LINE}
+        SYNTHETIC. {deskText(t, NOTIFY_SOURCE_LINE)}
       </p>
-      <p>{NOTIFY_BOUNDARY}</p>
-      <p>{NOTIFY_DEDUPE_NOTE}</p>
-      <p>{NOTIFY_CURRENT_NOTE}</p>
-      <p>{NOTIFY_SENSITIVE_NOTE}</p>
-      <p>{NOTIFY_ACTION_NOTE}</p>
-      <p>{NOTIFY_INQUIRY_NOTE}</p>
-      <p data-hide-note="true">{NOTIFY_HIDE_NOTE}</p>
-      <p>{NOTIFY_SCOPE_NOTE}</p>
-      <p>{NOTIFY_ACTOR_NOTE}</p>
-      <p>{NOTIFY_CLAIM_NOTE}</p>
-      <p>{NOTIFY_READ_NOTE}</p>
-      <p>{NOTIFY_SESSION_NOTE}</p>
-      <p>{WORKSPACE_RULING}</p>
-      <p data-hold-record="not-bound">{model.session.holdLine}</p>
-      <p data-not-composed="recorded">{model.session.notComposedLine}</p>
+      <p>{deskText(t, NOTIFY_BOUNDARY)}</p>
+      <p>{deskText(t, NOTIFY_DEDUPE_NOTE)}</p>
+      <p>{deskText(t, NOTIFY_CURRENT_NOTE)}</p>
+      <p>{deskText(t, NOTIFY_SENSITIVE_NOTE)}</p>
+      <p>{deskText(t, NOTIFY_ACTION_NOTE)}</p>
+      <p>{deskText(t, NOTIFY_INQUIRY_NOTE)}</p>
+      <p data-hide-note="true">{deskText(t, NOTIFY_HIDE_NOTE)}</p>
+      <p>{deskText(t, NOTIFY_SCOPE_NOTE)}</p>
+      <p>{deskText(t, NOTIFY_ACTOR_NOTE)}</p>
+      <p>{deskText(t, NOTIFY_CLAIM_NOTE)}</p>
+      <p>{deskText(t, NOTIFY_READ_NOTE)}</p>
+      <p>{deskText(t, NOTIFY_SESSION_NOTE)}</p>
+      <p>{deskText(t, WORKSPACE_RULING)}</p>
+      <p data-hold-record="not-bound">{deskText(t, model.session.holdLine)}</p>
+      <p data-not-composed="recorded">{deskText(t, model.session.notComposedLine)}</p>
     </header>
   );
 }
@@ -165,6 +175,7 @@ function PickAndApply({
   applyLabel: string;
   onApply: (next: string) => void;
 }) {
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   const [choice, setChoice] = useState(value);
   useEffect(() => {
     setChoice(value);
@@ -172,17 +183,17 @@ function PickAndApply({
   return (
     <>
       <label htmlFor={id}>
-        {label}
+        {deskText(t, label)}
         <select id={id} value={choice} onChange={(event) => setChoice(event.target.value)}>
-          {options.map((item) => (
+          {deskText(t, options.map((item) => (
             <option key={item} value={item}>
-              {item}
+              {deskText(t, item)}
             </option>
-          ))}
+          )))}
         </select>
       </label>
       <button type="button" id={applyId} className="discovery-action" onClick={() => onApply(choice)}>
-        {applyLabel}
+        {deskText(t, applyLabel)}
       </button>
     </>
   );
@@ -199,106 +210,100 @@ export function NotifyControls({
   role: NotifyRole;
   actions: NotifyActions;
 }) {
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   const [focusText, setFocusText] = useState("");
   return (
-    <section id="notify-controls" className="discovery-section" aria-label="Synthetic controls">
+    <section id="notify-controls" className="discovery-section" aria-label={t("s1o9")}>
       <div className="discovery-controls">
         <PickAndApply
           id="notify-scenario"
-          label="Synthetic scenario"
+          label={t("s1p5")}
           value={scenario}
           options={NOTIFY_SCENARIOS}
           applyId="notify-apply-scenario"
-          applyLabel="Start a session with this scenario"
+          applyLabel={t("s1m5")}
           onApply={(next) => actions.setScenario(next as NotifyScenario)}
         />
         <PickAndApply
           id="notify-actor"
-          label="Desk actor"
+          label={t("sgd")}
           value={actorRef}
           options={NOTIFY_ACTORS}
           applyId="notify-apply-actor"
-          applyLabel="Switch to this actor"
+          applyLabel={t("s1o6")}
           onApply={(next) => actions.switchActor(next)}
         />
         <PickAndApply
           id="notify-role"
-          label="Role for this actor"
+          label={t("s1hg")}
           value={role}
           options={NOTIFY_ROLES}
           applyId="notify-apply-role"
-          applyLabel="Switch to this role"
+          applyLabel={t("s1o7")}
           onApply={(next) => actions.switchRole(next as NotifyRole)}
         />
         <button type="button" id="notify-refresh" className="discovery-action" onClick={() => actions.refresh()}>
-          Read again
-        </button>
+          {t("s1ax")}</button>
         <button type="button" id="notify-switch-tenant" className="discovery-action" onClick={() => actions.switchTenant()}>
-          Switch tenant ({NOTIFY_OWN} / {NOTIFY_FOREIGN})
+          {t("s1o3")}{deskText(t, NOTIFY_OWN)} / {deskText(t, NOTIFY_FOREIGN)})
         </button>
         <ConnectivityWriteButton type="button" id="notify-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          Start a new synthetic session
-        </ConnectivityWriteButton>
+          {t("s1m2")}</ConnectivityWriteButton>
       </div>
-      <div className="discovery-controls" role="group" aria-label="Direct open by reference">
+      <div className="discovery-controls" role="group" aria-label={t("sgn")}>
         <label htmlFor="notify-focus-ref">
-          Open a notification by reference
-          <input
+          {t("s14u")}<input
             id="notify-focus-ref"
             name="notify-focus-ref"
             autoComplete="off"
-            placeholder="ntf-0001…"
+            placeholder={t("s13f")}
             value={focusText}
             onChange={(event) => setFocusText(event.target.value)}
           />
         </label>
         <button type="button" id="notify-open-ref" className="discovery-action" onClick={() => actions.openNotification(focusText)}>
-          Open this notification
-        </button>
+          {t("s15h")}</button>
       </div>
-      <div className="discovery-controls" role="group" aria-label="Synthetic source controls">
+      <div className="discovery-controls" role="group" aria-label={t("s1p9")}>
         <ConnectivityWriteButton type="button" id="notify-revoke-grant" className="discovery-action" onClick={() => actions.revokeGrant()}>
-          Simulate a revoked grant
-        </ConnectivityWriteButton>
+          {t("s1kh")}</ConnectivityWriteButton>
         <ConnectivityWriteButton type="button" id="notify-rotate-grant" className="discovery-action" onClick={() => actions.rotateGrant()}>
-          Simulate a rotated grant generation
-        </ConnectivityWriteButton>
+          {t("s1ki")}</ConnectivityWriteButton>
         <button type="button" id="notify-deliver-late" className="discovery-action" onClick={() => actions.deliverLate()}>
-          Simulate a late delivery
-        </button>
+          {t("s1kd")}</button>
       </div>
       <p className="muted">
-        A pasted reference is a direct open, like a typed URL. The source answers a ref outside this tenant or addressed to
-        another subject with denied — never a row of another tenant, never a row of another subject.
-      </p>
+        {t("s4v")}</p>
       <p className="muted" data-scenario-note={scenario}>
-        {NOTIFY_SCENARIO_NOTES[scenario]} Choosing a scenario does nothing until you start a session with it, and starting one clears earlier reads, material, and requests.
-      </p>
-      <p className="muted">{NOTIFY_SYNTHETIC_CONTROL_NOTE}</p>
+        {deskText(t, NOTIFY_SCENARIO_NOTES[scenario])} {t("scd")}</p>
+      <p className="muted">{deskText(t, NOTIFY_SYNTHETIC_CONTROL_NOTE)}</p>
     </section>
   );
 }
 
 export function NotifyStatus({ model }: { model: NotifyModel }) {
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
     <section id="notify-status" className="discovery-section" tabIndex={-1} data-notify-state={model.state}>
-      <h3>Status</h3>
+      <h3>{t("s1mj")}</h3>
       {model.state === "loading" || model.state === "empty" || model.state === "stale" || model.state === "not-bound" ? (
-        <AsyncState kind={model.state} label="Inbox" data-status={model.state}><p>{model.statusLine} {model.detailLine}</p></AsyncState>
-      ) : <p role="status" data-status={model.state}>{model.statusLine} {model.detailLine}</p>}
-      <p className="muted">{model.freshnessWord}</p>
-      <p className="muted">{model.scopeLine}</p>
-      <p className="muted">{model.generationLine}</p>
-      <p className="muted">{model.watermarkLine}</p>
+        <AsyncState kind={model.state} label={t("merge.inbox")} data-status={model.state}><p>{deskText(t, model.statusLine)} {deskText(t, model.detailLine)}</p></AsyncState>
+      ) : <p role="status" data-status={model.state}>{deskText(t, model.statusLine)}
+        {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
+      </p>}
+      <p className="muted">{deskText(t, model.freshnessWord)}</p>
+      <p className="muted">{deskText(t, model.scopeLine)}</p>
+      <p className="muted">{deskText(t, model.generationLine)}</p>
+      <p className="muted">{deskText(t, model.watermarkLine)}</p>
       <p className="muted" data-unread-line="true">
-        {model.unreadLine}
+        {deskText(t, model.unreadLine)}
       </p>
       <p className="muted" data-dedupe-line="true">
-        {model.dedupeLine}
+        {deskText(t, model.dedupeLine)}
       </p>
       {model.lastLine ? (
         <p role="status" aria-live="polite" aria-busy={false} data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
-          {model.lastNeedsFocus ? <WordMark word="Attention." /> : null} {model.lastLine}
+          {model.lastNeedsFocus ? <WordMark word={t("s91")} /> : null} {deskText(t, model.lastLine)}
         </p>
       ) : null}
     </section>
@@ -306,33 +311,31 @@ export function NotifyStatus({ model }: { model: NotifyModel }) {
 }
 
 export function NotifyAuthoritySection({ model }: { model: NotifyModel }) {
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
-    <section id="notify-authority" className="discovery-section" aria-label="Who may do what">
-      <h3>Who may do what</h3>
+    <section id="notify-authority" className="discovery-section" aria-label={t("s26m")}>
+      <h3>{t("s26m")}</h3>
       <p className="muted">
-        Reading the inbox, marking read, resolving an offered action, reading the support material, and seeing a sensitive
-        detail stay separate capabilities. The grant is the source&apos;s own record, separate from the desk&apos;s role
-        assignment.
-      </p>
-      <ScrollTable label="Capabilities and the roles that hold them">
+        {t("s1ba")}</p>
+      <ScrollTable label={t("sba")}>
         <table className="finance-authority">
-          <caption>The source&apos;s capabilities on this inbox</caption>
+          <caption>{t("s1ye")}</caption>
           <thead>
             <tr>
-              <th scope="col">Capability</th>
-              <th scope="col">Held by</th>
+              <th scope="col">{t("sbb")}</th>
+              <th scope="col">{t("sn9")}</th>
             </tr>
           </thead>
           <tbody>
-            {model.authority.map((row) => (
+            {deskText(t, model.authority.map((row) => (
               <tr key={row.capability} data-capability={row.capability} data-held-by-role={row.heldByRole ? "true" : "false"}>
-                <th scope="row">{row.capability}</th>
+                <th scope="row">{deskText(t, row.capability)}</th>
                 <td>
-                  {row.heldByLine}
-                  {row.heldByRole ? " The role on screen holds it." : ""}
+                  {deskText(t, row.heldByLine)}
+                  {row.heldByRole ? (" " + t("s1xf")) : ""}
                 </td>
               </tr>
-            ))}
+            )))}
           </tbody>
         </table>
       </ScrollTable>
@@ -341,60 +344,60 @@ export function NotifyAuthoritySection({ model }: { model: NotifyModel }) {
 }
 
 export function NotifyFocusSection({ model }: { model: NotifyModel }) {
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   if (model.focus === null) {
     return null;
   }
   return (
-    <section id="notify-focus" className="discovery-section" aria-label="Deep-opened notification" data-focus-kind="notification">
-      <h3>{model.focus.title}</h3>
-      {model.focus.lines.map((line) => (
-        <p key={line}>{line}</p>
-      ))}
+    <section id="notify-focus" className="discovery-section" aria-label={t("sfp")} data-focus-kind="notification">
+      <h3>{deskText(t, model.focus.title)}</h3>
+      {deskText(t, model.focus.lines.map((line) => (
+        <p key={line}>{deskText(t, line)}</p>
+      )))}
     </section>
   );
 }
 
 export function NotifyInboxSection({ model, actions }: { model: NotifyModel; actions: NotifyActions }) {
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
-    <section id="notify-inbox" className="discovery-section" aria-label="Inbox" data-row-count={model.rows.length}>
-      <h3>Inbox</h3>
+    <section id="notify-inbox" className="discovery-section" aria-label={t("snt")} data-row-count={model.rows.length}>
+      <h3>{t("snt")}</h3>
       <p className="muted">
-        A row reports what the source recorded. An arrival confirms no economic effect. A stale-issued row keeps its place
-        but its offered action resolves nothing.
-      </p>
+        {t("s7l")}</p>
       {model.markBlock ? (
         <p id="notify-mark-reason" className="muted" data-blocked-reason="true" data-block="mark-read">
-          <WordMark word="Blocked." /> Marking read is off: {model.markBlock}
+          <WordMark word={t("status.transport.blocked")} /> {t("ss3")}{" "}{deskText(t, model.markBlock)}
         </p>
       ) : null}
       {model.resolveBlock ? (
         <p id="notify-resolve-reason" className="muted" data-blocked-reason="true" data-block="resolve">
-          <WordMark word="Blocked." /> Resolving offered actions is off: {model.resolveBlock}
+          <WordMark word={t("status.transport.blocked")} /> {t("s1gi")}{" "}{deskText(t, model.resolveBlock)}
         </p>
       ) : null}
-      {model.rows.length === 0 ? <p data-state="empty">No notification in this read.</p> : null}
+      {model.rows.length === 0 ? <p data-state="empty">{t("swf")}</p> : null}
       {model.rows.length > 0 ? (
-        <ul className="discovery-list" aria-label="Notifications in the last read">
-          {model.rows.map((row) => (
+        <ul className="discovery-list" aria-label={t("s11u")}>
+          {deskText(t, model.rows.map((row) => (
             <li
               key={row.notificationRef}
               data-notification={row.notificationRef}
-              data-notification-read={row.readWord === "Read" ? "true" : "false"}
+              data-notification-read={row.readWord === copy0.en["s1av"] ? "true" : "false"}
               data-issue-state={row.issueState}
             >
-              <Synthetic /> <strong>{row.notificationRef}</strong> {row.kindWord} (seq {row.seq}). {row.headline}{" "}
+              <Synthetic /> <strong>{deskText(t, row.notificationRef)}</strong> {deskText(t, row.kindWord)} {t("s1je")}{" "}{deskText(t, row.seq)}). {deskText(t, row.headline)}{" "}
               <span className="muted">
-                {row.readWord}. {row.issueWord}. Issued {row.issuedAt}. {row.sensitiveLine}
+                {deskText(t, row.readWord)}. {deskText(t, row.issueWord)}{t("sov")}{" "}{deskText(t, row.issuedAt)}. {deskText(t, row.sensitiveLine)}
               </span>
               <br />
-              {row.detailLine ? <span data-detail="notification">{row.detailLine}</span> : null}
+              {row.detailLine ? <span data-detail="notification">{deskText(t, row.detailLine)}</span> : null}
               <br />
-              <span className="muted">{row.offerWord}</span>
+              <span className="muted">{deskText(t, row.offerWord)}</span>
               <br />
               {row.markRead === null ? null : (
                 <GuardedButton
                   id={`notify-mark-${row.notificationRef}`}
-                  label={`Mark ${row.notificationRef} read`}
+                  label={t("ss4", { notificationRef: row.notificationRef })}
                   control={row.markRead}
                   describedBy={model.markBlock ? "notify-mark-reason" : undefined}
                   onPress={() => actions.markRead(row.notificationRef)}
@@ -403,41 +406,41 @@ export function NotifyInboxSection({ model, actions }: { model: NotifyModel; act
               {row.resolve === null ? null : (
                 <GuardedButton
                   id={`notify-resolve-${row.notificationRef}`}
-                  label={`Resolve the offered action on ${row.notificationRef}`}
+                  label={t("s1gh", { notificationRef: row.notificationRef })}
                   control={row.resolve}
                   describedBy={model.resolveBlock ? "notify-resolve-reason" : undefined}
                   onPress={() => actions.resolveAction(row.notificationRef)}
                 />
               )}
             </li>
-          ))}
+          )))}
         </ul>
       ) : null}
-      <ScrollTable label="Notification fields">
+      <ScrollTable label={t("s11p")}>
         {model.rows.length > 0 ? (
           <table className="finance-cuts">
-            <caption>Dedupe keys and issue generations the read reported</caption>
+            <caption>{t("sfo")}</caption>
             <thead>
               <tr>
-                <th scope="col">Notification</th>
-                <th scope="col">Dedupe key</th>
-                <th scope="col">Kind</th>
-                <th scope="col">Seq</th>
-                <th scope="col">Read</th>
-                <th scope="col">Issue</th>
+                <th scope="col">{t("s11o")}</th>
+                <th scope="col">{t("sfn")}</th>
+                <th scope="col">{t("sps")}</th>
+                <th scope="col">{t("s1jd")}</th>
+                <th scope="col">{t("s1av")}</th>
+                <th scope="col">{t("sos")}</th>
               </tr>
             </thead>
             <tbody>
-              {model.rows.map((row) => (
+              {deskText(t, model.rows.map((row) => (
                 <tr key={row.notificationRef} data-notification-row={row.notificationRef}>
-                  <th scope="row">{row.notificationRef}</th>
-                  <td>{row.dedupeKey}</td>
-                  <td>{row.kindWord}</td>
-                  <td>{row.seq}</td>
-                  <td>{row.readWord}</td>
-                  <td>{row.issueWord}</td>
+                  <th scope="row">{deskText(t, row.notificationRef)}</th>
+                  <td>{deskText(t, row.dedupeKey)}</td>
+                  <td>{deskText(t, row.kindWord)}</td>
+                  <td>{deskText(t, row.seq)}</td>
+                  <td>{deskText(t, row.readWord)}</td>
+                  <td>{deskText(t, row.issueWord)}</td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         ) : null}
@@ -447,26 +450,25 @@ export function NotifyInboxSection({ model, actions }: { model: NotifyModel; act
 }
 
 export function NotifyInquirySection({ model, actions }: { model: NotifyModel; actions: NotifyActions }) {
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   const inquiry = model.inquiry;
   const destination = model.request?.destination ?? null;
   return (
-    <section id="notify-inquiry" className="discovery-section" aria-label="Support material" data-inquiry-phase={inquiry.phase}>
-      <h3>Support material</h3>
-      <p data-inquiry-status={inquiry.phase}>{inquiry.statusLine}</p>
-      {inquiry.detailLine ? <p className="muted">{inquiry.detailLine}</p> : null}
+    <section id="notify-inquiry" className="discovery-section" aria-label={t("s1nm")} data-inquiry-phase={inquiry.phase}>
+      <h3>{t("s1nm")}</h3>
+      <p data-inquiry-status={inquiry.phase}>{deskText(t, inquiry.statusLine)}</p>
+      {inquiry.detailLine ? <p className="muted">{deskText(t, inquiry.detailLine)}</p> : null}
       {destination !== null && destination.kind === "authority" ? (
         <p data-destination="authority">
-          The resolve landed on the authority query.{" "}
-          <Link to={destination.href}>Open the receipts desk</Link> and look up <strong>{destination.ref}</strong> — the
-          reference text travels with you; nothing was sent.
-        </p>
+          {t("s1x7")}{" "}
+          <Link to={destination.href}>{t("s15f")}</Link> {t("s3t")}{" "}<strong>{destination.ref}</strong> {t("s1wh")}</p>
       ) : null}
       {destination !== null && destination.kind === "support" ? (
         <p data-destination="support">
-          The resolve landed on support material {destination.inquiryRef}.{" "}
+          {t("s1x6")}{" "}{deskText(t, destination.inquiryRef)}.{" "}
           <GuardedButton
             id="notify-open-inquiry"
-            label={`Open the support material ${destination.inquiryRef}`}
+            label={t("s15g", { inquiryRef: destination.inquiryRef })}
             control={model.inquiryControl}
             onPress={() => actions.loadInquiry(destination.inquiryRef)}
           />
@@ -474,49 +476,50 @@ export function NotifyInquirySection({ model, actions }: { model: NotifyModel; a
       ) : null}
       {inquiry.declarationLine ? (
         <p className="muted" data-inquiry-declaration="declared">
-          {inquiry.declarationLine}
+          {deskText(t, inquiry.declarationLine)}
         </p>
       ) : null}
-      {inquiry.notificationRef ? <p className="muted">Material for notification {inquiry.notificationRef}.</p> : null}
+      {inquiry.notificationRef ? <p className="muted">{t("ss9")}{" "}{deskText(t, inquiry.notificationRef)}.</p> : null}
       {inquiry.rows.length > 0 ? (
         <dl data-inquiry-lines="true">
-          {inquiry.rows.map((row) => (
+          {deskText(t, inquiry.rows.map((row) => (
             <div key={row.label}>
-              <dt>{row.label}</dt>
-              <dd>{row.text}</dd>
+              <dt>{deskText(t, row.label)}</dt>
+              <dd>{deskText(t, row.text)}</dd>
             </div>
-          ))}
+          )))}
         </dl>
       ) : null}
-      <p className="muted">{NOTIFY_INQUIRY_NOTE}</p>
+      <p className="muted">{deskText(t, NOTIFY_INQUIRY_NOTE)}</p>
     </section>
   );
 }
 
 export function NotifyRequestsSection({ model }: { model: NotifyModel }) {
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
-    <section id="notify-requests" className="discovery-section" aria-label="Requests">
-      <h3>Requests</h3>
-      {model.behindLine ? <p data-behind="true">{model.behindLine}</p> : null}
+    <section id="notify-requests" className="discovery-section" aria-label={t("s1fv")}>
+      <h3>{t("s1fv")}</h3>
+      {model.behindLine ? <p data-behind="true">{deskText(t, model.behindLine)}</p> : null}
       {model.fenceLine ? (
         <p data-fence="true">
-          <WordMark word="Fenced." /> {model.fenceLine}
+          <WordMark word={t("sky")} /> {deskText(t, model.fenceLine)}
         </p>
       ) : null}
-      {model.request === null ? <p data-state="empty">No request has been sent from this session.</p> : null}
+      {model.request === null ? <p data-state="empty">{t("sxr")}</p> : null}
       {model.request !== null ? (
         <div data-request-seq={model.request.seq} data-request-phase={model.request.phase}>
-          {model.request.phase === "unknown" ? <AsyncState kind="unknown" label="Notification request" announcement="parent" /> : null}
+          {model.request.phase === "unknown" ? <AsyncState kind="unknown" label={t("merge.notifyRequest")} announcement="parent" /> : null}
           <p>
-            Request {model.request.seq}: {model.request.kindWord}. {model.request.phaseWord}
-            {model.request.code ? ` (${model.request.code})` : ""}.
+            {t("s1fq")}{" "}{deskText(t, model.request.seq)}: {deskText(t, model.request.kindWord)}. {deskText(t, model.request.phaseWord)}
+            {model.request.code ? (" " + t("sd2", { code: model.request.code })) : ""}.
           </p>
-          {model.request.detail ? <p className="muted">{model.request.detail}</p> : null}
-          {model.request.receiptLines.map((line) => (
+          {model.request.detail ? <p className="muted">{deskText(t, model.request.detail)}</p> : null}
+          {deskText(t, model.request.receiptLines.map((line) => (
             <p key={line} className="muted">
-              {line}
+              {deskText(t, line)}
             </p>
-          ))}
+          )))}
         </div>
       ) : null}
     </section>
@@ -524,18 +527,19 @@ export function NotifyRequestsSection({ model }: { model: NotifyModel }) {
 }
 
 export function NotifySessionSection({ session }: { session: NotifySessionModel }) {
+  const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
-    <section id="notify-session" className="discovery-section" aria-label="Session record">
-      <h3>Session record</h3>
-      <p className="muted">{session.contextLine}</p>
-      <p className="muted">{session.capabilityLine}</p>
-      <p className="muted">{session.countersLine}</p>
-      <p className="muted">{session.earlierUnknownLine}</p>
+    <section id="notify-session" className="discovery-section" aria-label={t("s1js")}>
+      <h3>{t("s1js")}</h3>
+      <p className="muted">{deskText(t, session.contextLine)}</p>
+      <p className="muted">{deskText(t, session.capabilityLine)}</p>
+      <p className="muted">{deskText(t, session.countersLine)}</p>
+      <p className="muted">{deskText(t, session.earlierUnknownLine)}</p>
       <p className="muted" data-hold-record="not-bound">
-        {session.holdLine}
+        {deskText(t, session.holdLine)}
       </p>
       <p className="muted" data-not-composed="recorded">
-        {session.notComposedLine}
+        {deskText(t, session.notComposedLine)}
       </p>
     </section>
   );

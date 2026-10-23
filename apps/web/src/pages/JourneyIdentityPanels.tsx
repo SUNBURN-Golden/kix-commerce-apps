@@ -1,3 +1,7 @@
+import { messages as copy0 } from "../i18n/messages/pages--JourneyIdentityPanels";
+import { messages as copy1 } from "../i18n/messages/journey-identity";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useState } from "react";
 import { useRestoreFocus } from "../a11y/focus";
@@ -29,6 +33,7 @@ export interface IdentityDeskLive {
  * skipped by the keyboard, so its reason would never be reached.
  */
 function GuardedButton({ id, label, control, onPress }: { id: string; label: string; control: IdentityControl; onPress: () => void }) {
+  const t = useT(copy0, copy1);
   const reasonId = `${id}-reason`;
   return (
     <span className="refund-guard">
@@ -43,11 +48,11 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
           }
         }}
       >
-        {label}
+        {deskText(t, label)}
       </ConnectivityWriteButton>
       {control.reason ? (
         <span id={reasonId} className="muted">
-          {control.reason}
+          {deskText(t, control.reason)}
         </span>
       ) : null}
     </span>
@@ -60,169 +65,162 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
  * payment, issuance, or admission.
  */
 export function JourneyIdentityPanel({ live }: { live: IdentityDeskLive }) {
+  const t = useT(copy0, copy1);
   const { model, actions } = live;
   const [pendingScenario, setPendingScenario] = useState<JourneyIdentityScenario>(live.scenario);
   useRestoreFocus(model.lastNeedsFocus && model.lastSeq !== null ? `identity:${model.lastSeq}` : null, "identity-status");
   return (
-    <section aria-label={IDENTITY_TITLE} data-identity-state={model.state} data-adapter-environment={live.environment} data-source={live.environment === "stub" ? "synthetic-identity" : "none"}>
-      <h2>{IDENTITY_TITLE}</h2>
-      <p className="muted">{IDENTITY_SOURCE_LINE}</p>
-      <p className="muted">{IDENTITY_BOUNDARY}</p>
-      <p className="muted">{IDENTITY_RULE_NOTE}</p>
-      <p className="muted">{IDENTITY_SESSION_NOTE}</p>
+    <section aria-label={deskText(t, IDENTITY_TITLE)} data-identity-state={model.state} data-adapter-environment={live.environment} data-source={live.environment === "stub" ? "synthetic-identity" : "none"}>
+      <h2>{deskText(t, IDENTITY_TITLE)}</h2>
+      <p className="muted">{deskText(t, IDENTITY_SOURCE_LINE)}</p>
+      <p className="muted">{deskText(t, IDENTITY_BOUNDARY)}</p>
+      <p className="muted">{deskText(t, IDENTITY_RULE_NOTE)}</p>
+      <p className="muted">{deskText(t, IDENTITY_SESSION_NOTE)}</p>
 
       <div role="status" id="identity-status" tabIndex={-1} aria-live="polite" data-testid="identity-status">
-        <p data-field="status">{model.statusLine}</p>
-        {model.detailLine ? <p className="muted">{model.detailLine}</p> : null}
-        {model.lastLine ? <p data-field="last">{model.lastLine}</p> : null}
-        <p className="muted">{model.freshnessWord}</p>
-        <p className="muted">{model.countersLine}</p>
+        <p data-field="status">{deskText(t, model.statusLine)}</p>
+        {model.detailLine ? <p className="muted">{deskText(t, model.detailLine)}</p> : null}
+        {model.lastLine ? <p data-field="last">{deskText(t, model.lastLine)}</p> : null}
+        <p className="muted">{deskText(t, model.freshnessWord)}</p>
+        <p className="muted">{deskText(t, model.countersLine)}</p>
         {model.actionLabel ? (
           <button
             type="button"
             onClick={() => {
-              if (model.actionLabel === "Reset synthetic source") {
+              if (model.actionLabel === copy0.en["s1gc"]) {
                 actions.resetSource();
               } else {
                 actions.refresh();
               }
             }}
           >
-            {model.actionLabel}
+            {deskText(t, model.actionLabel)}
           </button>
         ) : null}
       </div>
 
-      <h3>Current context</h3>
-      <table aria-label="Current context key fields">
+      <h3>{t("sf8")}</h3>
+      <table aria-label={t("sf9")}>
         <tbody>
-          {model.contextRows.map((row) => (
+          {deskText(t, model.contextRows.map((row) => (
             <tr key={row.field} data-context-field={row.field}>
-              <th scope="row">{row.field}</th>
-              <td>{row.value}</td>
+              <th scope="row">{deskText(t, row.field)}</th>
+              <td>{deskText(t, row.value)}</td>
             </tr>
-          ))}
+          )))}
         </tbody>
       </table>
 
-      <h3>Observations and receipts</h3>
+      <h3>{t("s13i")}</h3>
       {model.items.length === 0 ? (
-        <p className="muted">No adjudicated rows in this read.</p>
+        <p className="muted">{t("stx")}</p>
       ) : (
-        <div className="identity-scroll" role="region" aria-label="Adjudicated observations, scrollable" tabIndex={0}>
-        <table aria-label="Adjudicated observations">
+        <div className="identity-scroll" role="region" aria-label={t("s1d")} tabIndex={0}>
+        <table aria-label={t("s1c")}>
           <thead>
             <tr>
-              <th scope="col">Item</th>
-              <th scope="col">Kind</th>
-              <th scope="col">Subject</th>
-              <th scope="col">Issued under</th>
-              <th scope="col">Verdict</th>
-              <th scope="col">Attach</th>
+              <th scope="col">{t("sp2")}</th>
+              <th scope="col">{t("sps")}</th>
+              <th scope="col">{t("s1n3")}</th>
+              <th scope="col">{t("sox")}</th>
+              <th scope="col">{t("s25y")}</th>
+              <th scope="col">{t("s8v")}</th>
             </tr>
           </thead>
           <tbody>
-            {model.items.map((row) => (
+            {deskText(t, model.items.map((row) => (
               <tr key={row.itemId} data-item={row.itemId} data-verdict={row.verdict} data-kind={row.kind}>
-                <td>{row.itemId}</td>
-                <td>{row.kind}</td>
-                <td>{row.subjectRef}</td>
-                <td>{row.issuedLine}</td>
+                <td>{deskText(t, row.itemId)}</td>
+                <td>{deskText(t, row.kind)}</td>
+                <td>{deskText(t, row.subjectRef)}</td>
+                <td>{deskText(t, row.issuedLine)}</td>
                 <td>
-                  {row.verdict}
-                  <span className="muted"> — {row.detail}</span>
+                  {deskText(t, row.verdict)}
+                  <span className="muted"> — {deskText(t, row.detail)}</span>
                 </td>
                 <td>
-                  <GuardedButton id={`attach-${row.itemId}`} label="Attach" control={row.attach} onPress={() => actions.attach(row.itemId)} />
+                  <GuardedButton id={`attach-${row.itemId}`} label={t("s8v")} control={row.attach} onPress={() => actions.attach(row.itemId)} />
                 </td>
               </tr>
-            ))}
+            )))}
           </tbody>
         </table>
         </div>
       )}
 
-      <h3>Session journal</h3>
+      <h3>{t("s1jp")}</h3>
       {model.intents.length === 0 && model.quarantineLines.length === 0 && model.isolatedLines.length === 0 ? (
-        <p className="muted">No writes or quarantined results yet.</p>
+        <p className="muted">{t("s139")}</p>
       ) : (
         <ul>
-          {model.intents.map((intent) => (
+          {deskText(t, model.intents.map((intent) => (
             <li key={intent.seq} data-outcome={intent.outcome} data-scope={intent.scope}>
-              {intent.intentRef} on {intent.scope}: {intent.outcome}
-              {intent.code ? ` (${intent.code})` : ""}
-              {intent.lateLine ? ` ${intent.lateLine}` : ""}
+              {deskText(t, intent.intentRef)} {t("s140")}{" "}{deskText(t, intent.scope)}: {deskText(t, intent.outcome)}
+              {intent.code ? (" " + t("sd2", { code: intent.code })) : ""}
+              {intent.lateLine ? t("sqk", { lateLine: intent.lateLine }) : ""}
             </li>
-          ))}
-          {model.quarantineLines.map((line) => (
+          )))}
+          {deskText(t, model.quarantineLines.map((line) => (
             <li key={line} data-outcome="QUARANTINED">
-              {line}
+              {deskText(t, line)}
             </li>
-          ))}
-          {model.isolatedLines.map((line) => (
+          )))}
+          {deskText(t, model.isolatedLines.map((line) => (
             <li key={line} data-outcome="ISOLATED">
-              {line}
+              {deskText(t, line)}
             </li>
-          ))}
+          )))}
         </ul>
       )}
 
-      <h3>Synthetic controls</h3>
-      <p className="muted">These stand in for events a real producer would cause. A real producer offers none of them.</p>
-      <div role="group" aria-label="Synthetic controls">
+      <h3>{t("s1o9")}</h3>
+      <p className="muted">{t("s1y1")}</p>
+      <div role="group" aria-label={t("s1o9")}>
         <label>
-          Scenario{" "}
+          {t("s1ic")}{" "}
           <select
-            aria-label="Scenario"
+            aria-label={t("s1ic")}
             value={pendingScenario}
             onChange={(event) => setPendingScenario(event.target.value as JourneyIdentityScenario)}
           >
-            {IDENTITY_SCENARIOS.map((scenario) => (
+            {deskText(t, IDENTITY_SCENARIOS.map((scenario) => (
               <option key={scenario} value={scenario}>
-                {scenario}
+                {deskText(t, scenario)}
               </option>
-            ))}
+            )))}
           </select>
         </label>
         <ConnectivityWriteButton type="button" disabled={pendingScenario === live.scenario} onClick={() => actions.setScenario(pendingScenario)}>
-          Apply this scenario
-        </ConnectivityWriteButton>
-        <p className="muted">{IDENTITY_SCENARIO_NOTES[pendingScenario]}</p>
-        <p className="muted">Applying a scenario binds this page to a new synthetic source. Earlier unknown writes stay on record and keep fencing their subject, and intent numbers keep counting. Only a reload clears them.</p>
+          {t("s5q")}</ConnectivityWriteButton>
+        <p className="muted">{deskText(t, IDENTITY_SCENARIO_NOTES[pendingScenario])}</p>
+        <p className="muted">{t("s5n")}</p>
         <button type="button" onClick={() => actions.refresh()}>
-          Read again
-        </button>
+          {t("s1ax")}</button>
         <button type="button" onClick={() => actions.switchActor()}>
-          Switch actor
-        </button>
+          {t("s1nr")}</button>
         <button type="button" onClick={() => actions.switchRole()}>
-          Switch role
-        </button>
+          {t("s1ny")}</button>
         <ConnectivityWriteButton type="button" onClick={() => actions.rotateCut()}>
-          Rotate source cut
-        </ConnectivityWriteButton>
+          {t("s1hn")}</ConnectivityWriteButton>
         <ConnectivityWriteButton type="button" onClick={() => actions.resetSource()}>
-          Reset synthetic source
-        </ConnectivityWriteButton>
+          {t("s1gc")}</ConnectivityWriteButton>
         {live.heldSupported ? (
           <button type="button" onClick={() => actions.deliverHeld()}>
-            Deliver held response
-          </button>
+            {t("sg2")}</button>
         ) : null}
         {live.lateSupported ? (
           <button type="button" onClick={() => actions.deliverLate()}>
-            Deliver late result
-          </button>
+            {t("sg4")}</button>
         ) : null}
       </div>
 
-      <h3>Recorded and never sent</h3>
+      <h3>{t("s1dt")}</h3>
       <ul>
-        {model.notComposed.map((entry) => (
+        {deskText(t, model.notComposed.map((entry) => (
           <li key={entry.action} data-action={entry.action}>
-            {entry.action}: {entry.reason}
+            {deskText(t, entry.action)}: {deskText(t, entry.reason)}
           </li>
-        ))}
+        )))}
       </ul>
     </section>
   );

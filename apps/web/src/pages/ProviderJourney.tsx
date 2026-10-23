@@ -1,3 +1,7 @@
+import { messages as copy0 } from "../i18n/messages/pages--ProviderJourney";
+import { messages as copy1 } from "../i18n/messages/provider-journey";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { useRestoreFocus } from "../a11y/focus";
 import { useProviderJourney } from "../provider-journey";
 import {
@@ -10,6 +14,7 @@ import {
 } from "./ProviderJourneyPanels";
 
 export function ProviderJourneyPage() {
+  const t = useT(copy0, copy1);
   const live = useProviderJourney();
   const model = live.model;
   // A block, a rejection, or an unknown result takes focus to the status region.
@@ -17,12 +22,12 @@ export function ProviderJourneyPage() {
 
   return (
     <div className="discovery provider" data-adapter-environment={live.environment}>
-      <nav className="discovery-nav" aria-label="Provider sections">
-        <a href="#provider-controls">Controls</a>
-        <a href="#provider-status">Status</a>
-        <a href="#provider-orders">Orders</a>
-        <a href="#provider-session">Session record</a>
-        <a href="#provider-identity">Identity links</a>
+      <nav className="discovery-nav" aria-label={t("s1a8")}>
+        <a href="#provider-controls">{t("sed")}</a>
+        <a href="#provider-status">{t("s1mj")}</a>
+        <a href="#provider-orders">{t("s15u")}</a>
+        <a href="#provider-session">{t("s1js")}</a>
+        <a href="#provider-identity">{t("snr")}</a>
       </nav>
       <div className="discovery-body">
         <ProviderBanner environment={live.environment} scenario={live.scenario} model={model} />
@@ -44,7 +49,7 @@ export function ProviderJourneyPage() {
                 : live.actions.refresh()
             }
           >
-            {model.actionLabel}
+            {deskText(t, model.actionLabel)}
           </button>
         ) : null}
         <OrdersSection model={model} actions={live.actions} />

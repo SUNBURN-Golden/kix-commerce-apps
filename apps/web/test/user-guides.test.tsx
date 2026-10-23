@@ -183,6 +183,17 @@ describe("in-app help", () => {
     expect(html).toContain("glossary");
   });
 
+  it("translates glossary explanations in Korean while retaining each protocol word", () => {
+    const html = page("/help", "ko");
+    for (const item of STATUS_WORD_GUIDE) {
+      expect(html, item.word).toContain(`<code>${item.word}</code>`);
+      for (const text of [item.meaning, item.doText, item.dontText]) {
+        const escaped = renderToStaticMarkup(<span>{text}</span>).slice(6, -7);
+        expect(html, `${item.word}: ${text}`).not.toContain(escaped);
+      }
+    }
+  });
+
   it("the help page states it is a glossary, not a status surface", () => {
     const html = page("/help");
     expect(html).toContain("no request is sent");

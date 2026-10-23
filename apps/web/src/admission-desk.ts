@@ -1,3 +1,4 @@
+import { messages as sourceCopy } from "./i18n/messages/admission-desk";
 import { connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useState } from "react";
 import { type AdmissionPresentation } from "@kix/protocol-adapter";
@@ -133,7 +134,7 @@ export function useAdmissionDesk(eventId: string, gateId: string) {
 }
 
 function message(reason: unknown): string {
-  return reason instanceof Error ? reason.message : "Admission credential command was rejected.";
+  return reason instanceof Error ? reason.message : sourceCopy.en["s1n"];
 }
 
 function readAttempt(eventId: string): number {

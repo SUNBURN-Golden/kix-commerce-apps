@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/receipt-explorer";
+import { sourceMessage } from "./i18n/source-message";
 import { useEffect, useSyncExternalStore } from "react";
 import {
   CONSENT_NOT_COMPOSED,
@@ -30,14 +32,14 @@ import {
 
 export const RECEIPT_RULING = WORKSPACE_RULING;
 
-export const RECEIPT_STUB_SENTENCE = "Stub-shape receipts are not from the gate.";
+export const RECEIPT_STUB_SENTENCE = sourceCopy.en["s1n0"];
 
-export const RECEIPT_READ_NOTE = "This read does not turn an unknown outcome into a confirmed receipt.";
+export const RECEIPT_READ_NOTE = sourceCopy.en["s23e"];
 
-export const RECEIPT_SESSION_NOTE = "A receipt from another session is not shown on this screen.";
+export const RECEIPT_SESSION_NOTE = sourceCopy.en["s6g"];
 
 export const RECEIPT_RELOAD_NOTE =
-  "A reload clears page-load state and opens a new session. This page does not send.";
+  sourceCopy.en["s6v"];
 
 export const RECEIPT_CONTEXTS = ["journey", "gift", "consent", "organizer", "transport"] as const;
 
@@ -144,17 +146,17 @@ const DENY_FIELD_KEYS = new Set([
   "credential",
 ]);
 
-const ALLOWED_NOTES = new Set([
-  "Confirmed stub-shape receipt. Not from the gate.",
-  "Confirmed receipt.",
-  "Unconfirmed: sent, no authoritative receipt. May have applied. Not a rejection.",
-  "Blocked. The next write stays blocked.",
-  "In flight. One attempt.",
-  "Unavailable. No write is sent.",
-  "Ready to send. One attempt.",
-  "Waiting for the previous step.",
-  "This track is loading.",
-  "Not sent.",
+const ALLOWED_NOTES = new Set<string>([
+  sourceCopy.en["sdk"],
+  sourceCopy.en["sdj"],
+  sourceCopy.en["s253"],
+  sourceCopy.en["saa"],
+  sourceCopy.en["snx"],
+  sourceCopy.en["s250"],
+  sourceCopy.en["s1d1"],
+  sourceCopy.en["s268"],
+  sourceCopy.en["s23u"],
+  sourceCopy.en["s12l"],
 ]);
 
 const ROLES = new Set<WorkspaceRole>(["buyer", "organizer", "operator"]);
@@ -472,8 +474,8 @@ function publicNote(note: string): string {
   if (/^Rejected by the gate \([A-Z0-9_]{1,64}\)\.$/.test(note)) {
     return note;
   }
-  if (note.startsWith("Not sent.")) {
-    return "Not sent.";
+  if (note.startsWith(sourceCopy.en["s12l"])) {
+    return sourceCopy.en["s12l"];
   }
   return "[redacted-note]";
 }
@@ -702,7 +704,7 @@ function publishReceipt(parsed: ParsedCandidate): KeptReceipt {
 export function explainReceipt(receipt: KeptReceipt): ReceiptExplanation {
   const status = receipt.status;
   const contract = TRACK_STATE_CONTRACT[status];
-  const codeBit = receipt.code ? ` Code ${receipt.code} stays on ${receipt.action}.` : ` Action ${receipt.action}.`;
+  const codeBit = receipt.code ? sourceMessage(sourceCopy.en["p.t400"], { v1: receipt.code, v2: receipt.action }) : sourceMessage(sourceCopy.en["p.t570"], { v1: receipt.action });
   const confirmed = status === "confirmed";
   const unconfirmed = status === "unknown";
   if (unconfirmed) {
@@ -714,9 +716,9 @@ export function explainReceipt(receipt: KeptReceipt): ReceiptExplanation {
       status,
       confirmed: false,
       unconfirmed: true,
-      meaning: `${contract.copy} Unconfirmed: sent, no authoritative receipt. May have applied. Not a rejection.${codeBit}${stale}`,
-      unconfirmedReason: `The outcome of ${receipt.action} is unknown.${receipt.code ? ` Code ${receipt.code}.` : ""} This read does not confirm it.`,
-      nextAction: "Leave this attempt unknown. This page does not retry and does not send the action again.",
+      meaning: sourceMessage(sourceCopy.en["p.t401"], { v1: contract.copy, v2: codeBit, v3: stale }),
+      unconfirmedReason: sourceMessage(sourceCopy.en["p.t402"], { v1: receipt.action, v2: receipt.code ? ` Code ${receipt.code}.` : "" }),
+      nextAction: sourceCopy.en["sqm"],
     };
   }
   if (status === "stale") {
@@ -724,9 +726,9 @@ export function explainReceipt(receipt: KeptReceipt): ReceiptExplanation {
       status,
       confirmed: false,
       unconfirmed: false,
-      meaning: `${contract.copy}${codeBit} A stale response does not update this track.`,
+      meaning: sourceMessage(sourceCopy.en["p.t403"], { v1: contract.copy, v2: codeBit }),
       unconfirmedReason: null,
-      nextAction: "Do not apply the stale response. This page does not send.",
+      nextAction: sourceCopy.en["sh6"],
     };
   }
   if (confirmed) {
@@ -734,9 +736,9 @@ export function explainReceipt(receipt: KeptReceipt): ReceiptExplanation {
       status,
       confirmed,
       unconfirmed: false,
-      meaning: `${contract.copy} Action ${receipt.action}.`,
+      meaning: sourceMessage(sourceCopy.en["p.t572"], { v1: contract.copy, v2: receipt.action }),
       unconfirmedReason: null,
-      nextAction: "This receipt does not confirm another action. This page does not send.",
+      nextAction: sourceCopy.en["s23f"],
     };
   }
   if (status === "rejected") {
@@ -746,7 +748,7 @@ export function explainReceipt(receipt: KeptReceipt): ReceiptExplanation {
       unconfirmed: false,
       meaning: `${contract.copy}${codeBit}`,
       unconfirmedReason: null,
-      nextAction: "The rejection stays on this action. This page does not send it again.",
+      nextAction: sourceCopy.en["s1ww"],
     };
   }
   if (status === "in-flight") {
@@ -754,9 +756,9 @@ export function explainReceipt(receipt: KeptReceipt): ReceiptExplanation {
       status,
       confirmed: false,
       unconfirmed: false,
-      meaning: `${contract.copy} Action ${receipt.action}.`,
+      meaning: sourceMessage(sourceCopy.en["p.t572"], { v1: contract.copy, v2: receipt.action }),
       unconfirmedReason: null,
-      nextAction: "One attempt. This page does not retry.",
+      nextAction: sourceCopy.en["s145"],
     };
   }
   if (status === "loading") {
@@ -764,9 +766,9 @@ export function explainReceipt(receipt: KeptReceipt): ReceiptExplanation {
       status,
       confirmed: false,
       unconfirmed: false,
-      meaning: `${contract.copy} This observation is not a protocol command and not a receipt.`,
+      meaning: sourceMessage(sourceCopy.en["p.t404"], { v1: contract.copy }),
       unconfirmedReason: null,
-      nextAction: "Wait for this observation. This page does not send.",
+      nextAction: sourceCopy.en["s264"],
     };
   }
   if (status === "unavailable") {
@@ -775,9 +777,9 @@ export function explainReceipt(receipt: KeptReceipt): ReceiptExplanation {
       status,
       confirmed: false,
       unconfirmed: false,
-      meaning: `${contract.copy}${codeBit}${degraded} The desk stays on the selected adapter.`,
+      meaning: sourceMessage(sourceCopy.en["p.t405"], { v1: contract.copy, v2: codeBit, v3: degraded }),
       unconfirmedReason: null,
-      nextAction: "The desk does not fall back to the stub and does not retry. This page does not send.",
+      nextAction: sourceCopy.en["s1rm"],
     };
   }
   if (status === "not-sent") {
@@ -787,7 +789,7 @@ export function explainReceipt(receipt: KeptReceipt): ReceiptExplanation {
       unconfirmed: false,
       meaning: `${contract.copy}${codeBit}`,
       unconfirmedReason: null,
-      nextAction: "Nothing was posted. This page does not send it.",
+      nextAction: sourceCopy.en["s11l"],
     };
   }
   if (status === "fenced") {
@@ -797,7 +799,7 @@ export function explainReceipt(receipt: KeptReceipt): ReceiptExplanation {
       unconfirmed: false,
       meaning: `${contract.copy}${codeBit}`,
       unconfirmedReason: null,
-      nextAction: "A later write waits for a new page load. This page does not send.",
+      nextAction: sourceCopy.en["s2k"],
     };
   }
   if (status === "not-bound") {
@@ -805,9 +807,9 @@ export function explainReceipt(receipt: KeptReceipt): ReceiptExplanation {
       status,
       confirmed: false,
       unconfirmed: false,
-      meaning: `${contract.copy} Action ${receipt.action}.`,
+      meaning: sourceMessage(sourceCopy.en["p.t572"], { v1: contract.copy, v2: receipt.action }),
       unconfirmedReason: null,
-      nextAction: "The desk method stays not-bound. This page does not send it.",
+      nextAction: sourceCopy.en["s1rr"],
     };
   }
   if (status === "error") {
@@ -817,7 +819,7 @@ export function explainReceipt(receipt: KeptReceipt): ReceiptExplanation {
       unconfirmed: false,
       meaning: contract.copy,
       unconfirmedReason: null,
-      nextAction: "This page does not send.",
+      nextAction: sourceCopy.en["s238"],
     };
   }
   return {
@@ -826,7 +828,7 @@ export function explainReceipt(receipt: KeptReceipt): ReceiptExplanation {
     unconfirmed: false,
     meaning: contract.copy,
     unconfirmedReason: null,
-    nextAction: "A supported action stays on its own desk. This page does not send.",
+    nextAction: sourceCopy.en["s8k"],
   };
 }
 
@@ -871,7 +873,7 @@ function projectRow(
   const operationId = publicToken(row.operationId);
   const note =
     row.status === "confirmed" && row.receipt === null
-      ? "Unconfirmed: sent, no authoritative receipt. May have applied. Not a rejection."
+      ? sourceCopy.en["s253"]
       : row.note;
   const fields = (row.receipt ?? []).slice(0, 24).map((field) => ({
     key: field.key.slice(0, 40),
@@ -928,7 +930,7 @@ function projectPath(
     correlationId: null,
     refId: desk,
     sequence,
-    note: status === "loading" ? "This track is loading." : "Unavailable. No write is sent.",
+    note: status === "loading" ? sourceCopy.en["s23u"] : sourceCopy.en["s250"],
     fields: [],
   };
 }
@@ -983,12 +985,12 @@ function recordedFor(role: WorkspaceRole): RecordedNotSent[] {
     }
   };
   if (role === "buyer" || role === "operator") {
-    push("BookingJourney", JOURNEY_NOT_COMPOSED);
-    push("GiftTransfer", GIFT_NOT_COMPOSED);
-    push("ConsentBind", CONSENT_NOT_COMPOSED);
+    push(sourceCopy.en["sae"], JOURNEY_NOT_COMPOSED);
+    push(sourceCopy.en["sml"], GIFT_NOT_COMPOSED);
+    push(sourceCopy.en["sdr"], CONSENT_NOT_COMPOSED);
   }
   if (role === "organizer" || role === "operator") {
-    push("OrganizerConsole", ORGANIZER_NOT_COMPOSED);
+    push(sourceCopy.en["s162"], ORGANIZER_NOT_COMPOSED);
   }
   return rows;
 }
@@ -1040,16 +1042,16 @@ function toEntry(receipt: KeptReceipt): ReceiptEntry {
 }
 
 const CONTEXT_HEADING: Record<ReceiptContext, string> = {
-  journey: "Journey",
+  journey: sourceCopy.en["spe"],
   gift: "Gift",
-  consent: "Consent",
+  consent: sourceCopy.en["sdo"],
   organizer: "Organizer",
-  transport: "Adapter path",
+  transport: sourceCopy.en["s15"],
 };
 
 function summaryLine(label: string, entry: ReceiptEntry | undefined): string {
   if (!entry?.operationId) {
-    return `${label}: none`;
+    return sourceMessage(sourceCopy.en["p.t464"], { v1: label });
   }
   return `${label}: ${entry.action} · ${entry.operationId}`;
 }
@@ -1066,8 +1068,8 @@ function groupEntries(entries: readonly ReceiptEntry[]): ReceiptGroup[] {
         context: entry.context,
         refId: entry.refId,
         heading: `${CONTEXT_HEADING[entry.context]} ${entry.refId}`,
-        lastConfirmed: "Last confirmed receipt: none",
-        unconfirmed: "Unconfirmed request: none",
+        lastConfirmed: sourceCopy.en["sq8"],
+        unconfirmed: sourceCopy.en["s252"],
         entries: [],
       };
       index.set(id, group);
@@ -1080,8 +1082,8 @@ function groupEntries(entries: readonly ReceiptEntry[]): ReceiptGroup[] {
     const unconfirmed = group.entries.find((entry) => entry.status === "unknown");
     return {
       ...group,
-      lastConfirmed: summaryLine("Last confirmed receipt", lastConfirmed),
-      unconfirmed: summaryLine("Unconfirmed request", unconfirmed),
+      lastConfirmed: summaryLine(sourceCopy.en["sq7"], lastConfirmed),
+      unconfirmed: summaryLine(sourceCopy.en["s251"], unconfirmed),
     };
   });
 }

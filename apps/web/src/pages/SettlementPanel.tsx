@@ -1,3 +1,6 @@
+import { messages as copy0 } from "../i18n/messages/pages--SettlementPanel";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { SettlementCaseView } from "@kix/protocol-adapter";
 
@@ -14,13 +17,13 @@ export const SETTLEMENT_DESK_COMMANDS = [
 export type SettlementDeskCommand = (typeof SETTLEMENT_DESK_COMMANDS)[number];
 
 const CONTROLS: readonly { command: SettlementDeskCommand; label: string; needsCase: boolean }[] = [
-  { command: "initiate", label: "Initiate mock case", needsCase: false },
-  { command: "authorize", label: "Authorize mock phase", needsCase: true },
-  { command: "capture", label: "Simulate CAPTURED phase", needsCase: true },
-  { command: "commit", label: "Simulate COMMITTED phase", needsCase: true },
-  { command: "fail", label: "Fail mock case", needsCase: true },
-  { command: "cancel", label: "Cancel mock case", needsCase: true },
-  { command: "reconcile", label: "Reconcile process-local", needsCase: true },
+  { command: "initiate", label: copy0.en["e.56"], needsCase: false },
+  { command: "authorize", label: copy0.en["e.57"], needsCase: true },
+  { command: "capture", label: copy0.en["e.58"], needsCase: true },
+  { command: "commit", label: copy0.en["e.59"], needsCase: true },
+  { command: "fail", label: copy0.en["e.60"], needsCase: true },
+  { command: "cancel", label: copy0.en["e.61"], needsCase: true },
+  { command: "reconcile", label: copy0.en["e.4"], needsCase: true },
 ];
 
 export function SettlementPanel({
@@ -38,63 +41,60 @@ export function SettlementPanel({
   onCommand: (command: SettlementDeskCommand) => void;
   onClose: () => void;
 }) {
+  const t = useT(copy0);
   const opened = view !== null;
-  const rejectLabel = view?.failureReason ?? view?.cancelReason ?? "None";
+  const rejectLabel = view?.failureReason ?? view?.cancelReason ?? copy0.en["sw8"];
 
   return (
-    <aside className="panel" aria-label="Mock settlement case">
-      <p className="eyebrow">{view?.surface ?? "wave3.settlement.F01-F03.fsm"}</p>
-      <h3>Mock settlement case</h3>
-      <p className="muted">{eventTitle}</p>
+    <aside className="panel" aria-label={t("st5")}>
+      <p className="eyebrow">{deskText(t, view?.surface) ?? t("s26b")}</p>
+      <h3>{t("st5")}</h3>
+      <p className="muted">{deskText(t, eventTitle)}</p>
       <p>
-        Simulated mock phase on the adapter stub. Not live funds. F01, F02, and F03 stay 설계중. Protocol
-        truth remains in kix-protocol. Commands on this panel call the adapter stub only.
-      </p>
+        {t("s1km")}</p>
       <p className="muted">
-        CAPTURED and COMMITTED here are mock phase names. Not live funds. FAILED and CANCELLED are terminal
-        mock phases. Reconcile matched is process-local.
-      </p>
+        {t("sbd")}</p>
       {error ? (
         <p className="alert" role="alert">
-          {error}
+          {deskText(t, error)}
         </p>
       ) : null}
       <dl className="facts">
         <div>
-          <dt>Mock phase</dt>
-          <dd className="phase-name">{view?.phase ?? "Not opened"}</dd>
+          <dt>{t("st0")}</dt>
+          <dd className="phase-name">{view?.phase ?? t("s121")}</dd>
         </div>
         <div>
-          <dt>Terminal</dt>
-          <dd>{view?.terminal ? "Yes" : "No"}</dd>
+          <dt>{t("s1pk")}</dt>
+          <dd>{view?.terminal ? t("s276") : t("str")}</dd>
         </div>
         <div>
-          <dt>Last error</dt>
-          <dd>{view?.lastRejectCode ?? "None"}</dd>
+          <dt>{t("sqa")}</dt>
+          <dd>{deskText(t, view?.lastRejectCode) ?? t("sw8")}</dd>
         </div>
         <div>
-          <dt>Reject label</dt>
-          <dd>{rejectLabel}</dd>
+          <dt>{t("s1f2")}</dt>
+          <dd>{deskText(t, rejectLabel)}</dd>
         </div>
         <div>
-          <dt>Reconcile matched</dt>
-          <dd>{view?.reconcileMatched ? "Matched (process-local)" : "Not run"}</dd>
+          <dt>{t("s1dn")}</dt>
+          <dd>{view?.reconcileMatched ? t("ss7") : t("s12i")}</dd>
         </div>
         <div>
-          <dt>Idempotency key</dt>
-          <dd>{view?.idempotencyKey ?? "None"}</dd>
+          <dt>{t("snm")}</dt>
+          <dd>{deskText(t, view?.idempotencyKey) ?? t("sw8")}</dd>
         </div>
         <div>
-          <dt>Provenance</dt>
-          <dd>MOCK_SETTLEMENT_ONLY</dd>
+          <dt>{t("s1a1")}</dt>
+          <dd>{t("sss")}</dd>
         </div>
         <div>
-          <dt>Mode</dt>
-          <dd>mock</dd>
+          <dt>{t("st8")}</dt>
+          <dd>{t("ssp")}</dd>
         </div>
       </dl>
       <div className="row-actions">
-        {CONTROLS.map((control) => (
+        {deskText(t, CONTROLS.map((control) => (
           <ConnectivityWriteButton
             key={control.command}
             type="button"
@@ -102,12 +102,11 @@ export function SettlementPanel({
             disabled={pending || (control.needsCase ? !opened : opened)}
             onClick={() => onCommand(control.command)}
           >
-            {control.label}
+            {deskText(t, control.label)}
           </ConnectivityWriteButton>
-        ))}
+        )))}
         <button type="button" className="ghost" disabled={pending} onClick={onClose}>
-          Close
-        </button>
+          {t("scs")}</button>
       </div>
     </aside>
   );

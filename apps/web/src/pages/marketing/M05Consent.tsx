@@ -1,9 +1,16 @@
+import { messages as copy0 } from "../../i18n/messages/pages--marketing--M05Consent";
+import { messages as copy1 } from "../../i18n/messages/consent-desk";
+import { messages as copy2 } from "../../i18n/messages/storage-allow-list";
+import { messages as copy3 } from "../../i18n/messages/marketing--contracts";
+import { messages as copy4 } from "../../i18n/messages/marketing--desk";
+import { deskText } from "../../i18n/desk-translate";
 import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
 import type { ValidationHandle } from "../../forms/useFormValidation";
 import { ValidatedForm } from "../../forms/ValidatedForm";
 import { field } from "../../forms/validation";
 import { useRef, useState, type FormEvent } from "react";
 import { emptyConsentDraft, useConsentDesk, type ConsentDraft, type ConsentPanelModel, type ConsentRowStatus } from "../../consent-desk";
+import { useT } from "../../i18n/desk-context";
 import { useFormatWhen } from "../../i18n/locale-context";
 import { MARKETING_CONTRACT_ALIGNMENT } from "../../marketing/contracts";
 import { marketingSession } from "../../marketing/session";
@@ -11,6 +18,7 @@ import { useMarketingSnapshot } from "../../marketing/useMarketingSnapshot";
 import { MarketingChrome } from "./MarketingChrome";
 
 export function M05Page() {
+  const t = useT(copy0, copy1, copy2, copy3, copy4);
   const formatWhen = useFormatWhen();
   const { snapshot, refresh } = useMarketingSnapshot();
   const [performanceNotes, setPerformanceNotes] = useState(snapshot.consent.performanceNotes);
@@ -45,8 +53,8 @@ export function M05Page() {
             onChange={(event) => setPerformanceNotes(event.target.checked)}
           />
           <span>
-            <span lang="ko">공연 안내 플래그</span>
-            <span className="muted"> Performance-note flag. No address is collected.</span>
+            <span lang="ko">{t("s27a")}</span>
+            <span className="muted"> {t("s17w")}</span>
           </span>
         </label>
         {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- The input is nested inside the label and the visible text is in the sibling span; the control is therefore labeled. */}
@@ -58,28 +66,26 @@ export function M05Page() {
             onChange={(event) => setMembershipNotes(event.target.checked)}
           />
           <span>
-            <span lang="ko">멤버십 소식 플래그</span>
-            <span className="muted"> Membership-note flag. No address is collected.</span>
+            <span lang="ko">{t("s27e")}</span>
+            <span className="muted"> {t("ssi")}</span>
           </span>
         </label>
         <p className="muted">
-          Saving writes flags on this stub. Channel send stays {consent.channelSend}. Storage is {consent.storage}.
-          These flags are not the set_consent body. Missing field names:{" "}
-          {MARKETING_CONTRACT_ALIGNMENT.M05.missingFromStub.join(", ")}. channelSend: {consent.channelSend}.
+          {t("s1i8")}{" "}{deskText(t, consent.channelSend)}{t("s1mq")}{" "}{deskText(t, consent.storage)}{t("s1xt")}{" "}
+          {deskText(t, MARKETING_CONTRACT_ALIGNMENT.M05.missingFromStub.join(", "))}{t("sbz")}{" "}{deskText(t, consent.channelSend)}.
         </p>
         <div className="row-actions">
-          <ConnectivityWriteButton type="submit">Save consent flags</ConnectivityWriteButton>
+          <ConnectivityWriteButton type="submit">{t("s1i7")}</ConnectivityWriteButton>
           <ConnectivityWriteButton type="button" className="ghost" onClick={withdraw}>
-            Withdraw flags
-          </ConnectivityWriteButton>
+            {t("s26r")}</ConnectivityWriteButton>
         </div>
       </ValidatedForm>
       <article className="stamp">
         <p className="stamp-word">{consent.state}</p>
         <p>
-          {consent.updatedAt ? `Updated ${formatWhen(consent.updatedAt)}` : "No consent write on this session yet."}
+          {consent.updatedAt ? t("s25r", { v1: formatWhen(consent.updatedAt) }) : t("sux")}
         </p>
-        <p className="muted">Outbound send: {consent.channelSend}. This screen has no sender.</p>
+        <p className="muted">{t("s16f")}{" "}{deskText(t, consent.channelSend)}{t("s23l")}</p>
       </article>
       <ConsentBindPanel
         eventId={eventId}
@@ -93,15 +99,15 @@ export function M05Page() {
 }
 
 const ROW_STATUS: Record<ConsentRowStatus, string> = {
-  "not-started": "Not started",
-  ready: "Ready",
-  "in-flight": "In flight",
-  confirmed: "Confirmed",
-  rejected: "Rejected by the gate",
-  unconfirmed: "Unconfirmed",
-  "not-sent": "Not sent",
+  "not-started": copy0.en["s12p"],
+  ready: copy0.en["e.19"],
+  "in-flight": copy0.en["e.20"],
+  confirmed: copy0.en["e.21"],
+  rejected: copy0.en["e.22"],
+  unconfirmed: copy0.en["e.23"],
+  "not-sent": copy0.en["e.24"],
   blocked: "Blocked",
-  unavailable: "Unavailable",
+  unavailable: copy0.en["s24z"],
 };
 
 function ConsentBindPanel({
@@ -118,28 +124,25 @@ function ConsentBindPanel({
   onDraft: (partial: Partial<ConsentDraft>) => void;
 }) {
   const validation = useRef<ValidationHandle>(null);
+  const t = useT(copy0, copy1, copy2, copy3, copy4);
   const unavailable = model.path.kind === "unavailable";
   return (
-    <aside className="panel" aria-label="Consent bind" data-consent-path={model.path.kind}>
-      <p className="eyebrow">{eyebrow(model)}</p>
-      <h3>Consent bind</h3>
-      <p>The actor is not an authentication result.</p>
+    <aside className="panel" aria-label={t("sds")} data-consent-path={model.path.kind}>
+      <p className="eyebrow">{deskText(t, eyebrow(model))}</p>
+      <h3>{t("sds")}</h3>
+      <p>{t("s1ps")}</p>
       {model.source === "stub-shape" || model.path.kind === "available-stub-shape" ? (
-        <p>Stub-shape receipts are not gate receipts.</p>
+        <p>{t("s1n1")}</p>
       ) : null}
       <p className="muted">
-        Sending set consent before authorize marketing is desk behavior for this page. It is not protocol law. Fields
-        start empty. This page does not choose business, channel, purpose, or subject.
-      </p>
-      <p className="muted">Reload clears page-load state. A reload uses a new attempt id. CRM campaign editing stays out.</p>
+        {t("s1j8")}</p>
+      <p className="muted">{t("s1fb")}</p>
       {model.path.kind === "checking" ? (
-        <p className="muted">Environment integration-http. Loopback status is not loaded yet.</p>
+        <p className="muted">{t("sim")}</p>
       ) : null}
       {unavailable ? (
         <p className="alert" role="alert">
-          Consent path unavailable. The reviewed gate answers no CORS preflight; the desk stays on integration HTTP and
-          does not fall back to the stub.
-          {model.path.kind === "unavailable" && model.path.code ? ` Code ${model.path.code}.` : ""}
+          {t("sdx")}{model.path.kind === "unavailable" && model.path.code ? t("sd4", { code: model.path.code }) : ""}
         </p>
       ) : null}
       <ValidatedForm id="consent-bind-form" validationRef={validation} fields={[
@@ -157,80 +160,73 @@ function ConsentBindPanel({
         }}
       >
         <label>
-          Event id
-          <input id="consent-event" value={eventId} onChange={(event) => onEventId(event.target.value)} autoComplete="off" />
+          {t("sis")}<input id="consent-event" value={eventId} onChange={(event) => onEventId(event.target.value)} autoComplete="off" />
         </label>
         <label>
-          Subject
-          <input id="consent-subject" value={draft.subject} onChange={(event) => onDraft({ subject: event.target.value })} autoComplete="off" />
+          {t("s1n3")}<input id="consent-subject" value={draft.subject} onChange={(event) => onDraft({ subject: event.target.value })} autoComplete="off" />
         </label>
         <label>
-          Business
-          <input id="consent-business"
+          {t("saq")}<input id="consent-business"
             value={draft.business}
             onChange={(event) => onDraft({ business: event.target.value })}
             autoComplete="off"
           />
         </label>
         <label>
-          Channel
-          <input id="consent-channel" value={draft.channel} onChange={(event) => onDraft({ channel: event.target.value })} autoComplete="off" />
+          {t("sby")}<input id="consent-channel" value={draft.channel} onChange={(event) => onDraft({ channel: event.target.value })} autoComplete="off" />
         </label>
         <label>
-          Purpose
-          <input id="consent-purpose" value={draft.purpose} onChange={(event) => onDraft({ purpose: event.target.value })} autoComplete="off" />
+          {t("s1ag")}<input id="consent-purpose" value={draft.purpose} onChange={(event) => onDraft({ purpose: event.target.value })} autoComplete="off" />
         </label>
         <label>
-          Expected consent version
-          <input id="consent-version"
+          {t("sk6")}<input id="consent-version"
             value={draft.expectedConsentVersion}
             inputMode="numeric"
-            placeholder="Caller-supplied integer"
+            placeholder={t("sas")}
             onChange={(event) => onDraft({ expectedConsentVersion: event.target.value })}
             autoComplete="off"
           />
         </label>
         <label>
-          Allowed
-          <select id="consent-allowed" value={draft.allowed} onChange={(event) => onDraft({ allowed: event.target.value })}>
-            <option value="">Choose allowed</option>
+          {t("s2y")}<select id="consent-allowed" value={draft.allowed} onChange={(event) => onDraft({ allowed: event.target.value })}>
+            <option value="">{t("sca")}</option>
             <option value="true">true</option>
             <option value="false">false</option>
           </select>
         </label>
       </ValidatedForm>
-      <p>{model.lastConfirmed}</p>
-      <p>{model.unconfirmed}</p>
+      <p>{deskText(t, model.lastConfirmed)}</p>
+      <p>{deskText(t, model.unconfirmed)}</p>
       <ol className="journey-steps">
-        {model.rows.map((row) => (
+        {deskText(t, model.rows.map((row) => (
           <li key={row.step} className="journey-step" data-status={row.status}>
-            <p className="eyebrow">{row.label}</p>
-            <p>{row.step}</p>
+            <p className="eyebrow">{deskText(t, row.label)}</p>
+            <p>{deskText(t, row.step)}</p>
             <dl className="facts">
               <div>
-                <dt>Status</dt>
-                <dd>{ROW_STATUS[row.status]}</dd>
+                <dt>{t("s1mj")}</dt>
+                <dd>{deskText(t, ROW_STATUS[row.status])}</dd>
               </div>
               <div>
-                <dt>Operation</dt>
-                <dd>{row.operationId ?? "none"}</dd>
+                <dt>{t("s15j")}</dt>
+                <dd>{deskText(t, row.operationId) ?? t("common.empty")}</dd>
               </div>
               <div>
-                <dt>Actor</dt>
-                <dd>{row.actor && row.actor.length > 0 ? row.actor : "none"}</dd>
+                <dt>{t("s12")}</dt>
+                <dd>{row.actor && row.actor.length > 0 ? deskText(t, row.actor) : t("common.empty")}</dd>
               </div>
               <div>
-                <dt>Code</dt>
-                <dd>{row.code ?? "none"}</dd>
+                <dt>{t("error.fact.code")}</dt>
+                <dd>{deskText(t, row.code) ?? t("common.empty")}</dd>
               </div>
             </dl>
-            {row.note ? <p>{row.note}</p> : null}
+            {row.note ? <p>{deskText(t, row.note)}</p> : null}
             {row.receipt ? (
               <dl className="facts">
                 {row.receipt.map((field) => (
                   <div key={field.key}>
-                    <dt>{field.key}</dt>
-                    <dd>{field.value}</dd>
+                    <dt>{deskText(t, field.key)}</dt>
+                    <dd>{deskText(t, field.value)}</dd>
                   </div>
                 ))}
               </dl>
@@ -240,29 +236,29 @@ function ConsentBindPanel({
                 const ids = row.step === "set_consent" ? undefined : ["consent-event", "consent-subject", "consent-business", "consent-channel", "consent-purpose", "consent-version"];
                 if (validation.current?.validate(ids)) model.send(row.step);
               }}>
-                Send {row.step}
+                {t("s1j5")}{" "}{deskText(t, row.step)}
               </ConnectivityWriteButton>
             </div>
           </li>
-        ))}
+        )))}
       </ol>
-      <p className="eyebrow">Not composed</p>
+      <p className="eyebrow">{t("s10i")}</p>
       <dl className="facts">
-        {model.notComposed.map((entry) => (
+        {deskText(t, model.notComposed.map((entry) => (
           <div key={entry.label}>
-            <dt>{entry.label}</dt>
-            <dd>Not composed. {entry.detail}</dd>
+            <dt>{deskText(t, entry.label)}</dt>
+            <dd>{t("s10j")}{" "}{deskText(t, entry.detail)}</dd>
           </div>
-        ))}
+        )))}
       </dl>
-      <p className="eyebrow">Desk methods not bound</p>
+      <p className="eyebrow">{t("sge")}</p>
       <dl className="facts">
-        {model.deskNotBound.map((entry) => (
+        {deskText(t, model.deskNotBound.map((entry) => (
           <div key={entry.label}>
-            <dt>{entry.label}</dt>
-            <dd>{entry.detail}</dd>
+            <dt>{deskText(t, entry.label)}</dt>
+            <dd>{deskText(t, entry.detail)}</dd>
           </div>
-        ))}
+        )))}
       </dl>
     </aside>
   );
@@ -270,16 +266,16 @@ function ConsentBindPanel({
 
 function eyebrow(model: ConsentPanelModel): string {
   if (model.path.kind === "available-stub-shape" || model.source === "stub-shape") {
-    return "Consent bind · stub-shape receipts";
+    return copy0.en["e.66"];
   }
   if (model.path.kind === "unavailable") {
-    return "integration-http · unavailable";
+    return copy0.en["e.26"];
   }
   if (model.path.kind === "checking") {
-    return "integration-http · checking";
+    return copy0.en["e.27"];
   }
   if (model.path.kind === "available") {
-    return "integration-http · available";
+    return copy0.en["e.28"];
   }
-  return "Consent bind";
+  return copy0.en["sds"];
 }

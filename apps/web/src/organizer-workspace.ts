@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/organizer-workspace";
+import { sourceMessage } from "./i18n/source-message";
 import { connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
@@ -27,36 +29,36 @@ import {
 export const ORGANIZER_WS_RULING = JOURNEY_RULING;
 
 export const BATCH_NOT_ATOMIC =
-  "Each command is its own request with its own result. They are not one atomic transaction. An earlier receipt is not undone by a later rejection.";
+  sourceCopy.en["sht"];
 
-export const ORGANIZER_WS_STUB = "Stub-shape receipts are not from the gate.";
+export const ORGANIZER_WS_STUB = sourceCopy.en["s1n0"];
 
-export const ORGANIZER_WS_ACTOR = "Operator is a local-call actor string, not an authentication result.";
+export const ORGANIZER_WS_ACTOR = sourceCopy.en["s15q"];
 
-export const ORGANIZER_WS_FUNDS = "No funds.";
+export const ORGANIZER_WS_FUNDS = sourceCopy.en["svk"];
 
-export const ORGANIZER_WS_RELOAD = "Reload clears page-load state. A reload uses a new attempt id.";
+export const ORGANIZER_WS_RELOAD = sourceCopy.en["s1fc"];
 
 export const ORGANIZER_UNCONNECTED = [
   {
     id: "edit-after-create",
-    label: "Edit after create",
-    reason: "No published command updates an event after create_event. The draft stays local until a listed command is sent.",
+    label: sourceCopy.en["si8"],
+    reason: sourceCopy.en["sx4"],
   },
   {
     id: "date-time-venue",
-    label: "Date, time, and venue",
-    reason: "No published field carries an event date, time, or venue.",
+    label: sourceCopy.en["sfg"],
+    reason: sourceCopy.en["sx5"],
   },
   {
     id: "capacity-read",
-    label: "Capacity, sales, and inventory read",
-    reason: "No published read of capacity, sales, or inventory. Typed seats are caller input. The gate decides inventory.",
+    label: sourceCopy.en["sbc"],
+    reason: sourceCopy.en["sx6"],
   },
   {
     id: "settlement",
-    label: "Settlement and funds",
-    reason: "Settlement and funds stay unconnected. No funds.",
+    label: sourceCopy.en["s1jz"],
+    reason: sourceCopy.en["s1k0"],
   },
 ] as const;
 
@@ -136,10 +138,10 @@ const SUMMARY_LABELS: ReadonlyArray<readonly [OrganizerBatchItemStatus, string, 
   ["RECEIPT", "receipt", "receipts"],
   ["REJECTED", "rejected", "rejected"],
   ["UNKNOWN", "unknown", "unknown"],
-  ["NOT_SENT", "not sent", "not sent"],
+  ["NOT_SENT", sourceCopy.en["s12m"], sourceCopy.en["s12m"]],
   ["FENCED", "fenced", "fenced"],
   ["STALE", "stale", "stale"],
-  ["NOT_ATTEMPTED", "not attempted", "not attempted"],
+  ["NOT_ATTEMPTED", sourceCopy.en["s108"], sourceCopy.en["s108"]],
 ];
 
 let planSeq = 0;
@@ -150,7 +152,7 @@ export function seatsTypedLine(seats: string): string {
     .split(",")
     .map((seat) => seat.trim())
     .filter((seat) => seat.length > 0).length;
-  return `seats typed: ${count}, caller input; the gate decides inventory`;
+  return sourceMessage(sourceCopy.en["p.t353"], { v1: count });
 }
 
 export function inventorySuggestions(snapshot: OrganizerDeskSnapshot, eventId: string): string[] {
@@ -260,7 +262,7 @@ export class OrganizerBatchRun {
     let stopped = false;
     for (const planned of this.plan.items) {
       if (stopped) {
-        items.push(itemResult(planned, "NOT_ATTEMPTED", null, null, null, null, "Not attempted."));
+        items.push(itemResult(planned, "NOT_ATTEMPTED", null, null, null, null, sourceCopy.en["s109"]));
         continue;
       }
       const row = this.rows.find((candidate) => candidate.key === planned.key);
@@ -274,14 +276,14 @@ export class OrganizerBatchRun {
             null,
             null,
             null,
-            "Stale selection. The local selection changed. Nothing was sent.",
+            sourceCopy.en["s1ly"],
           ),
         );
         stopped = true;
         continue;
       }
       if (fresh.state === "blocked") {
-        items.push(itemResult(planned, "FENCED", fresh.reason, null, null, null, `Fenced. ${fresh.reason}`));
+        items.push(itemResult(planned, "FENCED", fresh.reason, null, null, null, sourceMessage(sourceCopy.en["p.t559"], { v1: fresh.reason })));
         stopped = true;
         continue;
       }
@@ -505,7 +507,7 @@ function previewOne(
       actor = preview.actor;
       body = preview.body;
     } catch (error) {
-      invalid = error instanceof Error ? error.message : "The command is invalid.";
+      invalid = error instanceof Error ? error.message : sourceCopy.en["s1r0"];
     }
   }
   const state = blocked !== null ? "blocked" : invalid.length > 0 ? "invalid" : "ready";
@@ -540,10 +542,10 @@ function previewOne(
 
 function blockReason(row: OrganizerChangeRow, snapshot: OrganizerDeskSnapshot, duplicate: string | null): string | null {
   if (row.eventId.length === 0) {
-    return "Empty event id.";
+    return sourceCopy.en["sib"];
   }
   if (!pathWritesOpen(snapshot.path)) {
-    return "Path not open.";
+    return sourceCopy.en["s17c"];
   }
   if (duplicate !== null) {
     return duplicate;
@@ -551,17 +553,17 @@ function blockReason(row: OrganizerChangeRow, snapshot: OrganizerDeskSnapshot, d
   const event = snapshot.events.find((item) => item.eventId === row.eventId);
   const stepRow = event?.rows.find((item) => item.step === row.step);
   if (event?.pending || stepRow?.status === "in-flight") {
-    return "In flight.";
+    return sourceCopy.en["snw"];
   }
   if (event?.halted) {
-    return "Console halted.";
+    return sourceCopy.en["se4"];
   }
   if (row.step === "issue_invitation") {
     if (row.draft.inventoryId.length > 0 && event?.issuedInventoryIds.includes(row.draft.inventoryId)) {
-      return "Already sent.";
+      return sourceCopy.en["s2z"];
     }
   } else if (stepRow?.status === "confirmed") {
-    return "Already sent.";
+    return sourceCopy.en["s2z"];
   }
   return null;
 }
@@ -573,12 +575,12 @@ function duplicateReason(row: OrganizerChangeRow, earlier: readonly OrganizerCha
     }
     if (row.step === "issue_invitation" && other.step === "issue_invitation") {
       if (row.draft.inventoryId.length > 0 && row.draft.inventoryId === other.draft.inventoryId) {
-        return "Duplicate inventory id.";
+        return sourceCopy.en["sho"];
       }
       continue;
     }
     if (other.step === row.step) {
-      return "Duplicate command for this event.";
+      return sourceCopy.en["shn"];
     }
   }
   return null;

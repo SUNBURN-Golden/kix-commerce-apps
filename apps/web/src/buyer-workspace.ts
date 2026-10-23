@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/buyer-workspace";
+import { sourceMessage } from "./i18n/source-message";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { COMMERCE_COMMAND_BINDINGS, JOURNEY_NOT_COMPOSED, type Performance } from "@kix/protocol-adapter";
 import { giftDesk, type GiftDeskSnapshot, type GiftRowStatus } from "./gift-desk";
@@ -15,9 +17,9 @@ import { PLACE_HOLD_RECORD, WORKSPACE_RULING, type OutcomeTrack, type TrackState
 
 export const BUYER_RULING = WORKSPACE_RULING;
 
-export const BUYER_STUB_SENTENCE = "Stub-shape receipts are not from the gate.";
+export const BUYER_STUB_SENTENCE = sourceCopy.en["s1n0"];
 
-export const BUYER_RELOAD_NOTE = "A reload clears page-load state and re-sends nothing.";
+export const BUYER_RELOAD_NOTE = sourceCopy.en["s6t"];
 
 export type BuyerSource = "stub-shape" | "integration-gate" | "mock-case" | "none";
 
@@ -168,7 +170,7 @@ export function buildBuyerWorkspace(input: BuyerWorkspaceInput): BuyerWorkspaceM
   if (input.reservation) {
     progress.push(reservationRow(input.reservation, input.reservationError));
   } else if (input.reservationError) {
-    progress.push(readErrorRow("Reservation case", "reservation", "reservation", input.reservationError, selected));
+    progress.push(readErrorRow(sourceCopy.en["s1g5"], "reservation", "reservation", input.reservationError, selected));
   }
 
   progress.push(ticketReadRow());
@@ -185,14 +187,14 @@ export function buildBuyerWorkspace(input: BuyerWorkspaceInput): BuyerWorkspaceM
   if (input.resaleRight) {
     progress.push(resaleProgress(input.resaleRight));
   } else if (input.resaleError) {
-    progress.push(readErrorRow("Resale right", "issuance", "issuance", input.resaleError, selected));
+    progress.push(readErrorRow(sourceCopy.en["s1g3"], "issuance", "issuance", input.resaleError, selected));
   }
 
   if (input.journey.path.kind === "unavailable") {
-    progress.push(unavailableRow("Journey path", input.journey.path.code, sourceFromDesk(input.journey.source)));
+    progress.push(unavailableRow(sourceCopy.en["spj"], input.journey.path.code, sourceFromDesk(input.journey.source)));
   }
   if (input.gift.path.kind === "unavailable") {
-    progress.push(unavailableRow("Gift path", input.gift.path.code, sourceFromDesk(input.gift.source)));
+    progress.push(unavailableRow(sourceCopy.en["smj"], input.gift.path.code, sourceFromDesk(input.gift.source)));
   }
 
   return {
@@ -267,16 +269,16 @@ export function useBuyerWorkspace(eventId: string): { model: BuyerWorkspaceModel
 
 function actionForCatalog(catalog: CatalogState): BuyerReturnAction | null {
   if (catalog.kind === "loading") {
-    return { label: "Back to box office", to: "/" };
+    return { label: sourceCopy.en["s9g"], to: "/" };
   }
   if (catalog.kind === "empty") {
-    return { label: "Pick a show", to: "/" };
+    return { label: sourceCopy.en["s183"], to: "/" };
   }
   if (catalog.kind === "error") {
-    return { label: "Read again", readAgain: true };
+    return { label: sourceCopy.en["s1ax"], readAgain: true };
   }
   if (catalog.kind === "not-bound") {
-    return { label: "Open box office", to: "/" };
+    return { label: sourceCopy.en["s151"], to: "/" };
   }
   return null;
 }
@@ -288,18 +290,18 @@ function selectionRow(
   action: BuyerReturnAction | null,
 ): BuyerProgressRow {
   if (catalog.kind === "loading") {
-    return row("Selection", "selection", null, "loading", null, "none", action);
+    return row(sourceCopy.en["s1iw"], "selection", null, "loading", null, "none", action);
   }
   if (catalog.kind === "empty") {
-    return row("Selection", "selection", null, "empty", null, "none", action);
+    return row(sourceCopy.en["s1iw"], "selection", null, "empty", null, "none", action);
   }
   if (catalog.kind === "error") {
-    return row("Selection", "selection", null, "error", catalog.message, "none", action);
+    return row(sourceCopy.en["s1iw"], "selection", null, "error", catalog.message, "none", action);
   }
   if (catalog.kind === "not-bound") {
-    return row("Selection", "selection", null, "not-bound", catalog.reason, "none", action);
+    return row(sourceCopy.en["s1iw"], "selection", null, "not-bound", catalog.reason, "none", action);
   }
-  return row("Selection", "selection", null, "empty", selected.length > 0 ? selected : null, source, null);
+  return row(sourceCopy.en["s1iw"], "selection", null, "empty", selected.length > 0 ? selected : null, source, null);
 }
 
 function holdRow(selected: string): BuyerProgressRow {
@@ -308,7 +310,7 @@ function holdRow(selected: string): BuyerProgressRow {
     "reservation",
     "reservation",
     "not-bound",
-    `${PLACE_HOLD_RECORD.method} stays ${PLACE_HOLD_RECORD.status}. consideredAction ${PLACE_HOLD_RECORD.consideredAction}. mappedOntoPrepareTrade ${PLACE_HOLD_RECORD.mappedOntoPrepareTrade}. ${PLACE_HOLD_RECORD.reason}`,
+    sourceMessage(sourceCopy.en["p.t457"], { v1: PLACE_HOLD_RECORD.method, v2: PLACE_HOLD_RECORD.status, v3: PLACE_HOLD_RECORD.consideredAction, v4: PLACE_HOLD_RECORD.mappedOntoPrepareTrade, v5: PLACE_HOLD_RECORD.reason }),
     "none",
     bookingReturn(selected),
   );
@@ -328,7 +330,7 @@ function paymentRow(selected: string): BuyerProgressRow {
 
 function ticketReadRow(): BuyerProgressRow {
   return row(
-    "Ticket read",
+    sourceCopy.en["s243"],
     "issuance",
     "issuance",
     "not-bound",
@@ -359,7 +361,7 @@ function giftProgress(step: DeskStep, source: BuyerSource): BuyerProgressRow {
     mapDeskState(step.status, step.receipt),
     joinReason(step.code, step.note),
     source,
-    { label: "Open gift", to: "/gift" },
+    { label: sourceCopy.en["s154"], to: "/gift" },
   );
 }
 
@@ -373,7 +375,7 @@ function reservationRow(facts: BuyerReservationFacts, error: string | null): Buy
     error,
   ].filter((part): part is string => part !== null && part.length > 0);
   return row(
-    "Reservation case",
+    sourceCopy.en["s1g5"],
     "reservation",
     "reservation",
     facts.lastRejectCode ? "rejected" : "empty",
@@ -388,13 +390,13 @@ function resaleProgress(facts: BuyerResaleFacts): BuyerProgressRow {
     (part): part is string => part !== null && part.length > 0,
   );
   return row(
-    "Resale right",
+    sourceCopy.en["s1g3"],
     "issuance",
     "issuance",
     facts.lastRejectCode ? "rejected" : "empty",
     parts.join(" "),
     "mock-case",
-    { label: "Open resale", to: "/resale" },
+    { label: sourceCopy.en["s155"], to: "/resale" },
   );
 }
 
@@ -413,7 +415,7 @@ function readErrorRow(
     locked ? "not-bound" : "error",
     locked ?? message,
     locked ? "none" : "mock-case",
-    stage === "issuance" ? { label: "Open resale", to: "/resale" } : bookingReturn(selected),
+    stage === "issuance" ? { label: sourceCopy.en["s155"], to: "/resale" } : bookingReturn(selected),
   );
 }
 
@@ -472,7 +474,7 @@ function evidenceRows(input: BuyerWorkspaceInput): BuyerEvidenceRow[] {
 }
 
 function confirmedSummaries(journeys: JourneyDeskSnapshot["journeys"]): string[] {
-  return journeys.map((journey) => journey.lastConfirmed).filter((line) => !line.endsWith(": none"));
+  return journeys.map((journey) => journey.lastConfirmed).filter((line) => !line.endsWith(sourceCopy.en["swa"]));
 }
 
 function visibleJourneys(snapshot: JourneyDeskSnapshot, selected: string): JourneyDeskSnapshot["journeys"] {

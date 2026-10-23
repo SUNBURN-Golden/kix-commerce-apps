@@ -1,3 +1,4 @@
+import { messages as sourceCopy } from "../i18n/messages/guide--status-words";
 import { ADMISSION_DESK_STATES, ADMISSION_PHASES } from "@kix/protocol-adapter";
 import { STATUS_MARKS } from "../a11y/marks";
 import { OUTCOME_WORDS } from "../i18n/translate";
@@ -47,221 +48,221 @@ const entry = (
 
 const OUTCOME: Record<(typeof OUTCOME_WORDS)[number], Omit<StatusWordGuideEntry, "word" | "kind">> = {
   UNKNOWN: {
-    meaning: "The request was sent (or may have been sent) but its result was never read back. The answer is not known.",
-    doText: "Read the fence or the receipt page before acting again. Treat the request as possibly applied.",
-    dontText: "Not a failure and not a success. Never read it as 'did not happen' — it may have applied.",
+    meaning: sourceCopy.en["s1x4"],
+    doText: sourceCopy.en["s1ck"],
+    dontText: sourceCopy.en["merge.unknownDont"],
   },
   NOT_BOUND: {
-    meaning: "No published command exists for this action, so nothing was composed and nothing was sent.",
-    doText: "Read the recorded reason. This is a wiring fact, not an outcome.",
-    dontText: "Not a rejection and not a pending result. Nothing is waiting to be retried.",
+    meaning: sourceCopy.en["sx3"],
+    doText: sourceCopy.en["s1cs"],
+    dontText: sourceCopy.en["s102"],
   },
   STALE: {
-    meaning: "The value on screen is older than the source it came from and is kept separate from a fresh value.",
-    doText: "Treat it as history. Look for a newer value before deciding anything.",
-    dontText: "Not a current value and not an error. It is not proof the thing is gone.",
+    meaning: sourceCopy.en["s22q"],
+    doText: sourceCopy.en["s24n"],
+    dontText: sourceCopy.en["sza"],
   },
 };
 
 const FIXTURE: Record<"SUCCESS" | "REJECT", Omit<StatusWordGuideEntry, "word" | "kind">> = {
   SUCCESS: {
-    meaning: "A synthetic fixture whose scripted outcome is a normal reply. It is canned evidence, not a live result.",
-    doText: "Read it as a demonstration of the screen's handling of a normal reply.",
-    dontText: "Not a real payment, booking or integration result. Nothing was bought or reserved.",
+    meaning: sourceCopy.en["s8l"],
+    doText: sourceCopy.en["s1bs"],
+    dontText: sourceCopy.en["szy"],
   },
   REJECT: {
-    meaning: "A synthetic fixture whose scripted outcome is a refusal that arrived as a reply.",
-    doText: "Read it as a demonstrated refusal path.",
-    dontText: "Not UNKNOWN. A reject is an answer; UNKNOWN is the absence of an answer.",
+    meaning: sourceCopy.en["s8m"],
+    doText: sourceCopy.en["s1bq"],
+    dontText: sourceCopy.en["s12t"],
   },
 };
 
 const TRANSPORT: Record<string, Omit<StatusWordGuideEntry, "word" | "kind">> = {
   checking: {
-    meaning: "The loopback probe result is not loaded yet.",
-    doText: "Wait for the banner to settle.",
-    dontText: "Not an outage and not readiness.",
+    meaning: sourceCopy.en["s1ub"],
+    doText: sourceCopy.en["s262"],
+    dontText: sourceCopy.en["szr"],
   },
   unavailable: {
-    meaning: "The loopback gate did not answer. The desk stays on integration HTTP; it does not fall back to the stub.",
-    doText: "Check that the gate is running on its loopback address, then reload.",
-    dontText: "Not production readiness, and never read as the desk switching to stub.",
+    meaning: sourceCopy.en["s1u6"],
+    doText: sourceCopy.en["sc5"],
+    dontText: sourceCopy.en["s126"],
   },
   degraded: {
-    meaning: "The gate answered but reported a strained condition (for example NOT_READY or OVERLOADED).",
-    doText: "The desk stays on integration HTTP. Read the banner code.",
-    dontText: "Not an outage and not a fallback to stub.",
+    meaning: sourceCopy.en["s1sz"],
+    doText: sourceCopy.en["s1ru"],
+    dontText: sourceCopy.en["szq"],
   },
   up: {
-    meaning: "The loopback probe answered. This is loopback only.",
-    doText: "Local reads may proceed on the loopback gate.",
-    dontText: "Not production readiness, conformance or a public service.",
+    meaning: sourceCopy.en["s1ua"],
+    doText: sourceCopy.en["srl"],
+    dontText: sourceCopy.en["s127"],
   },
   local: {
-    meaning: "Stub mode: no HTTP was selected and the probe is not running.",
-    doText: "Nothing to check; the synthetic adapter answers.",
-    dontText: "Not an offline fault. The stub is the default, not a failure.",
+    meaning: sourceCopy.en["s1mz"],
+    doText: sourceCopy.en["s11d"],
+    dontText: sourceCopy.en["szp"],
   },
-  offline: { meaning: "The browser reports lost connectivity; retained values are cached history.", doText: "Inspect retained values and reconnect, then explicitly read again before writing.", dontText: "Not an empty result or a determination of an interrupted write." },
-  online: { meaning: "The browser is online and a current-epoch loopback probe answered.", doText: "Read the cached-data notice and the controller's own fences.", dontText: "Not production readiness, a replay, or a fresh business read." },
+  offline: { meaning: sourceCopy.en["merge.offlineMeaning"], doText: sourceCopy.en["merge.offlineDo"], dontText: sourceCopy.en["merge.offlineDont"] },
+  online: { meaning: sourceCopy.en["merge.onlineMeaning"], doText: sourceCopy.en["merge.onlineDo"], dontText: sourceCopy.en["merge.onlineDont"] },
 };
 
 const BINDING: Record<(typeof ROUTE_BINDINGS)[number], Omit<StatusWordGuideEntry, "word" | "kind">> = {
   "published-bound": {
-    meaning: "The surface's action maps onto a published command. In stub mode it is still answered synthetically.",
-    doText: "Local-command only, Node loopback at most.",
-    dontText: "Not integration complete, not live.",
+    meaning: sourceCopy.en["s21q"],
+    doText: sourceCopy.en["srh"],
+    dontText: sourceCopy.en["s11w"],
   },
   "not-bound": {
-    meaning: "The desk method is deliberately not bound to a command; its considered action is recorded, not sent.",
-    doText: "Read the recorded reason.",
-    dontText: "Not a missing feature and not an outcome.",
+    meaning: sourceCopy.en["s1rp"],
+    doText: sourceCopy.en["s1cr"],
+    dontText: sourceCopy.en["szm"],
   },
   "stub-only": {
-    meaning: "The surface is answered by the synthetic adapter only.",
-    doText: "Read screens as demonstrations.",
-    dontText: "Not connected to any producer or gate.",
+    meaning: sourceCopy.en["s21p"],
+    doText: sourceCopy.en["s1c5"],
+    dontText: sourceCopy.en["s10l"],
   },
   "no-published-command": {
-    meaning: "The contract-only catalogue publishes no command for this surface.",
-    doText: "Nothing can be sent; read the catalogue note.",
-    dontText: "Not a defect; nothing exists to bind.",
+    meaning: sourceCopy.en["s1r7"],
+    doText: sourceCopy.en["s117"],
+    dontText: sourceCopy.en["szc"],
   },
   planned: {
-    meaning: "Reserved for a binding that is written down but not wired.",
-    doText: "None on this build beyond the registry word itself.",
-    dontText: "Not a working path.",
+    meaning: sourceCopy.en["s1g9"],
+    doText: sourceCopy.en["swc"],
+    dontText: sourceCopy.en["s10a"],
   },
 };
 
 const FEATURE: Record<(typeof FEATURE_STATUSES)[number], Omit<StatusWordGuideEntry, "word" | "kind">> = {
   "local-command": {
-    meaning: "The surface can post a local command on the stub or the loopback gate.",
-    doText: "Usable locally, with the stub as default.",
-    dontText: "Not a live integration.",
+    meaning: sourceCopy.en["s21n"],
+    doText: sourceCopy.en["s25s"],
+    dontText: sourceCopy.en["szl"],
   },
   synthetic: {
-    meaning: "The screen shows canned or locally derived rows. It demonstrates reading, not sending.",
-    doText: "Read it as a demonstration.",
-    dontText: "Not producer data.",
+    meaning: sourceCopy.en["s1xq"],
+    doText: sourceCopy.en["s1br"],
+    dontText: sourceCopy.en["s124"],
   },
   unsupported: {
-    meaning: "The surface has a screen but no command and no synthetic path for the step.",
-    doText: "Nothing to try.",
-    dontText: "Not pending work on this build.",
+    meaning: sourceCopy.en["s21o"],
+    doText: sourceCopy.en["s11i"],
+    dontText: sourceCopy.en["s122"],
   },
 };
 
 const ADMISSION_STATE: Record<(typeof ADMISSION_DESK_STATES)[number], Omit<StatusWordGuideEntry, "word" | "kind">> = {
   valid: {
-    meaning: "The desk's freshest read of a synthetic credential came back fresh with no decision code.",
-    doText: "Read it as the stub's label for a clean credential read.",
-    dontText: "Not entry granted, not a venue scan result, and not a promise about the next read.",
+    meaning: sourceCopy.en["s1rt"],
+    doText: sourceCopy.en["s1bv"],
+    dontText: sourceCopy.en["s10v"],
   },
   invalid: {
-    meaning: "The desk label when no more specific label applies: the read did not come back fresh-and-clean.",
-    doText: "Read the decision code beside it for the reason.",
-    dontText: "Not a permanent refusal and not a venue verdict.",
+    meaning: sourceCopy.en["s1rn"],
+    doText: sourceCopy.en["s1cj"],
+    dontText: sourceCopy.en["szv"],
   },
   stale: {
-    meaning: "The credential read is older than the source it came from.",
-    doText: "Re-read before deciding anything.",
-    dontText: "Not the outcome word STALE; this word labels one credential read.",
+    meaning: sourceCopy.en["s1ra"],
+    doText: sourceCopy.en["s1fy"],
+    dontText: sourceCopy.en["s12r"],
   },
   "already-consumed": {
-    meaning: "The credential is recorded as already consumed once.",
-    doText: "Read the consumption record.",
-    dontText: "Not a second entry and not a duplicate-scan finding.",
+    meaning: sourceCopy.en["s1r9"],
+    doText: sourceCopy.en["s1ch"],
+    dontText: sourceCopy.en["s106"],
   },
   transferred: {
-    meaning: "A transfer of the right was observed.",
-    doText: "Read the transfer record.",
-    dontText: "Not a decision about who may enter.",
+    meaning: sourceCopy.en["s8u"],
+    doText: sourceCopy.en["s1cx"],
+    dontText: sourceCopy.en["szb"],
   },
   cancelled: {
-    meaning: "The source reported the ticket cancelled.",
-    doText: "Read the cancellation note.",
-    dontText: "Not a refund and not an admission denial.",
+    meaning: sourceCopy.en["s20d"],
+    doText: sourceCopy.en["s1ce"],
+    dontText: sourceCopy.en["szz"],
   },
   "unavailable-server": {
-    meaning: "The source that answers credential reads could not be reached.",
-    doText: "Check the source, then re-read.",
-    dontText: "Not 'invalid'; the answer was never heard.",
+    meaning: sourceCopy.en["s21d"],
+    doText: sourceCopy.en["sc8"],
+    dontText: sourceCopy.en["s11x"],
   },
 };
 
 const ADMISSION_PHASE: Record<(typeof ADMISSION_PHASES)[number], Omit<StatusWordGuideEntry, "word" | "kind">> = {
   ELIGIBLE: {
-    meaning: "Credential FSM phase: the synthetic credential may be authorized. P03 stays 설계중.",
-    doText: "Read it as a phase label only.",
-    dontText: "Not an entry decision and not venue admission.",
+    meaning: sourceCopy.en["merge.eligiblePhase"],
+    doText: sourceCopy.en["s1bt"],
+    dontText: sourceCopy.en["szn"],
   },
   AUTHORIZED: {
-    meaning: "Credential FSM phase: the synthetic credential was authorized. P03 stays 설계중.",
-    doText: "Read it as a phase label only.",
-    dontText: "Not entry granted and not a venue scan result.",
+    meaning: sourceCopy.en["merge.authorizedPhase"],
+    doText: sourceCopy.en["s1bt"],
+    dontText: sourceCopy.en["s10u"],
   },
   CONSUMED: {
-    meaning: "Credential FSM phase: the synthetic credential was consumed once.",
-    doText: "Read it as a phase label only.",
-    dontText: "Not a scan event and not a settlement.",
+    meaning: sourceCopy.en["seu"],
+    doText: sourceCopy.en["s1bt"],
+    dontText: sourceCopy.en["s105"],
   },
 };
 
 const FACET_WORDS: Record<string, Omit<StatusWordGuideEntry, "word" | "kind">> = {
-  MERGED_RECORDED: { meaning: "The node's merge is recorded in the node table.", doText: "Read the cited PR.", dontText: "Not a done judgement; central DONE is NOT_EVALUATED here." },
-  REPO_PRESENT: { meaning: "The code exists in this repository.", doText: "The screen can be opened.", dontText: "Not qualified, accepted or released." },
-  NOT_PRESENT: { meaning: "The named thing does not exist in this repository.", doText: "Nothing to open.", dontText: "Not deleted; it was never here." },
-  WAITING: { meaning: "A pending node names an external prerequisite it waits on.", doText: "Read the Waits-on column.", dontText: "Not started and not counted." },
-  NOT_STARTED: { meaning: "The node exists in a catalogue but has no merged work recorded.", doText: "Nothing to read yet.", dontText: "Not in progress." },
-  NOT_EVALUATED: { meaning: "This repository does not evaluate the central done flag.", doText: "Read each facet on its own.", dontText: "Not failed and not passed." },
-  UNQUALIFIED: { meaning: "No qualification run exists or is claimed.", doText: "Read it as the standing state.", dontText: "Not failed; no run happened." },
-  NOT_REQUIRED: { meaning: "This facet does not apply to the row (for example acceptance on a row with no page).", doText: "Skip it.", dontText: "Not waived; it never applied." },
-  PENDING: { meaning: "A decision belongs to the user and has not been taken.", doText: "Wait for the named decider.", dontText: "Not accepted and not rejected." },
-  NOT_AUTHORIZED: { meaning: "No authority exists for release, so nothing may ship.", doText: "Release needs its own authority.", dontText: "Not refused; it was never open." },
-  RECORDED: { meaning: "Coverage evidence exists and is cited.", doText: "Follow the pointer.", dontText: "Not a pass of a live system." },
-  NOT_REACHABLE: { meaning: "The branch cannot be produced by the sources this build has.", doText: "Read the branch note.", dontText: "Not a failure; unreachable is a fact." },
-  NOT_APPLICABLE: { meaning: "The check does not apply here.", doText: "Skip it.", dontText: "Not skipped out of convenience." },
-  UNVERIFIED: { meaning: "No fixture or run covers this cell yet.", doText: "Treat the cell as open work.", dontText: "Not failed and not covered." },
+  MERGED_RECORDED: { meaning: sourceCopy.en["s1uj"], doText: sourceCopy.en["s1cf"], dontText: sourceCopy.en["szd"] },
+  REPO_PRESENT: { meaning: sourceCopy.en["s1qy"], doText: sourceCopy.en["s1xp"], dontText: sourceCopy.en["s128"] },
+  NOT_PRESENT: { meaning: sourceCopy.en["s1ug"], doText: sourceCopy.en["s11f"], dontText: sourceCopy.en["s10o"] },
+  WAITING: { meaning: sourceCopy.en["s54"], doText: sourceCopy.en["s1cy"], dontText: sourceCopy.en["s12q"] },
+  NOT_STARTED: { meaning: sourceCopy.en["s1ui"], doText: sourceCopy.en["s11g"], dontText: sourceCopy.en["s11v"] },
+  NOT_EVALUATED: { meaning: sourceCopy.en["s23h"], doText: sourceCopy.en["s1b9"], dontText: sourceCopy.en["s10z"] },
+  UNQUALIFIED: { meaning: sourceCopy.en["sxa"], doText: sourceCopy.en["s1bu"], dontText: sourceCopy.en["s110"] },
+  NOT_REQUIRED: { meaning: sourceCopy.en["s230"], doText: sourceCopy.en["s1l0"], dontText: sourceCopy.en["s12w"] },
+  PENDING: { meaning: sourceCopy.en["s19"], doText: sourceCopy.en["s263"], dontText: sourceCopy.en["sz7"] },
+  NOT_AUTHORIZED: { meaning: sourceCopy.en["su7"], doText: sourceCopy.en["s1f7"], dontText: sourceCopy.en["s12g"] },
+  RECORDED: { meaning: sourceCopy.en["ses"], doText: sourceCopy.en["slr"], dontText: sourceCopy.en["szu"] },
+  NOT_REACHABLE: { meaning: sourceCopy.en["s1qi"], doText: sourceCopy.en["s1cd"], dontText: sourceCopy.en["szf"] },
+  NOT_APPLICABLE: { meaning: sourceCopy.en["s1qv"], doText: sourceCopy.en["s1l0"], dontText: sourceCopy.en["s12o"] },
+  UNVERIFIED: { meaning: sourceCopy.en["svi"], doText: sourceCopy.en["s24p"], dontText: sourceCopy.en["s10y"] },
 };
 
 const JOURNEY_WORDS: Record<string, Omit<StatusWordGuideEntry, "word" | "kind">> = {
-  RECEIPT: { meaning: "A leg landed and a receipt was recorded.", doText: "Read the receipt.", dontText: "Not a settlement and not a payment." },
-  REJECTED: { meaning: "The leg was answered with a refusal.", doText: "Read the refusal code.", dontText: "Not UNKNOWN; it is an answer." },
-  NOT_SENT: { meaning: "The leg was never sent — not-bound, gated open, or observation only.", doText: "Read the recorded reason.", dontText: "Not lost; it never left." },
-  FENCED: { meaning: "The request may have applied and later writes are held.", doText: "Stop and read the fence before anything new.", dontText: "Not a cancel and not a confirm." },
-  NONE_NEEDED: { meaning: "The compensation cell: nothing was applied, so nothing needs undoing.", doText: "Nothing to do.", dontText: "Not a completed compensation." },
-  COMPENSATION_UNDEFINED: { meaning: "A leg landed and a later one did not, and no compensation path is approved.", doText: "Escalate; do not improvise a compensation.", dontText: "Not a refund and not automatic." },
+  RECEIPT: { meaning: sourceCopy.en["s2n"], doText: sourceCopy.en["s1cp"], dontText: sourceCopy.en["s107"] },
+  REJECTED: { meaning: sourceCopy.en["s1tu"], doText: sourceCopy.en["s1cu"], dontText: sourceCopy.en["s12u"] },
+  NOT_SENT: { meaning: sourceCopy.en["merge.unsentLeg"], doText: sourceCopy.en["s1cr"], dontText: sourceCopy.en["s11y"] },
+  FENCED: { meaning: sourceCopy.en["s1x3"], doText: sourceCopy.en["s1mp"], dontText: sourceCopy.en["sz6"] },
+  NONE_NEEDED: { meaning: sourceCopy.en["s1r3"], doText: sourceCopy.en["s11e"], dontText: sourceCopy.en["sz8"] },
+  COMPENSATION_UNDEFINED: { meaning: sourceCopy.en["s2m"], doText: sourceCopy.en["sio"], dontText: sourceCopy.en["s100"] },
 };
 
 const CODE_WORDS: Record<string, Omit<StatusWordGuideEntry, "word" | "kind">> = {
-  CONNECTIVITY_BLOCKED: { meaning: "The app refused a new write before dispatch because connectivity or its read is unavailable.", doText: "Restore connectivity and explicitly read again. Nothing is queued.", dontText: "Not UNKNOWN; an already dispatched interruption stays UNKNOWN separately." },
-  GATE_UNAVAILABLE: { meaning: "The loopback gate could not be reached.", doText: "Check the gate, then reload.", dontText: "Not a fallback to stub." },
-  STALE_RESPONSE: { meaning: "The gate's reply was older than the request expected.", doText: "Treat the value as STALE.", dontText: "Not a fresh answer." },
-  REQUEST_TIMEOUT: { meaning: "The one attempt ran out of time.", doText: "Outcome is UNKNOWN until a fence or receipt says otherwise.", dontText: "Not retried; there is no retry." },
-  GATE_TRANSPORT: { meaning: "The transport between desk and loopback gate failed.", doText: "Read the banner and the gate log.", dontText: "Not a business refusal." },
-  GATE_STATUS: { meaning: "The gate answered with a status the desk treats as blocked.", doText: "Read the code beside it.", dontText: "Not an outcome word." },
-  GATE_REJECTED: { meaning: "The gate refused the request.", doText: "Read the refusal reason.", dontText: "Not UNKNOWN." },
-  SCREEN_LOAD_FAILED: { meaning: "The code for a screen could not be loaded or started. A load fault, not an outcome.", doText: "Use 'Load this screen again' or reload.", dontText: "Not UNKNOWN; nothing was sent." },
-  SESSION_EVIDENCE_LOST: { meaning: "The session journal is corrupt, unsupported or lost; every write is held.", doText: "Start a fresh intent; nothing is re-sent.", dontText: "Not an outcome of a request." },
-  ADMISSION_REQUIRED: { meaning: "The admission path needs a credential step first.", doText: "Follow the named step.", dontText: "Not a refusal." },
-  STALE_ISSUE: { meaning: "The issue being read is older than the current source.", doText: "Look for a newer record.", dontText: "Not a current fact." },
-  GRANT_REVOKED: { meaning: "A previously recorded grant is no longer valid.", doText: "Re-read the permission state.", dontText: "Not a new denial." },
+  CONNECTIVITY_BLOCKED: { meaning: sourceCopy.en["merge.connectivityMeaning"], doText: sourceCopy.en["merge.connectivityDo"], dontText: sourceCopy.en["merge.connectivityDont"] },
+  GATE_UNAVAILABLE: { meaning: sourceCopy.en["s1u5"], doText: sourceCopy.en["sc6"], dontText: sourceCopy.en["szh"] },
+  STALE_RESPONSE: { meaning: sourceCopy.en["s1t3"], doText: sourceCopy.en["s24q"], dontText: sourceCopy.en["szi"] },
+  REQUEST_TIMEOUT: { meaning: sourceCopy.en["s1uo"], doText: sourceCopy.en["s16h"], dontText: sourceCopy.en["s12h"] },
+  GATE_TRANSPORT: { meaning: sourceCopy.en["s22o"], doText: sourceCopy.en["s1cb"], dontText: sourceCopy.en["sz5"] },
+  GATE_STATUS: { meaning: sourceCopy.en["s1t0"], doText: sourceCopy.en["s1cg"], dontText: sourceCopy.en["szt"] },
+  GATE_REJECTED: { meaning: sourceCopy.en["s1t2"], doText: sourceCopy.en["s1cv"], dontText: sourceCopy.en["s12s"] },
+  SCREEN_LOAD_FAILED: { meaning: sourceCopy.en["s1qz"], doText: sourceCopy.en["s25t"], dontText: sourceCopy.en["s12v"] },
+  SESSION_EVIDENCE_LOST: { meaning: sourceCopy.en["s1xy"], doText: sourceCopy.en["s1m1"], dontText: sourceCopy.en["szs"] },
+  ADMISSION_REQUIRED: { meaning: sourceCopy.en["s1pz"], doText: sourceCopy.en["slq"], dontText: sourceCopy.en["s101"] },
+  STALE_ISSUE: { meaning: sourceCopy.en["s1td"], doText: sourceCopy.en["srn"], dontText: sourceCopy.en["sz9"] },
+  GRANT_REVOKED: { meaning: sourceCopy.en["s60"], doText: sourceCopy.en["s1fz"], dontText: sourceCopy.en["szo"] },
 };
 
 const POLICY_WORDS: Record<string, Omit<StatusWordGuideEntry, "word" | "kind">> = {
-  UNDETERMINED: { meaning: "A value this repository deliberately does not decide (for example a retention period or a target standard).", doText: "Treat it as open; the named decider owns it.", dontText: "Not zero, not infinite, not decided." },
-  PENDING_USER_DECISION: { meaning: "The release packet waits on a decision only a user can take.", doText: "Nothing proceeds until the user rules.", dontText: "Not scheduled, not approved." },
-  STUB_RUN_RECORDED: { meaning: "A run of the stub was recorded as evidence.", doText: "Read the record.", dontText: "Not a live-environment run." },
-  STUB_CANDIDATE_RECORDED: { meaning: "A release candidate was recorded in stub scope.", doText: "Read the record.", dontText: "Not a release." },
-  MOCK_SETTLEMENT_ONLY: { meaning: "The settlement figures on this screen are mock units only.", doText: "Read as a demonstration.", dontText: "No real money, no settlement math." },
-  MOCK_GATE_ONLY: { meaning: "The flow shown exists only against the mock gate.", doText: "Read as a demonstration.", dontText: "Not a live gate path." },
-  MOCK_CREDIT_F04_ONLY: { meaning: "The credit rows are mock data only.", doText: "Read as a demonstration.", dontText: "No credit is issued." },
+  UNDETERMINED: { meaning: sourceCopy.en["s9b"], doText: sourceCopy.en["s24o"], dontText: sourceCopy.en["s12x"] },
+  PENDING_USER_DECISION: { meaning: sourceCopy.en["s1wz"], doText: sourceCopy.en["s11c"], dontText: sourceCopy.en["s12j"] },
+  STUB_RUN_RECORDED: { meaning: sourceCopy.en["s7r"], doText: sourceCopy.en["s1cq"], dontText: sourceCopy.en["szj"] },
+  STUB_CANDIDATE_RECORDED: { meaning: sourceCopy.en["s6r"], doText: sourceCopy.en["s1cq"], dontText: sourceCopy.en["s103"] },
+  MOCK_SETTLEMENT_ONLY: { meaning: sourceCopy.en["s1y2"], doText: sourceCopy.en["s1b7"], dontText: sourceCopy.en["sxi"] },
+  MOCK_GATE_ONLY: { meaning: sourceCopy.en["s1sv"], doText: sourceCopy.en["s1b7"], dontText: sourceCopy.en["szk"] },
+  MOCK_CREDIT_F04_ONLY: { meaning: sourceCopy.en["s1rc"], doText: sourceCopy.en["s1b7"], dontText: sourceCopy.en["sv0"] },
 };
 
 const ENVIRONMENT_WORDS: Record<string, Omit<StatusWordGuideEntry, "word" | "kind">> = {
-  stub: { meaning: "The default environment. The synthetic adapter answers; nothing leaves the machine.", doText: "The default; nothing to enable.", dontText: "Not a fallback mode and not offline." },
-  "integration-http": { meaning: "The opt-in environment that talks to the loopback gate only.", doText: "Start the gate from its own checkout first.", dontText: "Not production and never a public endpoint." },
+  stub: { meaning: sourceCopy.en["s1rg"], doText: sourceCopy.en["s1rh"], dontText: sourceCopy.en["szg"] },
+  "integration-http": { meaning: sourceCopy.en["s1uq"], doText: sourceCopy.en["s1mf"], dontText: sourceCopy.en["s125"] },
 };
 
 /** Facet cells from the evidence matrix documents (node, qualification, acceptance, release, coverage). */
@@ -271,7 +272,7 @@ export const STATUS_WORD_GUIDE: readonly StatusWordGuideEntry[] = [
   entry("SUCCESS", "fixture", FIXTURE.SUCCESS.meaning, FIXTURE.SUCCESS.doText, FIXTURE.SUCCESS.dontText),
   entry("REJECT", "fixture", FIXTURE.REJECT.meaning, FIXTURE.REJECT.doText, FIXTURE.REJECT.dontText),
   ...(Object.keys(STATUS_MARKS) as (keyof typeof STATUS_MARKS)[]).map((kind) =>
-    entry(STATUS_MARKS[kind].word, "status-mark", STATUS_MARKS[kind].meaning, "Read the word; it carries the meaning, not the colour.", "Not a promise about any request's outcome."),
+    entry(STATUS_MARKS[kind].word, "status-mark", STATUS_MARKS[kind].meaning, sourceCopy.en["s1cz"], sourceCopy.en["szx"]),
   ),
   ...Object.entries(TRANSPORT).map(([word, cell]) => entry(word, "transport", cell.meaning, cell.doText, cell.dontText)),
   ...ROUTE_BINDINGS.map((word) => entry(word, "binding", BINDING[word].meaning, BINDING[word].doText, BINDING[word].dontText)),
@@ -286,16 +287,16 @@ export const STATUS_WORD_GUIDE: readonly StatusWordGuideEntry[] = [
 ];
 
 export const GUIDE_KIND_LABELS: Record<StatusWordGuideEntry["kind"], string> = {
-  outcome: "Outcome words",
-  fixture: "Fixture classes",
-  "status-mark": "Status marks",
-  transport: "Transport banner states",
-  binding: "Binding words",
-  feature: "Feature statuses",
-  admission: "Admission credential words",
-  facet: "Evidence facet cells",
-  journey: "Journey leg and compensation words",
-  code: "Diagnosis and fault codes",
-  policy: "Policy and provenance words",
-  environment: "Environments",
+  outcome: sourceCopy.en["s16k"],
+  fixture: sourceCopy.en["slk"],
+  "status-mark": sourceCopy.en["s1mk"],
+  transport: sourceCopy.en["s24m"],
+  binding: sourceCopy.en["sa3"],
+  feature: sourceCopy.en["skw"],
+  admission: sourceCopy.en["s1o"],
+  facet: sourceCopy.en["sjw"],
+  journey: sourceCopy.en["spi"],
+  code: sourceCopy.en["sgk"],
+  policy: sourceCopy.en["s18m"],
+  environment: sourceCopy.en["sin"],
 };

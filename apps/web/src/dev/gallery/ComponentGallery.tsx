@@ -1,3 +1,5 @@
+import { messages as mergedCopy } from "../../i18n/messages/gallery";
+import { useT } from "../../i18n/desk-context";
 import type { ReactNode } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { Shell } from "../../components/Shell";
@@ -23,6 +25,7 @@ const chrome = {
 
 export function ComponentGallery() {
   const { locale } = useLocale();
+  const t = useT(mergedCopy);
   const text = chrome[locale];
   const query = new URLSearchParams(useLocation().search);
   const specimen = query.get("specimen");
@@ -34,7 +37,7 @@ export function ComponentGallery() {
     const entry = GALLERY_CASES.find((candidate) => candidate.id === specimen);
     return <SpecimenLocation key={specimen} samplePath={entry?.samplePath ?? "/unmatched-specimen"}>
       {entry?.ownsShell ? entry.render() : <main id="desk-main" className="gallery-preview" tabIndex={-1}>
-        <h1>{entry ? `${entry.component}: ${entry.state}` : text.title}</h1>
+        <h1>{entry ? t("merge.specimenTitle", { component: entry.component, state: entry.state }) : text.title}</h1>
         <p>{text.note}</p><a href={`/dev/gallery?lang=${locale}`}>{text.back}</a>
         <div data-gallery-specimen={specimen}>{entry ? entry.render() : <p role="status">{text.missing}</p>}</div>
       </main>}
@@ -46,7 +49,7 @@ export function ComponentGallery() {
       {GALLERY_CASES.map((entry) => <li key={entry.id} data-gallery-case={entry.id}>
         <h3>{entry.component}</h3><p>{entry.state}</p>
         <a href={`/dev/gallery?specimen=${entry.id}&lang=${locale}`}>{text.preview}: {entry.id}</a>
-        <iframe title={`${entry.component}: ${entry.state}`} loading="lazy" src={`/dev/gallery?specimen=${entry.id}&lang=${locale}`} />
+        <iframe title={t("merge.specimenTitle", { component: entry.component, state: entry.state })} loading="lazy" src={`/dev/gallery?specimen=${entry.id}&lang=${locale}`} />
       </li>)}
     </ul>
   </section></Shell>;

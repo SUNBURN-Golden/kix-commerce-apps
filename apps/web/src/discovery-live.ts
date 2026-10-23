@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/discovery-live";
+import { sourceMessage } from "./i18n/source-message";
 import { connectedActions } from "./connectivity/write-guard";
 /**
  * The discovery projection read on top of the adapter's bounded port.
@@ -27,19 +29,19 @@ import {
 import { formatWhen } from "./format";
 import { protocol } from "./connectivity/desk-protocol";
 
-export const LIVE_READ_TITLE = "Projection read (synthetic)";
+export const LIVE_READ_TITLE = sourceCopy.en["s19f"];
 
 export const LIVE_READ_SOURCE_LINE =
-  "Rows come from a synthetic projection stream on this page load. They are not a producer read and not a catalogue receipt.";
+  sourceCopy.en["s1hv"];
 
 export const LIVE_READ_BOUNDARY =
-  "A projection row confirms no sale, no ownership, and no payment. Trade commands re-check on their own path.";
+  sourceCopy.en["s61"];
 
-export const LIVE_READ_SCOPE_NOTE = `Access scope ${DISCOVERY_READ_TENANT}. The subject string is not an authentication result.`;
+export const LIVE_READ_SCOPE_NOTE = sourceMessage(sourceCopy.en["p.t136"], { v1: DISCOVERY_READ_TENANT });
 
-export const LIVE_READ_PAGE_NOTE = `One bounded page per click, at most ${DISCOVERY_READ_PAGE_BOUND} rows. The stream never arrives as one response.`;
+export const LIVE_READ_PAGE_NOTE = sourceMessage(sourceCopy.en["p.t137"], { v1: DISCOVERY_READ_PAGE_BOUND });
 
-export const LIVE_READ_REBUILD_LABEL = "Rebuild projection";
+export const LIVE_READ_REBUILD_LABEL = sourceCopy.en["s1da"];
 
 export type LiveOutcome = DiscoveryReadOutcome | { kind: "loading" };
 
@@ -105,12 +107,12 @@ export function liveReturnMode(outcome: LiveOutcome | DiscoveryRowOutcome): Live
 
 export function liveReturnLabel(mode: LiveReturnMode): string {
   if (mode === "resync") {
-    return "Start over";
+    return sourceCopy.en["s1me"];
   }
   if (mode === "again") {
-    return "Read again";
+    return sourceCopy.en["s1ax"];
   }
-  return "Back to first page";
+  return sourceCopy.en["s9h"];
 }
 
 export function liveStatusLine(outcome: LiveOutcome | DiscoveryRowOutcome): {
@@ -119,36 +121,36 @@ export function liveStatusLine(outcome: LiveOutcome | DiscoveryRowOutcome): {
 } {
   switch (outcome.kind) {
     case "loading":
-      return { statusLine: "Loading projection rows.", detailLine: "" };
+      return { statusLine: sourceCopy.en["sre"], detailLine: "" };
     case "ready":
-      return { statusLine: "Projection page ready.", detailLine: "" };
+      return { statusLine: sourceCopy.en["s19e"], detailLine: "" };
     case "empty":
-      return { statusLine: "No projection rows on this stream.", detailLine: "" };
+      return { statusLine: sourceCopy.en["sx0"], detailLine: "" };
     case "gap":
-      return { statusLine: `Gap in the synthetic stream (${outcome.code}).`, detailLine: outcome.detail };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t138"], { v1: outcome.code }), detailLine: outcome.detail };
     case "stale":
       return {
-        statusLine: "Stale projection watermark.",
-        detailLine: `watermark ${formatWhen(outcome.watermark)}. floor ${formatWhen(outcome.floor)}.`,
+        statusLine: sourceCopy.en["s1lu"],
+        detailLine: sourceMessage(sourceCopy.en["p.t502"], { v1: formatWhen(outcome.watermark), v2: formatWhen(outcome.floor) }),
       };
     case "cursor-invalid":
-      return { statusLine: `Cursor invalid (${outcome.code}).`, detailLine: outcome.detail };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t139"], { v1: outcome.code }), detailLine: outcome.detail };
     case "tenant-mismatch":
       return {
-        statusLine: "A row from another tenant arrived.",
-        detailLine: `row ${outcome.rowId}. tenant ${outcome.tenantId}.`,
+        statusLine: sourceCopy.en["s7j"],
+        detailLine: sourceMessage(sourceCopy.en["p.t503"], { v1: outcome.rowId, v2: outcome.tenantId }),
       };
     case "tuple-changed":
       return {
-        statusLine: `Projection tuple changed (${outcome.field}).`,
-        detailLine: `expected ${outcome.expected}. actual ${outcome.actual}.`,
+        statusLine: sourceMessage(sourceCopy.en["p.t140"], { v1: outcome.field }),
+        detailLine: sourceMessage(sourceCopy.en["p.t504"], { v1: outcome.expected, v2: outcome.actual }),
       };
     case "not-bound":
       return { statusLine: outcome.reason, detailLine: "" };
     case "invalid-request":
-      return { statusLine: `Blocked read (${outcome.code}).`, detailLine: outcome.detail };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t141"], { v1: outcome.code }), detailLine: outcome.detail };
     case "unknown":
-      return { statusLine: "Unknown read.", detailLine: outcome.message };
+      return { statusLine: sourceCopy.en["s25d"], detailLine: outcome.message };
     default: {
       const exhaustive: never = outcome;
       return exhaustive;
@@ -166,11 +168,11 @@ export function buildLiveListModel(input: {
   const { outcome } = input;
   const { statusLine, detailLine } = liveStatusLine(outcome);
   const mode = liveReturnMode(outcome);
-  let metaLine = `stream ${input.stream}. revision ${input.revision}.`;
+  let metaLine = sourceMessage(sourceCopy.en["p.t505"], { v1: input.stream, v2: input.revision });
   if (outcome.kind === "ready") {
-    metaLine = `${metaLine} watermark ${outcome.watermark ? formatWhen(outcome.watermark) : "none"}. scanned ${outcome.scannedCount}. about ${outcome.totalEstimate} rows in the stream.`;
+    metaLine = sourceMessage(sourceCopy.en["p.t142"], { v1: metaLine, v2: outcome.watermark ? formatWhen(outcome.watermark) : "none", v3: outcome.scannedCount, v4: outcome.totalEstimate });
   } else if (outcome.kind === "empty") {
-    metaLine = `${metaLine} about ${outcome.totalEstimate} rows in the stream.`;
+    metaLine = sourceMessage(sourceCopy.en["p.t143"], { v1: metaLine, v2: outcome.totalEstimate });
   }
   return {
     stream: input.stream,
@@ -192,14 +194,14 @@ export function buildLiveDetailModel(input: {
   const { outcome } = input;
   const { statusLine, detailLine } =
     outcome.kind === "empty"
-      ? { statusLine: "No projection row for this id.", detailLine: "" }
+      ? { statusLine: sourceCopy.en["swz"], detailLine: "" }
       : liveStatusLine(outcome);
   const mode = outcome.kind === "empty" ? null : liveReturnMode(outcome);
   return {
     state: outcome.kind,
     statusLine,
     detailLine,
-    actionLabel: mode === null ? null : "Read again",
+    actionLabel: mode === null ? null : sourceCopy.en["s1ax"],
     row: outcome.kind === "ready" ? outcome.row : null,
   };
 }

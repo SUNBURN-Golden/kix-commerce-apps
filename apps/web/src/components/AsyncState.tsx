@@ -1,3 +1,7 @@
+import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
+import { messages as bindingCopy } from "../i18n/messages/workspace--registry";
+import { useT } from "../i18n/desk-context";
+import { deskText } from "../i18n/desk-translate";
 import { Link } from "react-router-dom";
 import type { COMMERCE_COMMAND_BINDINGS, CommerceMethod } from "@kix/protocol-adapter";
 import { useLocale } from "../i18n/locale-context";
@@ -16,7 +20,8 @@ export interface AsyncStateProps extends Omit<AsyncStateFrameProps, "word" | "no
 }
 
 export function AsyncState({ kind, children, code, read, binding, ...attributes }: AsyncStateProps) {
-  const { t, locale } = useLocale();
+  const { locale } = useLocale();
+  const t = useT(mergedCopy, bindingCopy);
   const copy = kind === "loading" ? { word: t("status.loading.word"), note: t("status.loading.meaning") } : STATE_MESSAGES[locale][kind];
   const actions = STATE_ACTION_MESSAGES[locale];
   // UNKNOWN never offers a read/recovery button; a fresh read cannot resolve its outcome.
@@ -24,7 +29,7 @@ export function AsyncState({ kind, children, code, read, binding, ...attributes 
   return (
     <AsyncStateFrame {...attributes} {...copy} kind={kind}>
       {code && /^[A-Z][A-Z0-9_]{1,47}$/.test(code) ? <p>{code}</p> : null}
-      {binding ? <p>{binding.method} · consideredAction {binding.record.consideredAction ?? "none"}. {binding.record.reason}</p> : null}
+      {binding ? <p>{binding.method} · {t("merge.considered")} {binding.record.consideredAction ?? t("merge.none")}. {deskText(t, binding.record.reason)}</p> : null}
       {children}
       {canRead ? <button type="button" disabled={read.disabled} onClick={read.onRead}>{read.label}</button> : null}
       {kind === "error" || kind === "stale" ? <Link to="/help">{actions.help}</Link> : null}

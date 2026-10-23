@@ -1,3 +1,9 @@
+import { messages as copy0 } from "../i18n/messages/pages--Organizer";
+import { messages as copy1 } from "../i18n/messages/organizer-desk";
+import { messages as copy2 } from "../i18n/messages/storage-allow-list";
+import { messages as copy3 } from "../i18n/messages/journey-desk";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import type { ValidationHandle } from "../forms/useFormValidation";
 import { ValidatedForm } from "../forms/ValidatedForm";
 import { field } from "../forms/validation";
@@ -12,6 +18,7 @@ import {
 import { OrganizerPanel } from "./OrganizerPanel";
 
 export function OrganizerPage() {
+  const t = useT(copy0, copy1, copy2, copy3);
   const [eventId, setEventId] = useState("");
   const [draft, setDraft] = useState<OrganizerDraft>(emptyDraft());
   const validation = useRef<ValidationHandle>(null);
@@ -26,12 +33,10 @@ export function OrganizerPage() {
   return (
     <section>
       <header className="section-head">
-        <p className="eyebrow">Organizer · event lifecycle</p>
-        <h2>Organizer console</h2>
+        <p className="eyebrow">{t("s165")}</p>
+        <h2>{t("s163")}</h2>
         <p className="muted">
-          Send create, close sales, open admission, complete, cancel, and issue invitation for an event id the caller
-          types. No funds.
-        </p>
+          {t("s1j6")}</p>
       </header>
       <ValidatedForm id="organizer-form" validationRef={validation} submitFields={["organizer-event", "organizer-seats", "organizer-quota"]} fields={[
           field("organizer-event", "validation.label.eventId"),
@@ -47,61 +52,53 @@ export function OrganizerPage() {
         }}
       >
         <label>
-          Event id
-          <input id="organizer-event" value={eventId} onChange={(event) => setEventId(event.target.value)} autoComplete="off" />
+          {t("sis")}<input id="organizer-event" value={eventId} onChange={(event) => setEventId(event.target.value)} autoComplete="off" />
         </label>
         <label>
-          Seats
-          <input id="organizer-seats"
+          {t("s1ir")}<input id="organizer-seats"
             value={draft.seats}
             disabled={createLocked}
-            placeholder="Comma-separated seat ids"
+            placeholder={t("sd8")}
             onChange={(event) => patch({ seats: event.target.value })}
             autoComplete="off"
           />
         </label>
         <label>
-          Invitation quota
-          <input id="organizer-quota"
+          {t("soq")}<input id="organizer-quota"
             value={draft.invitationQuota}
             disabled={createLocked}
             inputMode="numeric"
-            placeholder="Caller-supplied integer, or leave blank"
+            placeholder={t("sat")}
             onChange={(event) => patch({ invitationQuota: event.target.value })}
             autoComplete="off"
           />
         </label>
         <label>
-          Inventory id
-          <input id="organizer-inventory"
+          {t("son")}<input id="organizer-inventory"
             value={draft.inventoryId}
-            placeholder="Caller-supplied inventory id"
+            placeholder={t("sau")}
             onChange={(event) => patch({ inventoryId: event.target.value })}
             autoComplete="off"
           />
         </label>
         <label>
-          Expected inventory version
-          <input id="organizer-version"
+          {t("sk7")}<input id="organizer-version"
             value={draft.expectedInventoryVersion}
             inputMode="numeric"
-            placeholder="Caller-supplied integer"
+            placeholder={t("sas")}
             onChange={(event) => patch({ expectedInventoryVersion: event.target.value })}
             autoComplete="off"
           />
         </label>
         <label>
-          Recipient
-          <input id="organizer-recipient"
+          {t("s1di")}<input id="organizer-recipient"
             value={draft.recipient}
             onChange={(event) => patch({ recipient: event.target.value })}
             autoComplete="off"
           />
         </label>
         <p className="muted">
-          Operator {ORGANIZER_OPERATOR}. Organizer {ORGANIZER_DEFAULT_ID}. The synthetic show policy is a fixture, not a
-          policy. It is not shown.
-        </p>
+          {t("s15p")}{" "}{deskText(t, ORGANIZER_OPERATOR)}{t("s161")}{" "}{deskText(t, ORGANIZER_DEFAULT_ID)}{t("s21w")}</p>
       </ValidatedForm>
       <OrganizerPanel model={{ ...model, send: (step) => {
         const ids = step === "create_event" ? ["organizer-event", "organizer-seats", "organizer-quota"]

@@ -1,3 +1,6 @@
+import { MemoryRouter } from "react-router-dom";
+import { renderToStaticMarkup } from "react-dom/server";
+import { HandoffScreen } from "../src/pages/Handoff";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -150,7 +153,8 @@ describe("display preferences (stub)", () => {
     expect(css).toMatch(/\.handoff li,\s*\.handoff p\s*{[^}]*overflow-wrap:\s*anywhere/);
     const handoff = readFileSync(path.join(webRoot, "src/pages/Handoff.tsx"), "utf8");
     for (const label of ["Supported commands, scrollable", "Pending producers, scrollable", "Feature status, scrollable"]) {
-      expect(handoff).toContain(`aria-label="${label}"`);
+      const rendered = renderToStaticMarkup(<MemoryRouter><HandoffScreen phase="settled" adapter="stub" environment="stub" fundsMovement="none" publicDeploy={false} /></MemoryRouter>);
+      expect(rendered).toContain(`aria-label="${label}"`);
     }
     expect(handoff.match(/className="handoff-scroll"[^>]*tabIndex=\{0\}/g)?.length).toBe(3);
   });

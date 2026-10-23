@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/storage-allow-list";
+import { sourceMessage } from "./i18n/source-message";
 export const STORAGE_ALLOW_LIST = [
   "kix-session-journal",
   "kix-session-journal-quarantine",
@@ -23,7 +25,7 @@ export function isAllowedStorageKey(key: string): boolean {
 
 export function assertAllowedStorageKey(key: string): void {
   if (!isAllowedStorageKey(key)) {
-    throw new Error(`Browser storage key is not allowed: ${key}`);
+    throw new Error(sourceMessage(sourceCopy.en["p.t431"], { v1: key }));
   }
 }
 

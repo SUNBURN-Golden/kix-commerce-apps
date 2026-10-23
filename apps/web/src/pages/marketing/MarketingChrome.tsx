@@ -1,3 +1,8 @@
+import { messages as copy0 } from "../../i18n/messages/pages--marketing--MarketingChrome";
+import { messages as copy1 } from "../../i18n/messages/marketing--contracts";
+import { messages as copy2 } from "../../i18n/messages/marketing--labels";
+import { deskText } from "../../i18n/desk-translate";
+import { useT } from "../../i18n/desk-context";
 import { useConnectivityCopy } from "../../connectivity/copy";
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
@@ -14,36 +19,36 @@ export function MarketingChrome({
   onReadAgain?: () => void;
 }) {
   const copy = useConnectivityCopy();
+  const t = useT(copy0, copy1, copy2);
   const surface = id ? marketingSurface(id) : null;
 
   return (
     <section>
       <p className="banner" role="status">
-        {`Stub demo${surface ? ` · ${surface.status}` : ""} · not protocol law. The adapter pin is not this desk. No live chain, no funds, and no outbound message.`}
+        {t("s1mw", { v1: surface ? ` · ${surface.status}` : "" })}
       </p>
-      <nav className="tabs" aria-label="Marketing labels">
+      <nav className="tabs" aria-label={t("srx")}>
         <NavLink to="/marketing" end>
-          Hub
-        </NavLink>
-        {MARKETING_SURFACES.map((item) => (
+          {t("snk")}</NavLink>
+        {deskText(t, MARKETING_SURFACES.map((item) => (
           <NavLink key={item.id} to={item.path}>
-            {item.id} · <span lang="ko">{item.titleKo}</span>
+            {deskText(t, item.id)} · <span lang="ko">{deskText(t, item.titleKo)}</span>
           </NavLink>
-        ))}
+        )))}
       </nav>
       {surface ? (
         <header className="section-head">
           <p className="eyebrow">
-            {surface.id} · <span lang="ko">{surface.titleKo}</span> · {surface.status}
+            {surface.id} · <span lang="ko">{deskText(t, surface.titleKo)}</span> · {surface.status}
           </p>
-          <h2>{surface.titleEn}</h2>
-          <p lang="ko">{surface.blurbKo}</p>
-          <p className="muted">{surface.blurbEn}</p>
-          <p className="muted">{marketingPublishedLine(surface.id)}</p>
+          <h2>{deskText(t, surface.titleEn)}</h2>
+          <p lang="ko">{deskText(t, surface.blurbKo)}</p>
+          <p className="muted">{deskText(t, surface.blurbEn)}</p>
+          <p className="muted">{deskText(t, marketingPublishedLine(surface.id))}</p>
         </header>
       ) : null}
       {onReadAgain ? <button type="button" onClick={onReadAgain}>{copy.readAgain}</button> : null}
-      {children}
+      {deskText(t, children)}
     </section>
   );
 }

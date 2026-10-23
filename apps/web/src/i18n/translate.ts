@@ -1,16 +1,14 @@
-import { MESSAGES, type MessageKey } from "./catalogue";
+import { MESSAGES } from "./catalogue";
 import type { Locale } from "./locales";
 
-/** Names of the `{name}` placeholders in a message, as a union. */
+import type { messages as ScreenInventory } from "./generated-catalogue";
+
+type EnMessages = typeof MESSAGES.en & typeof ScreenInventory.en;
+type DisplayKey = keyof EnMessages;
 type Placeholders<S extends string> = S extends `${string}{${infer P}}${infer R}` ? P | Placeholders<R> : never;
-
-type EnMessages = typeof MESSAGES.en;
-
-export type Params<K extends MessageKey> = Placeholders<EnMessages[K]>;
-
-type ParamArgs<K extends MessageKey> = [Params<K>] extends [never] ? [] : [params: Record<Params<K>, string | number>];
-
-export type Translate = <K extends MessageKey>(key: K, ...args: ParamArgs<K>) => string;
+export type Params<K extends DisplayKey> = Placeholders<EnMessages[K]>;
+type ParamArgs<K extends DisplayKey> = [Params<K>] extends [never] ? [] : [params: Record<Params<K>, string | number>];
+export type Translate = <K extends DisplayKey>(key: K, ...args: ParamArgs<K>) => string;
 
 const PLACEHOLDER = /\{([A-Za-z][A-Za-z0-9]*)\}/g;
 
@@ -29,8 +27,8 @@ export function interpolate(template: string, params?: Record<string, string | n
 
 /** Pure: no storage, no DOM. */
 export function makeTranslate(locale: Locale): Translate {
-  const table: Record<string, string> = MESSAGES[locale];
-  return ((key: MessageKey, params?: Record<string, string | number>) => interpolate(table[key] ?? MESSAGES.en[key], params)) as Translate;
+  const table: Readonly<Record<string, string>> = MESSAGES[locale];
+  return ((key: DisplayKey, params?: Record<string, string | number>) => interpolate(table[key] ?? key, params)) as Translate;
 }
 
 /** The outcome words. They are shown verbatim in every locale; a locale may add a gloss beside them. */

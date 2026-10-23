@@ -1,3 +1,7 @@
+import { messages as copy0 } from "../i18n/messages/pages--InstallableMobile";
+import { messages as copy1 } from "../i18n/messages/installable-mobile";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { useRestoreFocus } from "../a11y/focus";
 import { useMobileShell } from "../installable-mobile";
 import {
@@ -15,6 +19,7 @@ import {
 } from "./InstallableMobilePanels";
 
 export function InstallableMobilePage() {
+  const t = useT(copy0, copy1);
   const live = useMobileShell();
   const model = live.model;
   // A block, a rejection, or an unknown result takes focus to the status region.
@@ -22,17 +27,17 @@ export function InstallableMobilePage() {
 
   return (
     <div className="discovery mobile-shell" data-adapter-environment={live.environment}>
-      <nav className="discovery-nav" aria-label="Mobile shell sections">
-        <a href="#mobile-controls">Controls</a>
-        <a href="#mobile-status">Status</a>
-        <a href="#mobile-device">Link and clock</a>
-        <a href="#mobile-install">Install</a>
-        <a href="#mobile-session">Session</a>
-        <a href="#mobile-vault">Stored items</a>
-        <a href="#mobile-order">Pending order</a>
-        <a href="#mobile-support">Support range</a>
-        <a href="#mobile-record">Session record</a>
-        <a href="#mobile-identity">Identity links</a>
+      <nav className="discovery-nav" aria-label={t("sso")}>
+        <a href="#mobile-controls">{t("sed")}</a>
+        <a href="#mobile-status">{t("s1mj")}</a>
+        <a href="#mobile-device">{t("sqv")}</a>
+        <a href="#mobile-install">{t("snz")}</a>
+        <a href="#mobile-session">{t("s1jl")}</a>
+        <a href="#mobile-vault">{t("s1ms")}</a>
+        <a href="#mobile-order">{t("s17r")}</a>
+        <a href="#mobile-support">{t("s1no")}</a>
+        <a href="#mobile-record">{t("s1js")}</a>
+        <a href="#mobile-identity">{t("snr")}</a>
       </nav>
       <div className="discovery-body">
         <MobileBanner environment={live.environment} scenario={live.scenario} model={model} />
@@ -49,7 +54,7 @@ export function InstallableMobilePage() {
                 : live.actions.refresh()
             }
           >
-            {model.actionLabel}
+            {deskText(t, model.actionLabel)}
           </button>
         ) : null}
         <DeviceSection device={model.device} />

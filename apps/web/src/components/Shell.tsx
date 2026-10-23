@@ -186,7 +186,7 @@ export function Shell({ children }: { children: ReactNode }) {
       </p>
       {!onboardingDismissed ? <FirstRunGuide onDismiss={dismissOnboarding} /> : null}
       <main id="desk-main" tabIndex={-1}>
-        <Suspense fallback={connection.writesBlocked || connection.disconnected ? <p data-cached-read="true">STALE · cached</p> : null}><CachedReadNotice path={location.pathname} /></Suspense>
+        <Suspense fallback={connection.writesBlocked || connection.disconnected ? <p data-cached-read="true">{t("connectivity.cached")}</p> : null}><CachedReadNotice path={location.pathname} /></Suspense>
         {children}
       </main>
     </div>

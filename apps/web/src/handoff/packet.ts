@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "../i18n/messages/handoff--packet";
+import { sourceMessage } from "../i18n/source-message";
 import {
   INTEGRATION_GATE_LOOPBACK_HOST,
   KIX_SDK_0_PIN,
@@ -55,16 +57,16 @@ export const HANDOFF_PINS = {
   consumedProducerChange: true,
 } as const;
 
-export const INTEGRATION_REASON = "A screen does not complete protocol integration.";
+export const INTEGRATION_REASON = sourceCopy.en["s7x"];
 
 export const FIRST_RUN = {
-  install: "npm install",
-  test: "npm test",
-  ciStubTest: "KIX_REQUIRE_GATE=0 npm test",
-  dev: "npm run dev",
+  install: sourceCopy.en["s13c"],
+  test: sourceCopy.en["s13e"],
+  ciStubTest: sourceCopy.en["spt"],
+  dev: sourceCopy.en["s13d"],
   port: 5173,
-  reload: "A reload clears page-load state and does not send again.",
-  ciSkip: "KIX_REQUIRE_GATE=0 skips the live gate. That skip is not a live-gate pass.",
+  reload: sourceCopy.en["s6u"],
+  ciSkip: sourceCopy.en["spu"],
 } as const;
 
 export const STUB_MODE = {
@@ -93,7 +95,7 @@ export const LOOPBACK = {
 
 export const GATE_START = {
   repo: "kix-protocol",
-  command: "python3 -m integration_gate --port 8765",
+  command: sourceCopy.en["s1ah"],
   startedByThisRepo: false,
   bindHost: INTEGRATION_GATE_LOOPBACK_HOST,
 } as const;
@@ -101,51 +103,51 @@ export const GATE_START = {
 export const STARTUP_FAULTS = [
   {
     id: "missing-base",
-    when: "HTTP mode without VITE_KIX_PROTOCOL_API_BASE",
-    result: "Startup throws. The desk does not fall back to the stub.",
+    when: sourceCopy.en["snj"],
+    result: sourceCopy.en["s1mh"],
   },
   {
     id: "public-mode",
-    when: "A mode named production, public, or live",
-    result: "Refused with PRODUCTION_ENVIRONMENT. The stub is not selected.",
+    when: sourceCopy.en["s35"],
+    result: sourceCopy.en["s1ev"],
   },
   {
     id: "bad-host",
-    when: `The base is https, localhost, a missing port, port 0, or any host other than ${INTEGRATION_GATE_LOOPBACK_HOST}`,
-    result: "Rejected before a request.",
+    when: sourceMessage(sourceCopy.en["p.t182"], { v1: INTEGRATION_GATE_LOOPBACK_HOST }),
+    result: sourceCopy.en["s1ey"],
   },
   {
     id: "closed-port",
-    when: "The loopback port is closed",
-    result: "GATE_UNAVAILABLE after one attempt. No stub fallback and no retry.",
+    when: sourceCopy.en["s1u9"],
+    result: sourceCopy.en["smd"],
   },
   {
     id: "browser-cors",
-    when: "The reviewed gate answers no CORS preflight",
-    result: "The banner stays unavailable. There is no proxy. A Node loopback run is not a browser pass.",
+    when: sourceCopy.en["s1x9"],
+    result: sourceCopy.en["s1qg"],
   },
 ] as const;
 
 export const OUTCOME_SEPARATION = [
   {
     klass: "UNKNOWN",
-    means: "The call may have applied. It is not a rejection and not a success.",
-    next: "Fence the next write. Do not retry and do not mint an operation id.",
+    means: sourceCopy.en["s1qo"],
+    next: sourceCopy.en["skz"],
   },
   {
     klass: "NOT_BOUND",
-    means: "The desk method is not sent.",
-    next: "Do not map it onto another body.",
+    means: sourceCopy.en["s1rq"],
+    next: sourceCopy.en["sh7"],
   },
   {
     klass: "STALE",
-    means: "A stale response does not update the track.",
-    next: "Do not retry. Do not treat it as a success.",
+    means: sourceCopy.en["s8e"],
+    next: sourceCopy.en["sh9"],
   },
   {
     klass: "REJECT",
-    means: "The call was rejected.",
-    next: "Leave it rejected. Do not relabel it unknown or success.",
+    means: sourceCopy.en["s1qp"],
+    next: sourceCopy.en["sql"],
   },
 ] as const;
 
@@ -198,7 +200,7 @@ export const TRANSPORT_DIAGNOSES: readonly TransportDiagnosis[] = [
     transportRow(
       code,
       "degraded",
-      "The loopback gate is degraded. The client does not retry and does not fall back to the stub. This is not production readiness.",
+      sourceCopy.en["s1u7"],
     ),
   ),
   ...UNAVAILABLE_CODES.map((code) =>
@@ -206,26 +208,26 @@ export const TRANSPORT_DIAGNOSES: readonly TransportDiagnosis[] = [
       code,
       "unavailable",
       code === "STALE_RESPONSE"
-        ? "Fixture class STALE. Not a success. A traced protocol error may still show as unknown. Those labels are not collapsed."
-        : "The loopback gate is unavailable. The client does not retry and does not fall back to the stub.",
+        ? sourceCopy.en["sll"]
+        : sourceCopy.en["s1u8"],
       code === "STALE_RESPONSE" ? "STALE" : null,
     ),
   ),
   transportRow(
     "EVENT_EXISTS",
     "rejected",
-    "An explicit reject stays a reject. It is not unknown and not a success. The client does not retry with a new operation id.",
+    sourceCopy.en["s45"],
   ),
 ];
 
 const REFUSED_CLAIMS = [
-  "payment complete",
-  "admission complete",
-  "refund complete",
-  "live payment",
-  "funds moved",
-  "public service",
-  "integration complete",
+  sourceCopy.en["s17h"],
+  sourceCopy.en["s1l"],
+  sourceCopy.en["s1ep"],
+  sourceCopy.en["src"],
+  sourceCopy.en["sma"],
+  sourceCopy.en["s1aa"],
+  sourceCopy.en["soc"],
 ] as const;
 
 export function claimRefused(text: string): boolean {
@@ -262,11 +264,11 @@ export function lookupDiagnosis(code: string): { kind: "empty" } | { kind: "refu
   }
   const transport = TRANSPORT_DIAGNOSES.find((row) => row.code === trimmed);
   if (transport) {
-    const fixture = transport.fixtureClass ? ` Fixture class ${transport.fixtureClass}.` : "";
+    const fixture = transport.fixtureClass ? sourceMessage(sourceCopy.en["p.t183"], { v1: transport.fixtureClass }) : "";
     return {
       kind: "transport",
       title: `${transport.code} · ${transport.transport}`,
-      detail: `${transport.note}${fixture} Retry is off. Stub fallback is off.`,
+      detail: sourceMessage(sourceCopy.en["p.t184"], { v1: transport.note, v2: fixture }),
       confirmsSuccess: false,
     };
   }
@@ -331,7 +333,7 @@ export const CONSUMED_PRODUCERS = [
     productionEndpoint: false,
     protocolTruth: false,
     productionConformance: false,
-    note: "The p-sdk-0 BOOTSTRAP tuple is vendored and pin-checked. The SDK tuple was consumed; the catalogue, the gate, and the five pins did not move. BOOTSTRAP grants catalogue-schema binding only. No live connection and no semantic conformance.",
+    note: sourceCopy.en["merge.sdkNote"],
   },
 ] as const satisfies readonly ConsumedProducer[];
 
@@ -342,7 +344,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "box-office-catalog",
-    note: "The contract-only catalogue has no list or read command. listPerformances stays on the stub.",
+    note: sourceCopy.en["s1r6"],
   },
   {
     id: "browser-gate-path",
@@ -350,7 +352,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "operator-transport",
-    note: "The browser path to the loopback gate is not open. There is no proxy.",
+    note: sourceCopy.en["s1qk"],
   },
   {
     id: "bind-settlement-fsm",
@@ -358,7 +360,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "box-office-settlement",
-    note: "Settlement desk methods stay not-bound. The mock case is not funds.",
+    note: sourceCopy.en["s1k1"],
   },
   {
     id: "bind-reservation-fsm",
@@ -366,7 +368,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "reservation-case",
-    note: "Reservation desk methods stay not-bound. Stub phases are not catalogue commands.",
+    note: sourceCopy.en["s1g6"],
   },
   {
     id: "bind-admission-fsm",
@@ -374,7 +376,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "admission-credential",
-    note: "admit stays uncomposed. A credential label and a health probe are not entry.",
+    note: sourceCopy.en["s1p"],
   },
   {
     id: "bind-resale-fsm",
@@ -382,7 +384,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "resale-desk",
-    note: "Resale desk methods stay not-bound. This desk is not a live marketplace.",
+    note: sourceCopy.en["s1g1"],
   },
   {
     id: "bind-credit-fsm",
@@ -390,7 +392,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "credit-desk",
-    note: "The catalogue has no credit command. drawCredit is not a disbursement.",
+    note: sourceCopy.en["s1qt"],
   },
   {
     id: "bind-wave4-pointers",
@@ -398,7 +400,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "booking-journey",
-    note: "placeHold stays not-bound with consideredAction reserve_listing. This packet does not remap it.",
+    note: sourceCopy.en["s18d"],
   },
   {
     id: "primary-price-fee-ui",
@@ -406,7 +408,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "booking-journey",
-    note: "Price and fee display stays UNDETERMINED. This packet does not calculate an amount.",
+    note: sourceCopy.en["s194"],
   },
   {
     id: "api-state-distinction",
@@ -414,7 +416,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "refund-return-desk",
-    note: "The five order states are shown as separate synthetic cells. The real state distinction over a producer read stays on that pending node.",
+    note: sourceCopy.en["s1su"],
   },
   {
     id: "refund-surface",
@@ -422,7 +424,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "refund-return-desk",
-    note: "refund_ticket, void_unissued, adjust_pg_cancel, and observe_return are pinned and not sent. The refund desk is a synthetic record. COMPENSATION_UNDEFINED stays visible.",
+    note: sourceCopy.en["s1el"],
   },
   {
     id: "c-discovery-live",
@@ -430,7 +432,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "discovery-live-read",
-    note: "Synthetic rows are not a live query projection.",
+    note: sourceCopy.en["s1p1"],
   },
   {
     id: "c-inventory-venue",
@@ -438,7 +440,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "inventory-venue-select",
-    note: "Seat and GA selection is a synthetic page. A real inventory and queue read stays on that pending node.",
+    note: sourceCopy.en["s1iq"],
   },
   {
     id: "c-platform-journey",
@@ -446,7 +448,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "platform-journey-trade",
-    note: "The multi-channel trade page is synthetic. A real listing, trade, payment, transfer, and refund connection stays on that pending node.",
+    note: sourceCopy.en["s1uf"],
   },
   {
     id: "c-async-session-fence",
@@ -454,7 +456,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "platform-journey-trade",
-    note: "The write fence and the unknown handling on the trade page live in this page load only. Durable session recovery stays on that pending node.",
+    note: sourceCopy.en["s22s"],
   },
   {
     id: "c-cross-surface-journeys",
@@ -462,7 +464,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "cross-surface-journeys",
-    note: "The journey table is synthetic. A real cross-surface journey connection over producer reads stays on that pending node.",
+    note: sourceCopy.en["s1tg"],
   },
   {
     id: "c-merchant-operations",
@@ -470,7 +472,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "merchant-operations",
-    note: "The merchant workroom is synthetic. A real event, listing, trade, and settlement-obligation read model and a real producer export stay on that pending node.",
+    note: sourceCopy.en["s1ue"],
   },
   {
     id: "c-credit-origination",
@@ -478,7 +480,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "credit-origination",
-    note: "The origination desk is synthetic. A real claim basis, policy revision, consent, document, review, commitment, and drawdown permission read model and a real producer connection stay on that pending node.",
+    note: sourceCopy.en["s1uu"],
   },
   {
     id: "c-credit-servicing-journey",
@@ -486,7 +488,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "credit-servicing",
-    note: "The servicing desk is synthetic. A real draw, observation, reservation, exposure, schedule, payment, allocation, reversal, adjustment, and case read model and a real producer connection stay on that pending node.",
+    note: sourceCopy.en["s1xv"],
   },
   {
     id: "c-finance-operations",
@@ -494,7 +496,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "finance-operations",
-    note: "The finance desk is synthetic. A real reconciliation case, source cut, payee allocation, unapplied remainder, and accounting export read model and a real producer connection stay on that pending node.",
+    note: sourceCopy.en["s1ss"],
   },
   {
     id: "c-marketing-journey",
@@ -502,7 +504,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "marketing-journey",
-    note: "The benefit journey is synthetic. A real membership eligibility, presale priority, usage count, coupon budget, referral attribution, apply, and reclaim read model and a real producer connection stay on that pending node, which waits on kix-protocol:wave7-marketing-contracts. A full CRM product is not built here.",
+    note: sourceCopy.en["s1qh"],
   },
   {
     id: "c-delegated-assistant",
@@ -510,7 +512,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "delegated-assistant",
-    note: "The delegation assistant is synthetic. A real grant, proposal, approval, and command read model and a real producer connection stay on that pending node, which waits on kix-protocol:ai-delegation-execution-decision and kix-protocol:k-authority-qualification. Nothing here transfers, refunds, or signs.",
+    note: sourceCopy.en["s1ri"],
   },
   {
     id: "delegation-surface",
@@ -518,7 +520,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "delegated-assistant",
-    note: "The delegation screen on /assistant is synthetic query/propose scope. Execution delegation stays unadopted. Nothing here transfers, refunds, or signs.",
+    note: sourceCopy.en["s1rj"],
   },
   {
     id: "c-tenant-permissions",
@@ -526,7 +528,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "tenant-permissions",
-    note: "The permissions desk is synthetic. A real organization, role assignment, resource scope, maker/checker, revocation, account change, sensitive export, and audit read model and a real producer connection stay on that pending node, which waits on kix-protocol:k-operator-contract. A hidden control is never enforcement, and nothing here grants a real permission.",
+    note: sourceCopy.en["s1v5"],
   },
   {
     id: "c-notification-inbox",
@@ -534,7 +536,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "notification-inbox",
-    note: "The notification inbox is synthetic. A real contracted-event feed, dedupe, read state, offered-action resolve, and support-inquiry read model and a real producer connection stay on that pending node, which waits on kix-protocol:k-operator-contract. An arrival confirms no economic effect, and no external send or provider API is wired.",
+    note: sourceCopy.en["s1ul"],
   },
   {
     id: "c-provider-connected-journey",
@@ -542,7 +544,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "provider-connected-journey",
-    note: "The provider journey is synthetic. A real approved-provider checkout, payment observation, issuance, and refund connection stays on that pending node, which waits on kix-protocol:k-provider-sandbox and kix-protocol:k-authority-qualification. A return landing is not a payment observation, a sandbox success is not a real payment, and a refund record executes nothing.",
+    note: sourceCopy.en["s1vl"],
   },
   {
     id: "c-marketplace-performance",
@@ -550,7 +552,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "marketplace-performance-bench",
-    note: "The marketplace scale bench is synthetic. A real large-marketplace read, queue, device measurement, and producer load qualification stays on that pending node, which waits on kix-protocol:ps-07-scale-qualification. Browser-boundary measurements are never a producer load figure, and an emulated device is never real mobile evidence.",
+    note: sourceCopy.en["s1uc"],
   },
   {
     id: "c-installable-mobile",
@@ -558,7 +560,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "installable-mobile-shell",
-    note: "The installable mobile shell is synthetic. A real packaging, install, update, session, vault, presentation, and device read model and a real producer connection stay on that pending node. A stored item is a copy that mints no admission, the device clock never decides validity, and an app resume re-executes no uncertain write.",
+    note: sourceCopy.en["s1t9"],
   },
   {
     id: "c-platform-operational-qualification",
@@ -566,7 +568,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "platform-operational-qualification",
-    note: "The qualification packet is a synthetic record of stub journeys. A real platform, finance, and marketing operational qualification stays on that pending node, which waits on kix-protocol:ps-07-scale-qualification, kix-protocol:cr-10-credit-qualification, and the unpromoted commerce-integration-closeout. A per-call confirmed is not a journey close, and the packet is never a public deployment, a real-money approval, or a service qualification.",
+    note: sourceCopy.en["s1vq"],
   },
   {
     id: "c-journey-identity",
@@ -574,7 +576,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "journey-identity",
-    note: "The journey context desk is synthetic. A real context-bound identity registry and a real read-projection evidence contract stay on that pending node, which waits on kix-protocol:protocol-runtime-boundary-register, protocol-canonical-identity-conformance, protocol-read-projection-evidence, and contract-compatibility-profile. The context key here is app-internal and is never a public identifier.",
+    note: sourceCopy.en["s1tf"],
   },
   {
     id: "c-platform-release",
@@ -582,7 +584,7 @@ export const PENDING_PRODUCERS = [
     connected: false,
     implementedHere: false,
     waitingSurface: "platform-release",
-    note: "The release candidate packet is a synthetic record scoped to the live tuple. A real final review, user acceptance, RELEASE gate, and operations handoff stays on that pending node, which waits on kix-protocol:k-platform-release and the user RELEASE decision. Nothing is released, deployed, or operated.",
+    note: sourceCopy.en["s1wx"],
   },
 ] as const satisfies readonly PendingProducer[];
 
@@ -709,7 +711,7 @@ export const ROLE_JOURNEYS = {
       "delegated-assistant",
       "buyer",
       ["delegated-assistant"],
-      "Synthetic delegation assistant. Request text is untrusted intent and never authority, a proposal is not an approval, and only the approve control on a recorded open proposal sends one synthetic command once. An unadopted execution delegation stays in query/propose mode, and nothing here moves funds, transfers a right, or signs.",
+      sourceCopy.en["s1og"],
     ),
   ],
   organizer: [
@@ -717,31 +719,31 @@ export const ROLE_JOURNEYS = {
       "organizer-console",
       "organizer",
       ["organizer-console"],
-      "Six local commands, each its own request. The operator actor string is not an authentication result.",
+      sourceCopy.en["s1kz"],
     ),
     stepFromSurfaces(
       "organizer-workspace",
       "organizer",
       ["organizer-workspace"],
-      "Preview, then one send. The list is not one atomic transaction.",
+      sourceCopy.en["s192"],
     ),
     stepFromSurfaces(
       "box-office-settlement",
       "organizer",
       ["box-office-settlement"],
-      "Mock settlement case. Shares are not computed. This is not funds.",
+      sourceCopy.en["st6"],
     ),
     stepFromSurfaces(
       "merchant-operations",
       "organizer",
       ["merchant-operations"],
-      "Synthetic merchant read and export. A sales figure stays an observation, never a settled or lendable figure.",
+      sourceCopy.en["s1om"],
     ),
     stepFromSurfaces(
       "credit-origination",
       "organizer",
       ["credit-origination"],
-      "Synthetic credit origination. A submission is not a decision, an approval is not a commitment, and a recorded request is not a disbursement.",
+      sourceCopy.en["s1ob"],
     ),
   ],
   operator: [
@@ -749,73 +751,73 @@ export const ROLE_JOURNEYS = {
       "operator-transport",
       "operator",
       ["operator-transport"],
-      "The banner is a probe. A probe is not payment, issuance, or admission. Browser HTTP stays unavailable.",
+      sourceCopy.en["s1qf"],
     ),
     stepFromSurfaces(
       "receipt-explorer",
       "operator",
       ["receipt-explorer"],
-      "Explains receipts already on this page load. Unknown stays unknown. The page does not post.",
+      sourceCopy.en["skg"],
     ),
     stepFromSurfaces(
       "credit-desk",
       "operator",
       ["credit-desk"],
-      "Mock credit case. No disbursement and no catalogue credit command.",
+      sourceCopy.en["ssw"],
     ),
     stepFromSurfaces(
       "credit-servicing",
       "operator",
       ["credit-servicing"],
-      "Synthetic credit servicing. A draw instruction is not a disbursement, a partial repayment restores no limit, and a case closure extinguishes no debt.",
+      sourceCopy.en["s1od"],
     ),
     stepFromSurfaces(
       "finance-operations",
       "operator",
       ["finance-operations"],
-      "Synthetic finance queue and export. A mismatch is reviewed against its original trade, a proposal and an approval change no economic state, and nothing forces a ledger to match.",
+      sourceCopy.en["s1oi"],
     ),
     stepFromSurfaces(
       "tenant-permissions",
       "operator",
       ["tenant-permissions"],
-      "Synthetic role workspaces. A hidden control is never enforcement, a proposal and an approval are records, and a role switch mixes no old session rows.",
+      sourceCopy.en["s1p0"],
     ),
     stepFromSurfaces(
       "notification-inbox",
       "operator",
       ["notification-inbox"],
-      "Synthetic notification inbox and support material. An arrival confirms no economic effect, a stale-issued row's action resolves nothing, and dedupe drops a second delivery once.",
+      sourceCopy.en["s1oq"],
     ),
     stepFromSurfaces(
       "marketplace-performance-bench",
       "operator",
       ["marketplace-performance-bench"],
-      "Synthetic scale bench. A bounded window over a lazy stream, queue admission as browse access only, dropped stale answers, and browser-boundary measurements that never claim a real device or a producer load share.",
+      sourceCopy.en["s1p4"],
     ),
     stepFromSurfaces(
       "installable-mobile-shell",
       "operator",
       ["installable-mobile-shell"],
-      "Synthetic mobile shell. Stored items stay copies that mint no admission, the device clock never decides validity, and an app resume re-executes no uncertain write.",
+      sourceCopy.en["s1oo"],
     ),
     stepFromSurfaces(
       "platform-operational-qualification",
       "operator",
       ["platform-operational-qualification"],
-      "Synthetic qualification packet. A per-call confirmed is not a journey close, the five denominators never merge, and the packet is never promoted to a deployment or a real-money approval.",
+      sourceCopy.en["s1ov"],
     ),
     stepFromSurfaces(
       "platform-release",
       "operator",
       ["platform-release"],
-      "Synthetic release candidate. The packet is scoped to the live tuple, decides nothing, and never starts a public deploy, real money, or real operations before the user RELEASE decision.",
+      sourceCopy.en["s1oz"],
     ),
     stepFromSurfaces(
       "accessibility-baseline",
       "operator",
       ["accessibility-baseline"],
-      "Presentation only. No added route and no command. Price and fee display stays UNDETERMINED.",
+      sourceCopy.en["s18x"],
     ),
     {
       id: "local-handoff",
@@ -825,7 +827,7 @@ export const ROLE_JOURNEYS = {
       surfaces: [],
       statuses: ["unsupported"] as const,
       protocolIntegrationComplete: false as const,
-      note: "This page is the local handoff. It does not post. A screen here is not protocol integration.",
+      note: sourceCopy.en["s23a"],
     },
   ],
 } as const satisfies Record<WorkspaceRole, readonly RoleStep[]>;
@@ -841,37 +843,37 @@ export const ORIGINAL10_EVIDENCE = [
   {
     id: "w6a-journey-map",
     doc: "docs/wave-6a-journey-map-apps-bind.md",
-    anchor: "does not map `refund_ticket`",
+    anchor: sourceCopy.en["sh3"],
   },
   {
     id: "w6a-journey-adapter",
     doc: "docs/wave-6a-journey-adapter-apps-bind.md",
-    anchor: "Wave 7 stays shut until `w6a-evidence` merges",
+    anchor: sourceCopy.en["s26g"],
   },
   {
     id: "w6a-journey-test",
     doc: "docs/wave-6a-journey-test-apps-bind.md",
-    anchor: "live loopback journey test and the stub step-sequence parity",
+    anchor: sourceCopy.en["srb"],
   },
   {
     id: "w6a-ui-skeleton",
     doc: "docs/wave-6a-ui-skeleton-apps-bind.md",
-    anchor: "This screen does not add a command, a read, a retry, or a desk binding.",
+    anchor: sourceCopy.en["s23k"],
   },
   {
     id: "w6a-evidence",
     doc: "docs/wave-6a-evidence-apps-bind.md",
-    anchor: "It is not a purchase-to-admission journey.",
+    anchor: sourceCopy.en["sp5"],
   },
   {
     id: "organizer-admin-console",
     doc: "docs/organizer-admin-console-apps-bind.md",
-    anchor: "organizer event lifecycle",
+    anchor: sourceCopy.en["s166"],
   },
   {
     id: "gift-surface",
     doc: "docs/gift-surface-apps-bind.md",
-    anchor: "P02 transfer",
+    anchor: sourceCopy.en["s16q"],
   },
   {
     id: "doc-m05-label",
@@ -886,7 +888,7 @@ export const ORIGINAL10_EVIDENCE = [
   {
     id: "w7-m05-consent-bind",
     doc: "docs/m05-consent-bind-apps-bind.md",
-    anchor: "CRM campaign editing stays out",
+    anchor: sourceCopy.en["sf1"],
   },
 ] as const satisfies readonly PreservedEvidence[];
 
@@ -899,132 +901,132 @@ export const LOCAL_SURFACE_EVIDENCE = [
   {
     id: "c-buyer-workspace",
     doc: "docs/c-buyer-workspace-apps-bind.md",
-    anchor: "read-only buyer workspace at `/buyer`",
+    anchor: sourceCopy.en["s1bx"],
   },
   {
     id: "c-organizer-workspace",
     doc: "docs/c-organizer-workspace-apps-bind.md",
-    anchor: "sends one command at a time",
+    anchor: sourceCopy.en["s1j9"],
   },
   {
     id: "c-receipt-explorer",
     doc: "docs/c-receipt-explorer-apps-bind.md",
-    anchor: "redacted support export",
+    anchor: sourceCopy.en["s1ec"],
   },
   {
     id: "c-discovery-prototype",
     doc: "docs/c-discovery-prototype-apps-bind.md",
-    anchor: "The rows are a fixture.",
+    anchor: sourceCopy.en["s1xg"],
   },
   {
     id: "c-accessibility-baseline",
     doc: "docs/c-accessibility-baseline-apps-bind.md",
-    anchor: "It adds no route and no command.",
+    anchor: sourceCopy.en["sp0"],
   },
   {
     id: "c-contract-fixture-library",
     doc: "docs/c-contract-fixture-library-apps-bind.md",
-    anchor: "A failed live call is not replaced with a stub success.",
+    anchor: sourceCopy.en["s1z"],
   },
   {
     id: "c-discovery-live-stub",
     doc: "docs/c-discovery-live-stub-apps-bind.md",
-    anchor: "A projection row confirms no sale, no ownership, and no payment.",
+    anchor: sourceCopy.en["s62"],
   },
   {
     id: "c-inventory-venue-stub",
     doc: "docs/c-inventory-venue-stub-apps-bind.md",
-    anchor: "the page shows counts, never amounts.",
+    anchor: sourceCopy.en["s1ux"],
   },
   {
     id: "c-platform-journey-stub",
     doc: "docs/c-platform-journey-stub-apps-bind.md",
-    anchor: "Its writes land on an in-process synthetic source, which is a stand-in for the producer.",
+    anchor: sourceCopy.en["sp8"],
   },
   {
     id: "c-merchant-operations-stub",
     doc: "docs/c-merchant-operations-stub-apps-bind.md",
-    anchor: "no client-side sum is the financial truth",
+    anchor: sourceCopy.en["sun"],
   },
   {
     id: "c-credit-origination-stub",
     doc: "docs/c-credit-origination-stub-apps-bind.md",
-    anchor: "an approval is not a commitment",
+    anchor: sourceCopy.en["s3i"],
   },
   {
     id: "c-credit-servicing-journey-stub",
     doc: "docs/c-credit-servicing-journey-stub-apps-bind.md",
-    anchor: "a case closure is not an extinguished debt",
+    anchor: sourceCopy.en["sa"],
   },
   {
     id: "c-finance-operations-stub",
     doc: "docs/c-finance-operations-stub-apps-bind.md",
-    anchor: "no actor on this desk holds the authority to change economic state",
+    anchor: sourceCopy.en["stv"],
   },
   {
     id: "c-marketing-journey-stub",
     doc: "docs/c-marketing-journey-stub-apps-bind.md",
-    anchor: "an application confirms no purchase and pays no reward",
+    anchor: sourceCopy.en["s3d"],
   },
   {
     id: "c-delegated-assistant-stub",
     doc: "docs/c-delegated-assistant-stub-apps-bind.md",
-    anchor: "a sentence is never authority",
+    anchor: sourceCopy.en["s80"],
   },
   {
     id: "c-tenant-permissions-stub",
     doc: "docs/c-tenant-permissions-stub-apps-bind.md",
-    anchor: "a hidden control is never enforcement",
+    anchor: sourceCopy.en["s2c"],
   },
   {
     id: "c-notification-inbox-stub",
     doc: "docs/c-notification-inbox-stub-apps-bind.md",
-    anchor: "an arrival confirms no economic effect",
+    anchor: sourceCopy.en["s3k"],
   },
   {
     id: "c-provider-connected-journey-stub",
     doc: "docs/c-provider-connected-journey-stub-apps-bind.md",
-    anchor: "a return landing is never a payment observation",
+    anchor: sourceCopy.en["s7b"],
   },
   {
     id: "c-marketplace-performance-stub",
     doc: "docs/c-marketplace-performance-stub-apps-bind.md",
-    anchor: "an emulated device is never real mobile evidence",
+    anchor: sourceCopy.en["s41"],
   },
   {
     id: "c-installable-mobile-stub",
     doc: "docs/c-installable-mobile-stub-apps-bind.md",
-    anchor: "an app resume re-executes nothing",
+    anchor: sourceCopy.en["s3f"],
   },
   {
     id: "c-platform-operational-qualification-stub",
     doc: "docs/c-platform-operational-qualification-stub-apps-bind.md",
-    anchor: "a per-call confirmed is never an end-to-end journey close",
+    anchor: sourceCopy.en["s55"],
   },
   {
     id: "c-platform-release-stub",
     doc: "docs/c-platform-release-stub-apps-bind.md",
-    anchor: "an approval under a different source or contract tuple is never reused",
+    anchor: sourceCopy.en["s3j"],
   },
   {
     id: "c-refund-return-states-stub",
     doc: "docs/c-refund-return-states-stub-apps-bind.md",
-    anchor: "Return-required is its own state",
+    anchor: sourceCopy.en["s1gs"],
   },
   {
     id: "c-journey-identity-stub",
     doc: "docs/c-journey-identity-stub-apps-bind.md",
-    anchor: "receipt minted under another context is never this journey's evidence",
+    anchor: sourceCopy.en["s1de"],
   },
   {
     id: "c-session-recovery-stub",
     doc: "docs/c-session-recovery-stub-apps-bind.md",
-    anchor: "an unresolved intent comes back as UNKNOWN and is never sent again",
+    anchor: sourceCopy.en["s4r"],
   },
   {
     id: "c-cross-surface-journeys-stub",
     doc: "docs/c-cross-surface-journeys-stub-apps-bind.md",
-    anchor: "a partly landed journey keeps COMPENSATION_UNDEFINED visible",
+    anchor: sourceCopy.en["s4u"],
   },
 ] as const satisfies readonly PreservedEvidence[];
 
@@ -1051,8 +1053,8 @@ export interface HandoffView {
   readonly steps: readonly RoleStep[];
 }
 
-const UNKNOWN_CODE = "This code is not in the local diagnosis list. It is not a success.";
-const REFUSED_TEXT = "This handoff refuses that completion claim. A screen is not protocol integration.";
+const UNKNOWN_CODE = sourceCopy.en["s22v"];
+const REFUSED_TEXT = sourceCopy.en["s232"];
 
 export function buildHandoffView(input: {
   phase: "loading" | "settled";
@@ -1120,16 +1122,16 @@ export function buildHandoffView(input: {
 
 export function nextRole(role: WorkspaceRole, key: string): WorkspaceRole | null {
   const index = WORKSPACE_ROLES.indexOf(role);
-  if (key === "ArrowRight" || key === "ArrowDown") {
+  if (key === sourceCopy.en["s7p"] || key === sourceCopy.en["s7n"]) {
     return WORKSPACE_ROLES[(index + 1) % WORKSPACE_ROLES.length] ?? null;
   }
-  if (key === "ArrowLeft" || key === "ArrowUp") {
+  if (key === sourceCopy.en["s7o"] || key === sourceCopy.en["s7q"]) {
     return WORKSPACE_ROLES[(index - 1 + WORKSPACE_ROLES.length) % WORKSPACE_ROLES.length] ?? null;
   }
-  if (key === "Home") {
+  if (key === sourceCopy.en["sni"]) {
     return WORKSPACE_ROLES[0] ?? null;
   }
-  if (key === "End") {
+  if (key === sourceCopy.en["sid"]) {
     return WORKSPACE_ROLES[WORKSPACE_ROLES.length - 1] ?? null;
   }
   return null;

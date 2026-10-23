@@ -1,3 +1,7 @@
+import { messages as copy0 } from "../i18n/messages/pages--MarketingJourney";
+import { messages as copy1 } from "../i18n/messages/marketing-journey";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { useRestoreFocus } from "../a11y/focus";
 import { useMarketingJourney } from "../marketing-journey";
 import {
@@ -14,6 +18,7 @@ import {
 } from "./MarketingJourneyPanels";
 
 export function MarketingJourneyPage() {
+  const t = useT(copy0, copy1);
   const live = useMarketingJourney();
   const model = live.model;
   // A block, a rejection, an unknown result, or a refused read takes focus to the status region.
@@ -21,16 +26,16 @@ export function MarketingJourneyPage() {
 
   return (
     <div className="discovery mkj" data-adapter-environment={live.environment}>
-      <nav className="discovery-nav" aria-label="Marketing journey sections">
-        <a href="#mkj-controls">Controls</a>
-        <a href="#mkj-status">Status</a>
-        <a href="#mkj-lanes">Stages</a>
-        <a href="#mkj-consent">Consent</a>
-        <a href="#mkj-benefits">Benefits</a>
-        <a href="#mkj-orders">Orders and applications</a>
-        <a href="#mkj-rejections">Rejected</a>
-        <a href="#mkj-session">Session record</a>
-        <a href="#mkj-register">Contract register</a>
+      <nav className="discovery-nav" aria-label={t("srw")}>
+        <a href="#mkj-controls">{t("sed")}</a>
+        <a href="#mkj-status">{t("s1mj")}</a>
+        <a href="#mkj-lanes">{t("s1lg")}</a>
+        <a href="#mkj-consent">{t("sdo")}</a>
+        <a href="#mkj-benefits">{t("s9v")}</a>
+        <a href="#mkj-orders">{t("s15v")}</a>
+        <a href="#mkj-rejections">{t("s1ew")}</a>
+        <a href="#mkj-session">{t("s1js")}</a>
+        <a href="#mkj-register">{t("sec")}</a>
       </nav>
       <div className="discovery-body">
         <MarketingBanner environment={live.environment} scenario={live.scenario} model={model} />
@@ -49,7 +54,7 @@ export function MarketingJourneyPage() {
             className="discovery-action"
             onClick={() => (model.state === "tuple-changed" ? live.actions.newSession() : live.actions.refresh())}
           >
-            {model.actionLabel}
+            {deskText(t, model.actionLabel)}
           </button>
         ) : null}
         <LanesSection model={model} />

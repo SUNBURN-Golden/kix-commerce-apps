@@ -1,0 +1,26 @@
+export const messages = {
+  en: {
+    "sl": "Accounting export",
+    "sed": "Controls",
+    "sjz": "Exception queue",
+    "sle": "Finance sections",
+    "s1fv": "Requests",
+    "s1js": "Session record",
+    "s1l7": "Source cuts",
+    "s1la": "Source figures",
+    "s1mj": "Status",
+    "s26m": "Who may do what",
+  },
+  ko: {
+    "sl": "회계 내보내기",
+    "sed": "제어",
+    "sjz": "예외 큐",
+    "sle": "재무 영역",
+    "s1fv": "요청 목록",
+    "s1js": "세션 기록",
+    "s1l7": "원본 기준점",
+    "s1la": "원본 수치",
+    "s1mj": "상태",
+    "s26m": "주체별 허용 동작",
+  },
+} as const;

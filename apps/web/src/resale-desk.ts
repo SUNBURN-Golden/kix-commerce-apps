@@ -1,3 +1,4 @@
+import { messages as sourceCopy } from "./i18n/messages/resale-desk";
 import { connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useState } from "react";
 import { ProtocolError, type ResaleCaseView, type ResaleRightView } from "@kix/protocol-adapter";
@@ -200,7 +201,7 @@ export function useResaleDesk(eventId: string) {
 }
 
 function message(reason: unknown): string {
-  return reason instanceof Error ? reason.message : "Mock resale command was rejected.";
+  return reason instanceof Error ? reason.message : sourceCopy.en["st2"];
 }
 
 function readAttempt(eventId: string): number {

@@ -1,3 +1,8 @@
+import { messages as copy0 } from "../i18n/messages/pages--Gift";
+import { messages as copy1 } from "../i18n/messages/gift-desk";
+import { messages as copy2 } from "../i18n/messages/storage-allow-list";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import type { ValidationHandle } from "../forms/useFormValidation";
 import { ValidatedForm } from "../forms/ValidatedForm";
 import { field } from "../forms/validation";
@@ -7,6 +12,7 @@ import { GIFT_DEFAULT_RECIPIENT, GIFT_DONOR, emptyDraft, useGiftDesk, type GiftD
 import { GiftPanel } from "./GiftPanel";
 
 export function GiftPage() {
+  const t = useT(copy0, copy1, copy2);
   const [giftId, setGiftId] = useState("");
   const [draft, setDraft] = useState<GiftDraft>(emptyDraft());
   const validation = useRef<ValidationHandle>(null);
@@ -14,7 +20,7 @@ export function GiftPage() {
   const fault = model.rows.find(
     (row) => row.status === "rejected" || row.status === "not-sent" || row.status === "unconfirmed",
   );
-  useRestoreFocus(fault ? `${fault.step}:${fault.status}:${fault.note}` : null, "gift-ticket-id");
+  useRestoreFocus(fault ? `${fault.step}:${fault.status}:${deskText(t, fault.note)}` : null, "gift-ticket-id");
   const offer = model.rows.find((row) => row.step === "offer_gift");
   const offerLocked = offer !== undefined && offer.status !== "ready" && offer.status !== "not-started";
 
@@ -25,12 +31,10 @@ export function GiftPage() {
   return (
     <section>
       <header className="section-head">
-        <p className="eyebrow">Gift · P02 transfer</p>
-        <h2>Gift transfer</h2>
+        <p className="eyebrow">{t("smi")}</p>
+        <h2>{t("smm")}</h2>
         <p className="muted">
-          Offer a right the caller already holds, then accept or cancel that offer. Gift offer is not a credit draw.
-          No funds.
-        </p>
+          {t("s13v")}</p>
       </header>
       <ValidatedForm id="gift-form" validationRef={validation} fields={[
           field("gift-id", "validation.label.giftId"),
@@ -45,12 +49,10 @@ export function GiftPage() {
         }}
       >
         <label htmlFor="gift-id">
-          Gift id
-          <input id="gift-id" value={giftId} onChange={(event) => setGiftId(event.target.value)} autoComplete="off" />
+          {t("smf")}<input id="gift-id" value={giftId} onChange={(event) => setGiftId(event.target.value)} autoComplete="off" />
         </label>
         <label htmlFor="gift-ticket-id">
-          Ticket id
-          <input
+          {t("s242")}<input
             id="gift-ticket-id"
             value={draft.ticketId}
             disabled={offerLocked && fault === undefined}
@@ -62,36 +64,31 @@ export function GiftPage() {
           />
         </label>
         <label htmlFor="gift-expected-version">
-          Expected version
-          <input
+          {t("sk8")}<input
             id="gift-expected-version"
             value={draft.expectedVersion}
             disabled={offerLocked}
             inputMode="numeric"
-            placeholder="Caller-supplied integer"
+            placeholder={t("sas")}
             onChange={(event) => patch({ expectedVersion: event.target.value })}
             autoComplete="off"
           />
         </label>
         <label htmlFor="gift-expires-at">
-          Expires at
-          <input
+          {t("skb")}<input
             id="gift-expires-at"
             value={draft.expiresAt}
             disabled={offerLocked}
             inputMode="numeric"
-            placeholder="Caller-supplied integer"
+            placeholder={t("sas")}
             onChange={(event) => patch({ expiresAt: event.target.value })}
             autoComplete="off"
           />
         </label>
         <p className="muted">
-          expiresAt is a caller-supplied integer. This page does not turn that integer into an expiry decision. Display
-          locale does not decide expiry.
-        </p>
+          {t("skd")}</p>
         <label htmlFor="gift-recipient">
-          Recipient
-          <input
+          {t("s1di")}<input
             id="gift-recipient"
             value={draft.recipient}
             disabled={offerLocked}
@@ -99,8 +96,8 @@ export function GiftPage() {
             autoComplete="off"
           />
         </label>
-        <p className="muted">Donor {GIFT_DONOR}. Default recipient {GIFT_DEFAULT_RECIPIENT}.</p>
-        {fault ? <p id="gift-outcome-note">{fault.note}</p> : null}
+        <p className="muted">{t("sh5")}{" "}{deskText(t, GIFT_DONOR)}{t("sfr")}{" "}{deskText(t, GIFT_DEFAULT_RECIPIENT)}.</p>
+        {fault ? <p id="gift-outcome-note">{deskText(t, fault.note)}</p> : null}
       </ValidatedForm>
       <GiftPanel model={{ ...model, send: (step) => {
         const ids = step === "offer_gift" ? undefined : ["gift-id"];

@@ -24,7 +24,7 @@ export function AsyncStateFrame({ kind, label, word, note, children, announcemen
     >
       <p>
         <span className="status-mark async-state-word" data-status-mark={kind}>{word}</span>{" "}
-        {label ? `${label}: ` : ""}{note}
+        {label}{label ? ": " : ""}{note}
       </p>
       {children}
     </div>

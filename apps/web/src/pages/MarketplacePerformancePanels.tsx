@@ -1,3 +1,8 @@
+import { messages as copy0 } from "../i18n/messages/pages--MarketplacePerformancePanels";
+import { messages as copy1 } from "../i18n/messages/marketplace-performance";
+import { messages as copy2 } from "../i18n/messages/workspace--registry";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import {
   MARKETPLACE_DEVICE_PROFILES,
@@ -44,20 +49,21 @@ export function BenchBanner({
   scenario: MarketplaceScenario;
   model: MarketplaceBenchModel;
 }) {
+  const t = useT(copy0, copy1, copy2);
   return (
     <header
       className="section-head discovery-section"
       data-adapter-environment={environment}
       data-scenario={scenario}
     >
-      <h2>{MARKETPLACE_BENCH_TITLE}</h2>
+      <h2>{deskText(t, MARKETPLACE_BENCH_TITLE)}</h2>
       <p>
-        <Synthetic /> {MARKETPLACE_BENCH_SOURCE_LINE}
+        <Synthetic /> {deskText(t, MARKETPLACE_BENCH_SOURCE_LINE)}
       </p>
-      <p className="muted">{MARKETPLACE_BENCH_BOUNDARY}</p>
-      <p className="muted">{MARKETPLACE_BENCH_SCENARIO_NOTES[scenario]}</p>
-      <p className="muted">{WORKSPACE_RULING}</p>
-      <p className="muted">{model.contextLine}</p>
+      <p className="muted">{deskText(t, MARKETPLACE_BENCH_BOUNDARY)}</p>
+      <p className="muted">{deskText(t, MARKETPLACE_BENCH_SCENARIO_NOTES[scenario])}</p>
+      <p className="muted">{deskText(t, WORKSPACE_RULING)}</p>
+      <p className="muted">{deskText(t, model.contextLine)}</p>
     </header>
   );
 }
@@ -71,69 +77,68 @@ export function BenchControls({
   workload: MarketplaceWorkload;
   actions: MarketplaceBenchActions;
 }) {
+  const t = useT(copy0, copy1, copy2);
   return (
     <section id="mperf-controls" className="discovery-section" aria-labelledby="mperf-controls-head">
-      <h3 id="mperf-controls-head">Controls</h3>
-      <p className="muted">{MARKETPLACE_BENCH_READ_NOTE}</p>
-      <p className="muted">{MARKETPLACE_BENCH_SYNTHETIC_CONTROL_NOTE}</p>
+      <h3 id="mperf-controls-head">{t("sed")}</h3>
+      <p className="muted">{deskText(t, MARKETPLACE_BENCH_READ_NOTE)}</p>
+      <p className="muted">{deskText(t, MARKETPLACE_BENCH_SYNTHETIC_CONTROL_NOTE)}</p>
       <div className="discovery-controls">
-        <label htmlFor="mperf-scenario">Synthetic scenario</label>
+        <label htmlFor="mperf-scenario">{t("s1p5")}</label>
         <select
           id="mperf-scenario"
           value={scenario}
           onChange={(event) => actions.setScenario(event.target.value as MarketplaceScenario)}
         >
-          {MARKETPLACE_SCENARIOS.map((item) => (
+          {deskText(t, MARKETPLACE_SCENARIOS.map((item) => (
             <option key={item} value={item}>
-              {item}
+              {deskText(t, item)}
             </option>
-          ))}
+          )))}
         </select>
-        <label htmlFor="mperf-workload">Workload label</label>
+        <label htmlFor="mperf-workload">{t("s26y")}</label>
         <select
           id="mperf-workload"
           value={workload}
           onChange={(event) => actions.setWorkload(event.target.value as MarketplaceWorkload)}
         >
-          {MARKETPLACE_WORKLOADS.map((item) => (
+          {deskText(t, MARKETPLACE_WORKLOADS.map((item) => (
             <option key={item} value={item}>
-              {item}
+              {deskText(t, item)}
             </option>
-          ))}
+          )))}
         </select>
-        <label htmlFor="mperf-actor">Desk actor</label>
+        <label htmlFor="mperf-actor">{t("sgd")}</label>
         <select
           id="mperf-actor"
           defaultValue={MARKETPLACE_BENCH_ACTORS[0]}
           onChange={(event) => actions.switchActor(event.target.value)}
         >
-          {MARKETPLACE_BENCH_ACTORS.map((actor) => (
+          {deskText(t, MARKETPLACE_BENCH_ACTORS.map((actor) => (
             <option key={actor} value={actor}>
-              {actor}
+              {deskText(t, actor)}
             </option>
-          ))}
+          )))}
         </select>
-        <label htmlFor="mperf-device">Device profile</label>
+        <label htmlFor="mperf-device">{t("sgj")}</label>
         <select
           id="mperf-device"
           defaultValue={MARKETPLACE_DEVICE_PROFILES[0].deviceClass}
           onChange={(event) => actions.switchDevice(event.target.value as MarketplaceDeviceClass)}
         >
-          {MARKETPLACE_DEVICE_PROFILES.map((profile) => (
+          {deskText(t, MARKETPLACE_DEVICE_PROFILES.map((profile) => (
             <option key={profile.deviceClass} value={profile.deviceClass}>
-              {profile.deviceClass}
+              {deskText(t, profile.deviceClass)}
             </option>
-          ))}
+          )))}
         </select>
         <button type="button" id="mperf-second-tab" className="discovery-action" onClick={() => actions.openSecondTab()}>
-          Open a second tab (new session incarnation)
-        </button>
+          {t("s14x")}</button>
         <ConnectivityWriteButton type="button" id="mperf-new-session" className="discovery-action" onClick={() => actions.newSession()}>
-          New synthetic session
-        </ConnectivityWriteButton>
+          {t("sto")}</ConnectivityWriteButton>
       </div>
-      <div className="discovery-controls" aria-label="Synthetic controls">
-        {MARKETPLACE_SYNTHETIC_CONTROLS.map((control) => (
+      <div className="discovery-controls" aria-label={t("s1o9")}>
+        {deskText(t, MARKETPLACE_SYNTHETIC_CONTROLS.map((control) => (
           <ConnectivityWriteButton
             key={control}
             type="button"
@@ -141,97 +146,96 @@ export function BenchControls({
             className="discovery-action"
             onClick={() => actions.synthetic(control)}
           >
-            Simulate {control}
+            {t("s1kc")}{" "}{deskText(t, control)}
           </ConnectivityWriteButton>
-        ))}
+        )))}
       </div>
     </section>
   );
 }
 
 export function BenchStatus({ model, actions }: { model: MarketplaceBenchModel; actions: MarketplaceBenchActions }) {
+  const t = useT(copy0, copy1, copy2);
   return (
     <section id="mperf-status" className="discovery-section" aria-labelledby="mperf-status-head" tabIndex={-1}>
-      <h3 id="mperf-status-head">Status</h3>
+      <h3 id="mperf-status-head">{t("s1mj")}</h3>
       <p role="status" data-read-state={model.state}>
         <StatusMark kind={model.state === "loading" ? "loading" : model.state === "ready" ? "selected" : "blocked"} />{" "}
-        {model.statusLine}
+        {deskText(t, model.statusLine)}
       </p>
-      {model.detailLine ? <p className="muted">{model.detailLine}</p> : null}
-      <p className="muted">{model.freshnessWord}</p>
-      <p className="muted">{model.watermarkLine}</p>
-      <p className="muted">{model.inFlightLine}</p>
-      {model.lastLine ? <p className="muted">{model.lastLine}</p> : null}
+      {model.detailLine ? <p className="muted">{deskText(t, model.detailLine)}</p> : null}
+      <p className="muted">{deskText(t, model.freshnessWord)}</p>
+      <p className="muted">{deskText(t, model.watermarkLine)}</p>
+      <p className="muted">{deskText(t, model.inFlightLine)}</p>
+      {model.lastLine ? <p className="muted">{deskText(t, model.lastLine)}</p> : null}
       <div className="discovery-controls">
         <button type="button" id="mperf-refresh" className="discovery-action" onClick={() => actions.refresh()}>
-          Read again
-        </button>
+          {t("s1ax")}</button>
         <button type="button" id="mperf-cancel" className="discovery-action" onClick={() => actions.cancel()}>
-          Cancel reads in flight
-        </button>
+          {t("sb6")}</button>
       </div>
     </section>
   );
 }
 
 export function BenchQueue({ model, actions }: { model: MarketplaceBenchModel; actions: MarketplaceBenchActions }) {
+  const t = useT(copy0, copy1, copy2);
   return (
     <section id="mperf-queue" className="discovery-section" aria-labelledby="mperf-queue-head">
-      <h3 id="mperf-queue-head">Queue</h3>
-      <p className="muted">{MARKETPLACE_BENCH_QUEUE_NOTE}</p>
+      <h3 id="mperf-queue-head">{t("s1ar")}</h3>
+      <p className="muted">{deskText(t, MARKETPLACE_BENCH_QUEUE_NOTE)}</p>
       <p role="status" data-queue-phase={model.queue.phaseWord}>
-        <span className="status-word">{model.queue.phaseWord}.</span> {model.queue.stateWord}. {model.queue.grantsLine}
+        <span className="status-word">{deskText(t, model.queue.phaseWord)}.</span> {deskText(t, model.queue.stateWord)}. {deskText(t, model.queue.grantsLine)}
       </p>
-      {model.queue.positionLine ? <p className="muted">{model.queue.positionLine}</p> : null}
-      {model.queue.admittedLine ? <p className="muted">{model.queue.admittedLine}</p> : null}
-      {model.queue.detailLine ? <p className="muted">{model.queue.detailLine}</p> : null}
+      {model.queue.positionLine ? <p className="muted">{deskText(t, model.queue.positionLine)}</p> : null}
+      {model.queue.admittedLine ? <p className="muted">{deskText(t, model.queue.admittedLine)}</p> : null}
+      {model.queue.detailLine ? <p className="muted">{deskText(t, model.queue.detailLine)}</p> : null}
       <div className="discovery-controls">
         <ConnectivityWriteButton type="button" id="mperf-join" className="discovery-action" onClick={() => actions.joinQueue()}>
-          Join the queue once
-        </ConnectivityWriteButton>
+          {t("spc")}</ConnectivityWriteButton>
         <button type="button" id="mperf-poll" className="discovery-action" onClick={() => actions.pollQueue()}>
-          Check the queue once
-        </button>
+          {t("sc7")}</button>
       </div>
     </section>
   );
 }
 
 export function BenchWindow({ model, actions }: { model: MarketplaceBenchModel; actions: MarketplaceBenchActions }) {
+  const t = useT(copy0, copy1, copy2);
   return (
     <section id="mperf-window" className="discovery-section" aria-labelledby="mperf-window-head">
-      <h3 id="mperf-window-head">Window</h3>
-      <p className="muted">{MARKETPLACE_BENCH_BOUND_NOTE}</p>
-      <p className="muted">{model.filterLine}</p>
+      <h3 id="mperf-window-head">{t("s26o")}</h3>
+      <p className="muted">{deskText(t, MARKETPLACE_BENCH_BOUND_NOTE)}</p>
+      <p className="muted">{deskText(t, model.filterLine)}</p>
       {model.rows.length === 0 ? (
-        <p className="muted">No rows are held. Loading, empty, stale, denied, refused, gapped, blocked, and unknown are each their own state — none of them lists a row.</p>
+        <p className="muted">{t("sy3")}</p>
       ) : (
-        <div className="finance-scroll" role="region" aria-label="Held bench window" tabIndex={0}>
+        <div className="finance-scroll" role="region" aria-label={t("sn8")} tabIndex={0}>
           <table>
-            <caption>{model.memoryLine} A row confirms no price, no right, no sale, and no ownership.</caption>
+            <caption>{deskText(t, model.memoryLine)} {t("s7i")}</caption>
             <thead>
               <tr>
-                <th scope="col">Seq</th>
-                <th scope="col">Listing ref</th>
-                <th scope="col">Event</th>
-                <th scope="col">Venue</th>
-                <th scope="col">Tier</th>
-                <th scope="col">Status</th>
-                <th scope="col">Terms</th>
+                <th scope="col">{t("s1jd")}</th>
+                <th scope="col">{t("sr4")}</th>
+                <th scope="col">{t("sip")}</th>
+                <th scope="col">{t("s25v")}</th>
+                <th scope="col">{t("s244")}</th>
+                <th scope="col">{t("s1mj")}</th>
+                <th scope="col">{t("s1pl")}</th>
               </tr>
             </thead>
             <tbody>
-              {model.rows.map((row) => (
+              {deskText(t, model.rows.map((row) => (
                 <tr key={row.listingRef} data-sequence={row.sequence}>
-                  <td>{row.sequence}</td>
-                  <td>{row.listingRef}</td>
-                  <td>{row.eventLabel}</td>
-                  <td>{row.venueLabel}</td>
-                  <td>{row.tier}</td>
-                  <td>{row.status}</td>
-                  <td>{row.termsRef}</td>
+                  <td>{deskText(t, row.sequence)}</td>
+                  <td>{deskText(t, row.listingRef)}</td>
+                  <td>{deskText(t, row.eventLabel)}</td>
+                  <td>{deskText(t, row.venueLabel)}</td>
+                  <td>{deskText(t, row.tier)}</td>
+                  <td>{deskText(t, row.status)}</td>
+                  <td>{deskText(t, row.termsRef)}</td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>
@@ -246,12 +250,10 @@ export function BenchWindow({ model, actions }: { model: MarketplaceBenchModel; 
           data-enabled={model.hasNextCursor ? "true" : "false"}
           onClick={model.hasNextCursor ? () => actions.nextPage() : undefined}
         >
-          Next page
-        </button>
+          {t("stq")}</button>
         {model.hasNextCursor ? null : (
           <p id="mperf-next-reason" className="muted">
-            Blocked. The last read reported no next cursor, or no read is held. Nothing is paged past it.
-          </p>
+            {t("sa9")}</p>
         )}
       </div>
     </section>
@@ -259,71 +261,73 @@ export function BenchWindow({ model, actions }: { model: MarketplaceBenchModel; 
 }
 
 export function BenchMeasurements({ model }: { model: MarketplaceBenchModel }) {
+  const t = useT(copy0, copy1, copy2);
   return (
     <section id="mperf-measure" className="discovery-section" aria-labelledby="mperf-measure-head">
-      <h3 id="mperf-measure-head">Measurements</h3>
-      <p className="muted">{MARKETPLACE_BENCH_MEASURE_NOTE}</p>
-      <p className="muted">{MARKETPLACE_BENCH_DEVICE_NOTE}</p>
+      <h3 id="mperf-measure-head">{t("sse")}</h3>
+      <p className="muted">{deskText(t, MARKETPLACE_BENCH_MEASURE_NOTE)}</p>
+      <p className="muted">{deskText(t, MARKETPLACE_BENCH_DEVICE_NOTE)}</p>
       {model.report.length === 0 ? (
-        <p className="muted">No settled call is measured yet.</p>
+        <p className="muted">{t("sym")}</p>
       ) : (
-        <div className="finance-scroll" role="region" aria-label="Browser-boundary measurements" tabIndex={0}>
+        <div className="finance-scroll" role="region" aria-label={t("sak")} tabIndex={0}>
           <table>
-            <caption>Browser-boundary measurements only. Denominator browser-boundary-measurement. Producer load share none. Real-device evidence false.</caption>
+            <caption>{t("sal")}</caption>
             <thead>
               <tr>
-                <th scope="col">Device class</th>
-                <th scope="col">Real device</th>
-                <th scope="col">Workload</th>
-                <th scope="col">Calls</th>
-                <th scope="col">Outcomes</th>
-                <th scope="col">Last ms</th>
-                <th scope="col">Max ms</th>
-                <th scope="col">Max offered ms</th>
+                <th scope="col">{t("sgi")}</th>
+                <th scope="col">{t("s1d3")}</th>
+                <th scope="col">{t("s26x")}</th>
+                <th scope="col">{t("sav")}</th>
+                <th scope="col">{t("s16i")}</th>
+                <th scope="col">{t("sqd")}</th>
+                <th scope="col">{t("ssb")}</th>
+                <th scope="col">{t("ssc")}</th>
               </tr>
             </thead>
             <tbody>
-              {model.report.map((row) => (
+              {deskText(t, model.report.map((row) => (
                 <tr key={`${row.deviceClass}/${row.workload}`} data-real-device={row.realDevice ? "true" : "false"}>
-                  <td>{row.deviceClass}</td>
-                  <td>{row.realDevice ? "real" : "emulation"}</td>
-                  <td>{row.workload}</td>
-                  <td>{row.calls}</td>
-                  <td>{row.outcomeLine}</td>
-                  <td>{row.lastMeasuredMs ?? "none"}</td>
-                  <td>{row.maxMeasuredMs ?? "none"}</td>
-                  <td>{row.maxOfferedMs ?? "none"}</td>
+                  <td>{deskText(t, row.deviceClass)}</td>
+                  <td>{row.realDevice ? t("s1d2") : t("sic")}</td>
+                  <td>{deskText(t, row.workload)}</td>
+                  <td>{deskText(t, row.calls)}</td>
+                  <td>{deskText(t, row.outcomeLine)}</td>
+                  <td>{deskText(t, row.lastMeasuredMs) ?? t("common.empty")}</td>
+                  <td>{deskText(t, row.maxMeasuredMs) ?? t("common.empty")}</td>
+                  <td>{deskText(t, row.maxOfferedMs) ?? t("common.empty")}</td>
                 </tr>
-              ))}
-              {model.unverified.map((row) => (
+              )))}
+              {deskText(t, model.unverified.map((row) => (
                 <tr key={row.device} data-real-device="unverified">
-                  <td>{row.device}</td>
-                  <td>unverified</td>
-                  <td>none</td>
+                  <td>{deskText(t, row.device)}</td>
+                  <td>{t("s25q")}</td>
+                  <td>{t("common.empty")}</td>
                   <td>0</td>
-                  <td colSpan={4}>{row.note}</td>
+                  <td colSpan={4}>{deskText(t, row.note)}</td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>
       )}
-      <p className="muted">{MARKETPLACE_BENCH_MEMORY_NOTE}</p>
-      <p className="muted">{model.memoryLine}</p>
+      <p className="muted">{deskText(t, MARKETPLACE_BENCH_MEMORY_NOTE)}</p>
+      <p className="muted">{deskText(t, model.memoryLine)}</p>
     </section>
   );
 }
 
 export function BenchSession({ model }: { model: MarketplaceBenchModel }) {
+  const t = useT(copy0, copy1, copy2);
   return (
     <section id="mperf-session" className="discovery-section" aria-labelledby="mperf-session-head">
-      <h3 id="mperf-session-head">Session record</h3>
-      <p className="muted">{model.countersLine}</p>
-      {model.sessionLines.map((line) => (
+      <h3 id="mperf-session-head">{t("s1js")}</h3>
+      <p className="muted">{deskText(t, model.countersLine)}</p>
+      {deskText(t, model.sessionLines.map((line) => (
         <p key={line} className="muted">
-          {line}
+          {deskText(t, line)}
         </p>
-      ))}
+      )))}
     </section>
   );
 }

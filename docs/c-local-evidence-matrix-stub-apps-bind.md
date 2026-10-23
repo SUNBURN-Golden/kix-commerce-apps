@@ -1,5 +1,7 @@
 # Local evidence matrix (stub) apps bind
 
+Current merge note (2026-10-23): `c-i18n-coverage-completion-stub` is implemented in this working tree alongside main's async-state, form-validation, connectivity, gallery, visual-regression and onboarding work. The node table below remains a historical merge-status snapshot at its explicitly named base; no pending node is implemented by this reconciliation. Production routes and the journey/a11y screen denominators are unchanged. Current validation is in [the i18n binding](c-i18n-coverage-completion-stub-apps-bind.md).
+
 ## Consumption evidence correction — 2026-10-23
 
 Recorded option (b) now binds the consumed p-sdk-0 BOOTSTRAP SDK, manifest, and vector digests into fixture catalogue v2, discovery's shared synthetic-port checks, release, qualification, and handoff. See [audit-6-decision-apps-bind.md](audit-6-decision-apps-bind.md) for the owner ruling, current tuple, historical v1, consumer mapping, verification, and boundaries. Unavailable domain producer tuples retain nulls and NOT_BOUND. BOOTSTRAP remains `catalogue-schema-binding only`; this grants no qualification or release authority.

@@ -162,7 +162,7 @@ describe("credit panel copy", () => {
     expect(app).toContain("Not live credit");
 
     const files = ["src/pages/CreditPanel.tsx", "src/pages/Credit.tsx", "src/credit-desk.ts"];
-    const combined = files.map((file) => readFileSync(path.join(webRoot, file), "utf8")).join("\n");
+    const combined = [...files, "src/i18n/messages/pages--CreditPanel.ts", "src/i18n/messages/credit-desk.ts", "src/i18n/desk-catalogue.ts"].map((file) => readFileSync(path.join(webRoot, file), "utf8")).join("\n");
     for (const pattern of BANNED_COPY) {
       expect(combined).not.toMatch(pattern);
     }

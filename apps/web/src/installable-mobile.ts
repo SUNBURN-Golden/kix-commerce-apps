@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/installable-mobile";
+import { sourceMessage } from "./i18n/source-message";
 import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The synthetic installable-mobile shell screen on top of the adapter's
@@ -42,65 +44,65 @@ import {
 } from "@kix/protocol-adapter";
 import { protocol } from "./connectivity/desk-protocol";
 
-export const MOBILE_TITLE = "Installable mobile shell (synthetic)";
+export const MOBILE_TITLE = sourceCopy.en["so1"];
 
 export const MOBILE_SOURCE_LINE =
-  "The install record, the session, the stored items, and the pending order come from a synthetic shell source on this page load. They are not a store listing, not a device attestation, not an authentication result, and not a producer read. Every row is labelled synthetic.";
+  sourceCopy.en["s1ta"];
 
 export const MOBILE_BOUNDARY =
-  "Install, update, reconnect, present, confirm, and withdraw are six separate lines. None of them completes the others, and none is a catalogue command.";
+  sourceCopy.en["so7"];
 
 export const MOBILE_VAULT_NOTE =
-  "A stored item is a copy. It keeps the validity verdict the source stated and the instant it stated it. Shown while the link is down it mints no admission, opens no gate, and is never sent as authority.";
+  sourceCopy.en["s8i"];
 
 export const MOBILE_CLOCK_NOTE =
-  "The device clock is report-only. The source's own instant decides validity and expiry. A skewed or missing device clock marks stored verdicts uncertain; it never decides them.";
+  sourceCopy.en["s1rx"];
 
 export const MOBILE_RESUME_NOTE =
-  "An app resume re-executes nothing. Coming back to the foreground marks the held read resumed and fences every write until an explicit read lands. An uncertain confirm or withdraw stays unknown and is never retried.";
+  sourceCopy.en["s3g"];
 
 export const MOBILE_SESSION_NOTE =
-  "A session is a source verdict, not a device claim. When the source says the session is expired, writes that need a session stay fenced until reconnect opens a new one. Re-login under another actor reuses no session and no stored copy.";
+  sourceCopy.en["s81"];
 
 export const MOBILE_FENCE_NOTE =
-  "One write is sent at a time per scope, and each is sent once. This page does not send a write again, does not mint an intent for you, and does not undo one with another.";
+  sourceCopy.en["s14k"];
 
 export const MOBILE_READ_NOTE =
-  "One read follows each settled write so the next step can use fresh evidence. Nothing polls. A read is evidence and never resolves an unknown write.";
+  sourceCopy.en["s14c"];
 
 export const MOBILE_ORDER_NOTE =
-  "The pending order's confirm and withdraw each write one synthetic record. A confirmation record is not a payment and moves no funds; a withdrawal record executes nothing and returns no funds.";
+  sourceCopy.en["s1v4"];
 
 export const MOBILE_SUPPORT_NOTE =
-  "The support range below is this stub's decision, not a capability claim. Installable web packaging and an in-place update are covered; a native store shell, push, and background sync are unsupported; real-device evidence stays unverified.";
+  sourceCopy.en["s21l"];
 
-export const MOBILE_HOLD_NOTE = `Holding a seat is not available here. ${MOBILE_HOLD_NOT_BOUND.reason}`;
+export const MOBILE_HOLD_NOTE = sourceMessage(sourceCopy.en["p.t8"], { v1: MOBILE_HOLD_NOT_BOUND.reason });
 
-export const MOBILE_AMOUNT_NOTE = `Amounts are the source's own text in ${MOBILE_UNIT}, a synthetic unit. An order with no amount shows UNDETERMINED. This page does not compute, convert, or verify any amount.`;
+export const MOBILE_AMOUNT_NOTE = sourceMessage(sourceCopy.en["p.t185"], { v1: MOBILE_UNIT });
 
 export const SCENARIO_NOTES: Readonly<Record<MobileScenario, string>> = {
-  clean: "Installed shell, active session, three stored items, and one pending order.",
-  empty: "A fresh device: nothing installed, no session, no stored items, no order.",
-  stale: "The source serves a watermark older than the floor this page holds. Stored items stay cached copies.",
-  "update-available": "The source offers a shell update. Applying it is one synthetic write.",
-  "session-expired": "The session verdict is expired. Reconnect opens a new session; the expired verdict is never revived.",
-  offline: "The link starts down. Reads answer offline and writes answer unknown; stored items are cached copies only.",
-  "production-claimed": "The source declares a production environment. The read is refused before any snapshot is applied.",
-  "confirm-lost": "A confirm is applied at the source and its answer is lost. A late result can be delivered later.",
-  "withdraw-lost": "A withdraw is applied at the source and its answer is lost. A late result can be delivered later.",
-  "held-response": "Answers are held until you deliver them. Use it to switch the session while a write is in flight.",
-  "read-lost": "The answer to a read never arrives. The read stays in flight until the context changes.",
-  "claims-grant": "The read payload claims an admission grant. The whole payload is refused before a row shows.",
-  "receipt-claims": "The read is clean but a confirmed answer claims an admission grant. The write is unknown.",
+  clean: sourceCopy.en["so3"],
+  empty: sourceCopy.en["s23"],
+  stale: sourceCopy.en["s21b"],
+  "update-available": sourceCopy.en["s203"],
+  "session-expired": sourceCopy.en["s1y0"],
+  offline: sourceCopy.en["s1u1"],
+  "production-claimed": sourceCopy.en["s1yr"],
+  "confirm-lost": sourceCopy.en["su"],
+  "withdraw-lost": sourceCopy.en["s9c"],
+  "held-response": sourceCopy.en["s4o"],
+  "read-lost": sourceCopy.en["s1q4"],
+  "claims-grant": sourceCopy.en["s1w7"],
+  "receipt-claims": sourceCopy.en["s1w2"],
 };
 
 const STEP_WORDS: Readonly<Record<MobileStepInput["step"], string>> = {
-  install: "Install",
-  update: "Apply update",
-  reconnect: "Reconnect session",
-  present: "Present pass",
-  confirm: "Confirm order",
-  withdraw: "Withdraw order",
+  install: sourceCopy.en["snz"],
+  update: sourceCopy.en["s5s"],
+  reconnect: sourceCopy.en["s1do"],
+  present: sourceCopy.en["s18y"],
+  confirm: sourceCopy.en["sdl"],
+  withdraw: sourceCopy.en["s26t"],
 };
 
 export type MobileScreenState =
@@ -121,9 +123,9 @@ export type MobileClockMode = "in-step" | "skewed" | "unreported";
 export const MOBILE_CLOCK_MODES: readonly MobileClockMode[] = ["in-step", "skewed", "unreported"];
 
 export const MOBILE_CLOCK_MODE_NOTES: Readonly<Record<MobileClockMode, string>> = {
-  "in-step": "The reported device clock sits inside the skew bound.",
-  skewed: "The reported device clock is out of step. Stored verdicts read clock-uncertain; the authority still decides.",
-  unreported: "No device clock is reported. Stored verdicts read clock-uncertain; the authority still decides.",
+  "in-step": sourceCopy.en["s1x2"],
+  skewed: sourceCopy.en["s1x1"],
+  unreported: sourceCopy.en["sv4"],
 };
 
 export interface ControlModel {
@@ -242,15 +244,15 @@ export interface MobileModel {
 export function causeLine(cause: MobileRefreshCause): string {
   switch (cause) {
     case "own-write":
-      return "Your own write landed after the last read.";
+      return sourceCopy.en["s279"];
     case "stale-rejection":
-      return "The source said the last read was behind.";
+      return sourceCopy.en["s20g"];
     case "context-switch":
-      return "The session context changed.";
+      return sourceCopy.en["s1xw"];
     case "resumed":
-      return "The app resumed. A resume re-executes nothing; an explicit read must land first.";
+      return sourceCopy.en["s1qa"];
     case "cached-read":
-      return "The last read landed no current evidence; the held copy is cached only and the link coming back freshens nothing.";
+      return sourceCopy.en["s1tp"];
     default: {
       const exhaustive: never = cause;
       return exhaustive;
@@ -262,32 +264,32 @@ export function causeLine(cause: MobileRefreshCause): string {
 export function fenceLine(fence: MobileFence): string {
   switch (fence.reason) {
     case "in-flight":
-      return `A write in this scope is in flight (${fence.intentRef}). Wait for its answer.`;
+      return sourceMessage(sourceCopy.en["p.t186"], { v1: fence.intentRef });
     case "unknown-outcome": {
       const late = fence.lateRecorded ? " A late result was recorded, and it does not make the write known." : "";
       const earlier = fence.earlierContext ? " It was sent in an earlier session context." : "";
-      return `An earlier write in this scope has an unknown result (${fence.intentRef}).${late}${earlier} Writes in this scope stay blocked. A read does not resolve it.`;
+      return sourceMessage(sourceCopy.en["p.t187"], { v1: fence.intentRef, v2: late, v3: earlier });
     }
     case "no-snapshot":
-      return "No read is held. Read the source first.";
+      return sourceCopy.en["sxh"];
     case "empty-device":
-      return "Nothing is installed on this device in this read. Install is the only write that can go.";
+      return sourceCopy.en["s119"];
     case "snapshot-stale":
-      return `The held read is not current. ${causeLine(fence.cause)} Read again.`;
+      return sourceMessage(sourceCopy.en["p.t188"], { v1: causeLine(fence.cause) });
     case "duplicate-intent":
-      return `Intent ${fence.intentRef} was already used. A write is sent once; this page does not mint a new intent for it.`;
+      return sourceMessage(sourceCopy.en["p.t189"], { v1: fence.intentRef });
     case "link-offline":
-      return "The link is down. No write goes out while the link is down, and a stored copy is never sent as authority.";
+      return sourceCopy.en["s1tx"];
     case "environment":
-      return "The read was refused for the environment. No write goes out.";
+      return sourceCopy.en["s1wc"];
     case "session-expired":
-      return "No active session for this actor is recorded at the source. Reconnect first; the expired session is never revived.";
+      return sourceCopy.en["stu"];
     case "already-installed":
-      return `Install ${fence.installRef} is already on this device. Installing again is not an update.`;
+      return sourceMessage(sourceCopy.en["p.t190"], { v1: fence.installRef });
     case "session-active":
-      return `Session ${fence.sessionRef} is already active for this actor. Reconnecting mints no second session.`;
+      return sourceMessage(sourceCopy.en["p.t191"], { v1: fence.sessionRef });
     case "no-update":
-      return "The source offers no shell update. There is nothing to apply.";
+      return sourceCopy.en["s205"];
     case "not-bound":
       return MOBILE_NOT_BOUND_REASON;
     default: {
@@ -301,17 +303,17 @@ export function stepResultLine(step: MobileStepInput["step"], result: MobileStep
   const word = STEP_WORDS[step];
   switch (result.kind) {
     case "CONFIRMED":
-      return `${word} confirmed by the synthetic source. This is a synthetic record, not a payment, an admission, or an attestation.`;
+      return sourceMessage(sourceCopy.en["p.t192"], { v1: word });
     case "REJECTED":
-      return `${word} rejected (${result.intent.code ?? "no code"}). ${result.intent.message ?? ""} The source applied nothing for this write.`.trim();
+      return sourceMessage(sourceCopy.en["p.t193"], { v1: word, v2: result.intent.code ?? "no code", v3: result.intent.message ?? "" }).trim();
     case "UNKNOWN":
-      return `${word} result unknown (${result.intent.code ?? "no code"}). It may or may not have applied. Writes in this scope are blocked, and neither a read, a resume, nor a late result resolves it.`;
+      return sourceMessage(sourceCopy.en["p.t194"], { v1: word, v2: result.intent.code ?? "no code" });
     case "QUARANTINED":
-      return `The result of the ${word.toLowerCase()} arrived after the session context changed. It was quarantined and applied nowhere. The write stays unknown.`;
+      return sourceMessage(sourceCopy.en["p.t102"], { v1: word.toLowerCase() });
     case "FENCED":
-      return `${word} not sent. ${fenceLine(result.fence)}`;
+      return sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: fenceLine(result.fence) });
     case "NOT_SENT":
-      return `${word} not sent. ${result.detail}`;
+      return sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: result.detail });
     default: {
       const exhaustive: never = result;
       return exhaustive;
@@ -365,58 +367,58 @@ function statusFor(
 ): { statusLine: string; detailLine: string; actionLabel: string | null } {
   switch (state) {
     case "loading":
-      return { statusLine: "Reading the synthetic shell source. Nothing is confirmed yet.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s1bp"], detailLine: "", actionLabel: null };
     case "unread":
       return {
-        statusLine: "The session context changed, so there is no read in this context.",
-        detailLine: "Read again to see the shell from this context. An earlier unknown write still blocks its scope.",
-        actionLabel: "Read again",
+        statusLine: sourceCopy.en["s1xx"],
+        detailLine: sourceCopy.en["s1b4"],
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "ready":
-      return { statusLine: "Shell read.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s1k8"], detailLine: "", actionLabel: null };
     case "empty":
       return {
-        statusLine: "Nothing is installed on this device.",
-        detailLine: "No session, no stored items, no order. Install is the one write that can go.",
-        actionLabel: "Read again",
+        statusLine: sourceCopy.en["s11a"],
+        detailLine: sourceCopy.en["syk"],
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "stale":
       return {
-        statusLine: "Stale shell read.",
+        statusLine: sourceCopy.en["s1m0"],
         detailLine: detail ?? "",
-        actionLabel: "Read again",
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "offline":
       return {
-        statusLine: "The link is down. Stored items are cached copies, not current authority.",
+        statusLine: sourceCopy.en["s1tz"],
         detailLine: detail ?? "",
-        actionLabel: "Read again",
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "refused":
       return {
-        statusLine: "The read payload was refused whole before any row was shown.",
+        statusLine: sourceCopy.en["s1w9"],
         detailLine: detail ?? "",
-        actionLabel: "Start a new synthetic session",
+        actionLabel: sourceCopy.en["s1m2"],
       };
     case "environment-refused":
       return {
-        statusLine: "The source declares a production environment. This shell serves installable-sandbox only.",
+        statusLine: sourceCopy.en["s1ys"],
         detailLine: detail ?? "",
-        actionLabel: "Start a new synthetic session",
+        actionLabel: sourceCopy.en["s1m2"],
       };
     case "not-bound":
       return { statusLine: MOBILE_NOT_BOUND_REASON, detailLine: "", actionLabel: null };
     case "tuple-changed":
       return {
-        statusLine: "The pin tuple changed. Nothing was read and nothing was applied.",
+        statusLine: sourceCopy.en["s1v8"],
         detailLine: detail ?? "",
-        actionLabel: "Start a new synthetic session",
+        actionLabel: sourceCopy.en["s1m2"],
       };
     case "unavailable":
       return {
-        statusLine: "The source did not answer. This is not an empty device.",
+        statusLine: sourceCopy.en["s1z2"],
         detailLine: detail ?? "",
-        actionLabel: "Read again",
+        actionLabel: sourceCopy.en["s1ax"],
       };
     default: {
       const exhaustive: never = state;
@@ -434,35 +436,35 @@ function lateLineOf(intent: MobileIntent): string {
     return "";
   }
   const code = intent.late.code ? ` (${intent.late.code})` : "";
-  return `Late result ${intent.late.result}${code}. Evidence only.`;
+  return sourceMessage(sourceCopy.en["p.t195"], { v1: intent.late.result, v2: code });
 }
 
 /** The unused-intent id the gate preview asks with. It is never sent. */
 const GATE_PREVIEW = "gate-preview";
 
 const CURRENCY_LABELS: Readonly<Record<MobileVaultView["currency"], string>> = {
-  current: "current authority",
-  cached: "cached copy",
+  current: sourceCopy.en["sf7"],
+  cached: sourceCopy.en["sar"],
   "clock-uncertain": "clock-uncertain",
 };
 
 function describeVaultItem(item: MobileVaultView, present: ControlModel): VaultItemModel {
   const presentLine =
     item.present === null
-      ? "No presentation sent by this page."
+      ? sourceCopy.en["swy"]
       : item.present.outcome === "CONFIRMED"
-        ? `Presentation ${item.present.presentationRef ?? ""} confirmed by the synthetic source. It is a display record, not admission.`
-        : `${item.present.outcome === "IN_FLIGHT" ? "Presentation in flight" : `Presentation ${item.present.outcome.toLowerCase()}`}${item.present.code ? ` (${item.present.code})` : ""}.`;
+        ? sourceMessage(sourceCopy.en["p.t196"], { v1: item.present.presentationRef ?? "" })
+        : `${item.present.outcome === "IN_FLIGHT" ? sourceCopy.en["s18w"] : sourceMessage(sourceCopy.en["p.t519"], { v1: item.present.outcome.toLowerCase() })}${item.present.code ? ` (${item.present.code})` : ""}.`;
   return {
     vaultRef: item.vaultRef,
     kind: item.kind,
     label: item.label,
     ownerLine: item.ownerMatch
-      ? `Stored for ${item.ownerRef}, the current context actor.`
-      : `Stored for ${item.ownerRef}. This context actor is different; the copy is not transferable.`,
-    storedLine: `Stored at ${item.cachedAt}.`,
+      ? sourceMessage(sourceCopy.en["p.t197"], { v1: item.ownerRef })
+      : sourceMessage(sourceCopy.en["p.t198"], { v1: item.ownerRef }),
+    storedLine: sourceMessage(sourceCopy.en["p.t199"], { v1: item.cachedAt }),
     verdictWord: item.authorityVerdict,
-    verdictLine: `Source verdict ${item.authorityVerdict}, stated at ${item.verdictAt}.`,
+    verdictLine: sourceMessage(sourceCopy.en["p.t200"], { v1: item.authorityVerdict, v2: item.verdictAt }),
     currencyWord: item.currency,
     currencyLabel: CURRENCY_LABELS[item.currency],
     presentLine,
@@ -481,17 +483,17 @@ export function buildMobileModel(input: {
   const projection = projectMobile(state);
   const freshnessWord =
     state.freshness === "CURRENT"
-      ? "The last read is current."
+      ? sourceCopy.en["s1tn"]
       : state.freshness === "STALE"
-        ? "The last read is behind, resumed, or unreachable."
-        : "There is no usable read.";
+        ? sourceCopy.en["s1tk"]
+        : sourceCopy.en["s1wv"];
   const cachedWord = state.cached
-    ? "Showing a cached copy: the last read could not be freshened. Cached is never current authority."
+    ? sourceCopy.en["s1ka"]
     : null;
   const environment = state.snapshot?.environment ?? null;
   const environmentLine = environment
-    ? `Environment ${environment.shellEnvironment}, device ${environment.deviceId}, watermark ${state.snapshot?.watermark ?? "none"}. Synthetic only; every row is a synthetic row.`
-    : "No environment is read. Environment and device are carried on every read and write.";
+    ? sourceMessage(sourceCopy.en["p.t201"], { v1: environment.shellEnvironment, v2: environment.deviceId, v3: state.snapshot?.watermark ?? "none" })
+    : sourceCopy.en["sva"];
 
   const install: InstallModel | null = (() => {
     const gate = controller.gateFor({ step: "install", intentRef: GATE_PREVIEW });
@@ -499,8 +501,8 @@ export function buildMobileModel(input: {
     if (installView === null) {
       return {
         stateWord: "none",
-        installLine: "No install record in this read.",
-        shellLine: "No shell reference.",
+        installLine: sourceCopy.en["svr"],
+        shellLine: sourceCopy.en["syn"],
         updateLine: null,
         install: control(gate),
         update: control(controller.gateFor({ step: "update", intentRef: GATE_PREVIEW })),
@@ -510,14 +512,14 @@ export function buildMobileModel(input: {
       stateWord: installView.state,
       installLine:
         installView.state === "installed"
-          ? `Install ${installView.installRef} on this device. A synthetic record, not a verified install attestation.`
-          : "No install record in this read.",
+          ? sourceMessage(sourceCopy.en["p.t202"], { v1: installView.installRef })
+          : sourceCopy.en["svr"],
       shellLine:
-        installView.state === "installed" ? `Shell ${installView.shellRef} at version ${installView.version}.` : "No shell reference.",
+        installView.state === "installed" ? sourceMessage(sourceCopy.en["p.t203"], { v1: installView.shellRef, v2: installView.version }) : sourceCopy.en["syn"],
       updateLine:
         installView.update === null
           ? null
-          : `Update ${installView.update.updateRef} offers ${installView.update.toShell}. ${installView.update.note}`,
+          : sourceMessage(sourceCopy.en["p.t520"], { v1: installView.update.updateRef, v2: installView.update.toShell, v3: installView.update.note }),
       install: control(gate),
       update: control(controller.gateFor({ step: "update", intentRef: GATE_PREVIEW })),
     };
@@ -533,8 +535,8 @@ export function buildMobileModel(input: {
       stateWord: sessionView.state,
       actorLine:
         sessionView.actorRef === null
-          ? "No session actor."
-          : `Session actor ${sessionView.actorRef}. A context label, not an authentication result.`,
+          ? sourceCopy.en["syi"]
+          : sourceMessage(sourceCopy.en["p.t204"], { v1: sessionView.actorRef }),
       verdictLine: sessionView.note,
       reconnect: control(controller.gateFor({ step: "reconnect", intentRef: GATE_PREVIEW })),
     };
@@ -544,10 +546,10 @@ export function buildMobileModel(input: {
     linkWord: state.link,
     linkLine:
       state.link === "online"
-        ? "The link is up. One read or one write per call."
-        : "The link is down. Reads answer offline, writes answer unknown, and stored items stay cached copies.",
+        ? sourceCopy.en["s1u0"]
+        : sourceCopy.en["s1ty"],
     clockWord: projection.clock?.verdict ?? "unread",
-    clockLine: projection.clock === null ? "No clock verdict is read." : projection.clock.note,
+    clockLine: projection.clock === null ? sourceCopy.en["suo"] : projection.clock.note,
   };
 
   const vault = projection.vault.map((item) =>
@@ -567,17 +569,17 @@ export function buildMobileModel(input: {
   }));
 
   const quarantineLines = state.quarantined.map(
-    (item) => `Result ${item.arrived} for ${item.intentRef} was quarantined (${item.cause}). It changed nothing.`,
+    (item) => sourceMessage(sourceCopy.en["p.t122"], { v1: item.arrived, v2: item.intentRef, v3: item.cause }),
   );
   const unlinkedLines = projection.unlinkedIntents.map(
     (intent) =>
-      `${intentWord(intent)} ${intent.intentRef} on ${intent.targetRef} is ${intent.outcome.toLowerCase().replace("_", " ")}. No snapshot row is linked to it, and a row seen in a read is not claimed for it.`,
+      sourceMessage(sourceCopy.en["p.t205"], { v1: intentWord(intent), v2: intent.intentRef, v3: intent.targetRef, v4: intent.outcome.toLowerCase().replace("_", " ") }),
   );
 
   const counters = state.counters;
   const record: RecordModel = {
-    contextLine: `Actor ${state.context.actorRef}, device ${state.context.deviceId}, session ${state.context.incarnation}, mode ${state.context.environment}.`,
-    countersLine: `Sent ${counters.sent}. Blocked before sending ${counters.fenced}. Not sent ${counters.notSent}. Reads dropped ${counters.droppedReads}.`,
+    contextLine: sourceMessage(sourceCopy.en["p.t521"], { v1: state.context.actorRef, v2: state.context.deviceId, v3: state.context.incarnation, v4: state.context.environment }),
+    countersLine: sourceMessage(sourceCopy.en["p.t206"], { v1: counters.sent, v2: counters.fenced, v3: counters.notSent, v4: counters.droppedReads }),
     intents,
     quarantineLines,
     unlinkedLines,
@@ -587,7 +589,7 @@ export function buildMobileModel(input: {
     id: row.id,
     shellField: row.shellField,
     status: row.status,
-    statusWord: row.status === "field-named" ? "Field named in the pin" : "Not-bound",
+    statusWord: row.status === "field-named" ? sourceCopy.en["sl3"] : sourceCopy.en["s10d"],
     bodyFields: row.bodyFields.length === 0 ? "none" : row.bodyFields.map((entry) => `${entry.action}.${entry.field}`).join(", "),
     reason: row.reason,
   }));
@@ -627,20 +629,20 @@ function describeOrder(
 ): OrderViewModel {
   const writeLine = (view: { outcome: string; code: string | null } | null, verb: string): string => {
     if (view === null) {
-      return `${verb}: no write sent by this page.`;
+      return sourceMessage(sourceCopy.en["p.t207"], { v1: verb });
     }
     const code = view.code ? ` (${view.code})` : "";
     switch (view.outcome) {
       case "CONFIRMED":
-        return `${verb}: confirmed by the synthetic source. A record, not funds.`;
+        return sourceMessage(sourceCopy.en["p.t208"], { v1: verb });
       case "REJECTED":
-        return `${verb}: rejected${code}.`;
+        return sourceMessage(sourceCopy.en["p.t522"], { v1: verb, v2: code });
       case "UNKNOWN":
-        return `${verb}: unknown${code}. The write may or may not have applied; it is not re-executed.`;
+        return sourceMessage(sourceCopy.en["p.t209"], { v1: verb, v2: code });
       case "IN_FLIGHT":
-        return `${verb}: in flight.`;
+        return sourceMessage(sourceCopy.en["p.t210"], { v1: verb });
       default:
-        return `${verb}: not sent${code}.`;
+        return sourceMessage(sourceCopy.en["p.t211"], { v1: verb, v2: code });
     }
   };
   return {
@@ -648,11 +650,11 @@ function describeOrder(
     stateWord: order.state,
     amountWord:
       order.amount === null
-        ? `Amount: UNDETERMINED (${MOBILE_UNIT})`
-        : `Amount ${order.amount} ${order.currency}, the source's own text.`,
-    versionLine: `Order at version ${order.version} in the last read. Payment record ${order.paymentRef ?? "none"}. Withdrawal record ${order.withdrawalRef ?? "none"}.`,
-    confirmLine: writeLine(order.confirm, "Confirm"),
-    withdrawLine: writeLine(order.withdraw, "Withdraw"),
+        ? sourceMessage(sourceCopy.en["p.t523"], { v1: MOBILE_UNIT })
+        : sourceMessage(sourceCopy.en["p.t212"], { v1: order.amount, v2: order.currency }),
+    versionLine: sourceMessage(sourceCopy.en["p.t213"], { v1: order.version, v2: order.paymentRef ?? "none", v3: order.withdrawalRef ?? "none" }),
+    confirmLine: writeLine(order.confirm, sourceCopy.en["sdh"]),
+    withdrawLine: writeLine(order.withdraw, sourceCopy.en["s26p"]),
     confirm: control(controller.gateFor({ step: "confirm", intentRef: GATE_PREVIEW, orderRef: order.orderRef })),
     withdraw: control(controller.gateFor({ step: "withdraw", intentRef: GATE_PREVIEW, orderRef: order.orderRef })),
   };
@@ -800,7 +802,7 @@ export function useMobileShell(): {
         return;
       }
       session.controller.resume();
-      note("The app resumed. Nothing was re-executed; writes stay fenced until an explicit read lands current evidence.");
+      note(sourceCopy.en["s1qb"]);
     },
     dropConnection() {
       const session = sessionRef.current;
@@ -808,7 +810,7 @@ export function useMobileShell(): {
         return;
       }
       session.port.dropConnection();
-      note("The link is down. Reads answer offline, writes answer unknown, and stored items stay cached copies.");
+      note(sourceCopy.en["s1ty"]);
     },
     restoreConnection() {
       const session = sessionRef.current;
@@ -816,7 +818,7 @@ export function useMobileShell(): {
         return;
       }
       session.port.restoreConnection();
-      note("The link is back. Nothing that was lost is replayed; read again to land current evidence.");
+      note(sourceCopy.en["s1tw"]);
     },
     offerUpdate() {
       const session = sessionRef.current;
@@ -824,7 +826,7 @@ export function useMobileShell(): {
         return;
       }
       session.port.offerUpdate();
-      note("The source offers a shell update. Read again to see it; applying it is one write.");
+      note(sourceCopy.en["s204"]);
     },
     expireSession() {
       const session = sessionRef.current;
@@ -832,7 +834,7 @@ export function useMobileShell(): {
         return;
       }
       session.port.expireSession();
-      note("The source expired the session verdict. Read again, then reconnect to open a new session.");
+      note(sourceCopy.en["s1z7"]);
     },
     deliverHeld() {
       const session = sessionRef.current;
@@ -840,7 +842,7 @@ export function useMobileShell(): {
         return;
       }
       const count = session.port.deliverHeld();
-      note(count === 0 ? "No held response to deliver." : `Delivered ${count} held response${count === 1 ? "" : "s"}.`);
+      note(count === 0 ? sourceCopy.en["svq"] : sourceMessage(sourceCopy.en["p.t130"], { v1: count, v2: count === 1 ? "" : "s" }));
     },
     deliverLate() {
       const session = sessionRef.current;
@@ -849,14 +851,14 @@ export function useMobileShell(): {
       }
       const due = session.port.deliverLate();
       if (due.length === 0) {
-        note("No late result is due.");
+        note(sourceCopy.en["svv"]);
         return;
       }
       const lines = due.map((delivery) => {
         const outcome = session.controller.acceptLate(delivery);
         return outcome.kind === "RECORDED"
-          ? `Late result ${delivery.result} recorded for ${delivery.intentRef}. The write stays unknown.`
-          : `Late result for ${delivery.intentRef} was quarantined (${outcome.cause}).`;
+          ? sourceMessage(sourceCopy.en["p.t214"], { v1: delivery.result, v2: delivery.intentRef })
+          : sourceMessage(sourceCopy.en["p.t215"], { v1: delivery.intentRef, v2: outcome.cause });
       });
       note(lines.join(" "));
     },
@@ -870,19 +872,19 @@ export function useMobileShell(): {
         actorRef: current === MOBILE_DESK_ACTOR ? MOBILE_GUEST_ACTOR : MOBILE_DESK_ACTOR,
       });
       note(
-        `Session context switched to ${next.actorRef}, session ${next.incarnation}. A write in flight is now unknown and its result will be quarantined. The earlier actor's session and stored copies are not reused. Read again.`,
+        sourceMessage(sourceCopy.en["p.t216"], { v1: next.actorRef, v2: next.incarnation }),
       );
     },
     newSession() {
-      startSession(scenario, "Started a new synthetic session. Earlier intents are gone, as after a reload. Nothing was resolved at the source.");
+      startSession(scenario, sourceCopy.en["s1m9"]);
     },
     setScenario(next) {
-      startSession(next, `Started a new synthetic session with scenario ${next}. Earlier intents are gone, as after a reload.`);
+      startSession(next, sourceMessage(sourceCopy.en["p.t217"], { v1: next }));
     },
     setClockMode(next) {
       clockRef.current = next;
       setClockModeState(next);
-      note(`Device clock mode set to ${next}. ${MOBILE_CLOCK_MODE_NOTES[next]} Read again to see the verdict.`);
+      note(sourceMessage(sourceCopy.en["p.t218"], { v1: next, v2: MOBILE_CLOCK_MODE_NOTES[next] }));
     },
   };
 

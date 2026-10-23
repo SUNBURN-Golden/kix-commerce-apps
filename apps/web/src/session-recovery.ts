@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/session-recovery";
+import { sourceMessage } from "./i18n/source-message";
 import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The synthetic session recovery desk. A write is recorded in a tab-session
@@ -36,30 +38,30 @@ import { identityFenceLine } from "./journey-identity";
 import { protocol } from "./connectivity/desk-protocol";
 import { pageSessionStore } from "./session-store";
 
-export const SESSION_TITLE = "Session recovery (synthetic)";
+export const SESSION_TITLE = sourceCopy.en["s1jt"];
 
 export const SESSION_SOURCE_LINE =
-  "The write on this page is a synthetic attach on an in-process source. It is not a producer write, not a protocol receipt, and never a proof of payment, issuance, or admission.";
+  sourceCopy.en["s22t"];
 
 export const SESSION_BOUNDARY =
-  "The journal lives in this tab's session storage only. Its format is app-internal: it is not a public schema, operation, capability, or identifier. A record holds short tokens and a hash of the context, never an actor label or free text.";
+  sourceCopy.en["s1te"];
 
 export const SESSION_STANDING_NOTICE =
-  "Browser storage can be cleared, lost, or copied with a duplicated tab. A cleared tab looks the same as a new session, so this journal cannot tell them apart. It is not an exactly-once guarantee and it does not survive losing the tab's storage.";
+  sourceCopy.en["san"];
 
 export const SESSION_RECOVERY_RULE =
-  "After a reload or a tab resume, an intent that was not settled is UNKNOWN. This page sends nothing to settle it, and no new write or compensation goes out for that subject. Neither a read nor a late answer resolves it.";
+  sourceCopy.en["s25"];
 
-export const SESSION_RETENTION_NOTE = `Retention is ${SESSION_RETENTION_POLICY}. No record expires, and nothing on this page removes a fence.`;
+export const SESSION_RETENTION_NOTE = sourceMessage(sourceCopy.en["p.t412"], { v1: SESSION_RETENTION_POLICY });
 
 export const SESSION_SCENARIOS = ["clean", "attach-lost", "held-response"] as const satisfies readonly JourneyIdentityScenario[];
 
 export type SessionScenario = (typeof SESSION_SCENARIOS)[number];
 
 export const SESSION_SCENARIO_NOTES: Readonly<Record<SessionScenario, string>> = {
-  clean: "An attach is answered and recorded as confirmed in this load.",
-  "attach-lost": "An attach is applied and its answer is lost. The subject stays unknown, also after a reload.",
-  "held-response": "The answer is held until you deliver it. Reload while it is held to see the in-flight recovery.",
+  clean: sourceCopy.en["s3n"],
+  "attach-lost": sourceCopy.en["s3p"],
+  "held-response": sourceCopy.en["s1q1"],
 };
 
 export type SessionScreenState =
@@ -116,11 +118,11 @@ export interface SessionRecoveryModel {
 export function evidenceLostCauseLine(cause: EvidenceLostCause): string {
   switch (cause) {
     case "CORRUPT":
-      return "The stored journal was damaged. It was set aside and nothing in it is trusted.";
+      return sourceCopy.en["s21i"];
     case "UNSUPPORTED_VERSION":
-      return "The stored journal has a version this page does not read. It was set aside and nothing in it is trusted.";
+      return sourceCopy.en["s21h"];
     case "LOST_DURING_SESSION":
-      return "The stored journal disappeared during this session. A cleared store cannot be told from a new tab, so nothing is assumed.";
+      return sourceCopy.en["s21g"];
     default: {
       const exhaustive: never = cause;
       return exhaustive;
@@ -134,16 +136,16 @@ export function sessionFenceLine(fence: SessionFence): string {
     case "not-bound":
       return JOURNEY_IDENTITY_NOT_BOUND_REASON;
     case "evidence-lost":
-      return `${SESSION_EVIDENCE_LOST} (${fence.cause}). ${evidenceLostCauseLine(fence.cause)} Every write is held and no new reference is issued.`;
+      return sourceMessage(sourceCopy.en["p.t413"], { v1: SESSION_EVIDENCE_LOST, v2: fence.cause, v3: evidenceLostCauseLine(fence.cause) });
     case "unavailable":
-      return `This tab's session storage is not usable (${fence.cause}). A write is recorded before it is sent, so every write is held.`;
+      return sourceMessage(sourceCopy.en["p.t414"], { v1: fence.cause });
     case "unresolved": {
       if (fence.inFlight) {
-        return `Another write on this subject is in flight (${fence.intentRef}). Wait for its answer.`;
+        return sourceMessage(sourceCopy.en["p.t237"], { v1: fence.intentRef });
       }
       const where = fence.recovered ? " It was in flight when the page went away." : "";
       const earlier = fence.earlierLoad ? " It was sent in an earlier page load." : "";
-      return `An earlier write on this subject has an unknown result (${fence.intentRef}, ${fence.code ?? "no code"}).${where}${earlier} This page does not send it again, and nothing new or compensating is sent for this subject.`;
+      return sourceMessage(sourceCopy.en["p.t415"], { v1: fence.intentRef, v2: fence.code ?? "no code", v3: where, v4: earlier });
     }
     case "underlying":
       return identityFenceLine(fence.identity);
@@ -157,20 +159,20 @@ export function sessionFenceLine(fence: SessionFence): string {
 export function sessionRunResultLine(result: SessionRunResult): string {
   switch (result.kind) {
     case "CONFIRMED":
-      return "Attach recorded by the synthetic source and in the session journal. This is a synthetic evidence record, not a producer receipt.";
+      return sourceCopy.en["s90"];
     case "REJECTED":
-      return `Attach rejected (${result.record.code ?? "no code"}). The source applied nothing for this write.`;
+      return sourceMessage(sourceCopy.en["p.t416"], { v1: result.record.code ?? "no code" });
     case "UNKNOWN": {
       const seen =
         result.observed === null
           ? ""
-          : ` An answer (${result.observed}) arrived but could not be trusted as the record. It is kept in memory as evidence only.`;
-      return `Attach result unknown (${result.record.code ?? "no code"}). It may or may not have applied.${seen} Writes on this subject are blocked, and neither a read nor a late answer resolves it.`;
+          : sourceMessage(sourceCopy.en["p.t417"], { v1: result.observed });
+      return sourceMessage(sourceCopy.en["p.t418"], { v1: result.record.code ?? "no code", v2: seen });
     }
     case "FENCED":
-      return `Attach not sent. ${sessionFenceLine(result.fence)}`;
+      return sourceMessage(sourceCopy.en["p.t242"], { v1: sessionFenceLine(result.fence) });
     case "NOT_SENT":
-      return `Attach not sent. ${result.detail}`;
+      return sourceMessage(sourceCopy.en["p.t242"], { v1: result.detail });
     default: {
       const exhaustive: never = result;
       return exhaustive;
@@ -196,18 +198,18 @@ function recordKind(record: SessionRecord, load: number): SessionRecordKind {
 }
 
 function recordLine(record: SessionRecord, kind: SessionRecordKind, load: number): string {
-  const base = `${record.intentRef} on ${record.scope}: ${record.outcome}${record.code ? ` (${record.code})` : ""}.`;
+  const base = sourceMessage(sourceCopy.en["p.t575"], { v1: record.intentRef, v2: record.scope, v3: record.outcome, v4: record.code ? ` (${record.code})` : "" });
   switch (kind) {
     case "history":
-      return `${base} History from load ${record.loadNo}. It is not a current fact and it lifts no fence.`;
+      return sourceMessage(sourceCopy.en["p.t419"], { v1: base, v2: record.loadNo });
     case "recovered-unknown":
-      return `${base} Its answer never reached the journal. It stays unknown and this page does not send it again.`;
+      return sourceMessage(sourceCopy.en["p.t420"], { v1: base });
     case "unknown":
-      return `${base} It stays unknown and blocks its subject.${record.loadNo < load ? " It was sent in an earlier page load." : ""}`;
+      return sourceMessage(sourceCopy.en["p.t421"], { v1: base, v2: record.loadNo < load ? " It was sent in an earlier page load." : "" });
     case "in-flight":
-      return `${base} Waiting for the answer.`;
+      return sourceMessage(sourceCopy.en["p.t422"], { v1: base });
     case "rejected":
-      return `${base} The source applied nothing.`;
+      return sourceMessage(sourceCopy.en["p.t423"], { v1: base });
     default:
       return base;
   }
@@ -216,27 +218,27 @@ function recordLine(record: SessionRecord, kind: SessionRecordKind, load: number
 function statusFor(state: SessionScreenState, snapshot: SessionControllerState | null): { statusLine: string; detailLine: string } {
   switch (state) {
     case "empty":
-      return { statusLine: "Session journal ready. Nothing has been written in this tab yet.", detailLine: "" };
+      return { statusLine: sourceCopy.en["s1jr"], detailLine: "" };
     case "ready":
-      return { statusLine: "Session journal ready.", detailLine: "" };
+      return { statusLine: sourceCopy.en["s1jq"], detailLine: "" };
     case "in-progress":
-      return { statusLine: "A write is in flight. Nothing is confirmed yet.", detailLine: "If the page goes away now, the intent comes back as unknown and is not sent again." };
+      return { statusLine: sourceCopy.en["s9d"], detailLine: sourceCopy.en["sns"] };
     case "recovered": {
       const count = snapshot?.records.filter((record) => record.outcome === "UNKNOWN").length ?? 0;
       return {
-        statusLine: `${count} unresolved write${count === 1 ? "" : "s"} came back as UNKNOWN.`,
-        detailLine: "Each one may or may not have applied. Nothing was sent again, and the subject stays blocked.",
+        statusLine: sourceMessage(sourceCopy.en["p.t424"], { v1: count, v2: count === 1 ? "" : "s" }),
+        detailLine: sourceCopy.en["shx"],
       };
     }
     case "evidence-lost": {
       const status = snapshot?.status;
       const cause = status !== undefined && status.kind === "evidence-lost" ? status.cause : "CORRUPT";
-      return { statusLine: `${SESSION_EVIDENCE_LOST}. Every write is held.`, detailLine: evidenceLostCauseLine(cause) };
+      return { statusLine: sourceMessage(sourceCopy.en["p.t425"], { v1: SESSION_EVIDENCE_LOST }), detailLine: evidenceLostCauseLine(cause) };
     }
     case "unavailable":
-      return { statusLine: "This tab's session storage is not usable. Every write is held.", detailLine: "A write is recorded before it is sent, so nothing goes out without that record." };
+      return { statusLine: sourceCopy.en["s23o"], detailLine: sourceCopy.en["s9e"] };
     case "full":
-      return { statusLine: "The session journal is full. No further write is sent from this tab session.", detailLine: "Nothing is evicted, because an eviction could drop a fence." };
+      return { statusLine: sourceCopy.en["s1xz"], detailLine: sourceCopy.en["s118"] };
     case "not-bound":
       return { statusLine: JOURNEY_IDENTITY_NOT_BOUND_REASON, detailLine: "" };
     default: {
@@ -287,7 +289,7 @@ export function buildSessionModel(input: {
     const fence = recovery === null ? null : recovery.gateFor(itemId);
     let reason: string | null = null;
     if (verdict.verdict !== "current") {
-      reason = `Verdict ${verdict.verdict}. ${verdict.detail}`;
+      reason = sourceMessage(sourceCopy.en["p.t537"], { v1: verdict.verdict, v2: verdict.detail });
     } else if (fence !== null) {
       reason = sessionFenceLine(fence);
     }
@@ -328,12 +330,12 @@ export function buildSessionModel(input: {
     records,
     budgetLine:
       budget === undefined
-        ? "Journal budget not in use."
-        : `Journal: ${budget.usedRecords} of ${budget.maxRecords} records, ${budget.usedBytes} of ${budget.maxBytes} bytes. Nothing is evicted.`,
-    countersLine: `Sent ${counters.sent} in this load. Blocked before sending ${counters.fenced}. Not sent ${counters.notSent}. Recovered as unknown ${counters.recoveredUnknown}.`,
-    loadLine: load === 0 ? "No journal load." : `This is page load ${load} of this tab session.`,
+        ? sourceCopy.en["spd"]
+        : sourceMessage(sourceCopy.en["p.t426"], { v1: budget.usedRecords, v2: budget.maxRecords, v3: budget.usedBytes, v4: budget.maxBytes }),
+    countersLine: sourceMessage(sourceCopy.en["p.t427"], { v1: counters.sent, v2: counters.fenced, v3: counters.notSent, v4: counters.recoveredUnknown }),
+    loadLine: load === 0 ? sourceCopy.en["svt"] : sourceMessage(sourceCopy.en["p.t428"], { v1: load }),
     observationLines: (snapshot?.observations ?? []).map(
-      (item) => `Answer (${item.observed}) for ${item.intentRef} could not be recorded. Kept in memory as evidence only; it resolves nothing.`,
+      (item) => sourceMessage(sourceCopy.en["p.t429"], { v1: item.observed, v2: item.intentRef }),
     ),
     notComposed: JOURNEY_IDENTITY_NOT_COMPOSED.map((entry) => ({ action: entry.action, reason: entry.reason })),
     lastLine,
@@ -455,11 +457,11 @@ export function useSessionRecoveryDesk(): {
         return;
       }
       const count = current.port.deliverHeld();
-      note(count === 0 ? "No held response to deliver." : `Delivered ${count} held response${count === 1 ? "" : "s"}.`);
+      note(count === 0 ? sourceCopy.en["svq"] : sourceMessage(sourceCopy.en["p.t130"], { v1: count, v2: count === 1 ? "" : "s" }));
     },
     setScenario(next) {
       setScenarioState(next);
-      note(`Started a new synthetic source with scenario ${next}. This tab's journal is kept: an earlier unknown write keeps blocking its subject.`);
+      note(sourceMessage(sourceCopy.en["p.t430"], { v1: next }));
     },
     reloadPage() {
       window.location.reload();

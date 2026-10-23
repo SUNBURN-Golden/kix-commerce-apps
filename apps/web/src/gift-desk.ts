@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/gift-desk";
+import { sourceMessage } from "./i18n/source-message";
 import { connectivityInvoker, connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import {
@@ -22,9 +24,9 @@ export const GIFT_DONOR = "desk-donor";
 export const GIFT_DEFAULT_RECIPIENT = "desk-recipient";
 
 const STEP_LABEL: Record<GiftStep, string> = {
-  offer_gift: "Offer gift",
-  accept_gift: "Accept gift",
-  cancel_gift: "Cancel gift",
+  offer_gift: sourceCopy.en["s13x"],
+  accept_gift: sourceCopy.en["sc"],
+  cancel_gift: sourceCopy.en["sb0"],
 };
 
 export type GiftRowStatus =
@@ -171,15 +173,15 @@ export function selectGiftView(
       ...row,
       status: "not-started" as const,
       canSend: false,
-      note: "Enter a gift id. The desk does not mint one.",
+      note: sourceCopy.en["sig"],
     };
   });
   return {
     source: snapshot.source,
     path: snapshot.path,
     rows,
-    lastConfirmed: found?.lastConfirmed ?? "Last confirmed receipt: none",
-    unconfirmed: found?.unconfirmed ?? "Unconfirmed request: none",
+    lastConfirmed: found?.lastConfirmed ?? sourceCopy.en["sq8"],
+    unconfirmed: found?.unconfirmed ?? sourceCopy.en["s252"],
     pending: found?.pending ?? false,
     opened: snapshot.gifts.map((item) => ({
       giftId: item.giftId,
@@ -271,7 +273,7 @@ export class GiftDesk {
     current.phase = "in-flight";
     current.operationId = operationId;
     current.actor = actorFor(step, record);
-    current.note = "In flight. One attempt.";
+    current.note = sourceCopy.en["snx"];
     record.pending = true;
     this.publish();
     try {
@@ -284,7 +286,7 @@ export class GiftDesk {
       const stepRecord = record.steps.find((item) => item.step === step);
       if (stepRecord && stepRecord.phase === "in-flight") {
         stepRecord.phase = "not-sent";
-        stepRecord.note = "Not sent.";
+        stepRecord.note = sourceCopy.en["s12l"];
         record.localHalt = true;
       }
       this.publish();
@@ -306,7 +308,7 @@ export class GiftDesk {
       this.path = {
         kind: "unavailable",
         code,
-        detail: "Integration HTTP stayed selected. The desk did not fall back to the stub.",
+        detail: sourceCopy.en["sod"],
       };
     }
     this.publish();
@@ -319,7 +321,7 @@ export class GiftDesk {
     draft: GiftDraft,
   ): Promise<GiftStepOutcome> {
     if (this.deps.source === null || record.transfer === null) {
-      throw new ProtocolError("Gift invoker is not selected.");
+      throw new ProtocolError(sourceCopy.en["smg"]);
     }
     if (step === "offer_gift") {
       return record.transfer.offerGift({
@@ -352,8 +354,8 @@ export class GiftDesk {
       current.receipt = receiptFields(outcome.receipt);
       current.note =
         this.deps.source?.source === "stub-shape"
-          ? "Confirmed stub-shape receipt. Not from the gate."
-          : "Confirmed receipt.";
+          ? sourceCopy.en["sdk"]
+          : sourceCopy.en["sdj"];
       return;
     }
     if (outcome.kind === "REJECTED") {
@@ -362,7 +364,7 @@ export class GiftDesk {
       current.code = outcome.code;
       current.requestId = outcome.identity.requestId ?? null;
       current.correlationId = outcome.identity.correlationId ?? null;
-      current.note = `Rejected by the gate (${outcome.code}).`;
+      current.note = sourceMessage(sourceCopy.en["p.t4"], { v1: outcome.code });
       return;
     }
     if (outcome.kind === "UNKNOWN") {
@@ -371,12 +373,12 @@ export class GiftDesk {
       current.code = outcome.code;
       current.requestId = outcome.identity.requestId ?? null;
       current.correlationId = outcome.identity.correlationId ?? null;
-      current.note = "Unconfirmed: sent, no authoritative receipt. May have applied. Not a rejection.";
+      current.note = sourceCopy.en["s253"];
       return;
     }
     current.phase = "pending";
     current.operationId = null;
-    current.note = "Blocked. The next write stays blocked.";
+    current.note = sourceCopy.en["saa"];
     record.localHalt = true;
   }
 
@@ -393,7 +395,7 @@ export class GiftDesk {
       current.code = halted.identity.code ?? "UNKNOWN";
       current.requestId = halted.identity.requestId ?? null;
       current.correlationId = halted.identity.correlationId ?? null;
-      current.note = "Unconfirmed: sent, no authoritative receipt. May have applied. Not a rejection.";
+      current.note = sourceCopy.en["s253"];
       return;
     }
     current.phase = "not-sent";
@@ -401,8 +403,8 @@ export class GiftDesk {
     current.code = halted?.identity.code ?? null;
     current.requestId = halted?.identity.requestId ?? null;
     current.correlationId = halted?.identity.correlationId ?? null;
-    const message = error instanceof Error ? error.message : "The step was not sent.";
-    current.note = `Not sent. ${message}`;
+    const message = error instanceof Error ? error.message : sourceCopy.en["s21f"];
+    current.note = sourceMessage(sourceCopy.en["p.t6"], { v1: message });
     record.localHalt = halted === null;
   }
 
@@ -420,8 +422,8 @@ export class GiftDesk {
         giftId: record.giftId,
         pending: record.pending,
         rows,
-        lastConfirmed: summaryLine("Last confirmed receipt", lastRow(rows, "confirmed")),
-        unconfirmed: summaryLine("Unconfirmed request", rows.find((row) => row.status === "unconfirmed")),
+        lastConfirmed: summaryLine(sourceCopy.en["sq7"], lastRow(rows, "confirmed")),
+        unconfirmed: summaryLine(sourceCopy.en["s251"], rows.find((row) => row.status === "unconfirmed")),
       };
     });
     return {
@@ -579,26 +581,26 @@ function siblingPending(record: GiftRecord, step: GiftStep): boolean {
 
 function noteFor(status: GiftRowStatus): string {
   if (status === "ready") {
-    return "Ready to send. One attempt.";
+    return sourceCopy.en["s1d1"];
   }
   if (status === "not-started") {
-    return "Waiting for the offer receipt.";
+    return sourceCopy.en["s267"];
   }
   if (status === "blocked") {
-    return "Blocked. The next write stays blocked.";
+    return sourceCopy.en["saa"];
   }
   if (status === "in-flight") {
-    return "In flight. One attempt.";
+    return sourceCopy.en["snx"];
   }
   if (status === "unavailable") {
-    return "Unavailable. No write is sent.";
+    return sourceCopy.en["s250"];
   }
   return "";
 }
 
 function summaryLine(label: string, row: GiftRow | undefined): string {
   if (!row || !row.operationId) {
-    return `${label}: none`;
+    return sourceMessage(sourceCopy.en["p.t464"], { v1: label });
   }
   return `${label}: ${row.step} · ${row.operationId}`;
 }

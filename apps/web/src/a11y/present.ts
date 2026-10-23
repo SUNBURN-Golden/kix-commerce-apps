@@ -1,3 +1,5 @@
+import { en as sourceEn } from "../i18n/messages/a11y--present.en";
+import { sourceMessage } from "../i18n/source-message";
 /**
  * Amount, quantity, and deadline presentation for the existing desks.
  * Amounts are copied whole-unit strings. This module does not add, scale,
@@ -17,7 +19,7 @@ export type DisplayLocale = (typeof DISPLAY_LOCALES)[number];
 export const AMOUNT_NOTICE =
   "Price and fee display is UNDETERMINED. No amount is calculated on this page.";
 
-export const QUANTITY_NOTE = "Count copied. Not an amount.";
+export const QUANTITY_NOTE = sourceEn["sel"];
 
 const INTEGER_DIGITS = /^-?(?:0|[1-9][0-9]*)$/;
 
@@ -79,7 +81,7 @@ export function presentDeadline(input: {
   const authority = expiryAuthority({ expiresAt: input.expiresAt, expired: input.expired });
   const clock = presentInstant(authority.expiresAt, input.locale ?? "en-GB");
   const flag = authority.expired === null ? "not decided on this page" : authority.expired ? "true" : "false";
-  const authorityLine = `Authority expiresAt ${authority.expiresAt}. expired ${flag}. Display locale does not decide expiry.`;
+  const authorityLine = sourceMessage(sourceEn["p.t0"], { v1: authority.expiresAt, v2: flag });
   return { authority, clock, authorityLine };
 }
 
@@ -99,7 +101,7 @@ export function copiedIntegerDigits(value: number): string | null {
 export function presentIntegerUnits(value: number | string, unitLabel: string): string {
   const digits = typeof value === "string" ? (INTEGER_DIGITS.test(value) ? value : null) : copiedIntegerDigits(value);
   if (digits === null) {
-    return "Amount refused. The figure was not a whole unit string, so it is not calculated here.";
+    return sourceEn["s38"];
   }
   return `${digits} ${unitLabel}`;
 }
@@ -107,7 +109,7 @@ export function presentIntegerUnits(value: number | string, unitLabel: string): 
 export function presentQuantityLine(value: number): string {
   const digits = copiedIntegerDigits(value);
   if (digits === null) {
-    return "Quantity refused. Not calculated.";
+    return sourceEn["s1am"];
   }
   return `${digits}. ${QUANTITY_NOTE}`;
 }
@@ -115,9 +117,9 @@ export function presentQuantityLine(value: number): string {
 export function capacityLine(count: number): string {
   const digits = copiedIntegerDigits(count);
   if (digits === null) {
-    return "Quantity refused. Not calculated.";
+    return sourceEn["s1am"];
   }
-  return `${digits} still open. ${QUANTITY_NOTE}`;
+  return sourceMessage(sourceEn["p.t1"], { v1: digits, v2: QUANTITY_NOTE });
 }
 
 /**
@@ -145,14 +147,14 @@ export function bookingQuantityNumber(raw: string): number | null {
 export function syntheticCountLine(count: number): string {
   const digits = copiedIntegerDigits(count);
   if (digits === null) {
-    return "synthetic count refused";
+    return sourceEn["s1oa"];
   }
-  return `synthetic count ${digits}`;
+  return sourceMessage(sourceEn["p.t2"], { v1: digits });
 }
 
 export function syntheticTierLine(tier: string | null): string | null {
   if (tier === null) {
     return null;
   }
-  return `synthetic tier ${tier}`;
+  return sourceMessage(sourceEn["p.t3"], { v1: tier });
 }

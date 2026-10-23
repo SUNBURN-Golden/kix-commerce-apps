@@ -1,3 +1,7 @@
+import { messages as copy0 } from "../i18n/messages/pages--CreditServicing";
+import { messages as copy1 } from "../i18n/messages/credit-servicing";
+import { deskText } from "../i18n/desk-translate";
+import { useT } from "../i18n/desk-context";
 import { useRestoreFocus } from "../a11y/focus";
 import { useCreditServicing } from "../credit-servicing";
 import {
@@ -15,6 +19,7 @@ import {
 } from "./CreditServicingPanels";
 
 export function CreditServicingPage() {
+  const t = useT(copy0, copy1);
   const live = useCreditServicing();
   const model = live.model;
   // A block, a refusal, or an unknown result takes focus to the status region.
@@ -22,17 +27,17 @@ export function CreditServicingPage() {
 
   return (
     <div className="discovery servicing" data-adapter-environment={live.environment}>
-      <nav className="discovery-nav" aria-label="Servicing sections">
-        <a href="#servicing-controls">Controls</a>
-        <a href="#servicing-status">Status</a>
-        <a href="#servicing-draw">Draw and exposure</a>
-        <a href="#servicing-schedule">Schedule</a>
-        <a href="#servicing-payments">Payments</a>
-        <a href="#servicing-case">Case</a>
-        <a href="#servicing-timeline">Timeline</a>
-        <a href="#servicing-reasons">Reasons</a>
-        <a href="#servicing-requests">Requests</a>
-        <a href="#servicing-session">Session record</a>
+      <nav className="discovery-nav" aria-label={t("s1jk")}>
+        <a href="#servicing-controls">{t("sed")}</a>
+        <a href="#servicing-status">{t("s1mj")}</a>
+        <a href="#servicing-draw">{t("shd")}</a>
+        <a href="#servicing-schedule">{t("s1ie")}</a>
+        <a href="#servicing-payments">{t("s17k")}</a>
+        <a href="#servicing-case">{t("sbe")}</a>
+        <a href="#servicing-timeline">{t("s248")}</a>
+        <a href="#servicing-reasons">{t("s1d6")}</a>
+        <a href="#servicing-requests">{t("s1fv")}</a>
+        <a href="#servicing-session">{t("s1js")}</a>
       </nav>
       <div className="discovery-body">
         <ServicingBanner environment={live.environment} scenario={live.scenario} model={model} />
@@ -45,7 +50,7 @@ export function CreditServicingPage() {
             className="discovery-action"
             onClick={() => (model.state === "tuple-changed" ? live.actions.newSession() : live.actions.refresh())}
           >
-            {model.actionLabel}
+            {deskText(t, model.actionLabel)}
           </button>
         ) : null}
         <DrawSection model={model} />

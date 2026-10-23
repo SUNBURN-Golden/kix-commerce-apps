@@ -1,3 +1,4 @@
+import { messages as sourceCopy } from "./i18n/messages/discovery-workspace";
 /**
  * Discovery screen model over the synthetic fixture plus one catalogue read.
  * M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
@@ -27,9 +28,9 @@ import { protocol } from "./connectivity/desk-protocol";
 import { WORKSPACE_RULING } from "./workspace/registry";
 
 export const DISCOVERY_SAMPLE_NOTE =
-  "Search and filters apply to the materialized sample only. The scale view is date order and is count-only.";
+  sourceCopy.en["s1ip"];
 
-export const SEAT_GA_NOTE = "no supported purchase path here; seat and GA selection is a synthetic page and sends nothing";
+export const SEAT_GA_NOTE = sourceCopy.en["syv"];
 
 export const INVENTORY_ROUTE = "/inventory";
 
@@ -72,7 +73,7 @@ export function resolvePurchase(row: DiscoveryRow, catalog: CatalogState): Purch
     };
   }
   if (row.status === "cancelled") {
-    return { kind: "unsupported", message: "cancelled (synthetic)" };
+    return { kind: "unsupported", message: sourceCopy.en["sb5"] };
   }
   if (catalog.kind === "not-bound") {
     return { kind: "not-bound", reason: catalog.reason, source: "none" };
@@ -92,7 +93,7 @@ export function resolvePurchase(row: DiscoveryRow, catalog: CatalogState): Purch
   if (catalog.kind === "error") {
     return { kind: "unavailable", message: catalog.message };
   }
-  return { kind: "unsupported", message: "No supported purchase path on this row." };
+  return { kind: "unsupported", message: sourceCopy.en["syw"] };
 }
 
 /** One catalogue read. The caller does not try again on its own. */

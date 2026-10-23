@@ -1,3 +1,5 @@
+import { messages as sourceCopy } from "./i18n/messages/delegated-assistant";
+import { sourceMessage } from "./i18n/source-message";
 import { connectivityPort, connectivityController, connectedActions } from "./connectivity/write-guard";
 /**
  * The delegated-assistant screen on top of the adapter's synthetic delegation source.
@@ -53,78 +55,78 @@ import {
 } from "@kix/protocol-adapter";
 import { protocol } from "./connectivity/desk-protocol";
 
-export const DELEGATION_TITLE = "Delegated assistant (synthetic)";
+export const DELEGATION_TITLE = sourceCopy.en["sfv"];
 
 export const DELEGATION_ROUTE = "/assistant";
 
 export const DELEGATION_SOURCE_LINE =
-  "Grants, listings, staged drafts, and every answer come from a synthetic delegation source on this page load. They are not a producer read and not a catalogue receipt. The grant rows you see are the source's own records, copied.";
+  sourceCopy.en["smw"];
 
 export const DELEGATION_BOUNDARY =
-  "Request, proposal, approval, and command are four separate lines. Request text is untrusted intent, never authority. A proposal is the page's own record and is not an approval. An approval is the approve control, not a sentence, and it is not a result: it lets this page send one synthetic command, once. A confirmed command is the synthetic source's record of it. It moves no funds and transfers no right.";
+  sourceCopy.en["s1fu"];
 
-export const DELEGATION_NON_CLAIM_NOTE = `Every read and every answer states these seven as false, and a payload that omits one or states it otherwise is refused whole: ${DELEGATION_NON_CLAIM_FIELDS.join(", ")}.`;
+export const DELEGATION_NON_CLAIM_NOTE = sourceMessage(sourceCopy.en["p.t80"], { v1: DELEGATION_NON_CLAIM_FIELDS.join(", ") });
 
 export const DELEGATION_TEXT_NOTE =
-  "The interpreter is a deterministic stand-in for an LLM. It maps a request onto at most a structured proposal and refuses or clarifies everything else. It infers no grant, no scope, no action, no budget, and no approval from a goal it cannot read, and instruction-like text in a request refuses the whole request.";
+  sourceCopy.en["s1tb"];
 
 export const DELEGATION_MODE_NOTE =
-  "The adopted mode on a grant is the source's own ceiling. Query answers questions, propose records proposals, command lets an approved proposal become one synthetic command. An unadopted execution delegation stays in query/propose mode, and nothing on this page raises a requested or adopted mode.";
+  sourceCopy.en["s1q0"];
 
 export const DELEGATION_ACTOR_NOTE =
-  "The actor string and the principal are context labels. They are not an authentication result, and the source decides scope with its own synthetic grants.";
+  sourceCopy.en["s1pu"];
 
 export const DELEGATION_FENCE_NOTE =
-  "One write is sent at a time per grant, and each is sent once under the caller's own intent reference. This page does not send a write again, does not mint an intent, and does not undo one with another. A revoke, a stale grant, or a lost answer keeps the grant's writes blocked.";
+  sourceCopy.en["s14j"];
 
 export const DELEGATION_READ_NOTE =
-  "One read follows each settled write so the next approval can use fresh evidence. Nothing polls. A read is evidence and never resolves an unknown write. A Simulate control stands in for something a real producer would do, and this page does not see its effect until it reads.";
+  sourceCopy.en["s14b"];
 
 export const DELEGATION_SESSION_NOTE =
-  "Intents and proposals live in this page load only. A reload, a new synthetic session, or a context switch clears them and resolves nothing at a producer. A proposal recorded before a context switch is stale and cannot be approved.";
+  sourceCopy.en["sof"];
 
-export const DELEGATION_TARGET_NOTE = `Whether a cancel restores a command budget is a product policy that is not published. The source states ${DELEGATION_UNDETERMINED}, and this page restores and recomputes nothing.`;
+export const DELEGATION_TARGET_NOTE = sourceMessage(sourceCopy.en["p.t81"], { v1: DELEGATION_UNDETERMINED });
 
-export const DELEGATION_HOLD_NOTE = `Holding a seat is not available here. ${DELEGATION_HOLD_NOT_BOUND.reason} A staged draft is not a hold and not a booking.`;
+export const DELEGATION_HOLD_NOTE = sourceMessage(sourceCopy.en["p.t82"], { v1: DELEGATION_HOLD_NOT_BOUND.reason });
 
 export const DELEGATION_NOT_BOUND_BANNER =
-  "NOT BOUND. There is no source on integration-http, so no grant, listing, draft, or proposal is read or written here, and nothing falls back to the synthetic source. Requests still interpret, but no command can be approved.";
+  sourceCopy.en["s10e"];
 
 export const DELEGATION_SCENARIO_OFF_NOTE =
-  "Scenarios and Simulate events belong to the synthetic source, which is not selected on integration-http. They are off here, and nothing falls back to the synthetic source.";
+  sourceCopy.en["s1id"];
 
-export const DELEGATION_ALT_PRINCIPAL_NOTE = `Principal ${DELEGATION_FOREIGN_PRINCIPAL} is a principal this desk holds no grant from. Switching to it shows the source's refusal and no row.`;
+export const DELEGATION_ALT_PRINCIPAL_NOTE = sourceMessage(sourceCopy.en["p.t83"], { v1: DELEGATION_FOREIGN_PRINCIPAL });
 
 export const DELEGATION_RULING_LINE = DELEGATION_RULING;
 
 export const SCENARIO_NOTES: Readonly<Record<DelegationScenario, string>> = {
-  clean: "Every step is answered. One grant is adopted at command mode over evt-0001; a second grant on evt-0002 was adopted at propose only.",
-  empty: "The source lists no grant for this principal.",
-  stale: "The source serves a watermark older than the floor this page holds.",
-  denied: "The synthetic grants for this principal were withdrawn at the source.",
-  expired: "Grant grt-0001 is already past its deadline at the source.",
-  "budget-spent": "Grant grt-0001 has no command budget left at the source.",
-  "closed-listing": "Listing lst-0001 is closed at the source.",
-  "draft-lost": "A draft order is recorded and its answer is lost.",
-  "cancel-lost": "A cancel is recorded and its answer is lost.",
-  "held-response": "Answers are held until you deliver them. Use it to switch the session while a write is in flight.",
-  "receipt-claims-execution": "The source records a draft order and then answers that funds moved. The answer is not trusted.",
-  "snapshot-claims-authority": "The source answers a read that claims assistant text is authority and an execution delegation is bound. The whole payload is refused.",
-  "scope-leak": "The source sends a draft that belongs to another principal. The whole payload is refused.",
-  "race-superseded": "The first write after the first read finds the grant already moved to a newer version at the source, as a supersede between read and write would.",
+  clean: sourceCopy.en["sjr"],
+  empty: sourceCopy.en["s1zr"],
+  stale: sourceCopy.en["s21a"],
+  denied: sourceCopy.en["s21u"],
+  expired: sourceCopy.en["sms"],
+  "budget-spent": sourceCopy.en["smr"],
+  "closed-listing": sourceCopy.en["sr3"],
+  "draft-lost": sourceCopy.en["s1s"],
+  "cancel-lost": sourceCopy.en["s8"],
+  "held-response": sourceCopy.en["s4o"],
+  "receipt-claims-execution": sourceCopy.en["s208"],
+  "snapshot-claims-authority": sourceCopy.en["s1y9"],
+  "scope-leak": sourceCopy.en["s20q"],
+  "race-superseded": sourceCopy.en["s1st"],
 };
 
 export const CONTROL_LABELS: Readonly<Record<DelegationSyntheticControl, string>> = {
-  "revoke-grant": "Simulate: grant grt-0001 is revoked at the source",
-  "supersede-grant": "Simulate: grant grt-0001 moves to a newer version",
-  "expire-grant": "Simulate: grant grt-0001 passes its deadline",
-  "spend-budget": "Simulate: another channel uses the grt-0001 command budget",
-  "close-listing": "Simulate: listing lst-0001 closes at the source",
+  "revoke-grant": sourceCopy.en["s1ko"],
+  "supersede-grant": sourceCopy.en["s1kp"],
+  "expire-grant": sourceCopy.en["s1kq"],
+  "spend-budget": sourceCopy.en["s1kf"],
+  "close-listing": sourceCopy.en["s1kr"],
 };
 
-const STEP_WORDS: Readonly<Record<DelegationCommand, string>> = { "draft-order": "Draft order", "cancel-draft": "Cancel draft" };
+const STEP_WORDS: Readonly<Record<DelegationCommand, string>> = { "draft-order": sourceCopy.en["shb"], "cancel-draft": sourceCopy.en["sax"] };
 
-const DRAFT_STATE_WORDS: Readonly<Record<DelegationDraftState, string>> = { staged: "Staged", cancelled: "Cancelled" };
+const DRAFT_STATE_WORDS: Readonly<Record<DelegationDraftState, string>> = { staged: sourceCopy.en["s1lf"], cancelled: sourceCopy.en["sb1"] };
 
 export type DelegationScreenState =
   | "loading"
@@ -274,11 +276,11 @@ export interface DelegationAssistantModel {
 export function causeLine(cause: DelegationRefreshCause): string {
   switch (cause) {
     case "own-write":
-      return "Your own write landed after the last read.";
+      return sourceCopy.en["s279"];
     case "rejection":
-      return "The source rejected the last write, so the read it was built from is behind.";
+      return sourceCopy.en["s20c"];
     case "context-switch":
-      return "The session context changed.";
+      return sourceCopy.en["s1xw"];
     default: {
       const exhaustive: never = cause;
       return exhaustive;
@@ -290,11 +292,11 @@ export function causeLine(cause: DelegationRefreshCause): string {
 export function returnActionLine(action: DelegationReturnAction): string {
   switch (action) {
     case "read-again":
-      return "Read again to see what the source holds now.";
+      return sourceCopy.en["s1b5"];
     case "revise-request":
-      return "Revise the request: name a different action or target. The assistant does not search for a wider grant or infer one.";
+      return sourceCopy.en["s1h3"];
     case "none":
-      return "Nothing on this page corrects it. The source decides.";
+      return sourceCopy.en["s11b"];
     default: {
       const exhaustive: never = action;
       return exhaustive;
@@ -306,37 +308,37 @@ export function returnActionLine(action: DelegationReturnAction): string {
 export function fenceLine(fence: DelegationFence): string {
   switch (fence.reason) {
     case "in-flight":
-      return `Another write under this grant is in flight (${fence.intentRef}). Wait for its answer.`;
+      return sourceMessage(sourceCopy.en["p.t84"], { v1: fence.intentRef });
     case "unknown-outcome": {
       const earlier = fence.earlierContext ? " It was sent in an earlier session context." : "";
-      return `An earlier write under this grant has an unknown result (${fence.intentRef}).${earlier} Writes under this grant stay blocked. A read does not resolve it.`;
+      return sourceMessage(sourceCopy.en["p.t85"], { v1: fence.intentRef, v2: earlier });
     }
     case "no-snapshot":
-      return "Read the grants first.";
+      return sourceCopy.en["s1cl"];
     case "snapshot-stale":
-      return `Read again before the next write. ${causeLine(fence.cause)}`;
+      return sourceMessage(sourceCopy.en["p.t86"], { v1: causeLine(fence.cause) });
     case "duplicate-intent":
-      return `Intent ${fence.intentRef} was already used. This page does not send the same intent twice.`;
+      return sourceMessage(sourceCopy.en["p.t87"], { v1: fence.intentRef });
     case "proposal-missing":
-      return `Proposal ${fence.proposalRef} is not on this page. Only a recorded proposal can be approved.`;
+      return sourceMessage(sourceCopy.en["p.t88"], { v1: fence.proposalRef });
     case "proposal-closed":
-      return `Proposal ${fence.proposalRef} is ${fence.state}. Only an open proposal can be approved.`;
+      return sourceMessage(sourceCopy.en["p.t89"], { v1: fence.proposalRef, v2: fence.state });
     case "proposal-stale":
-      return `Proposal ${fence.proposalRef} was recorded before the session context changed. It is stale.`;
+      return sourceMessage(sourceCopy.en["p.t90"], { v1: fence.proposalRef });
     case "not-listed":
-      return `${fence.ref} is not in the last read.`;
+      return sourceMessage(sourceCopy.en["p.t91"], { v1: fence.ref });
     case "no-grant":
-      return `No grant in the last read covers ${fence.targetRef}. The assistant infers none.`;
+      return sourceMessage(sourceCopy.en["p.t92"], { v1: fence.targetRef });
     case "grant-not-active":
-      return `Grant ${fence.grantRef} is ${fence.state} in the last read.`;
+      return sourceMessage(sourceCopy.en["p.t93"], { v1: fence.grantRef, v2: fence.state });
     case "mode-capped":
-      return `Grant ${fence.grantRef} was requested at mode ${fence.requestedMode} and adopted at ${fence.adoptedMode}. An unadopted execution delegation stays in query/propose mode, and this page does not raise it.`;
+      return sourceMessage(sourceCopy.en["p.t94"], { v1: fence.grantRef, v2: fence.requestedMode, v3: fence.adoptedMode });
     case "action-not-granted":
-      return `Grant ${fence.grantRef} does not allow ${fence.step} in the last read.`;
+      return sourceMessage(sourceCopy.en["p.t95"], { v1: fence.grantRef, v2: fence.step });
     case "budget-exhausted":
-      return `Grant ${fence.grantRef} used its command budget in the last read.`;
+      return sourceMessage(sourceCopy.en["p.t96"], { v1: fence.grantRef });
     case "target-closed":
-      return `${fence.ref} is ${fence.state} in the last read.`;
+      return sourceMessage(sourceCopy.en["p.t97"], { v1: fence.ref, v2: fence.state });
     case "not-bound":
       return DELEGATION_NOT_BOUND_REASON;
     default: {
@@ -351,20 +353,20 @@ export function stepResultLine(step: DelegationCommand, result: DelegationStepRe
   switch (result.kind) {
     case "CONFIRMED":
       return step === "draft-order"
-        ? `Draft order recorded by the synthetic source${result.intent.receipt ? ` as ${result.intent.receipt.draftRef}` : ""}. It stages an order draft only: it is not a hold, not a booking, not a payment, and not a right. This is not a protocol receipt.`
-        : `Cancel recorded by the synthetic source. Whether the command budget is restored is ${DELEGATION_UNDETERMINED}, and this page restores nothing. This is not a protocol receipt.`;
+        ? sourceMessage(sourceCopy.en["p.t98"], { v1: result.intent.receipt ? ` as ${result.intent.receipt.draftRef}` : "" })
+        : sourceMessage(sourceCopy.en["p.t99"], { v1: DELEGATION_UNDETERMINED });
     case "REJECTED": {
       const action = returnActionLine(DELEGATION_RETURN_ACTIONS[result.intent.code as DelegationRejectCode] ?? "read-again");
-      return `${word} rejected (${result.intent.code ?? "no code"}). ${result.intent.message ?? ""} The source applied nothing for this write. ${action}`.replace(/\s+/g, " ").trim();
+      return sourceMessage(sourceCopy.en["p.t100"], { v1: word, v2: result.intent.code ?? "no code", v3: result.intent.message ?? "", v4: action }).replace(/\s+/g, " ").trim();
     }
     case "UNKNOWN":
-      return `${word} result unknown (${result.intent.code ?? "no code"}). It may or may not have been recorded. Writes under this grant are blocked, and a read does not resolve it.`;
+      return sourceMessage(sourceCopy.en["p.t101"], { v1: word, v2: result.intent.code ?? "no code" });
     case "QUARANTINED":
-      return `The result of the ${word.toLowerCase()} arrived after the session context changed. It was quarantined and applied nowhere. The write stays unknown.`;
+      return sourceMessage(sourceCopy.en["p.t102"], { v1: word.toLowerCase() });
     case "FENCED":
-      return `${word} not sent. ${fenceLine(result.fence)}`;
+      return sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: fenceLine(result.fence) });
     case "NOT_SENT":
-      return `${word} not sent. ${result.detail}`;
+      return sourceMessage(sourceCopy.en["p.t45"], { v1: word, v2: result.detail });
     default: {
       const exhaustive: never = result;
       return exhaustive;
@@ -373,10 +375,10 @@ export function stepResultLine(step: DelegationCommand, result: DelegationStepRe
 }
 
 const TURN_KIND_WORDS: Readonly<Record<DelegationTurn["kind"], string>> = {
-  answer: "Answer",
-  proposal: "Proposal",
-  clarify: "Needs a choice",
-  refused: "Refused",
+  answer: sourceCopy.en["s4m"],
+  proposal: sourceCopy.en["s19g"],
+  clarify: sourceCopy.en["stj"],
+  refused: sourceCopy.en["s1et"],
 };
 
 function attentionFor(last: LastAction | null): boolean {
@@ -428,41 +430,41 @@ function statusFor(
   const coded = code ? ` (${code})` : "";
   switch (state) {
     case "loading":
-      return { statusLine: "Reading the synthetic delegation source. Nothing is proposed or sent yet.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["s1be"], detailLine: "", actionLabel: null };
     case "unread":
       return {
-        statusLine: "The session context changed, so there is no read in this context.",
-        detailLine: "Read again to see the grants from this context. An earlier unknown write under a grant still blocks that grant.",
-        actionLabel: "Read again",
+        statusLine: sourceCopy.en["s1xx"],
+        detailLine: sourceCopy.en["s1b2"],
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "ready":
-      return { statusLine: "Delegation grants read.", detailLine: "", actionLabel: null };
+      return { statusLine: sourceCopy.en["sfz"], detailLine: "", actionLabel: null };
     case "empty":
-      return { statusLine: "No grant is listed for this principal in this read.", detailLine: "Nothing can be proposed or sent.", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["svm"], detailLine: sourceCopy.en["s116"], actionLabel: sourceCopy.en["s1ax"] };
     case "stale":
-      return { statusLine: "Stale delegation read.", detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["s1ll"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     case "denied":
       return {
-        statusLine: `The source refused this actor and principal${coded}. No grant, no listing, and no request is accepted.`,
+        statusLine: sourceMessage(sourceCopy.en["p.t103"], { v1: coded }),
         detailLine: detail ?? "",
-        actionLabel: "Read again",
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "refused":
       return {
-        statusLine: `The payload was refused${coded}. No row is shown.`,
+        statusLine: sourceMessage(sourceCopy.en["p.t104"], { v1: coded }),
         detailLine: detail ?? "",
-        actionLabel: "Read again",
+        actionLabel: sourceCopy.en["s1ax"],
       };
     case "not-bound":
       return { statusLine: DELEGATION_NOT_BOUND_REASON, detailLine: "", actionLabel: null };
     case "tuple-changed":
       return {
-        statusLine: "The pin tuple changed. Nothing was read and nothing was sent.",
+        statusLine: sourceCopy.en["s1v9"],
         detailLine: detail ?? "",
-        actionLabel: "Start a new synthetic session",
+        actionLabel: sourceCopy.en["s1m2"],
       };
     case "unavailable":
-      return { statusLine: "The source did not answer. This is not an empty grant list.", detailLine: detail ?? "", actionLabel: "Read again" };
+      return { statusLine: sourceCopy.en["s1z0"], detailLine: detail ?? "", actionLabel: sourceCopy.en["s1ax"] };
     default: {
       const exhaustive: never = state;
       return exhaustive;
@@ -472,9 +474,9 @@ function statusFor(
 
 function modeLine(mode: DelegationMode, requested: DelegationMode, grantRef: string): string {
   if (mode === requested) {
-    return `Requested and adopted at ${mode} mode. The source's own ceiling, copied.`;
+    return sourceMessage(sourceCopy.en["p.t105"], { v1: mode });
   }
-  return `Requested at ${requested} mode, adopted at ${mode}. Grant ${grantRef} stays in ${mode === "propose" ? "query/propose" : mode} mode: this page does not raise it.`;
+  return sourceMessage(sourceCopy.en["p.t106"], { v1: requested, v2: mode, v3: grantRef, v4: mode === "propose" ? "query/propose" : mode });
 }
 
 /** What a question turn answers out of the last read. A query sends nothing. */
@@ -482,20 +484,20 @@ function answerLines(question: string, model: { grants: GrantModel[]; listings: 
   switch (question) {
     case "grants":
       return model.grants.length === 0
-        ? ["No grant is listed in the last read."]
+        ? [sourceCopy.en["svn"]]
         : model.grants.map((grant) => `${grant.grantRef}: ${grant.modeLine}`);
     case "board":
       return model.listings.length === 0
-        ? ["No listing is listed in the last read."]
-        : model.listings.map((listing) => `${listing.listingRef} under ${listing.eventRef}: ${listing.state}.`);
+        ? [sourceCopy.en["sw1"]]
+        : model.listings.map((listing) => sourceMessage(sourceCopy.en["p.t489"], { v1: listing.listingRef, v2: listing.eventRef, v3: listing.state }));
     case "drafts":
       return model.drafts.length === 0
-        ? ["No staged or cancelled draft is listed in the last read."]
-        : model.drafts.map((draft) => `${draft.draftRef} on ${draft.listingRef}: ${DRAFT_STATE_WORDS[draft.state]}.`);
+        ? [sourceCopy.en["sys"]]
+        : model.drafts.map((draft) => sourceMessage(sourceCopy.en["p.t490"], { v1: draft.draftRef, v2: draft.listingRef, v3: DRAFT_STATE_WORDS[draft.state] }));
     case "session":
       return [counters];
     default:
-      return ["The last read answers no such question."];
+      return [sourceCopy.en["s1th"]];
   }
 }
 
@@ -514,41 +516,41 @@ export function buildDelegationAssistantModel(input: {
   const projection = projectDelegation(state);
   const freshnessWord =
     state.freshness === "CURRENT"
-      ? "The last read is current."
+      ? sourceCopy.en["s1tn"]
       : state.freshness === "STALE"
-        ? "The last read is behind."
-        : "There is no usable read.";
+        ? sourceCopy.en["s1ti"]
+        : sourceCopy.en["s1wv"];
 
   const grants: GrantModel[] = projection.grants.map((grant) => ({
     grantRef: grant.grantRef,
-    scopeLine: `Scope ${grant.scope} for principal ${grant.principalRef}. The source's own words, copied.`,
-    targetLine: `Target family ${grant.targetEventRef}: only listings under this event are in scope.`,
-    deadlineLine: `Deadline ${grant.notAfter}, the source's own instant text. The source decides whether it has passed; this page copies it.`,
-    budgetLine: `Command budget ${grant.commandBudget}, used ${grant.commandsUsed}. A count of commands, not an amount. The source's own figures, never added or subtracted here.`,
-    actionsLine: `Allowed actions: ${grant.allowedActions.join(", ") || "none"}. The source's own list.`,
+    scopeLine: sourceMessage(sourceCopy.en["p.t107"], { v1: grant.scope, v2: grant.principalRef }),
+    targetLine: sourceMessage(sourceCopy.en["p.t108"], { v1: grant.targetEventRef }),
+    deadlineLine: sourceMessage(sourceCopy.en["p.t109"], { v1: grant.notAfter }),
+    budgetLine: sourceMessage(sourceCopy.en["p.t110"], { v1: grant.commandBudget, v2: grant.commandsUsed }),
+    actionsLine: sourceMessage(sourceCopy.en["p.t111"], { v1: grant.allowedActions.join(", ") || "none" }),
     modeLine: modeLine(grant.adoptedMode, grant.requestedMode, grant.grantRef),
-    versionLine: `Version ${grant.version}, as the source reports it. Copied, never raised here.`,
-    stateLine: grant.state === "active" ? "Active in the last read." : `Revoked in the last read. A command under it is denied.`,
+    versionLine: sourceMessage(sourceCopy.en["p.t112"], { v1: grant.version }),
+    stateLine: grant.state === "active" ? sourceCopy.en["s11"] : sourceCopy.en["s1h5"],
   }));
 
   const drafts: DraftModel[] = projection.drafts.map((draft) => ({
     draftRef: draft.draftRef,
     listingRef: draft.listingRef,
     state: draft.state,
-    stateLine: `${DRAFT_STATE_WORDS[draft.state]}. A staged draft is not a hold, not a booking, not a payment, and not a right.`,
-    grantLine: `Staged under grant ${draft.grantRef} at version ${draft.grantVersion}. Copied, never raised here.`,
+    stateLine: sourceMessage(sourceCopy.en["p.t113"], { v1: DRAFT_STATE_WORDS[draft.state] }),
+    grantLine: sourceMessage(sourceCopy.en["p.t114"], { v1: draft.grantRef, v2: draft.grantVersion }),
     linkLine: draft.linked
-      ? "Named by a confirmed command of this page."
-      : "Observed only. It is not named by a confirmed command of this page, and this page does not claim it.",
+      ? sourceCopy.en["stg"]
+      : sourceCopy.en["s13p"],
   }));
 
   const listings: ListingModel[] = projection.listings.map((listing) => ({
     listingRef: listing.listingRef,
     eventRef: listing.eventRef,
     title: listing.title,
-    tierLine: `Tier ${listing.tier}, an opaque label with no amount.`,
+    tierLine: sourceMessage(sourceCopy.en["p.t115"], { v1: listing.tier }),
     state: listing.state,
-    stateLine: listing.state === "open" ? "Open at the source." : "Closed at the source. A draft order on it is rejected.",
+    stateLine: listing.state === "open" ? sourceCopy.en["s150"] : sourceCopy.en["scw"],
     drafts: drafts.filter((draft) => draft.listingRef === listing.listingRef),
   }));
 
@@ -557,19 +559,19 @@ export function buildDelegationAssistantModel(input: {
     step: proposal.step,
     stepWord: STEP_WORDS[proposal.step],
     targetRef: proposal.targetRef,
-    stateWord: proposal.state === "open" ? "Open" : proposal.state === "dismissed" ? "Dismissed" : "Consumed by an approval",
+    stateWord: proposal.state === "open" ? sourceCopy.en["s14s"] : proposal.state === "dismissed" ? sourceCopy.en["sgv"] : sourceCopy.en["se5"],
     detail: proposal.detail,
     approve:
       proposal.state === "open"
         ? control(controller.gateFor({ proposalRef: proposal.proposalRef, intentRef: GATE_PREVIEW }))
-        : { enabled: false, reason: `Proposal ${proposal.proposalRef} is ${proposal.state}. Only an open proposal can be approved.` },
+        : { enabled: false, reason: sourceMessage(sourceCopy.en["p.t89"], { v1: proposal.proposalRef, v2: proposal.state }) },
     dismiss:
       proposal.state === "open"
         ? { enabled: true, reason: null }
-        : { enabled: false, reason: `Proposal ${proposal.proposalRef} is already ${proposal.state}.` },
+        : { enabled: false, reason: sourceMessage(sourceCopy.en["p.t116"], { v1: proposal.proposalRef, v2: proposal.state }) },
   }));
 
-  const countersLine = `Sent ${state.counters.sent}. Blocked before sending ${state.counters.fenced}. Not sent ${state.counters.notSent}. Reads dropped ${state.counters.droppedReads}. Requests refused ${state.counters.refusedRequests}.`;
+  const countersLine = sourceMessage(sourceCopy.en["p.t117"], { v1: state.counters.sent, v2: state.counters.fenced, v3: state.counters.notSent, v4: state.counters.droppedReads, v5: state.counters.refusedRequests });
 
   const modelSoFar = { grants, listings, drafts };
   const turns: TurnModel[] = projection.turns.map((record) => ({
@@ -585,7 +587,7 @@ export function buildDelegationAssistantModel(input: {
   const rejections: RejectionModel[] = projection.rejections.map((row) => ({
     intentRef: row.intentRef,
     stepWord: STEP_WORDS[row.step],
-    target: `${row.targetRef} under ${row.grantRef}`,
+    target: sourceMessage(sourceCopy.en["p.t491"], { v1: row.targetRef, v2: row.grantRef }),
     code: row.code,
     returnAction: row.returnAction,
     returnLine: returnActionLine(row.returnAction),
@@ -595,27 +597,27 @@ export function buildDelegationAssistantModel(input: {
   const lanes: LaneModel[] = [
     {
       lane: "query",
-      label: "Query",
+      label: sourceCopy.en["s1ap"],
       count: turns.filter((turn) => turn.kind === "answer").length,
-      line: `${turns.filter((turn) => turn.kind === "answer").length} questions answered out of the last read. A query sends nothing and changes nothing.`,
+      line: sourceMessage(sourceCopy.en["p.t118"], { v1: turns.filter((turn) => turn.kind === "answer").length }),
     },
     {
       lane: "proposal",
-      label: "Proposal",
-      count: proposals.filter((proposal) => proposal.stateWord === "Open").length,
-      line: `${proposals.length} proposal${proposals.length === 1 ? "" : "s"} recorded, ${proposals.filter((proposal) => proposal.stateWord === "Open").length} open. A proposal is not an approval and sends nothing.`,
+      label: sourceCopy.en["s19g"],
+      count: proposals.filter((proposal) => proposal.stateWord === sourceCopy.en["s14s"]).length,
+      line: sourceMessage(sourceCopy.en["p.t119"], { v1: proposals.length, v2: proposals.length === 1 ? "" : "s", v3: proposals.filter((proposal) => proposal.stateWord === "Open").length }),
     },
     {
       lane: "approval",
-      label: "Approval",
+      label: sourceCopy.en["s5t"],
       count: state.intents.length,
-      line: `${state.intents.length} approval${state.intents.length === 1 ? "" : "s"} pressed, each its own intent reference. An approval is the control's own press, not a sentence, and it is not a result.`,
+      line: sourceMessage(sourceCopy.en["p.t120"], { v1: state.intents.length, v2: state.intents.length === 1 ? "" : "s" }),
     },
     {
       lane: "command",
-      label: "Command",
+      label: sourceCopy.en["sd5"],
       count: state.intents.filter((intent) => intent.outcome === "CONFIRMED").length,
-      line: `${state.intents.filter((intent) => intent.outcome === "CONFIRMED").length} confirmed by the synthetic source, ${state.intents.filter((intent) => intent.outcome === "UNKNOWN" || intent.outcome === "IN_FLIGHT").length} with no known result. A confirmed command moves no funds and transfers no right.`,
+      line: sourceMessage(sourceCopy.en["p.t121"], { v1: state.intents.filter((intent) => intent.outcome === "CONFIRMED").length, v2: state.intents.filter((intent) => intent.outcome === "UNKNOWN" || intent.outcome === "IN_FLIGHT").length }),
     },
   ];
 
@@ -630,14 +632,14 @@ export function buildDelegationAssistantModel(input: {
     code: intent.code ?? "",
   }));
   const quarantineLines = state.quarantined.map(
-    (item) => `Result ${item.arrived} for ${item.intentRef} was quarantined (${item.cause}). It changed nothing.`,
+    (item) => sourceMessage(sourceCopy.en["p.t122"], { v1: item.arrived, v2: item.intentRef, v3: item.cause }),
   );
   const unlinkedLines = projection.unlinkedIntents.map(
     (intent) =>
-      `${STEP_WORDS[intent.step]} ${intent.intentRef} under ${intent.grantRef} is ${intent.outcome.toLowerCase().replace("_", " ")}. No draft is claimed for it, and a draft seen in a read is not claimed for it.`,
+      sourceMessage(sourceCopy.en["p.t123"], { v1: STEP_WORDS[intent.step], v2: intent.intentRef, v3: intent.grantRef, v4: intent.outcome.toLowerCase().replace("_", " ") }),
   );
   const session: SessionModel = {
-    contextLine: `Actor ${state.context.actorRef}, principal ${state.context.principalRef}, session ${state.context.incarnation}, mode ${state.context.environment}.`,
+    contextLine: sourceMessage(sourceCopy.en["p.t492"], { v1: state.context.actorRef, v2: state.context.principalRef, v3: state.context.incarnation, v4: state.context.environment }),
     countersLine,
     intents,
     quarantineLines,
@@ -667,7 +669,7 @@ export function buildDelegationAssistantModel(input: {
       id: row.id,
       field: row.delegationField,
       status: row.status,
-      statusWord: row.status === "field-named" ? "Field named in the pin" : "Not-bound",
+      statusWord: row.status === "field-named" ? sourceCopy.en["sl3"] : sourceCopy.en["s10d"],
       bodyFields: row.bodyFields.length === 0 ? "none" : row.bodyFields.map((entry) => `${entry.action}.${entry.field}`).join(", "),
       reason: row.reason,
     })),
@@ -739,7 +741,7 @@ export function useDelegationAssistant(): {
       }
       if (ATTENTION_READS.includes(result.readState)) {
         const state = session.controller.state();
-        note(`The read ended as ${result.readState}${state.readCode ? ` (${state.readCode})` : ""}. No grant or listing is shown from it.`, true);
+        note(sourceMessage(sourceCopy.en["p.t124"], { v1: result.readState, v2: state.readCode ? ` (${state.readCode})` : "" }), true);
       }
     },
     [note],
@@ -803,7 +805,7 @@ export function useDelegationAssistant(): {
       actionSeq.current += 1;
       switch (turn.kind) {
         case "proposal":
-          setLast({ seq: actionSeq.current, kind: "note", text: `${turn.detail} Recorded as a proposal. Nothing is sent.`, attention: false });
+          setLast({ seq: actionSeq.current, kind: "note", text: sourceMessage(sourceCopy.en["p.t125"], { v1: turn.detail }), attention: false });
           break;
         case "answer":
           setLast({ seq: actionSeq.current, kind: "note", text: turn.detail, attention: false });
@@ -812,7 +814,7 @@ export function useDelegationAssistant(): {
           setLast({ seq: actionSeq.current, kind: "note", text: turn.detail, attention: true });
           break;
         case "refused":
-          setLast({ seq: actionSeq.current, kind: "note", text: `Refused (${turn.code}). ${turn.detail}`, attention: true });
+          setLast({ seq: actionSeq.current, kind: "note", text: sourceMessage(sourceCopy.en["p.t494"], { v1: turn.code, v2: turn.detail }), attention: true });
           break;
         default: {
           const exhaustive: never = turn;
@@ -837,10 +839,10 @@ export function useDelegationAssistant(): {
       const result = session.controller.dismiss(proposalRef);
       note(
         result.kind === "dismissed"
-          ? `Proposal ${proposalRef} dismissed. It was never an approval and sends nothing.`
+          ? sourceMessage(sourceCopy.en["p.t126"], { v1: proposalRef })
           : result.kind === "closed"
-            ? `Proposal ${proposalRef} is already closed.`
-            : `Proposal ${proposalRef} is not on this page.`,
+            ? sourceMessage(sourceCopy.en["p.t127"], { v1: proposalRef })
+            : sourceMessage(sourceCopy.en["p.t128"], { v1: proposalRef }),
       );
     },
     setScenario(next) {
@@ -848,7 +850,7 @@ export function useDelegationAssistant(): {
         note(DELEGATION_SCENARIO_OFF_NOTE);
         return;
       }
-      startSession(next, `Started a new synthetic session with scenario ${next}. Earlier intents and proposals are gone, as after a reload.`);
+      startSession(next, sourceMessage(sourceCopy.en["p.t129"], { v1: next }));
     },
     deliverHeld() {
       const session = sessionRef.current;
@@ -856,7 +858,7 @@ export function useDelegationAssistant(): {
         return;
       }
       const count = session.port.deliverHeld();
-      note(count === 0 ? "No held response to deliver." : `Delivered ${count} held response${count === 1 ? "" : "s"}.`);
+      note(count === 0 ? sourceCopy.en["svq"] : sourceMessage(sourceCopy.en["p.t130"], { v1: count, v2: count === 1 ? "" : "s" }));
     },
     switchScope() {
       const session = sessionRef.current;
@@ -865,11 +867,11 @@ export function useDelegationAssistant(): {
       }
       const current = session.controller.state().context.principalRef;
       const next = session.controller.switchContext({ principalRef: current === DELEGATION_OWN_PRINCIPAL ? DELEGATION_FOREIGN_PRINCIPAL : DELEGATION_OWN_PRINCIPAL });
-      note(`Principal scope switched to ${next.principalRef}, session ${next.incarnation}. A write in flight is now unknown and its result will be quarantined.`);
+      note(sourceMessage(sourceCopy.en["p.t131"], { v1: next.principalRef, v2: next.incarnation }));
       void read(session);
     },
     newSession() {
-      startSession(scenario, "Started a new synthetic session. Earlier intents and proposals are gone, as after a reload. Nothing was resolved at a producer.");
+      startSession(scenario, sourceCopy.en["s1m7"]);
     },
     simulate(controlName) {
       const session = sessionRef.current;
@@ -884,8 +886,8 @@ export function useDelegationAssistant(): {
       // The page does not read again: a real producer event is not seen until a read.
       note(
         result.kind === "done"
-          ? `${result.detail} This page has not read again, so it does not show this yet.`
-          : `Nothing changed: ${result.reason}`,
+          ? sourceMessage(sourceCopy.en["p.t132"], { v1: result.detail })
+          : sourceMessage(sourceCopy.en["p.t133"], { v1: result.reason }),
       );
       session.controller.notify();
     },
