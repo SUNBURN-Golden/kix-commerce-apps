@@ -1,8 +1,10 @@
+import { ValidatedForm } from "../forms/ValidatedForm";
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { Link } from "react-router-dom";
 import { StatusMark } from "../a11y/marks";
 import {
   buildHandoffView,
+  CONSUMED_PRODUCERS,
   FEATURE_ROWS,
   FIRST_RUN,
   GATE_START,
@@ -24,7 +26,7 @@ import {
   type FeatureRow,
   type HandoffView,
 } from "../handoff/packet";
-import { protocol } from "../protocol";
+import { protocol } from "../connectivity/desk-protocol";
 import { WORKSPACE_ROLES, type WorkspaceRole } from "../workspace/registry";
 
 const ROLE_LABEL: Record<WorkspaceRole, string> = {
@@ -208,7 +210,7 @@ function HandoffBody({
         </ul>
       </section>
 
-      <form className="panel" onSubmit={onQuery} aria-label="Handoff filter">
+      <ValidatedForm id="handoff-filter-form" fields={[]} reportedIssues={view.focusId ? [{ fieldId: view.focusId, labelKey: "validation.label.filter", messageKey: "validation.filter", params: { max: 0 } }] : []} className="panel" onSubmit={onQuery} aria-label="Handoff filter">
         <label htmlFor="handoff-query">
           Filter features
           <input
@@ -231,7 +233,7 @@ function HandoffBody({
         </label>
         <button type="submit">Apply filter</button>
         <p className="muted">Enter applies the text already in the fields. This page does not post.</p>
-      </form>
+      </ValidatedForm>
 
       {view.error ? (
         <p id="handoff-error" className="alert" role="alert" data-focus={view.focusId ?? ""}>
@@ -371,8 +373,18 @@ function HandoffBody({
         </ul>
         <p>
           Pins stay on contract {HANDOFF_PINS.contractOpenApiSha256.slice(0, 12)} and gate {HANDOFF_PINS.gateOpenApiSha256.slice(0, 12)}.
-          Merge {HANDOFF_PINS.protocolMergeSha.slice(0, 12)}. SDK digest is null. No producer change is consumed. Feature rows{" "}
-          {FEATURE_ROWS.length}. Journey roles {Object.keys(ROLE_JOURNEYS).join(", ")}.
+          Merge {HANDOFF_PINS.protocolMergeSha.slice(0, 12)}. Feature rows {FEATURE_ROWS.length}. Journey roles{" "}
+          {Object.keys(ROLE_JOURNEYS).join(", ")}.
+        </p>
+        <p>
+          {CONSUMED_PRODUCERS.map((producer) => (
+            <span key={producer.id}>
+              Consumed producer {producer.id} (PR #{producer.pr}, merge {producer.producerMergeSha.slice(0, 12)}): SDK
+              catalogue {producer.catalogueSha256.slice(0, 12)}, manifest {producer.manifestSha256.slice(0, 12)}, profile{" "}
+              {producer.profileRevision}. The SDK tuple was consumed; the catalogue, the gate, and the five pins did not
+              move. BOOTSTRAP grants {producer.grants} only; not semantic conformance.
+            </span>
+          ))}
         </p>
       </section>
     </div>

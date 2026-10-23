@@ -1,3 +1,5 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { AsyncState } from "../components/AsyncState";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -9,7 +11,6 @@ import {
   type NotifyRole,
   type NotifyScenario,
 } from "@kix/protocol-adapter";
-import { StatusMark } from "../a11y/marks";
 import {
   NOTIFY_ACTION_NOTE,
   NOTIFY_ACTOR_NOTE,
@@ -75,7 +76,7 @@ function GuardedButton({
   const pointer = control.reason ? (describedBy ?? reasonId) : undefined;
   return (
     <>
-      <button
+      <ConnectivityWriteButton inspection={id === "notify-open-inquiry"}
         type="button"
         id={id}
         className="discovery-action"
@@ -85,7 +86,7 @@ function GuardedButton({
         onClick={control.enabled ? onPress : undefined}
       >
         {label}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason && describedBy === undefined ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word="Blocked." /> {control.reason}
@@ -235,9 +236,9 @@ export function NotifyControls({
         <button type="button" id="notify-switch-tenant" className="discovery-action" onClick={() => actions.switchTenant()}>
           Switch tenant ({NOTIFY_OWN} / {NOTIFY_FOREIGN})
         </button>
-        <button type="button" id="notify-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+        <ConnectivityWriteButton type="button" id="notify-new-session" className="discovery-action" onClick={() => actions.newSession()}>
           Start a new synthetic session
-        </button>
+        </ConnectivityWriteButton>
       </div>
       <div className="discovery-controls" role="group" aria-label="Direct open by reference">
         <label htmlFor="notify-focus-ref">
@@ -256,12 +257,12 @@ export function NotifyControls({
         </button>
       </div>
       <div className="discovery-controls" role="group" aria-label="Synthetic source controls">
-        <button type="button" id="notify-revoke-grant" className="discovery-action" onClick={() => actions.revokeGrant()}>
+        <ConnectivityWriteButton type="button" id="notify-revoke-grant" className="discovery-action" onClick={() => actions.revokeGrant()}>
           Simulate a revoked grant
-        </button>
-        <button type="button" id="notify-rotate-grant" className="discovery-action" onClick={() => actions.rotateGrant()}>
+        </ConnectivityWriteButton>
+        <ConnectivityWriteButton type="button" id="notify-rotate-grant" className="discovery-action" onClick={() => actions.rotateGrant()}>
           Simulate a rotated grant generation
-        </button>
+        </ConnectivityWriteButton>
         <button type="button" id="notify-deliver-late" className="discovery-action" onClick={() => actions.deliverLate()}>
           Simulate a late delivery
         </button>
@@ -282,10 +283,9 @@ export function NotifyStatus({ model }: { model: NotifyModel }) {
   return (
     <section id="notify-status" className="discovery-section" tabIndex={-1} data-notify-state={model.state}>
       <h3>Status</h3>
-      <p role="status" data-status={model.state}>
-        {model.state === "loading" ? <StatusMark kind="loading" /> : null} {model.statusLine}
-        {model.detailLine ? ` ${model.detailLine}` : ""}
-      </p>
+      {model.state === "loading" || model.state === "empty" || model.state === "stale" || model.state === "not-bound" ? (
+        <AsyncState kind={model.state} label="Inbox" data-status={model.state}><p>{model.statusLine} {model.detailLine}</p></AsyncState>
+      ) : <p role="status" data-status={model.state}>{model.statusLine} {model.detailLine}</p>}
       <p className="muted">{model.freshnessWord}</p>
       <p className="muted">{model.scopeLine}</p>
       <p className="muted">{model.generationLine}</p>
@@ -297,7 +297,7 @@ export function NotifyStatus({ model }: { model: NotifyModel }) {
         {model.dedupeLine}
       </p>
       {model.lastLine ? (
-        <p role="status" data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
+        <p role="status" aria-live="polite" aria-busy={false} data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
           {model.lastNeedsFocus ? <WordMark word="Attention." /> : null} {model.lastLine}
         </p>
       ) : null}
@@ -506,6 +506,7 @@ export function NotifyRequestsSection({ model }: { model: NotifyModel }) {
       {model.request === null ? <p data-state="empty">No request has been sent from this session.</p> : null}
       {model.request !== null ? (
         <div data-request-seq={model.request.seq} data-request-phase={model.request.phase}>
+          {model.request.phase === "unknown" ? <AsyncState kind="unknown" label="Notification request" announcement="parent" /> : null}
           <p>
             Request {model.request.seq}: {model.request.kindWord}. {model.request.phaseWord}
             {model.request.code ? ` (${model.request.code})` : ""}.

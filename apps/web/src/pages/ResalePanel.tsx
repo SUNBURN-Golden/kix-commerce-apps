@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { ResaleCaseView, ResaleRightView } from "@kix/protocol-adapter";
 import { formatWhen } from "../format";
 
@@ -158,7 +159,7 @@ export function ResalePanel({
       </dl>
       <div className="row-actions">
         {CONTROLS.map((control) => (
-          <button
+          <ConnectivityWriteButton
             key={control.command}
             type="button"
             className={control.command === "adopt" || control.command === "list" ? undefined : "ghost"}
@@ -166,7 +167,7 @@ export function ResalePanel({
             onClick={() => onCommand(control.command)}
           >
             {control.label}
-          </button>
+          </ConnectivityWriteButton>
         ))}
       </div>
     </aside>

@@ -9,6 +9,7 @@ import { Breadcrumb } from "../src/components/Breadcrumb";
 import { MARKETING_SURFACES } from "../src/marketing/labels";
 import { NotFoundPage } from "../src/pages/NotFound";
 import {
+  APP_ROUTES,
   ROUTE_ALIASES,
   ROUTE_BINDINGS,
   ROUTE_GROUPS,
@@ -80,7 +81,7 @@ describe("registry structure", () => {
   });
 
   it("puts every route in exactly one group, and every group in the nav in registry order", () => {
-    const groups = navGroups();
+    const groups = navGroups(ROUTES);
     expect(groups.map((group) => group.id)).toEqual(ROUTE_GROUPS.map((group) => group.id));
     const linked = groups.flatMap((group) => group.links.map((link) => link.path));
     expect(new Set(linked).size).toBe(linked.length);
@@ -199,7 +200,7 @@ describe("grouped nav, current page, breadcrumb and landmarks (server markup)", 
     expect(nav).toContain('aria-controls="surface-menu"');
     expect(nav).toContain('id="surface-menu"');
     expect(nav.slice(1)).not.toContain("<nav");
-    for (const group of navGroups()) {
+    for (const group of navGroups(APP_ROUTES)) {
       const start = nav.indexOf(`id="nav-group-${group.id}"`);
       expect(start, group.id).toBeGreaterThan(-1);
       expect(nav).toContain(`aria-labelledby="nav-group-${group.id}"`);
@@ -211,7 +212,7 @@ describe("grouped nav, current page, breadcrumb and landmarks (server markup)", 
         at = found;
       }
     }
-    expect(countOf(nav, "<a ")).toBe(ROUTES.filter((item) => item.nav === "link").length);
+    expect(countOf(nav, "<a ")).toBe(APP_ROUTES.filter((item) => item.nav === "link").length);
   });
 
   it("draws the breadcrumb with the page as the current crumb, the group as text, and the binding word", () => {

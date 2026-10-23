@@ -88,3 +88,32 @@ The initial JS limit remains 290000, initial CSS 5000, route chunk 30000 and tot
 | `KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 KIX_BUDGET_RECORD_OUT=/tmp/kix-onboarding-browser-budget.json npm run test:budget` | Exit 0; 3 files / 9 tests passed: slow/missing/stale chunks, UNKNOWN fence preservation, five cold loads per long-list case, route splitting and landing-size limits. |
 
 The final a11y record contains 230 required check IDs, including all four `a11y.onboarding.*` checks, and a zero-count network ledger. The journey record contains 39 passed checks and a zero-count network ledger. Artifacts remain local under `/tmp` for supervisor inspection; no GitHub operation was performed. Live-gate skips remain skips, and real integration, screen-reader/device observation, qualification, user acceptance and release remain unverified or unauthorized as described above.
+
+## Merge refresh verification
+
+The in-progress merge combines branch HEAD `dc91e6fec55b48eb8a9360f85e17184d1833d638` with `MERGE_HEAD` / `origin/main` `376042e5761753e577510abb1c61df4791ff98dd`. Verification below observes that uncommitted combined worktree, not either commit alone; there is no merge commit SHA yet. The visual manifest's `appHead` is the branch HEAD and must be read with this source pair. The supervisor stages and commits the merge.
+
+The README conflict retains the onboarding guide and storage preference alongside main's component gallery, connectivity, shared async states and form validation. The overlapping storage paragraph is deduplicated using the expanded allow-list that includes `kix-onboarding`; its shorter main version is superseded. Main's SDK0 catalogue/pin documentation additions are retained. No planned production route is promoted by onboarding or by the development-only gallery, and the evidence matrix's historical node snapshot convention is unchanged.
+
+Main introduced the component-gallery snapshots and visual baselines after the onboarding branch diverged. Two Shell DOM snapshots (en/ko) and all 32 existing visual PNGs are refreshed to include the demo mark and guide. All 32 captured images were visually inspected in eight local inspection sheets; every refreshed baseline was also checked pixel for pixel against those inspected captures. No comparison tolerance, matrix row, assertion, timeout or test is removed or weakened.
+
+M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. The locked bindings remain byte-identical to main with sha256 `83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249`. No package, pin, CI, `.aiops/` or `docs/aiops/` edit is made during conflict resolution. Session TTL remains UNDETERMINED. No kix-protocol catalogue or gate change is consumed by this resolution.
+
+The first test attempt exposed the two stale Shell snapshots and missing installed dependencies (`jsdom`, `terser`) from main's merged lockfile. `npm ci` installed that lockfile without changing manifests or lockfile. The first visual comparison correctly failed all 32 old baselines on the added UI. A visual recording attempt and the full accessibility run each hit an existing test timeout while browser suites overlapped; subsequent browser suites run sequentially without changing timeouts or enabling retries. Recording baselines is preparation only; the separate comparison run supplies the visual pass evidence.
+
+| Merge refresh command actually run | Result |
+| --- | --- |
+| `npm ci` | Exit 0; installed the merged lockfile's dependencies. No dependency-file edit. |
+| `npm run typecheck` | Exit 0; adapter and web. |
+| `npm run typecheck:e2e` | Exit 0. |
+| `KIX_REQUIRE_GATE=0 npm test` | Exit 0 on final run; adapter 1317 passed / 23 existing live-gate skips, web 1052 passed. |
+| `npm exec -w @kix/web -- vitest run test/component-gallery.test.tsx -t 'shell-stub /' --update` | Exit 0; exactly two intended snapshots refreshed, then verified by the full passing suite above. |
+| `KIX_REQUIRE_GATE=0 KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 KIX_E2E_RECORD_OUT=/tmp/kix-onboarding-merge-e2e.json npm run test:e2e` | Exit 0 after dependency install; 15 files / 54 tests, 43 journey check IDs and 5 fault check IDs. Network ledger all zero. |
+| `KIX_REQUIRE_GATE=0 KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 KIX_VISUAL_UPDATE=1 KIX_VISUAL_RECORD_OUT=/tmp/kix-onboarding-merge-visual-update.json KIX_VISUAL_OUT=/tmp/kix-onboarding-merge-visual-update npm run test:visual` | Exit 0 on complete sequential recording run; 3 files / 42 tests. All 32 PNGs and the source manifest refreshed. |
+| `KIX_REQUIRE_GATE=0 KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 KIX_VISUAL_RECORD_OUT=/tmp/kix-onboarding-merge-visual-final.json KIX_VISUAL_OUT=/tmp/kix-onboarding-merge-visual-final npm run test:visual` | Exit 0; 3 files / 42 tests, 32 MATCH shots with diffPixels=0, network ledger all zero. |
+| `KIX_REQUIRE_GATE=0 KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 KIX_A11Y_RECORD_OUT=/tmp/kix-onboarding-merge-a11y-final.json npm run test:a11y` | Exit 0 on complete sequential rerun; 15 files / 267 tests. Includes all four onboarding checks and the unchanged all-screen dialog probe. Network ledger all zero. |
+| `git diff --check` and a conflict-marker scan of every tracked text file | Exit 0; no conflict markers. README remains unmerged in the index until the supervisor stages the edited file. |
+| `git diff --exit-code origin/main -- packages/protocol-adapter/src/commerce-bindings.ts` | Exit 0; the locked file is byte-identical. |
+| `git diff --exit-code -- packages/ .github/ .aiops/ docs/aiops/ package.json package-lock.json` | Exit 0 against the merge index; no conflict-resolution edit in these paths. Main's already-staged merged changes are retained. |
+
+Final observations remain local synthetic evidence. Live gate, HTTP/browser integration, real-device/screen-reader observation, production qualification and user acceptance are unverified; release remains NOT_AUTHORIZED. No GitHub comment, staging, commit, merge command, rebase, reset, checkout or push was performed by the builder.

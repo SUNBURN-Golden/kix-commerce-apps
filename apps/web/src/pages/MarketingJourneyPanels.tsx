@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { MARKETING_SCENARIOS, type MarketingScenario } from "@kix/protocol-adapter";
@@ -68,7 +69,7 @@ function GuardedButton({
   const reasonId = `${id}-reason`;
   return (
     <>
-      <button
+      <ConnectivityWriteButton
         type="button"
         id={id}
         className="discovery-action"
@@ -78,7 +79,7 @@ function GuardedButton({
         onClick={control.enabled ? onPress : undefined}
       >
         {label}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <p id={reasonId} className="muted" data-blocked-reason="true">
           <WordMark word="Blocked." /> {control.reason}
@@ -162,7 +163,7 @@ export function MarketingControls({
             ))}
           </select>
         </label>
-        <button
+        <ConnectivityWriteButton
           type="button"
           id="mkj-apply-scenario"
           className="discovery-action"
@@ -171,16 +172,16 @@ export function MarketingControls({
           onClick={simulated ? () => actions.setScenario(picked) : undefined}
         >
           Start a session with this scenario
-        </button>
+        </ConnectivityWriteButton>
         <button type="button" id="mkj-refresh" className="discovery-action" onClick={() => actions.refresh()}>
           Read again
         </button>
         <button type="button" id="mkj-switch" className="discovery-action" onClick={() => actions.switchScope()}>
           Switch subject scope
         </button>
-        <button type="button" id="mkj-new-session" className="discovery-action" onClick={() => actions.newSession()}>
+        <ConnectivityWriteButton type="button" id="mkj-new-session" className="discovery-action" onClick={() => actions.newSession()}>
           Start a new synthetic session
-        </button>
+        </ConnectivityWriteButton>
         <button
           type="button"
           id="mkj-deliver-held"
@@ -207,7 +208,7 @@ export function MarketingControls({
       </p>
       <div className="discovery-controls" role="group" aria-label="Simulated producer events">
         {(Object.keys(CONTROL_LABELS) as (keyof typeof CONTROL_LABELS)[]).map((control) => (
-          <button
+          <ConnectivityWriteButton
             key={control}
             type="button"
             id={`mkj-simulate-${control}`}
@@ -218,7 +219,7 @@ export function MarketingControls({
             onClick={simulated ? () => actions.simulate(control) : undefined}
           >
             {CONTROL_LABELS[control]}
-          </button>
+          </ConnectivityWriteButton>
         ))}
       </div>
       <p className="muted" id="mkj-simulate-note">

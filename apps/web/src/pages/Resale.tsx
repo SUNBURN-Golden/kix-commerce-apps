@@ -1,7 +1,11 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { connectedHandler } from "../connectivity/write-guard";
+import { ValidatedForm } from "../forms/ValidatedForm";
+import { field } from "../forms/validation";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import type { Booking, Performance, ResaleListing } from "@kix/protocol-adapter";
-import { protocol } from "../protocol";
+import { protocol } from "../connectivity/desk-protocol";
 import { useResaleDesk } from "../resale-desk";
 import { ResalePanel } from "./ResalePanel";
 
@@ -54,6 +58,7 @@ export function ResalePage() {
 
   async function openListing(event: FormEvent) {
     event.preventDefault();
+    if (!connectedHandler()) return;
     setPending(true);
     setError(null);
     setTransfer(null);
@@ -68,6 +73,7 @@ export function ResalePage() {
   }
 
   async function accept(listingId: string) {
+    if (!connectedHandler()) return;
     setPending(true);
     setError(null);
     try {
@@ -91,14 +97,14 @@ export function ResalePage() {
           marketplace.
         </p>
       </header>
-      <form className="panel" onSubmit={(event) => void openListing(event)}>
+      <ValidatedForm id="resale-form" busy={pending} fields={[field("resale-booking", "validation.label.bookingId"), field("resale-ask", "validation.label.askLabel", { maxLength: 40 })]} className="panel" onSubmit={(event) => void openListing(event)}>
         <label>
           Booking id
-          <input value={bookingId} onChange={(event) => setBookingId(event.target.value)} autoComplete="off" />
+          <input id="resale-booking" value={bookingId} onChange={(event) => setBookingId(event.target.value)} autoComplete="off" />
         </label>
         <label>
           Ask label
-          <input
+          <input id="resale-ask"
             value={askLabel}
             maxLength={40}
             onChange={(event) => setAskLabel(event.target.value)}
@@ -106,10 +112,10 @@ export function ResalePage() {
           />
         </label>
         <p className="muted">The ask label is shown as text. It is not a price and it is not charged.</p>
-        <button type="submit" disabled={pending}>
+        <ConnectivityWriteButton type="submit" disabled={pending}>
           Open listing
-        </button>
-      </form>
+        </ConnectivityWriteButton>
+      </ValidatedForm>
       {error ? (
         <p className="alert" role="alert">
           {error}
@@ -130,9 +136,9 @@ export function ResalePage() {
                 </p>
               </div>
               {listing.status === "open" ? (
-                <button type="button" disabled={pending} onClick={() => void accept(listing.listingId)}>
+                <ConnectivityWriteButton type="button" disabled={pending} onClick={() => void accept(listing.listingId)}>
                   Transfer (simulated)
-                </button>
+                </ConnectivityWriteButton>
               ) : null}
             </article>
           </li>

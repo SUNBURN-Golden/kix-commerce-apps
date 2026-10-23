@@ -14,6 +14,7 @@
     "test:e2e": "npm run test -w @kix/e2e",
     "test:a11y": "npm run test:a11y -w @kix/e2e",
     "test:budget": "npm run test:budget -w @kix/e2e",
+    "test:visual": "npm run test:visual -w @kix/e2e",
     "budget": "node scripts/check-bundle-budget.mjs --dist apps/web/dist --budget apps/web/bundle-budget.json",
     "lint": "node scripts/lint.mjs",
     "coverage:check": "node scripts/coverage-check.mjs",

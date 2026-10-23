@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { useRestoreFocus } from "../a11y/focus";
 import { AmountNotice } from "../a11y/marks";
 import {
@@ -44,7 +45,7 @@ function GuardedButton({
   const reasonId = `${id}-reason`;
   return (
     <span className="refund-guard">
-      <button
+      <ConnectivityWriteButton
         id={id}
         type="button"
         aria-disabled={control.enabled ? undefined : true}
@@ -56,7 +57,7 @@ function GuardedButton({
         }}
       >
         {label}
-      </button>
+      </ConnectivityWriteButton>
       {control.reason ? (
         <span id={reasonId} className="muted">
           {control.reason}
@@ -179,9 +180,9 @@ export function RefundReturnPanel({
             <button type="button" className="ghost" onClick={() => live.actions.refresh()}>
               Read again
             </button>
-            <button type="button" className="ghost" onClick={() => live.actions.markReturnRequired()}>
+            <ConnectivityWriteButton type="button" className="ghost" onClick={() => live.actions.markReturnRequired()}>
               Mark a return required
-            </button>
+            </ConnectivityWriteButton>
             <GuardedButton
               id={`${baseId}-held`}
               label="Deliver held response"
@@ -205,9 +206,9 @@ export function RefundReturnPanel({
             <button type="button" className="ghost" onClick={() => live.actions.switchContext()}>
               Switch session context
             </button>
-            <button type="button" className="ghost" onClick={() => live.actions.newSession()}>
+            <ConnectivityWriteButton type="button" className="ghost" onClick={() => live.actions.newSession()}>
               New synthetic session
-            </button>
+            </ConnectivityWriteButton>
           </div>
           {live.environment === "stub" ? (
             <label className="refund-scenario">

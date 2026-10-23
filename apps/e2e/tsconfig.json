@@ -1,8 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"],
+    "types": ["node", "vite/client"],
     "lib": ["ES2022", "DOM"]
   },
-  "include": ["src", "tests", "vitest.config.ts", "vitest.a11y.config.ts", "vitest.budget.config.ts"]
+  "include": ["src", "tests", "vitest.config.ts", "vitest.a11y.config.ts", "vitest.budget.config.ts", "vitest.visual.config.ts"]
 }

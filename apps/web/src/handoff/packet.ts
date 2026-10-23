@@ -1,7 +1,9 @@
 import {
   INTEGRATION_GATE_LOOPBACK_HOST,
+  KIX_SDK_0_PIN,
   OPENAPI_CONTRACT_PIN,
   OPENAPI_INTEGRATION_GATE_PIN,
+  VENDORED_SDK_PIN_INPUTS,
 } from "@kix/protocol-adapter";
 import {
   BUYER_FLOW_STAGES,
@@ -45,14 +47,24 @@ export const HANDOFF_NON_CLAIMS = {
   qualificationState: "UNQUALIFIED",
 } as const;
 
+/**
+ * The vendored p-sdk-0 BOOTSTRAP tuple, in the manifest's own vector order.
+ * Every value is derived from the adapter pin; nothing is retyped here.
+ */
+const SDK_MANIFEST_VECTORS = (
+  JSON.parse(VENDORED_SDK_PIN_INPUTS.manifestRaw) as {
+    vectors: readonly { name: string; sha256: string }[];
+  }
+).vectors;
+
 export const HANDOFF_PINS = {
   contractOpenApiSha256: OPENAPI_CONTRACT_PIN.openApiFileSha256,
   gateOpenApiSha256: OPENAPI_INTEGRATION_GATE_PIN.openApiFileSha256,
   protocolMergeSha: OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha,
-  sdkDigest: null,
-  manifestDigest: null,
-  vectorDigest: null,
-  consumedProducerChange: false,
+  sdkDigest: KIX_SDK_0_PIN.catalogueSha256,
+  manifestDigest: KIX_SDK_0_PIN.manifestSha256,
+  vectorDigest: SDK_MANIFEST_VECTORS.map((vector) => `${vector.name}:${vector.sha256}`).join(" "),
+  consumedProducerChange: true,
 } as const;
 
 export const INTEGRATION_REASON = "A screen does not complete protocol integration.";
@@ -282,6 +294,59 @@ export interface PendingProducer {
   readonly note: string;
 }
 
+/**
+ * A producer change this repo consumed. The p-sdk-0 BOOTSTRAP tuple is vendored
+ * under packages/protocol-adapter/vendor/kix-sdk-0 and pin-checked at load time
+ * (consume-p-sdk-0, PR #86). Consuming it moved no catalogue, gate, or OpenAPI
+ * pin. BOOTSTRAP grants catalogue-schema binding only; it is not semantic
+ * conformance, not a live HTTP server, and not production qualification.
+ */
+export interface ConsumedProducer {
+  readonly id: "consume-p-sdk-0";
+  readonly catalogue: "program";
+  readonly pr: 86;
+  readonly producerRepo: string;
+  readonly producerMergeSha: string;
+  readonly manifestSha256: string;
+  readonly catalogueSha256: string;
+  readonly profileSha256: string;
+  readonly profileKind: string;
+  readonly profileRevision: string;
+  readonly grants: string;
+  readonly connected: false;
+  readonly implementedHere: true;
+  readonly semanticConformance: false;
+  readonly liveHttpServer: false;
+  readonly productionEndpoint: false;
+  readonly protocolTruth: false;
+  readonly productionConformance: false;
+  readonly note: string;
+}
+
+export const CONSUMED_PRODUCERS = [
+  {
+    id: "consume-p-sdk-0",
+    catalogue: "program",
+    pr: 86,
+    producerRepo: KIX_SDK_0_PIN.producerRepo,
+    producerMergeSha: KIX_SDK_0_PIN.producerMergeSha,
+    manifestSha256: KIX_SDK_0_PIN.manifestSha256,
+    catalogueSha256: KIX_SDK_0_PIN.catalogueSha256,
+    profileSha256: KIX_SDK_0_PIN.profileSha256,
+    profileKind: KIX_SDK_0_PIN.profileKind,
+    profileRevision: KIX_SDK_0_PIN.profileRevision,
+    grants: KIX_SDK_0_PIN.grants,
+    connected: false,
+    implementedHere: true,
+    semanticConformance: false,
+    liveHttpServer: false,
+    productionEndpoint: false,
+    protocolTruth: false,
+    productionConformance: false,
+    note: "The p-sdk-0 BOOTSTRAP tuple is vendored and pin-checked. The SDK tuple was consumed; the catalogue, the gate, and the five pins did not move. BOOTSTRAP grants catalogue-schema binding only. No live connection and no semantic conformance.",
+  },
+] as const satisfies readonly ConsumedProducer[];
+
 export const PENDING_PRODUCERS = [
   {
     id: "bind-list-read",
@@ -450,14 +515,6 @@ export const PENDING_PRODUCERS = [
     implementedHere: false,
     waitingSurface: "marketing-journey",
     note: "The benefit journey is synthetic. A real membership eligibility, presale priority, usage count, coupon budget, referral attribution, apply, and reclaim read model and a real producer connection stay on that pending node, which waits on kix-protocol:wave7-marketing-contracts. A full CRM product is not built here.",
-  },
-  {
-    id: "consume-p-sdk-0",
-    catalogue: "pending",
-    connected: false,
-    implementedHere: false,
-    waitingSurface: null,
-    note: "No SDK is consumed. SDK, manifest, and vector digests stay null.",
   },
   {
     id: "c-delegated-assistant",

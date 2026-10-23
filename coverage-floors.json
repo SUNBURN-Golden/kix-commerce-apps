@@ -10,7 +10,7 @@
     },
     "@kix/web": {
       "lines": 83.6,
-      "functions": 60.4,
+      "functions": 76.1,
       "branches": 84.6,
       "statements": 83.6
     },

@@ -1,3 +1,4 @@
+import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import type { CreditCaseView } from "@kix/protocol-adapter";
 import { AmountNotice, StatusMark } from "../a11y/marks";
 import { presentIntegerUnits } from "../a11y/present";
@@ -181,7 +182,7 @@ export function CreditPanel({
       </dl>
       <div className="row-actions">
         {CONTROLS.map((control) => (
-          <button
+          <ConnectivityWriteButton
             key={control.command}
             type="button"
             className={control.command === "offer" || control.command === "draw" ? undefined : "ghost"}
@@ -189,7 +190,7 @@ export function CreditPanel({
             onClick={() => onCommand(control.command)}
           >
             {control.label}
-          </button>
+          </ConnectivityWriteButton>
         ))}
       </div>
     </aside>

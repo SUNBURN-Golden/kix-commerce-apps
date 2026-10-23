@@ -27,6 +27,7 @@ stub이 기본 환경이다. stub 모드에서 base URL을 넣어도 HTTP가 열
 | Browser journeys (stub, headless Chrome) | `npm run typecheck:e2e`, `KIX_E2E_CHROME=<chrome 경로> KIX_E2E_NO_SANDBOX=1 npm run test:e2e` |
 | Accessibility observation | 같은 Chrome 변수로 `npm run test:a11y` |
 | Bundle budget | `npm run build`, `npm run budget`, `npm run test:budget` |
+| Visual baselines (stub, headless Chrome) | 같은 Chrome 변수로 `npm run test:visual`. 기준선 갱신은 로컬에서만 `KIX_VISUAL_UPDATE=1`을 붙이고, 새 기준선은 눈으로 확인한 뒤 커밋한다 |
 
 `KIX_E2E_NO_SANDBOX=1`은 Chrome 샌드박스를 띄울 수 없는 환경(컨테이너·CI 러너)에서만 쓴다. `KIX_E2E_CHROME`이 없으면 `/usr/bin/google-chrome` 등 기본 경로를 찾고, 브라우저가 없으면 건너뛰지 않고 그 실행을 멈춘다.
 

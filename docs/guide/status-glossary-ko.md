@@ -20,6 +20,8 @@ English summary: this glossary explains every status word a reader can meet on t
 | `degraded` | 전송 배너 | 게이트가 응답했으나 부하 상태(NOT_READY, OVERLOADED 등)를 보고함 | 데스크는 integration HTTP에 머뭄. 배너의 코드를 읽기 | 장애도 stub fallback도 아님 |
 | `up` | 전송 배너 | 루프백 probe가 응답함. 루프백 한정 | 로컬 읽기를 진행할 수 있음 | 프로덕션 준비·적합성·공개 서비스가 아님 |
 | `local` | 전송 배너 | stub 모드. HTTP가 선택되지 않았고 probe도 동작하지 않음 | 확인할 것 없음. 합성 어댑터가 응답 | 오프라인 장애가 아님. stub은 기본값 |
+| `offline` | 연결 배너 | 브라우저 연결 끊김. 남아 있는 값은 캐시 이력 | 읽기 전용으로 살펴보고 재연결 후 명시적으로 다시 읽기 | 빈 결과나 전송 중 쓰기의 판정이 아님 |
+| `online` | 연결 배너 | 브라우저 온라인이며 현재 연결 epoch의 루프백 probe가 응답함 | 캐시 안내와 controller 제한을 읽기 | 프로덕션 준비나 재실행, 새 업무 읽기가 아님 |
 | `published-bound` | 연결 단어 | 화면 동작이 게시 명령에 대응됨. stub 모드에서는 여전히 합성 응답 | 로컬 명령 한정, 최대 Node 루프백 | 통합 완료도 라이브도 아님 |
 | `not-bound` | 연결 단어 | 데스크 메서드가 의도적으로 명령에 연결되지 않음. 고려된 action은 전송하지 않고 기록 | 기록된 사유를 읽기 | 빠진 기능도 결과도 아님 |
 | `stub-only` | 연결 단어 | 합성 어댑터만이 이 화면에 응답 | 화면을 시연으로 읽기 | 어떤 producer나 게이트와도 연결되지 않음 |
@@ -58,6 +60,7 @@ English summary: this glossary explains every status word a reader can meet on t
 | `FENCED` | 여정 leg/보상 | 요청이 적용되었을 수 있고 이후 쓰기가 보류됨 | 새 동작 전에 fence를 읽고 멈추기 | 취소도 확정도 아님 |
 | `NONE_NEEDED` | 여정 leg/보상 | 보상 셀: 적용된 것이 없어 되돌릴 것도 없음 | 할 일 없음 | 완료된 보상이 아님 |
 | `COMPENSATION_UNDEFINED` | 여정 leg/보상 | 한 leg는 도착하고 이후 leg는 도착하지 않았으며 정해진 보상 경로가 없음 | 임의로 보상하지 말고 에스컬레이션 | 환불도 자동도 아님 |
+| `CONNECTIVITY_BLOCKED` | 코드 | 연결 또는 현재 읽기가 없어 앱이 전송 전에 새 쓰기를 막음 | 연결 복구 후 명시적으로 다시 읽기. 큐에 넣지 않음 | UNKNOWN과 다름. 이미 전송된 쓰기의 연결 끊김은 별도로 UNKNOWN 유지 |
 | `GATE_UNAVAILABLE` | 코드 | 루프백 게이트에 도달하지 못함 | 게이트를 확인 후 새로 고침 | stub fallback이 아님 |
 | `STALE_RESPONSE` | 코드 | 게이트의 응답이 요청이 기대한 것보다 오래됨 | 값을 STALE로 취급 | 새 답이 아님 |
 | `REQUEST_TIMEOUT` | 코드 | 한 번의 시도가 시간 안에 끝나지 않음 | fence나 영수증이 달리 말할 때까지 결과는 UNKNOWN | 재시도 없음 |

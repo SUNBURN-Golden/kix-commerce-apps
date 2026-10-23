@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useT } from "../i18n/locale-context";
-import { routeKey } from "../i18n/use-page-identity";
+import { useLocale } from "../i18n/locale-context";
+import { routeLabel } from "../i18n/use-page-identity";
 import { currentNavPath, navGroups } from "../shell/route-registry";
 
 const MENU_ID = "surface-menu";
@@ -13,7 +13,7 @@ const MENU_ID = "surface-menu";
  */
 export function SurfaceNav() {
   const { pathname } = useLocation();
-  const t = useT();
+  const { t, locale } = useLocale();
   const current = currentNavPath(pathname);
   const [open, setOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
@@ -59,7 +59,7 @@ export function SurfaceNav() {
                       }
                     }}
                   >
-                    {t(routeKey(link))}
+                    {routeLabel(link, t, locale)}
                   </Link>
                 </li>
               ))}

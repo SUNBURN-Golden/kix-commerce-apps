@@ -139,7 +139,7 @@ Driven by keys where a key path exists (a few values are set with `fill`), then 
 | `session:attach-lost` | session attach whose answer is lost (`/session`) |
 | `not-found:unknown-path` | not-found screen at an unknown address (`/no-such-screen`) |
 
-Forms: booking `1.5` keeps the typed value, marks the field invalid, returns focus to it and links the alert. The discovery conflict and the organizer-workspace empty id do the same. The gift refusal returns focus and marks the field invalid but links no message (finding below).
+Forms (updated by c-form-validation-ux-stub): booking `1.5`, organizer-workspace empty id and gift empty fields keep the typed values, mark invalid controls, and link localized messages. An invalid explicit submission focuses the shared summary; Tab and Enter on its first link move to the first invalid field. Discovery keeps the source conflict judgment and links it through the shared summary on submission. These are local input checks; controller NOT_SENT/rejection/UNKNOWN tests remain separate.
 
 Widgets: the Handoff and Receipts tablists use roving tabindex and answer ArrowLeft, ArrowRight, Home and End; the discovery and inventory listboxes move `aria-activedescendant` with ArrowDown and ArrowUp; the `/journeys` disclosure opens with Enter and closes with Space.
 
@@ -153,7 +153,7 @@ Observations (not assertions): when this node was written, after a keyboard rout
 | platform, merchant, finance, marketing-journey, provider, mobile | `landmark-unique` | Two landmarks of the same role have no distinct accessible name. |
 | merchant, credit-servicing, booking:missing | `heading-order` | A heading level is skipped. |
 | handoff (320px) | `reflow.narrow-overflow` | FIXED 2026-10-19 in `c-display-preferences-stub`: the unbreakable env token in the Startup faults list pushed a panel grid track past the window; handoff list text now wraps anywhere and the scrollable table regions are named focusable regions. The screen-matrix cell above is updated to OBSERVED. Was: the Role journey list is about 8px wider than a 320px window, so the document scrolls sideways. |
-| gift:not-sent | `form.error-not-linked / struct.invalid-unlinked` | The ticket id is marked invalid after a refused send, and focus returns to it, but no message is linked to it with aria-describedby. |
+| gift:not-sent | `form.error-not-linked / struct.invalid-unlinked` | FIXED in c-form-validation-ux-stub: the ticket field links its inline format error; summary focus and keyboard link activation are tested. Local invalid input creates no controller attempt. |
 | booking, gift | `status.disabled-no-reason` | Natively disabled buttons carry no reason that aria-describedby reaches. /journeys uses aria-disabled with a reason and passes. |
 
 The list is a ratchet in `KNOWN_FINDINGS`: a new violation fails the run, and a listed OPEN one that stops showing also fails it until it is marked FIXED with a note.
@@ -189,3 +189,13 @@ KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 KIX_A11Y_RECORD_OUT=/
 | Tool and version recorded, automation is not acceptance | `A11Y_BASELINE`, `baseline` test, record `claims` |
 | Per-screen matrix is PENDING only, and holds references only | `acceptance` test, `assertNoAcceptance` |
 | CI, observation, acceptance and release not merged | separate CI job, no CI field, `release: NOT_AUTHORIZED` |
+
+## Development gallery observations
+
+`c-component-gallery-stub` adds separate development-only coverage for `/dev/gallery`; it does not change the production SCREENS denominator or inherit any acceptance. The existing tool/version/tags and UNDETERMINED target standard are retained. Its index and 22 isolated specimens are scanned in en/ko at desktop/320px, with keyboard and display-preference probes; exact checks are in [the gallery bind](c-component-gallery-stub-apps-bind.md) and the development row of the local evidence matrix.
+
+| Route | Mode | qualification_state | acceptance_state | release_state |
+| --- | --- | --- | --- | --- |
+| /dev/gallery | development stub only | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
+
+The gallery node also fixes an inherited nested-control defect in discovery's independent projection listbox, observed in the empty/conflict search states. Projection rows retain mouse and keyboard detail opening. The original discovery results list still has the recorded OPEN nested-interactive finding; no finding exemption or existing check was relaxed.

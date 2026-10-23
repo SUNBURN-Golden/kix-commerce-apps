@@ -4,7 +4,7 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 import type { TestProject } from "vitest/node";
-import { buildShellFaultApp, buildStubApp, type BuiltApp } from "./build";
+import { buildGalleryApp, buildShellFaultApp, buildStubApp, type BuiltApp } from "./build";
 import { A11Y_BASELINE, KNOWN_FINDINGS, SCREENS, VIEWPORTS, expectedCheckIds, matrixProblems, type ScreenRecord, type ViewportName } from "./a11y-matrix";
 import { A11Y_NOT_RUN, readFacets, renderA11yRecord, type A11yRecord, type FacetLine } from "./a11y-record";
 import { readChecks, readLedger } from "./run-record";
@@ -14,6 +14,7 @@ declare module "vitest" {
   export interface ProvidedContext {
     origin: string;
     faultOrigin: string;
+    galleryOrigin: string;
   }
 }
 
@@ -22,6 +23,8 @@ let server: StaticServer | null = null;
 let faultApp: BuiltApp | null = null;
 let faultServer: StaticServer | null = null;
 let recordDir = "";
+let galleryApp: BuiltApp | null = null;
+let galleryServer: StaticServer | null = null;
 const require = createRequire(import.meta.url);
 
 function git(args: string[]): string {
@@ -42,6 +45,9 @@ export async function setup(project: TestProject): Promise<void> {
   faultApp = await buildShellFaultApp();
   faultServer = await serveDirectory(faultApp.outDir);
   project.provide("faultOrigin", faultServer.origin);
+  galleryApp = await buildGalleryApp();
+  galleryServer = await serveDirectory(galleryApp.outDir);
+  project.provide("galleryOrigin", galleryServer.origin);
 }
 
 function screenRecords(facets: FacetLine[], checks: Set<string>, head: string): ScreenRecord[] {
@@ -85,7 +91,7 @@ export async function teardown(): Promise<void> {
       problems.push(`check did not pass in this run: ${id}`);
     }
   }
-  for (const bound of [server, faultServer]) {
+  for (const bound of [server, faultServer, galleryServer]) {
     if (bound && bound.address !== LOOPBACK) {
       problems.push(`server bound to ${bound.address}`);
     }
@@ -122,6 +128,8 @@ export async function teardown(): Promise<void> {
   }
   await server?.close();
   await faultServer?.close();
+  await galleryServer?.close();
+  galleryApp?.cleanup();
   app?.cleanup();
   faultApp?.cleanup();
   fs.rmSync(recordDir, { recursive: true, force: true });
