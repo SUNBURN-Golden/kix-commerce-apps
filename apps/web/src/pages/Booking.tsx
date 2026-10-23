@@ -1,3 +1,4 @@
+import { formatWhen } from "../format";
 import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
 import { messages as copy0 } from "../i18n/messages/pages--Booking";
@@ -20,7 +21,7 @@ import { focusControl, heldAfterError } from "../a11y/focus";
 import { AmountNotice, DeadlineLine, StatusMark } from "../a11y/marks";
 import { bookingQuantityNumber, capacityLine, presentQuantityLine } from "../a11y/present";
 import { useT } from "../i18n/desk-context";
-import { useFormatWhen } from "../i18n/locale-context";
+import { useDisplayLocale } from "../i18n/locale-context";
 import { protocol } from "../connectivity/desk-protocol";
 import { deskText } from "../i18n/desk-translate";
 import { SafeText } from "../safe-text";
@@ -35,7 +36,7 @@ import { ReservationPanel } from "./ReservationPanel";
 
 export function BookingPage() {
   const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
-  const formatWhen = useFormatWhen();
+  const clock = useDisplayLocale();
   const { eventId = "" } = useParams();
   const [performance, setPerformance] = useState<Performance | null>(null);
   const [quantity, setQuantity] = useState("1");
@@ -198,7 +199,7 @@ export function BookingPage() {
         <p className="eyebrow">{t("desk.booking.eyebrow")}</p>
         <h2>{deskText(t, performance.title)}</h2>
         <p className="muted">
-          {deskText(t, performance.venue)} · <time dateTime={performance.startsAt}>{deskText(t, formatWhen(performance.startsAt))}</time> ·{" "}
+          {deskText(t, performance.venue)} · <time dateTime={performance.startsAt}>{deskText(t, formatWhen(performance.startsAt, clock))}</time> ·{" "}
           {deskText(t, capacityLine(performance.remainingCapacity))}
         </p>
         <AmountNotice />

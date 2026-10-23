@@ -1,3 +1,5 @@
+import type { DisplayLocale } from "./a11y/present";
+import { useDisplayLocale } from "./i18n/locale-context";
 import { messages as sourceCopy } from "./i18n/messages/inventory-venue";
 import { sourceMessage } from "./i18n/source-message";
 import { connectedActions } from "./connectivity/write-guard";
@@ -138,7 +140,7 @@ export function inventoryReturnLabel(mode: InventoryReturnMode): string {
   }
 }
 
-export function inventoryStatusLine(outcome: AnyOutcome): { statusLine: string; detailLine: string } {
+export function inventoryStatusLine(outcome: AnyOutcome, locale: DisplayLocale): { statusLine: string; detailLine: string } {
   switch (outcome.kind) {
     case "loading":
       return { statusLine: sourceCopy.en["srd"], detailLine: "" };
@@ -172,7 +174,7 @@ export function inventoryStatusLine(outcome: AnyOutcome): { statusLine: string; 
     case "stale":
       return {
         statusLine: sourceCopy.en["s1ln"],
-        detailLine: sourceMessage(sourceCopy.en["p.t502"], { v1: formatWhen(outcome.watermark), v2: formatWhen(outcome.floor) }),
+        detailLine: sourceMessage(sourceCopy.en["p.t502"], { v1: formatWhen(outcome.watermark, locale), v2: formatWhen(outcome.floor, locale) }),
       };
     case "tuple-changed":
       return {
@@ -289,19 +291,20 @@ export function describeSection(section: InventorySectionSummary): SummarySectio
 }
 
 export function buildSummaryModel(input: {
+  locale: DisplayLocale;
   outcome: SummaryState;
   scenario: InventoryScenario;
   servedGeneration: number;
   heldGeneration: number | null;
 }): SummaryModel {
-  const { outcome } = input;
-  const { statusLine, detailLine } = inventoryStatusLine(outcome);
+  const { outcome, locale } = input;
+  const { statusLine, detailLine } = inventoryStatusLine(outcome, locale);
   const mode = inventoryReturnMode("summary", outcome);
   const generationBehind = input.heldGeneration !== null && input.heldGeneration !== input.servedGeneration;
   const read = input.heldGeneration === null ? sourceCopy.en["swe"] : String(input.heldGeneration);
   let metaLine = sourceMessage(sourceCopy.en["p.t231"], { v1: input.scenario, v2: input.servedGeneration, v3: read });
   if (outcome.kind === "ready") {
-    metaLine = sourceMessage(sourceCopy.en["p.t527"], { v1: metaLine, v2: formatWhen(outcome.watermark) });
+    metaLine = sourceMessage(sourceCopy.en["p.t527"], { v1: metaLine, v2: formatWhen(outcome.watermark, locale) });
   }
   return {
     state: outcome.kind,
@@ -404,20 +407,21 @@ export interface PageModel {
 }
 
 export function buildPageModel(input: {
+  locale: DisplayLocale;
   outcome: PageState;
   sectionId: string;
   section: InventorySectionSummary | null;
   freeOnly: boolean;
 }): PageModel {
-  const { outcome } = input;
-  const { statusLine, detailLine } = inventoryStatusLine(outcome);
+  const { outcome, locale } = input;
+  const { statusLine, detailLine } = inventoryStatusLine(outcome, locale);
   const mode = inventoryReturnMode("page", outcome);
   const section = outcome.kind === "ready" || outcome.kind === "empty" ? outcome.section : input.section;
   let metaLine = sourceMessage(sourceCopy.en["p.t529"], { v1: input.freeOnly ? "free only" : "all" });
   let statusOut = statusLine;
   let detailOut = detailLine;
   if (outcome.kind === "ready") {
-    metaLine = sourceMessage(sourceCopy.en["p.t233"], { v1: metaLine, v2: outcome.generation, v3: formatWhen(outcome.watermark), v4: outcome.scannedCount, v5: outcome.totalEstimate });
+    metaLine = sourceMessage(sourceCopy.en["p.t233"], { v1: metaLine, v2: outcome.generation, v3: formatWhen(outcome.watermark, locale), v4: outcome.scannedCount, v5: outcome.totalEstimate });
     statusOut = outcome.rows.length === 0 ? sourceCopy.en["s16y"] : sourceCopy.en["s16x"];
     detailOut = outcome.rows.length === 0 && outcome.nextCursor !== null ? sourceCopy.en["s1uh"] : "";
   } else if (outcome.kind === "empty") {
@@ -457,9 +461,12 @@ export interface SelectionModel {
   actionLabel: string | null;
 }
 
-export function buildSelectionModel(input: { outcome: SelectionState }): SelectionModel {
-  const { outcome } = input;
-  const { statusLine, detailLine } = inventoryStatusLine(outcome);
+export function buildSelectionModel(input: {
+  locale: DisplayLocale;
+  outcome: SelectionState;
+}): SelectionModel {
+  const { outcome, locale } = input;
+  const { statusLine, detailLine } = inventoryStatusLine(outcome, locale);
   const mode = inventoryReturnMode("selection", outcome);
   const base: SelectionModel = {
     state: outcome.kind,
@@ -578,6 +585,7 @@ export function useInventoryRead(options: {
   selectionModel: SelectionModel | null;
   actions: InventoryActions;
 } {
+  const locale = useDisplayLocale();
   const environment = protocol.describe().environment;
   const portRef = useRef<InventoryReadPort | null>(null);
   if (portRef.current === null) {
@@ -829,6 +837,7 @@ export function useInventoryRead(options: {
     scenario,
     servedGeneration,
     summaryModel: buildSummaryModel({
+      locale,
       outcome: summary,
       scenario,
       servedGeneration,
@@ -838,12 +847,13 @@ export function useInventoryRead(options: {
       sectionId === null
         ? null
         : buildPageModel({
+            locale,
             outcome: page ?? { kind: "loading" },
             sectionId,
             section,
             freeOnly,
           }),
-    selectionModel: unitId === null || sectionId === null ? null : buildSelectionModel({ outcome: selection ?? { kind: "loading" } }),
+    selectionModel: unitId === null || sectionId === null ? null : buildSelectionModel({ locale, outcome: selection ?? { kind: "loading" } }),
     actions: connectedActions({
       readSummaryAgain,
       nextPage,

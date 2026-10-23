@@ -1,3 +1,5 @@
+import type { DisplayLocale } from "./a11y/present";
+import { useDisplayLocale } from "./i18n/locale-context";
 import { messages as sourceCopy } from "./i18n/messages/discovery-live";
 import { sourceMessage } from "./i18n/source-message";
 import { connectedActions } from "./connectivity/write-guard";
@@ -115,7 +117,7 @@ export function liveReturnLabel(mode: LiveReturnMode): string {
   return sourceCopy.en["s9h"];
 }
 
-export function liveStatusLine(outcome: LiveOutcome | DiscoveryRowOutcome): {
+export function liveStatusLine(outcome: LiveOutcome | DiscoveryRowOutcome, locale: DisplayLocale): {
   statusLine: string;
   detailLine: string;
 } {
@@ -131,7 +133,7 @@ export function liveStatusLine(outcome: LiveOutcome | DiscoveryRowOutcome): {
     case "stale":
       return {
         statusLine: sourceCopy.en["s1lu"],
-        detailLine: sourceMessage(sourceCopy.en["p.t502"], { v1: formatWhen(outcome.watermark), v2: formatWhen(outcome.floor) }),
+        detailLine: sourceMessage(sourceCopy.en["p.t502"], { v1: formatWhen(outcome.watermark, locale), v2: formatWhen(outcome.floor, locale) }),
       };
     case "cursor-invalid":
       return { statusLine: sourceMessage(sourceCopy.en["p.t139"], { v1: outcome.code }), detailLine: outcome.detail };
@@ -159,18 +161,19 @@ export function liveStatusLine(outcome: LiveOutcome | DiscoveryRowOutcome): {
 }
 
 export function buildLiveListModel(input: {
+  locale: DisplayLocale;
   stream: DiscoveryStreamKind;
   revision: string;
   filter: DiscoveryReadFilter;
   outcome: LiveOutcome;
   canNext: boolean;
 }): LiveListModel {
-  const { outcome } = input;
-  const { statusLine, detailLine } = liveStatusLine(outcome);
+  const { outcome, locale } = input;
+  const { statusLine, detailLine } = liveStatusLine(outcome, locale);
   const mode = liveReturnMode(outcome);
   let metaLine = sourceMessage(sourceCopy.en["p.t505"], { v1: input.stream, v2: input.revision });
   if (outcome.kind === "ready") {
-    metaLine = sourceMessage(sourceCopy.en["p.t142"], { v1: metaLine, v2: outcome.watermark ? formatWhen(outcome.watermark) : "none", v3: outcome.scannedCount, v4: outcome.totalEstimate });
+    metaLine = sourceMessage(sourceCopy.en["p.t142"], { v1: metaLine, v2: outcome.watermark ? formatWhen(outcome.watermark, locale) : "none", v3: outcome.scannedCount, v4: outcome.totalEstimate });
   } else if (outcome.kind === "empty") {
     metaLine = sourceMessage(sourceCopy.en["p.t143"], { v1: metaLine, v2: outcome.totalEstimate });
   }
@@ -189,13 +192,14 @@ export function buildLiveListModel(input: {
 }
 
 export function buildLiveDetailModel(input: {
+  locale: DisplayLocale;
   outcome: DiscoveryRowOutcome | { kind: "loading" };
 }): LiveDetailModel {
-  const { outcome } = input;
+  const { outcome, locale } = input;
   const { statusLine, detailLine } =
     outcome.kind === "empty"
       ? { statusLine: sourceCopy.en["swz"], detailLine: "" }
-      : liveStatusLine(outcome);
+      : liveStatusLine(outcome, locale);
   const mode = outcome.kind === "empty" ? null : liveReturnMode(outcome);
   return {
     state: outcome.kind,
@@ -222,6 +226,7 @@ export function useDiscoveryLiveRead(options: { rowId: string | null; detailEnab
   detailModel: LiveDetailModel;
   detailHandlers: LiveDetailHandlers;
 } {
+  const locale = useDisplayLocale();
   const environment = protocol.describe().environment;
   const portRef = useRef<DiscoveryReadPort | null>(null);
   if (portRef.current === null) {
@@ -356,6 +361,7 @@ export function useDiscoveryLiveRead(options: { rowId: string | null; detailEnab
 
   return {
     listModel: buildLiveListModel({
+      locale,
       stream,
       revision,
       filter,
@@ -363,7 +369,7 @@ export function useDiscoveryLiveRead(options: { rowId: string | null; detailEnab
       canNext: outcome.kind === "ready" && outcome.nextCursor !== null,
     }),
     listHandlers: connectedActions({ nextPage, runReturn, setStream, setFilter, rebuildProjection }, ["setStream", "rebuildProjection"]),
-    detailModel: buildLiveDetailModel({ outcome: detailEnabled ? detailOutcome : { kind: "loading" } }),
+    detailModel: buildLiveDetailModel({ locale, outcome: detailEnabled ? detailOutcome : { kind: "loading" } }),
     detailHandlers: { readAgain: readDetail },
   };
 }
