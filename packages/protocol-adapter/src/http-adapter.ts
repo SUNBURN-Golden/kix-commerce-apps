@@ -1,4 +1,5 @@
 import { ADMISSION_TRANSPORT_NOTE, admissionBoundaryPresentation } from "./admission-case.js";
+import { assertJourneyResult } from "./journey-receipts.js";
 import { COMMERCE_COMMAND_BINDINGS, type CommerceMethod } from "./commerce-bindings.js";
 import {
   INTEGRATION_GATE_HEALTH_PATH,
@@ -554,12 +555,13 @@ export class HttpProtocolAdapter implements CommerceProtocol {
         action: envelope.action,
         operationId: envelope.operationId,
       });
+      assertJourneyResult(parsed.body, envelope);
     } catch (error) {
       if (error instanceof GateRejectedError) {
         throw error;
       }
       if (error instanceof ProtocolError) {
-        throw new ProtocolError(error.message, error.code, parsed.trace);
+        throw new ProtocolError(error.message, error.code ?? "GATE_STATUS", parsed.trace);
       }
       throw error;
     }
@@ -680,8 +682,11 @@ export class HttpProtocolAdapter implements CommerceProtocol {
       return { ok: response.ok, status: response.status, body: undefined, trace };
     }
     try {
-      return { ok: response.ok, status: response.status, body: JSON.parse(text) as unknown, trace };
-    } catch {
+      // Only HTTP responses need the JSON preflight; keep it off the stub entry path.
+      const { parseGateJson } = await import("./gate-json.js");
+      return { ok: response.ok, status: response.status, body: parseGateJson(text), trace };
+    } catch (error) {
+      if (error instanceof ProtocolError) throw new ProtocolError(error.message, error.code, trace);
       throw new ProtocolError("Integration gate returned non-JSON.", "GATE_STATUS", trace);
     }
   }
