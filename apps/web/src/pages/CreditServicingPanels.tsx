@@ -1,3 +1,4 @@
+import { ReadLane } from "./ReadState";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
 import { messages as copy0 } from "../i18n/messages/pages--CreditServicingPanels";
 import { messages as copy1 } from "../i18n/messages/credit-servicing";
@@ -233,7 +234,7 @@ export function DrawSection({ model }: { model: ServicingModel }) {
       <h3>{t("shh")}</h3>
       <p className="muted">
         {t("slu")}</p>
-      {draw === null ? (
+      <ReadLane lane="draw">{draw === null ? (
         <p data-state="empty" data-draw="none">
           {t("sv9")}</p>
       ) : (
@@ -252,9 +253,9 @@ export function DrawSection({ model }: { model: ServicingModel }) {
           <h4>{deskText(t, draw.drawRef)}</h4>
           <p data-amount="copied">{deskText(t, draw.amountLine)}</p>
         </div>
-      )}
+      )}</ReadLane>
       <h4>{t("s1g4")}</h4>
-      {reservation === null ? (
+      <ReadLane lane="reservation">{reservation === null ? (
         <p data-state="empty" data-reservation="none">
           {t("sxu")}</p>
       ) : (
@@ -267,9 +268,9 @@ export function DrawSection({ model }: { model: ServicingModel }) {
           <h4>{deskText(t, reservation.reservationRef)}</h4>
           <p>{t("s2b")}</p>
         </div>
-      )}
+      )}</ReadLane>
       <h4>{t("skm")}</h4>
-      {exposure === null ? (
+      <ReadLane lane="exposure">{exposure === null ? (
         <p data-state="empty" data-exposure="none">
           {t("svh")}</p>
       ) : (
@@ -291,7 +292,7 @@ export function DrawSection({ model }: { model: ServicingModel }) {
               <WordMark word={t("s26v")} /> {t("s20e")}</p>
           ) : null}
         </div>
-      )}
+      )}</ReadLane>
       <h4>{t("sdc")}</h4>
       {limit === null ? (
         <p data-state="empty" data-limit="none">
@@ -556,6 +557,7 @@ export function CaseSection({ model, actions }: { model: ServicingModel; actions
       <h3>{t("s1ji")}</h3>
       <p className="muted">
         {t("s9")}</p>
+      <ReadLane lane="case">
       {item === null ? (
         <p data-state="empty" data-case="none">
           {t("syg")}</p>
@@ -582,6 +584,8 @@ export function CaseSection({ model, actions }: { model: ServicingModel; actions
           </ol>
         </div>
       )}
+      </ReadLane>
+      <ReadLane lane="proposal">
       <h4>{t("s19i")}</h4>
       {model.proposals.length === 0 ? <p data-state="empty">{t("sx1")}</p> : null}
       {model.proposals.length > 0 ? (
@@ -591,6 +595,7 @@ export function CaseSection({ model, actions }: { model: ServicingModel; actions
           )))}
         </ul>
       ) : null}
+      </ReadLane>
     </section>
   );
 }

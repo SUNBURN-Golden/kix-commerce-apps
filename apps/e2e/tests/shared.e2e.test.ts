@@ -85,4 +85,43 @@ describe("shared UNKNOWN evidence (stub, headless Chrome)", () => {
     await suite.pass(page, "session.UNKNOWN");
     await page.close();
   });
+  it("back/forward restores a filter and selected row on notifications and finance", async () => {
+    const page = await newDeskPage(suite.newPage, suite.origin);
+    for (const [route, filter, selection] of [["/notifications", "filter", "item"], ["/finance", "queue", "case"]]) {
+      await page.goto(`${suite.origin}${route}`);
+      const select = page.locator(`#read-${filter}`);
+      await select.waitFor();
+      await poll(() => select.locator("option").count(), (count) => count > 2, `${route} filter options`);
+      const options = await select.locator('option:not([value=""])').evaluateAll((nodes) => nodes.map((node) => (node as HTMLOptionElement).value));
+      // unread is the initial notification source; finance uses the first real category.
+      const first = route === "/notifications" ? "unread" : options[0]!;
+      const second = route === "/notifications" ? "all" : options[1]!;
+      await select.selectOption(first);
+      await page.locator(`#read-apply-${filter}`).click();
+      await poll(() => Promise.resolve(new URL(page.url()).searchParams.get(filter)), (value) => value === first, "first filter pushed");
+      const choice = page.locator(`[data-read-choice="${selection}"]`).first();
+      await choice.waitFor();
+      const id = await choice.getAttribute("data-read-value");
+      await choice.click();
+      await poll(() => Promise.resolve(new URL(page.url()).searchParams.get(selection)), (value) => value === id, "selection replaced");
+      const selectedText = await page.locator('[data-read-selected="true"]').textContent();
+      await page.reload();
+      await page.locator(`[data-read-selected="true"][data-read-id="${id}"]`).waitFor();
+      expect(await page.locator('[data-read-selected="true"]').textContent()).toBe(selectedText);
+      await select.selectOption(second);
+      await page.locator(`#read-apply-${filter}`).click();
+      await poll(() => Promise.resolve(new URL(page.url()).searchParams.get(filter)), (value) => value === second, "second filter pushed");
+      await poll(() => page.locator('[data-read-selected="true"]').count(), (count) => count === 0, "selection cleared with filter");
+      await page.goBack();
+      await poll(() => select.inputValue(), (value) => value === first, "back restores filter");
+      await page.locator(`[data-read-selected="true"][data-read-id="${id}"]`).waitFor();
+      expect(await page.locator('[data-read-selected="true"]').textContent()).toBe(selectedText);
+      await page.goForward();
+      await poll(() => select.inputValue(), (value) => value === second, "forward restores filter");
+      await poll(() => page.locator('[data-read-selected="true"]').count(), (count) => count === 0, "selection cleared with filter");
+    }
+    await suite.pass(page, "back-forward.read-state");
+    await page.close();
+  });
+
 });

@@ -1,5 +1,21 @@
 # Locale-aware instant presentation (stub)
 
+## Merge reconciliation (2026-10-25)
+
+Reconciled branch `d3650f3e542c91823fcc1ec19663c98733739a01` with main `2e8095952a661d280ada088fdb63f7979a44a87e` in the existing merge worktree. Buyer keeps main's `useReadState`, `ReadView`, and receipt pointers alongside this node's direct `formatWhen(instant, clock)` call and `useDisplayLocale`. Main's shadowing `useFormatWhen` assignment is superseded by the explicit locale API introduced by this node; its locale-aware behavior is preserved. Vite keeps both main's explicit lazy credit/journey copy chunks and this branch's two-pass Terser compression. No other content was dropped.
+
+Main's deep-link read-state implementation, loopback replay conformance sweep, tests, catalogue additions, and documentation remain present. UTC remains the only zone, ISO `dateTime` values remain unchanged, and expiry stays adapter-authoritative. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. Locked bindings, protocol pins, CI, budgets, and baseline files match main byte-for-byte. The earlier verification tables below describe the original node delivery; merge verification is recorded separately here.
+
+Merge checks: `npm run typecheck`, `npm run typecheck:e2e`, `npm run build`, `npm run lint`, and `npm run budget` passed. The combined bundle measures initial JS gzip 288793 bytes (limit 290000) and total gzip 783435 bytes; every route budget passes with unchanged limits.
+
+`KIX_REQUIRE_GATE=0 VITEST_MAX_FORKS=2 VITEST_MIN_FORKS=1 npm test` passed: adapter 66 files / 1367 tests, with 5 files / 23 gate-dependent tests skipped; web 86 files / 1218 tests. This includes the AST guard and deliberate scratch violations, all 20 locale instant cases, retained-read cases, both new read-state suites (122 tests), expiry authority, i18n-coverage, i18n, display-preferences, and user-guides. The first unrestricted-worker attempt hit an adapter timer timeout and a Vitest worker timeout; the reduced-worker rerun passed without changing code, assertions, or timeouts. Logs: `/tmp/kix-locale-merge-test.log` and `/tmp/kix-locale-merge-test-rerun.log`.
+
+`KIX_REQUIRE_GATE=0 KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 KIX_VISUAL_RECORD_OUT=/tmp/kix-locale-merge-visual.json KIX_VISUAL_OUT=/tmp/kix-locale-merge-visual npm run test:visual` passed: 3 files / 42 tests, all 32 pictures MATCH. This was comparison only; no baseline or manifest was rewritten. Browser records refer to the pre-commit branch HEAD because the supervisor owns the merge commit; the checks exercised the combined worktree.
+
+The first two full browser attempts each passed 174 of 175 tests, with a timeout in resale NOT_BOUND on the first and the all-screen offline scan on the second. Resale passed on the second attempt; the offline scan passed on the first. Both network ledgers were zero throughout. No assertion or timeout was weakened. Logs are `/tmp/kix-locale-merge-e2e.log` and `/tmp/kix-locale-merge-e2e-rerun.log`.
+
+The final full run of `KIX_REQUIRE_GATE=0 KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 KIX_E2E_RECORD_OUT=/tmp/kix-locale-merge-e2e-final.json npm run test:e2e` passed: 43 files / 175 tests, including both previously timed-out cases, with zero non-loopback requests, non-GET requests, and application network calls. Log: `/tmp/kix-locale-merge-e2e-final.log`. The adapter implementation matches main exactly; no adapter repair or binding change was needed. All 16 Korean visual pictures have zero differing pixels; English pictures match within the existing tolerance and their committed bytes remain unchanged. Live-gate checks remain skipped locally, and no CI or release success is claimed from these local runs. Files are deliberately left unstaged in the existing merge for the supervisor.
+
 ## Scope
 
 `contract_change=NO`. This document uses the Constraints path, `docs/c-plan-c-locale-aware-instant-presentation-stub-apps-bind.md`; the Objective's shorter path names the same work.

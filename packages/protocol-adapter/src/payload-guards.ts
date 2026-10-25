@@ -126,6 +126,7 @@ function rejectTransportProductionClaims(value: unknown, depth: number): void {
   }
   if (
     value.production === true ||
+    value.productionEndpoint === true ||
     value.productionReadiness === true ||
     value.productionConformance === true ||
     value.protocolTruth === true ||

@@ -1,4 +1,6 @@
 import { formatWhen } from "../format";
+import { useReadState } from "../shell/read-state-params";
+import { ReadView, receiptPointer } from "./ReadState";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
 import { messages as copy0 } from "../i18n/messages/buyer-workspace";
 import { messages as copy1 } from "../i18n/messages/gift-desk";
@@ -42,8 +44,9 @@ export function BuyerScreen({
 }) {
   const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
   const clock = useDisplayLocale();
+  const read = useReadState("buyer", { receipt: model.catalog.kind === "loading" ? null : model.evidence.map(receiptPointer) });
   return (
-    <div className="buyer">
+    <ReadView state={read}><div className="buyer">
       <nav className="buyer-nav" aria-label={t("desk.buyer.sections")} data-adapter-environment={model.environment}>
         <a href="#buyer-shows">{t("desk.buyer.shows")}</a>
         <a href="#buyer-progress">{t("desk.buyer.progress")}</a>
@@ -140,6 +143,6 @@ export function BuyerScreen({
           </ul>
         </section>
       </div>
-    </div>
+    </div></ReadView>
   );
 }

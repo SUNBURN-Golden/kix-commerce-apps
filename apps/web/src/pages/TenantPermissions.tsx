@@ -1,3 +1,6 @@
+import { TENANT_ROLES, tenantRoleResources } from "@kix/protocol-adapter";
+import { useReadState } from "../shell/read-state-params";
+import { ReadView, ReadFilter } from "./ReadState";
 import { messages as copy0 } from "../i18n/messages/pages--TenantPermissions";
 import { messages as copy1 } from "../i18n/messages/tenant-permissions";
 import { deskText } from "../i18n/desk-translate";
@@ -22,10 +25,24 @@ export function TenantPermissionsPage() {
   const t = useT(copy0, copy1);
   const live = useTenantPermissions();
   const model = live.model;
+  // A workspace intersects the last authorized snapshot; it cannot expand that snapshot.
+  const read = useReadState("permissions", { workspace: TENANT_ROLES });
+  const kinds = read.values.workspace ? tenantRoleResources(read.values.workspace) : null;
+  const view = { ...model,
+    members: model.members.filter((row) => !read.values.workspace || row.role === read.values.workspace),
+    orders: !kinds || kinds.includes("order") ? model.orders : [],
+    events: !kinds || kinds.includes("event") ? model.events : [],
+    accounts: !kinds || kinds.includes("account") ? model.accounts : [],
+    cases: !kinds || kinds.includes("case") ? model.cases : [],
+    proposals: !kinds || kinds.includes("proposal") ? model.proposals : [],
+    audit: !kinds || kinds.includes("audit") ? model.audit : [],
+  };
   // A block, a refusal, a denial, a read that did not answer, or an unknown result takes focus to the status region.
   useRestoreFocus(model.focusToken, "tenant-status");
 
   return (
+    <ReadView state={read}>
+    <ReadFilter state={read} name="workspace" options={TENANT_ROLES} />
     <div className="discovery platform finance" data-adapter-environment={live.environment}>
       <nav className="discovery-nav" aria-label={t("s1pj")}>
         <a href="#tenant-controls">{t("sed")}</a>
@@ -54,13 +71,14 @@ export function TenantPermissionsPage() {
         ) : null}
         <TenantAuthoritySection model={model} />
         <TenantFocusSection model={model} />
-        <TenantWorkspaceSection model={model} actions={live.actions} />
-        <TenantProposalsSection model={model} actions={live.actions} />
-        <TenantAuditSection model={model} />
+        <TenantWorkspaceSection model={view} actions={live.actions} />
+        <TenantProposalsSection model={view} actions={live.actions} />
+        <TenantAuditSection model={view} />
         <TenantExportSection model={model} />
         <TenantRequestsSection model={model} />
         <TenantSessionSection session={model.session} />
       </div>
     </div>
+    </ReadView>
   );
 }

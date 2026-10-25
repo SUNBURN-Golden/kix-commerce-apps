@@ -7,11 +7,22 @@ const appDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
-  // Preserve the existing size limits for the localized stub bundle.
+  // Preserve the existing size limits for localized copy and the shared app shell.
   build: {
     minify: "terser",
     // Revisit expressions exposed by the first pass without changing compression safety defaults.
     terserOptions: { compress: { passes: 2 } },
+    rollupOptions: {
+      output: {
+        // Related desk copy shares vocabulary. Compress these lazy catalogues together
+        // without pulling its dependencies (or either screen) into the entry bundle.
+        onlyExplicitManualChunks: true,
+        manualChunks(id) {
+          if (/\/src\/i18n\/messages\/(credit-(origination|servicing)|pages--Credit(Origination|Servicing)(Panels)?)\.ts$/.test(id)) return "credit-read-copy";
+          if (/\/src\/i18n\/messages\/((platform|provider)-journey|pages--(Platform|ProviderJourney)(Panels)?)\.ts$/.test(id)) return "journey-read-copy";
+        },
+      },
+    },
   },
   resolve: {
     alias: {

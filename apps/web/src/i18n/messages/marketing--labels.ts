@@ -1,18 +1,6 @@
+import { en } from "./marketing--labels.en";
 export const messages = {
-  en: {
-    "s8w": "Attach a display marker from a fixture list. No price and no tender.",
-    "sen": "Count demo markers from fixture referral codes. No credit is disbursed.",
-    "ser": "Coupon / promotion",
-    "sf2": "CRM / data use",
-    "skt": "Fan qualification / membership",
-    "sou": "Issue a session-only fan or member card for this page load.",
-    "s18s": "Presale",
-    "s1e2": "Record interest while a demo window is open. The booking desk is unchanged.",
-    "s1ef": "Referral / rewards",
-    "s1mr": "Store consent flags in this session. No channel and no send.",
-    "p.t255": "Unknown marketing label {v1}.",
-    "p.t256": "KIX Marketing · {v1} · {v2}",
-  },
+  en,
   ko: {
     "s8w": "fixture 목록의 표시 표식을 연결합니다. 가격이나 지불 수단이 아닙니다.",
     "sen": "fixture 추천 코드의 데모 표식을 집계합니다. 크레딧을 지급하지 않습니다.",

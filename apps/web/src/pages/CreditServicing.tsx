@@ -1,3 +1,6 @@
+import { SERVICING_LANES } from "@kix/protocol-adapter";
+import { useReadState } from "../shell/read-state-params";
+import { readSettled, ReadView, ReadFilter, ReadObligation, ReadLane } from "./ReadState";
 import { messages as copy0 } from "../i18n/messages/pages--CreditServicing";
 import { messages as copy1 } from "../i18n/messages/credit-servicing";
 import { deskText } from "../i18n/desk-translate";
@@ -22,10 +25,13 @@ export function CreditServicingPage() {
   const t = useT(copy0, copy1);
   const live = useCreditServicing();
   const model = live.model;
+  const read = useReadState("credit-servicing", { lane: SERVICING_LANES, obligation:  !readSettled(model.state) ? null : model.draw || model.installments.length || model.servicingCase ? [live.obligationRef] : [] });
   // A block, a refusal, or an unknown result takes focus to the status region.
   useRestoreFocus(model.lastNeedsFocus && model.lastSeq !== null ? String(model.lastSeq) : null, "servicing-status");
 
   return (
+    <ReadView state={read}>
+    <ReadFilter state={read} name="lane" options={SERVICING_LANES} />
     <div className="discovery servicing" data-adapter-environment={live.environment}>
       <nav className="discovery-nav" aria-label={t("s1jk")}>
         <a href="#servicing-controls">{t("sed")}</a>
@@ -53,15 +59,17 @@ export function CreditServicingPage() {
             {deskText(t, model.actionLabel)}
           </button>
         ) : null}
-        <DrawSection model={model} />
-        <ScheduleSection model={model} />
-        <PaymentsSection model={model} actions={live.actions} />
+        <ReadObligation value={live.obligationRef}><DrawSection model={model} />
+        <ReadLane lane="schedule"><ScheduleSection model={model} /></ReadLane>
+        <ReadLane lane="payment"><PaymentsSection model={model} actions={live.actions} /></ReadLane>
         <CaseSection model={model} actions={live.actions} />
+        </ReadObligation>
         <TimelineSection model={model} />
         <ServicingReasonsSection model={model} />
         <ServicingRequestsSection model={model} actions={live.actions} />
         <ServicingSessionSection session={model.session} />
       </div>
     </div>
+    </ReadView>
   );
 }

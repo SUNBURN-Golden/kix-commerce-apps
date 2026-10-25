@@ -1,3 +1,4 @@
+import { ReadRow, ReadLane } from "./ReadState";
 import { messages as copy0 } from "../i18n/messages/pages--CreditOriginationPanels";
 import { messages as copy1 } from "../i18n/messages/credit-origination";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
@@ -213,7 +214,7 @@ export function ApplicationSection({ model }: { model: OriginationModel }) {
       {application === null ? (
         <p data-state="empty">{t("su2")}</p>
       ) : (
-        <div className="discovery-row" data-application={application.applicationRef} data-state={application.state}>
+        <ReadRow as="div" name="application" value={application.applicationRef} className="discovery-row" data-application={application.applicationRef} data-state={application.state}>
           <p>
             <span className="discovery-badge" data-provenance="synthetic">
               SYNTHETIC
@@ -226,8 +227,9 @@ export function ApplicationSection({ model }: { model: OriginationModel }) {
           <p>{deskText(t, application.revisionLine)}</p>
           <p data-amount="copied">{deskText(t, application.requestLine)}</p>
           <p>{deskText(t, application.claimLine)}</p>
-        </div>
+        </ReadRow>
       )}
+      <ReadLane lane="review">
       <h4>{t("s1h1")}</h4>
       {decision === null ? (
         <p data-state="empty" data-decision="none">
@@ -280,6 +282,7 @@ export function ApplicationSection({ model }: { model: OriginationModel }) {
           <WordMark word={t("s26v")} /> {deskText(t, line)}
         </p>
       )))}
+      </ReadLane>
     </section>
   );
 }
@@ -525,6 +528,7 @@ export function CommitmentSection({ model }: { model: OriginationModel }) {
       <h3>{t("sdb")}</h3>
       <p className="muted">
         {t("s3h")}</p>
+      <ReadLane lane="commitment">
       <h4>{t("sd9")}</h4>
       {commitment === null ? (
         <p data-state="empty" data-commitment="none">
@@ -598,6 +602,8 @@ export function CommitmentSection({ model }: { model: OriginationModel }) {
           )}
         </div>
       )}
+      </ReadLane>
+      <ReadLane lane="drawdown">
       <h4>{t("she")}</h4>
       <div className="discovery-row" data-permission={drawdown.permission} data-withheld={drawdown.withheld ? "true" : "false"}>
         <p>
@@ -627,6 +633,7 @@ export function CommitmentSection({ model }: { model: OriginationModel }) {
           </ul>
         )}
       </div>
+      </ReadLane>
       <h4>{t("s1k6")}</h4>
       <div className="discovery-row" data-limit={model.limit.limitRef || "none"} data-contention={model.limit.contention}>
         <p>
