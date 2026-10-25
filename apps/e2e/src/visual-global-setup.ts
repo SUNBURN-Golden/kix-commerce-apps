@@ -6,7 +6,7 @@ import type { TestProject } from "vitest/node";
 import { buildStubApp, type BuiltApp } from "./build";
 import { readChecks, readLedger } from "./run-record";
 import { LOOPBACK, serveDirectory, type StaticServer } from "./static-server";
-import { BASELINE_ROOT, assertUpdateAllowed, baselineProblems, isUpdate, profileDir, type BaselineManifest } from "./visual-compare";
+import { BASELINE_ROOT, assertUpdateAllowed, baselineProblems, isUpdate, pngHash, profileDir, type BaselineManifest } from "./visual-compare";
 import { TOLERANCE, expectedVisualCheckIds, idOf, visualShots } from "./visual-matrix";
 import { VISUAL_NOT_RUN, koreanLayoutNote, readShots, renderVisualRecord, type VisualRecord } from "./visual-record";
 
@@ -74,6 +74,7 @@ export async function teardown(): Promise<void> {
       appHead: git(["rev-parse", "HEAD"]),
       recordedOn: new Date().toISOString().slice(0, 10),
       shots: shotIds.length,
+      hashes: Object.fromEntries(shotIds.map((id) => [id, pngHash(fs.readFileSync(path.join(profileDir(first.render.profile), `${id}.png`)))])),
     };
     fs.writeFileSync(path.join(profileDir(manifest.profile), "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
   }
