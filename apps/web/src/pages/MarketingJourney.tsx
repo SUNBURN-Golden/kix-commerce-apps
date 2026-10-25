@@ -1,3 +1,5 @@
+import { useReadState } from "../shell/read-state-params";
+import { readSettled, ReadView } from "./ReadState";
 import { messages as copy0 } from "../i18n/messages/pages--MarketingJourney";
 import { messages as copy1 } from "../i18n/messages/marketing-journey";
 import { deskText } from "../i18n/desk-translate";
@@ -21,10 +23,12 @@ export function MarketingJourneyPage() {
   const t = useT(copy0, copy1);
   const live = useMarketingJourney();
   const model = live.model;
+  const read = useReadState("marketing-journey", { benefit:  !readSettled(model.state) ? null : model.benefits.map((row) => row.benefitRef) });
   // A block, a rejection, an unknown result, or a refused read takes focus to the status region.
   useRestoreFocus(model.lastNeedsFocus && model.lastSeq !== null ? String(model.lastSeq) : null, "mkj-status");
 
   return (
+    <ReadView state={read}>
     <div className="discovery mkj" data-adapter-environment={live.environment}>
       <nav className="discovery-nav" aria-label={t("srw")}>
         <a href="#mkj-controls">{t("sed")}</a>
@@ -66,5 +70,6 @@ export function MarketingJourneyPage() {
         <RegisterSection model={model} />
       </div>
     </div>
+    </ReadView>
   );
 }

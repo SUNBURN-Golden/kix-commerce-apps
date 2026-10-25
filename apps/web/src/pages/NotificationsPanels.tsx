@@ -1,3 +1,4 @@
+import { ReadRow } from "./ReadState";
 import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { messages as copy0 } from "../i18n/messages/pages--NotificationsPanels";
 import { messages as copy1 } from "../i18n/messages/notification-inbox";
@@ -379,7 +380,7 @@ export function NotifyInboxSection({ model, actions }: { model: NotifyModel; act
       {model.rows.length > 0 ? (
         <ul className="discovery-list" aria-label={t("s11u")}>
           {deskText(t, model.rows.map((row) => (
-            <li
+            <ReadRow as="li" name="item" value={row.notificationRef}
               key={row.notificationRef}
               data-notification={row.notificationRef}
               data-notification-read={row.readWord === copy0.en["s1av"] ? "true" : "false"}
@@ -412,7 +413,7 @@ export function NotifyInboxSection({ model, actions }: { model: NotifyModel; act
                   onPress={() => actions.resolveAction(row.notificationRef)}
                 />
               )}
-            </li>
+            </ReadRow>
           )))}
         </ul>
       ) : null}

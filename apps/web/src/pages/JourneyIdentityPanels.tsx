@@ -1,3 +1,4 @@
+import { ReadRow } from "./ReadState";
 import { messages as copy0 } from "../i18n/messages/pages--JourneyIdentityPanels";
 import { messages as copy1 } from "../i18n/messages/journey-identity";
 import { deskText } from "../i18n/desk-translate";
@@ -129,7 +130,7 @@ export function JourneyIdentityPanel({ live }: { live: IdentityDeskLive }) {
           </thead>
           <tbody>
             {deskText(t, model.items.map((row) => (
-              <tr key={row.itemId} data-item={row.itemId} data-verdict={row.verdict} data-kind={row.kind}>
+              <ReadRow as="tr" name="item" value={row.itemId} key={row.itemId} data-item={row.itemId} data-verdict={row.verdict} data-kind={row.kind}>
                 <td>{deskText(t, row.itemId)}</td>
                 <td>{deskText(t, row.kind)}</td>
                 <td>{deskText(t, row.subjectRef)}</td>
@@ -141,7 +142,7 @@ export function JourneyIdentityPanel({ live }: { live: IdentityDeskLive }) {
                 <td>
                   <GuardedButton id={`attach-${row.itemId}`} label={t("s8v")} control={row.attach} onPress={() => actions.attach(row.itemId)} />
                 </td>
-              </tr>
+              </ReadRow>
             )))}
           </tbody>
         </table>

@@ -1,3 +1,4 @@
+import { ReadRow } from "./ReadState";
 import { messages as copy0 } from "../i18n/messages/pages--MarketingJourneyPanels";
 import { messages as copy1 } from "../i18n/messages/marketing-journey";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
@@ -327,7 +328,7 @@ export function ConsentSection({ model }: { model: MarketingJourneyModel }) {
 function BenefitCard({ benefit, actions }: { benefit: BenefitModel; actions: MarketingJourneyActions }) {
   const t = useT(copy0, copy1, copy2);
   return (
-    <li
+    <ReadRow as="li" name="benefit" value={benefit.benefitRef}
       className="discovery-row"
       data-benefit={benefit.benefitRef}
       data-kind={benefit.kind}
@@ -367,7 +368,7 @@ function BenefitCard({ benefit, actions }: { benefit: BenefitModel; actions: Mar
           </li>
         )))}
       </ul>
-    </li>
+    </ReadRow>
   );
 }
 

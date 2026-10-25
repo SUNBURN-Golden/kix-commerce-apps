@@ -1,3 +1,5 @@
+import { useReadState } from "../shell/read-state-params";
+import { readSettled, ReadView } from "./ReadState";
 import { messages as copy0 } from "../i18n/messages/pages--ProviderJourney";
 import { messages as copy1 } from "../i18n/messages/provider-journey";
 import { deskText } from "../i18n/desk-translate";
@@ -17,10 +19,12 @@ export function ProviderJourneyPage() {
   const t = useT(copy0, copy1);
   const live = useProviderJourney();
   const model = live.model;
+  const read = useReadState("provider", { step:  !readSettled(model.state) ? null : model.orders.flatMap((order) => order.facets.map((facet) => `${order.orderRef}:${facet.facet}`)) });
   // A block, a rejection, or an unknown result takes focus to the status region.
   useRestoreFocus(model.lastNeedsFocus && model.lastSeq !== null ? String(model.lastSeq) : null, "provider-status");
 
   return (
+    <ReadView state={read}>
     <div className="discovery provider" data-adapter-environment={live.environment}>
       <nav className="discovery-nav" aria-label={t("s1a8")}>
         <a href="#provider-controls">{t("sed")}</a>
@@ -57,5 +61,6 @@ export function ProviderJourneyPage() {
         <IdentitySection rows={model.identity} />
       </div>
     </div>
+    </ReadView>
   );
 }

@@ -1,3 +1,5 @@
+import { useReadState } from "../shell/read-state-params";
+import { readSettled, ReadView, ReadFilter } from "./ReadState";
 import { messages as copy0 } from "../i18n/messages/pages--Notifications";
 import { messages as copy1 } from "../i18n/messages/notification-inbox";
 import { deskText } from "../i18n/desk-translate";
@@ -20,10 +22,15 @@ export function NotificationsPage() {
   const t = useT(copy0, copy1);
   const live = useNotificationInbox();
   const model = live.model;
+  const rowsFor = (filter?: string) => model.rows.filter((row) => !filter || filter === "all" || (filter === "read" ? row.readWord === "Read" : row.readWord === "Unread"));
+  const read = useReadState("notifications", { filter: ["all", "unread", "read"], item: (values) =>  !readSettled(model.state) ? null : rowsFor(values.filter).map((row) => row.notificationRef) });
+  const view = { ...model, rows: rowsFor(read.values.filter) };
   // A block, a refusal, a denial, a read that did not answer, or an unknown result takes focus to the status region.
   useRestoreFocus(model.focusToken, "notify-status");
 
   return (
+    <ReadView state={read}>
+    <ReadFilter state={read} name="filter" options={["all", "unread", "read"]} />
     <div className="discovery platform finance" data-adapter-environment={live.environment}>
       <nav className="discovery-nav" aria-label={t("s11r")}>
         <a href="#notify-controls">{t("sed")}</a>
@@ -50,11 +57,12 @@ export function NotificationsPage() {
         ) : null}
         <NotifyAuthoritySection model={model} />
         <NotifyFocusSection model={model} />
-        <NotifyInboxSection model={model} actions={live.actions} />
+        <NotifyInboxSection model={view} actions={live.actions} />
         <NotifyInquirySection model={model} actions={live.actions} />
         <NotifyRequestsSection model={model} />
         <NotifySessionSection session={model.session} />
       </div>
     </div>
+    </ReadView>
   );
 }
