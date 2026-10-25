@@ -121,7 +121,7 @@ changing route focuses the new heading.
   history/reload check.
 - This bind/evidence document.
 
-## Verification
+## Original implementation verification
 
 Commands actually run from the worktree (browser steps use the environment
 shown below). The table records the final completed run of each command.
@@ -194,3 +194,59 @@ attempts, with no test timeout, CI or budget relaxation.
 - jsdom uses Node's AbortController with Node's Request for the data router.
   Its reload action is observed without asking jsdom to navigate a document;
   the unchanged Chrome session test performs a real recovery reload.
+
+## PR fix round 1 — initial bundle budget
+
+The reported CI failure is valid: initial JS gzip was **290,069 bytes**, above
+the unchanged **290,000-byte** limit. The branch alone measured 289,686 bytes,
+but an isolated, uncommitted merge tree of branch HEAD
+`7ed9f45c97de28d257ab8582d59c709fbeab13c3` and local `origin/main`
+`4dc642a3e95c488ab51d6325d70740d0a956aca5` reproduced the CI numbers exactly:
+290,069 initial JS, 4,965 CSS, 788,511 total gzip bytes, 78 emitted files.
+The merge tree was `b20002518e40fb5ef9f220fdede24d1b67d16b53`; it was exported
+to a temporary directory for measurement, without committing or changing this
+branch's base.
+
+`marketing/labels.ts`, used by the shell, previously imported the complete
+bilingual `marketing--labels.ts` bundle to read English source strings. It now
+imports `marketing--labels.en.ts`; the bilingual display bundle reuses that same
+English object and retains every Korean entry. This follows the existing
+`a11y--present.en.ts` pattern. All strings, keys, protocol words and runtime
+behavior remain unchanged, while the Korean display bundle loads with the
+marketing screens. No Vite configuration, CI, dependency or budget changed.
+
+Applying these three source-file changes to the same temporary merge tree gives
+**289,764 initial JS**, **4,965 CSS**, **788,805 total gzip bytes**, 79 emitted
+files; the largest route chunk is 26,062 gzip bytes. Every fixed limit passes,
+including 236 bytes of initial-JS headroom. The branch build measures 289,383
+initial JS and 788,039 total gzip bytes. These are local measurements, not a
+claim that remote exact-head CI was rerun.
+
+M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+The 2026-10-23 bundle-budget and copy scope ruling is respected; no limit or
+baseline increase is used. The locked bindings remain byte-identical to
+`origin/main`, blob `47ab5e10cbf5f8f10bed718b4dd5190fe5dfe76f`.
+
+Checks use Node `v22.23.4` through `npm exec --yes --package=node@22 -- ...`.
+Logs are local `/tmp/kix-read-fix-*` artifacts; no comments, posts, commits or
+pushes are made.
+
+| Evidence / command | Result |
+| --- | --- |
+| `npm run build` and `npm run budget` | PASS; branch and temporary merged-tree size measurements above. |
+| `npm run typecheck` and `npm run typecheck:e2e` | PASS. |
+| `KIX_REQUIRE_GATE=0 npm test` (adapter portion) | PASS; 65 files / 1,335 tests; 5 live-gate files / 23 tests skipped, not passed. |
+| `KIX_REQUIRE_GATE=0 npm run test -w @kix/web -- --fileParallelism=false` | PASS; all 83 files / 1,190 tests, including the 122 read-state tests and unchanged guard suites. |
+| `npm run lint` | PASS; no errors or warnings. |
+| `npm run cycle-check` and `npm run deps:check` | PASS; no circular imports; 4 manifests / 630 lock entries checked. |
+| `KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 npm run test:budget` | PASS; 3 files / 9 tests, including split/landing, missing/wrong chunks, UNKNOWN preservation and long-list render tripwires. Chrome `156.0.8078.47`; ledger non-loopback / non-GET / app network calls all 0. |
+| `KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 npm run test:e2e` | PASS; 43 files / 175 tests, including `back-forward.read-state` with actual reload/history restoration on notifications and finance. Run record `/tmp/kix-read-fix-e2e.json`: ledger non-loopback / non-GET / app network calls all 0; HTTP-mode, production qualification, real-payment and release claims all false. |
+| Direct comparison of the extracted English entries and complete Korean catalogue with HEAD | PASS; exact copy preserved. |
+| Protected-path diff and `git diff --check` | PASS; CI, Vite configuration, budgets, adapter packages, pins, route registry, breadcrumbs, a11y matrix, guard tests, `.aiops/`, `docs/aiops/`, manifests and lock unchanged. |
+
+Earlier concurrent verification attempts hit timeouts in existing screen sweeps
+and the gallery build; a reduced-worker run also timed out in the existing
+onboarding sweep. No assertions or timeouts were changed. The final complete web
+run serialized files with their existing timeouts and passed. A two-pass Terser
+experiment did not materially reduce initial JS and was fully reverted before
+the final checks.
