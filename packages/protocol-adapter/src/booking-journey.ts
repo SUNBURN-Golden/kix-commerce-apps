@@ -1,3 +1,5 @@
+import { readCreateReceipt, readPrepareReceipt, readAcceptReceipt, type CreatedEvent, type PreparedTrade } from "./journey-receipts.js";
+export { closedResult, sameKeys } from "./journey-receipts.js";
 import { COMMERCE_COMMAND_BINDINGS } from "./commerce-bindings.js";
 import { GateRejectedError } from "./http-adapter.js";
 import { type LocalCallInput, buildLocalCallEnvelope } from "./local-call.js";
@@ -105,22 +107,6 @@ export interface JourneyState {
 const CREATE_ACTOR = "operator";
 
 const STEP_ORDER = ["none", "create_event", "prepare_trade", "accept_trade"] as const;
-
-const CREATE_RESULT_KEYS = ["eventId", "policyHash", "inventoryIds", "reservationSeconds"] as const;
-const PREPARE_RESULT_KEYS = ["tradeId", "ticketId", "externalOrderId", "status", "termsHash"] as const;
-const ACCEPT_RESULT_KEYS = ["accepted"] as const;
-
-interface CreatedEvent {
-  eventId: string;
-  primaryPrice: unknown;
-  inventoryIds: string[];
-}
-
-interface PreparedTrade {
-  tradeId: string;
-  termsHash: string;
-  buyer: string;
-}
 
 /**
  * Composes the approved primary-seat journey through an existing local-call invoker.
@@ -373,82 +359,6 @@ function createEventBody(input: {
     policy: input.policy,
     seats: [...input.seats],
   };
-}
-
-function readCreateReceipt(body: Record<string, unknown>, receipt: Record<string, unknown>): CreatedEvent | null {
-  const result = closedResult(receipt, CREATE_RESULT_KEYS);
-  if (result === null) {
-    return null;
-  }
-  const seats = body.seats;
-  if (!Array.isArray(seats)) {
-    return null;
-  }
-  if (typeof result.eventId !== "string" || result.eventId !== body.eventId) {
-    return null;
-  }
-  if (typeof result.policyHash !== "string" || result.policyHash.length === 0) {
-    return null;
-  }
-  if (!Array.isArray(result.inventoryIds) || result.inventoryIds.length !== seats.length || result.inventoryIds.length === 0) {
-    return null;
-  }
-  const inventoryIds = result.inventoryIds.filter((id): id is string => typeof id === "string" && id.length > 0);
-  if (inventoryIds.length !== seats.length) {
-    return null;
-  }
-  if (typeof result.reservationSeconds !== "number" || !Number.isInteger(result.reservationSeconds)) {
-    return null;
-  }
-  const policy = body.policy;
-  return {
-    eventId: result.eventId,
-    primaryPrice: isRecord(policy) ? policy.primaryPrice : undefined,
-    inventoryIds,
-  };
-}
-
-function readPrepareReceipt(body: Record<string, unknown>, receipt: Record<string, unknown>): PreparedTrade | null {
-  const result = closedResult(receipt, PREPARE_RESULT_KEYS);
-  if (result === null) {
-    return null;
-  }
-  if (typeof result.tradeId !== "string" || result.tradeId !== body.tradeId || result.status !== "PREPARED") {
-    return null;
-  }
-  if (typeof result.ticketId !== "string" || result.ticketId.length === 0) {
-    return null;
-  }
-  if (typeof result.externalOrderId !== "string" || result.externalOrderId.length === 0) {
-    return null;
-  }
-  if (typeof result.termsHash !== "string" || result.termsHash.length === 0) {
-    return null;
-  }
-  if (typeof body.buyer !== "string" || body.buyer.length === 0) {
-    return null;
-  }
-  return { tradeId: result.tradeId, termsHash: result.termsHash, buyer: body.buyer };
-}
-
-function readAcceptReceipt(receipt: Record<string, unknown>): boolean {
-  const result = closedResult(receipt, ACCEPT_RESULT_KEYS);
-  return result !== null && result.accepted === true;
-}
-
-export function closedResult(
-  receipt: Record<string, unknown>,
-  keys: readonly string[],
-): Record<string, unknown> | null {
-  if (!isRecord(receipt.result) || !sameKeys(receipt.result, keys)) {
-    return null;
-  }
-  return receipt.result;
-}
-
-export function sameKeys(value: Record<string, unknown>, expected: readonly string[]): boolean {
-  const keys = Object.keys(value);
-  return keys.length === expected.length && expected.every((key) => Object.hasOwn(value, key));
 }
 
 export function snapshot(body: Record<string, unknown>): Record<string, unknown> {

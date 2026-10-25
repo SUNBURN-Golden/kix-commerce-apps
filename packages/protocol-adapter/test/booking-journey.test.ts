@@ -366,16 +366,11 @@ describe("booking journey fences", () => {
     if (kind === "stale") {
       expect(outcome.code).toBe("STALE_RESPONSE");
     }
-    if (kind === "wrong-operation" || kind === "extra-keys") {
+    if (kind === "wrong-operation" || kind === "extra-keys" || kind === "bad-result") {
       expect(outcome.code).toBe("GATE_STATUS");
     }
-    if (kind === "bad-result") {
-      expect(outcome.code).toBe("INVALID_RECEIPT");
-    }
-    if (kind !== "bad-result") {
-      expect(outcome.identity.requestId).toEqual(expect.any(String));
-      expect(outcome.identity.correlationId).toEqual(expect.any(String));
-    }
+    expect(outcome.identity.requestId).toEqual(expect.any(String));
+    expect(outcome.identity.correlationId).toEqual(expect.any(String));
   });
 
   it("halts on a pre-send failure and does not call the invoker", async () => {
