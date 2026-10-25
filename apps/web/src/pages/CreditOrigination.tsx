@@ -1,3 +1,6 @@
+import { ORIGINATION_LANES } from "@kix/protocol-adapter";
+import { useReadState } from "../shell/read-state-params";
+import { readSettled, ReadView, ReadFilter } from "./ReadState";
 import { messages as copy0 } from "../i18n/messages/pages--CreditOrigination";
 import { messages as copy1 } from "../i18n/messages/credit-origination";
 import { deskText } from "../i18n/desk-translate";
@@ -21,10 +24,13 @@ export function CreditOriginationPage() {
   const t = useT(copy0, copy1);
   const live = useCreditOrigination();
   const model = live.model;
+  const read = useReadState("credit-origination", { lane: ORIGINATION_LANES, application:  !readSettled(model.state) ? null : model.application ? [model.application.applicationRef] : [] });
   // A block, a refusal, or an unknown result takes focus to the status region.
   useRestoreFocus(model.lastNeedsFocus && model.lastSeq !== null ? String(model.lastSeq) : null, "origination-status");
 
   return (
+    <ReadView state={read}>
+    <ReadFilter state={read} name="lane" options={ORIGINATION_LANES} />
     <div className="discovery origination" data-adapter-environment={live.environment}>
       <nav className="discovery-nav" aria-label={t("s16d")}>
         <a href="#origination-controls">{t("sed")}</a>
@@ -60,5 +66,6 @@ export function CreditOriginationPage() {
         <OriginationSessionSection session={model.session} />
       </div>
     </div>
+    </ReadView>
   );
 }

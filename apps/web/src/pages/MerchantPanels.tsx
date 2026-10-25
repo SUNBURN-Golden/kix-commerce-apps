@@ -1,3 +1,4 @@
+import { ReadRow } from "./ReadState";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
 import { messages as copy0 } from "../i18n/messages/pages--MerchantPanels";
 import { messages as copy1 } from "../i18n/messages/merchant-operations";
@@ -229,7 +230,7 @@ export function LensesSection({ model }: { model: MerchantModel }) {
       {model.events.length > 0 ? (
         <ul className="discovery-list" aria-label={t("siv")}>
           {deskText(t, model.events.map((row) => (
-            <li key={row.eventRef} className="discovery-row" data-event={row.eventRef} data-cut={row.cutRef} data-provenance="synthetic" data-source="synthetic-merchant">
+            <ReadRow as="li" name="row" value={row.eventRef} key={row.eventRef} className="discovery-row" data-event={row.eventRef} data-cut={row.cutRef} data-provenance="synthetic" data-source="synthetic-merchant">
               <p>
                 <span className="discovery-badge" data-provenance="synthetic">
                   SYNTHETIC
@@ -239,7 +240,7 @@ export function LensesSection({ model }: { model: MerchantModel }) {
               <h5>{deskText(t, row.eventRef)}</h5>
               <p>{deskText(t, row.title)}</p>
               <p>{t("sfe")}{" "}{deskText(t, row.cutRef)}.</p>
-            </li>
+            </ReadRow>
           )))}
         </ul>
       ) : null}
@@ -248,7 +249,7 @@ export function LensesSection({ model }: { model: MerchantModel }) {
       {model.listings.length > 0 ? (
         <ul className="discovery-list" aria-label={t("sr6")}>
           {deskText(t, model.listings.map((row) => (
-            <li key={row.listingRef} className="discovery-row" data-listing={row.listingRef} data-cut={row.cutRef} data-provenance="synthetic" data-source="synthetic-merchant">
+            <ReadRow as="li" name="row" value={row.listingRef} key={row.listingRef} className="discovery-row" data-listing={row.listingRef} data-cut={row.cutRef} data-provenance="synthetic" data-source="synthetic-merchant">
               <p>
                 <span className="discovery-badge" data-provenance="synthetic">
                   SYNTHETIC
@@ -260,7 +261,7 @@ export function LensesSection({ model }: { model: MerchantModel }) {
                 {deskText(t, row.channel)} {t("siq")}{" "}{deskText(t, row.eventRef)}
               </p>
               <p>{t("sfe")}{" "}{deskText(t, row.cutRef)}.</p>
-            </li>
+            </ReadRow>
           )))}
         </ul>
       ) : null}
@@ -269,7 +270,7 @@ export function LensesSection({ model }: { model: MerchantModel }) {
       {model.trades.length > 0 ? (
         <ul className="discovery-list" aria-label={t("s24h")}>
           {deskText(t, model.trades.map((row) => (
-            <li key={row.tradeRef} className="discovery-row" data-trade={row.tradeRef} data-cut={row.cutRef} data-provenance="synthetic" data-source="synthetic-merchant">
+            <ReadRow as="li" name="row" value={row.tradeRef} key={row.tradeRef} className="discovery-row" data-trade={row.tradeRef} data-cut={row.cutRef} data-provenance="synthetic" data-source="synthetic-merchant">
               <p>
                 <span className="discovery-badge" data-provenance="synthetic">
                   SYNTHETIC
@@ -282,7 +283,7 @@ export function LensesSection({ model }: { model: MerchantModel }) {
               </p>
               <p>{deskText(t, row.statusLine)}</p>
               <p>{t("sfe")}{" "}{deskText(t, row.cutRef)}.</p>
-            </li>
+            </ReadRow>
           )))}
         </ul>
       ) : null}

@@ -1,3 +1,4 @@
+import { ReadRow } from "./ReadState";
 import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { messages as copy0 } from "../i18n/messages/pages--CrossSurfaceJourneysPanels";
 import { messages as copy1 } from "../i18n/messages/cross-surface-journeys";
@@ -219,7 +220,7 @@ export function CrossSurfaceStatus({ model }: { model: XsModel }) {
 function RowView({ row }: { row: XsRowModel }) {
   const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
-    <tr data-row={row.id} data-status={row.status} data-compensation={row.compensationState}>
+    <ReadRow as="tr" name="row" value={row.id} data-row={row.id} data-status={row.status} data-compensation={row.compensationState}>
       <th scope="row">
         {deskText(t, row.journey)}
         <br />
@@ -266,7 +267,7 @@ function RowView({ row }: { row: XsRowModel }) {
           )}
         </details>
       </td>
-    </tr>
+    </ReadRow>
   );
 }
 

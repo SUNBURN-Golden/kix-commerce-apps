@@ -1,3 +1,4 @@
+import { ReadRow } from "./ReadState";
 import { messages as copy0 } from "../i18n/messages/pages--ProviderJourneyPanels";
 import { messages as copy1 } from "../i18n/messages/provider-journey";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
@@ -262,13 +263,13 @@ function OrderCard({ order, actions }: { order: OrderModel; actions: ProviderAct
           </thead>
           <tbody>
             {deskText(t, order.facets.map((facet) => (
-              <tr key={facet.facet} data-facet={facet.facet} data-write={facet.writeKind} data-observed={facet.observedKind}>
+              <ReadRow as="tr" name="step" value={`${order.orderRef}:${facet.facet}`} key={facet.facet} data-facet={facet.facet} data-write={facet.writeKind} data-observed={facet.observedKind}>
                 <th scope="row">{deskText(t, facet.label)}</th>
                 <td>{deskText(t, facet.writeWord)}</td>
                 <td>
                   {deskText(t, facet.observedWord)} {deskText(t, facet.note)}
                 </td>
-              </tr>
+              </ReadRow>
             )))}
           </tbody>
         </table>
