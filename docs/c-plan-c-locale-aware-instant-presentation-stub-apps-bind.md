@@ -91,3 +91,44 @@ The private live-gate/token CI job is **SKIPPED locally**, not passed. No protoc
 Local Node 20.19.2 differs from CI Node 22 (the repository supports >=20); all local equivalents passed. No visual files changed because comparison established exact Korean picture identity before any recording. The implementation adds a separate retained-read test file and a saved deterministic English base fixture to meet the design review's stronger regression requirements. The recording-only test branch was removed after capture. No catalogue keys, budgets, CI rules, protocol files, `.aiops/`, or `docs/aiops/` were edited.
 
 A need for an unmerged protocol contract, unmerged dependency content, hardware/equipment, money/paid services, secrets/credentials, production runtime, product-policy value, new protocol command, or any standing-rule violation remains a STOP condition. It would require root `DECISION_REQUIRED.md` explaining what is needed, options, recommendation, and who decides. Ordinary English-output regressions are fixed within scope. No such decision boundary was encountered.
+
+## PR fix round 1 — bundle budget
+
+The supplied exact-head CI log reported total gzip **790117 > 790000**, a 117-byte overage, with initial JS at 289894 bytes. Enable a second Terser compression pass in `apps/web/vite.config.ts` so expressions exposed by the first pass can be simplified. All other compression safety defaults remain unchanged. This round changes only that build configuration and this evidence document; it changes no display copy or runtime source.
+
+The c-i18n-coverage-completion-stub bundle-budget & copy scope ruling (2026-10-23 KST, KIX Commerce under 2026-10-15 standing delegation) remains recorded. The total ceiling stays 790000, initial JS stays 290000, and every route and render cap stays unchanged. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. No protocol contract or gate change is consumed.
+
+Verification below uses a clean `npm ci`, Node **22.23.4**, npm **11.21.1**, and Chrome **156.0.8078.47**. A temporary build outside the repository, overriding only `compress.passes` back to 1, supplies the same-install comparison. Local chunk sizes do not reproduce the supplied CI byte counts exactly; they are local measurements, not an exact-head CI pass. The isolated comparison removes `VITE_*` inputs and uses an empty environment directory; no environment files or VITE inputs were present for `npm run build` either. An initial scratch invocation through `--input-type=module` failed in Vite's Terser worker; rerunning from a normal temporary `.mjs` file passed without a repository workaround.
+
+| Measurement | One pass | Two passes | Unchanged ceiling |
+| --- | ---: | ---: | ---: |
+| Initial JS gzip | 289507 | 289514 | 290000 |
+| Initial CSS gzip | 4965 | 4965 | 5000 |
+| Total gzip | 789319 | 789137 | 790000 |
+| Largest route chunk gzip | 28279 | 28303 | 30000 |
+
+The second pass saves 182 total gzip bytes on the same install. The final build has 863 bytes of total headroom and 486 bytes of initial JS headroom. Browser split measurement is 340443 landing JS gzip bytes, below 400000. The budget file, size checker, tests, CI workflow, locked adapter bindings, `.aiops/`, `docs/aiops/`, and all baseline PNG/manifest bytes remain unchanged.
+
+| Check | Fix-round result / local evidence |
+| --- | --- |
+| `npm ci` | PASS; `/tmp/kix-locale-ci-install.log` |
+| `npm run typecheck`, `npm run build`, `npm run typecheck:e2e` | PASS; `/tmp/kix-locale-typecheck.log`, `/tmp/kix-locale-clean-build.log`, `/tmp/kix-locale-e2e-typecheck.log` |
+| `KIX_REQUIRE_GATE=0 npm test` | PASS: adapter 65 files / 1335 tests, 23 gate-dependent tests skipped; web 84 files / 1096 tests; `/tmp/kix-locale-test.log` |
+| AST, eight-screen ko/en, retained reads, expiry authority, i18n-coverage, i18n, display-preferences, user-guides | Included in the passing full web suite; scratch violations detected and real source has zero locale-less calls |
+| `npm run budget` | PASS, all static caps; `/tmp/kix-locale-final-budget.log`; additional JSON measurement `/tmp/kix-locale-clean-budget.json` |
+| `npm run test:budget` | PASS: 3 files / 9 tests; `/tmp/kix-locale-browser-budget.json` |
+| `npm run test:visual` | PASS: 3 files / 42 tests, all 32 shots MATCH; all 16 Korean pictures have zero differing pixels; `/tmp/kix-locale-visual.json` |
+| `npm run lint`, `npm run cycle-check`, `npm run deps:check`, `npm run audit:warn` | PASS; production audit reports zero vulnerabilities |
+| `KIX_REQUIRE_GATE=0 npm run coverage:check` | PASS: all tests and floors; adapter lines/statements 91.22%, functions 97.44%, branches 84.59%; web lines/statements 92.32%, functions 78.08%, branches 88.52%; `/tmp/kix-locale-coverage.log` |
+| `git diff --check`; protected-path comparison against base `a0c6f89` | PASS; locked bindings SHA256 remains `83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249` |
+
+Visual comparison used the existing `linux-d29b2e9b` profile. There are still no affected Korean pictures to re-record; English PNGs and the manifest remain byte-identical. Visual and browser-budget ledgers report no non-loopback requests, non-GET requests, or application network calls. These are local stub observations, not release qualification. The private live-gate/token job remains unrun locally; no credentials were requested or used.
+
+The first journey/accessibility runs overlapped and reported only timeouts: notifications one-attempt while opening the screen, M02 REJECT, and gift reflow. Journey totals were 172 passed / 2 timed out; accessibility totals were 268 passed / 1 timed out. Logs are `/tmp/kix-locale-e2e.log` and `/tmp/kix-locale-a11y.log`. No timeout, assertion, retry setting, CI rule, or product source was changed in response. Subsequent complete runs execute separately to check whether these failures reproduce without the overlapping browser workloads.
+
+| Separate rerun | Result |
+| --- | --- |
+| `npm run test:e2e` | 42 files passed / 1 failed; 173 tests passed / 1 timed out. Notifications one-attempt and M02 REJECT now pass (1918ms and 2197ms). Provider one-attempt, which passed in the first run, timed out at 115421ms against the existing 60000ms limit. A concurrent tool wait requested for 25 seconds also returned after 115.45 seconds. `/tmp/kix-locale-e2e-rerun.log` |
+| `npm run test:a11y` | 14 files passed / 1 failed; 268 tests passed / 1 timed out. Gift reflow now passes. Korean desktop gallery, which passed in the first run, reports a 120000ms timeout with a displayed case duration of 38498ms. `/tmp/kix-locale-a11y-rerun.log` |
+
+The changing timeout subjects and observed scheduling delay suggest a host timing problem; that is an inference, not a full-suite pass. All journey/accessibility cases passed in at least one run, but results from different runs are not combined into a green matrix. Exact-head CI must confirm these two jobs on a stable runner. The bundle failure is fixed locally, while the all-jobs-green acceptance remains unverified; root `DECISION_REQUIRED.md` records this validation boundary.

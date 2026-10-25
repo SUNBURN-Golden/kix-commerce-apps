@@ -7,8 +7,12 @@ const appDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
-  // Preserve the existing size limits as app-wide connectivity adds shell code.
-  build: { minify: "terser" },
+  // Preserve the existing size limits for the localized stub bundle.
+  build: {
+    minify: "terser",
+    // Revisit expressions exposed by the first pass without changing compression safety defaults.
+    terserOptions: { compress: { passes: 2 } },
+  },
   resolve: {
     alias: {
       "@kix/protocol-adapter": path.resolve(appDir, "../../packages/protocol-adapter/src/index.ts"),
