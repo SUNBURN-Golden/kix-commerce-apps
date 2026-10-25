@@ -7,9 +7,11 @@ const appDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
-  // Preserve the existing size limits as app-wide connectivity adds shell code.
+  // Preserve the existing size limits for localized copy and the shared app shell.
   build: {
     minify: "terser",
+    // Revisit expressions exposed by the first pass without changing compression safety defaults.
+    terserOptions: { compress: { passes: 2 } },
     rollupOptions: {
       output: {
         // Related desk copy shares vocabulary. Compress these lazy catalogues together
