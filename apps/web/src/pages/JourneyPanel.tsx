@@ -6,11 +6,7 @@ import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { Link } from "react-router-dom";
-import {
-  JOURNEY_DESK_NOT_BOUND,
-  JOURNEY_NOT_COMPOSED,
-  JOURNEY_RULING,
-} from "@kix/protocol-adapter";
+import { JOURNEY_DESK_NOT_BOUND, JOURNEY_NOT_COMPOSED, JOURNEY_RULING } from "../../../../packages/protocol-adapter/src/booking-journey";
 import type { JourneyPanelModel, JourneyRowStatus } from "../journey-desk";
 
 const STATUS_TEXT: Record<JourneyRowStatus, string> = {

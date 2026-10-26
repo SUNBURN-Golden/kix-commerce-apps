@@ -1,3 +1,4 @@
+import { renderWhenReady } from "./bootstrap";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
@@ -13,7 +14,7 @@ if (!root) {
   throw new Error("Missing #root");
 }
 
-createRoot(root).render(
+void renderWhenReady(() => createRoot(root).render(
   <StrictMode>
     <LocaleProvider>
       <BrowserRouter>
@@ -26,4 +27,4 @@ createRoot(root).render(
       </BrowserRouter>
     </LocaleProvider>
   </StrictMode>,
-);
+));

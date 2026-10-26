@@ -7,7 +7,7 @@ import { messages as copy3 } from "../i18n/messages/refund-return";
 import { messages as copy4 } from "../i18n/messages/workspace--registry";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ProtocolError, type Performance, type SettlementCaseView } from "@kix/protocol-adapter";
+import { ProtocolError, type Performance, type SettlementCaseView } from "../../../../packages/protocol-adapter/src/types";
 import { capacityLine } from "../a11y/present";
 import { StatusMark } from "../a11y/marks";
 import { useT } from "../i18n/desk-context";

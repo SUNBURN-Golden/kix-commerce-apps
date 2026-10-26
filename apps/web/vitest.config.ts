@@ -18,6 +18,7 @@ export default defineConfig({
     environment: "node",
     environmentOptions: { jsdom: { url: "http://127.0.0.1:5173" } },
     reporters: ["default", new AsyncStateReporter()],
+    exclude: ["test/cold/**", "node_modules/**"],
     include: ["test/**/*.test.ts", "test/**/*.test.tsx"],
     // Every screen is imported before a test file runs, so a synchronous render sees the screen, not the loading note.
     setupFiles: ["./test/support/preload-screens.ts"],

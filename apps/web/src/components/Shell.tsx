@@ -3,7 +3,7 @@ import { connectivity } from "../connectivity/store";
 
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { CREDIT_BOUNDARY, ProtocolError, type TransportObservation } from "@kix/protocol-adapter";
+import { CREDIT_BOUNDARY, ProtocolError, type TransportObservation } from "../../../../packages/protocol-adapter/src/shell-entry";
 import { transportStatusWord } from "../a11y/marks";
 import { motionReduced, REDUCED_MOTION_QUERY } from "../a11y/motion";
 import { marketingChromeLabel } from "../marketing/labels";

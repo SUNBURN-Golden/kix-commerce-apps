@@ -1,4 +1,4 @@
-import { HttpProtocolAdapter } from "./http-adapter.js";
+import { createVerifiedHttpProtocol } from "./http-entry.js";
 import type { CommerceProtocol } from "./protocol.js";
 import { resolveRuntimeEnvironment } from "./runtime-env.js";
 import { ProtocolError } from "./types.js";
@@ -27,5 +27,5 @@ export function createProtocol(options: ProtocolOptions = {}): CommerceProtocol 
       "KIX_PROTOCOL_API_BASE is required when KIX_PROTOCOL_MODE=http. integration-http does not fall back to the stub.",
     );
   }
-  return new HttpProtocolAdapter(baseUrl, options.fetchImpl);
+  return createVerifiedHttpProtocol({ baseUrl, fetchImpl: options.fetchImpl });
 }

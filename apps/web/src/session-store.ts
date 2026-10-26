@@ -1,4 +1,4 @@
-import type { SessionStorePort } from "@kix/protocol-adapter";
+import type { SessionStorePort } from "../../../packages/protocol-adapter/src/shell-entry";
 import { assertAllowedStorageKey } from "./storage-allow-list";
 
 /**

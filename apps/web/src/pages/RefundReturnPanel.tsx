@@ -21,7 +21,7 @@ import {
   type RefundControl,
   type RefundReturnModel,
 } from "../refund-return";
-import { REFUND_SCENARIOS, type RefundScenario, type RefundStep } from "@kix/protocol-adapter";
+import { REFUND_SCENARIOS, type RefundScenario, type RefundStep } from "../../../../packages/protocol-adapter/src/refund-return";
 
 export interface RefundDeskLive {
   environment: "stub" | "integration-http";

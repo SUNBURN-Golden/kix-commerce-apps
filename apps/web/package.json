@@ -7,7 +7,7 @@
     "dev": "vite --host 0.0.0.0 --port 5173",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run && vitest run --config vitest.entry.config.ts",
     "preview": "vite preview --host 0.0.0.0 --port 5173"
   },
   "dependencies": {
