@@ -2,14 +2,9 @@ import { messages as sourceCopy } from "./i18n/messages/gift-desk";
 import { sourceMessage } from "./i18n/source-message";
 import { connectivityInvoker, connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
-import {
-  GiftTransfer,
-  GIFT_COMPOSED,
-  ProtocolError,
-  type GiftStep,
-  type GiftStepOutcome,
-  type TransportObservation,
-} from "@kix/protocol-adapter";
+import { GiftTransfer, GIFT_COMPOSED, type GiftStep, type GiftStepOutcome } from "../../../packages/protocol-adapter/src/gift-transfer";
+import { ProtocolError } from "../../../packages/protocol-adapter/src/types";
+import { type TransportObservation } from "../../../packages/protocol-adapter/src/operational-error";
 import type { GiftInvokerSource, GiftSource } from "@kix/protocol-adapter";
 import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 import { giftSource } from "./gift-source";

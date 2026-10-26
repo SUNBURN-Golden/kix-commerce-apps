@@ -2,14 +2,9 @@ import { messages as sourceCopy } from "./i18n/messages/journey-desk";
 import { sourceMessage } from "./i18n/source-message";
 import { connectivityInvoker, connectedHandler } from "./connectivity/write-guard";
 import { useCallback, useEffect, useSyncExternalStore } from "react";
-import {
-  BookingJourney,
-  JOURNEY_COMPOSED,
-  ProtocolError,
-  type JourneyStep,
-  type JourneyStepOutcome,
-  type TransportObservation,
-} from "@kix/protocol-adapter";
+import { BookingJourney, JOURNEY_COMPOSED, type JourneyStep, type JourneyStepOutcome } from "../../../packages/protocol-adapter/src/booking-journey";
+import { ProtocolError } from "../../../packages/protocol-adapter/src/types";
+import { type TransportObservation } from "../../../packages/protocol-adapter/src/operational-error";
 import type { JourneyInvokerSource, JourneySource } from "@kix/protocol-adapter";
 import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 import { journeySource } from "./journey-source";

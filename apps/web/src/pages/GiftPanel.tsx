@@ -4,7 +4,8 @@ import { messages as copy2 } from "../i18n/messages/storage-allow-list";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
-import { GIFT_DESK_NOT_BOUND, GIFT_NOT_COMPOSED, JOURNEY_RULING } from "@kix/protocol-adapter";
+import { GIFT_DESK_NOT_BOUND, GIFT_NOT_COMPOSED } from "../../../../packages/protocol-adapter/src/gift-transfer";
+import { JOURNEY_RULING } from "../../../../packages/protocol-adapter/src/booking-journey";
 import { StatusMark } from "../a11y/marks";
 import type { GiftPanelModel, GiftRowStatus } from "../gift-desk";
 

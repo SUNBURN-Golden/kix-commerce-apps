@@ -1,4 +1,4 @@
-import type { TransportObservation } from "@kix/protocol-adapter";
+import type { TransportObservation } from "../../../packages/protocol-adapter/src/shell-entry";
 import { makeTranslate, type Translate } from "./i18n/translate";
 import { DEFAULT_LOCALE } from "./i18n/locales";
 

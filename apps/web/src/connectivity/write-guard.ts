@@ -1,4 +1,4 @@
-import { ProtocolError, type CommerceProtocol, type LocalCallInvoker } from "@kix/protocol-adapter";
+import { ProtocolError, type CommerceProtocol, type LocalCallInvoker } from "../../../../packages/protocol-adapter/src/shell-entry";
 import { connectivity, type ConnectivityStore, type ReadConnectivityStamp } from "./store";
 
 export const OFFLINE_NOT_SENT = "Connection unavailable. Nothing sent. No write is queued or retried.";

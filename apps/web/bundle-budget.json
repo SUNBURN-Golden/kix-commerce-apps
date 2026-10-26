@@ -2,6 +2,15 @@
   "schema": "kix-commerce-bundle-budget/1",
   "scope": "clean stub build (no VITE_* variable, envDir empty), gzip level 9 of each emitted file, measured by scripts/check-bundle-budget.mjs. App-internal; not a public schema, operation or ID. Tripwires for this repository's CI, not an SLO, a qualification or a production performance claim.",
   "baseline": {
+    "entryHeadroom": {
+      "sourceSha": "5c0a96a1e73c87ff672a15fe7464be3f25e8713d plus c-plan-d-entry-bundle-headroom-stub working tree",
+      "nodeVersion": "22.20.0",
+      "note": "Clean stub build with narrow shell entry, lazy verified pin runtime and explicit display-copy groups; existing limits unchanged.",
+      "initialJsGzip": 161447,
+      "initialCssGzip": 4974,
+      "totalGzip": 778382,
+      "fileCount": 100
+    },
     "preSplit": {
       "sourceSha": "f5707862624cc34c249a1b4602da2e3e9c9d0764",
       "note": "main before this node; every screen in one entry chunk",

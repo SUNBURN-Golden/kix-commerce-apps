@@ -3,7 +3,7 @@ import { messages as bindingCopy } from "../i18n/messages/workspace--registry";
 import { useT } from "../i18n/desk-context";
 import { deskText } from "../i18n/desk-translate";
 import { Link } from "react-router-dom";
-import type { COMMERCE_COMMAND_BINDINGS, CommerceMethod } from "@kix/protocol-adapter";
+import type { COMMERCE_COMMAND_BINDINGS, CommerceMethod } from "../../../../packages/protocol-adapter/src/shell-entry";
 import { useLocale } from "../i18n/locale-context";
 import { STATE_ACTION_MESSAGES, STATE_MESSAGES } from "../async-state/messages";
 import { AsyncStateFrame, type AsyncStateFrameProps } from "./AsyncStateFrame";

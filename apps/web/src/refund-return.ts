@@ -18,28 +18,8 @@ import { connectivityPort, connectivityController, connectedActions } from "./co
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  REFUND_FLOW_LINES,
-  REFUND_HOLD_NOT_BOUND,
-  REFUND_IDENTITY_REGISTER,
-  REFUND_LINE_ACTIONS,
-  REFUND_RETURN_DESK_ACTOR,
-  REFUND_RETURN_NOT_BOUND_REASON,
-  REFUND_RETURN_NOT_COMPOSED,
-  RefundReturnController,
-  projectRefundReturn,
-  refundReturnPortFor,
-  type RefundCaseProjection,
-  type RefundCell,
-  type RefundFence,
-  type RefundFlowLine,
-  type RefundReadState,
-  type RefundRefreshCause,
-  type RefundReturnPort,
-  type RefundScenario,
-  type RefundStep,
-  type RefundStepResult,
-} from "@kix/protocol-adapter";
+import { REFUND_FLOW_LINES, REFUND_HOLD_NOT_BOUND, REFUND_IDENTITY_REGISTER, REFUND_LINE_ACTIONS, REFUND_RETURN_DESK_ACTOR, REFUND_RETURN_NOT_BOUND_REASON, REFUND_RETURN_NOT_COMPOSED, refundReturnPortFor, type RefundCell, type RefundFlowLine, type RefundReturnPort, type RefundScenario, type RefundStep } from "../../../packages/protocol-adapter/src/refund-return";
+import { RefundReturnController, projectRefundReturn, type RefundCaseProjection, type RefundFence, type RefundReadState, type RefundRefreshCause, type RefundStepResult } from "../../../packages/protocol-adapter/src/refund-return-controller";
 import { protocol } from "./connectivity/desk-protocol";
 import type { OutcomeTrack } from "./workspace/registry";
 
