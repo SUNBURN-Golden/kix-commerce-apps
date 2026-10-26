@@ -476,3 +476,8 @@ export function useSessionRecoveryDesk(): {
     actions: connectedActions(actions, ['attach', 'setScenario'], deskRef.current?.port),
   };
 }
+
+/** Observe the existing controller without opening or verifying the journal. */
+export function pageSessionJournalState(): SessionControllerState | null {
+  return pageRecovery?.state() ?? null;
+}

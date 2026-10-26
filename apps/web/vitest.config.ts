@@ -1,4 +1,5 @@
 import { AsyncStateReporter } from "./test/support/async-state-reporter";
+import { computeBuildIdentity } from "./build-identity";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
@@ -6,6 +7,7 @@ import { defineConfig } from "vitest/config";
 const appDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  define: { __KIX_BUILD_IDENTITY__: JSON.stringify(computeBuildIdentity()) },
   esbuild: {
     jsx: "automatic",
   },

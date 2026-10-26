@@ -145,6 +145,10 @@ export const ROUTES = [
     parent: "/handoff",
     note: "The help page is a glossary copy of the guide documents; it has no workspace surface, so the evidence matrix has no row for it.",
   }),
+  route("diagnostics", "/diagnostics", "Diagnostics", "verification", "stub-only", null, {
+    parent: "/help", nav: "section",
+    note: "Read-only app diagnostics have no workspace surface, so the evidence matrix has no row.",
+  }),
 ] as const satisfies readonly RouteEntry[];
 
 /** Production matrices intentionally keep ROUTES. The development extension is compile-time removed. */

@@ -25,6 +25,8 @@ interface RouteEvidence {
 }
 
 const evidence: readonly RouteEvidence[] = [
+  { route: "diagnostics", fact: "Read-only page-lifetime terminal outcomes, including UNKNOWN. No command or freshness-bearing read; excluded from role onboarding.",
+    checks: { empty: { file: "diagnostics.test.tsx", title: "renders empty page-load outcomes" }, unknown: { file: "diagnostics.test.tsx", title: "renders UNKNOWN without resolving it" } }, drivers: {} },
   {
     "route": "buyer",
     "fact": "Buyer catalogue, journey track and read-only refund desk.",
@@ -658,7 +660,7 @@ export const SCREEN_STATE_MATRIX: readonly ScreenStateCell[] = evidence.flatMap(
   const driver = state === "loading" ? "screen-import-pending" : state === "error" ? "screen-render-fault" : row.drivers[state];
   const check = driver ? { file: "async-state-matrix.test.tsx", title: checkId } : row.checks[state];
   const route = ROUTES.find((entry) => entry.id === row.route);
-  const excluded = row.route === "help" || row.route === "marketing" || row.route === "marketing-m03" || state === "stale" || ["admission", "credit", "resale", "organizer", "gift", "marketing-m01", "marketing-m04", "marketing-m05"].includes(row.route);
+  const excluded = row.route === "diagnostics" || row.route === "help" || row.route === "marketing" || row.route === "marketing-m03" || state === "stale" || ["admission", "credit", "resale", "organizer", "gift", "marketing-m01", "marketing-m04", "marketing-m05"].includes(row.route);
   return {
     route: row.route, state, checkId,
     kind: driver ? "CHECKED" : check ? "REFERENCE" : excluded ? "NOT_APPLICABLE" : "NOT_REACHABLE",

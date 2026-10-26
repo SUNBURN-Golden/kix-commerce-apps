@@ -8,3 +8,5 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+declare const __KIX_BUILD_IDENTITY__: import("./diagnostics/build-identity").BuildIdentity;

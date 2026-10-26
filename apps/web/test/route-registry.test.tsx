@@ -47,6 +47,7 @@ const LEGACY_PATTERNS = [
   "/marketing/journey", "/marketing/m01", "/marketing/m02", "/marketing/m03", "/marketing/m04", "/marketing/m05", "/assistant", "/permissions",
   "/notifications", "/provider", "/marketplace-performance", "/mobile", "/qualification", "/release", "/identity", "/session", "/journeys",
   "/help",
+  "/diagnostics",
 ];
 
 describe("registry structure", () => {

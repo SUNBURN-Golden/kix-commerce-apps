@@ -1,3 +1,4 @@
+import { pageOutcomes } from "./diagnostics/outcomes";
 import { messages as sourceCopy } from "./i18n/messages/gift-desk";
 import { sourceMessage } from "./i18n/source-message";
 import { connectivityInvoker, connectedHandler } from "./connectivity/write-guard";
@@ -404,7 +405,11 @@ export class GiftDesk {
   }
 
   private publish(): void {
-    this.snapshot = this.buildSnapshot();
+    const next = this.buildSnapshot();
+    pageOutcomes.observe("gift",
+      this.snapshot.gifts.map((item) => ({ refId: item.giftId, rows: item.rows })),
+      next.gifts.map((item) => ({ refId: item.giftId, rows: item.rows })));
+    this.snapshot = next;
     for (const listener of this.listeners) {
       listener();
     }

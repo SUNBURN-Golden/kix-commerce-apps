@@ -46,6 +46,7 @@ export const VISUAL_SCREENS: readonly VisualScreen[] = [
   { screenId: "organizer-workspace", path: "/organizer/workspace", matrix: "full" },
   { screenId: "handoff", path: "/handoff", matrix: "full" },
   { screenId: "help", path: "/help", matrix: "full" },
+  { screenId: "diagnostics", path: "/diagnostics", matrix: "coverage" },
   { screenId: "inventory", path: "/inventory", matrix: "coverage" },
   { screenId: "admission", path: "/admission", matrix: "coverage" },
   { screenId: "resale", path: "/resale", matrix: "coverage" },
