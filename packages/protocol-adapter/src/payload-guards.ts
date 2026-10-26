@@ -154,6 +154,9 @@ function scanDeep(value: unknown, depth: number): void {
   if (!isRecord(value)) {
     return;
   }
+  if ("fundsExecuted" in value && value.fundsExecuted !== false) {
+    throw new ProtocolError("Remote payload must not claim executed funds.", "GATE_STATUS");
+  }
   scan(value);
   for (const child of Object.values(value)) {
     scanDeep(child, depth + 1);

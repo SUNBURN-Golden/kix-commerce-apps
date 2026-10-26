@@ -16,7 +16,7 @@ No catalogue, gate, or SDK change is consumed. Both OpenAPI pins, `PINNED_ACTION
 
 Nothing goes to a protocol. The desk sends no local call and no money posting. Its writes land on an in-process synthetic source (`synthetic-refund`), which is a stand-in for the producer refund surface. `capture` and `settle_capture` are never composed or sent; `commit_trade`, `open_admission`, and `admit` stay uncomposed; `refund_ticket`, `void_unissued`, `adjust_pg_cancel`, and `observe_return` are pinned and recorded in `REFUND_RETURN_NOT_COMPOSED` and are never sent; the catalogue has no booking-cancel command, so the synthetic cancel line names none. `placeHold` stays not-bound with `consideredAction` `reserve_listing` (`REFUND_HOLD_NOT_BOUND` quotes the locked binding). The five synthetic steps (`cancel`, `void`, `adjust`, `observe-return`, `refund`) are not desk methods and not catalogue commands.
 
-On `integration-http` the read and every write are `not-bound`: the contract-only catalogue has no order read or refund command, and `api-state-distinction` and `refund-surface` are not promoted. There is no stub fallback, no third adapter, and no request.
+On `integration-http` the read and every write are `not-bound`: as recorded by `REFUND_RETURN_NOT_BOUND_REASON`, the contract-only catalogue has no order read or matching refund-case binding, and `api-state-distinction` and `refund-surface` are not promoted. `refund_ticket`, `void_unissued`, `adjust_pg_cancel`, and `observe_return` are pinned but remain uncomposed. There is no stub fallback, no third adapter, and no request.
 
 ## The five states and the per-screen mapping
 

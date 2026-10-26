@@ -70,7 +70,7 @@ Every call is `invokeLocalCall` with its own `operationId`. The reference finger
 
 A stored success receipt is `{ domain, operationId, sequence, action, result }` for that same id and action. `sequence` is not a request field.
 
-A parsed rejection is a rejection. The reference raises `Rejected` before commit, so the effect is absent. On the gate, HTTP 422 and any body with `rejected: true` stay rejections. The next command is not sent. The same `operationId` is not reused with a repaired body.
+A parsed rejection is a rejection. The reference raises `Rejected` before commit, so the effect is absent. On the gate, only HTTP 400 or 422 with a non-array object containing `rejected: true` and a nonblank string `error`, after transport, trace, JSON, and payload validation, proves a rejection. Empty or malformed rejection bodies and rejection objects on incompatible statuses stay `UNKNOWN` with trace IDs and code `GATE_STATUS`. The next command is not sent. The same `operationId` is not reused with a repaired body.
 
 A missing authoritative receipt is `UNKNOWN`. That includes `REQUEST_TIMEOUT`, a closed port after the request was written (`GATE_UNAVAILABLE`), and a body cut off mid-read. The reference can tell a pre-commit rollback (`fail_before_commit`) from a commit followed by `INJECTED_RESPONSE_LOSS_AFTER_COMMIT`. The HTTP client cannot. Both look like a lost response. The journey treats both as `UNKNOWN`. The caller does not start the next step, does not mint a replacement `operationId`, and does not retry. A non-authoritative read cannot prove payment, issuance, or admission. This node adds no read.
 

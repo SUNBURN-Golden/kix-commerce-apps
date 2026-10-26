@@ -310,6 +310,34 @@ describe("booking journey fences", () => {
     expect(requests).toEqual([{ action: "create_event", idempotency: undefined }]);
   });
 
+  it.each([
+    { status: 422, body: "" }, { status: 422, body: "null" },
+    { status: 400, body: JSON.stringify({ rejected: true, error: " " }) },
+    { status: 422, body: JSON.stringify({ rejected: true }) },
+    ...[200, 500, 503].map((status) => ({ status, body: JSON.stringify({ rejected: true, error: "INVALID" }) })),
+  ])("fences a malformed rejection ($status, $body) with its original identity", async ({ status, body }) => {
+    const seen: RequestInit[] = [];
+    const journey = new BookingJourney(new HttpProtocolAdapter("http://127.0.0.1:8765", async (_url, init) => {
+      seen.push(init ?? {});
+      return new Response(body, { status, headers: echoIntegrationGateHeaders(init) });
+    }));
+    const outcome = await journey.createEvent(createInput());
+    const headers = new Headers(seen[0]?.headers);
+    expect(outcome).toMatchObject({ kind: "UNKNOWN", code: "GATE_STATUS", identity: {
+      operationId: "op-create", actor: "operator", action: "create_event",
+      body: { eventId: "show-1", seats: ["A1"] }, requestId: headers.get("x-request-id"),
+      correlationId: headers.get("x-correlation-id"),
+    } });
+    expect(journey.state()).toMatchObject({ completedThrough: "none", halted: { kind: "UNKNOWN" } });
+    if (outcome.kind !== "UNKNOWN") throw new Error("Expected UNKNOWN");
+    expect(journey.state().halted?.identity).toEqual(outcome.identity);
+    expect(await journey.prepareTrade({ operationId: "never-sent", tradeId: "trade-1", buyer: "buyer-a" }))
+      .toMatchObject({ kind: "FENCED", blockedBy: { reason: "halted", identity: outcome.identity } });
+    expect(seen).toHaveLength(1);
+    expect(JSON.parse(String(seen[0]?.body))).toMatchObject({ operationId: "op-create" });
+    expect(headers.has("idempotency-key")).toBe(false);
+  });
+
   it("keeps a non-422 response without rejected:true as unknown", async () => {
     const base = await listen(async (req, res) => {
       await readRequest(req);

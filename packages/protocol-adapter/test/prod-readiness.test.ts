@@ -162,7 +162,7 @@ describe("integration HTTP environment", () => {
         action: "advance_clock",
         body: { domain: PINNED_PROTOCOL_DOMAIN, now: 1 },
       }),
-    ).rejects.toMatchObject({ code: "HIDDEN" });
+    ).rejects.toMatchObject({ code: "GATE_STATUS" });
     expect(keyed).toBe(1);
   });
 

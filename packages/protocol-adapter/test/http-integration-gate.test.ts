@@ -4,6 +4,8 @@ import {
   CONTRACT_ONLY_LOCAL_CALL_PATH,
   CREDIT_BOUNDARY,
   HttpProtocolAdapter,
+  GateRejectedError,
+  ProtocolError,
   INTEGRATION_GATE_HEALTH_PATH,
   INTEGRATION_GATE_READY_PATH,
   PINNED_PROTOCOL_DOMAIN,
@@ -11,6 +13,7 @@ import {
   admissionDeskState,
   echoIntegrationGateHeaders,
 } from "../src/index.js";
+import { localCallReceipt } from "./support/receipt.js";
 import { assertReviewedCheckout, protocolRoot, REVIEWED_GATE_RUNS, startGate, stopGate } from "./support/reviewed-gate.js";
 
 const describeGate = REVIEWED_GATE_RUNS ? describe.sequential : describe.skip;
@@ -84,7 +87,7 @@ describe("http mode fail-closed without a server", () => {
         action: "advance_clock",
         body: { domain: PINNED_PROTOCOL_DOMAIN, now: 1 },
       }),
-    ).rejects.toMatchObject({ code: "HIDDEN" });
+    ).rejects.toMatchObject({ code: "GATE_STATUS" });
 
     const listing: typeof fetch = async (_input, init) =>
       new Response(
@@ -116,6 +119,49 @@ describe("http mode fail-closed without a server", () => {
       action: "create_listing",
       result: { listingId: "lst_fixture", rightLocked: false },
     });
+  });
+});
+
+describe("offline rejection validation", () => {
+  const input = { operationId: "op-reject", actor: "operator", action: "advance_clock" as const,
+    body: { domain: PINNED_PROTOCOL_DOMAIN, now: 1 } };
+  const malformedBodies = ["", " \n\t", "null", '"rejected"', "0", "true", "[]", "{}",
+    ...[ { error: "INVALID" }, { rejected: false, error: "INVALID" }, { rejected: "true", error: "INVALID" },
+      { rejected: true }, { rejected: true, error: "" }, { rejected: true, error: "  " },
+      { rejected: true, error: null }, { rejected: true, error: 1 }, { rejected: true, error: [] },
+      localCallReceipt(input.operationId, input.action, {}) ].map((body) => JSON.stringify(body))];
+  const ambiguous = [
+    ...[400, 422].flatMap((status) => malformedBodies.map((body) => ({ status, body }))),
+    ...[200, 500, 503].map((status) => ({ status, body: JSON.stringify({ rejected: true, error: "INVALID" }) })),
+  ];
+  it.each(ambiguous)("keeps ambiguous $status body $body traced and attempts once", async ({ status, body }) => {
+    const seen: RequestInit[] = [];
+    const adapter = new HttpProtocolAdapter("http://127.0.0.1:8765", async (_url, init) => {
+      seen.push(init ?? {});
+      return new Response(body, { status, headers: echoIntegrationGateHeaders(init) });
+    });
+    const error: unknown = await adapter.invokeLocalCall(input).catch((failure: unknown) => failure);
+    expect(error).toBeInstanceOf(ProtocolError);
+    expect(error).not.toBeInstanceOf(GateRejectedError);
+    const headers = new Headers(seen[0]?.headers);
+    expect(error).toMatchObject({ code: "GATE_STATUS", requestId: headers.get("x-request-id"),
+      correlationId: headers.get("x-correlation-id") });
+    expect(seen).toHaveLength(1);
+    expect(headers.has("idempotency-key")).toBe(false);
+  });
+  it.each([400, 422])("preserves validated %i rejection codes verbatim", async (status) => {
+    const seen: RequestInit[] = [];
+    const adapter = new HttpProtocolAdapter("http://127.0.0.1:8765", async (_url, init) => {
+      seen.push(init ?? {});
+      return new Response(JSON.stringify({ rejected: true, error: " REQUEST_TIMEOUT ", extra: "allowed" }),
+        { status, headers: echoIntegrationGateHeaders(init) });
+    });
+    const error: unknown = await adapter.invokeLocalCall(input).catch((failure: unknown) => failure);
+    expect(error).toBeInstanceOf(GateRejectedError);
+    expect(error).toMatchObject({ code: " REQUEST_TIMEOUT ", status,
+      requestId: new Headers(seen[0]?.headers).get("x-request-id"),
+      correlationId: new Headers(seen[0]?.headers).get("x-correlation-id") });
+    expect(seen).toHaveLength(1);
   });
 });
 
