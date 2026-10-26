@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Page } from "playwright-core";
 import { overflowProblems } from "./a11y-keyboard";
-import { FIXED_TIME_ISO, MAX_SHOT_HEIGHT, TOLERANCE, VISUAL_VIEWPORTS, type VisualShot } from "./visual-matrix";
+import { FIXED_TIME_ISO, MAX_SHOT_HEIGHT, TOLERANCE, VISUAL_MASKS, VISUAL_MASK_COLOR, VISUAL_VIEWPORTS, type VisualShot } from "./visual-matrix";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -25,6 +25,8 @@ export interface PixelComparison {
   actual: { width: number; height: number };
   expected: { width: number; height: number };
   sizeMatch: boolean;
+  /** Exact decoded RGBA equality; distinct from the normal RGB tolerance. */
+  exactPixelsEqual: boolean;
   diffPixels: number;
   /** A PNG with the differing pixels in red over a dimmed copy of the baseline. Only when pixels differ. */
   diffPng: Buffer | null;
@@ -58,8 +60,9 @@ export async function comparePngs(helper: Page, actual: Buffer, expected: Buffer
       const right = await read(b);
       const sizeMatch = left.width === right.width && left.height === right.height;
       if (!sizeMatch) {
-        return { actual: { width: left.width, height: left.height }, expected: { width: right.width, height: right.height }, sizeMatch, diffPixels: 0, diffPng: null as string | null };
+        return { actual: { width: left.width, height: left.height }, expected: { width: right.width, height: right.height }, sizeMatch, exactPixelsEqual: false, diffPixels: 0, diffPng: null as string | null };
       }
+      const exactPixelsEqual = left.data.every((value, index) => value === right.data[index]);
       const diff = new ImageData(left.width, left.height);
       let diffPixels = 0;
       for (let i = 0; i < left.data.length; i += 4) {
@@ -89,7 +92,7 @@ export async function comparePngs(helper: Page, actual: Buffer, expected: Buffer
         canvas.getContext("2d")?.putImageData(diff, 0, 0);
         diffPng = canvas.toDataURL("image/png").split(",")[1] ?? null;
       }
-      return { actual: { width: left.width, height: left.height }, expected: { width: right.width, height: right.height }, sizeMatch, diffPixels, diffPng };
+      return { actual: { width: left.width, height: left.height }, expected: { width: right.width, height: right.height }, sizeMatch, exactPixelsEqual, diffPixels, diffPng };
     },
     { a: actual.toString("base64"), b: expected.toString("base64"), channelDelta: TOLERANCE.channelDelta },
   );
@@ -193,7 +196,10 @@ export interface BaselineManifest {
   appHead: string;
   recordedOn: string;
   shots: number;
+  hashes: Record<string, string>;
 }
+
+export const pngHash = (bytes: Buffer): string => crypto.createHash("sha256").update(bytes).digest("hex");
 
 export const profileDir = (profile: string, root: string = BASELINE_ROOT): string => path.join(root, profile);
 
@@ -246,6 +252,9 @@ export async function settleShot(helper: Page, profile: RenderProfile, id: strin
   const target = path.join(dir, `${id}.png`);
   if (isUpdate(env)) {
     fs.mkdirSync(dir, { recursive: true });
+    if (fs.existsSync(target) && (await comparePngs(helper, actual, fs.readFileSync(target))).exactPixelsEqual) {
+      return { id, ...size, diffPixels: 0, diffPpm: 0, result: "MATCH" };
+    }
     fs.writeFileSync(target, actual);
     return { id, ...size, diffPixels: 0, diffPpm: 0, result: "RECORDED" };
   }
@@ -314,6 +323,7 @@ export function baselineProblems(root: string, ids: readonly string[]): string[]
       }
       try {
         const size = pngSize(fs.readFileSync(path.join(dir, name)));
+        if (size.height > MAX_SHOT_HEIGHT) problems.push(`${profile}: ${name} is taller than MAX_SHOT_HEIGHT`);
         if (!widths.has(size.width) || size.height < 1) {
           problems.push(`${profile}: ${name} is ${size.width}x${size.height}`);
         }
@@ -332,6 +342,15 @@ export function baselineProblems(root: string, ids: readonly string[]): string[]
       continue;
     }
     const manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8")) as Partial<BaselineManifest>;
+    if (!manifest.hashes || JSON.stringify(Object.keys(manifest.hashes).sort()) !== JSON.stringify([...ids].sort())) {
+      problems.push(`${profile}: manifest hashes do not list exactly the shot ids`);
+    }
+    for (const id of ids) {
+      const file = path.join(dir, `${id}.png`);
+      if (fs.existsSync(file) && manifest.hashes && Object.hasOwn(manifest.hashes, id) && pngHash(fs.readFileSync(file)) !== manifest.hashes[id]) {
+        problems.push(`${profile}: ${id}.png hash differs from the manifest`);
+      }
+    }
     if (manifest.profile !== profile) {
       problems.push(`${profile}: manifest names profile ${String(manifest.profile)}`);
     }
@@ -395,8 +414,39 @@ export async function openShot(page: Page, origin: string, shot: VisualShot): Pr
 }
 
 /** The top of the page: full width, at most MAX_SHOT_HEIGHT tall. */
-export async function takeShot(page: Page): Promise<Buffer> {
+export async function takeShot(page: Page, shot: VisualShot): Promise<Buffer> {
   const size = await page.evaluate(() => ({ width: document.documentElement.clientWidth, height: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) }));
   const clip = { x: 0, y: 0, width: size.width, height: Math.min(size.height, MAX_SHOT_HEIGHT) };
-  return page.screenshot({ fullPage: true, clip, animations: "disabled", caret: "hide", scale: "css", type: "png" });
+  const mask = (VISUAL_MASKS[shot.screenId] ?? []).map((spec) => maskLocator(page, spec));
+  return page.screenshot({ mask, maskColor: VISUAL_MASK_COLOR, fullPage: true, clip, animations: "disabled", caret: "hide", scale: "css", type: "png" });
+}
+
+function maskLocator(page: Page, mask: { selector: string; hasText?: string }) {
+  const locator = page.locator(mask.selector);
+  return mask.hasText ? locator.filter({ hasText: new RegExp(mask.hasText) }) : locator;
+}
+
+/** Refuse stale mask selectors and any visible per-load id outside the reviewed regions. */
+export async function maskProblems(page: Page, screenId: string): Promise<string[]> {
+  const masks = VISUAL_MASKS[screenId] ?? [];
+  const problems: string[] = [];
+  for (const mask of masks) {
+    const count = await maskLocator(page, mask).count();
+    if (count !== mask.count) problems.push(`${mask.maskId}: expected ${mask.count} targets, found ${count}`);
+  }
+  const leaked = await page.evaluate((specs) => {
+    const targets = specs.flatMap((spec) => Array.from(document.querySelectorAll(spec.selector)).filter((el) => !spec.hasText || new RegExp(spec.hasText).test(el.textContent ?? "")));
+    const unmasked = (el: Element) => !targets.some((target) => target.contains(el));
+    const visible = (el: Element) => el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true });
+    const id = /page:[0-9a-f]{16}/;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let node: Node | null;
+    while ((node = walker.nextNode())) {
+      const parent = node.parentElement;
+      if (parent && !parent.closest("script,style") && visible(parent) && unmasked(parent) && id.test(node.textContent ?? "")) return true;
+    }
+    return Array.from(document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input,textarea")).some((el) => visible(el) && unmasked(el) && id.test(el.value));
+  }, [...masks]);
+  if (leaked) problems.push(`${screenId}: unmasked visible session id`);
+  return problems;
 }

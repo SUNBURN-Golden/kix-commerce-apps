@@ -34,7 +34,7 @@ export const VISUAL_NOT_RUN = [
   "a Chrome version other than the one named above: a rendering change beyond the tolerance fails with diff pictures",
   "Firefox, Safari, a real device, a printer or a screen reader",
   "HTTP mode in a browser (needs a kix-protocol gate change)",
-  "the receipts screen: receipt-explorer.ts mints a page session id per load, so no two pictures can match",
+  "the receipts session paragraph and diagnostic export textarea: masked (receipts.session-id, receipts.diagnostic-export); pixels under a mask are not compared",
   "design review, user acceptance, qualification or release",
 ] as const;
 

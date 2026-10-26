@@ -1514,3 +1514,8 @@ button[data-connectivity-write][aria-disabled="true"] { cursor: not-allowed; }
   [data-status-mark="not-bound"],
   [data-status-mark="empty"]
 ) { border-style: dotted; }
+
+/* Protocol field names in the marketplace session notes must wrap on phones. */
+#mperf-session {
+  overflow-wrap: anywhere;
+}

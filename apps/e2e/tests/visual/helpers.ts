@@ -1,7 +1,7 @@
 import { beforeAll, expect } from "vitest";
 import type { Page } from "playwright-core";
 import type { Suite } from "../../src/suite";
-import { layoutProblems, openShot, renderProfile, settleShot, takeShot, type RenderProfile } from "../../src/visual-compare";
+import { layoutProblems, maskProblems, openShot, renderProfile, settleShot, takeShot, type RenderProfile } from "../../src/visual-compare";
 import { idOf, visualCheckId, type VisualShot } from "../../src/visual-matrix";
 import { recordShot } from "../../src/visual-record";
 
@@ -42,7 +42,8 @@ export async function checkShot(suite: Suite, visual: VisualContext, shot: Visua
   try {
     await openShot(page, suite.origin, shot);
     expect(await layoutProblems(page), `${id} layout`).toEqual([]);
-    const picture = await takeShot(page);
+    expect(await maskProblems(page, shot.screenId), `${id} masks`).toEqual([]);
+    const picture = await takeShot(page, shot);
     const result = await settleShot(visual.helper(), visual.profile(), id, picture);
     recordShot({ ...result, render: visual.profile() });
     await suite.pass(page, visualCheckId(id));
