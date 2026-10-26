@@ -63,9 +63,9 @@ describe("stub startup boundary", () => {
     const dist = path.join(web, "dist");
     const html = readFileSync(path.join(dist, "index.html"), "utf8");
     const initial = new Set<string>();
-    for (const tag of html.match(/<(?:script|link)\b[^>]*>/g) ?? []) {
-      if (!tag.startsWith("<script") && !/rel="modulepreload"/.test(tag)) continue;
-      const ref = /(?:src|href)="\/?([^"]+\.js)"/.exec(tag)?.[1];
+    for (const tag of html.match(/<(?:script|link)\b[^>]*>/gi) ?? []) {
+      if (!/^<script/i.test(tag) && !/rel="modulepreload"/i.test(tag)) continue;
+      const ref = /(?:src|href)="\/?([^"]+\.js)"/i.exec(tag)?.[1];
       if (ref) initial.add(ref);
     }
     expect(initial.size).toBeGreaterThan(0);
