@@ -3,6 +3,8 @@ import type { AddressInfo } from "node:net";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   HttpProtocolAdapter,
+  GateRejectedError,
+  ProtocolError,
   INTEGRATION_HTTP_TIMEOUT_MS,
   OPENAPI_INTEGRATION_GATE_PIN,
   PINNED_PROTOCOL_DOMAIN,
@@ -216,6 +218,47 @@ describe("integration HTTP success receipts", () => {
       );
       await expect(adapter.invokeLocalCall(CLOSE_SALES)).rejects.toThrow(message);
     }
+  });
+
+  it("rejects marker-free funds claims recursively, including rejection bodies", async () => {
+    for (const claim of [true, "false", 0, 1, null]) {
+      const bodies = [
+        { ...localCallReceipt("op-close", "close_sales", { salesStatus: "CLOSED" }), fundsExecuted: claim },
+        localCallReceipt("op-close", "close_sales", { salesStatus: "CLOSED", fundsExecuted: claim }),
+        localCallReceipt("op-close", "close_sales", { nested: { fundsExecuted: claim } }),
+        localCallReceipt("op-close", "close_sales", { nested: [{ deeper: [{ fundsExecuted: claim }] }] }),
+        { rejected: true, error: "INVALID", nested: [{ fundsExecuted: claim }] },
+      ];
+      for (const body of bodies) {
+        const seen: RequestInit[] = [];
+        const adapter = new HttpProtocolAdapter("http://127.0.0.1:8765", async (_url, init) => {
+          seen.push(init ?? {});
+          return new Response(JSON.stringify(body), { status: "rejected" in body ? 422 : 200,
+            headers: echoIntegrationGateHeaders(init) });
+        });
+        const error: unknown = await adapter.invokeLocalCall(CLOSE_SALES).catch((failure: unknown) => failure);
+        expect(error).toBeInstanceOf(ProtocolError);
+        expect(error).not.toBeInstanceOf(GateRejectedError);
+        expect(error).toMatchObject({ code: "GATE_STATUS",
+          requestId: new Headers(seen[0]?.headers).get("x-request-id"),
+          correlationId: new Headers(seen[0]?.headers).get("x-correlation-id") });
+        expect(seen).toHaveLength(1);
+      }
+    }
+  });
+
+  it("allows false or omitted funds claims and preserves production-claim precedence", async () => {
+    for (const result of [{ salesStatus: "CLOSED" }, { salesStatus: "CLOSED", fundsExecuted: false,
+      nested: [{ fundsExecuted: false }] }]) {
+      const receipt = localCallReceipt("op-close", "close_sales", result);
+      await expect(new HttpProtocolAdapter("http://127.0.0.1:8765", answering(receipt)).invokeLocalCall(CLOSE_SALES))
+        .resolves.toEqual(receipt);
+    }
+    const claiming = localCallReceipt("op-close", "close_sales", {
+      fundsExecuted: true, nested: [{ productionEndpoint: true }],
+    });
+    await expect(new HttpProtocolAdapter("http://127.0.0.1:8765", answering(claiming)).invokeLocalCall(CLOSE_SALES))
+      .rejects.toMatchObject({ code: "PRODUCTION_ENDPOINT" });
   });
 
   it("refuses a payload nested past the walk limit", async () => {

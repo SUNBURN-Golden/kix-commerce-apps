@@ -9,6 +9,8 @@ import {
   ORGANIZER_DESK_NOT_BOUND,
   ORGANIZER_NOT_COMPOSED,
   OrganizerConsole,
+  HttpProtocolAdapter,
+  echoIntegrationGateHeaders,
   PINNED_PROTOCOL_DOMAIN,
   ProtocolError,
   createStubOrganizerInvoker,
@@ -20,6 +22,7 @@ import {
 import { GateRejectedError } from "../src/http-adapter.js";
 import type { LocalCallInput } from "../src/local-call.js";
 import { COMMAND_SCHEMAS } from "#kix-sdk-0/catalogue";
+import { localCallReceipt } from "./support/receipt.js";
 import { SHOW_POLICY } from "./support/journey-fixture.js";
 
 const CREATE: OrganizerCreateInput = {
@@ -65,6 +68,33 @@ function invite(over: Partial<OrganizerInvitationInput> = {}): OrganizerInvitati
 }
 
 describe("organizer console composition", () => {
+  it.each([
+    ["closeSales", "close_sales", { salesStatus: "CLOSED", fundsExecuted: true }],
+    ["completeEvent", "complete_event", { fundsExecuted: true }],
+    ["cancelEvent", "cancel_event", { fundsExecuted: true }],
+  ] as const)("classifies HTTP %s funds claims as UNKNOWN and fences subsequent writes", async (method, action, result) => {
+    const seen: RequestInit[] = [];
+    const console = new OrganizerConsole(new HttpProtocolAdapter("http://127.0.0.1:8765", async (_url, init) => {
+      seen.push(init ?? {});
+      return new Response(JSON.stringify(localCallReceipt("op-claim", action, result)),
+        { status: 200, headers: echoIntegrationGateHeaders(init) });
+    }));
+    const outcome = await console[method]({ operationId: "op-claim", eventId: "show-1" });
+    const headers = new Headers(seen[0]?.headers);
+    expect(outcome).toMatchObject({ kind: "UNKNOWN", step: action, code: "GATE_STATUS", identity: {
+      operationId: "op-claim", action, actor: "operator", body: { eventId: "show-1" },
+      requestId: headers.get("x-request-id"), correlationId: headers.get("x-correlation-id"),
+    } });
+    if (outcome.kind !== "UNKNOWN") throw new Error("Expected UNKNOWN");
+    expect(console.state()).toMatchObject({ sent: [], halted: { kind: "UNKNOWN", step: action, identity: outcome.identity } });
+    for (const next of ["closeSales", "completeEvent", "cancelEvent"] as const) {
+      expect(await console[next]({ operationId: "never-sent", eventId: "show-1" }))
+        .toMatchObject({ kind: "FENCED", blockedBy: { reason: "halted", identity: outcome.identity } });
+    }
+    expect(seen).toHaveLength(1);
+    expect(headers.has("idempotency-key")).toBe(false);
+  });
+
   it("records the ruling and the commands it does not send", () => {
     expect(JOURNEY_RULING).toBe("M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce");
     expect(ORGANIZER_COMPOSED).toEqual([

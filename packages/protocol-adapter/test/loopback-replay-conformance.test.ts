@@ -221,6 +221,33 @@ it("rejects every serialization-safe mutation at the adapter, once, and fences t
   expect(documented).toBe(table);
 });
 
+it("keeps malformed rejections UNKNOWN and fences at every journey step, once", async () => {
+  for (const step of steps) {
+    const scenario = success(step);
+    const answers = [
+      ...["", " ", "null", "[]", "{}", '{"rejected":true}', '{"rejected":true,"error":" "}',
+        JSON.stringify(scenario.receipt)].map((body) => ({ status: 422, body })),
+      ...[200, 500, 503].map((status) => ({ status, body: '{"rejected":true,"error":"INVALID"}' })),
+    ];
+    for (const answer of answers) {
+      const gate = createFakeLoopbackGate({ scenario, answer: (base) => ({ ...base, ...answer }) });
+      const replay = await replayStep(scenario, gate);
+      const trace = { requestId: gate.calls[0]?.requestId, correlationId: gate.calls[0]?.correlationId };
+      expect(replay.thrown).toBeInstanceOf(ProtocolError);
+      expect(replay.thrown).not.toBeInstanceOf(GateRejectedError);
+      expect(replay.thrown).toMatchObject({ code: "GATE_STATUS", ...trace });
+      expect(replay.outcome).toMatchObject({ kind: "UNKNOWN", code: "GATE_STATUS", identity: {
+        ...scenario.envelope, ...trace,
+      } });
+      expect(replay.journey.state().completedThrough).toBe(step === "create_event" ? "none" : step === "prepare_trade" ? "create_event" : "prepare_trade");
+      expect(replay.journey.state().halted?.identity).toMatchObject({ ...scenario.envelope, ...trace });
+      expect(await replay.journey.acceptTrade({ operationId: "never-sent" })).toMatchObject({ kind: "FENCED" });
+      expect(gate.calls).toHaveLength(1);
+      expect(gate.calls[0]).toMatchObject({ envelope: scenario.envelope, idempotencyKey: false });
+    }
+  }
+});
+
 it("rejects isolated hostile raw JSON without prototype pollution, once", async () => {
   const scenario = success("create_event");
   const raw = JSON.stringify(scenario.receipt);

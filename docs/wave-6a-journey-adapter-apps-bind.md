@@ -45,14 +45,14 @@ The check is on top of the published receipt envelope (`domain`, `operationId`, 
 | Outcome | When |
 | --- | --- |
 | `RECEIPT` | The step's result matches the table |
-| `REJECTED` | `invokeLocalCall` throws `GateRejectedError` (HTTP 422, or any body with `rejected: true`) |
+| `REJECTED` | `invokeLocalCall` throws `GateRejectedError` only after transport, trace, JSON, and payload validation: HTTP 400 or 422 with a non-array object, `rejected: true`, and a nonblank string `error` |
 | `UNKNOWN` | Any other `ProtocolError` that carries trace ids, or a returned receipt that fails the result check |
 | `NOT_SENT` | The helper threw before the call (schema or missing caller input). The method rejects. Later steps are fenced |
 | `FENCED` | The journey is halted, the step is out of order, the step already ran, or a call is in flight. Nothing is sent |
 
 A rejection or an unknown outcome stores the failing `operationId`, actor, action, body, and, when the transport supplied them, `requestId`, `correlationId`, and `code`. The next call returns `FENCED` and does not mint a replacement `operationId`. There is no retry and no `Idempotency-Key`. A repaired attempt is a new `BookingJourney` and new caller-chosen ids. This helper adds no read.
 
-A non-422 response whose body is not marked `rejected: true` stays `UNKNOWN`. The reviewed gate marks parsed rejections with `rejected: true`, including its HTTP 422 body. A gate-supplied `error` string such as `REQUEST_TIMEOUT` does not by itself classify the outcome; the typed rejection does.
+An empty or malformed rejection, or a rejection object on a status other than 400 or 422, stays `UNKNOWN` with trace IDs and code `GATE_STATUS`. Ordinary non-rejection transport failures also stay `UNKNOWN`. A gate-supplied `error` string such as `REQUEST_TIMEOUT` does not by itself classify the outcome; the typed rejection does.
 
 A response that is cut off after the server has applied the effect is `UNKNOWN`. The helper does not replay that `operationId`. A test-only oracle may replay the same id and body to show the stored receipt. That replay is not helper behaviour.
 

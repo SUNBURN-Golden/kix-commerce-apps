@@ -90,8 +90,8 @@ import {
 type FetchLike = typeof fetch;
 
 /**
- * A parsed integration-gate rejection. Thrown only when the HTTP status is 422
- * or the body has `rejected: true`. Other failures stay a plain ProtocolError,
+ * A validated integration-gate rejection: HTTP 400 or 422 with an object body,
+ * `rejected: true`, and a nonblank error code. Other failures stay a plain ProtocolError,
  * so a gate-supplied `error` string cannot be mistaken for a transport code.
  */
 export class GateRejectedError extends ProtocolError {
@@ -522,7 +522,7 @@ export class HttpProtocolAdapter implements CommerceProtocol {
   /**
    * Sends one local-call envelope to the published integration-gate path.
    * action must be one of the pinned commands. Unknown actions fail closed
-   * before a request. A non-success HTTP status stays a reject.
+   * before a request. Ambiguous responses do not prove a business rejection.
    */
   async invokeLocalCall(input: LocalCallInput): Promise<unknown> {
     const envelope = buildLocalCallEnvelope(input);
@@ -534,18 +534,19 @@ export class HttpProtocolAdapter implements CommerceProtocol {
       },
       body: JSON.stringify(envelope),
     });
-    const businessRejection =
-      parsed.status === 422 || (isRecord(parsed.body) && parsed.body.rejected === true);
     try {
       enforceRemotePayloadGuards(parsed.body);
-      if (businessRejection) {
-        const code = rejectionCode(parsed.body);
+      if (isGateRejection(parsed.status, parsed.body)) {
+        const code = parsed.body.error;
         throw new GateRejectedError(
           `Integration gate rejected the local call (${code}).`,
           code,
           parsed.trace,
           parsed.status,
         );
+      }
+      if (parsed.status === 400 || parsed.status === 422 || (isRecord(parsed.body) && parsed.body.rejected === true)) {
+        throw new ProtocolError("Integration gate returned an ambiguous rejection response.", "GATE_STATUS");
       }
       if (!parsed.ok) {
         const code = rejectionCode(parsed.body);
@@ -832,6 +833,11 @@ export function echoIntegrationGateHeaders(
     "x-correlation-id": sent.get("x-correlation-id") ?? "",
     ...overrides,
   };
+}
+
+function isGateRejection(status: number, body: unknown): body is Record<string, unknown> & { error: string } {
+  return (status === 400 || status === 422) && isRecord(body) && body.rejected === true
+    && typeof body.error === "string" && body.error.trim().length > 0;
 }
 
 function rejectionCode(body: unknown): string {
