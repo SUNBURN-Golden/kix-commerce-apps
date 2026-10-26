@@ -578,3 +578,36 @@ export class SessionJournal {
 export function openSessionJournal(store: SessionStorePort | null, options: OpenSessionJournalOptions = {}): SessionJournal {
   return new SessionJournal(store, options.budget ?? SESSION_JOURNAL_BUDGET).open();
 }
+
+
+export type SessionJournalPeek =
+  | { kind: "empty" }
+  | { kind: "ready"; usedRecords: number; maxRecords: number; usedBytes: number; maxBytes: number; full: boolean }
+  | { kind: "evidence-lost"; cause: EvidenceLostCause }
+  | { kind: "unavailable"; cause: "NO_STORE" };
+
+/** Inspection only: no load increment, recovery, quarantine write, or removal. */
+export function peekSessionJournal(store: Pick<SessionStorePort, "getItem"> | null, budget = SESSION_JOURNAL_BUDGET): SessionJournalPeek {
+  if (store === null) return { kind: "unavailable", cause: "NO_STORE" };
+  try {
+    const marker = store.getItem(SESSION_JOURNAL_QUARANTINE_KEY);
+    if (marker !== null) {
+      let cause: EvidenceLostCause = "CORRUPT";
+      try {
+        const value: unknown = JSON.parse(marker);
+        if (isPlainObject(value) && value.v === SESSION_JOURNAL_VERSION &&
+            (value.cause === "CORRUPT" || value.cause === "UNSUPPORTED_VERSION" || value.cause === "LOST_DURING_SESSION")) cause = value.cause;
+      } catch { /* A malformed quarantine marker is evidence loss too. */ }
+      return { kind: "evidence-lost", cause };
+    }
+    const raw = store.getItem(SESSION_JOURNAL_KEY);
+    if (raw === null) return { kind: "empty" };
+    const parsed = parseEnvelope(raw, budget);
+    if (parsed.kind !== "ok") return { kind: "evidence-lost", cause: parsed.cause };
+    const usedBytes = byteLength(raw);
+    const usedRecords = parsed.env.records.length;
+    return { kind: "ready", usedRecords, usedBytes, ...budget, full: usedRecords >= budget.maxRecords || usedBytes >= budget.maxBytes };
+  } catch {
+    return { kind: "unavailable", cause: "NO_STORE" };
+  }
+}

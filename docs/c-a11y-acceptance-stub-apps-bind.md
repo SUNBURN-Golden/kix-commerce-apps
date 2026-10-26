@@ -33,7 +33,7 @@ Changing the version or the tags needs a new dated row here, with a check of the
 
 ## Screen matrix
 
-One row per screen (37 screens; `/discovery/:rowId` is the same page as `/discovery`). Facets stay separate. `NOT_RUN` means no run of that kind exists. Violation columns list axe rule ids from this run. CI status is not recorded here, because a record cannot attest the run that produces it.
+One row per screen (38 screens; `/discovery/:rowId` is the same page as `/discovery`). Facets stay separate. `NOT_RUN` means no run of that kind exists. Violation columns list axe rule ids from this run. CI status is not recorded here, because a record cannot attest the run that produces it.
 
 | Screen | Path | axe desktop | axe 320px | Keyboard | Structure | Reflow | Assistive tech | User acceptance | Release |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -74,6 +74,7 @@ One row per screen (37 screens; `/discovery/:rowId` is the same page as `/discov
 | `session` | `/session` | none | none | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
 | `journeys` | `/journeys` | none | none | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
 | `help` | `/help` | none | none | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
+| `diagnostics` | `/diagnostics` | none | none | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
 
 Keyboard = skip link first and working, a Tab walk with no trap, an accessible name and a visible focus mark at every stop (keys only, no click). Native date-input sub-fields are not judged for the focus mark. Structure = table names and header cells, focusable scroll regions, a visible word in each status mark, control labels, and an error message linked to each invalid control. Reflow = no sideways document scroll at 320px, and at a 200% root font size in a 640px window, which is an approximation and not browser zoom.
 
@@ -120,6 +121,7 @@ Every row is PENDING. This node cannot write ACCEPTED, and the record type has n
 | `session` | Session recovery | PENDING | user (not assigned) | none | no |
 | `journeys` | Journeys | PENDING | user (not assigned) | none | no |
 | `help` | Help | PENDING | user (not assigned) | none | no |
+| `diagnostics` | Diagnostics | PENDING | user (not assigned) | none | no |
 
 ## Alternate states observed
 
@@ -199,3 +201,5 @@ KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 KIX_A11Y_RECORD_OUT=/
 | /dev/gallery | development stub only | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
 
 The gallery node also fixes an inherited nested-control defect in discovery's independent projection listbox, observed in the empty/conflict search states. Projection rows retain mouse and keyboard detail opening. The original discovery results list still has the recorded OPEN nested-interactive finding; no finding exemption or existing check was relaxed.
+
+The diagnostics screen and its PENDING acceptance row were added by `c-plan-d-build-identity-diagnostics-stub`; its current local observation commands and results are in [the diagnostics binding](c-plan-d-build-identity-diagnostics-stub-apps-bind.md), independently of the historical run above.

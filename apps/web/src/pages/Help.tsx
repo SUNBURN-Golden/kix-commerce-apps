@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { messages as copy0 } from "../i18n/messages/pages--Help";
 import { messages as copy1 } from "../i18n/messages/guide--status-words";
 import { messages as copy3 } from "../i18n/messages/marketing--labels";
@@ -38,6 +39,7 @@ export function HelpPage() {
           {t("s239")}{" "}<code>{t("sh0")}</code>{t("s3r")}</p>
         <p>
           {t("s25b")}</p>
+        <p><Link to="/diagnostics">{t("route.diagnostics")}</Link></p>
       </header>
       {deskText(t, KIND_ORDER.map((kind) => (
         <section className="panel" key={kind}>
