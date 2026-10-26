@@ -1,3 +1,4 @@
+import { formatWhen } from "../../format";
 import { messages as copy0 } from "../../i18n/messages/pages--marketing--M05Consent";
 import { messages as copy1 } from "../../i18n/messages/consent-desk";
 import { messages as copy2 } from "../../i18n/messages/storage-allow-list";
@@ -11,7 +12,7 @@ import { field } from "../../forms/validation";
 import { useRef, useState, type FormEvent } from "react";
 import { emptyConsentDraft, useConsentDesk, type ConsentDraft, type ConsentPanelModel, type ConsentRowStatus } from "../../consent-desk";
 import { useT } from "../../i18n/desk-context";
-import { useFormatWhen } from "../../i18n/locale-context";
+import { useDisplayLocale } from "../../i18n/locale-context";
 import { MARKETING_CONTRACT_ALIGNMENT } from "../../marketing/contracts";
 import { marketingSession } from "../../marketing/session";
 import { useMarketingSnapshot } from "../../marketing/useMarketingSnapshot";
@@ -19,7 +20,7 @@ import { MarketingChrome } from "./MarketingChrome";
 
 export function M05Page() {
   const t = useT(copy0, copy1, copy2, copy3, copy4);
-  const formatWhen = useFormatWhen();
+  const clock = useDisplayLocale();
   const { snapshot, refresh } = useMarketingSnapshot();
   const [performanceNotes, setPerformanceNotes] = useState(snapshot.consent.performanceNotes);
   const [membershipNotes, setMembershipNotes] = useState(snapshot.consent.membershipNotes);
@@ -83,7 +84,7 @@ export function M05Page() {
       <article className="stamp">
         <p className="stamp-word">{consent.state}</p>
         <p>
-          {consent.updatedAt ? t("s25r", { v1: formatWhen(consent.updatedAt) }) : t("sux")}
+          {consent.updatedAt ? t("s25r", { v1: formatWhen(consent.updatedAt, clock) }) : t("sux")}
         </p>
         <p className="muted">{t("s16f")}{" "}{deskText(t, consent.channelSend)}{t("s23l")}</p>
       </article>

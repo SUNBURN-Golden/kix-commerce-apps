@@ -1,3 +1,4 @@
+import { ReadRow } from "./ReadState";
 import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { messages as copy0 } from "../i18n/messages/pages--SessionRecoveryPanels";
 import { messages as copy1 } from "../i18n/messages/session-recovery";
@@ -112,14 +113,14 @@ export function SessionRecoveryPanel({ live }: { live: SessionDeskLive }) {
             </thead>
             <tbody>
               {deskText(t, model.items.map((row) => (
-                <tr key={row.itemId} data-item={row.itemId} data-verdict={row.verdict}>
+                <ReadRow as="tr" name="item" value={row.itemId} key={row.itemId} data-item={row.itemId} data-verdict={row.verdict}>
                   <td>{deskText(t, row.itemId)}</td>
                   <td>{deskText(t, row.subjectRef)}</td>
                   <td>{deskText(t, row.verdict)}</td>
                   <td>
                     <GuardedButton id={`session-attach-${row.itemId}`} label={t("s8v")} control={row.attach} onPress={() => actions.attach(row.itemId)} />
                   </td>
-                </tr>
+                </ReadRow>
               )))}
             </tbody>
           </table>

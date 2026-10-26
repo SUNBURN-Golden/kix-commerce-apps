@@ -1,3 +1,4 @@
+import { ReadRow } from "./ReadState";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
 import { messages as copy0 } from "../i18n/messages/pages--PlatformPanels";
 import { messages as copy1 } from "../i18n/messages/platform-journey";
@@ -298,7 +299,7 @@ export function RightsSection({ model, actions }: { model: PlatformModel; action
 function TradeCard({ trade, actions }: { trade: TradeModel; actions: PlatformActions }) {
   const t = useT(deskCopy, copy0, copy1, copy2);
   return (
-    <li
+    <ReadRow as="li" name="trade" value={trade.tradeRef}
       className="discovery-row"
       data-trade={trade.tradeRef}
       data-shape={trade.shape}
@@ -368,7 +369,7 @@ function TradeCard({ trade, actions }: { trade: TradeModel; actions: PlatformAct
         control={trade.transfer}
         onPress={() => actions.transfer(trade.tradeRef)}
       />
-    </li>
+    </ReadRow>
   );
 }
 

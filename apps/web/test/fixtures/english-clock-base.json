@@ -1,0 +1,361 @@
+{
+  "baseSha": "a0c6f89ec15fdecbaea74c5a64d3ce99c586f9a4",
+  "frozenAt": "2026-10-03T12:00:00.000Z",
+  "screens": {
+    "BoxOffice": [
+      {
+        "tag": "TIME",
+        "iso": "2026-10-03T19:00:00.000Z",
+        "text": "3 Oct 2026, 19:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-04T15:30:00.000Z",
+        "text": "4 Oct 2026, 15:30 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-05T20:00:00.000Z",
+        "text": "5 Oct 2026, 20:00 UTC"
+      }
+    ],
+    "Buyer": [
+      {
+        "tag": "TIME",
+        "iso": "2026-10-03T19:00:00.000Z",
+        "text": "3 Oct 2026, 19:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-04T15:30:00.000Z",
+        "text": "4 Oct 2026, 15:30 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-05T20:00:00.000Z",
+        "text": "5 Oct 2026, 20:00 UTC"
+      }
+    ],
+    "Booking": [
+      {
+        "tag": "TIME",
+        "iso": "2026-10-03T19:00:00.000Z",
+        "text": "3 Oct 2026, 19:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-03T12:10:00.000Z",
+        "text": "3 Oct 2026, 12:10 UTC"
+      }
+    ],
+    "Discovery": [
+      {
+        "tag": "TIME",
+        "iso": "2026-10-09T18:00:00.000Z",
+        "text": "9 Oct 2026, 18:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-10T18:00:00.000Z",
+        "text": "10 Oct 2026, 18:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-11T18:00:00.000Z",
+        "text": "11 Oct 2026, 18:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-12T18:00:00.000Z",
+        "text": "12 Oct 2026, 18:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T18:00:00.000Z",
+        "text": "13 Oct 2026, 18:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-07T23:59:59.000Z",
+        "text": "7 Oct 2026, 23:59 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-14T18:00:00.000Z",
+        "text": "14 Oct 2026, 18:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-15T18:00:00.000Z",
+        "text": "15 Oct 2026, 18:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-16T18:00:00.000Z",
+        "text": "16 Oct 2026, 18:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-17T18:00:00.000Z",
+        "text": "17 Oct 2026, 18:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-18T18:00:00.000Z",
+        "text": "18 Oct 2026, 18:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-11-08T00:00:00.000Z",
+        "text": "8 Nov 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-07T23:59:59.000Z",
+        "text": "7 Oct 2026, 23:59 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-11-08T01:00:00.000Z",
+        "text": "8 Nov 2026, 01:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-11-08T02:00:00.000Z",
+        "text": "8 Nov 2026, 02:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-11-08T03:00:00.000Z",
+        "text": "8 Nov 2026, 03:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-11-08T04:00:00.000Z",
+        "text": "8 Nov 2026, 04:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-11-08T05:00:00.000Z",
+        "text": "8 Nov 2026, 05:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-11-08T06:00:00.000Z",
+        "text": "8 Nov 2026, 06:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-11-08T07:00:00.000Z",
+        "text": "8 Nov 2026, 07:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-11-08T08:00:00.000Z",
+        "text": "8 Nov 2026, 08:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-11-08T09:00:00.000Z",
+        "text": "8 Nov 2026, 09:00 UTC"
+      },
+      {
+        "tag": "P",
+        "iso": null,
+        "text": "stream clean. revision syn-1. watermark 13 Oct 2026, 00:00 UTC. scanned 25. about 96 rows in the stream."
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      }
+    ],
+    "DiscoveryDetail": [
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T18:00:00.000Z",
+        "text": "13 Oct 2026, 18:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-07T23:59:59.000Z",
+        "text": "7 Oct 2026, 23:59 UTC"
+      }
+    ],
+    "DiscoveryLiveDetail": [
+      {
+        "tag": "TIME",
+        "iso": "2026-10-14T01:00:00.000Z",
+        "text": "14 Oct 2026, 01:00 UTC"
+      },
+      {
+        "tag": "TIME",
+        "iso": "2026-10-13T00:00:00.000Z",
+        "text": "13 Oct 2026, 00:00 UTC"
+      }
+    ],
+    "Resale": [
+      {
+        "tag": "DD",
+        "iso": null,
+        "text": "1 Jan 2099, 00:00 UTC"
+      }
+    ],
+    "M02": [
+      {
+        "tag": "P",
+        "iso": null,
+        "text": "3 Oct 2026, 19:00 UTC"
+      },
+      {
+        "tag": "P",
+        "iso": null,
+        "text": "Interest recorded 3 Oct 2026, 12:00 UTC · open-demo"
+      },
+      {
+        "tag": "P",
+        "iso": null,
+        "text": "4 Oct 2026, 15:30 UTC"
+      },
+      {
+        "tag": "P",
+        "iso": null,
+        "text": "5 Oct 2026, 20:00 UTC"
+      }
+    ],
+    "M03": [
+      {
+        "tag": "P",
+        "iso": null,
+        "text": "Attached 3 Oct 2026, 12:00 UTC"
+      }
+    ],
+    "M05": [
+      {
+        "tag": "P",
+        "iso": null,
+        "text": "Updated 3 Oct 2026, 12:00 UTC"
+      }
+    ]
+  }
+}

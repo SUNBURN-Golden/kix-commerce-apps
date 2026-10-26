@@ -1,8 +1,7 @@
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext } from "react";
 import { DEFAULT_LOCALE, intlTag, type Locale } from "./locales";
 import { makeTranslate, type Translate } from "./translate";
 import type { DisplayLocale } from "../a11y/present";
-import { formatWhen as formatWhenIn } from "../format";
 
 export interface LocaleState {
   locale: Locale;
@@ -35,8 +34,7 @@ export function stateFor(locale: Locale, setLocale: (locale: Locale) => void): L
   return { locale, t: makeTranslate(locale), clock: intlTag(locale), setLocale };
 }
 
-/** A formatter for `<time>` text. The locale changes the clock words only; expiry is never read from it. */
-export function useFormatWhen(): (iso: string) => string {
-  const { clock } = useLocale();
-  return useMemo(() => (iso: string) => formatWhenIn(iso, clock), [clock]);
+/** The selected locale for display clocks; UTC and adapter expiry authority stay fixed. */
+export function useDisplayLocale(): DisplayLocale {
+  return useLocale().clock;
 }

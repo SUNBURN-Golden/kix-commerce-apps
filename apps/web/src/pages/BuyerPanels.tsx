@@ -1,3 +1,4 @@
+import { ReadRow, receiptPointer } from "./ReadState";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
 import { messages as copy0 } from "../i18n/messages/pages--BuyerPanels";
 import { messages as copy1 } from "../i18n/messages/buyer-workspace";
@@ -88,7 +89,7 @@ export function ProgressRow({ row, onReadAgain }: { row: BuyerProgressRow; onRea
 export function EvidenceRow({ row }: { row: BuyerEvidenceRow }) {
   const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
   return (
-    <li className="buyer-evidence" data-kind={row.kind} data-source={row.source}>
+    <ReadRow as="li" name="receipt" value={receiptPointer(row)} className="buyer-evidence" data-kind={row.kind} data-source={row.source}>
       <p className="eyebrow">{row.kind}</p>
       <p>
         <Link className="button buyer-action" to={row.deskRoute}>
@@ -99,6 +100,6 @@ export function EvidenceRow({ row }: { row: BuyerEvidenceRow }) {
       <p>{deskText(t, row.step)}</p>
       <p>{row.status}</p>
       <p>{t("desk.buyer.source")}{" "}{row.source}</p>
-    </li>
+    </ReadRow>
   );
 }

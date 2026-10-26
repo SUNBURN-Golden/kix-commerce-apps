@@ -1,3 +1,4 @@
+import { formatWhen } from "../../format";
 import { messages as copy0 } from "../../i18n/messages/pages--marketing--M03Coupons";
 import { messages as copy1 } from "../../i18n/messages/marketing--desk";
 import { deskText } from "../../i18n/desk-translate";
@@ -9,12 +10,12 @@ import { COUPON_FIXTURES } from "../../marketing/desk";
 import { marketingSession } from "../../marketing/session";
 import { useMarketingSnapshot } from "../../marketing/useMarketingSnapshot";
 import { useT } from "../../i18n/desk-context";
-import { useFormatWhen } from "../../i18n/locale-context";
+import { useDisplayLocale } from "../../i18n/locale-context";
 import { errorText, MarketingChrome } from "./MarketingChrome";
 
 export function M03Page() {
   const t = useT(copy0, copy1);
-  const formatWhen = useFormatWhen();
+  const clock = useDisplayLocale();
   const { snapshot, refresh } = useMarketingSnapshot();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +59,7 @@ export function M03Page() {
                   <h3 lang="ko">{deskText(t, item.titleKo)}</h3>
                   <p className="muted">{deskText(t, item.titleEn)}</p>
                 </div>
-                <p className="muted">{applied ? t("s8y", { v1: formatWhen(applied.appliedAt) }) : deskText(t, item.marker)}</p>
+                <p className="muted">{applied ? t("s8y", { v1: formatWhen(applied.appliedAt, clock) }) : deskText(t, item.marker)}</p>
               </article>
             </li>
           );

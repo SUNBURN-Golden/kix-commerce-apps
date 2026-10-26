@@ -2,6 +2,8 @@
 
 Node `c-plan-c-visual-baseline-coverage-stub` extends the committed Linux visual matrix to all 37 production registry routes, including hidden booking. Seven existing full matrices (28 light shots), 30 route coverage pairs (60 light shots), and four existing dark/forced-colours samples total 92. This document supersedes the matrix and receipts exclusions in the historical [visual regression binding](c-visual-regression-stub-apps-bind.md).
 
+Current integration evidence is in [PR fix round 1](#pr-fix-round-1). Earlier recording sizes and verification records below describe the pre-integration candidate and remain historical evidence.
+
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
 `contract_change=NO`. Retain the exact citation above in the supervisor's PR summary. Only the existing `create_event` → `prepare_trade` → `accept_trade` journey is composed; `capture`, `settle_capture`, `commit_trade`, `open_admission` and `admit` remain uncomposed. `placeHold` stays not-bound with consideredAction `reserve_listing`; `prepare_trade` is only an invokeLocalCall body. Session-retention TTL remains `UNDETERMINED`.
@@ -283,3 +285,63 @@ User acceptance remains PENDING; release remains NOT_AUTHORIZED. No money, hardw
 ## Final worktree checks
 
 `git diff --check` and explicit whitespace checks of this new bind document passed. All 92 manifest hashes were recomputed and matched. The only change under apps/web/src is the five-line marketplace CSS addition. No changes under .aiops/, docs/aiops/, .github/workflows/ci.yml, apps/web/bundle-budget.json, package-lock.json or commerce-bindings.ts; the locked hash remains the value above. No git/GitHub mutations were performed. Final journeys, accessibility, browser budget, static checks and fresh-copy CI-mode visual comparison all passed. The supplied branch base and newer origin/main reference are recorded above for supervisor integration.
+
+## PR fix round 1
+
+The [failed visual job](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/40244871237/job/121324203707) tested merge `c200af21549d15fecc783a5f4b1f71102c9f9930`: branch head `bd751a0f447612f1521e054d8a1cfcbdc69c6757` plus main `777a6b5cf36f3f05ef3906d30a7da064b11e0fd7`. Its 17 failures were actual pixel mismatches, followed by the expected completeness failure. All 15 harness checks passed. This supersedes the earlier assumption that integration with newer main could be left entirely to the supervisor while using the old baselines.
+
+Main already merged the read-state controls in #103 and locale-aware dates in #101. Seven coverage pairs gain filters; identity and session desktop gain row-selection buttons; inventory phone/Korean gains Korean date formatting. These are merged implementation dependencies, not new product decisions. The original branch by itself still passed all 107 visual tests in 101.02s; that result does not verify the integration tree.
+
+Applied `git merge --no-commit --no-ff origin/main` successfully. HEAD is deliberately still `bd751a0`; MERGE_HEAD is `777a6b5`. The staged upstream files are the existing main changes. This round authors no production source; relative to main, `apps/web/src` still differs only by the previously recorded marketplace CSS rule. No protected directory, binding, protocol pin, workflow, lockfile, bundle budget or comparison threshold changed. No commit, push, GitHub comment or CI rerun was performed. The supervisor must preserve the main integration when preparing the final commit.
+
+Recorded the integrated source with the unchanged harness. All 17 replacement images decode to exactly the same RGB pixels as the actual pictures downloaded from CI artifact `12618307177`. The table gives the old-baseline differing-pixel counts under the unchanged channelDelta 8 rule; these equal the CI failures. Reviewed all 17 before/after/difference crops in five local contact sheets: filters, row buttons and the date line account for the differences. This review is baseline maintenance, not design approval.
+
+| Shot | Old-baseline differing pixels | Refreshed vs CI actual differing pixels |
+| --- | ---: | ---: |
+| `credit-origination.desktop.en.light` | 244453 | 0 |
+| `credit-origination.phone.ko.light` | 107256 | 0 |
+| `credit-servicing.desktop.en.light` | 261302 | 0 |
+| `credit-servicing.phone.ko.light` | 106443 | 0 |
+| `finance.desktop.en.light` | 250271 | 0 |
+| `finance.phone.ko.light` | 109286 | 0 |
+| `identity.desktop.en.light` | 25629 | 0 |
+| `inventory.phone.ko.light` | 1304 | 0 |
+| `merchant.desktop.en.light` | 240619 | 0 |
+| `merchant.phone.ko.light` | 107359 | 0 |
+| `notifications.desktop.en.light` | 262361 | 0 |
+| `notifications.phone.ko.light` | 109008 | 0 |
+| `permissions.desktop.en.light` | 260792 | 0 |
+| `permissions.phone.ko.light` | 111253 | 0 |
+| `platform.desktop.en.light` | 284702 | 0 |
+| `platform.phone.ko.light` | 107626 | 0 |
+| `session.desktop.en.light` | 28306 | 0 |
+
+Seven further PNGs were refreshed by the recorder's exact-pixel rule: assistant phone/ko and desktop/en (one pixel each), journeys phone/ko (three), marketing-journey desktop/en (one), provider phone/ko (three) and desktop/en (two), session phone/ko (three). Each changed channel differs by exactly 1/255 in the shared background; all have zero pixels above channelDelta 8. They are recorded explicitly rather than mistaken for layout changes. The other 68 PNGs, including both receipts images and all four display variants, remain byte-identical to the supplied branch head.
+
+The revised manifest hashes all 92 PNGs. Total PNG bytes are **24,297,584**, with largest `assistant.desktop.en.light.png` **412,922 bytes**; every image stays within 2000px. Profile remains **linux-d29b2e9b**, Chrome **156.0.8078.47**, vendored Korean glyphs present. Receipt production source and per-load id semantics are unchanged; the same two reviewed masks remain in force. No new mask was added.
+
+The manifest's appHead records the actual uncommitted HEAD `bd751a0`; the consumed main revision is `777a6b5` as recorded above. The observation record's baseMainSha remains the historical merge-base `4dc642a`, since the merge is intentionally uncommitted. Neither field is a claim that the integrated tree has a new commit. Fresh-copy records have unknown git ids because the copy excludes .git.
+
+M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. All locked not-bound reasons and uncomposed commands remain unchanged. The locked binding SHA-256 remains `83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249`.
+
+Local verification uses Node **20.19.2** and Chrome **156.0.8078.47**; hosted CI uses Node 22. Browser commands set `KIX_E2E_NO_SANDBOX=1`. Logs, source-copy paths and records are temporary `/tmp/kix-round1-*` files. A temporary foreground Node wrapper monitors wall versus monotonic clock without altering any application, test, timer, browser or workflow setting.
+
+| Check | Result |
+| --- | --- |
+| First integrated recording, `/tmp/kix-round1-record.log` | FAIL: 105/107 passed, 170.58s. Organizer workspace phone/en load wait and finance phone/ko test timer failed. Completeness correctly withheld the manifest. Excluded from pass evidence. |
+| Complete recording, `KIX_VISUAL_UPDATE=1 KIX_VISUAL_RECORD_OUT=/tmp/kix-round1-record-2.json node /tmp/kix-round1-monitor.cjs record-2 npm run test:visual` | PASS: 107/107, 106.26s; complete 92-shot manifest. Recording is not comparison evidence. Clock monitor: 107 samples, no drift above one second. |
+| `npm run typecheck:e2e` and `npm run typecheck` | PASS. |
+| `npm run lint`, `npm run deps:check`, `npm run cycle-check` | PASS: zero lint warnings, lock/license gate passed, no import cycles. |
+| `npm run build` and `KIX_REQUIRE_GATE=0 npm test` | PASS: adapter 1367 passed / 23 live-gate skips; web 1218 passed. Existing chunk-size advisory retained. Live skips are not passes. |
+| `KIX_REQUIRE_GATE=0 npm run coverage:check` | PASS: all floors. Adapter lines/statements 91.30%, functions 97.44%, branches 84.77%; web lines/statements 92.95%, functions 80.97%, branches 89.27%. |
+| `npm run budget` | PASS: initial JS gzip 288795, CSS 4984, total 783450 bytes. All route and growth caps unchanged. |
+| Fresh candidate `/tmp/kix-round1-clean-2go5g2ph`: `npm ci` | PASS; fresh dependencies and unchanged lockfile. All 795 non-document candidate files independently match the worktree. |
+| Worktree: `CI=1 KIX_VISUAL_RECORD_OUT=/tmp/kix-round1-compare.json KIX_VISUAL_OUT=/tmp/kix-round1-compare-out node /tmp/kix-round1-monitor.cjs compare npm run test:visual` | PASS: 107/107, 104.54s; all 92 MATCH, zero differing pixels, all network counters zero, all claims false. Update mode unset. |
+| Fresh candidate: `npm run typecheck:e2e`, then `CI=1 KIX_VISUAL_RECORD_OUT=/tmp/kix-round1-clean-compare.json KIX_VISUAL_OUT=/tmp/kix-round1-clean-compare-out node /tmp/kix-round1-monitor.cjs clean-compare npm run test:visual` | PASS: 107/107, 111.91s; all 92 MATCH, zero differing pixels, all network counters zero, all claims false, profile linux-d29b2e9b. Update mode unset. Expected missing-.git diagnostics; git ids unknown. |
+| Independent verification of all PNG hashes/dimensions, both comparison records, artifact SHA-256, protected files and candidate bytes; `git diff --check` and `git diff --cached --check` | PASS. The downloaded artifact ZIP hash matches the job's `1fd2f6d034ba6da8a477d2b2ddd9f01a54222f700e97b12fd9bbeb2fece13cbe`; all 17 CI actual images also match the replacements in decoded RGBA, including alpha. |
+
+Both comparison runs used the temporary clock monitor and preserved failure exit statuses. Neither observed a clock drift above one second. The fresh copy is a fresh installation of the uncommitted candidate, not a new committed checkout. Only this evidence document changed after that copy; its shot table and mask list are unchanged. No browser harness, test, assertion, allowance, font, timeout, retry setting or workflow changed in this round.
+
+The existing [hosted integration run](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/40244871237) passed every other required job: Typecheck/build/stub tests, Browser journeys, Accessibility observation, Bundle budget, Lint, Coverage floors, Dependency lock/license and Import cycle check. Those are historical hosted results on the original merge candidate, not new local browser-suite runs or a green hosted visual rerun. This round reran the affected visual suite on the integrated source and from a fresh install, plus the local static/build/stub/coverage/size gates above. A hosted rerun of the resulting commit remains for the supervisor; none was triggered here.
+
+Fix-round delivery status: **READY**. Keep the uncommitted main merge together with the refreshed images, manifest and this evidence update. No additional product change or owner decision is needed. Production source is inherited from merged main plus the branch's previously authorized CSS rule; all newly authored changes in this round are baseline data and this document. The result remains pixel match on one render profile, not design review, not acceptance and not release. User acceptance stays PENDING; release stays NOT_AUTHORIZED.

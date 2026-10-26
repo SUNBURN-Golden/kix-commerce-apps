@@ -1,3 +1,5 @@
+import { useReadState } from "../shell/read-state-params";
+import { readSettled, ReadView } from "./ReadState";
 import { messages as copy0 } from "../i18n/messages/pages--Assistant";
 import { messages as copy1 } from "../i18n/messages/delegated-assistant";
 import { deskText } from "../i18n/desk-translate";
@@ -23,10 +25,12 @@ export function AssistantPage() {
   const t = useT(copy0, copy1);
   const live = useDelegationAssistant();
   const model = live.model;
+  const read = useReadState("assistant", { grant:  !readSettled(model.state) ? null : model.grants.map((row) => row.grantRef) });
   // A refusal, a block, a rejection, an unknown result, or a refused read takes focus to the status region.
   useRestoreFocus(model.lastNeedsFocus && model.lastSeq !== null ? String(model.lastSeq) : null, "dlg-status");
 
   return (
+    <ReadView state={read}>
     <div className="discovery dlg" data-adapter-environment={live.environment}>
       <nav className="discovery-nav" aria-label={t("sfu")}>
         <a href="#dlg-controls">{t("sed")}</a>
@@ -72,5 +76,6 @@ export function AssistantPage() {
         <RegisterSection model={model} />
       </div>
     </div>
+    </ReadView>
   );
 }

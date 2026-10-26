@@ -333,7 +333,7 @@ function renderAt(pathname: string): string {
 
 function liveListStub() {
   return {
-    model: buildLiveListModel({
+    model: buildLiveListModel({ locale: "en-GB",
       stream: "clean",
       revision: "syn-1",
       filter: EMPTY_DISCOVERY_FILTER,
@@ -352,7 +352,7 @@ function liveListStub() {
 
 function liveDetailStub() {
   return {
-    model: buildLiveDetailModel({ outcome: { kind: "loading" } }),
+    model: buildLiveDetailModel({ locale: "en-GB", outcome: { kind: "loading" } }),
     handlers: { readAgain() {} },
   };
 }

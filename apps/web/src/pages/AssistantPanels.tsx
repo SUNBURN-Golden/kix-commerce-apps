@@ -1,3 +1,4 @@
+import { ReadRow } from "./ReadState";
 import { messages as copy0 } from "../i18n/messages/pages--AssistantPanels";
 import { messages as copy1 } from "../i18n/messages/delegated-assistant";
 import { messages as copy2 } from "../i18n/messages/workspace--registry";
@@ -307,7 +308,7 @@ export function LanesSection({ model }: { model: DelegationAssistantModel }) {
 function GrantCard({ grant }: { grant: GrantModel }) {
   const t = useT(copy0, copy1, copy2);
   return (
-    <li className="discovery-row" data-grant={grant.grantRef} data-provenance="synthetic" data-source="synthetic-delegation">
+    <ReadRow as="li" name="grant" value={grant.grantRef} className="discovery-row" data-grant={grant.grantRef} data-provenance="synthetic" data-source="synthetic-delegation">
       <p>
         <span className="discovery-badge" data-provenance="synthetic">
           SYNTHETIC
@@ -322,7 +323,7 @@ function GrantCard({ grant }: { grant: GrantModel }) {
       <p data-mode={grant.grantRef}>{deskText(t, grant.modeLine)}</p>
       <p>{deskText(t, grant.versionLine)}</p>
       <p>{deskText(t, grant.stateLine)}</p>
-    </li>
+    </ReadRow>
   );
 }
 

@@ -1,3 +1,6 @@
+import { formatWhen } from "../format";
+import { useReadState } from "../shell/read-state-params";
+import { ReadView, receiptPointer } from "./ReadState";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
 import { messages as copy0 } from "../i18n/messages/buyer-workspace";
 import { messages as copy1 } from "../i18n/messages/gift-desk";
@@ -12,7 +15,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AmountNotice, StatusMark } from "../a11y/marks";
 import { useT } from "../i18n/desk-context";
-import { useFormatWhen } from "../i18n/locale-context";
+import { useDisplayLocale } from "../i18n/locale-context";
 import { useBuyerWorkspace, type BuyerWorkspaceModel } from "../buyer-workspace";
 import { useRefundReturnDesk } from "../refund-return";
 import { EvidenceRow, ProgressRow, ReturnAction, StateNotice } from "./BuyerPanels";
@@ -40,9 +43,10 @@ export function BuyerScreen({
   onSelectEvent: (eventId: string) => void;
 }) {
   const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
-  const formatWhen = useFormatWhen();
+  const clock = useDisplayLocale();
+  const read = useReadState("buyer", { receipt: model.catalog.kind === "loading" ? null : model.evidence.map(receiptPointer) });
   return (
-    <div className="buyer">
+    <ReadView state={read}><div className="buyer">
       <nav className="buyer-nav" aria-label={t("desk.buyer.sections")} data-adapter-environment={model.environment}>
         <a href="#buyer-shows">{t("desk.buyer.shows")}</a>
         <a href="#buyer-progress">{t("desk.buyer.progress")}</a>
@@ -78,7 +82,7 @@ export function BuyerScreen({
               {deskText(t, model.catalog.performances.map((item) => (
                 <li key={item.eventId} className="buyer-show-row">
                   <p className="when">
-                    <time dateTime={item.startsAt}>{formatWhen(item.startsAt)}</time>
+                    <time dateTime={item.startsAt}>{formatWhen(item.startsAt, clock)}</time>
                   </p>
                   <h3>{deskText(t, item.title)}</h3>
                   <p className="muted">{deskText(t, item.venue)}</p>
@@ -139,6 +143,6 @@ export function BuyerScreen({
           </ul>
         </section>
       </div>
-    </div>
+    </div></ReadView>
   );
 }

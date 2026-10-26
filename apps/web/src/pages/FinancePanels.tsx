@@ -1,3 +1,4 @@
+import { ReadRow } from "./ReadState";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
 import { messages as copy0 } from "../i18n/messages/pages--FinancePanels";
 import { messages as copy1 } from "../i18n/messages/finance-operations";
@@ -346,7 +347,7 @@ function CaseCard({ row, model, actions }: { row: FinanceCaseModel; model: Finan
   const t = useT(deskCopy, copy0, copy1, copy2);
   const blockId = `finance-case-${row.caseRef}-block`;
   return (
-    <li
+    <ReadRow as="li" name="case" value={row.caseRef}
       className="discovery-row"
       data-case={row.caseRef}
       data-category={row.category}
@@ -494,7 +495,7 @@ function CaseCard({ row, model, actions }: { row: FinanceCaseModel; model: Finan
           <WordMark word={t("status.transport.blocked")} /> {deskText(t, row.caseBlock)}
         </p>
       ) : null}
-    </li>
+    </ReadRow>
   );
 }
 
