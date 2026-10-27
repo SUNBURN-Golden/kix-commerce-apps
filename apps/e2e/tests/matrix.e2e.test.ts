@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { JOURNEYS, MATRIX, OUTCOMES, expectedCheckIds, matrixProblems, SEND_CONTROL_JOURNEYS, oneAttemptCheckIds } from "../src/journey-matrix";
 import { NOT_RUN, renderRecord, type RunRecord } from "../src/run-record";
+import { lifecycleFixture, timingFixture } from "./record-fixtures";
 
 describe("journey matrix", () => {
   it("has exactly one cell for every journey and outcome, each with the evidence its kind needs", () => {
@@ -38,6 +39,8 @@ describe("journey matrix", () => {
       ledger: { nonLoopback: 0, nonGet: 0, appNetworkCalls: 0 },
       claims: { httpModePass: false, productionQualification: false, realPayment: false, released: false },
       checks: [{ checkId: "x", pass: true }],
+      timing: timingFixture(),
+      lifecycle: lifecycleFixture(),
       notRun: [...NOT_RUN],
     };
     const parsed = JSON.parse(renderRecord(record)) as RunRecord;

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { chromium, type Browser, type BrowserContext, type BrowserContextOptions, type Page } from "playwright-core";
+import { SessionTracker, type TeardownReport } from "./lifecycle";
 
 export interface Ledger {
   /** Requests the browser tried to send to any origin other than the loopback server. Blocked. */
@@ -15,7 +16,10 @@ export interface Session {
   context: BrowserContext;
   ledger: Ledger;
   version: string;
-  close: () => Promise<void>;
+  /** Counts the browser, contexts and pages of this session and what a test leaves pending or open. */
+  tracker: SessionTracker;
+  /** Closes the session. Returns what the file still held open or pending just before. */
+  close: () => Promise<TeardownReport>;
 }
 
 function chromePath(): string {
@@ -65,6 +69,8 @@ export interface SessionOptions {
   args?: readonly string[];
   env?: Record<string, string>;
   context?: Pick<BrowserContextOptions, "timezoneId" | "locale" | "deviceScaleFactor" | "reducedMotion">;
+  /** False keeps this session's lifecycle out of the run record. Only the harness self-test sets it. */
+  recordLifecycle?: boolean;
 }
 
 /** The final launch flags. A caller flag that touches the network, proxy, sandbox or profile is refused, not merged. */
@@ -94,31 +100,62 @@ export function launchEnv(extra: Record<string, string> = {}): Record<string, st
 export async function openSession(origin: string, extraOrigins: readonly string[] = [], options: SessionOptions = {}): Promise<Session> {
   const allowed = new Set([origin, ...extraOrigins]);
   const browser = await chromium.launch({ executablePath: chromePath(), headless: true, args: launchArgs(options.args), env: launchEnv(options.env) });
-  const context = await browser.newContext({ ...options.context, serviceWorkers: "block", acceptDownloads: false });
-  const ledger: Ledger = { nonLoopback: [], nonGet: [], appNetworkCalls: 0 };
-  await context.route("**/*", (route) => {
-    const request = route.request();
-    const url = new URL(request.url());
-    if (!allowed.has(url.origin)) {
-      ledger.nonLoopback.push(`${request.method()} ${url.origin}`);
-      return route.abort();
-    }
-    if (request.method() !== "GET") {
-      ledger.nonGet.push(`${request.method()} ${url.pathname}`);
-    }
-    return route.continue();
-  });
-  await context.addInitScript(COUNTER);
-  return {
-    browser,
-    context,
-    ledger,
-    version: browser.version(),
-    close: async () => {
-      await context.close();
+  let tracker: SessionTracker;
+  try {
+    tracker = new SessionTracker(browser, options.recordLifecycle !== false);
+  } catch (error) {
+    await browser.close();
+    throw error;
+  }
+  try {
+    const ledger: Ledger = { nonLoopback: [], nonGet: [], appNetworkCalls: 0 };
+    const initialize = async (context: BrowserContext): Promise<void> => {
+      await context.route("**/*", tracker.permanentRoute((route) => {
+        const request = route.request();
+        const url = new URL(request.url());
+        if (!allowed.has(url.origin)) {
+          ledger.nonLoopback.push(`${request.method()} ${url.origin}`);
+          return route.abort();
+        }
+        if (request.method() !== "GET") {
+          ledger.nonGet.push(`${request.method()} ${url.pathname}`);
+        }
+        return route.continue();
+      }));
+      await context.addInitScript(COUNTER);
+    };
+    const context = await browser.newContext({ ...options.context, serviceWorkers: "block", acceptDownloads: false });
+    tracker.adopt(context, true);
+    await initialize(context);
+    tracker.trackNewContexts(initialize);
+    return {
+      browser,
+      context,
+      ledger,
+      version: browser.version(),
+      tracker,
+      close: async () => {
+        try {
+          const report = await tracker.closeSession();
+          await context.close();
+          return report;
+        } finally {
+          try {
+            await browser.close();
+          } finally {
+            tracker.finish();
+          }
+        }
+      },
+    };
+  } catch (error) {
+    try {
       await browser.close();
-    },
-  };
+    } finally {
+      tracker.finish();
+    }
+    throw error;
+  }
 }
 
 export async function networkCalls(page: Page): Promise<number> {

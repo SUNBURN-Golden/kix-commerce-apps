@@ -33,10 +33,9 @@ describe("screen chunk load failure (stub, headless Chrome)", () => {
 
   it("a screen that is slow to load shows a role=status note, then the screen, and focus lands on its heading", async () => {
     const page = await suite.newPage();
-    let release: () => void = () => undefined;
-    const gate = new Promise<void>((resolve) => (release = resolve));
+    const gate = suite.gate();
     await page.route(GIFT_CHUNK, async (route) => {
-      await gate;
+      await gate.opened;
       await route.continue();
     });
     await openHome(page, suite.origin);
@@ -46,7 +45,7 @@ describe("screen chunk load failure (stub, headless Chrome)", () => {
     expect(await status.getAttribute("role")).toBe("status");
     expect(await status.innerText()).toContain("Loading Gift");
     expect(await page.locator("#desk-main h2").count(), "no screen heading while the code loads").toBe(0);
-    release();
+    gate.release();
     await page.getByRole("heading", { name: "Gift transfer", level: 2 }).waitFor();
     await poll(() => page.evaluate(() => document.activeElement?.tagName + ":" + document.activeElement?.textContent), (value) => /^H2:Gift transfer/.test(value), "focus on the screen heading");
     expect(await page.locator("[data-screen-loading]").count()).toBe(0);
@@ -76,10 +75,25 @@ describe("screen chunk load failure (stub, headless Chrome)", () => {
       expect(await focusedId(page)).toBe("shell-error-again");
       blocked = false;
       await page.keyboard.press("Enter");
-      const recovered = await Promise.race([
-        page.getByRole("heading", { name: "Gift transfer", level: 2 }).waitFor({ timeout: 3000 }).then(() => true, () => false),
-        page.locator("[data-cause=screen-load-error]").waitFor({ timeout: 3000 }).then(() => false, () => false),
-      ]);
+      // One condition wait for whichever shows first, so no second wait is left running after the first one settles.
+      const outcome = await page
+        .waitForFunction(
+          () => {
+            if (document.querySelector("[data-cause=screen-load-error]")) return "panel";
+            return Array.from(document.querySelectorAll("h2")).some((heading) => heading.textContent?.trim() === "Gift transfer") ? "heading" : false;
+          },
+          undefined,
+          { timeout: 3000 },
+        )
+        .then(
+          async (handle) => {
+            const value = (await handle.jsonValue()) as string;
+            await handle.dispose();
+            return value;
+          },
+          () => "none",
+        );
+      const recovered = outcome === "heading";
       // Observation only: a browser may remember a failed module file until the page is reloaded.
       recordLine("observations.jsonl", { id: checkId, note: recovered ? "again re-imported the screen in this Chrome" : "again did not re-import the screen in this Chrome; the panel stayed and advised a reload" });
       if (!recovered) {
