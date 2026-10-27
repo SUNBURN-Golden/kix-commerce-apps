@@ -8,6 +8,8 @@ const ACCEPT_RESULT_KEYS = ["ticketId", "owner", "rightsVersion", "financialEntr
 const CANCEL_RESULT_KEYS = ["giftState"] as const;
 
 const CREATE_RESULT_KEYS = ["eventId", "policyHash", "inventoryIds", "reservationSeconds"] as const;
+const ISSUE_RESULT_KEYS = ["ticketId", "financialEntries", "invitationsIssued"] as const;
+const EVENT_STATUS_RESULT_KEYS = ["eventStatus"] as const;
 
 const SET_RESULT_KEYS = ["allowed", "consentVersion"] as const;
 const AUTHORIZE_RESULT_KEYS = [
@@ -140,6 +142,18 @@ export function readAcceptGiftStructure(receipt: Record<string, unknown>): boole
     && result.financialEntries === 0;
 }
 
+/** HTTP-only closure of the open issue_invitation reader to the reviewed gate's result keys. */
+function readIssueResultShape(receipt: Record<string, unknown>): boolean {
+  const result = closedResult(receipt, ISSUE_RESULT_KEYS);
+  return result !== null && typeof result.invitationsIssued === "number" && Number.isInteger(result.invitationsIssued);
+}
+
+/** HTTP-only closure of the record-only complete_event and cancel_event readers. */
+function readEventStatusShape(receipt: Record<string, unknown>, eventStatus: "COMPLETED" | "CANCELLED"): boolean {
+  const result = closedResult(receipt, EVENT_STATUS_RESULT_KEYS);
+  return result !== null && result.eventStatus === eventStatus;
+}
+
 export function assertComposerResult(value: unknown, input: { action: string; body: Record<string, unknown> }): void {
   if (!isRecord(value)) throw new ProtocolError("Integration gate returned an invalid composer receipt.", "GATE_STATUS");
   let valid = true;
@@ -149,11 +163,12 @@ export function assertComposerResult(value: unknown, input: { action: string; bo
     case "cancel_gift": valid = readCancelReceipt(value); break;
     case "create_event": valid = readOrganizerCreateReceipt(input.body, value); break;
     // Preserve the composers' readers; HTTP additionally closes their open results
-    // to the existing app fixture shapes. These are not SDK receipt contracts.
+    // to the keys the reviewed gate returns. These are not SDK receipt contracts.
     case "close_sales": valid = closedResult(value, ["salesStatus"]) !== null && readCloseReceipt(value); break;
     case "open_admission": valid = readOpenReceipt(value); break;
-    case "issue_invitation": valid = closedResult(value, ["ticketId", "financialEntries"]) !== null && readIssueReceipt(value); break;
-    case "complete_event": case "cancel_event": valid = closedResult(value, []) !== null && readRecordResult(value); break;
+    case "issue_invitation": valid = readIssueResultShape(value) && readIssueReceipt(value); break;
+    case "complete_event": valid = readEventStatusShape(value, "COMPLETED") && readRecordResult(value); break;
+    case "cancel_event": valid = readEventStatusShape(value, "CANCELLED") && readRecordResult(value); break;
     case "set_consent": valid = readSetReceipt(input.body, value); break;
     case "authorize_marketing": valid = readAuthorizeReceipt({ expectedConsentVersion: input.body.expectedConsentVersion }, value); break;
   }

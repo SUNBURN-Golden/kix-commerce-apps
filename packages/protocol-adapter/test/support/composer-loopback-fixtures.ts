@@ -95,7 +95,9 @@ export async function createComposerFixtures(seed: number): Promise<ComposerFixt
         : input.action === "create_event" ? { eventId: body.eventId, policyHash: "policy-hash", inventoryIds: [inputs.invitation.inventoryId], reservationSeconds: 900 }
         : input.action === "close_sales" ? { salesStatus: "CLOSED" }
         : input.action === "open_admission" ? { admissionStatus: "OPEN" }
-        : input.action === "issue_invitation" ? { ticketId: "ticket-1", financialEntries: 0 }
+        : input.action === "issue_invitation" ? { ticketId: "ticket-1", financialEntries: 0, invitationsIssued: 1 }
+        : input.action === "complete_event" ? { eventStatus: "COMPLETED" }
+        : input.action === "cancel_event" ? { eventStatus: "CANCELLED" }
         : input.action === "set_consent" ? { allowed: body.allowed, consentVersion: 1 }
         : input.action === "authorize_marketing" ? { authorizedAt: 0, consentVersion: body.expectedConsentVersion,
           dispatchDecision: "AUTHORIZED_FIXTURE_INTENT", networkSendPerformed: false } : {};

@@ -4,9 +4,9 @@ M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
 Acceptance 2 applies to every mutation row without exception: each expects a coded ProtocolError after exactly one fetch and fences the next write with zero further fetches. The previously cited October 26 amendment is absent from the authoritative rulings supplied for fix round 2 and is not relied upon.
 
-The existing predicates are preserved: [organizer receipt checks](organizer-admin-console-apps-bind.md#receipt-checks) permit other keys for `close_sales` (only `salesStatus === "CLOSED"`) and `issue_invitation` (nonempty `ticketId`, `financialEntries === 0`); `complete_event` and `cancel_event` only require a record. The HTTP boundary additionally closes these four results to their existing app fixture keys: `salesStatus`; `ticketId`, `financialEntries`; and an empty result for `complete_event` and `cancel_event`. These are app guards, not a producer schema or an SDK receipt contract.
+The existing predicates are preserved: [organizer receipt checks](organizer-admin-console-apps-bind.md#receipt-checks) permit other keys for `close_sales` (only `salesStatus === "CLOSED"`) and `issue_invitation` (nonempty `ticketId`, `financialEntries === 0`); `complete_event` and `cancel_event` only require a record. The HTTP boundary additionally closes these four results to the keys the reviewed gate at the pinned `KIX_PROTOCOL_GATE_SHA` returns: `salesStatus`; `ticketId`, `financialEntries`, integer `invitationsIssued`; and `eventStatus` (`COMPLETED` for `complete_event`, `CANCELLED` for `cancel_event`). These are app guards, not a producer schema or an SDK receipt contract.
 
-All fixtures are deterministic app shapes, not generated SDK receipt types or live gate receipts. Eleven actions, 88 enumerated paths, six mutations per path and twelve envelope/header/origin/array cases per action give **660 rows per seed**: 660 errors. Seeds 0, 7 and 0xffffffff give **1,980 mutation executions**, 33 unmodified success replays, and 36 hostile JSON replays (one action per composer). Trace generation is mocked for every new invocation; fake timers must be empty and mocks/timers are restored in a finally block.
+All fixtures are deterministic app shapes, not generated SDK receipt types or live gate receipts. Eleven actions, 91 enumerated paths, six mutations per path and twelve envelope/header/origin/array cases per action give **678 rows per seed**: 678 errors. Seeds 0, 7 and 0xffffffff give **2,034 mutation executions**, 33 unmodified success replays, and 36 hostile JSON replays (one action per composer). Trace generation is mocked for every new invocation; fake timers must be empty and mocks/timers are restored in a finally block.
 
 The contextual gift acceptance predicate still rejects missing offer context and compares ticket/recipient with the offer. The HTTP boundary separately checks the closed structural shape and cannot establish the offer's ticket or recipient from the accept body. Composer causal equality checks remain intact. Shared readers load dynamically at the HTTP boundary; route composers share them directly.
 
@@ -427,6 +427,12 @@ The table is emitted by the test and compared verbatim. Codes are asserted expec
 | organizer.complete_event.success | $.result | inject:economicFinalityClaimed | GATE_STATUS |
 | organizer.complete_event.success | $.result | inject:fundsExecuted | GATE_STATUS |
 | organizer.complete_event.success | $.result | inject:productionEndpoint | PRODUCTION_ENDPOINT |
+| organizer.complete_event.success | $.result.eventStatus | delete | GATE_STATUS |
+| organizer.complete_event.success | $.result.eventStatus | swapType | GATE_STATUS |
+| organizer.complete_event.success | $.result.eventStatus | addKey | GATE_STATUS |
+| organizer.complete_event.success | $.result.eventStatus | inject:economicFinalityClaimed | GATE_STATUS |
+| organizer.complete_event.success | $.result.eventStatus | inject:fundsExecuted | GATE_STATUS |
+| organizer.complete_event.success | $.result.eventStatus | inject:productionEndpoint | PRODUCTION_ENDPOINT |
 | organizer.complete_event.success | $ | operationId:changed | GATE_STATUS |
 | organizer.complete_event.success | $ | action:other-pinned | GATE_STATUS |
 | organizer.complete_event.success | $ | action:unpinned | GATE_STATUS |
@@ -475,6 +481,12 @@ The table is emitted by the test and compared verbatim. Codes are asserted expec
 | organizer.cancel_event.success | $.result | inject:economicFinalityClaimed | GATE_STATUS |
 | organizer.cancel_event.success | $.result | inject:fundsExecuted | GATE_STATUS |
 | organizer.cancel_event.success | $.result | inject:productionEndpoint | PRODUCTION_ENDPOINT |
+| organizer.cancel_event.success | $.result.eventStatus | delete | GATE_STATUS |
+| organizer.cancel_event.success | $.result.eventStatus | swapType | GATE_STATUS |
+| organizer.cancel_event.success | $.result.eventStatus | addKey | GATE_STATUS |
+| organizer.cancel_event.success | $.result.eventStatus | inject:economicFinalityClaimed | GATE_STATUS |
+| organizer.cancel_event.success | $.result.eventStatus | inject:fundsExecuted | GATE_STATUS |
+| organizer.cancel_event.success | $.result.eventStatus | inject:productionEndpoint | PRODUCTION_ENDPOINT |
 | organizer.cancel_event.success | $ | operationId:changed | GATE_STATUS |
 | organizer.cancel_event.success | $ | action:other-pinned | GATE_STATUS |
 | organizer.cancel_event.success | $ | action:unpinned | GATE_STATUS |
@@ -535,6 +547,12 @@ The table is emitted by the test and compared verbatim. Codes are asserted expec
 | organizer.issue_invitation.success | $.result.financialEntries | inject:economicFinalityClaimed | GATE_STATUS |
 | organizer.issue_invitation.success | $.result.financialEntries | inject:fundsExecuted | GATE_STATUS |
 | organizer.issue_invitation.success | $.result.financialEntries | inject:productionEndpoint | PRODUCTION_ENDPOINT |
+| organizer.issue_invitation.success | $.result.invitationsIssued | delete | GATE_STATUS |
+| organizer.issue_invitation.success | $.result.invitationsIssued | swapType | GATE_STATUS |
+| organizer.issue_invitation.success | $.result.invitationsIssued | addKey | GATE_STATUS |
+| organizer.issue_invitation.success | $.result.invitationsIssued | inject:economicFinalityClaimed | GATE_STATUS |
+| organizer.issue_invitation.success | $.result.invitationsIssued | inject:fundsExecuted | GATE_STATUS |
+| organizer.issue_invitation.success | $.result.invitationsIssued | inject:productionEndpoint | PRODUCTION_ENDPOINT |
 | organizer.issue_invitation.success | $ | operationId:changed | GATE_STATUS |
 | organizer.issue_invitation.success | $ | action:other-pinned | GATE_STATUS |
 | organizer.issue_invitation.success | $ | action:unpinned | GATE_STATUS |
@@ -888,3 +906,53 @@ No worker, timeout, CI, or budget configuration is edited. Logs are retained und
 | `git hash-object packages/protocol-adapter/src/commerce-bindings.ts` | `47ab5e10cbf5f8f10bed718b4dd5190fe5dfe76f`. |
 | `git diff --check` | PASS. |
 | `KIX_REQUIRE_GATE=0 npm run coverage:check` | PASS: all floors met; adapter lines/statements **91.29%**, functions **97.45%**, branches **84.91%**; web lines/statements **92.93%**, functions **80.98%**, branches **89.26%**. Live-gate tests skipped. |
+
+## PR fix round 3 — live-gate result shapes
+
+The CI failure is valid. "Adapter tests against the reviewed gate" failed in
+`gift-transfer-gate.test.ts` (six tests, via the test-side `holdRight` setup) and
+`organizer-console-gate.test.ts` (one test) with `GATE_STATUS` "invalid composer
+result" on `issue_invitation`. Fix round 2 closed that result to
+`ticketId`, `financialEntries`, but the reviewed gate at
+`52a9b5cbf7777df55d2d2062cb8d99d862b423bb` returns
+`{ ticketId, financialEntries, invitationsIssued }`
+(`reference/v0.3-rc1/lifecycle.py` `_issue_invitation`). The same check showed a
+latent defect that no live test reaches: `complete_event` and `cancel_event` were
+closed to an empty result, while the gate returns `{ eventStatus: "COMPLETED" }` and
+`{ eventStatus: "CANCELLED" }` (`reference/v0.3-rc1/core.py`). The other eight
+closures already match the gate's handlers: `offer_gift`, `accept_gift`,
+`cancel_gift`, `create_event`, `close_sales`, `open_admission`, `set_consent` and
+`authorize_marketing`.
+
+`assertComposerResult` now closes `issue_invitation` to those three keys with an
+integer `invitationsIssued`, and closes `complete_event` / `cancel_event` to
+`eventStatus` with the matching literal. Every closure is HTTP-only and stays in
+the dynamically imported `composer-receipts.ts`. The ten composer reader bodies are
+unchanged, as are composer state machines, command bodies, stub predicates and the
+offline double. The fixtures add `invitationsIssued: 1` and the two `eventStatus`
+results. The explicit path oracle, per-fixture path counts and row count are
+updated with them. Every mutation still expects one of the four error codes; no
+row expects success.
+
+The seed-7 table above is regenerated from the emitted output and compared
+verbatim: **678 unique error rows across exactly 11 actions** (91 paths × 6 + 11 × 12).
+Seeds 0, 7 and 0xffffffff execute **2,034** mutations.
+
+M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+No command is newly composed or rebound, and `placeHold`, `capture` and
+`settle_capture` stay not-bound. No CI, budget limit, pin, vendor, commerce binding,
+`.aiops/` or `docs/aiops/` file is changed. No commit, push, PR, issue, comment or
+marker is created. The checks below are local evidence, not a GitHub CI result.
+
+| Round 3 check | Evidence |
+| --- | --- |
+| `KIX_PROTOCOL_ROOT=<clone at 52a9b5c> KIX_REQUIRE_GATE=1 npm test -w @kix/protocol-adapter`, before the fix | Reproduced CI: **7 failed** (6 gift, 1 organizer), all `issue_invitation` `GATE_STATUS`. |
+| Same live-gate run, after the fix | PASS: **1489 passed / 72 files**, 0 skipped. |
+| `KIX_REQUIRE_GATE=0 npm test` (local worker cap) | PASS: adapter **1466 passed / 23 skipped**, web **1220 passed**, cold-start **6 passed**. |
+| Composer sweep | PASS: **45 tests**, 678 rows per seed with expected codes, one fetch and a fenced next write. The emitted table matches the document verbatim. |
+| `npm run typecheck`, `npm run build` | PASS. |
+| `npm run budget` | PASS with unchanged limits: initial JS **160719** against fresh HEAD `7b573a4` **160722** (**−3**), total **775519** against **775518**. |
+| `npm run lint`, `npm run cycle-check`, `npm run deps:check` | PASS. |
+| Protected paths compared with `origin/main` | PASS: empty diff. |
+| `git hash-object packages/protocol-adapter/src/commerce-bindings.ts` | `47ab5e10cbf5f8f10bed718b4dd5190fe5dfe76f`. |
+| `git diff --check` | PASS. |

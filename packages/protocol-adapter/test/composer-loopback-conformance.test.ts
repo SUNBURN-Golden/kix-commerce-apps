@@ -135,7 +135,7 @@ const commonPaths = ["$", "$.domain", "$.operationId", "$.sequence", "$.action",
 const resultPaths = [
   ["giftId", "termsHash"], ["ticketId", "owner", "rightsVersion", "financialEntries"], ["giftState"],
   ["eventId", "policyHash", "inventoryIds", "inventoryIds.0", "reservationSeconds"],
-  ["salesStatus"], ["admissionStatus"], [], [], ["ticketId", "financialEntries"],
+  ["salesStatus"], ["admissionStatus"], ["eventStatus"], ["eventStatus"], ["ticketId", "financialEntries", "invitationsIssued"],
   ["allowed", "consentVersion"], ["authorizedAt", "consentVersion", "dispatchDecision", "networkSendPerformed"],
 ];
 const fixedMutations = ["operationId:changed", "action:other-pinned", "action:unpinned",
@@ -149,10 +149,10 @@ describe.each(seeds)("composer loopback seed %i", (seed) => {
     const actions = fixtures.map((fixture) => fixture.envelope.action).sort();
     expect(actions).toEqual([...COMPOSER_ACTIONS].sort());
     expect(actions).toEqual([...GIFT_COMPOSED, ...ORGANIZER_COMPOSED, ...CONSENT_COMPOSED].sort());
-    expect(fixtures.map((fixture) => paths(fixture.receipt).length)).toEqual([8, 10, 7, 11, 7, 7, 6, 6, 8, 8, 10]);
-    expect(sweep).toHaveLength(660);
+    expect(fixtures.map((fixture) => paths(fixture.receipt).length)).toEqual([8, 10, 7, 11, 7, 7, 7, 7, 9, 8, 10]);
+    expect(sweep).toHaveLength(678);
     const key = (row: Pick<SweepRow, "fixtureId" | "path" | "mutation">) => `${row.fixtureId}:${row.path}:${row.mutation}`;
-    expect(new Set(sweep.map(({ row }) => key(row))).size).toBe(660);
+    expect(new Set(sweep.map(({ row }) => key(row))).size).toBe(678);
     const required = fixtures.flatMap((fixture, i) => [
       ...[...commonPaths, ...resultPaths[i].map((path) => `$.result.${path}`)].flatMap((path) =>
         fieldMutations.map((mutation) => key({ fixtureId: fixture.fixtureId, path, mutation }))),
@@ -176,7 +176,7 @@ describe.each(seeds)("composer loopback seed %i", (seed) => {
     assertOneFetch(fixture, gate);
   });
 
-  it("enforces all 660 asserted outcomes with one fetch and fences every UNKNOWN", async () => {
+  it("enforces all 678 asserted outcomes with one fetch and fences every UNKNOWN", async () => {
     for (const { fixture, row, answer } of sweep) {
       const gate = createFakeLoopbackGate({ scenario: fixture, answer: (base) => {
         const mutated = answer(base);
