@@ -114,7 +114,7 @@ describe("integration HTTP redirects", () => {
     const seen: RequestInit[] = [];
     const recording: typeof fetch = async (_input, init) => {
       seen.push(init ?? {});
-      return new Response(JSON.stringify(localCallReceipt("op-close", "close_sales", {})), {
+      return new Response(JSON.stringify(localCallReceipt("op-close", "close_sales", { salesStatus: "CLOSED" })), {
         status: 200,
         headers: echoIntegrationGateHeaders(init),
       });
@@ -280,7 +280,7 @@ describe("integration HTTP default fetch", () => {
     let receiver: unknown = "unset";
     globalThis.fetch = async function (this: unknown, _input: RequestInfo | URL, init?: RequestInit) {
       receiver = this;
-      return new Response(JSON.stringify(localCallReceipt("op-close", "close_sales", {})), {
+      return new Response(JSON.stringify(localCallReceipt("op-close", "close_sales", { salesStatus: "CLOSED" })), {
         status: 200,
         headers: echoIntegrationGateHeaders(init),
       });

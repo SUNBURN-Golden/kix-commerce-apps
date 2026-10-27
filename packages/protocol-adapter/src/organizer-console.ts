@@ -1,6 +1,6 @@
+import { readOrganizerCreateReceipt, readCloseReceipt, readOpenReceipt, readIssueReceipt, readRecordResult } from "./composer-receipts.js";
 import {
   classifyThrown,
-  closedResult,
   JOURNEY_RULING,
   snapshot,
   traceIdentity,
@@ -112,8 +112,6 @@ export interface OrganizerState {
 
 const OPERATOR = "operator";
 
-const CREATE_RESULT_KEYS = ["eventId", "policyHash", "inventoryIds", "reservationSeconds"] as const;
-
 export interface OrganizerPolicy {
   primaryPrice: number;
   [key: string]: unknown;
@@ -186,7 +184,7 @@ export class OrganizerConsole {
       OPERATOR,
       undefined,
       () => createEventBody(input),
-      (body, receipt) => readCreateReceipt(body, receipt),
+      (body, receipt) => readOrganizerCreateReceipt(body, receipt),
     );
   }
 
@@ -451,53 +449,4 @@ function invitationBody(input: OrganizerInvitationInput): Record<string, unknown
     expectedInventoryVersion: input.expectedInventoryVersion,
     recipient: input.recipient,
   };
-}
-
-function readCreateReceipt(body: Record<string, unknown>, receipt: Record<string, unknown>): boolean {
-  const result = closedResult(receipt, CREATE_RESULT_KEYS);
-  if (result === null) {
-    return false;
-  }
-  const seats = body.seats;
-  if (!Array.isArray(seats)) {
-    return false;
-  }
-  if (typeof result.eventId !== "string" || result.eventId !== body.eventId) {
-    return false;
-  }
-  if (typeof result.policyHash !== "string" || result.policyHash.length === 0) {
-    return false;
-  }
-  if (!Array.isArray(result.inventoryIds) || result.inventoryIds.length !== seats.length || result.inventoryIds.length === 0) {
-    return false;
-  }
-  const inventoryIds = result.inventoryIds.filter((id): id is string => typeof id === "string" && id.length > 0);
-  if (inventoryIds.length !== seats.length) {
-    return false;
-  }
-  return typeof result.reservationSeconds === "number" && Number.isInteger(result.reservationSeconds);
-}
-
-function readCloseReceipt(receipt: Record<string, unknown>): boolean {
-  return isRecord(receipt.result) && receipt.result.salesStatus === "CLOSED";
-}
-
-function readOpenReceipt(receipt: Record<string, unknown>): boolean {
-  const result = closedResult(receipt, ["admissionStatus"]);
-  return result !== null && result.admissionStatus === "OPEN";
-}
-
-function readIssueReceipt(receipt: Record<string, unknown>): boolean {
-  if (!isRecord(receipt.result)) {
-    return false;
-  }
-  return (
-    typeof receipt.result.ticketId === "string" &&
-    receipt.result.ticketId.length > 0 &&
-    receipt.result.financialEntries === 0
-  );
-}
-
-function readRecordResult(receipt: Record<string, unknown>): boolean {
-  return isRecord(receipt.result);
 }

@@ -612,6 +612,7 @@ describe("resale payload guards", () => {
       });
 
     responseBody = localCallReceipt("op-resale-ok", "close_sales", {
+      salesStatus: "CLOSED",
       listingId: LISTING,
       mode: "mock",
       phase: "TRANSFERRED",

@@ -1,6 +1,6 @@
+import { readSetReceipt, readAuthorizeReceipt } from "./composer-receipts.js";
 import {
   classifyThrown,
-  closedResult,
   JOURNEY_RULING,
   snapshot,
   traceIdentity,
@@ -88,14 +88,6 @@ export interface ConsentState {
   halted: ConsentHalt | null;
   notComposed: readonly ConsentNotComposed[];
 }
-
-const SET_RESULT_KEYS = ["allowed", "consentVersion"] as const;
-const AUTHORIZE_RESULT_KEYS = [
-  "authorizedAt",
-  "consentVersion",
-  "dispatchDecision",
-  "networkSendPerformed",
-] as const;
 
 export interface ConsentSetInput {
   operationId: string;
@@ -309,29 +301,4 @@ function authorizeBody(input: ConsentAuthorizeInput): Record<string, unknown> {
     purpose: input.purpose,
     subject: input.subject,
   };
-}
-
-function readSetReceipt(body: Record<string, unknown>, receipt: Record<string, unknown>): boolean {
-  const result = closedResult(receipt, SET_RESULT_KEYS);
-  if (result === null) {
-    return false;
-  }
-  if (typeof result.allowed !== "boolean" || result.allowed !== body.allowed) {
-    return false;
-  }
-  return typeof result.consentVersion === "number" && Number.isInteger(result.consentVersion);
-}
-
-function readAuthorizeReceipt(input: ConsentAuthorizeInput, receipt: Record<string, unknown>): boolean {
-  const result = closedResult(receipt, AUTHORIZE_RESULT_KEYS);
-  if (result === null) {
-    return false;
-  }
-  if (result.dispatchDecision !== "AUTHORIZED_FIXTURE_INTENT" || result.networkSendPerformed !== false) {
-    return false;
-  }
-  if (typeof result.authorizedAt !== "number" || !Number.isInteger(result.authorizedAt)) {
-    return false;
-  }
-  return result.consentVersion === input.expectedConsentVersion && Number.isInteger(result.consentVersion);
 }

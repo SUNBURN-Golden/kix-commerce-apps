@@ -2,7 +2,13 @@ import { isDeepStrictEqual } from "node:util";
 import { echoIntegrationGateHeaders } from "../../src/http-adapter.js";
 import { INTEGRATION_GATE_LOOPBACK_HOST } from "../../src/integration-gate-pin.js";
 import { CONTRACT_ONLY_LOCAL_CALL_METHOD, CONTRACT_ONLY_LOCAL_CALL_PATH } from "../../src/openapi-contract-pin.js";
-import type { Sdk0MockScenario } from "../../src/sdk0-mock-scenarios.js";
+import type { LocalCallEnvelope } from "../../src/local-call.js";
+
+export type FakeGateScenario =
+  | { klass: "NOT_BOUND" }
+  | { klass: "SUCCESS"; envelope: LocalCallEnvelope; receipt: unknown }
+  | { klass: "REJECT" | "UNKNOWN"; envelope: LocalCallEnvelope; failure: { code: string } }
+  | { klass: "STALE"; envelope: LocalCallEnvelope; failure: { requestId: string; correlationId: string } };
 
 export interface GateAnswer { status: number; body: string | null; headers: Record<string, string>; url?: string }
 export interface FakeGateCall {
@@ -13,7 +19,7 @@ export interface FakeLoopbackGate { baseUrl: string; fetch: typeof fetch; calls:
 
 /** Offline fetch double. Raw text is returned verbatim, including duplicate keys. */
 export function createFakeLoopbackGate(input: {
-  scenario: Sdk0MockScenario; port?: number;
+  scenario: FakeGateScenario; port?: number;
   answer?: (base: GateAnswer, call: FakeGateCall) => GateAnswer;
   rawBody?: string;
 }): FakeLoopbackGate {

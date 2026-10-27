@@ -633,6 +633,7 @@ describe("reservation payload guards", () => {
       });
 
     responseBody = localCallReceipt("op-res-ok", "close_sales", {
+      salesStatus: "CLOSED",
       reservationId: RES,
       mode: "mock",
       phase: "ISSUED",
@@ -726,6 +727,7 @@ describe("reservation payload guards", () => {
     await expect(call("op-adm-proof")).rejects.toThrow(/proof mode/);
 
     responseBody = localCallReceipt("op-adm-ok", "close_sales", {
+      salesStatus: "CLOSED",
       admitted: false,
       rightsRef: "right_1",
       gateId: "gate-main",

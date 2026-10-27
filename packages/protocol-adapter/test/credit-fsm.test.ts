@@ -758,6 +758,7 @@ describe("http credit binding", () => {
     );
 
     responseBody = localCallReceipt("op-close-credit-6", "close_sales", {
+      salesStatus: "CLOSED",
       advanceId: ADVANCE,
       mode: "mock",
       provenance: "MOCK_CREDIT_F04_ONLY",

@@ -1,6 +1,6 @@
+import { readOfferReceipt, readAcceptGiftReceipt, readCancelReceipt } from "./composer-receipts.js";
 import {
   classifyThrown,
-  closedResult,
   JOURNEY_RULING,
   snapshot,
   traceIdentity,
@@ -94,10 +94,6 @@ export interface GiftState {
   notComposed: readonly GiftNotComposed[];
 }
 
-const OFFER_RESULT_KEYS = ["giftId", "termsHash"] as const;
-const ACCEPT_RESULT_KEYS = ["ticketId", "owner", "rightsVersion", "financialEntries"] as const;
-const CANCEL_RESULT_KEYS = ["giftState"] as const;
-
 interface OfferedGift {
   giftId: string;
   ticketId: string;
@@ -169,7 +165,7 @@ export class GiftTransfer {
       input.operationId,
       this.gift?.recipient ?? "recipient",
       () => this.acceptBody(),
-      (_body, receipt) => this.readAccept(receipt),
+      (_body, receipt) => readAcceptGiftReceipt(receipt, this.gift),
     );
   }
 
@@ -306,23 +302,6 @@ export class GiftTransfer {
       giftId: this.gift.giftId,
     };
   }
-
-  private readAccept(receipt: Record<string, unknown>): boolean {
-    if (this.gift === null) {
-      return false;
-    }
-    const result = closedResult(receipt, ACCEPT_RESULT_KEYS);
-    if (result === null) {
-      return false;
-    }
-    if (result.ticketId !== this.gift.ticketId || result.owner !== this.gift.recipient) {
-      return false;
-    }
-    if (typeof result.rightsVersion !== "number" || !Number.isInteger(result.rightsVersion)) {
-      return false;
-    }
-    return result.financialEntries === 0;
-  }
 }
 
 function deskQuote(method: GiftDeskNotBound["method"]): GiftDeskNotBound {
@@ -352,26 +331,4 @@ function offerBody(input: GiftOfferInput): Record<string, unknown> {
     recipient: input.recipient,
     expiresAt: input.expiresAt,
   };
-}
-
-function readOfferReceipt(
-  body: Record<string, unknown>,
-  receipt: Record<string, unknown>,
-): { termsHash: string } | null {
-  const result = closedResult(receipt, OFFER_RESULT_KEYS);
-  if (result === null) {
-    return null;
-  }
-  if (typeof result.giftId !== "string" || result.giftId !== body.giftId) {
-    return null;
-  }
-  if (typeof result.termsHash !== "string" || result.termsHash.length === 0) {
-    return null;
-  }
-  return { termsHash: result.termsHash };
-}
-
-function readCancelReceipt(receipt: Record<string, unknown>): boolean {
-  const result = closedResult(receipt, CANCEL_RESULT_KEYS);
-  return result !== null && result.giftState === "CANCELLED";
 }
