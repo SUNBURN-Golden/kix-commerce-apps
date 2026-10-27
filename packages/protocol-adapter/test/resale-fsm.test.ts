@@ -612,6 +612,7 @@ describe("resale payload guards", () => {
       });
 
     responseBody = localCallReceipt("op-resale-ok", "close_sales", {
+      salesStatus: "CLOSED",
       listingId: LISTING,
       mode: "mock",
       phase: "TRANSFERRED",
@@ -624,9 +625,7 @@ describe("resale payload guards", () => {
       priorCredentialInvalidated: true,
       note: "Simulated mock phase. Not live marketplace.",
     });
-    await expect(call("op-resale-ok")).resolves.toMatchObject({
-      result: { phase: "TRANSFERRED", economicFinalityClaimed: false, mode: "mock" },
-    });
+    await expect(call("op-resale-ok")).rejects.toMatchObject({ code: "GATE_STATUS" });
 
     responseBody = {
       listingId: LISTING,

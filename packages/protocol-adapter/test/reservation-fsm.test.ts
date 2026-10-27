@@ -633,6 +633,7 @@ describe("reservation payload guards", () => {
       });
 
     responseBody = localCallReceipt("op-res-ok", "close_sales", {
+      salesStatus: "CLOSED",
       reservationId: RES,
       mode: "mock",
       phase: "ISSUED",
@@ -646,9 +647,7 @@ describe("reservation payload guards", () => {
       references: ["B01", "B02", "B03", "B04", "B05"],
       note: "Simulated mock phase. Not live admission.",
     });
-    await expect(call("op-res-ok")).resolves.toMatchObject({
-      result: { phase: "ISSUED", economicFinalityClaimed: false, mode: "mock" },
-    });
+    await expect(call("op-res-ok")).rejects.toMatchObject({ code: "GATE_STATUS" });
 
     responseBody = {
       reservationId: RES,
@@ -726,12 +725,13 @@ describe("reservation payload guards", () => {
     await expect(call("op-adm-proof")).rejects.toThrow(/proof mode/);
 
     responseBody = localCallReceipt("op-adm-ok", "close_sales", {
+      salesStatus: "CLOSED",
       admitted: false,
       rightsRef: "right_1",
       gateId: "gate-main",
       proofMode: "stub",
       detail: "Stub: unknown right.",
     });
-    await expect(call("op-adm-ok")).resolves.toMatchObject({ result: { proofMode: "stub", admitted: false } });
+    await expect(call("op-adm-ok")).rejects.toMatchObject({ code: "GATE_STATUS" });
   });
 });
