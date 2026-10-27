@@ -699,7 +699,7 @@ All negative payload/production guards stay intact. Open-result extra-key accept
 
 Scope provenance: [Wave 6 gate record](https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343), and kix-protocol `docs/decisions/PROGRAM_ROADMAP_20260930.md` §2 R-7 (read-only references; no producer source consumed or pin moved).
 
-## Verification
+## Verification (initial implementation; superseded by fix-round evidence below)
 
 Base implementation HEAD: `a96f14e8adefc44fd13e4cd99c75940b0965d1d6`. Local Node `v20.19.2` (repository engine supports >=20; CI uses Node 22), npm lockfile toolchain. Fresh baseline and final build use the same toolchain and settings. Baseline: initial JS gzip **160704**, total gzip **776245**. Final: initial JS gzip **160747**, delta **+43 bytes**; total gzip **778007**. `npm run budget` passes with every limit unchanged. The extra shared receipt module is a deferred chunk; initial JS stays within both the node delta and repository ceilings.
 
@@ -750,3 +750,76 @@ Additional read-only AST comparison (`node --input-type=module` with TypeScript 
 - `packages/protocol-adapter/test/reservation-fsm.test.ts`
 - `packages/protocol-adapter/test/resale-fsm.test.ts`
 - `docs/c-plan-d-invoker-loopback-conformance-stub-apps-bind.md` (new)
+
+## PR fix round 1 — total bundle regression
+
+The reported CI failure is valid. Its 785,942-byte total exceeded the preceding
+node's stricter 785,000-byte entry-import-graph tripwire, even though the separate
+790,000-byte repository budget passed. The branch was based on `a96f14e`; current
+`origin/main` (`0990caf`) also contains the merged diagnostics UI. An isolated
+copy of that merged main with this node's source overlaid reproduces the total
+size pressure. No unmerged dependency was consumed.
+
+The final fix groups the existing BookingJourney, GiftTransfer, OrganizerConsole
+and ConsentBind implementations in `packages/protocol-adapter/src/composer-runtime.ts`.
+Their original module paths re-export the same values and types. Keeping those
+implementations in one deferred module lets gzip share their existing vocabulary
+and avoids another shared runtime chunk. The shared result readers and the HTTP
+boundary's lazy reader import are unchanged. No receipt predicate, command body,
+state transition, fence, error classification, not-bound wording or test expectation
+changes in this fix round.
+
+A TypeScript token comparison against submitted HEAD `5be81ee` checks all **87**
+moved declarations. Every token matches after prefixing only the private
+`deskQuote`, `attemptIdentity` and `createEventBody` helper names to avoid collisions.
+The receipt reader file is byte-identical to submitted HEAD. The sweep table above
+is unchanged and remains compared verbatim by the suite.
+
+M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+The four previously recorded open-result ACCEPT exceptions remain unchanged.
+No command is newly composed or rebound. No CI, budget limit, pin, vendor,
+commerce binding, `.aiops/` or `docs/aiops/` file is changed.
+
+Final local verification uses Node **22.23.4** and a fresh `npm ci`. Isolated
+baseline and integration builds use the same installed lockfile dependencies.
+These runs are local evidence; they do not claim a newly posted GitHub check.
+No commit, push, issue, PR or comment was created.
+
+| Clean build, gzip level 9 | Initial JS | Total JS + CSS | Files |
+| --- | ---: | ---: | ---: |
+| Branch base `a96f14e` | 161447 | 778382 | 100 |
+| Submitted node `5be81ee` | 161484 | 780213 | 101 |
+| Fix-round branch | **161452** | **777624** | **100** |
+| Current merged main `0990caf` | 161679 | 784542 | 103 |
+| Current merged main + final node sources (isolated copy) | **161662** | **783528** | **103** |
+
+The branch initial-JS delta is **+5 bytes** against its base (allowance: +200).
+The combined tree's initial JS decreases by 17 bytes against current merged main.
+The combined total leaves **1,472 bytes** below the stricter 785,000 tripwire;
+all repository budget limits are unchanged. Local build logs are retained under
+`/tmp/kix-invoker-*`.
+
+| Fix-round check | Result |
+| --- | --- |
+| `npm ci` (Node 22.23.4) | PASS; no lockfile change |
+| `npm run typecheck` | PASS on branch and isolated combined tree |
+| `npm run build` | PASS on branch; isolated combined Vite stub build also PASS |
+| `npm run budget` | PASS; branch and isolated combined metrics above |
+| `KIX_REQUIRE_GATE=0 npm test` | Initial unrestricted run hit worker/RPC and two test timeouts under host contention; no product assertion failure, no timeout/config change |
+| `VITEST_MAX_THREADS=2 VITEST_MIN_THREADS=1 VITEST_MAX_FORKS=2 VITEST_MIN_FORKS=1 KIX_REQUIRE_GATE=0 npm test` | PASS: adapter **1466 passed / 23 skipped**; web **1220 passed**; cold-start **6 passed** |
+| Isolated combined `KIX_REQUIRE_GATE=0 npm test -w @kix/web` | PASS: **1237 web tests / 89 files**, plus **6 cold-start tests** |
+| Isolated combined `npx vitest run test/entry-import-graph.test.ts` | PASS: **2 tests**, including the exact previously failing total-size assertion |
+| Composer sweep (included in full adapter suite) | PASS: **45 tests**, all 1980 mutation executions, 33 success receipts, 36 hostile JSON replays; emitted table unchanged, no pending fake timers |
+| `npm run lint` | PASS |
+| `npm run cycle-check` | PASS: no circular imports |
+| `npm run deps:check` | PASS: 4 manifests / 630 lockfile entries |
+| `VITEST_MAX_THREADS=2 VITEST_MIN_THREADS=1 VITEST_MAX_FORKS=2 VITEST_MIN_FORKS=1 KIX_REQUIRE_GATE=0 npm run coverage:check` | PASS: all adapter and web coverage floors met; adapter lines 91.29%, functions 97.45%, branches 84.90%; web lines 92.93%, functions 80.98%, branches 89.26% |
+| `git diff --check` | PASS |
+| Read-only TypeScript token comparison against `5be81ee` | PASS: **87 declarations**, only private helper identifiers prefixed |
+| Protected paths compared with `origin/main` | PASS: empty diff for bindings, three pin sources, vendor, `.github`, `.aiops`, `docs/aiops`, bundle budget |
+| `git hash-object packages/protocol-adapter/src/commerce-bindings.ts` | `47ab5e10cbf5f8f10bed718b4dd5190fe5dfe76f` |
+
+Fix-round changes are limited to this evidence document, the four existing
+composer modules as re-export facades, and the new `composer-runtime.ts`. No
+expectations, test files or protocol inputs change in this round. Live gate suites
+remain skipped, never passed.
