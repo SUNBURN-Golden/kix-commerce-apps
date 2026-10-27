@@ -148,10 +148,12 @@ export function assertComposerResult(value: unknown, input: { action: string; bo
     case "accept_gift": valid = readAcceptGiftStructure(value); break;
     case "cancel_gift": valid = readCancelReceipt(value); break;
     case "create_event": valid = readOrganizerCreateReceipt(input.body, value); break;
-    case "close_sales": valid = readCloseReceipt(value); break;
+    // Preserve the composers' readers; HTTP additionally closes their open results
+    // to the existing app fixture shapes. These are not SDK receipt contracts.
+    case "close_sales": valid = closedResult(value, ["salesStatus"]) !== null && readCloseReceipt(value); break;
     case "open_admission": valid = readOpenReceipt(value); break;
-    case "issue_invitation": valid = readIssueReceipt(value); break;
-    case "complete_event": case "cancel_event": valid = readRecordResult(value); break;
+    case "issue_invitation": valid = closedResult(value, ["ticketId", "financialEntries"]) !== null && readIssueReceipt(value); break;
+    case "complete_event": case "cancel_event": valid = closedResult(value, []) !== null && readRecordResult(value); break;
     case "set_consent": valid = readSetReceipt(input.body, value); break;
     case "authorize_marketing": valid = readAuthorizeReceipt({ expectedConsentVersion: input.body.expectedConsentVersion }, value); break;
   }

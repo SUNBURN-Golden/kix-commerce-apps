@@ -2,11 +2,11 @@
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
-Owner ruling 2026-10-26 13:06 KST (KIX Commerce, delegation 10-15): acceptance 2 is amended for exactly four open-result `$.result × addKey` rows. These expect ACCEPT, without UNKNOWN or a halt fence. Every other row expects a coded ProtocolError after one fetch and fences the next write.
+Acceptance 2 applies to every mutation row without exception: each expects a coded ProtocolError after exactly one fetch and fences the next write with zero further fetches. The previously cited October 26 amendment is absent from the authoritative rulings supplied for fix round 2 and is not relied upon.
 
-The existing predicates are preserved: [organizer receipt checks](organizer-admin-console-apps-bind.md#receipt-checks) permit other keys for `close_sales` (only `salesStatus === "CLOSED"`) and `issue_invitation` (nonempty `ticketId`, `financialEntries === 0`); `complete_event` and `cancel_event` only require a record. No closed result contract is inferred for them.
+The existing predicates are preserved: [organizer receipt checks](organizer-admin-console-apps-bind.md#receipt-checks) permit other keys for `close_sales` (only `salesStatus === "CLOSED"`) and `issue_invitation` (nonempty `ticketId`, `financialEntries === 0`); `complete_event` and `cancel_event` only require a record. The HTTP boundary additionally closes these four results to their existing app fixture keys: `salesStatus`; `ticketId`, `financialEntries`; and an empty result for `complete_event` and `cancel_event`. These are app guards, not a producer schema or an SDK receipt contract.
 
-All fixtures are deterministic app shapes, not generated SDK receipt types or live gate receipts. Eleven actions, 88 enumerated paths, six mutations per path and twelve envelope/header/origin/array cases per action give **660 rows per seed**: 656 errors and four ACCEPTs. Seeds 0, 7 and 0xffffffff give **1,980 mutation executions**, 33 unmodified success replays, and 36 hostile JSON replays (one action per composer). Trace generation is mocked for every new invocation; fake timers must be empty and mocks/timers are restored in a finally block.
+All fixtures are deterministic app shapes, not generated SDK receipt types or live gate receipts. Eleven actions, 88 enumerated paths, six mutations per path and twelve envelope/header/origin/array cases per action give **660 rows per seed**: 660 errors. Seeds 0, 7 and 0xffffffff give **1,980 mutation executions**, 33 unmodified success replays, and 36 hostile JSON replays (one action per composer). Trace generation is mocked for every new invocation; fake timers must be empty and mocks/timers are restored in a finally block.
 
 The contextual gift acceptance predicate still rejects missing offer context and compares ticket/recipient with the offer. The HTTP boundary separately checks the closed structural shape and cannot establish the offer's ticket or recipient from the accept body. Composer causal equality checks remain intact. Shared readers load dynamically at the HTTP boundary; route composers share them directly.
 
@@ -14,7 +14,7 @@ No additional command is composed or rebound. Stub remains default; offline HTTP
 
 ## Sweep table (seed 7)
 
-The table is emitted by the test and compared verbatim. Codes are asserted expectations, selected before execution. Missing x-kix-production-endpoint expects GATE_TRANSPORT. ACCEPT appears only in the four owner-authorized rows.
+The table is emitted by the test and compared verbatim. Codes are asserted expectations, selected before execution. Missing x-kix-production-endpoint expects GATE_TRANSPORT. Every row expects an error code; there are no ACCEPT exceptions.
 
 <!-- composer-loopback-sweep:start -->
 | Fixture | Path | Mutation | Expected outcome |
@@ -315,7 +315,7 @@ The table is emitted by the test and compared verbatim. Codes are asserted expec
 | organizer.close_sales.success | $.action | inject:productionEndpoint | PRODUCTION_ENDPOINT |
 | organizer.close_sales.success | $.result | delete | GATE_STATUS |
 | organizer.close_sales.success | $.result | swapType | GATE_STATUS |
-| organizer.close_sales.success | $.result | addKey | ACCEPT |
+| organizer.close_sales.success | $.result | addKey | GATE_STATUS |
 | organizer.close_sales.success | $.result | inject:economicFinalityClaimed | GATE_STATUS |
 | organizer.close_sales.success | $.result | inject:fundsExecuted | GATE_STATUS |
 | organizer.close_sales.success | $.result | inject:productionEndpoint | PRODUCTION_ENDPOINT |
@@ -423,7 +423,7 @@ The table is emitted by the test and compared verbatim. Codes are asserted expec
 | organizer.complete_event.success | $.action | inject:productionEndpoint | PRODUCTION_ENDPOINT |
 | organizer.complete_event.success | $.result | delete | GATE_STATUS |
 | organizer.complete_event.success | $.result | swapType | GATE_STATUS |
-| organizer.complete_event.success | $.result | addKey | ACCEPT |
+| organizer.complete_event.success | $.result | addKey | GATE_STATUS |
 | organizer.complete_event.success | $.result | inject:economicFinalityClaimed | GATE_STATUS |
 | organizer.complete_event.success | $.result | inject:fundsExecuted | GATE_STATUS |
 | organizer.complete_event.success | $.result | inject:productionEndpoint | PRODUCTION_ENDPOINT |
@@ -471,7 +471,7 @@ The table is emitted by the test and compared verbatim. Codes are asserted expec
 | organizer.cancel_event.success | $.action | inject:productionEndpoint | PRODUCTION_ENDPOINT |
 | organizer.cancel_event.success | $.result | delete | GATE_STATUS |
 | organizer.cancel_event.success | $.result | swapType | GATE_STATUS |
-| organizer.cancel_event.success | $.result | addKey | ACCEPT |
+| organizer.cancel_event.success | $.result | addKey | GATE_STATUS |
 | organizer.cancel_event.success | $.result | inject:economicFinalityClaimed | GATE_STATUS |
 | organizer.cancel_event.success | $.result | inject:fundsExecuted | GATE_STATUS |
 | organizer.cancel_event.success | $.result | inject:productionEndpoint | PRODUCTION_ENDPOINT |
@@ -519,7 +519,7 @@ The table is emitted by the test and compared verbatim. Codes are asserted expec
 | organizer.issue_invitation.success | $.action | inject:productionEndpoint | PRODUCTION_ENDPOINT |
 | organizer.issue_invitation.success | $.result | delete | GATE_STATUS |
 | organizer.issue_invitation.success | $.result | swapType | GATE_STATUS |
-| organizer.issue_invitation.success | $.result | addKey | ACCEPT |
+| organizer.issue_invitation.success | $.result | addKey | GATE_STATUS |
 | organizer.issue_invitation.success | $.result | inject:economicFinalityClaimed | GATE_STATUS |
 | organizer.issue_invitation.success | $.result | inject:fundsExecuted | GATE_STATUS |
 | organizer.issue_invitation.success | $.result | inject:productionEndpoint | PRODUCTION_ENDPOINT |
@@ -695,7 +695,7 @@ No assertions or expected codes in existing composer/invoker tests changed. Nine
 | `reservation-fsm.test.ts` | mock reservation payload; stub admission payload |
 | `resale-fsm.test.ts` | mock resale payload |
 
-All negative payload/production guards stay intact. Open-result extra-key acceptance is preserved, including the existing nested `fundsExecuted: false` transport test. No web scanner exclusion was needed. The earlier design's optional live execution was removed per review. The four ACCEPT exceptions are owner-authorized, as cited above, and are not inferred from an unpinned checkout.
+All negative payload/production guards stay intact. The original open composer predicates are preserved; HTTP rejects extra result keys, including otherwise safe mock payload extensions. The expectation updates for those HTTP tests are documented in fix round 2 below. No web scanner exclusion was needed. The earlier design's optional live execution was removed per review. The four former ACCEPT exceptions are removed in fix round 2; no acceptance amendment is claimed.
 
 Scope provenance: [Wave 6 gate record](https://github.com/BeautifulMind-JT/kix-protocol/issues/56#issuecomment-5868307343), and kix-protocol `docs/decisions/PROGRAM_ROADMAP_20260930.md` §2 R-7 (read-only references; no producer source consumed or pin moved).
 
@@ -732,7 +732,7 @@ Validation commands are run from the repository root. Output redirections only r
 
 The worker cap is a local execution adjustment, not a CI or test timeout change. Coverage: adapter lines/statements **91.29%**, functions **97.45%**, branches **84.90%**; web lines/statements **92.93%**, functions **80.98%**, branches **89.26%**. Live suites remain skipped in both test and coverage runs.
 
-Additional read-only AST comparison (`node --input-type=module` with TypeScript and `git show HEAD:<source>`) verified all **10 extracted reader bodies match the base revision**, normalizing whitespace and the explicit `this.gift` → `gift` context reference only. An independent Python table check confirmed **660 unique rows and exactly four expected ACCEPT rows**. The full commands used for these checks only read source, git blobs and this document.
+Additional read-only AST comparison (`node --input-type=module` with TypeScript and `git show HEAD:<source>`) verified all **10 extracted reader bodies match the base revision**, normalizing whitespace and the explicit `this.gift` → `gift` context reference only. At initial implementation, an independent Python table check confirmed **660 unique rows with four expected ACCEPT rows**; fix round 2 supersedes those four expectations with errors and fences. The full commands used for these checks only read source, git blobs and this document.
 
 ### Changed files
 
@@ -776,7 +776,7 @@ The receipt reader file is byte-identical to submitted HEAD. The sweep table abo
 is unchanged and remains compared verbatim by the suite.
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
-The four previously recorded open-result ACCEPT exceptions remain unchanged.
+At fix round 1, the four open-result ACCEPT exceptions remained unchanged; fix round 2 removes them.
 No command is newly composed or rebound. No CI, budget limit, pin, vendor,
 commerce binding, `.aiops/` or `docs/aiops/` file is changed.
 
@@ -823,3 +823,68 @@ Fix-round changes are limited to this evidence document, the four existing
 composer modules as re-export facades, and the new `composer-runtime.ts`. No
 expectations, test files or protocol inputs change in this round. Live gate suites
 remain skipped, never passed.
+
+## PR fix round 2 — reject every mutated result
+
+The blocking finding is valid. The authoritative rulings supplied for this round
+contain no October 26 exception to acceptance 2. The unsupported amendment claim
+has been removed; the four `$.result × addKey` rows for `close_sales`,
+`issue_invitation`, `complete_event` and `cancel_event` now expect `GATE_STATUS`.
+
+`assertComposerResult` closes these four HTTP result shapes with `closedResult`
+before calling the existing readers. All ten extracted composer reader bodies
+remain byte-identical to submitted HEAD `6a34f1a`; the composers' state machines,
+bodies and stub predicates are unchanged. The boundary uses existing app fixture
+shapes, adds no producer contract, and remains in the dynamically imported module.
+The sweep's expected-code type permits only the four specified ProtocolError codes,
+and its execution asserts UNKNOWN and the next-write fence unconditionally for
+every row. There is no success branch for a mutation.
+
+The seed-7 table above is updated to match the emitted table verbatim: **660 unique
+error rows across exactly 11 actions**. Seeds **0, 7, 0xffffffff** execute **1,980**
+mutations, each with the expected code and trace IDs, exactly one fetch, and a
+fenced next write with zero further fetches. The **33** unmodified success fixtures
+still pass. The **36** hostile JSON replays (12 per composer) leave Object.prototype
+unchanged. Fake timers have zero pending timers after every test.
+
+Existing GiftTransfer, OrganizerConsole and ConsentBind tests and invoker tests
+have no changes. The following existing HTTP expectations change because mock
+payload extensions are now extra result keys on a closed `close_sales` receipt:
+
+| Test file | Expectation update |
+| --- | --- |
+| `critical-flows.test.ts` | Simulated booking and mock settlement result extensions now reject with `GATE_STATUS`. |
+| `credit-fsm.test.ts` | Mock credit result extension now rejects with `GATE_STATUS`. |
+| `reservation-fsm.test.ts` | Mock reservation and stub admission result extensions now reject with `GATE_STATUS`. |
+| `resale-fsm.test.ts` | Mock resale result extension now rejects with `GATE_STATUS`. |
+| `http-transport-hardening.test.ts` | Exact `salesStatus` result still succeeds. Nested `fundsExecuted: false` is explicitly accepted by the payload guard but rejected as an extra HTTP result key. Production-claim precedence and unsafe payload assertions are retained. |
+
+M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+No command is newly composed or rebound. Live-gate suites remain skipped, never
+passed. No commit, push, PR, issue, comment or marker is created. The supplied CI
+log contains no failure; the checks below are local evidence, not a claim that
+GitHub CI ran on these uncommitted changes.
+
+Validation uses Node **22.20.0**, a fresh `npm ci`, and the unchanged lockfile.
+Test and coverage runs use the existing local worker cap:
+`VITEST_MAX_THREADS=2 VITEST_MIN_THREADS=1 VITEST_MAX_FORKS=2 VITEST_MIN_FORKS=1`.
+No worker, timeout, CI, or budget configuration is edited. Logs are retained under
+`/tmp/kix-round2-*`.
+
+| Round 2 check | Evidence |
+| --- | --- |
+| `npm ci` | PASS; lockfile unchanged. |
+| `npm run typecheck` | PASS for adapter and web. |
+| `npm run build` | PASS before and after the fix. |
+| `npm run budget` | PASS with unchanged limits. Fresh submitted-HEAD baseline: initial JS **161452**, total **777624** gzip bytes; final: initial JS **161454** (**+2**), total **777827**. Initial JS is **+7** against the recorded original node-base **161447**, within the +200 allowance. |
+| `KIX_REQUIRE_GATE=0 npx vitest run --root packages/protocol-adapter` with the 13 affected composer, invoker, replay, transport and FSM test files | PASS: **178 tests / 13 files**, including **45 conformance tests**, all mutation errors and fences, unmodified successes, hostile JSON, zero pending timers and verbatim table comparison. |
+| `KIX_REQUIRE_GATE=0 npm test` | PASS: adapter **1466 passed / 23 skipped**, web **1220 passed**, cold-start **6 passed**. |
+| `npm run lint` | PASS. |
+| `npm run cycle-check` | PASS; no circular imports. |
+| `npm run deps:check` | PASS; 4 manifests / 630 lockfile entries. |
+| Read-only TypeScript AST comparison against `HEAD` | PASS: all **10 composer reader bodies** are identical, without normalization. |
+| Independent document table check | PASS: **660 unique rows**, exactly **11 actions**, every row expects one of the four required error codes; each reported addKey row expects `GATE_STATUS`. |
+| Protected paths compared with `origin/main` | PASS: empty diff for bindings, three pin sources, vendor, `.github`, `.aiops`, `docs/aiops`, bundle budget. |
+| `git hash-object packages/protocol-adapter/src/commerce-bindings.ts` | `47ab5e10cbf5f8f10bed718b4dd5190fe5dfe76f`. |
+| `git diff --check` | PASS. |
+| `KIX_REQUIRE_GATE=0 npm run coverage:check` | PASS: all floors met; adapter lines/statements **91.29%**, functions **97.45%**, branches **84.91%**; web lines/statements **92.93%**, functions **80.98%**, branches **89.26%**. Live-gate tests skipped. |

@@ -770,9 +770,7 @@ describe("http credit binding", () => {
       availableCredit: FACE,
       outstandingExposure: 0,
     });
-    await expect(http.invokeLocalCall({ ...command, operationId: "op-close-credit-6" })).resolves.toMatchObject({
-      result: { mode: "mock", phase: "DRAWN", economicFinalityClaimed: false },
-    });
+    await expect(http.invokeLocalCall({ ...command, operationId: "op-close-credit-6" })).rejects.toMatchObject({ code: "GATE_STATUS" });
   });
 });
 

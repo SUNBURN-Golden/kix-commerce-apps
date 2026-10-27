@@ -12,6 +12,7 @@ import {
   echoIntegrationGateHeaders,
 } from "../src/index.js";
 import { localCallReceipt } from "./support/receipt.js";
+import { enforceRemotePayloadGuards } from "../src/payload-guards.js";
 
 const CLOSE_SALES = {
   operationId: "op-close",
@@ -251,8 +252,13 @@ describe("integration HTTP success receipts", () => {
     for (const result of [{ salesStatus: "CLOSED" }, { salesStatus: "CLOSED", fundsExecuted: false,
       nested: [{ fundsExecuted: false }] }]) {
       const receipt = localCallReceipt("op-close", "close_sales", result);
-      await expect(new HttpProtocolAdapter("http://127.0.0.1:8765", answering(receipt)).invokeLocalCall(CLOSE_SALES))
-        .resolves.toEqual(receipt);
+      expect(() => enforceRemotePayloadGuards(receipt)).not.toThrow();
+      const response = new HttpProtocolAdapter("http://127.0.0.1:8765", answering(receipt)).invokeLocalCall(CLOSE_SALES);
+      if ("nested" in result) {
+        await expect(response).rejects.toMatchObject({ code: "GATE_STATUS" });
+      } else {
+        await expect(response).resolves.toEqual(receipt);
+      }
     }
     const claiming = localCallReceipt("op-close", "close_sales", {
       fundsExecuted: true, nested: [{ productionEndpoint: true }],

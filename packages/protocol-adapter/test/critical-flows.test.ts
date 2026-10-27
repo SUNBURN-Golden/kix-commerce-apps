@@ -330,7 +330,7 @@ describe("http adapter binding", () => {
         action: "close_sales",
         body: commandBody,
       }),
-    ).resolves.toMatchObject({ result: { payment: "simulated-no-funds" } });
+    ).rejects.toMatchObject({ code: "GATE_STATUS" });
 
     responseBody = {
       eventId: "evt_lanterns",
@@ -487,7 +487,7 @@ describe("http adapter binding", () => {
         action: "close_sales",
         body: commandBody,
       }),
-    ).resolves.toMatchObject({ result: { mode: "mock", references: ["F01", "F02", "F03"], phase: "CAPTURED" } });
+    ).rejects.toMatchObject({ code: "GATE_STATUS" });
     expect(calls.every((call) => call.url === `http://127.0.0.1:8765${CONTRACT_ONLY_LOCAL_CALL_PATH}`)).toBe(
       true,
     );

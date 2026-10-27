@@ -87,21 +87,19 @@ function mutate(receipt: ComposerFixture["receipt"], path: Path, mutation: Field
   (parent as Record<string | number, unknown>)[path.at(-1)!] = next;
   return JSON.stringify(copy);
 }
-interface SweepRow { fixtureId: string; path: string; mutation: string; expected: string }
+type SweepCode = "GATE_STATUS" | "STALE_RESPONSE" | "GATE_TRANSPORT" | "PRODUCTION_ENDPOINT";
+interface SweepRow { fixtureId: string; path: string; mutation: string; expected: SweepCode }
 interface SweepCase { fixture: ComposerFixture; row: SweepRow; answer: (base: GateAnswer) => GateAnswer }
-const openActions = ["close_sales", "issue_invitation", "complete_event", "cancel_event"];
 function sweepFor(fixtures: ComposerFixture[]): SweepCase[] {
   const sweep: SweepCase[] = [];
-  function add(fixture: ComposerFixture, path: string, mutation: string, expected: string, answer: SweepCase["answer"]) {
+  function add(fixture: ComposerFixture, path: string, mutation: string, expected: SweepCode, answer: SweepCase["answer"]) {
     sweep.push({ fixture, row: { fixtureId: fixture.fixtureId, path, mutation, expected }, answer });
   }
   for (const fixture of fixtures) {
     for (const path of paths(fixture.receipt)) {
       for (const mutation of fieldMutations) {
         const name = "$" + path.map((key) => `.${key}`).join("");
-        // Owner ruling 2026-10-26 13:06 KST: preserve exactly four open predicates.
-        const expected = name === "$.result" && mutation === "addKey" && openActions.includes(fixture.envelope.action)
-          ? "ACCEPT" : mutation === "inject:productionEndpoint" ? "PRODUCTION_ENDPOINT" : "GATE_STATUS";
+        const expected = mutation === "inject:productionEndpoint" ? "PRODUCTION_ENDPOINT" : "GATE_STATUS";
         const body = mutate(fixture.receipt, path, mutation);
         if (body === JSON.stringify(fixture.receipt)) throw new Error("Mutation disappeared in JSON");
         add(fixture, name, mutation, expected, (base) => ({ ...base, body }));
@@ -118,7 +116,7 @@ function sweepFor(fixtures: ComposerFixture[]): SweepCase[] {
       ["x-request-id", "STALE_RESPONSE"], ["x-correlation-id", "STALE_RESPONSE"],
       ["x-kix-transport", "GATE_TRANSPORT"], ["x-kix-production-endpoint", "GATE_TRANSPORT"],
       ["x-kix-protocol-truth", "PRODUCTION_ENDPOINT"], ["x-kix-production-conformance", "PRODUCTION_ENDPOINT"],
-    ]) add(fixture, "$headers", `drop:${header}`, code, (base) => {
+    ] as const) add(fixture, "$headers", `drop:${header}`, code, (base) => {
       const headers = { ...base.headers }; delete headers[header]; return { ...base, headers };
     });
     for (const [name, url] of [["other-port", "http://127.0.0.1:8766/"], ["localhost", "http://localhost:8765/"]]) {
@@ -153,19 +151,16 @@ describe.each(seeds)("composer loopback seed %i", (seed) => {
     expect(actions).toEqual([...GIFT_COMPOSED, ...ORGANIZER_COMPOSED, ...CONSENT_COMPOSED].sort());
     expect(fixtures.map((fixture) => paths(fixture.receipt).length)).toEqual([8, 10, 7, 11, 7, 7, 6, 6, 8, 8, 10]);
     expect(sweep).toHaveLength(660);
-    const key = (row: SweepRow) => `${row.fixtureId}:${row.path}:${row.mutation}`;
+    const key = (row: Pick<SweepRow, "fixtureId" | "path" | "mutation">) => `${row.fixtureId}:${row.path}:${row.mutation}`;
     expect(new Set(sweep.map(({ row }) => key(row))).size).toBe(660);
     const required = fixtures.flatMap((fixture, i) => [
       ...[...commonPaths, ...resultPaths[i].map((path) => `$.result.${path}`)].flatMap((path) =>
-        fieldMutations.map((mutation) => key({ fixtureId: fixture.fixtureId, path, mutation, expected: "" }))),
+        fieldMutations.map((mutation) => key({ fixtureId: fixture.fixtureId, path, mutation }))),
       ...fixedMutations.map((mutation) => key({ fixtureId: fixture.fixtureId,
-        path: mutation.startsWith("drop:") ? "$headers" : mutation.startsWith("origin:") ? "$origin" : "$", mutation, expected: "" })),
+        path: mutation.startsWith("drop:") ? "$headers" : mutation.startsWith("origin:") ? "$origin" : "$", mutation })),
     ]);
     expect(sweep.map(({ row }) => key(row)).sort()).toEqual(required.sort());
-    expect(sweep.filter(({ row }) => row.expected === "ACCEPT").map(({ fixture, row }) =>
-      `${fixture.envelope.action}:${row.path}:${row.mutation}`).sort()).toEqual([
-      "cancel_event:$.result:addKey", "close_sales:$.result:addKey", "complete_event:$.result:addKey", "issue_invitation:$.result:addKey",
-    ]);
+    expect(sweep.every(({ row }) => ["GATE_STATUS", "STALE_RESPONSE", "GATE_TRANSPORT", "PRODUCTION_ENDPOINT"].includes(row.expected))).toBe(true);
     for (const fixture of fixtures) {
       expect(["capture", "settle_capture", "commit_trade", "admit", "prepare_trade", "accept_trade"]).not.toContain(fixture.envelope.action);
     }
@@ -190,19 +185,12 @@ describe.each(seeds)("composer loopback seed %i", (seed) => {
       } });
       const replay = await replayComposer(fixture, gate);
       assertOneFetch(fixture, gate);
-      if (row.expected === "ACCEPT") {
-        expect(replay.thrown, JSON.stringify(row)).toBeUndefined();
-        expect(replay.outcome).toMatchObject({ kind: "RECEIPT" });
-        expect(replay.returned).toEqual({ ...fixture.receipt, result: { ...fixture.receipt.result, extraKey: "x" } });
-        expect(replay.state().halted).toBeNull();
-      } else {
-        expect(replay.thrown, JSON.stringify(row)).toBeInstanceOf(ProtocolError);
-        expect(replay.thrown, JSON.stringify(row)).toMatchObject({ code: row.expected, ...trace });
-        expect(replay.outcome).toMatchObject({ kind: "UNKNOWN", code: row.expected, identity: { ...fixture.envelope, ...trace } });
-        expect(replay.state().halted).toMatchObject({ kind: "UNKNOWN", identity: { ...fixture.envelope, ...trace } });
-        expect(await replay.fence()).toMatchObject({ kind: "FENCED", blockedBy: { reason: "halted" } });
-        assertOneFetch(fixture, gate);
-      }
+      expect(replay.thrown, JSON.stringify(row)).toBeInstanceOf(ProtocolError);
+      expect(replay.thrown, JSON.stringify(row)).toMatchObject({ code: row.expected, ...trace });
+      expect(replay.outcome).toMatchObject({ kind: "UNKNOWN", code: row.expected, identity: { ...fixture.envelope, ...trace } });
+      expect(replay.state().halted).toMatchObject({ kind: "UNKNOWN", identity: { ...fixture.envelope, ...trace } });
+      expect(await replay.fence()).toMatchObject({ kind: "FENCED", blockedBy: { reason: "halted" } });
+      assertOneFetch(fixture, gate);
     }
   });
 });
