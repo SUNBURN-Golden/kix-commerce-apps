@@ -30,5 +30,6 @@ describe("untrusted render and CSP", () => {
     expect(state).toEqual({ violations: [], owned: undefined });
     expect(suite.session().ledger.nonLoopback).toEqual([]);
     await suite.pass(page, "untrusted-render.csp");
+    await page.close();
   });
 });

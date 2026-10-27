@@ -1,7 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { LifecycleBlock } from "./lifecycle";
 import { findSensitiveInRecord } from "./redact";
-import { recordDir } from "./run-record";
+import { recordDir } from "./record-dir";
+import type { TimingBlock } from "./timing";
 import type { RenderProfile, ShotResult } from "./visual-compare";
 
 export interface ShotLine extends ShotResult {
@@ -20,12 +22,17 @@ export interface VisualRecord {
   chrome: string;
   playwrightCore: string;
   profile: string;
-  cjkGlyphs: "present" | "missing";
+  /** `unavailable`: no shot was rendered, so the profile was never measured. */
+  cjkGlyphs: "present" | "missing" | "unavailable";
   koreanLayout: string;
   tolerance: { channelDelta: number; maxDiffPpm: number };
   shots: ShotResult[];
   ledger: { nonLoopback: number; nonGet: number; appNetworkCalls: number };
   claims: { qualification: false; userAccepted: false; released: false; designApproved: false; otherRunners: false };
+  /** Per-test duration, wall and monotonic time, and the host clock watch. */
+  timing: TimingBlock;
+  /** Browsers, contexts and pages opened and closed, and what tests left open or pending. */
+  lifecycle: LifecycleBlock;
   notRun: string[];
 }
 
@@ -54,8 +61,12 @@ export function readShots(dir: string): ShotLine[] {
     .map((line) => JSON.parse(line) as ShotLine);
 }
 
-export const koreanLayoutNote = (cjkGlyphs: "present" | "missing"): string =>
-  cjkGlyphs === "present" ? "Korean glyphs are drawn on this profile" : "Korean layout not verified on this profile: Korean glyphs show as placeholder boxes";
+export const koreanLayoutNote = (cjkGlyphs: "present" | "missing" | "unavailable"): string =>
+  cjkGlyphs === "present"
+    ? "Korean glyphs are drawn on this profile"
+    : cjkGlyphs === "missing"
+      ? "Korean layout not verified on this profile: Korean glyphs show as placeholder boxes"
+      : "Korean layout not verified: no shot was rendered in this run";
 
 export function renderVisualRecord(record: VisualRecord): string {
   const hits = findSensitiveInRecord(record);

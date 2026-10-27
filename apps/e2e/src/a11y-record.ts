@@ -1,7 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { LifecycleBlock } from "./lifecycle";
 import { findSensitiveInRecord } from "./redact";
-import { recordDir } from "./run-record";
+import { recordDir } from "./record-dir";
+import type { TimingBlock } from "./timing";
 import type { ManualFacet, ScreenRecord, ViewportName } from "./a11y-matrix";
 
 /** One line per observation. Only ids, rule ids and fixed words are written: no DOM text and no typed values. */
@@ -49,6 +51,10 @@ export interface A11yRecord {
   findings: { screenId: string; viewport: ViewportName; ruleId: string; status: "OPEN" | "FIXED" }[];
   observations: { id: string; note: string }[];
   checkIds: string[];
+  /** Per-test duration, wall and monotonic time, and the host clock watch. */
+  timing: TimingBlock;
+  /** Browsers, contexts and pages opened and closed, and what tests left open or pending. */
+  lifecycle: LifecycleBlock;
   notRun: string[];
 }
 

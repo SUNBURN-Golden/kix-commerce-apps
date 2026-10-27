@@ -38,16 +38,19 @@ export async function alertTexts(page: Page): Promise<string[]> {
   return (await page.getByRole("alert").allInnerTexts()).map((text) => text.trim());
 }
 
-/** Polls page state until it holds. Never a fixed sleep; a failure throws with the last value. */
+/**
+ * Polls page state until it holds. Never a fixed sleep; a failure throws with the last value.
+ * The deadline is on the monotonic clock: a host that steps the wall clock must not time out a condition that is still fresh.
+ */
 export async function poll<T>(read: () => Promise<T>, ok: (value: T) => boolean, what: string, timeoutMs = 5000): Promise<T> {
-  const deadline = Date.now() + timeoutMs;
+  const deadline = performance.now() + timeoutMs;
   let last: T | undefined;
   for (;;) {
     last = await read();
     if (ok(last)) {
       return last;
     }
-    if (Date.now() > deadline) {
+    if (performance.now() > deadline) {
       throw new Error(`Timed out waiting for ${what}. Last value: ${JSON.stringify(last)?.slice(0, 300)}`);
     }
     await new Promise((resolve) => setTimeout(resolve, 25));

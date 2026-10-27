@@ -4,6 +4,8 @@ import { openSession } from "../src/browser";
 import { findSensitive } from "../src/redact";
 import { LOOPBACK } from "../src/static-server";
 import { expectStubBanner } from "../src/desk";
+import { assertNoLeaks } from "../src/lifecycle";
+import { recordTiming, relativeTestFile, startMeasure, testFullName } from "../src/timing";
 import { recordCheck } from "../src/run-record";
 
 function raw(method: string, path: string): Promise<{ status: number; headers: http.IncomingHttpHeaders }> {
@@ -47,8 +49,11 @@ describe("harness guards", () => {
     recordCheck("harness.paths");
   });
 
-  it("blocks a request to any other origin and records it in the ledger", async () => {
+  it("blocks a request to any other origin and records it in the ledger", async (ctx) => {
     const session = await openSession(inject("origin"));
+    session.tracker.file = relativeTestFile(ctx.task.file.filepath);
+    session.tracker.beginTest();
+    const stop = startMeasure(session.tracker.file, testFullName(ctx.task));
     try {
       const page = await session.context.newPage();
       await page.goto(inject("origin") + "/");
@@ -57,8 +62,17 @@ describe("harness guards", () => {
       await page.goto("http://example.invalid/").catch(() => undefined);
       expect(session.ledger.nonLoopback.length).toBeGreaterThanOrEqual(1);
       expect(session.ledger.nonLoopback.every((entry) => !entry.includes("127.0.0.1"))).toBe(true);
+      await page.close();
     } finally {
-      await session.close();
+      try {
+        const timing = stop();
+        const life = await session.tracker.endTest();
+        recordTiming(timing);
+        session.tracker.recordTest(timing.name, (ctx.task.result?.errors?.length ?? 0) > 0, life);
+        assertNoLeaks(life, (ctx.task.result?.errors?.length ?? 0) > 0);
+      } finally {
+        await session.close();
+      }
     }
     recordCheck("harness.external-blocked");
   });

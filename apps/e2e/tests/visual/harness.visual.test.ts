@@ -25,6 +25,7 @@ import {
 import { APP_ROUTES, ROUTES } from "../../../web/src/shell/route-registry";
 import { FIXED_TIME_ISO, VISUAL_SCREENS, VISUAL_EXCLUSIONS, VISUAL_MASKS, MAX_SHOT_HEIGHT, visualRouteProblems, TOLERANCE, VISUAL_FONTS_CONF, VISUAL_FONT_FILES, VISUAL_SESSION, VISUAL_STATIC_CHECK_IDS, expectedVisualCheckIds, idOf, visualShots } from "../../src/visual-matrix";
 import { VISUAL_NOT_RUN, koreanLayoutNote, renderVisualRecord, type VisualRecord } from "../../src/visual-record";
+import { lifecycleFixture, timingFixture } from "../record-fixtures";
 import { useVisual } from "./helpers";
 
 describe("visual harness self-checks (stub, headless Chrome)", () => {
@@ -347,6 +348,8 @@ describe("visual harness self-checks (stub, headless Chrome)", () => {
       shots: [{ id: "box-office.desktop.en.light", width: 1280, height: 1436, diffPixels: 123, diffPpm: 67, result: "MATCH" }],
       ledger: { nonLoopback: 0, nonGet: 0, appNetworkCalls: 0 },
       claims: { qualification: false, userAccepted: false, released: false, designApproved: false, otherRunners: false },
+      timing: timingFixture(),
+      lifecycle: lifecycleFixture(),
       notRun: [...VISUAL_NOT_RUN],
     };
     const text = renderVisualRecord(record);

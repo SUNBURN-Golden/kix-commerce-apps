@@ -1,18 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { LifecycleBlock } from "./lifecycle";
+import { recordDir } from "./record-dir";
 import { findSensitiveInRecord } from "./redact";
+import type { TimingBlock } from "./timing";
+
+export { recordDir };
 
 export interface CheckLine {
   checkId: string;
   pass: boolean;
-}
-
-export function recordDir(): string {
-  const dir = process.env.KIX_E2E_RECORD_DIR;
-  if (!dir) {
-    throw new Error("KIX_E2E_RECORD_DIR is not set. The global setup sets it.");
-  }
-  return dir;
 }
 
 /** Appends one passed check. Only the id and the result are written. */
@@ -42,6 +39,10 @@ export interface RunRecord {
   ledger: { nonLoopback: number; nonGet: number; appNetworkCalls: number };
   claims: { httpModePass: false; productionQualification: false; realPayment: false; released: false };
   checks: CheckLine[];
+  /** Per-test duration, wall and monotonic time, and the host clock watch. */
+  timing: TimingBlock;
+  /** Browsers, contexts and pages opened and closed, and what tests left open or pending. */
+  lifecycle: LifecycleBlock;
   notRun: string[];
 }
 
