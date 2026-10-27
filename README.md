@@ -477,3 +477,7 @@ Shared async presentations now distinguish loading, empty, error, UNKNOWN, STALE
 All 16 page forms use shared input-format validation with Korean/English messages, linked inline errors and a focused error summary. Keyboard links lead to invalid fields; correcting and explicitly resubmitting retains the existing one-attempt and UNKNOWN guards. Validation makes no request and computes no protocol outcome. It coexists with the shared async presentations above. Details and limits are in [docs/c-form-validation-ux-stub-apps-bind.md](docs/c-form-validation-ux-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce; `contract_change=NO`.
 
 The [complete ko/en display catalogue](docs/c-i18n-coverage-completion-stub-apps-bind.md) now covers every registry screen and the merged connectivity, validation, async-state and gallery UI. Literal, key/placeholder parity and protocol-word guards run with web tests. Identical sentences are shared across lazy bundles; the 2026-10-23 owner ruling authorises a total gzip ceiling of 790000 while initial JS remains 290000 and route caps stay strict. The local-only evidence and M2 + H1 boundaries remain unchanged.
+
+## Diagnostics (stub)
+
+Help links to the lazy `/diagnostics` view: deterministic app version and pin digest, display/connection/journal state, and the last ten page-load outcomes in completion order. Its redacted copy sends nothing and is not evidence, approval or production readiness. [Binding and local checks](docs/c-plan-d-build-identity-diagnostics-stub-apps-bind.md).

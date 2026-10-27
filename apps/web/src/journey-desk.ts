@@ -1,3 +1,4 @@
+import { pageOutcomes } from "./diagnostics/outcomes";
 import { messages as sourceCopy } from "./i18n/messages/journey-desk";
 import { sourceMessage } from "./i18n/source-message";
 import { connectivityInvoker, connectedHandler } from "./connectivity/write-guard";
@@ -398,7 +399,11 @@ export class JourneyDesk {
   }
 
   private publish(): void {
-    this.snapshot = this.buildSnapshot();
+    const next = this.buildSnapshot();
+    pageOutcomes.observe("journey",
+      this.snapshot.journeys.map((item) => ({ refId: item.eventId, rows: item.rows })),
+      next.journeys.map((item) => ({ refId: item.eventId, rows: item.rows })));
+    this.snapshot = next;
     for (const listener of this.listeners) {
       listener();
     }

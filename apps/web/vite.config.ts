@@ -1,3 +1,4 @@
+import { computeBuildIdentity } from "./build-identity";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
@@ -126,6 +127,7 @@ const displayCopyGroups: [string, string[]][] = [
 ];
 
 export default defineConfig({
+  define: { __KIX_BUILD_IDENTITY__: JSON.stringify(computeBuildIdentity()) },
   plugins: [react()],
   // Preserve the existing size limits for localized copy and the shared app shell.
   build: {

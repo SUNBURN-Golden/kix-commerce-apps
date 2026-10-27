@@ -1,6 +1,6 @@
 # Async state patterns (stub) apps bind
 
-Shared presentation for loading, empty, error, UNKNOWN, STALE and NOT_BOUND, with an executable screen × state matrix over the 37 registry routes (222 cells). Local synthetic evidence only; no integration, qualification, acceptance or release is claimed.
+Shared presentation for loading, empty, error, UNKNOWN, STALE and NOT_BOUND, with an executable screen × state matrix over the 38 registry routes (228 cells). Local synthetic evidence only; no integration, qualification, acceptance or release is claimed.
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 
@@ -98,6 +98,7 @@ C = new executable owning-route/shell check; R = exact existing executed screen 
 | `session` | C | R | C | R | A | R |
 | `journeys` | C | R | C | R | A | R |
 | `help` | C | A | C | A | A | A |
+| `diagnostics` | C | R | C | R | A | A |
 
 ## Limits and deviations from the design plan
 

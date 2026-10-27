@@ -76,6 +76,7 @@ Every registry route is listed. "chrome only" means the shell around the screen 
 | `/qualification` | chrome only | Qualification | chrome (nav, breadcrumb, title, loading note, error panels) in ko; screen body English |
 | `/release` | chrome only | Release | chrome (nav, breadcrumb, title, loading note, error panels) in ko; screen body English |
 | `/help` | chrome only | Help | chrome (nav, breadcrumb, title, loading note, error panels, help line) in ko; screen body English |
+| `/diagnostics` | chrome only | Diagnostics | Historical column vocabulary retained; added later with complete lazy ko/en body copy. See c-plan-d-build-identity-diagnostics-stub-apps-bind.md. |
 
 Also not migrated and left English on purpose or by lock: the view-model `.ts` files (they format clocks with `en-GB`), `ReservationPanel` and `ResalePanel` clock text, the Shell-made transport error detail, ORIGINAL_32 charter labels (설계중, 미착수), binding words, adapter-owned text, and the Latin brand `KIX Box Office`.
 

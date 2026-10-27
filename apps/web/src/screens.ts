@@ -6,6 +6,7 @@ import { createScreenLoader, type ScreenImport } from "./shell/screen-loader";
  * A route added to the registry without an import here fails typecheck. The specifiers stay literal.
  */
 const SCREEN_IMPORTS: Record<RouteId, ScreenImport> = {
+  diagnostics: () => import("./pages/Diagnostics").then((m) => ({ default: m.DiagnosticsPage })),
   "box-office": () => import("./pages/BoxOffice").then((m) => ({ default: m.BoxOfficePage })),
   buyer: () => import("./pages/Buyer").then((m) => ({ default: m.BuyerPage })),
   discovery: () => import("./pages/Discovery").then((m) => ({ default: m.DiscoveryPage })),

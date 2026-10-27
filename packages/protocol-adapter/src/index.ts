@@ -2162,3 +2162,5 @@ export {
   type CrossSurfaceReadState,
   type CrossSurfaceSummary,
 } from "./cross-surface-controller.js";
+
+export { peekSessionJournal, type SessionJournalPeek } from "./session-journal.js";

@@ -56,6 +56,7 @@ export const SCREENS: readonly ScreenRow[] = [
   row("session", "/session", "Session recovery"),
   row("journeys", "/journeys", "Journeys"),
   row("help", "/help", "Help"),
+  row("diagnostics", "/diagnostics", "Diagnostics"),
 ];
 
 export const VIEWPORTS = {
@@ -166,6 +167,7 @@ export const structCheckId = (screenId: string) => `a11y.struct.${screenId}`;
 export const kbdCheckId = (screenId: string) => `a11y.kbd.${screenId}`;
 
 export const STATIC_CHECK_IDS: readonly string[] = [
+  "a11y.diagnostics.390", "a11y.diagnostics.1280",
   "a11y.baseline",
   "a11y.onboarding.first-visit",
   "a11y.onboarding.role-keys",

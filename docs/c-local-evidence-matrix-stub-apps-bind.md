@@ -312,7 +312,7 @@ Each line has its own count. Nothing is summed, nothing is subtracted, and there
 - D08 published-bound surfaces (local-command, Node loopback only): 5
 - D09 user acceptance PENDING surfaces: 41 of 43; ACCEPTED 0
 - D10 user acceptance PENDING journeys: 10 of 10; ACCEPTED 0
-- D11 user acceptance PENDING a11y screens: 37 of 37; ACCEPTED 0
+- D11 user acceptance PENDING a11y screens: 38 of 38; ACCEPTED 0
 - D12 release page user acceptance: PENDING_USER_DECISION, 1 packet; realUserAcceptance false
 - D13 release decisions: install awaiting-user-decision, publish not-open, operate not-open; taken 0
 - D14 release NOT_AUTHORIZED rows: surfaces 43 of 43, journeys 10 of 10, nodes 102 of 102; RELEASED 0

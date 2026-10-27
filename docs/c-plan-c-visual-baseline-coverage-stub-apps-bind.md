@@ -52,6 +52,8 @@ Phone is 390×844; desktop is 1280×800. Each screenshot is clipped at the exist
 | `help.phone.ko.light` | help | `/help` | phone | ko | light | full |
 | `help.desktop.en.light` | help | `/help` | desktop | en | light | full |
 | `help.desktop.ko.light` | help | `/help` | desktop | ko | light | full |
+| `diagnostics.phone.ko.light` | diagnostics | `/diagnostics` | phone | ko | light | coverage |
+| `diagnostics.desktop.en.light` | diagnostics | `/diagnostics` | desktop | en | light | coverage |
 | `inventory.phone.ko.light` | inventory | `/inventory` | phone | ko | light | coverage |
 | `inventory.desktop.en.light` | inventory | `/inventory` | desktop | en | light | coverage |
 | `admission.phone.ko.light` | admission | `/admission` | phone | ko | light | coverage |
