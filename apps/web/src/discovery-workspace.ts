@@ -24,6 +24,7 @@ import {
   type RowFacts,
 } from "./discovery/model";
 import { type DiscoveryRow } from "./discovery/fixture";
+import { DISCOVERY_SEARCH_INDEX } from "./discovery/search-index";
 import { protocol } from "./connectivity/desk-protocol";
 import { WORKSPACE_RULING } from "./workspace/registry";
 
@@ -120,7 +121,7 @@ export function buildDiscoveryModel(input: {
   query: DiscoveryQuery;
   rowId: string | null;
 }): DiscoveryModel {
-  const result = runDiscoveryQuery(input.query);
+  const result = runDiscoveryQuery(input.query, undefined, DISCOVERY_SEARCH_INDEX);
   let detail: DiscoveryDetailModel | null = null;
   let missingRow = false;
   if (input.rowId) {

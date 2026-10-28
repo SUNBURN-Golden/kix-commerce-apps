@@ -18,6 +18,7 @@ import type { CatalogState } from "../src/buyer-workspace";
 import { WORKSPACE_RULING } from "../src/workspace/registry";
 import { buildLiveDetailModel, buildLiveListModel } from "../src/discovery-live";
 import { DiscoveryDetail, DiscoveryScreen } from "../src/pages/Discovery";
+import { LocaleProvider } from "../src/i18n/LocaleProvider";
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BANNED = /[$₩]|KRW|USD|still open|in stock/i;
@@ -49,6 +50,37 @@ const PERFORMANCES: Performance[] = [
 const READY: CatalogState = { kind: "ready", performances: PERFORMANCES };
 
 describe("discovery page", () => {
+  it("renders searched labels in both locales with the same rows and purchase decisions", () => {
+    const query = { ...DEFAULT_DISCOVERY_QUERY, text: "등불" };
+    const model = modelFor(query, READY);
+    for (const locale of ["ko", "en"] as const) {
+      const html = renderToStaticMarkup(<LocaleProvider initial={locale}><MemoryRouter>
+        <DiscoveryScreen model={model} query={query} onQuery={() => undefined} onOpen={() => undefined}
+          onReadAgain={() => undefined} live={liveListStub()} />
+      </MemoryRouter></LocaleProvider>);
+      expect(html).toContain(locale === "ko" ? "등불 합성 공연" : "Lanterns synthetic show");
+      expect(html).toContain(locale === "ko" ? "종이 홀" : "Paper hall");
+      for (const row of model.result.rows) expect(html).toContain(`id="discovery-result-${row.rowId}"`);
+      expect(html).not.toContain('href="/booking/');
+    }
+    for (const rowId of Object.values(FIXTURE_IDS)) {
+      const searched = modelFor({ ...query, text: rowId }, READY, rowId);
+      const original = modelFor(DEFAULT_DISCOVERY_QUERY, READY, rowId);
+      expect(searched.result.rows.map((row) => row.rowId)).toEqual([rowId]);
+      expect(searched.detail?.purchase).toEqual(original.detail?.purchase);
+      const html = renderDetail(searched);
+      const restricted: readonly string[] = [FIXTURE_IDS.cancelled, FIXTURE_IDS.resale, FIXTURE_IDS.seat, FIXTURE_IDS.ga, FIXTURE_IDS.soldOut, FIXTURE_IDS.unlinked];
+      if (restricted.includes(rowId)) {
+        expect(html).not.toContain('href="/booking/');
+      }
+      if (rowId === FIXTURE_IDS.stale) {
+        expect(html).toContain("STALE");
+        expect(html).toContain('href="/booking/evt_paper_orchestra"');
+      }
+      expect(renderDetail(modelFor({ ...query, text: rowId }, { kind: "not-bound", reason: COMMERCE_COMMAND_BINDINGS.listPerformances.reason }, rowId)))
+        .not.toContain('href="/booking/');
+    }
+  });
   it("renders the synthetic sample, the ruling, and distinct row kinds", () => {
     const html = renderScreen(modelFor(DEFAULT_DISCOVERY_QUERY, READY));
     expect(html).toContain("SYNTHETIC");
@@ -233,6 +265,7 @@ describe("discovery page", () => {
     const files = [
       "src/discovery/fixture.ts",
       "src/discovery/model.ts",
+      "src/discovery/search-index.ts",
       "src/discovery-live.ts",
       "src/discovery-workspace.ts",
       "src/pages/Discovery.tsx",
