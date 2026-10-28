@@ -131,8 +131,8 @@ export class BookingJourney {
   state(): JourneyState {
     return {
       completedThrough: this.completedThrough,
-      halted: this.halted,
-      notComposed: JOURNEY_NOT_COMPOSED,
+      halted: this.halted ? { ...this.halted, identity: copyCallIdentity(this.halted.identity) } : null,
+      notComposed: JOURNEY_NOT_COMPOSED.map((entry) => ({ ...entry })),
     };
   }
 
@@ -191,9 +191,11 @@ export class BookingJourney {
       return fenced;
     }
     let body: Record<string, unknown> | undefined;
+    let dispatchBody: Record<string, unknown>;
     try {
       body = snapshot(build());
       buildLocalCallEnvelope({ operationId, actor, action: step, body });
+      dispatchBody = snapshot(body);
     } catch (error) {
       this.halt(step, "NOT_SENT", traceIdentity({ operationId, actor, action: step, body: body ?? {} }, error));
       throw error;
@@ -203,7 +205,7 @@ export class BookingJourney {
     try {
       let parsed: unknown;
       try {
-        parsed = await this.invoker.invokeLocalCall({ operationId, actor, action: step, body: sent });
+        parsed = await this.invoker.invokeLocalCall({ operationId, actor, action: step, body: dispatchBody });
       } catch (error) {
         const classified = classifyThrown(error);
         if (classified.disposition === "not-sent") {
@@ -224,11 +226,23 @@ export class BookingJourney {
       } catch {
         return this.unknownReceipt(step, sent, operationId, actor, "GATE_STATUS");
       }
-      if (!isRecord(parsed) || !remember(sent, parsed)) {
+      // Own both copies before remembering success: an uncloneable response
+      // after dispatch is UNKNOWN and must leave every later write fenced.
+      let receipt: Record<string, unknown>;
+      try {
+        if (!isRecord(parsed)) {
+          return this.unknownReceipt(step, sent, operationId, actor, "INVALID_RECEIPT");
+        }
+        const evidence = snapshot(parsed);
+        receipt = snapshot(evidence);
+        if (!remember(sent, evidence)) {
+          return this.unknownReceipt(step, sent, operationId, actor, "INVALID_RECEIPT");
+        }
+      } catch {
         return this.unknownReceipt(step, sent, operationId, actor, "INVALID_RECEIPT");
       }
       this.completedThrough = step;
-      return { kind: "RECEIPT", step, receipt: parsed };
+      return { kind: "RECEIPT", step, receipt };
     } finally {
       this.inFlight = false;
     }
@@ -243,7 +257,7 @@ export class BookingJourney {
       return {
         kind: "FENCED",
         step,
-        blockedBy: { reason: "halted", identity: this.halted.identity },
+        blockedBy: { reason: "halted", identity: copyCallIdentity(this.halted.identity) },
         identity,
       };
     }
@@ -257,7 +271,7 @@ export class BookingJourney {
   }
 
   private halt(step: JourneyStep, kind: JourneyHalt["kind"], identity: CallIdentity): void {
-    this.halted = { step, kind, identity };
+    this.halted = { step, kind, identity: copyCallIdentity(identity) };
   }
 
   private unknownReceipt(
@@ -367,6 +381,11 @@ function journeyCreateEventBody(input: {
 
 export function snapshot(body: Record<string, unknown>): Record<string, unknown> {
   return structuredClone(body);
+}
+
+/** Halt storage and each public snapshot own their nested command body. */
+function copyCallIdentity(identity: CallIdentity): CallIdentity {
+  return { ...identity, body: snapshot(identity.body) };
 }
 
 interface ThrownClass {
@@ -549,13 +568,14 @@ export class GiftTransfer {
     return {
       offered: this.offered,
       resolvedBy: this.resolvedBy,
-      halted: this.halted,
-      notComposed: GIFT_NOT_COMPOSED,
+      halted: this.halted ? { ...this.halted, identity: copyCallIdentity(this.halted.identity) } : null,
+      notComposed: GIFT_NOT_COMPOSED.map((entry) => ({ ...entry })),
     };
   }
 
   offerGift(input: GiftOfferInput): Promise<GiftStepOutcome> {
-    return this.run("offer_gift", input.operationId, input.donor, () => offerBody(input), (body, receipt) => {
+    const donor = input.donor;
+    return this.run("offer_gift", input.operationId, donor, () => offerBody(input), (body, receipt) => {
       const read = readOfferReceipt(body, receipt);
       if (read === null) {
         return false;
@@ -566,7 +586,7 @@ export class GiftTransfer {
       this.gift = {
         giftId: body.giftId,
         ticketId: body.ticketId,
-        donor: input.donor,
+        donor,
         recipient: body.recipient,
         termsHash: read.termsHash,
       };
@@ -606,9 +626,11 @@ export class GiftTransfer {
       return fenced;
     }
     let body: Record<string, unknown> | undefined;
+    let dispatchBody: Record<string, unknown>;
     try {
       body = snapshot(build());
       buildLocalCallEnvelope({ operationId, actor, action: step, body });
+      dispatchBody = snapshot(body);
     } catch (error) {
       this.halt(step, "NOT_SENT", traceIdentity({ operationId, actor, action: step, body: body ?? {} }, error));
       throw error;
@@ -618,7 +640,7 @@ export class GiftTransfer {
     try {
       let parsed: unknown;
       try {
-        parsed = await this.invoker.invokeLocalCall({ operationId, actor, action: step, body: sent });
+        parsed = await this.invoker.invokeLocalCall({ operationId, actor, action: step, body: dispatchBody });
       } catch (error) {
         const classified = classifyThrown(error);
         if (classified.disposition === "not-sent") {
@@ -639,7 +661,19 @@ export class GiftTransfer {
       } catch {
         return this.unknownReceipt(step, sent, operationId, actor, "GATE_STATUS");
       }
-      if (!isRecord(parsed) || !remember(sent, parsed)) {
+      // Own both copies before remembering success: an uncloneable response
+      // after dispatch is UNKNOWN and must leave every later write fenced.
+      let receipt: Record<string, unknown>;
+      try {
+        if (!isRecord(parsed)) {
+          return this.unknownReceipt(step, sent, operationId, actor, "INVALID_RECEIPT");
+        }
+        const evidence = snapshot(parsed);
+        receipt = snapshot(evidence);
+        if (!remember(sent, evidence)) {
+          return this.unknownReceipt(step, sent, operationId, actor, "INVALID_RECEIPT");
+        }
+      } catch {
         return this.unknownReceipt(step, sent, operationId, actor, "INVALID_RECEIPT");
       }
       if (step === "offer_gift") {
@@ -647,7 +681,7 @@ export class GiftTransfer {
       } else {
         this.resolvedBy = step;
       }
-      return { kind: "RECEIPT", step, receipt: parsed };
+      return { kind: "RECEIPT", step, receipt };
     } finally {
       this.inFlight = false;
     }
@@ -662,7 +696,7 @@ export class GiftTransfer {
       return {
         kind: "FENCED",
         step,
-        blockedBy: { reason: "halted", identity: this.halted.identity },
+        blockedBy: { reason: "halted", identity: copyCallIdentity(this.halted.identity) },
         identity,
       };
     }
@@ -682,7 +716,7 @@ export class GiftTransfer {
   }
 
   private halt(step: GiftStep, kind: GiftHalt["kind"], identity: CallIdentity): void {
-    this.halted = { step, kind, identity };
+    this.halted = { step, kind, identity: copyCallIdentity(identity) };
   }
 
   private unknownReceipt(
@@ -905,8 +939,8 @@ export class OrganizerConsole {
   state(): OrganizerState {
     return {
       sent: [...this.sent],
-      halted: this.halted,
-      notComposed: ORGANIZER_NOT_COMPOSED,
+      halted: this.halted ? { ...this.halted, identity: copyCallIdentity(this.halted.identity) } : null,
+      notComposed: ORGANIZER_NOT_COMPOSED.map((entry) => ({ ...entry })),
     };
   }
 
@@ -971,9 +1005,11 @@ export class OrganizerConsole {
       return fenced;
     }
     let body: Record<string, unknown> | undefined;
+    let dispatchBody: Record<string, unknown>;
     try {
       body = snapshot(build());
       buildLocalCallEnvelope({ operationId, actor, action: step, body });
+      dispatchBody = snapshot(body);
     } catch (error) {
       this.halt(step, "NOT_SENT", traceIdentity({ operationId, actor, action: step, body: body ?? {} }, error));
       throw error;
@@ -983,7 +1019,7 @@ export class OrganizerConsole {
     try {
       let parsed: unknown;
       try {
-        parsed = await this.invoker.invokeLocalCall({ operationId, actor, action: step, body: sent });
+        parsed = await this.invoker.invokeLocalCall({ operationId, actor, action: step, body: dispatchBody });
       } catch (error) {
         const classified = classifyThrown(error);
         if (classified.disposition === "not-sent") {
@@ -1004,14 +1040,26 @@ export class OrganizerConsole {
       } catch {
         return this.unknownReceipt(step, sent, operationId, actor, "GATE_STATUS");
       }
-      if (!isRecord(parsed) || !remember(sent, parsed)) {
+      // Own both copies before remembering success: an uncloneable response
+      // after dispatch is UNKNOWN and must leave every later write fenced.
+      let receipt: Record<string, unknown>;
+      try {
+        if (!isRecord(parsed)) {
+          return this.unknownReceipt(step, sent, operationId, actor, "INVALID_RECEIPT");
+        }
+        const evidence = snapshot(parsed);
+        receipt = snapshot(evidence);
+        if (!remember(sent, evidence)) {
+          return this.unknownReceipt(step, sent, operationId, actor, "INVALID_RECEIPT");
+        }
+      } catch {
         return this.unknownReceipt(step, sent, operationId, actor, "INVALID_RECEIPT");
       }
       this.sent.push(step);
       if (step === "issue_invitation" && typeof sent.inventoryId === "string") {
         this.issued.add(sent.inventoryId);
       }
-      return { kind: "RECEIPT", step, receipt: parsed };
+      return { kind: "RECEIPT", step, receipt };
     } finally {
       this.inFlight = false;
     }
@@ -1031,7 +1079,7 @@ export class OrganizerConsole {
       return {
         kind: "FENCED",
         step,
-        blockedBy: { reason: "halted", identity: this.halted.identity },
+        blockedBy: { reason: "halted", identity: copyCallIdentity(this.halted.identity) },
         identity,
       };
     }
@@ -1048,7 +1096,7 @@ export class OrganizerConsole {
   }
 
   private halt(step: OrganizerStep, kind: OrganizerHalt["kind"], identity: CallIdentity): void {
-    this.halted = { step, kind, identity };
+    this.halted = { step, kind, identity: copyCallIdentity(identity) };
   }
 
   private unknownReceipt(
@@ -1303,8 +1351,8 @@ export class ConsentBind {
       consented: this.consented,
       allowed: this.allowed,
       authorized: this.authorized,
-      halted: this.halted,
-      notComposed: CONSENT_NOT_COMPOSED,
+      halted: this.halted ? { ...this.halted, identity: copyCallIdentity(this.halted.identity) } : null,
+      notComposed: CONSENT_NOT_COMPOSED.map((entry) => ({ ...entry })),
     };
   }
 
@@ -1320,7 +1368,7 @@ export class ConsentBind {
       input.operationId,
       CONSENT_AUTHORIZE_ACTOR,
       () => authorizeBody(input),
-      (_body, receipt) => readAuthorizeReceipt(input, receipt),
+      (body, receipt) => readAuthorizeReceipt({ expectedConsentVersion: body.expectedConsentVersion }, receipt),
     );
   }
 
@@ -1336,9 +1384,11 @@ export class ConsentBind {
       return fenced;
     }
     let body: Record<string, unknown> | undefined;
+    let dispatchBody: Record<string, unknown>;
     try {
       body = snapshot(build());
       buildLocalCallEnvelope({ operationId, actor, action: step, body });
+      dispatchBody = snapshot(body);
     } catch (error) {
       this.halt(step, "NOT_SENT", traceIdentity({ operationId, actor, action: step, body: body ?? {} }, error));
       throw error;
@@ -1348,7 +1398,7 @@ export class ConsentBind {
     try {
       let parsed: unknown;
       try {
-        parsed = await this.invoker.invokeLocalCall({ operationId, actor, action: step, body: sent });
+        parsed = await this.invoker.invokeLocalCall({ operationId, actor, action: step, body: dispatchBody });
       } catch (error) {
         const classified = classifyThrown(error);
         if (classified.disposition === "not-sent") {
@@ -1369,7 +1419,19 @@ export class ConsentBind {
       } catch {
         return this.unknownReceipt(step, sent, operationId, actor, "GATE_STATUS");
       }
-      if (!isRecord(parsed) || !remember(sent, parsed)) {
+      // Own both copies before remembering success: an uncloneable response
+      // after dispatch is UNKNOWN and must leave every later write fenced.
+      let receipt: Record<string, unknown>;
+      try {
+        if (!isRecord(parsed)) {
+          return this.unknownReceipt(step, sent, operationId, actor, "INVALID_RECEIPT");
+        }
+        const evidence = snapshot(parsed);
+        receipt = snapshot(evidence);
+        if (!remember(sent, evidence)) {
+          return this.unknownReceipt(step, sent, operationId, actor, "INVALID_RECEIPT");
+        }
+      } catch {
         return this.unknownReceipt(step, sent, operationId, actor, "INVALID_RECEIPT");
       }
       if (step === "set_consent") {
@@ -1379,7 +1441,7 @@ export class ConsentBind {
       } else {
         this.authorized = true;
       }
-      return { kind: "RECEIPT", step, receipt: parsed };
+      return { kind: "RECEIPT", step, receipt };
     } finally {
       this.inFlight = false;
     }
@@ -1394,7 +1456,7 @@ export class ConsentBind {
       return {
         kind: "FENCED",
         step,
-        blockedBy: { reason: "halted", identity: this.halted.identity },
+        blockedBy: { reason: "halted", identity: copyCallIdentity(this.halted.identity) },
         identity,
       };
     }
@@ -1411,7 +1473,7 @@ export class ConsentBind {
   }
 
   private halt(step: ConsentStep, kind: ConsentHalt["kind"], identity: CallIdentity): void {
-    this.halted = { step, kind, identity };
+    this.halted = { step, kind, identity: copyCallIdentity(identity) };
   }
 
   private unknownReceipt(

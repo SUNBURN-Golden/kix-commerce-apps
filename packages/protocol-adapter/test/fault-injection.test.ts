@@ -173,7 +173,9 @@ describe("fault matrix over HttpProtocolAdapter with a fake fetch (FI-N01 to FI-
           }
           handle.ledger.assertOneAttempt(at + 1);
           handle.ledger.assertNoWriteAfter(at + 1);
-          expect(driver.halted()).toBe(halted);
+          // State readers return detached evidence; late delivery preserves its value.
+          expect(driver.halted()).toEqual(halted);
+          expect(driver.halted()).not.toBe(halted);
           expect(handle.ledger.idempotencyKeyHeaders).toBe(0);
           hygiene(handle.ledger);
         });
@@ -206,7 +208,8 @@ describe("fault matrix over HttpProtocolAdapter with a fake fetch (FI-N01 to FI-
     const halted = driver.halted();
     expect(handle.release()).toBe(1);
     await new Promise((r) => setTimeout(r, 5));
-    expect(driver.halted()).toBe(halted);
+    expect(driver.halted()).toEqual(halted);
+    expect(driver.halted()).not.toBe(halted);
     expect((await driver.steps[1]!("1")).kind).toBe("FENCED");
     handle.ledger.assertOneAttempt(1);
   });
