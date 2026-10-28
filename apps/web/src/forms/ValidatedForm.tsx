@@ -43,14 +43,36 @@ export function ValidatedForm({ fields, validationRef, submitFields, busy = fals
   }
   return (
     <form {...props} aria-busy={busy || props["aria-busy"]} noValidate ref={validation.formRef}
-      onBlurCapture={(event) => validation.update(event.target, true)}
+      onCompositionStartCapture={(event) => {
+        validation.compositionStart(event.target);
+        props.onCompositionStartCapture?.(event);
+      }}
+      onCompositionEndCapture={(event) => {
+        validation.compositionEnd(event.target);
+        props.onCompositionEndCapture?.(event);
+      }}
+      onKeyDownCapture={(event) => {
+        const suppress = validation.keyDown(event.target, event.nativeEvent);
+        props.onKeyDownCapture?.(event);
+        if (suppress) event.preventDefault();
+      }}
+      onKeyUpCapture={(event) => {
+        validation.keyUp(event.target, event.nativeEvent);
+        props.onKeyUpCapture?.(event);
+      }}
+      onBlurCapture={(event) => {
+        validation.update(event.target, true);
+        props.onBlurCapture?.(event);
+      }}
       onChangeCapture={(event) => {
         refusal.press(null);
         validation.update(event.target);
+        props.onChangeCapture?.(event);
       }}
       onSubmit={(event) => {
+        const cancelled = event.defaultPrevented;
         event.preventDefault();
-        if (!busy && validation.validate(submitFields)) onSubmit?.(event);
+        if (!cancelled && !busy && validation.validate(submitFields)) onSubmit?.(event);
       }}>
       <ErrorSummary id={`${id}-errors`} issues={validation.issues} summaryRef={validation.summaryRef} />
       {/* Always in the page, so a refused submit is announced once. Blur checks fill the summary without speaking. */}
