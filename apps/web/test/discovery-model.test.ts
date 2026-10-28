@@ -29,12 +29,50 @@ import {
   runDiscoveryQuery,
   scaleWindow,
   windowRange,
+  withFilter,
   type DiscoveryQuery,
 } from "../src/discovery/model";
 
 const BANNED = /[$₩]|KRW|USD|still open|in stock/i;
 
 describe("discovery model", () => {
+  it("combines bilingual search with every filter without changing page or URL semantics", () => {
+    const query: DiscoveryQuery = {
+      ...DEFAULT_DISCOVERY_QUERY, text: "  등불 ".normalize("NFD"), kinds: ["seat"],
+      statuses: ["on-sale"], tiers: ["T1"], section: "A", from: "2026-10-14", to: "2026-10-14",
+      purchasableOnly: true, sort: "title", pageSize: 10,
+    };
+    expect(runDiscoveryQuery(query).rows.map((row) => row.rowId)).toEqual([FIXTURE_IDS.seat]);
+    expect(queryFromParams(paramsFromQuery(query))).toEqual(query);
+    expect(paramsFromQuery(query).get("q")).toBe(query.text);
+    expect(runDiscoveryQuery({ ...query, tiers: ["T3"] }).state).toBe("empty");
+    expect(runDiscoveryQuery({ ...query, section: "B" }).state).toBe("empty");
+    expect(runDiscoveryQuery({ ...query, statuses: ["sold-out"] }).state).toBe("empty");
+    expect(runDiscoveryQuery({ ...query, to: "2026-10-13" }).state).toBe("filter-conflict");
+    expect(runDiscoveryQuery({ ...query, kinds: ["ga"] }).state).toBe("filter-conflict");
+    expect(runDiscoveryQuery({ ...query, statuses: ["cancelled"] }).state).toBe("filter-conflict");
+    expect(withFilter({ ...query, page: 3 }, { text: "종이 홀" }).page).toBe(1);
+    for (const pageSize of [10, 20, 50] as const) {
+      const base = { ...DEFAULT_DISCOVERY_QUERY, text: "북쪽 별관", pageSize };
+      const first = runDiscoveryQuery(base);
+      const all: string[] = [];
+      for (let page = 1; page <= first.pageCount; page += 1) {
+        const current = { ...base, page };
+        const result = runDiscoveryQuery(current);
+        expect(result).toEqual(runDiscoveryQuery({ ...current, text: "North annex" }));
+        expect(result).toEqual(runDiscoveryQuery({ ...current, text: base.text.normalize("NFD") }));
+        expect(runDiscoveryQuery(queryFromParams(paramsFromQuery(current)))).toEqual(result);
+        expect(result.rows.length).toBeLessThanOrEqual(pageSize);
+        all.push(...result.rows.map((row) => row.rowId));
+      }
+      expect(all.length).toBe(first.totalMatching);
+      expect(new Set(all).size).toBe(all.length);
+      const beyond = runDiscoveryQuery({ ...base, page: first.pageCount + 1 });
+      expect(beyond.state).toBe("ready");
+      expect(beyond.rows).toEqual([]);
+      expect(beyond.totalMatching).toBe(first.totalMatching);
+    }
+  });
   it("keeps the materialized sample small and the scale total count-only", () => {
     expect(DISCOVERY_FIXTURE.length).toBe(FIXTURE_LENGTH);
     expect(DISCOVERY_FIXTURE.length).toBeLessThanOrEqual(400);

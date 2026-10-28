@@ -23,6 +23,7 @@ import {
   type SyntheticTier,
 } from "./fixture";
 import { syntheticCountLine, syntheticTierLine } from "../a11y/present";
+import { buildDiscoverySearchIndex, DISCOVERY_SEARCH_INDEX, normalizeDiscoverySearchText, type DiscoverySearchIndex } from "./search-index";
 
 export { SCALE_TOTAL, SCALE_VIEWPORT_HEIGHT, SCALE_ROW_HEIGHT, SCALE_OVERSCAN };
 
@@ -199,6 +200,7 @@ export function toggleValue<T extends string>(values: readonly T[], value: T, or
 export function runDiscoveryQuery(
   query: DiscoveryQuery,
   rows: readonly DiscoveryRow[] = DISCOVERY_FIXTURE,
+  index?: DiscoverySearchIndex,
 ): DiscoveryPageResult {
   const conflicts = detectConflicts(query);
   if (conflicts.length > 0) {
@@ -212,7 +214,15 @@ export function runDiscoveryQuery(
       conflicts,
     };
   }
-  const matched = rows.filter((row) => matches(query, row));
+  const rawNeedle = query.text.trim();
+  const needle = normalizeDiscoverySearchText(rawNeedle);
+  const searchIndex = index ?? (rows === DISCOVERY_FIXTURE ? DISCOVERY_SEARCH_INDEX : buildDiscoverySearchIndex(rows));
+  const matched = rows.filter((row) => {
+    const entry = searchIndex.get(row);
+    const textMatches = needle.length === 0 || row.rowId.includes(rawNeedle) ||
+      entry?.normalizedLabels.some((label) => label.includes(needle));
+    return textMatches && matches(query, row);
+  });
   const sorted = [...matched].sort((left, right) => compareRows(query.sort, left, right));
   const pageCount = sorted.length === 0 ? 0 : Math.ceil(sorted.length / query.pageSize);
   const start = (query.page - 1) * query.pageSize;
@@ -448,13 +458,6 @@ export function searchSuffix(params: URLSearchParams): string {
 }
 
 function matches(query: DiscoveryQuery, row: DiscoveryRow): boolean {
-  const needle = query.text.trim().toLowerCase();
-  if (needle.length > 0) {
-    const hay = `${row.title} ${row.venueLabel} ${row.rowId}`.toLowerCase();
-    if (!hay.includes(needle)) {
-      return false;
-    }
-  }
   if (query.kinds.length > 0 && !query.kinds.includes(row.kind)) {
     return false;
   }
