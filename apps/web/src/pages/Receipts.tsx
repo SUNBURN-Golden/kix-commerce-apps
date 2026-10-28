@@ -12,16 +12,19 @@ import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
 import { COMMERCE_COMMAND_BINDINGS } from "@kix/protocol-adapter";
 import { AsyncState } from "../components/AsyncState";
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import { Link } from "react-router-dom";
 import { StatusMark } from "../a11y/marks";
 import {
   useReceiptExplorer,
+  ROLE_CONTEXTS,
+  type ReceiptContext,
   type ReceiptEntry,
   type ReceiptExplorerModel,
   type ReceiptGroup,
 } from "../receipt-explorer";
-import { WORKSPACE_ROLES, type WorkspaceRole } from "../workspace/registry";
+import { buildReceiptTimelinePage, receiptSelectionKey, type ReceiptTimelineQuery } from "../receipt-pagination";
+import { TRACK_STATES, WORKSPACE_ROLES, type WorkspaceRole, type TrackState } from "../workspace/registry";
 
 const ROLE_LABEL: Record<WorkspaceRole, string> = {
   buyer: "Buyer",
@@ -35,34 +38,92 @@ export function ReceiptsPage() {
   return <ReceiptScreen model={model} role={role} onRole={setRole} />;
 }
 
-export function ReceiptScreen({
+export function ReceiptScreen(props: {
+  model: ReceiptExplorerModel;
+  role: WorkspaceRole;
+  onRole: (role: WorkspaceRole) => void;
+}) {
+  const roleFocus = useRef(false);
+  const focusedEntry = useRef<HTMLButtonElement | null>(null);
+  useLayoutEffect(() => {
+    if (roleFocus.current) {
+      roleFocus.current = false;
+      document.getElementById(`receipt-tab-${props.role}`)?.focus();
+    }
+  }, [props.role]);
+  // Remount local presentation state synchronously at the authorization boundary.
+  const key = JSON.stringify([props.model.sessionId, props.model.role, props.role]);
+  const [boundary, setBoundary] = useState({ key, initialize: true });
+  if (boundary.key !== key) setBoundary({ key, initialize: false });
+  return <ReceiptView key={key} focusedEntry={focusedEntry} initialize={boundary.key === key && boundary.initialize} {...props} onRole={(next) => {
+    roleFocus.current = next !== props.role;
+    props.onRole(next);
+  }} />;
+}
+
+function ReceiptView({
+  focusedEntry,
+  initialize,
   model,
   role,
   onRole,
 }: {
+  initialize: boolean;
+  focusedEntry: RefObject<HTMLButtonElement | null>;
   model: ReceiptExplorerModel;
   role: WorkspaceRole;
   onRole: (role: WorkspaceRole) => void;
 }) {
   const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
   const entries = flatEntries(model);
-  const [selected, setSelected] = useState<string | null>(null);
-  const current = entries.find((entry) => entry.id === selected) ?? entries[0] ?? null;
+  const keyOf = (entry: ReceiptEntry) => receiptSelectionKey(model, entry);
+  const identities = new Map<string, ReceiptEntry[]>();
+  for (const entry of entries) {
+    const key = keyOf(entry);
+    identities.set(key, [...(identities.get(key) ?? []), entry]);
+  }
+  const [selected, setSelected] = useState<string | null>(() => {
+    const first = entries[0];
+    return initialize && first && identities.get(keyOf(first))?.length === 1 ? keyOf(first) : null;
+  });
+  const matches = selected === null ? [] : identities.get(selected) ?? [];
+  const current = matches.length === 1 ? matches[0] : null;
+  // Invalidate permanently: later arrivals must never restore a missing/ambiguous selection.
+  if (selected !== null && !current) setSelected(null);
+  const [query, setQuery] = useState<ReceiptTimelineQuery>({ status: "all", context: "all", page: 1 });
+  const timeline = buildReceiptTimelinePage(model, query);
+  if (timeline.page !== query.page && query.page !== 1) setQuery({ ...query, page: timeline.page || 1 });
+  const offPage = current && !timeline.entries.includes(current);
+  // The shell owns the initial route announcement. Local changes subsequently speak here.
+  const announcementToken = JSON.stringify([timeline.start, timeline.end, timeline.filteredCount,
+    timeline.totalCount, timeline.unknownCount, selected, current?.status, Boolean(offPage)]);
+  const [announcement, setAnnouncement] = useState({ token: announcementToken, live: !initialize });
+  if (announcement.token !== announcementToken) setAnnouncement({ token: announcementToken, live: true });
+  const statusRef = useRef<HTMLParagraphElement>(null);
+  useLayoutEffect(() => {
+    if (focusedEntry.current && !focusedEntry.current.isConnected) {
+      focusedEntry.current = null;
+      statusRef.current?.focus();
+    }
+  });
+  // Ambiguous evidence has no stable logical identity. Never reuse its DOM node for another candidate.
+  const ambiguousKeys = useRef(new WeakMap<ReceiptEntry, number>());
+  const nextAmbiguousKey = useRef(0);
+  const rowKey = (entry: ReceiptEntry) => {
+    const key = keyOf(entry);
+    if (identities.get(key)?.length === 1) return key;
+    let token = ambiguousKeys.current.get(entry);
+    if (token === undefined) {
+      token = nextAmbiguousKey.current++;
+      ambiguousKeys.current.set(entry, token);
+    }
+    return `ambiguous:${key}:${token}`;
+  };
   const panelId = useId();
-  const keyboardRole = useRef(false);
   const exportRef = useRef<HTMLTextAreaElement>(null);
   const [copyNote, setCopyNote] = useState<string>(copy0.en["e.34"]);
 
-  useEffect(() => {
-    if (!keyboardRole.current) {
-      return;
-    }
-    keyboardRole.current = false;
-    document.getElementById(`receipt-tab-${role}`)?.focus();
-  }, [role]);
-
-  function chooseRole(next: WorkspaceRole, fromKeyboard: boolean) {
-    keyboardRole.current = fromKeyboard;
+  function chooseRole(next: WorkspaceRole) {
     setSelected(null);
     onRole(next);
   }
@@ -84,12 +145,12 @@ export function ReceiptScreen({
     event.preventDefault();
     const roleNext = WORKSPACE_ROLES[next];
     if (roleNext) {
-      chooseRole(roleNext, true);
+      chooseRole(roleNext);
     }
   }
 
-  function onTimelineKey(event: KeyboardEvent<HTMLOListElement>) {
-    const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>("button"));
+  function onTimelineKey(event: KeyboardEvent<HTMLElement>) {
+    const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>("button[data-entry-id]"));
     const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
     if (index < 0) {
       return;
@@ -166,7 +227,7 @@ export function ReceiptScreen({
                 aria-selected={role === item}
                 aria-controls={panelId}
                 tabIndex={role === item ? 0 : -1}
-                onClick={() => chooseRole(item, false)}
+                onClick={() => chooseRole(item)}
                 onKeyDown={(event) => onTabKey(event, item)}
               >
                 {deskText(t, ROLE_LABEL[item])}
@@ -182,22 +243,52 @@ export function ReceiptScreen({
             data-source={model.environment === "stub" ? "stub-shape" : "integration-gate"}
           >
             <h3>{t("s248")}</h3>
-            {model.paths.length > 0 ? (
-              <div>
-                <h4>{t("s15")}</h4>
-                <p>{t("s3a")}</p>
-                {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Keyboard navigation is managed on the list because its items are buttons; arrow keys move focus among entries. */}
-                <ol className="receipt-list" onKeyDown={onTimelineKey}>
-                  {deskText(t, model.paths.map((entry) => (
-                    <EntryButton key={entry.id} entry={entry} selected={current?.id === entry.id} onSelect={setSelected} />
-                  )))}
-                </ol>
-              </div>
-            ) : null}
-            {model.groups.length === 0 ? <AsyncState kind="empty" label={t("merge.receipts")} announcement="parent"><p className="empty">{t("desk.buyer.empty")}</p></AsyncState> : null}
-            {deskText(t, model.groups.map((group) => (
-              <GroupBlock key={group.id} group={group} selectedId={current?.id ?? null} onSelect={setSelected} onKeyDown={onTimelineKey} />
-            )))}
+            <div className="receipt-filters">
+              <label htmlFor="receipt-status-filter">{t("page.status")}</label>{" "}
+              <select className="receipt-action" id="receipt-status-filter" value={query.status} onChange={(event) => setQuery({ ...query, status: event.target.value as "all" | TrackState, page: 1 })}>
+                <option value="all">{t("page.all")}</option>
+                {TRACK_STATES.map((status) => <option key={status} value={status}>{status === "unknown" ? t("page.unresolved") : status}</option>)}
+              </select>{" "}
+              <label htmlFor="receipt-context-filter">{t("page.context")}</label>{" "}
+              <select className="receipt-action" id="receipt-context-filter" value={query.context} onChange={(event) => setQuery({ ...query, context: event.target.value as "all" | ReceiptContext, page: 1 })}>
+                <option value="all">{t("page.all")}</option>
+                {ROLE_CONTEXTS[model.role].map((context) => <option key={context} value={context}>{t(`page.${context}`)}</option>)}
+              </select>{" "}
+              <button type="button" className="receipt-action" onClick={() => setQuery({ status: "all", context: "all", page: 1 })}>{t("page.clear")}</button>
+            </div>
+            <p id="receipt-timeline-status" style={{ overflowWrap: "anywhere" }} ref={statusRef} role="status" aria-live={announcement.live ? "polite" : "off"} tabIndex={-1}>
+              {t("page.count", { start: timeline.start, end: timeline.end, filtered: timeline.filteredCount, total: timeline.totalCount })}{" "}
+              {t("page.unknown", { count: timeline.unknownCount })}{" "}
+              {current ? t("page.selected", { action: current.action, status: current.status, operationId: current.operationId ?? t("common.empty") }) : t("page.unselected")}{" "}
+              {offPage ? t("page.offPage") : ""}
+            </p>
+            <nav aria-label={t("page.navigation")}>
+              {([ ["first", 1], ["previous", timeline.page - 1], ["next", timeline.page + 1], ["last", timeline.pageCount] ] as const).map(([label, page]) => {
+                const unavailable = !timeline.pageCount || (label === "first" || label === "previous" ? timeline.page <= 1 : timeline.page >= timeline.pageCount);
+                return <button key={label} type="button" className="receipt-action" aria-disabled={unavailable} onClick={() => { if (!unavailable) setQuery({ ...query, page }); }}>{t(`page.${label}`)}</button>;
+              })}
+              <span>{t("page.number", { page: timeline.page, pages: timeline.pageCount })}</span>
+            </nav>
+            {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- Entry buttons share arrow navigation across all visible groups. */}
+            <div onKeyDown={onTimelineKey} onFocusCapture={(event) => {
+              if (event.target instanceof HTMLButtonElement && event.target.dataset.entryId) focusedEntry.current = event.target;
+            }} onBlurCapture={(event) => { if (event.relatedTarget) focusedEntry.current = null; }}>
+              {timeline.paths.length > 0 ? (
+                <div>
+                  <h4>{t("s15")}</h4>
+                  <p>{t("s3a")}</p>
+                  <ol className="receipt-list">
+                    {deskText(t, timeline.paths.map((entry) => (
+                      <EntryButton key={rowKey(entry)} entry={entry} identity={keyOf(entry)} selected={current === entry} onSelect={setSelected} />
+                    )))}
+                  </ol>
+                </div>
+              ) : null}
+              {timeline.filteredCount === 0 ? <AsyncState kind="empty" label={t("merge.receipts")} announcement="parent"><p className="empty">{t(timeline.totalCount === 0 ? "desk.buyer.empty" : "page.empty")}</p></AsyncState> : null}
+              {deskText(t, timeline.groups.map((group) => (
+                <GroupBlock key={group.id} group={group} selectedId={selected} onSelect={setSelected} keyOf={keyOf} rowKey={rowKey} />
+              )))}
+            </div>
           </section>
           <section
             id="receipt-detail"
@@ -205,10 +296,10 @@ export function ReceiptScreen({
             tabIndex={-1}
             data-adapter-environment={model.environment}
             data-state={current?.status ?? "empty"}
-            aria-live={selected === null ? undefined : "polite"}
           >
             <h3 id="receipt-detail-title">{t("sgf")}</h3>
-            {current ? <Detail entry={current} /> : <AsyncState kind="empty" label={t("merge.receiptDetail")} announcement="parent"><p className="empty">{t("desk.buyer.empty")}</p></AsyncState>}
+            {offPage ? <p>{t("page.offPage")}</p> : null}
+            {current ? <Detail entry={current} /> : <AsyncState kind="empty" label={t("merge.receiptDetail")} announcement="parent"><p className="empty">{t(entries.length ? "page.unselected" : "desk.buyer.empty")}</p></AsyncState>}
           </section>
           <section
             id="receipt-quarantine"
@@ -256,6 +347,7 @@ export function ReceiptScreen({
           >
             <h3>{t("s1nl")}</h3>
             <p>{t("s1xm")}</p>
+            <p>{t("page.export")}</p>
             <label htmlFor="receipt-diagnostic">{t("s1ni")}</label>
             <textarea
               id="receipt-diagnostic"
@@ -283,12 +375,14 @@ function GroupBlock({
   group,
   selectedId,
   onSelect,
-  onKeyDown,
+  keyOf,
+  rowKey,
 }: {
   group: ReceiptGroup;
   selectedId: string | null;
   onSelect: (id: string) => void;
-  onKeyDown: (event: KeyboardEvent<HTMLOListElement>) => void;
+  keyOf: (entry: ReceiptEntry) => string;
+  rowKey: (entry: ReceiptEntry) => string;
 }) {
   const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7);
   return (
@@ -296,10 +390,9 @@ function GroupBlock({
       <h4>{deskText(t, group.heading)}</h4>
       <p>{deskText(t, group.lastConfirmed)}</p>
       <p>{deskText(t, group.unconfirmed)}</p>
-      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Keyboard navigation is managed on the list because its items are buttons; arrow keys move focus among entries. */}
-      <ol className="receipt-list" onKeyDown={onKeyDown}>
+      <ol className="receipt-list">
         {deskText(t, group.entries.map((entry) => (
-          <EntryButton key={entry.id} entry={entry} selected={selectedId === entry.id} onSelect={onSelect} />
+          <EntryButton key={rowKey(entry)} entry={entry} identity={keyOf(entry)} selected={selectedId === keyOf(entry)} onSelect={onSelect} />
         )))}
       </ol>
     </div>
@@ -308,10 +401,12 @@ function GroupBlock({
 
 function EntryButton({
   entry,
+  identity,
   selected,
   onSelect,
 }: {
   entry: ReceiptEntry;
+  identity: string;
   selected: boolean;
   onSelect: (id: string) => void;
 }) {
@@ -326,7 +421,7 @@ function EntryButton({
       data-confirmed={entry.confirmed ? "true" : "false"}
     >
       {selected ? <StatusMark kind="selected" /> : null}
-      <button type="button" data-entry-id={entry.id} aria-current={selected ? "true" : undefined} onClick={() => onSelect(entry.id)}>
+      <button type="button" data-entry-id={identity} aria-current={selected ? "true" : undefined} onClick={() => onSelect(identity)}>
         {entry.action} {entry.status}
         {entry.operationId ? t("s15l", { operationId: entry.operationId }) : ""}
       </button>

@@ -15,8 +15,8 @@
     "channelDelta": 8,
     "maxDiffPpm": 200
   },
-  "appHead": "a96f14e8adefc44fd13e4cd99c75940b0965d1d6",
-  "recordedOn": "2026-10-26",
+  "appHead": "5be78541968af937c22abdd1fcc0899155ce1e54",
+  "recordedOn": "2026-10-28",
   "shots": 94,
   "hashes": {
     "box-office.phone.en.light": "de5a27a533f6b30afecd94be6657f06129e44329b53f7b4af2e2caa9d6a4441b",
@@ -101,8 +101,8 @@
     "identity.desktop.en.light": "604456feaefec5f1855465a6cb8560fb86faca8920544320e5c4ddad3a62d34c",
     "session.phone.ko.light": "aee0fa72bc3ea09693625a7a2c32cbd160556fc555635fdeb3d5c81f32d2e23e",
     "session.desktop.en.light": "abb130ccc004702d42f53b21d74a6bfa3149ac95ee8178374a7f4959f09b7e08",
-    "receipts.phone.ko.light": "daeace52d1a0aab892c4f0f6259c4bffcd5ed9c5bc09c0948b8f7237795b6a49",
-    "receipts.desktop.en.light": "089788839238e0a17eb5e9bc59686e23744d59c6f580f1dfa8c840c96a16a89c",
+    "receipts.phone.ko.light": "7f94f620276b843c6b35d4e14f252ea6e59a2465733219d1f249f00dbbeeccde",
+    "receipts.desktop.en.light": "df4dd7e9b8cf37e5be504d3deb8021244f5fd8608982e131b106ce8191f0bac5",
     "journeys.phone.ko.light": "15d5014f3ed922839887f126b87281dd9482b60279d9746f745f1905ab3d551c",
     "journeys.desktop.en.light": "5cddbbf6270cd4641b3ee576e0c4abf074f82de05f97b281ceb0b592015d77e1",
     "qualification.phone.ko.light": "f501c93a1d279f409a7d9a79d84032a6a1a794681c6342b6ed30aa1aed37487e",

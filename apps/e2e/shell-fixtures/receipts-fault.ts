@@ -6,6 +6,8 @@
 import { createElement } from "react";
 import { ReceiptsPage as RealReceiptsPage } from "../../web/src/pages/Receipts";
 
+import { PaginationReceipts } from "./receipts-pagination";
+
 export const HOSTILE = "Bearer sk_live_FAKE0123456789abcdef buyer.person@example.test {\"token\":\"tok_FAKE_body_secret\"}";
 
 export function ReceiptsPage() {
@@ -14,5 +16,6 @@ export function ReceiptsPage() {
     error.stack = `Error: leak\n    at renderReceipts (/srv/app/src/pages/Receipts.tsx:41:9)`;
     throw error;
   }
+  if (window.__kixReceiptPagination) return createElement(PaginationReceipts);
   return createElement(RealReceiptsPage);
 }
