@@ -50,6 +50,8 @@ function GuardedButton({ id, label, control, onPress }: { id: string; label: str
         type="button"
         aria-disabled={control.enabled ? undefined : true}
         aria-describedby={control.reason ? reasonId : undefined}
+        // The controller reports FENCED before sending; its existing status explains the refused activation.
+        onDomainRefused={onPress}
         onClick={() => {
           if (control.enabled) {
             onPress();

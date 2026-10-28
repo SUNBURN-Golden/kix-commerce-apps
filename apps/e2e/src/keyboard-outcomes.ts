@@ -655,13 +655,16 @@ export const KEYBOARD_DRIVES = [
   }),
   drive({
     journey: "session", outcome: "REJECT", path: "/session",
-    setup: [...pick("main select", "attach-lost"), ...press("Start new source with this scenario")],
+    // UNKNOWN is setup. The measured outcome is the next activation being refused before sending.
+    setup: [...pick("main select", "attach-lost"), ...press("Start new source with this scenario"),
+      ...pressId("#session-attach-obs-0001"), wait('li[data-kind="unknown"]'), wait('#session-status[aria-busy="false"]')],
     trigger: pressId("#session-attach-obs-0001"),
-    outcomeSelector: '#session-attach-obs-0001[aria-disabled="true"]',
+    outcomeSelector: '#session-status [data-field="last"]:has-text("Attach not sent.")',
+    terminal: ['li[data-kind="unknown"]', '#session-status:has-text("Sent 1 in this load. Blocked before sending 1.")'],
+    absentAfter: ['li[data-outcome="CONFIRMED"]', 'li[data-outcome="REJECTED"]', 'li[data-outcome="IN_FLIGHT"]'],
     status: "#session-status",
     focus: "STATUS",
     fence: "#session-attach-obs-0001",
-    refusal: { keys: pressId("#session-attach-obs-0001"), holds: '#session-status:has-text("Sent 1 in this load.")' },
   }),
   drive({
     journey: "session", outcome: "UNKNOWN", path: "/session",

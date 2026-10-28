@@ -47,7 +47,7 @@ Fence kinds over the 85 checks:
 - **Fence.**
   - FENCED: every matching control is disabled or aria-disabled, and its `aria-describedby` reaches non-empty text.
   - NO_WRITE: no send-style button and none of the cell's write selectors are present.
-  - Drives with a refusal replay press the fenced control again. The refusal adds no announcement and the state does not move.
+  - Drives with a refusal replay press the fenced control again. These replays add no announcement and the state does not move. Session REJECT instead measures the refused activation itself, after UNKNOWN has settled during setup; that refusal must announce once.
 - **Reflow.** After the other probes, the window is set to 360 × 800 CSS px and the document must not scroll sideways.
 - Every check ends with `assertNoPointer()`. `suite.pass` then asserts zero application network calls.
 
@@ -264,10 +264,11 @@ The outcome view has no next-write control. Existing scenario, scope, inspection
 
 ## Web fixes
 
-Every fix is in `apps/web/src`. The SSR test is `apps/web/test/keyboard-outcome-focus.test.tsx` (31 tests); focus effects are checked by the browser checks above.
+Every fix is in `apps/web/src`. SSR coverage is in `apps/web/test/keyboard-outcome-focus.test.tsx` (31 tests) and the session refusal regression in `apps/web/test/session-recovery.test.tsx`; focus effects are checked by the browser checks above.
 
 - **Synthetic status sections.** These desks: mobile, assistant, credit origination, credit servicing, benefit journey, merchant, notifications, platform, provider, permissions, finance, journeys, qualification, release and marketplace bench. Each status section is now the single polite region (`aria-live="polite"`, busy while loading, in progress or in flight). The inner `role="status"` lines are gone. Freshness, scope, watermark, counter, behind and fence lines are `aria-live="off"`. Each section keeps `tabIndex=-1` as the status focus target.
 - **Identity and session.** The status regions mark freshness, counter, load and budget lines `aria-live="off"`. Each region is busy while a scenario change waits for its read (identity) or an attach waits for its answer (session). Applying a scenario moves focus to the status, because the apply button locks (`useSettledFocus`).
+  - Session's aria-disabled attach reports its domain refusal through the controller's existing `FENCED` path. That path stops before sending or changing the journal, uses existing ko/en "Attach not sent" copy and moves focus to `#session-status`. Connectivity blocks still take precedence; other buttons retain their existing behavior.
 - **One status update per action.**
   - Assistant: busy until a session's first read settles.
   - Journeys: a new session starts busy.
@@ -305,13 +306,45 @@ Measured with Node 22.20.0, gzip level 9. All existing limits, including the tig
 | Build | Initial JS gzip | CSS gzip | Total gzip | Files |
 | --- | --- | --- | --- | --- |
 | main `0990caf`, independently rebuilt from `git archive HEAD` | 161,679 | 4,974 | 784,542 | 103 |
-| final worktree | 161,448 | 4,974 | 781,778 | 94 |
+| before PR fix round 1 | 161,448 | 4,974 | 781,778 | 94 |
+| PR fix round 1 | 161,462 | 4,974 | 781,125 | 94 |
 
-The final total is 2,764 bytes smaller than main. Baseline reproduction used a temporary archive at `/tmp/kixc-keyboard-main-bzbyc4qa`, symlinked the existing installed dependencies, then ran `npm run build` and `npm run budget` there. Both passed; logs: `/tmp/kixc-ready-baseline-build.log`, `/tmp/kixc-ready-baseline-budget.log`. No baseline repository source was edited. Current final logs: `/tmp/kixc-resume-build.log`, `/tmp/kixc-resume-budget.log`.
+The PR fix total is 3,417 bytes smaller than the main baseline above. Baseline reproduction used a temporary archive at `/tmp/kixc-keyboard-main-bzbyc4qa`, symlinked the existing installed dependencies, then ran `npm run build` and `npm run budget` there. Both passed; logs: `/tmp/kixc-ready-baseline-build.log`, `/tmp/kixc-ready-baseline-budget.log`. No baseline repository source was edited. PR-fix logs: `/tmp/kixc-fix1-build.log`, `/tmp/kixc-fix1-budget.log`.
 
 ## Visual baselines
 
-PASS: all 109 visual tests (92 baseline comparisons plus harness/display checks), no baseline edits or pixel diffs. Chrome 156.0.8078.47, Node 22.20.0. Current log: `/tmp/kixc-resume-visual.log`; record: `/tmp/kixc-resume-visual.json`, ledger 0/0/0.
+PASS: all 109 visual tests (92 baseline comparisons plus harness/display checks), no baseline edits or pixel diffs. Chrome 156.0.8078.47, Node 22.20.0. PR-fix log: `/tmp/kixc-fix1-visual.log`; record: `/tmp/kixc-fix1-visual.json`, ledger 0/0/0.
+
+## PR fix round 1 — session rejection measurement, 2026-10-28 KST
+
+The blocking review finding is accepted. Earlier `session.REJECT` evidence measured the lost-response UNKNOWN transition; its later quiet refusal replay did not establish rejection focus or announcement coverage. That earlier rejection claim is superseded by this fix and its run records below.
+
+UNKNOWN is now completed during setup. The measured Enter activates the already aria-disabled attach, and the existing controller returns `FENCED` before sending. The outcome selector requires the new "Attach not sent" status line to be absent before Enter and present afterward. Terminal assertions require the original UNKNOWN record, exactly one send and one blocked activation, and no confirmed, rejected-source or in-flight record. This cell is a local refusal, not a claim of a source rejection. Its focus rule remains STATUS, and the same runner checks exactly one live announcement, the disabled control's described reason, zero pointer input and no horizontal overflow at 360px.
+
+`ConnectivityWriteButton` accepts an optional domain-refusal reporter; session uses it to expose the controller's existing fenced result through the existing status/focus path. Connectivity restrictions still stop activation first. SSR regression verifies one focusable polite status, the refusal and described fence, one UNKNOWN record, one send, and byte-identical journal contents after refusal. Existing ko/en copy is reused. No network, storage, command, pin, baseline, budget or CI change is introduced.
+
+M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. Locked binding blob matches `origin/main`: `47ab5e10cbf5f8f10bed718b4dd5190fe5dfe76f`. Human acceptance stays PENDING. No hosted CI was triggered; no commit, push, comment or program marker was made.
+
+Verification uses the uncommitted fix worktree based on `13a7121a6f99c2cc08cbd8991a9859413a28ec06`; JSON `appHead`/base fields identify that commit, while each browser command rebuilds the modified worktree. Node 22.20.0, npm 11.21.1, Chrome 156.0.8078.47. All commands use `PATH=/tmp/kix-node22/node_modules/node/bin:$PATH`; browser commands also use `KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1`.
+
+| Command actually run | Result | Evidence |
+| --- | --- | --- |
+| `npm exec -w @kix/web -- vitest run test/session-recovery.test.tsx test/keyboard-outcome-focus.test.tsx` | PASS: 46 tests, including the new fenced-refusal SSR regression. | `/tmp/kixc-fix1-web.log` |
+| `npm run typecheck` and `npm run typecheck:e2e` | PASS. | `/tmp/kixc-fix1-typecheck.log`, `/tmp/kixc-fix1-typecheck-e2e.log` |
+| `npm run build` and `npm run budget` | PASS: initial JS 161,462 / CSS 4,974 / total 781,125 gzip bytes; unchanged limits. | `/tmp/kixc-fix1-build.log`, `/tmp/kixc-fix1-budget.log` |
+| `KIX_REQUIRE_GATE=0 npm test` | PASS: adapter 1,466 passed / 23 conditional tests skipped, web 1,269 passed, cold-entry 6 passed. | `/tmp/kixc-fix1-stub.log` |
+| `KIX_REQUIRE_GATE=0 npm run coverage:check` | PASS: adapter lines 91.24%, functions 97.40%, branches 84.92%; web lines 92.92%, functions 81.10%, branches 89.28%. All unchanged floors met. | `/tmp/kixc-fix1-coverage.log` |
+| `npm run lint`, `npm run deps:check`, `npm run cycle-check`, `npm run audit:warn` | PASS; zero production vulnerabilities. | `/tmp/kixc-fix1-{lint,deps,cycle,audit}.log` |
+| `KIX_A11Y_RECORD_OUT=/tmp/kixc-fix1-a11y.json npm run test:a11y` | PASS: 17 files / 363 tests, 85/85 keyboard cells and both helper checks; session REJECT has STATUS focus, one announcement, FENCED and zero pointer input. Ledger nonLoopback/nonGet/appNetworkCalls = 0/0/0. | `/tmp/kixc-fix1-a11y.log`, `/tmp/kixc-fix1-a11y.json` |
+| `KIX_E2E_RECORD_OUT=/tmp/kixc-fix1-e2e.json npm run test:e2e` | PASS: 47 files / 195 tests, including all nine matrix assertions; keyboard facet 85/85. Ledger nonLoopback/nonGet/appNetworkCalls = 0/0/0. | `/tmp/kixc-fix1-e2e.log`, `/tmp/kixc-fix1-e2e.json` |
+| `KIX_VISUAL_RECORD_OUT=/tmp/kixc-fix1-visual.json KIX_VISUAL_OUT=/tmp/kixc-fix1-visual npm run test:visual` | PASS: three files / 109 tests, unchanged baselines; ledger 0/0/0. | `/tmp/kixc-fix1-visual.log`, `/tmp/kixc-fix1-visual.json` |
+| `KIX_BUDGET_RECORD_OUT=/tmp/kixc-fix1-browser-budget.json npm run test:budget` | PASS: three files / nine tests, unchanged timing and size limits; ledger 0/0/0. | `/tmp/kixc-fix1-browser-budget.log`, `/tmp/kixc-fix1-browser-budget.json` |
+| Record inspection | PASS: accessibility has exactly 85 outcome observations with one announcement and zero pointer events each. All four full browser records have zero network ledger, lifecycle leaks, pending calls/routes, unreleased gates or cleanup errors; all claims remain false. | The four JSON records above. |
+| `git diff --check` and protected-path comparison with `origin/main` | PASS: locked binding, program/delegation files, CI, bundle limits and visual baselines unchanged. | Final worktree checks; binding blob above. |
+
+The exploratory filtered session command (`npm exec -w @kix/e2e -- vitest run -c vitest.a11y.config.ts tests/a11y/keyboard-outcomes.a11y.test.ts -t 'session\.(REJECT|UNKNOWN|SUCCESS)'`, with the browser flags above and `KIX_A11Y_RECORD_OUT=/tmp/kixc-fix1-session-probe.json`) passed all three selected assertions. It exited 1 because full-matrix teardown requires omitted checks; it is not a passing suite. Log: `/tmp/kixc-fix1-session-probe.log`. The complete accessibility pass above supersedes it.
+
+PR fix round 1 local verification: READY. All full commands above exited 0, with no relaxed limits, baselines, timeouts or CI settings. The supplied review contains no failing hosted CI log; hosted exact-head CI is not claimed rerun. Human acceptance: PENDING.
 
 ## Merge resolution verification — 2026-10-28 KST
 
@@ -444,7 +477,7 @@ Human acceptance: PENDING.
 
 ## Files changed
 
-70 files relative to the merge target, all within the node’s allowed app/doc paths (including the config-pin integration fix). Visual baselines, bundle limits, protocol bindings, pins, CI and protected program/delegation files are unchanged. The obsolete untracked decision handoff was removed.
+71 files relative to the merge target, all within the node’s allowed app/doc paths (including the config-pin integration fix and PR-fix session SSR regression). Visual baselines, bundle limits, protocol bindings, pins, CI and protected program/delegation files are unchanged. The obsolete untracked decision handoff was removed.
 
 - `apps/e2e/src/a11y-global-setup.ts`
 - `apps/e2e/src/a11y-matrix.ts`
@@ -514,5 +547,6 @@ Human acceptance: PENDING.
 - `apps/web/src/session-recovery.ts`
 - `apps/web/test/__snapshots__/component-gallery.test.tsx.snap`
 - `apps/web/test/keyboard-outcome-focus.test.tsx`
+- `apps/web/test/session-recovery.test.tsx`
 - `apps/web/vite.config.ts`
 - `docs/c-plan-d-keyboard-outcome-journeys-stub-apps-bind.md`

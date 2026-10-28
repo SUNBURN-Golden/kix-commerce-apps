@@ -5,8 +5,13 @@ import { cachedGroups } from "../connectivity/write-guard";
 import { useConnectivityCopy } from "../connectivity/copy";
 
 /** Focusable when connectivity blocks it; existing native/domain disabled restrictions remain. */
-export function ConnectivityWriteButton({ onClick, disabled, children, "aria-describedby": describedBy, "aria-disabled": domainDisabled, requiresFresh = true, inspection = false, ...props }:
-  ButtonHTMLAttributes<HTMLButtonElement> & { requiresFresh?: boolean; inspection?: boolean }) {
+export function ConnectivityWriteButton({ onClick, onDomainRefused, disabled, children, "aria-describedby": describedBy, "aria-disabled": domainDisabled, requiresFresh = true, inspection = false, ...props }:
+  ButtonHTMLAttributes<HTMLButtonElement> & {
+    requiresFresh?: boolean;
+    inspection?: boolean;
+    /** Reports a domain fence without calling onClick. Connectivity blocks take precedence. */
+    onDomainRefused?: () => void;
+  }) {
   const state = useConnectivity();
   const copy = useConnectivityCopy();
   const refusal = useContext(RefusalContext);
@@ -22,6 +27,7 @@ export function ConnectivityWriteButton({ onClick, disabled, children, "aria-des
         event.preventDefault();
         // Reopening a refused form returns to its summary; no send is attempted and its live text stays unchanged.
         if (refused) document.getElementById(refused)?.focus();
+        else if (!blocked) onDomainRefused?.();
         return;
       }
       refusal?.press(key);
