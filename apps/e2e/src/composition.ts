@@ -20,7 +20,7 @@ export async function engineComposition(page: Page, selector: string, cancel = f
   }
 }
 
-/** Injected native-event ordering: end-before-key, key-before-end, legacy 229, repeat and blur. */
+/** Injected native-event ordering: end-before-key, key-before-end, legacy 229, interleaved keyup, repeat and blur. */
 export async function confirmation(page: Page, selector: string, order: "end-first" | "key-first" | "229", blur = false) {
   await page.locator(selector).evaluate((element, args) => {
     const input = element as HTMLInputElement;
@@ -34,8 +34,14 @@ export async function confirmation(page: Page, selector: string, order: "end-fir
     if (!down.defaultPrevented) throw new Error("IME confirmation default was not prevented");
     if (!input.form) throw new Error("Composition target has no form");
     input.form.requestSubmit();
-    input.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter", repeat: true }));
     if (args.order === "key-first") composition("compositionend");
+    for (const release of [{ key: "r", code: "KeyR" }, { key: "Shift", code: "ShiftLeft" }, { key: "Process", code: "KeyR", keyCode: 229 }]) {
+      input.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, ...release }));
+      const repeated = new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter", repeat: true });
+      input.dispatchEvent(repeated);
+      if (!repeated.defaultPrevented) throw new Error("Unrelated keyup released IME confirmation guard");
+      input.form.requestSubmit();
+    }
     input.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true, key: "Enter" }));
   }, { order, blur });
 }

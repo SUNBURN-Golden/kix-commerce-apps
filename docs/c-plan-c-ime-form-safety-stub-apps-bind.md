@@ -1,7 +1,8 @@
 # IME form safety — local stub binding and evidence
 
 Node: `c-plan-c-ime-form-safety-stub`; `contract_change=NO`; audit floor A2.
-Source HEAD: `2acd0a0fd71d21aafcad98b80f58527c536adab4` (uncommitted node worktree).
+Original implementation baseline: `2acd0a0fd71d21aafcad98b80f58527c536adab4`.
+PR fix round 1 starts at reviewed HEAD `048959c52b2ade02bc88e0f9036b5c2b1dd68aed`; the fix remains uncommitted.
 
 M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
 The existing command/binding decisions, stub default, one-attempt transport, UNKNOWN fences and production/truth flags are unchanged. No protocol tuple is consumed. No protocol, page/controller, dependency, copy, CI or bundle-budget changes are needed. No funds, live gate, public deployment, KYC, scanning, bank rail, secrets or external service is used.
@@ -17,7 +18,7 @@ The existing command/binding decisions, stub default, one-attempt transport, UNK
 | imperative validate / native submit during preedit | Return false; no active-field change, submit-attempt increment, new refusal announcement, controller call or focus request. |
 | Enter while native isComposing, legacy keyCode 229, tracked composition, or same-turn compositionend | Cancel Enter's default and fence validation until its keyup; repeated Enter stays fenced. Ordinary preedit letter keys (including 229) are not cancelled. Native `key` or physical `code` identifies Enter. |
 | compositionend | Retain the browser's actual resulting value. Defer reconciliation to a zero-delay task after final input/change; keep only a target-scoped confirmation guard for the associated event turn. Empty composition data is not interpreted as cancellation. |
-| confirmation keyup | Clear the confirmation/end guard and reconcile touched or previously submitted fields. A fresh immediate Enter can submit. |
+| confirmation Enter keyup | Recognize `key=Enter` or physical `code=Enter/NumpadEnter`; clear the confirmation/end guard and reconcile touched or previously submitted fields. Unrelated character/modifier keyup, including legacy 229 without an Enter identity, keeps the held-key guard. A fresh immediate Enter can submit. |
 | blur | Mark touched, defer while composing; clear confirmation/end state on blur. Reconciliation never requests focus. |
 | cancellation | Retain the browser's restored value; resolve through compositionend, with either blur/end ordering tested. Never replay a refused action. |
 | removed/disabled control, unmount | A removed or disabled editor cannot retain a validation fence; cancel scheduled work on unmount. |
@@ -42,7 +43,7 @@ The test-only fault build aliases gift/organizer sources to wrappers around thei
 | Requirement | Evidence |
 | --- | --- |
 | Korean draft, cancel, final change ordering | `apps/web/test/form-ime.test.tsx`: mounted controlled input sequences; browser tests use actual Chrome CDP preedit, commit and cancel. |
-| End-before-key, key-before-end, native flag false + 229, held/repeated keys | DOM sequences and browser-injected variants; confirmation causes zero sends. Ordinary 229 letter key remains uncancelled. |
+| End-before-key, key-before-end, native flag false + 229, held/repeated keys | DOM sequences and browser-injected variants, including interleaved character/modifier/229 keyup before repeated Enter; confirmation causes zero sends. Ordinary 229 letter key remains uncancelled. |
 | Blur/end both orders, previously invalid fields | DOM tests defer blur and freeze issues until resolution; browser blur fills errors without summary focus. |
 | No focus theft/new refusal during preedit | DOM active-element and refusal checks; browser submits and activates buttons while CDP preedit is active, asserting zero sends, no summary and retained focus. |
 | Fresh valid submission exactly once | DOM real booking/gift/organizer pages and controllers; browser counts actual underlying sends, holds responses, refuses duplicates and releases once. |
@@ -101,6 +102,30 @@ Final command results are recorded below. Local success does not establish hoste
 | `git diff --check` | PASS after final evidence edits. |
 
 During development: the first e2e typecheck found the fixture global declaration outside the e2e compiler scope; moved it to the composition helper. Focused regressions caught a premature blur timer and a spy attached after booking methods had been bound; retained blur deferral and observed the actual page port. A full stub run overlapped an in-progress source/test edit and saw the old 229 handler against the new typing-key test; final checks were rerun on the completed source. The first full accessibility run caught driver assumptions about offline button accessible names/activation and organizer's domain-disabled empty-event action, plus a blur expectation that should allow unfocused errors after resolution. The driver now uses keyboard activation offline and the editable seats error under a valid organizer event. No test/gate setting is relaxed.
+
+## PR fix round 1 — blocking keyup finding (2026-10-28 KST)
+
+The finding is accepted. The previous `confirming.current === target` alternative cleared the held confirmation guard on any keyup from the control; the independent `keyCode === 229` alternative also admitted unrelated IME character releases. `keyUp` now requires Enter's native key or physical Enter/NumpadEnter code, matching `keyDown`. Existing blur/removal/disabled cleanup and consumer handlers are unchanged.
+
+Six new DOM cases cover valid `2` and invalid Korean `한글`, each with a character, Shift or legacy-229 character released after compositionend and its scheduled reconciliation task. Repeated Enter, imperative validation and a forced submit remain fenced: zero sends, no new errors/refusal or focus theft, and unchanged draft. Releasing confirmation by native Enter or physical Enter/NumpadEnter then permits an immediate deliberate valid submission exactly once. All six cases failed against the reviewed implementation before the fix; the completed focused suite passes 45 tests (20 IME, 25 existing validation).
+
+The browser confirmation helper now injects each unrelated release after compositionend, asserts repeated Enter's default remains prevented, and forces a submit before Enter keyup. The existing booking, gift and organizer browser scenarios exercise this helper alongside their later deliberate send and offline/busy/UNKNOWN checks. This remains injected-event evidence, separate from the existing CDP engine coverage and PENDING native OS IME acceptance.
+
+Round-1 verification uses Node `v22.20.0` and Chrome `156.0.8078.47` on the reviewed HEAD plus the uncommitted fix. The original command ledger above describes the initial delivery; the round-1 results below describe this fix. Hosted exact-head CI is not independently verified by local checks. No commit, push or external post is made.
+
+| Round-1 command / evidence | Result |
+| --- | --- |
+| New DOM regression against the reviewed hook (`vitest ... -t unrelated`) | Expected FAIL: all six cases reproduce premature release. |
+| `npm exec -w @kix/web -- vitest run test/form-ime.test.tsx test/form-validation.test.tsx` | PASS: 45 tests. |
+| `npm run typecheck`, `npm run typecheck:e2e`, `npm run build`, `npm run lint` | PASS; exit status 0 observed for each command. |
+| `KIX_REQUIRE_GATE=0 npm test` | PASS: adapter 1,659 passed / 23 live-gate skips; web 1,300 passed; cold-entry 6 passed. Exit status 0. |
+| `KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 KIX_A11Y_RECORD_OUT=/tmp/kix-ime-r1-a11y.json npm run test:a11y` | PASS: 369 tests / 18 files; all 359 required checks including six IME checks; keyboard facet 85/85; zero non-loopback, non-GET or application-network calls, pending API/routes, cleanup errors or lifecycle leaks. Exit status 0. |
+| `npm run budget` | PASS: initial JS gzip 161,465 / 290,000; CSS 4,974; total gzip 782,450 / 790,000; every route cap passes. Budget file unchanged. |
+| `git diff --check`; protected-file comparison against the original implementation baseline; locked binding SHA-256 | PASS. `.aiops`, `docs/aiops`, CI, protocol packages, budgets and dependency manifests/lockfile remain byte-identical; binding hash matches the lock below. |
+
+The `/tmp/kix-ime-r1-*` redirected logs disappeared during the browser run; completed command results above were observed in tool output before their removal. The browser's open log descriptor was retained separately to recover its complete output without interrupting the run. The recovered full browser log and JSON record are `/tmp/kixc-ime-review1-2hq_pqmn/a11y.{log,json}`. These remain supplemental host-local artifacts; the tracked ledger records the result and limits.
+
+M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. All locked bindings and fail-closed transport boundaries remain unchanged; no protocol tuple is consumed.
 
 ## Protected-file comparison
 

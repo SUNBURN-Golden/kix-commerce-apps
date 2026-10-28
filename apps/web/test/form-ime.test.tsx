@@ -69,6 +69,38 @@ describe("IME form transactions (automated DOM sequences, no native IME claim)",
     expect(send).toHaveBeenCalledTimes(1);
   });
 
+  it.each(["한글", "2"].flatMap((draft) => [
+    { draft, released: "character", release: { key: "r", code: "KeyR" }, confirmationRelease: { key: "Enter" } },
+    { draft, released: "modifier", release: { key: "Shift", code: "ShiftLeft" }, confirmationRelease: { key: "Unidentified", code: "Enter" } },
+    { draft, released: "legacy-229 character", release: { key: "Process", code: "KeyR", keyCode: 229 }, confirmationRelease: { key: "Process", code: "NumpadEnter", keyCode: 229 } },
+  ]))("keeps $draft fenced after an unrelated $released keyup until confirmation Enter is released", async ({ draft, release, confirmationRelease }) => {
+    const { input, form, send, container, validation } = await harness();
+    await dispatch(input, compose("compositionstart"));
+    await change(input, draft);
+    await dispatch(input, key("keydown", { isComposing: true }));
+    await dispatch(input, compose("compositionend", draft));
+    await turn(); // The compositionend task must not release a held confirmation key.
+    await dispatch(input, key("keyup", release));
+    const repeated = key("keydown", { repeat: true });
+    await dispatch(input, repeated);
+    expect(repeated.defaultPrevented).toBe(true);
+    expect(validation.current?.validate()).toBe(false);
+    await dispatch(form, new Event("submit", { bubbles: true, cancelable: true }));
+    expect(send).not.toHaveBeenCalled();
+    expect(input.value).toBe(draft);
+    expect(container.querySelector(".error-summary")).toBeNull();
+    expect(container.querySelector('[data-validation-refused="true"]')).toBeNull();
+    expect(document.activeElement).toBe(input);
+
+    await dispatch(input, key("keyup", confirmationRelease));
+    await change(input, "2");
+    const deliberate = key("keydown");
+    await dispatch(input, deliberate);
+    expect(deliberate.defaultPrevented).toBe(false);
+    await dispatch(form, new Event("submit", { bubbles: true, cancelable: true }));
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
   it("does not cancel ordinary legacy-229 preedit keystrokes or leave a swallow-next-Enter flag", async () => {
     const { input, form, send } = await harness();
     await dispatch(input, compose("compositionstart"));

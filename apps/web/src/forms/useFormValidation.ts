@@ -75,7 +75,9 @@ export function useFormValidation(fields: readonly FieldRule[], reportedIssues: 
     return false;
   }
   function keyUp(target: EventTarget, event: KeyboardEvent) {
-    if (event.key === "Enter" || event.keyCode === 229 || confirming.current === target) {
+    // Another held key can be released while confirmation Enter is still repeating.
+    const enter = event.key === "Enter" || event.code === "Enter" || event.code === "NumpadEnter";
+    if (enter) {
       if (confirming.current === target) confirming.current = null;
       if (ending.current === target) ending.current = null;
       reconcile();
