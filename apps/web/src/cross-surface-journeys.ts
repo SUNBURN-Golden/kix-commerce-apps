@@ -412,7 +412,8 @@ export function useCrossSurfaceJourneys(): {
     },
     applyScenario(next) {
       sessionRef.current = createSession(environment, next);
-      setInFlight(false);
+      // The new session's first read starts right away; the start note and its answer are one status update.
+      setInFlight(true);
       setScenarioState(next);
       setEpoch((value) => value + 1);
       note(sourceMessage(sourceCopy.en["p.t79"], { v1: next, v2: XS_SCENARIO_NOTES[next] }));

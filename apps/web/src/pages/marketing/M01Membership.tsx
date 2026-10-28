@@ -61,10 +61,11 @@ export function M01Page() {
         <p className="muted">{t("s1qr")}</p>
         <div className="row-actions">
           <ConnectivityWriteButton type="submit">{t("sow")}</ConnectivityWriteButton>
-          <ConnectivityWriteButton type="button" className="ghost" onClick={leave} disabled={!card}>
+          <ConnectivityWriteButton type="button" className="ghost" onClick={leave} disabled={!card} aria-describedby={card ? undefined : "m01-card-empty"}>
             {t("sco")}</ConnectivityWriteButton>
         </div>
       </ValidatedForm>
+      <div aria-live="polite">
       {card ? (
         <article className="ticket">
           <p className="eyebrow">{t("s1jm")}{" "}{card.status}</p>
@@ -86,8 +87,9 @@ export function M01Page() {
           <p className="muted">{deskText(t, card.note)}</p>
         </article>
       ) : (
-        <p className="empty">{t("sv3")}</p>
+        <p className="empty" id="m01-card-empty">{t("sv3")}</p>
       )}
+      </div>
     </MarketingChrome>
   );
 }

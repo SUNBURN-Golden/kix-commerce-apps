@@ -291,3 +291,98 @@ export function matrixProblems(): string[] {
   }
   return problems;
 }
+
+/**
+ * Keyboard facet. Every BROWSER cell whose outcome is SUCCESS, REJECT or UNKNOWN has a keyboard-only check in
+ * tests/a11y/keyboard-outcomes.a11y.test.ts. Every other cell is NOT_APPLICABLE with a reason and keeps its pointer.
+ *
+ * Fences (owner ruling 2026-10-26 13:06 KST, KIX Commerce under the 2026-10-15 delegation): a REJECT or UNKNOWN check
+ * on a screen with a next-write control asserts that control is disabled or aria-disabled with a non-empty
+ * aria-describedby reason (FENCED). A check on a genuinely read-only screen is NO_WRITE: it asserts that no next-write
+ * control exists and that the outcome is reached and announced by keys. Controls are neither added nor disabled for it.
+ * A refused send on a write screen is fenced by the app itself: it stays aria-disabled, described by the refusal, until
+ * another send or an edit (RefusalScope in apps/web/src/components/ConnectivityWriteButton.tsx).
+ */
+export const KEYBOARD_OUTCOMES = ["SUCCESS", "REJECT", "UNKNOWN"] as const;
+export type KeyboardOutcome = (typeof KEYBOARD_OUTCOMES)[number];
+export type KeyboardFence = "FENCED" | "NO_WRITE" | "NONE";
+
+export type KeyboardFacet =
+  | { kind: "CHECK"; checkId: string; fence: KeyboardFence; reason?: string }
+  | { kind: "NOT_APPLICABLE"; reason: string };
+
+export const keyboardCheckId = (cell: Pick<MatrixCell, "journey" | "outcome">) => `a11y.kbd.outcome.${cell.journey}.${cell.outcome}`;
+
+/** Every NO_WRITE cell, with the reason the screen has no next-write control. */
+export const KEYBOARD_NO_WRITE: Readonly<Partial<Record<string, string>>> = {
+  "receipts.REJECT": "Receipt explorer is a read-only page-load reader; it sends nothing and has no write control.",
+  "buyer.REJECT": "Buyer workspace says 'No write sent by this page.'; show and order choices are local reads.",
+  "discovery.REJECT": "Discovery is a read-only search; a refused filter has no write to fence.",
+  "inventory.REJECT": "Seat selection is local and the lapsed queue has no published command to join; nothing is written.",
+  "merchant.REJECT": "Merchant operations is a read and export screen; a denied read has no write to fence.",
+  "journeys.REJECT": "The Journeys table is one read made once and sends no command (README); a refused table read has no write to fence.",
+  "journeys.UNKNOWN": "The Journeys table sends no command (README); Unknown rows belong to other surfaces and are listed, never closed.",
+  "marketplace-performance.REJECT": "Marketplace bench is a bounded read; a refused page has no write to fence.",
+  "permissions.REJECT": "The denied read returns no membership row. The only writes on this desk act on a row (account changes), so the outcome screen has none; what remains are scenario, scope and read controls and the sensitive export, an inspection read that stays fenced.",
+  "notifications.REJECT": "The denied read returns no notification row. The only writes on this desk act on a row (mark and resolve), so the outcome screen has none; what remains are scenario, scope and read controls and Simulate stand-ins for source events.",
+};
+
+const isKeyboardOutcome = (outcome: Outcome): outcome is KeyboardOutcome => (KEYBOARD_OUTCOMES as readonly string[]).includes(outcome);
+
+export function keyboardFacet(cell: MatrixCell): KeyboardFacet {
+  if (cell.kind === "BROWSER" && isKeyboardOutcome(cell.outcome)) {
+    const key = `${cell.journey}.${cell.outcome}`;
+    const noWriteReason = KEYBOARD_NO_WRITE[key];
+    if (noWriteReason) {
+      return { kind: "CHECK", checkId: keyboardCheckId(cell), fence: "NO_WRITE", reason: noWriteReason };
+    }
+    return { kind: "CHECK", checkId: keyboardCheckId(cell), fence: cell.outcome === "SUCCESS" ? "NONE" : "FENCED" };
+  }
+  if (cell.outcome === "NOT_BOUND") {
+    return { kind: "NOT_APPLICABLE", reason: "NOT_BOUND is a standing not-bound notice, not the result of a keyboard-driven write." };
+  }
+  return { kind: "NOT_APPLICABLE", reason: `${cell.kind}: pointer kept (${cell.owner ?? "no owner"}); no user action on this desk produces this outcome.` };
+}
+
+export const KEYBOARD_OUTCOME_CHECK_IDS: readonly string[] = MATRIX.flatMap((cell) => {
+  const facet = keyboardFacet(cell);
+  return facet.kind === "CHECK" ? [facet.checkId] : [];
+});
+
+/** The facet denominator: BROWSER cells whose outcome is SUCCESS, REJECT or UNKNOWN. */
+export const KEYBOARD_DENOMINATOR = MATRIX.filter((cell) => cell.kind === "BROWSER" && isKeyboardOutcome(cell.outcome)).length;
+
+export function keyboardFacetFor(checkId: string): KeyboardFence {
+  const cell = MATRIX.find((item) => keyboardCheckId(item) === checkId);
+  const facet = cell ? keyboardFacet(cell) : null;
+  if (!facet || facet.kind !== "CHECK") {
+    throw new Error(`${checkId} is not a keyboard check cell`);
+  }
+  return facet.fence;
+}
+
+export function keyboardFacetLine(): string {
+  return `keyboard facet: ${KEYBOARD_OUTCOME_CHECK_IDS.length} / ${KEYBOARD_DENOMINATOR} BROWSER SUCCESS/REJECT/UNKNOWN cells`;
+}
+
+/** Problems with the keyboard facet itself. */
+export function keyboardFacetProblems(): string[] {
+  const problems: string[] = [];
+  for (const cell of MATRIX) {
+    const facet = keyboardFacet(cell);
+    const browserTarget = cell.kind === "BROWSER" && isKeyboardOutcome(cell.outcome);
+    if (browserTarget && facet.kind !== "CHECK") problems.push(`${cell.journey}/${cell.outcome}: BROWSER cell without a keyboard check`);
+    if (!browserTarget && facet.kind !== "NOT_APPLICABLE") problems.push(`${cell.journey}/${cell.outcome}: keyboard check on a non-BROWSER or NOT_BOUND cell`);
+    if (facet.kind === "NOT_APPLICABLE" && facet.reason.trim() === "") problems.push(`${cell.journey}/${cell.outcome}: NOT_APPLICABLE without a reason`);
+    if (cell.kind !== "BROWSER" && (!cell.pointer || !cell.owner)) problems.push(`${cell.journey}/${cell.outcome}: pointer or owner lost`);
+  }
+  for (const key of Object.keys(KEYBOARD_NO_WRITE)) {
+    const cell = MATRIX.find((item) => `${item.journey}.${item.outcome}` === key);
+    if (!cell || cell.kind !== "BROWSER" || (cell.outcome !== "REJECT" && cell.outcome !== "UNKNOWN")) {
+      problems.push(`${key}: NO_WRITE is only for a BROWSER REJECT or UNKNOWN cell`);
+    }
+  }
+  if (new Set(KEYBOARD_OUTCOME_CHECK_IDS).size !== KEYBOARD_OUTCOME_CHECK_IDS.length) problems.push("duplicate keyboard check id");
+  if (KEYBOARD_OUTCOME_CHECK_IDS.length !== KEYBOARD_DENOMINATOR) problems.push("keyboard checks do not equal the denominator");
+  return problems;
+}

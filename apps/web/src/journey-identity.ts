@@ -412,6 +412,7 @@ export function useJourneyIdentityDesk(): {
   model: JourneyIdentityModel;
   heldSupported: boolean;
   lateSupported: boolean;
+  rereading: boolean;
   actions: IdentityActions;
 } {
   const environment = protocol.describe().environment;
@@ -420,6 +421,8 @@ export function useJourneyIdentityDesk(): {
   const [scenario, setScenarioState] = useState<JourneyIdentityScenario>("clean");
   const [, setTick] = useState(0);
   const [last, setLast] = useState<IdentityLastAction | null>(null);
+  // A scenario change and the read it starts are one status update.
+  const [rereading, setRereading] = useState(false);
   const intentCounter = useRef(0);
   const actionSeq = useRef(0);
   const actorRef = useRef<string>(JOURNEY_IDENTITY_DESK_ACTOR);
@@ -544,8 +547,10 @@ export function useJourneyIdentityDesk(): {
       }
       const bound = applyIdentityScenario(current, environment, next);
       setScenarioState(next);
+      setRereading(true);
       note(sourceMessage(sourceCopy.en["p.t251"], { v1: next, v2: bound.incarnation, v3: bound.cutGeneration }));
-      void current.controller.refresh();
+      const done = () => setRereading(false);
+      void current.controller.refresh().then(done, done);
     },
   };
 
@@ -555,6 +560,7 @@ export function useJourneyIdentityDesk(): {
     model: buildIdentityModel({ controller: session?.controller ?? null, last }),
     heldSupported: scenario === "held-response",
     lateSupported: scenario === "attach-lost",
+    rereading,
     actions: connectedActions(actions, ['attach', 'rotateCut', 'resetSource', 'setScenario'], sessionRef.current?.port),
   };
 }

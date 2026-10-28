@@ -193,15 +193,15 @@ export function ProviderControls({
 export function ProviderStatus({ model }: { model: ProviderModel }) {
   const t = useT(copy0, copy1, copy2);
   return (
-    <section id="provider-status" className="discovery-section" tabIndex={-1} data-provider-state={model.state}>
+    <section id="provider-status" className="discovery-section" tabIndex={-1} aria-live="polite" aria-busy={model.state === "loading"} data-provider-state={model.state}>
       <h3>{t("s1mj")}</h3>
-      <p role="status" data-provider-status={model.state}>
+      <p data-provider-status={model.state}>
         {model.state === "loading" ? <StatusMark kind="loading" /> : null} {deskText(t, model.statusLine)}
         {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
       </p>
-      <p className="muted">{deskText(t, model.freshnessWord)}</p>
+      <p className="muted" aria-live="off">{deskText(t, model.freshnessWord)}</p>
       {model.lastLine ? (
-        <p role="status" data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
+        <p data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
           {model.lastNeedsFocus ? <WordMark word={t("s91")} /> : null} {deskText(t, model.lastLine)}
         </p>
       ) : null}

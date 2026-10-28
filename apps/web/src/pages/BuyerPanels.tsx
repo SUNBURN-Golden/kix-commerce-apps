@@ -33,7 +33,7 @@ export function StateNotice({ model }: { model: BuyerWorkspaceModel }) {
   }
   if (model.catalog.kind === "loading") {
     return (
-      <p className="muted" role="status">
+      <p className="muted" role="status" aria-busy="true">
         <StatusMark kind="loading" /> {t("desk.performance.loading")}</p>
     );
   }

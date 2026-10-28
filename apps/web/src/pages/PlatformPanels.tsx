@@ -6,6 +6,7 @@ import { messages as copy2 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { RefusalScope } from "../connectivity/refusal";
 import { useState, type ReactNode } from "react";
 import { PLATFORM_SCENARIOS, PLATFORM_TIERS, type PlatformScenario, type PlatformTier } from "@kix/protocol-adapter";
 import { AmountNotice, StatusMark } from "../a11y/marks";
@@ -191,15 +192,15 @@ export function PlatformControls({
 export function PlatformStatus({ model }: { model: PlatformModel }) {
   const t = useT(deskCopy, copy0, copy1, copy2);
   return (
-    <section id="platform-status" className="discovery-section" tabIndex={-1} data-platform-state={model.state}>
+    <section id="platform-status" className="discovery-section" tabIndex={-1} aria-live="polite" aria-busy={model.state === "loading"} data-platform-state={model.state}>
       <h3>{t("s1mj")}</h3>
-      <p role="status" data-platform-status={model.state}>
+      <p data-platform-status={model.state}>
         {model.state === "loading" ? <StatusMark kind="loading" /> : null} {deskText(t, model.statusLine)}
         {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
       </p>
-      <p className="muted">{deskText(t, model.freshnessWord)}</p>
+      <p className="muted" aria-live="off">{deskText(t, model.freshnessWord)}</p>
       {model.lastLine ? (
-        <p role="status" data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
+        <p id="platform-last" data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
           {model.lastNeedsFocus ? <WordMark word={t("s91")} /> : null} {deskText(t, model.lastLine)}
         </p>
       ) : null}
@@ -376,6 +377,7 @@ function TradeCard({ trade, actions }: { trade: TradeModel; actions: PlatformAct
 export function TradesSection({ model, actions }: { model: PlatformModel; actions: PlatformActions }) {
   const t = useT(deskCopy, copy0, copy1, copy2);
   return (
+    <RefusalScope reason={model.lastNeedsFocus ? "platform-last" : null}>
     <section id="platform-trades" className="discovery-section" aria-label={t("s24g")}>
       <h3>{t("s24g")}</h3>
       {model.trades.length === 0 ? <p data-state="empty">{t("s12b")}</p> : null}
@@ -387,6 +389,7 @@ export function TradesSection({ model, actions }: { model: PlatformModel; action
         </ul>
       ) : null}
     </section>
+    </RefusalScope>
   );
 }
 

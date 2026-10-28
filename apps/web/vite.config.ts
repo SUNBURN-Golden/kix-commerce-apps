@@ -147,6 +147,9 @@ export default defineConfig({
           if (/\/protocol-adapter\/src\/(finance-operations|tenant-permissions|delegated-assistant)\.ts$/.test(id)) return "kix-operations-cases";
           if (/\/protocol-adapter\/src\/(platform-journey|provider-journey|refund-return|installable-mobile|inventory-read|discovery-read|marketplace-performance)\.ts$/.test(id)) return "kix-journey-cases";
 
+          // Small UI helpers that many lazy desks share load as one lazy chunk; the entry never imports them.
+          if (/\/src\/(a11y\/focus|components\/(AsyncState|CachedReadNotice|ConnectivityWriteButton)|connectivity\/(copy|desk-protocol|refusal|write-guard)|desk-attempts|i18n\/desk-context)\.tsx?$/.test(id)) return "desk-ui";
+
           const copy = /\/src\/i18n\/messages\/([^/]+)\.ts$/.exec(id)?.[1];
           if (copy) return displayCopyGroups.find(([, files]) => files.includes(copy))?.[0];
         },

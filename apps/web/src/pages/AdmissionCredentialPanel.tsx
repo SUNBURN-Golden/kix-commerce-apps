@@ -2,6 +2,7 @@ import { messages as copy0 } from "../i18n/messages/pages--AdmissionCredentialPa
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { RefusalScope } from "../connectivity/refusal";
 import type { AdmissionPresentation } from "@kix/protocol-adapter";
 import { SafeText } from "../safe-text";
 
@@ -40,6 +41,7 @@ export function AdmissionCredentialPanel({
 }) {
   const t = useT(copy0);
   return (
+    <RefusalScope reason={error ? "credential-refusal" : null}>
     <aside className="panel" aria-label={t("s1m")}>
       <p className="eyebrow">{deskText(t, presentation?.surface) ?? t("s26c")}</p>
       <h3>{t("s1m")}</h3>
@@ -50,12 +52,12 @@ export function AdmissionCredentialPanel({
       <p className="muted">
         {t("s199")}</p>
       {error ? (
-        <p className="alert" role="alert">
+        <p className="alert" role="alert" id="credential-refusal">
           {deskText(t, error)}
         </p>
       ) : null}
       <dl className="facts">
-        <div>
+        <div aria-live="polite">
           <dt>{t("sew")}</dt>
           <dd className="phase-name">{deskText(t, presentation?.deskState) ?? t("s121")}</dd>
         </div>
@@ -110,5 +112,6 @@ export function AdmissionCredentialPanel({
         <p className="muted">{t("s22y")}</p>
       )}
     </aside>
+    </RefusalScope>
   );
 }

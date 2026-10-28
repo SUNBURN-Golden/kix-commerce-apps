@@ -1,4 +1,5 @@
 import { messages as bindingCopy } from "../i18n/messages/workspace--registry";
+import { useStepOutcome } from "../a11y/focus";
 import { messages as copy0 } from "../i18n/messages/pages--JourneyPanel";
 import { messages as copy1 } from "../i18n/messages/journey-desk";
 import { messages as copy2 } from "../i18n/messages/storage-allow-list";
@@ -23,6 +24,7 @@ const STATUS_TEXT: Record<JourneyRowStatus, string> = {
 
 export function JourneyPanel({ variant, model }: { variant: "booking" | "box-office"; model: JourneyPanelModel }) {
   const t = useT(bindingCopy, copy0, copy1, copy2);
+  const outcome = useStepOutcome("journey", model.rows);
   const unavailable = model.path.kind === "unavailable";
   return (
     <aside
@@ -59,7 +61,7 @@ export function JourneyPanel({ variant, model }: { variant: "booking" | "box-off
               {variant === "box-office" ? (" " + t("s18e")) : ""}
             </p>
             <dl className="facts">
-              <div>
+              <div {...outcome.statusProps(row.step, row.status)}>
                 <dt>{t("s1mj")}</dt>
                 <dd>{deskText(t, STATUS_TEXT[row.status])}</dd>
               </div>
@@ -88,7 +90,7 @@ export function JourneyPanel({ variant, model }: { variant: "booking" | "box-off
                 </div>
               ) : null}
             </dl>
-            {row.note ? <p>{deskText(t, row.note)}</p> : null}
+            {row.note ? <p id={outcome.noteId(row.step)}>{deskText(t, row.note)}</p> : null}
             {row.receipt ? (
               <dl className="facts">
                 {row.receipt.map((field) => (
@@ -101,7 +103,10 @@ export function JourneyPanel({ variant, model }: { variant: "booking" | "box-off
             ) : null}
             {variant === "booking" ? (
               <div className="row-actions">
-                <ConnectivityWriteButton type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
+                <ConnectivityWriteButton type="button" disabled={!row.canSend} {...outcome.reasonProps(row.step, row.canSend, row.note)} onClick={() => {
+                outcome.markSent(row.step);
+                model.send(row.step);
+              }}>
                   {t("s1j5")}{" "}{deskText(t, row.step)}
                 </ConnectivityWriteButton>
               </div>

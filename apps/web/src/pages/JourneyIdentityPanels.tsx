@@ -1,4 +1,5 @@
 import { ReadRow } from "./ReadState";
+import { useSettledFocus } from "../a11y/focus";
 import { messages as copy0 } from "../i18n/messages/pages--JourneyIdentityPanels";
 import { messages as copy1 } from "../i18n/messages/journey-identity";
 import { deskText } from "../i18n/desk-translate";
@@ -25,6 +26,8 @@ export interface IdentityDeskLive {
   scenario: JourneyIdentityScenario;
   model: JourneyIdentityModel;
   heldSupported: boolean;
+  /** True while a scenario change waits for its read. Optional for callers that render a fixed model. */
+  rereading?: boolean;
   lateSupported: boolean;
   actions: IdentityActions;
 }
@@ -69,6 +72,8 @@ export function JourneyIdentityPanel({ live }: { live: IdentityDeskLive }) {
   const t = useT(copy0, copy1);
   const { model, actions } = live;
   const [pendingScenario, setPendingScenario] = useState<JourneyIdentityScenario>(live.scenario);
+  // Applying a scenario locks its button, so focus would fall to the document; the status takes it.
+  useSettledFocus(live.scenario, "identity-status");
   useRestoreFocus(model.lastNeedsFocus && model.lastSeq !== null ? `identity:${model.lastSeq}` : null, "identity-status");
   return (
     <section aria-label={deskText(t, IDENTITY_TITLE)} data-identity-state={model.state} data-adapter-environment={live.environment} data-source={live.environment === "stub" ? "synthetic-identity" : "none"}>
@@ -78,12 +83,12 @@ export function JourneyIdentityPanel({ live }: { live: IdentityDeskLive }) {
       <p className="muted">{deskText(t, IDENTITY_RULE_NOTE)}</p>
       <p className="muted">{deskText(t, IDENTITY_SESSION_NOTE)}</p>
 
-      <div role="status" id="identity-status" tabIndex={-1} aria-live="polite" data-testid="identity-status">
+      <div role="status" id="identity-status" tabIndex={-1} aria-live="polite" aria-busy={live.rereading === true} data-testid="identity-status">
         <p data-field="status">{deskText(t, model.statusLine)}</p>
         {model.detailLine ? <p className="muted">{deskText(t, model.detailLine)}</p> : null}
         {model.lastLine ? <p data-field="last">{deskText(t, model.lastLine)}</p> : null}
-        <p className="muted">{deskText(t, model.freshnessWord)}</p>
-        <p className="muted">{deskText(t, model.countersLine)}</p>
+        <p className="muted" aria-live="off">{deskText(t, model.freshnessWord)}</p>
+        <p className="muted" aria-live="off">{deskText(t, model.countersLine)}</p>
         {model.actionLabel ? (
           <button
             type="button"

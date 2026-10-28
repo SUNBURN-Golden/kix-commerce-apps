@@ -1,4 +1,5 @@
 import { ReadRow } from "./ReadState";
+import { useSettledFocus } from "../a11y/focus";
 import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { messages as copy0 } from "../i18n/messages/pages--SessionRecoveryPanels";
 import { messages as copy1 } from "../i18n/messages/session-recovery";
@@ -30,6 +31,8 @@ export interface SessionDeskLive {
   scenario: SessionScenario;
   model: SessionRecoveryModel;
   heldSupported: boolean;
+  /** True while an attach waits for its answer. Optional for callers that render a fixed model. */
+  attaching?: boolean;
   actions: SessionActions;
 }
 
@@ -72,6 +75,8 @@ export function SessionRecoveryPanel({ live }: { live: SessionDeskLive }) {
   const t = useT(mergedCopy, copy0, copy1, copy2, copy3);
   const { model, actions } = live;
   const [pendingScenario, setPendingScenario] = useState<SessionScenario>(live.scenario);
+  // Applying a scenario locks its button, so focus would fall to the document; the status takes it.
+  useSettledFocus(live.scenario, "session-status");
   useRestoreFocus(model.lastNeedsFocus && model.lastSeq !== null ? `session:${model.lastSeq}` : null, "session-status");
   const bound = live.environment === "stub";
   return (
@@ -85,16 +90,16 @@ export function SessionRecoveryPanel({ live }: { live: SessionDeskLive }) {
       </p>
       <p className="muted">{deskText(t, SESSION_RETENTION_NOTE)}</p>
 
-      <div role="status" id="session-status" tabIndex={-1} aria-live="polite" aria-busy={model.state === "in-progress"} data-testid="session-status">
+      <div role="status" id="session-status" tabIndex={-1} aria-live="polite" aria-busy={model.state === "in-progress" || live.attaching === true} data-testid="session-status">
         {model.state === "in-progress" || model.state === "empty" || model.state === "recovered" || model.state === "not-bound" ? (
           <AsyncState kind={model.state === "in-progress" ? "loading" : model.state === "recovered" ? "unknown" : model.state} label={t("merge.session")} announcement="parent" />
         ) : null}
         <p data-field="status">{deskText(t, model.statusLine)}</p>
         {model.detailLine ? <p className="muted">{deskText(t, model.detailLine)}</p> : null}
         {model.lastLine ? <p data-field="last">{deskText(t, model.lastLine)}</p> : null}
-        <p className="muted">{deskText(t, model.loadLine)}</p>
-        <p className="muted">{deskText(t, model.countersLine)}</p>
-        <p className="muted">{deskText(t, model.budgetLine)}</p>
+        <p className="muted" aria-live="off">{deskText(t, model.loadLine)}</p>
+        <p className="muted" aria-live="off">{deskText(t, model.countersLine)}</p>
+        <p className="muted" aria-live="off">{deskText(t, model.budgetLine)}</p>
       </div>
 
       <h3>{t("s1n5")}</h3>

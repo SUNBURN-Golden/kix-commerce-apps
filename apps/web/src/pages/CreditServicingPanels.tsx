@@ -198,24 +198,24 @@ export function ServicingControls({
 export function ServicingStatus({ model }: { model: ServicingModel }) {
   const t = useT(deskCopy, copy0, copy1, copy2);
   return (
-    <section id="servicing-status" className="discovery-section" tabIndex={-1} data-servicing-state={model.state}>
+    <section id="servicing-status" className="discovery-section" tabIndex={-1} aria-live="polite" aria-busy={model.state === "loading"} data-servicing-state={model.state}>
       <h3>{t("s1mj")}</h3>
-      <p role="status" data-status={model.state}>
+      <p data-status={model.state}>
         {model.state === "loading" ? <StatusMark kind="loading" /> : null} {deskText(t, model.statusLine)}
         {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
       </p>
-      <p className="muted">{deskText(t, model.freshnessWord)}</p>
-      <p className="muted">{deskText(t, model.scopeLine)}</p>
-      <p className="muted">{deskText(t, model.actorLine)}</p>
-      <p className="muted">{deskText(t, model.watermarkLine)}</p>
-      {model.behindLine ? <p data-behind="true">{deskText(t, model.behindLine)}</p> : null}
+      <p className="muted" aria-live="off">{deskText(t, model.freshnessWord)}</p>
+      <p className="muted" aria-live="off">{deskText(t, model.scopeLine)}</p>
+      <p className="muted" aria-live="off">{deskText(t, model.actorLine)}</p>
+      <p className="muted" aria-live="off">{deskText(t, model.watermarkLine)}</p>
+      {model.behindLine ? <p aria-live="off" data-behind="true">{deskText(t, model.behindLine)}</p> : null}
       {model.fenceLine ? (
-        <p data-fence="true">
+        <p aria-live="off" data-fence="true">
           <WordMark word={t("sky")} /> {deskText(t, model.fenceLine)}
         </p>
       ) : null}
       {model.lastLine ? (
-        <p role="status" data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
+        <p data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
           {model.lastNeedsFocus ? <WordMark word={t("s91")} /> : null} {deskText(t, model.lastLine)}
         </p>
       ) : null}

@@ -230,18 +230,18 @@ export function AssistantControls({
   );
 }
 
-export function AssistantStatus({ model }: { model: DelegationAssistantModel }) {
+export function AssistantStatus({ model, firstRead = false }: { model: DelegationAssistantModel; firstRead?: boolean }) {
   const t = useT(copy0, copy1, copy2);
   return (
-    <section id="dlg-status" className="discovery-section" tabIndex={-1} data-delegation-state={model.state}>
+    <section id="dlg-status" className="discovery-section" tabIndex={-1} aria-live="polite" aria-busy={model.state === "loading" || firstRead} data-delegation-state={model.state}>
       <h3>{t("s1mj")}</h3>
-      <p role="status" data-delegation-status={model.state}>
+      <p id="dlg-status-line" data-delegation-status={model.state}>
         {model.state === "loading" ? <StatusMark kind="loading" /> : null} {deskText(t, model.statusLine)}
         {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
       </p>
-      <p className="muted">{deskText(t, model.freshnessWord)}</p>
+      <p className="muted" aria-live="off">{deskText(t, model.freshnessWord)}</p>
       {model.lastLine ? (
-        <p role="status" data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
+        <p data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
           {model.lastNeedsFocus ? <WordMark word={t("s91")} /> : null} {deskText(t, model.lastLine)}
         </p>
       ) : null}
@@ -253,7 +253,7 @@ export function AssistantStatus({ model }: { model: DelegationAssistantModel }) 
  * The request box. Text goes in as untrusted intent. It is never an approval: only
  * the approve control on a recorded proposal sends anything.
  */
-export function AssistantRequest({ actions }: { actions: DelegationAssistantActions }) {
+export function AssistantRequest({ actions, fencedBy = null }: { actions: DelegationAssistantActions; fencedBy?: string | null }) {
   const t = useT(copy0, copy1, copy2);
   const [text, setText] = useState("");
   const onSubmit = (event: FormEvent) => {
@@ -278,7 +278,7 @@ export function AssistantRequest({ actions }: { actions: DelegationAssistantActi
             aria-describedby="dlg-request-note"
           />
         </label>
-        <ConnectivityWriteButton type="submit" id="dlg-ask" className="discovery-action">
+        <ConnectivityWriteButton type="submit" id="dlg-ask" className="discovery-action" aria-disabled={fencedBy ? true : undefined} aria-describedby={fencedBy ?? undefined}>
           {t("s85")}</ConnectivityWriteButton>
       </ValidatedForm>
       <p className="muted" id="dlg-request-note">

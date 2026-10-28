@@ -1,4 +1,5 @@
 import { GALLERY_CHECK_IDS } from "./gallery-matrix";
+import { KEYBOARD_OUTCOME_CHECK_IDS } from "./journey-matrix";
 /**
  * The accessibility observation matrix. App-internal; not a public schema, operation, capability or ID.
  *
@@ -137,7 +138,7 @@ export const KNOWN_FINDINGS: readonly KnownFinding[] = [
   { screenId: "gift:not-sent", viewport: "desktop", ruleId: "form.error-not-linked", status: "FIXED", note: "c-form-validation-ux-stub links local input errors and focuses the summary before the keyboard link moves to the ticket field." },
   { screenId: "gift:not-sent", viewport: "desktop", ruleId: "struct.invalid-unlinked", status: "FIXED", note: "c-form-validation-ux-stub links local input errors and focuses the summary before the keyboard link moves to the ticket field." },
   single("booking", "desktop", "status.disabled-no-reason", "Disabled booking buttons (such as Confirm before a hold) carry no reason that aria-describedby reaches. Not fixed here."),
-  single("gift", "desktop", "status.disabled-no-reason", "Disabled gift buttons carry no reason that aria-describedby reaches. Not fixed here."),
+  { screenId: "gift", viewport: "desktop", ruleId: "status.disabled-no-reason", status: "FIXED", note: "c-plan-d-keyboard-outcome-journeys-stub: each locked gift send names its row note through aria-describedby." },
   single("inventory:section-page", "desktop", "nested-interactive", "A control sits inside the seat listbox option. Same rule as on /discovery. Not fixed here."),
   { screenId: "handoff", viewport: "narrow", ruleId: "reflow.narrow-overflow", status: "FIXED", note: "At 320px the Startup faults list (an unbreakable VITE_KIX_PROTOCOL_API_BASE token) made the panel grid track wider than the window. Fixed in c-display-preferences-stub: handoff list text wraps anywhere." },
 ];
@@ -182,6 +183,8 @@ export const STATIC_CHECK_IDS: readonly string[] = [
   "a11y.kbd.listbox.inventory",
   "a11y.kbd.details.journeys",
   "a11y.kbd.escape-noop",
+  "a11y.kbd.outcome.pointer-guard",
+  "a11y.kbd.outcome.live-probe",
   "a11y.kbd.route-change",
   "a11y.status.disabled-reasons",
   "a11y.shell.title-focus",
@@ -213,7 +216,8 @@ export const STATIC_CHECK_IDS: readonly string[] = [
 ];
 
 export function expectedCheckIds(): string[] {
-  const ids = [...STATIC_CHECK_IDS, ...GALLERY_CHECK_IDS, ...ALT_STATES.map((state) => altCheckId(state.id))];
+  // Keyboard outcome checks: one per BROWSER SUCCESS/REJECT/UNKNOWN journey cell (tests/a11y/keyboard-outcomes.a11y.test.ts).
+  const ids = [...STATIC_CHECK_IDS, ...GALLERY_CHECK_IDS, ...ALT_STATES.map((state) => altCheckId(state.id)), ...KEYBOARD_OUTCOME_CHECK_IDS];
   for (const screen of SCREENS) {
     ids.push(kbdCheckId(screen.screenId), reflowCheckId(screen.screenId), structCheckId(screen.screenId));
     for (const viewport of Object.keys(VIEWPORTS) as ViewportName[]) {

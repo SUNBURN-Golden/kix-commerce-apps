@@ -3,6 +3,7 @@ import { messages as copy1 } from "../../i18n/messages/marketing--desk";
 import { deskText } from "../../i18n/desk-translate";
 import { useT } from "../../i18n/desk-context";
 import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
+import { RefusalScope } from "../../connectivity/refusal";
 import { ValidatedForm } from "../../forms/ValidatedForm";
 import { field } from "../../forms/validation";
 import { useState, type FormEvent } from "react";
@@ -32,7 +33,7 @@ export function M04Page() {
   return (
     <MarketingChrome id="M04" onReadAgain={refresh}>
       {error ? (
-        <p className="alert" role="alert">
+        <p className="alert" role="alert" id="referral-refusal">
           {deskText(t, error)}
         </p>
       ) : null}
@@ -40,7 +41,7 @@ export function M04Page() {
         <p className="eyebrow">{t("s1jn")}</p>
         <h3>{deskText(t, snapshot.referralCode)}</h3>
         <dl>
-          <div>
+          <div aria-live="polite">
             <dt>{t("sg7")}</dt>
             <dd>{deskText(t, snapshot.rewardMarkers)}</dd>
           </div>
@@ -51,6 +52,7 @@ export function M04Page() {
         </dl>
         <p className="muted">{t("srt")}</p>
       </article>
+      <RefusalScope reason={error ? "referral-refusal" : null}>
       <ValidatedForm id="referral-form" fields={[field("referral-code", "validation.label.code")]} className="panel" onSubmit={onSubmit}>
         <label>
           {t("s17a")}<input id="referral-code" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="off" />
@@ -60,6 +62,7 @@ export function M04Page() {
           <ConnectivityWriteButton type="submit">{t("sem")}</ConnectivityWriteButton>
         </div>
       </ValidatedForm>
+      </RefusalScope>
       {snapshot.acceptedReferrals.length > 0 ? (
         <p className="panel">{t("seo")}{" "}{deskText(t, snapshot.acceptedReferrals.join(", "))}</p>
       ) : (

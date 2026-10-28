@@ -49,7 +49,7 @@ export function OperationalQualificationPage() {
           model={model}
           actions={live.actions}
         />
-        <QualificationStatus model={model} />
+        <QualificationStatus model={model} running={live.running} />
         {model.packet ? (
           <>
             <PacketSummary packet={model.packet} />

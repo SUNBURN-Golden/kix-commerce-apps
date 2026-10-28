@@ -376,6 +376,7 @@ export function useSessionRecoveryDesk(): {
   scenario: SessionScenario;
   model: SessionRecoveryModel;
   heldSupported: boolean;
+  attaching: boolean;
   actions: SessionActions;
 } {
   const environment = protocol.describe().environment;
@@ -385,6 +386,8 @@ export function useSessionRecoveryDesk(): {
   const [scenario, setScenarioState] = useState<SessionScenario>("clean");
   const [, setTick] = useState(0);
   const [last, setLast] = useState<SessionLastAction | null>(null);
+  // An attach is one status update: the journal change and the recorded result are announced together.
+  const [attaching, setAttaching] = useState(false);
   const actionSeq = useRef(0);
 
   const wantedKey = `${environment}|${scenario}`;
@@ -427,6 +430,7 @@ export function useSessionRecoveryDesk(): {
 
   const note = useCallback((text: string) => {
     actionSeq.current += 1;
+    setAttaching(false);
     setLast({ seq: actionSeq.current, kind: "note", text });
   }, []);
 
@@ -436,8 +440,10 @@ export function useSessionRecoveryDesk(): {
     if (current === null || controller === null) {
       return;
     }
+    setAttaching(true);
     const result = await controller.run(itemId);
     actionSeq.current += 1;
+    setAttaching(false);
     setLast({ seq: actionSeq.current, kind: "step", result });
     if (result.kind === "CONFIRMED" || result.kind === "REJECTED" || result.kind === "UNKNOWN") {
       await current.identity.refresh();
@@ -473,6 +479,7 @@ export function useSessionRecoveryDesk(): {
     scenario,
     model: buildSessionModel({ environment, recovery, identity: desk?.identity ?? null, last }),
     heldSupported: scenario === "held-response",
+    attaching,
     actions: connectedActions(actions, ['attach', 'setScenario'], deskRef.current?.port),
   };
 }

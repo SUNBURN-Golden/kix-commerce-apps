@@ -76,11 +76,14 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
           <StatusMark kind="blocked" /> {t("s16a")}{model.path.kind === "unavailable" && model.path.code ? t("sd4", { code: model.path.code }) : ""}
         </p>
       ) : null}
-      {model.submitting || !model.results ? (
-        <AsyncState kind={model.submitting ? "loading" : "empty"} label={t("merge.organizerResults")} className="organizer-ws-status">
-          <p>{model.submitting ? t("s1nd") : t("sxv")}</p>
-        </AsyncState>
-      ) : <p className="organizer-ws-status" role="status">{deskText(t, model.results.summary)}</p>}
+      {/* One polite region: the empty, submitting and result lines replace each other inside it. */}
+      <div id="organizer-ws-status" role="status" aria-live="polite" aria-busy={model.submitting}>
+        {model.submitting || !model.results ? (
+          <AsyncState announcement="parent" kind={model.submitting ? "loading" : "empty"} label={t("merge.organizerResults")} className="organizer-ws-status">
+            <p>{model.submitting ? t("s1nd") : t("sxv")}</p>
+          </AsyncState>
+        ) : <p className="organizer-ws-status">{deskText(t, model.results.summary)}</p>}
+      </div>
       <ValidatedForm id="organizer-workspace-form" validationRef={validation} submitFields={[]} fields={[
           field("organizer-ws-event-id", "validation.label.eventId"),
           field("organizer-ws-seats", "validation.label.seats", { kind: "seats" }),
@@ -98,7 +101,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
           }
         }}
       >
-        <fieldset className="organizer-ws-fields" disabled={model.writesDisabled} aria-busy={model.submitting}>
+        <fieldset className="organizer-ws-fields" disabled={model.writesDisabled} aria-busy={model.submitting} style={{ overflowWrap: "anywhere" }}>
           <div className="panel organizer-ws-editor">
             <h3>{t("s1hq")}</h3>
             <label>
@@ -207,7 +210,7 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
           </div>
           <div className="panel organizer-ws-list">
             <h3>{t("sbu")}</h3>
-            {model.rows.length === 0 ? <p>{t("suq")}</p> : null}
+            {model.rows.length === 0 ? <p id="organizer-ws-empty">{t("suq")}</p> : null}
             <ul className="organizer-ws-rows">
               {deskText(t, model.rows.map((row) => (
                 <li key={row.key} className="organizer-ws-row">
@@ -219,9 +222,9 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
                 </li>
               )))}
             </ul>
-            <button type="button" className="organizer-ws-button" disabled={!model.canPrepare} onClick={model.prepare}>
+            <button type="button" className="organizer-ws-button" disabled={!model.canPrepare} aria-describedby={model.rows.length === 0 ? "organizer-ws-empty" : undefined} onClick={model.prepare}>
               {t("s18q")}</button>
-            {model.plan && !model.planCurrent ? <p>{t("s1qu")}</p> : null}
+            {model.plan && !model.planCurrent ? <p id="organizer-ws-plan-stale">{t("s1qu")}</p> : null}
           </div>
           {model.plan ? (
             <div className="panel organizer-ws-preview">
@@ -260,11 +263,12 @@ export function OrganizerWorkspaceScreen({ model }: { model: OrganizerWorkspaceM
               </table>
             </div>
           ) : null}
-          <ConnectivityWriteButton type="submit" className="organizer-ws-button" disabled={!model.canSubmit}>
+          <ConnectivityWriteButton type="submit" className="organizer-ws-button" disabled={!model.canSubmit}
+            aria-describedby={model.rows.length === 0 ? "organizer-ws-empty" : model.plan && !model.planCurrent ? "organizer-ws-plan-stale" : undefined}>
             {t("s1na")}</ConnectivityWriteButton>
         </fieldset>
       </ValidatedForm>
-      <div className="panel organizer-ws-results">
+      <div className="panel organizer-ws-results" style={{ overflowWrap: "anywhere" }}>
         <h3 id="organizer-ws-results" tabIndex={-1} ref={resultsRef}>
           {t("s1gl")}</h3>
         {model.results ? <p>{deskText(t, model.results.summary)}</p> : <p>{t("sxv")}</p>}

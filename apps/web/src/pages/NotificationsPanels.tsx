@@ -285,25 +285,25 @@ export function NotifyControls({
 export function NotifyStatus({ model }: { model: NotifyModel }) {
   const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
-    <section id="notify-status" className="discovery-section" tabIndex={-1} data-notify-state={model.state}>
+    <section id="notify-status" className="discovery-section" tabIndex={-1} aria-live="polite" aria-busy={model.state === "loading"} data-notify-state={model.state}>
       <h3>{t("s1mj")}</h3>
       {model.state === "loading" || model.state === "empty" || model.state === "stale" || model.state === "not-bound" ? (
-        <AsyncState kind={model.state} label={t("merge.inbox")} data-status={model.state}><p>{deskText(t, model.statusLine)} {deskText(t, model.detailLine)}</p></AsyncState>
-      ) : <p role="status" data-status={model.state}>{deskText(t, model.statusLine)}
+        <AsyncState announcement="parent" kind={model.state} label={t("merge.inbox")} data-status={model.state}><p>{deskText(t, model.statusLine)} {deskText(t, model.detailLine)}</p></AsyncState>
+      ) : <p data-status={model.state}>{deskText(t, model.statusLine)}
         {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
       </p>}
-      <p className="muted">{deskText(t, model.freshnessWord)}</p>
-      <p className="muted">{deskText(t, model.scopeLine)}</p>
-      <p className="muted">{deskText(t, model.generationLine)}</p>
-      <p className="muted">{deskText(t, model.watermarkLine)}</p>
-      <p className="muted" data-unread-line="true">
+      <p className="muted" aria-live="off">{deskText(t, model.freshnessWord)}</p>
+      <p className="muted" aria-live="off">{deskText(t, model.scopeLine)}</p>
+      <p className="muted" aria-live="off">{deskText(t, model.generationLine)}</p>
+      <p className="muted" aria-live="off">{deskText(t, model.watermarkLine)}</p>
+      <p className="muted" aria-live="off" data-unread-line="true">
         {deskText(t, model.unreadLine)}
       </p>
-      <p className="muted" data-dedupe-line="true">
+      <p className="muted" aria-live="off" data-dedupe-line="true">
         {deskText(t, model.dedupeLine)}
       </p>
       {model.lastLine ? (
-        <p role="status" aria-live="polite" aria-busy={false} data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
+        <p data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
           {model.lastNeedsFocus ? <WordMark word={t("s91")} /> : null} {deskText(t, model.lastLine)}
         </p>
       ) : null}

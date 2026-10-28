@@ -683,7 +683,7 @@ export function ResultSection({
       </p>
       {model.result.state === "filter-conflict" ? (
         <div>
-          <p id="discovery-conflict" role="status">
+          <p id="discovery-conflict" role="alert">
             <StatusMark kind="blocked" /> {t("sl8")}</p>
           <ul className="discovery-list">
             {deskText(t, model.result.conflicts.map((conflict) => (

@@ -48,7 +48,7 @@ export function PlatformReleasePage() {
           model={model}
           actions={live.actions}
         />
-        <ReleaseStatus model={model} />
+        <ReleaseStatus model={model} running={live.running} />
         {model.packet ? (
           <>
             <PacketSummary packet={model.packet} />
