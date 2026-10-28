@@ -713,6 +713,8 @@ export function useDelegationAssistant(): {
   scenario: DelegationScenario;
   model: DelegationAssistantModel;
   heldSupported: boolean;
+  /** True until the session's first read settles. */
+  firstRead: boolean;
   actions: DelegationAssistantActions;
 } {
   const environment = protocol.describe().environment;
@@ -724,6 +726,8 @@ export function useDelegationAssistant(): {
   const [epoch, setEpoch] = useState(0);
   const [, setTick] = useState(0);
   const [last, setLast] = useState<LastAction | null>(null);
+  // From a session start until its first read settles, so the start note and a refused read are one status update.
+  const [firstRead, setFirstRead] = useState(true);
   const intentCounter = useRef(0);
   const actionSeq = useRef(0);
 
@@ -753,7 +757,9 @@ export function useDelegationAssistant(): {
       return undefined;
     }
     const off = session.controller.subscribe(() => setTick((value) => value + 1));
-    void read(session);
+    void read(session).then(() => {
+      if (sessionRef.current === session) setFirstRead(false);
+    });
     return off;
   }, [epoch, read]);
 
@@ -790,6 +796,7 @@ export function useDelegationAssistant(): {
       intentCounter.current = 0;
       setScenarioState(next);
       setEpoch((value) => value + 1);
+      setFirstRead(true);
       note(text);
     },
     [environment, note],
@@ -899,6 +906,7 @@ export function useDelegationAssistant(): {
     scenario,
     model: buildDelegationAssistantModel({ controller: session.controller, environment, last }),
     heldSupported: scenario === "held-response",
+    firstRead,
     actions: connectedActions(actions, ['ask', 'approve', 'dismiss', 'setScenario', 'newSession', 'simulate'], sessionRef.current?.port),
   };
 }

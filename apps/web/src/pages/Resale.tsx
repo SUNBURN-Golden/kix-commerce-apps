@@ -4,6 +4,7 @@ import { messages as copy1 } from "../i18n/messages/resale-desk";
 import { messages as copy2 } from "../i18n/messages/reservation-desk";
 import { messages as copy3 } from "../i18n/messages/storage-allow-list";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { RefusalScope } from "../connectivity/refusal";
 import { connectedHandler } from "../connectivity/write-guard";
 import { ValidatedForm } from "../forms/ValidatedForm";
 import { field } from "../forms/validation";
@@ -102,6 +103,7 @@ export function ResalePage() {
         <h2>{t("desk.resale.title")}</h2>
         <p className="muted">{t("desk.resale.note")}</p>
       </header>
+      <RefusalScope reason={error ? "resale-refusal" : null}>
       <ValidatedForm id="resale-form" busy={pending} fields={[field("resale-booking", "validation.label.bookingId"), field("resale-ask", "validation.label.askLabel", { maxLength: 40 })]} className="panel" onSubmit={(event) => void openListing(event)}>
         <label>
           {t("desk.resale.bookingId")}
@@ -121,8 +123,9 @@ export function ResalePage() {
           {t("desk.resale.open")}
         </ConnectivityWriteButton>
       </ValidatedForm>
+      </RefusalScope>
       {error ? (
-        <p className="alert" role="alert">
+        <p className="alert" role="alert" id="resale-refusal">
           {deskText(t, error)}
         </p>
       ) : null}

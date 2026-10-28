@@ -6,6 +6,7 @@ import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
 import type { ValidationHandle } from "../forms/useFormValidation";
 import { ValidatedForm } from "../forms/ValidatedForm";
+import { RefusalScope } from "../connectivity/refusal";
 import { field } from "../forms/validation";
 import { useRef, useState } from "react";
 import {
@@ -38,6 +39,7 @@ export function OrganizerPage() {
         <p className="muted">
           {t("s1j6")}</p>
       </header>
+      <RefusalScope>
       <ValidatedForm id="organizer-form" validationRef={validation} submitFields={["organizer-event", "organizer-seats", "organizer-quota"]} fields={[
           field("organizer-event", "validation.label.eventId"),
           field("organizer-seats", "validation.label.seats", { kind: "seats" }),
@@ -106,6 +108,7 @@ export function OrganizerPage() {
           : ["organizer-event"];
         if (validation.current?.validate(ids)) model.send(step);
       } }} />
+      </RefusalScope>
     </section>
   );
 }

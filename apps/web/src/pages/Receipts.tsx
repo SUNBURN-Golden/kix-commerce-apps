@@ -145,7 +145,7 @@ export function ReceiptScreen({
       <div className="receipt-body">
         <header className="section-head receipt-section" data-adapter-environment={model.environment}>
           <p className="eyebrow">{t("s1db")}</p>
-          <h2>{t("s1db")}</h2>
+          <h2 aria-describedby="receipt-timeline">{t("s1db")}</h2>
           <p>{deskText(t, model.ruling)}</p>
           <p>{deskText(t, model.stubSentence)}</p>
           <p>{deskText(t, model.readNote)}</p>
@@ -194,7 +194,7 @@ export function ReceiptScreen({
                 </ol>
               </div>
             ) : null}
-            {model.groups.length === 0 ? <AsyncState kind="empty" label={t("merge.receipts")}><p className="empty">{t("desk.buyer.empty")}</p></AsyncState> : null}
+            {model.groups.length === 0 ? <AsyncState kind="empty" label={t("merge.receipts")} announcement="parent"><p className="empty">{t("desk.buyer.empty")}</p></AsyncState> : null}
             {deskText(t, model.groups.map((group) => (
               <GroupBlock key={group.id} group={group} selectedId={current?.id ?? null} onSelect={setSelected} onKeyDown={onTimelineKey} />
             )))}
@@ -205,7 +205,7 @@ export function ReceiptScreen({
             tabIndex={-1}
             data-adapter-environment={model.environment}
             data-state={current?.status ?? "empty"}
-            aria-live="polite"
+            aria-live={selected === null ? undefined : "polite"}
           >
             <h3 id="receipt-detail-title">{t("sgf")}</h3>
             {current ? <Detail entry={current} /> : <AsyncState kind="empty" label={t("merge.receiptDetail")} announcement="parent"><p className="empty">{t("desk.buyer.empty")}</p></AsyncState>}
@@ -233,7 +233,7 @@ export function ReceiptScreen({
             <h3>{t("desk.buyer.recorded")}</h3>
             <ul className="receipt-list">
               <li data-state="not-bound" data-source="none">
-                <AsyncState kind="not-bound" label={t("merge.hold")} binding={{ method: "placeHold", record: COMMERCE_COMMAND_BINDINGS.placeHold }} />
+                <AsyncState kind="not-bound" announcement="parent" label={t("merge.hold")} binding={{ method: "placeHold", record: COMMERCE_COMMAND_BINDINGS.placeHold }} />
                 <p>
                   {model.placeHold.method} {t("s1mm")}{" "}{model.placeHold.consideredAction}{t("srq")}</p>
                 <p>{deskText(t, model.placeHold.reason)}</p>
@@ -267,7 +267,7 @@ export function ReceiptScreen({
             />
             <button type="button" className="receipt-action" onClick={onCopy}>
               {t("see")}</button>
-            <p role="status">{deskText(t, copyNote)}</p>
+            <p role={copyNote === copy0.en["e.34"] ? undefined : "status"}>{deskText(t, copyNote)}</p>
           </section>
         </div>
       </div>
@@ -348,7 +348,7 @@ function Detail({ entry }: { entry: ReceiptEntry }) {
     <div data-action={entry.action} data-state={entry.status} data-confirmed={entry.confirmed ? "true" : "false"}>
       {entry.status === "unknown" ? <AsyncState kind="unknown" label={t("merge.receipt")} announcement="parent" /> : null}
       {entry.status === "stale" ? <AsyncState kind="stale" label={t("merge.receipt")} announcement="parent" /> : null}
-      <dl className="receipt-detail">
+      <dl className="receipt-detail" style={{ overflowWrap: "anywhere" }}>
         <dt>{t("s15j")}</dt>
         <dd>{entry.operationId ?? t("common.empty")}</dd>
         <dt>{t("s1mj")}</dt>

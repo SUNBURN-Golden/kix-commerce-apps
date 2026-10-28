@@ -13,7 +13,8 @@ import { messages as copy10 } from "../i18n/messages/resale-desk";
 import { messages as copy11 } from "../i18n/messages/reservation-desk";
 import { messages as copy12 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSettledFocus } from "../a11y/focus";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { conflictControlId, focusControl } from "../a11y/focus";
 import { useT } from "../i18n/desk-context";
@@ -38,6 +39,29 @@ import {
   ScaleList,
 } from "./DiscoveryPanels";
 
+/**
+ * The form shows each key at once. The address catches up in a transition, so a fast key would otherwise be undone
+ * before it lands. An address this form did not write (back, forward, Clear filters) replaces the draft.
+ */
+function useDraftQuery(query: DiscoveryQuery, write: (next: DiscoveryQuery) => void): [DiscoveryQuery, (next: DiscoveryQuery) => void] {
+  const key = paramsFromQuery(query).toString();
+  const [draft, setDraft] = useState<DiscoveryQuery | null>(null);
+  const typed = useRef<string[]>([]);
+  useEffect(() => {
+    const index = typed.current.indexOf(key);
+    typed.current = index >= 0 ? typed.current.slice(index + 1) : [];
+    if (typed.current.length === 0) setDraft(null);
+  }, [key]);
+  return [
+    draft ?? query,
+    (next) => {
+      typed.current.push(paramsFromQuery(next).toString());
+      setDraft(next);
+      write(next);
+    },
+  ];
+}
+
 export function DiscoveryPage() {
   const [params, setParams] = useSearchParams();
   const { rowId } = useParams();
@@ -49,9 +73,11 @@ export function DiscoveryPage() {
     rowId: selected,
     detailEnabled: selected !== null && model.missingRow,
   });
-  const onQuery = (next: DiscoveryQuery) => {
+  // A detail opened from the list replaces it in place, so focus would fall to the document; the detail takes it.
+  useSettledFocus(selected, selected === null ? null : "discovery-detail");
+  const [formQuery, onQuery] = useDraftQuery(query, (next) => {
     setParams(paramsFromQuery(next));
-  };
+  });
   const onOpen = (id: string) => {
     navigate({ pathname: `/discovery/${encodeURIComponent(id)}`, search: searchSuffix(params) });
   };
@@ -69,6 +95,7 @@ export function DiscoveryPage() {
     <DiscoveryScreen
       model={model}
       query={query}
+      formQuery={formQuery}
       onQuery={onQuery}
       onOpen={onOpen}
       onReadAgain={readAgain}
@@ -80,6 +107,7 @@ export function DiscoveryPage() {
 export function DiscoveryScreen({
   model,
   query,
+  formQuery = query,
   onQuery,
   onOpen,
   onReadAgain,
@@ -87,6 +115,8 @@ export function DiscoveryScreen({
 }: {
   model: DiscoveryModel;
   query: DiscoveryQuery;
+  /** What the form shows: the typed draft until the address catches up. */
+  formQuery?: DiscoveryQuery;
   onQuery: (next: DiscoveryQuery) => void;
   onOpen: (rowId: string) => void;
   onReadAgain: () => void;
@@ -127,7 +157,7 @@ export function DiscoveryScreen({
           <h3>{t("sbq")}</h3>
           <CatalogNotice model={model} onReadAgain={onReadAgain} />
         </section>
-        <DiscoveryForm query={query} onQuery={onQuery} invalidControlId={invalidControlId} />
+        <DiscoveryForm query={formQuery} onQuery={onQuery} invalidControlId={invalidControlId} />
         <ResultSection
           model={model}
           query={query}
@@ -177,6 +207,8 @@ export function DiscoveryDetail({
           </>
         ) : (
           <article
+            id="discovery-detail"
+            tabIndex={-1}
             className="discovery-detail"
             data-kind={detail.row.kind}
             data-status={detail.row.status}

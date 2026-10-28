@@ -233,15 +233,15 @@ export function MarketingControls({
 export function MarketingStatus({ model }: { model: MarketingJourneyModel }) {
   const t = useT(copy0, copy1, copy2);
   return (
-    <section id="mkj-status" className="discovery-section" tabIndex={-1} data-marketing-state={model.state}>
+    <section id="mkj-status" className="discovery-section" tabIndex={-1} aria-live="polite" aria-busy={model.state === "loading"} data-marketing-state={model.state}>
       <h3>{t("s1mj")}</h3>
-      <p role="status" data-marketing-status={model.state}>
+      <p data-marketing-status={model.state}>
         {model.state === "loading" ? <StatusMark kind="loading" /> : null} {deskText(t, model.statusLine)}
         {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
       </p>
-      <p className="muted">{deskText(t, model.freshnessWord)}</p>
+      <p className="muted" aria-live="off">{deskText(t, model.freshnessWord)}</p>
       {model.lastLine ? (
-        <p role="status" data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
+        <p data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
           {model.lastNeedsFocus ? <WordMark word={t("s91")} /> : null} {deskText(t, model.lastLine)}
         </p>
       ) : null}

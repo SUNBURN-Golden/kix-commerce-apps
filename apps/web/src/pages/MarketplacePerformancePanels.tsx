@@ -157,16 +157,16 @@ export function BenchControls({
 export function BenchStatus({ model, actions }: { model: MarketplaceBenchModel; actions: MarketplaceBenchActions }) {
   const t = useT(copy0, copy1, copy2);
   return (
-    <section id="mperf-status" className="discovery-section" aria-labelledby="mperf-status-head" tabIndex={-1}>
+    <section id="mperf-status" className="discovery-section" aria-labelledby="mperf-status-head" tabIndex={-1} aria-live="polite" aria-busy={model.state === "loading"}>
       <h3 id="mperf-status-head">{t("s1mj")}</h3>
-      <p role="status" data-read-state={model.state}>
+      <p data-read-state={model.state}>
         <StatusMark kind={model.state === "loading" ? "loading" : model.state === "ready" ? "selected" : "blocked"} />{" "}
         {deskText(t, model.statusLine)}
       </p>
-      {model.detailLine ? <p className="muted">{deskText(t, model.detailLine)}</p> : null}
-      <p className="muted">{deskText(t, model.freshnessWord)}</p>
-      <p className="muted">{deskText(t, model.watermarkLine)}</p>
-      <p className="muted">{deskText(t, model.inFlightLine)}</p>
+      {model.detailLine ? <p className="muted" aria-live="off">{deskText(t, model.detailLine)}</p> : null}
+      <p className="muted" aria-live="off">{deskText(t, model.freshnessWord)}</p>
+      <p className="muted" aria-live="off">{deskText(t, model.watermarkLine)}</p>
+      <p className="muted" aria-live="off">{deskText(t, model.inFlightLine)}</p>
       {model.lastLine ? <p className="muted">{deskText(t, model.lastLine)}</p> : null}
       <div className="discovery-controls">
         <button type="button" id="mperf-refresh" className="discovery-action" onClick={() => actions.refresh()}>

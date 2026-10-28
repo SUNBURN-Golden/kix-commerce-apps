@@ -122,7 +122,7 @@ export function RefundReturnPanel({
         <AmountNotice />
       </header>
 
-      <p id={`${baseId}-status`} className={model.state === "ready" ? "muted" : "alert"} role="status" tabIndex={-1}>
+      <p id={`${baseId}-status`} className={model.state === "ready" ? "muted" : "alert"} role={readOnly && live.orderRef === null ? undefined : "status"} aria-busy={model.state === "loading"} tabIndex={-1}>
         {deskText(t, model.statusLine)} {deskText(t, model.detailLine)}
       </p>
       {model.lastLine ? <p className="muted">{deskText(t, model.lastLine)}</p> : null}

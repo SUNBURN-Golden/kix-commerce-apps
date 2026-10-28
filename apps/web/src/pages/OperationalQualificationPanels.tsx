@@ -120,18 +120,18 @@ export function QualificationControls({
   );
 }
 
-export function QualificationStatus({ model }: { model: QualificationModel }) {
+export function QualificationStatus({ model, running = false }: { running?: boolean; model: QualificationModel }) {
   const t = useT(copy0, copy1, copy2, copy3);
   return (
-    <section id="oq-status" className="discovery-section" aria-labelledby="oq-status-head" tabIndex={-1}>
+    <section id="oq-status" className="discovery-section" aria-labelledby="oq-status-head" tabIndex={-1} aria-live="polite" aria-busy={model.state === "in-flight" || running}>
       <h3 id="oq-status-head">{t("s1mj")}</h3>
-      <p role="status" data-run-state={model.state}>
+      <p data-run-state={model.state}>
         <StatusMark kind={model.state === "ready" ? "selected" : model.state === "in-flight" ? "loading" : "blocked"} />{" "}
         {deskText(t, model.statusLine)}
       </p>
-      {model.detailLine ? <p className="muted">{deskText(t, model.detailLine)}</p> : null}
+      {model.detailLine ? <p className="muted" aria-live="off">{deskText(t, model.detailLine)}</p> : null}
       {model.lastLine ? (
-        <p role="status" data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
+        <p data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
           {deskText(t, model.lastLine)}
         </p>
       ) : null}
@@ -148,7 +148,7 @@ export function PacketSummary({ packet }: { packet: PacketModel }) {
       <p className="muted">{deskText(t, packet.summaryLine)}</p>
       <p className="muted">{deskText(t, packet.promotionLine)}</p>
       <p className="muted">{t("sw7")}{" "}{deskText(t, packet.nonClaimsLine)}</p>
-      <ul className="discovery-list" aria-label={t("s188")}>
+      <ul className="discovery-list" aria-label={t("s188")} style={{ overflowWrap: "anywhere" }}>
         {deskText(t, packet.pinLines.map((line) => (
           <li key={line}>{deskText(t, line)}</li>
         )))}
@@ -190,30 +190,32 @@ export function ExercisesSection({ packet }: { packet: PacketModel }) {
       <h3 id="oq-exercises-head">{t("sk1")}</h3>
       <p className="muted">
         {t("shs")}</p>
-      <table className="discovery-table" aria-label={t("sk3")}>
-        <thead>
-          <tr>
-            <th scope="col">{t("sk0")}</th>
-            <th scope="col">{t("scm")}</th>
-            <th scope="col">{t("s1np")}</th>
-            <th scope="col">{t("s25y")}</th>
-            <th scope="col">{t("sk4")}</th>
-            <th scope="col">{t("s13j")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {deskText(t, packet.exercises.map((row) => (
-            <tr key={row.id} data-exercise={row.id} data-verdict={row.verdict}>
-              <td>{deskText(t, row.id)}</td>
-              <td>{deskText(t, row.klass)}</td>
-              <td>{deskText(t, row.surface)}</td>
-              <td>{deskText(t, row.verdict)}</td>
-              <td>{deskText(t, row.expected)}</td>
-              <td>{deskText(t, row.observed)}</td>
+      <div className="platform-scroll" role="region" aria-label={t("sk3")} tabIndex={0}>
+        <table className="discovery-table" aria-label={t("sk3")}>
+          <thead>
+            <tr>
+              <th scope="col">{t("sk0")}</th>
+              <th scope="col">{t("scm")}</th>
+              <th scope="col">{t("s1np")}</th>
+              <th scope="col">{t("s25y")}</th>
+              <th scope="col">{t("sk4")}</th>
+              <th scope="col">{t("s13j")}</th>
             </tr>
-          )))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {deskText(t, packet.exercises.map((row) => (
+              <tr key={row.id} data-exercise={row.id} data-verdict={row.verdict}>
+                <td>{deskText(t, row.id)}</td>
+                <td>{deskText(t, row.klass)}</td>
+                <td>{deskText(t, row.surface)}</td>
+                <td>{deskText(t, row.verdict)}</td>
+                <td>{deskText(t, row.expected)}</td>
+                <td>{deskText(t, row.observed)}</td>
+              </tr>
+            )))}
+          </tbody>
+        </table>
+      </div>
       <ul className="discovery-list" aria-label={t("sk2")}>
         {deskText(t, packet.exercises.map((row) => (
           <li key={`${row.id}-note`}>
@@ -276,28 +278,30 @@ export function CandidatesSection({ packet }: { packet: PacketModel }) {
     <section id="oq-candidates" className="discovery-section" aria-labelledby="oq-candidates-head">
       <h3 id="oq-candidates-head">{t("s1d4")}</h3>
       <p className="muted">{t("shq")}</p>
-      <table className="discovery-table" aria-label={t("s1h0")}>
-        <thead>
-          <tr>
-            <th scope="col">{t("s1ho")}</th>
-            <th scope="col">{t("s1np")}</th>
-            <th scope="col">{t("slp")}</th>
-            <th scope="col">{t("spr")}</th>
-            <th scope="col">{t("s10r")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {deskText(t, packet.candidates.map((row) => (
-            <tr key={row.route} data-candidate={row.surface}>
-              <td>{deskText(t, row.route)}</td>
-              <td>{deskText(t, row.surface)}</td>
-              <td>{deskText(t, row.focus)}</td>
-              <td>{deskText(t, row.keyboard)}</td>
-              <td>{deskText(t, row.note)}</td>
+      <div className="platform-scroll" role="region" aria-label={t("s1h0")} tabIndex={0}>
+        <table className="discovery-table" aria-label={t("s1h0")}>
+          <thead>
+            <tr>
+              <th scope="col">{t("s1ho")}</th>
+              <th scope="col">{t("s1np")}</th>
+              <th scope="col">{t("slp")}</th>
+              <th scope="col">{t("spr")}</th>
+              <th scope="col">{t("s10r")}</th>
             </tr>
-          )))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {deskText(t, packet.candidates.map((row) => (
+              <tr key={row.route} data-candidate={row.surface}>
+                <td>{deskText(t, row.route)}</td>
+                <td>{deskText(t, row.surface)}</td>
+                <td>{deskText(t, row.focus)}</td>
+                <td>{deskText(t, row.keyboard)}</td>
+                <td>{deskText(t, row.note)}</td>
+              </tr>
+            )))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

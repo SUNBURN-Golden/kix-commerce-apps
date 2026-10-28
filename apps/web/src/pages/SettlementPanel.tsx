@@ -2,6 +2,7 @@ import { messages as copy0 } from "../i18n/messages/pages--SettlementPanel";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { RefusalScope } from "../connectivity/refusal";
 import type { SettlementCaseView } from "@kix/protocol-adapter";
 
 export const SETTLEMENT_DESK_COMMANDS = [
@@ -46,6 +47,7 @@ export function SettlementPanel({
   const rejectLabel = view?.failureReason ?? view?.cancelReason ?? copy0.en["sw8"];
 
   return (
+    <RefusalScope reason={error ? "settlement-refusal" : null}>
     <aside className="panel" aria-label={t("st5")}>
       <p className="eyebrow">{deskText(t, view?.surface) ?? t("s26b")}</p>
       <h3>{t("st5")}</h3>
@@ -55,12 +57,12 @@ export function SettlementPanel({
       <p className="muted">
         {t("sbd")}</p>
       {error ? (
-        <p className="alert" role="alert">
+        <p className="alert" role="alert" id="settlement-refusal">
           {deskText(t, error)}
         </p>
       ) : null}
       <dl className="facts">
-        <div>
+        <div aria-live="polite">
           <dt>{t("st0")}</dt>
           <dd className="phase-name">{view?.phase ?? t("s121")}</dd>
         </div>
@@ -76,7 +78,7 @@ export function SettlementPanel({
           <dt>{t("s1f2")}</dt>
           <dd>{deskText(t, rejectLabel)}</dd>
         </div>
-        <div>
+        <div aria-live="polite">
           <dt>{t("s1dn")}</dt>
           <dd>{view?.reconcileMatched ? t("ss7") : t("s12i")}</dd>
         </div>
@@ -109,5 +111,6 @@ export function SettlementPanel({
           {t("scs")}</button>
       </div>
     </aside>
+    </RefusalScope>
   );
 }

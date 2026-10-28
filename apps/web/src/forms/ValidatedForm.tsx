@@ -1,5 +1,6 @@
-import { Children, Fragment, cloneElement, isValidElement, useId, useImperativeHandle, type FormHTMLAttributes, type ReactElement, type ReactNode, type Ref } from "react";
+import { Children, Fragment, cloneElement, isValidElement, useContext, useEffect, useId, useImperativeHandle, useState, type FormHTMLAttributes, type ReactElement, type ReactNode, type Ref } from "react";
 import { ErrorSummary } from "../components/ErrorSummary";
+import { RefusalContext } from "../connectivity/refusal";
 import { useFormT } from "./useFormT";
 import { useFormValidation, type ValidationHandle } from "./useFormValidation";
 import type { FieldRule, ValidationIssue } from "./validation";
@@ -16,6 +17,13 @@ export function ValidatedForm({ fields, validationRef, submitFields, busy = fals
   const id = useId();
   const validation = useFormValidation(fields, reportedIssues);
   useImperativeHandle(validationRef, () => ({ validate: validation.validate }));
+  // A refused submit fences the send that asked for it, described by the summary, until a field changes.
+  const parent = useContext(RefusalContext);
+  const [pressed, press] = useState<string | null>(null);
+  const reason = validation.refused ? `${id}-errors` : null;
+  const report = parent?.report;
+  useEffect(() => report?.(reason), [report, reason]);
+  const refusal = parent ?? { reason, pressed, press, report: () => undefined };
   function connect(nodes: ReactNode): ReactNode {
     return Children.map(nodes, (node): ReactNode => {
       if (!isValidElement(node)) return node;
@@ -36,13 +44,18 @@ export function ValidatedForm({ fields, validationRef, submitFields, busy = fals
   return (
     <form {...props} aria-busy={busy || props["aria-busy"]} noValidate ref={validation.formRef}
       onBlurCapture={(event) => validation.update(event.target, true)}
-      onChangeCapture={(event) => validation.update(event.target)}
+      onChangeCapture={(event) => {
+        refusal.press(null);
+        validation.update(event.target);
+      }}
       onSubmit={(event) => {
         event.preventDefault();
         if (!busy && validation.validate(submitFields)) onSubmit?.(event);
       }}>
       <ErrorSummary id={`${id}-errors`} issues={validation.issues} summaryRef={validation.summaryRef} />
-      {connect(children)}
+      {/* Always in the page, so a refused submit is announced once. Blur checks fill the summary without speaking. */}
+      <p role="status" data-validation-refused={validation.refused ? "true" : "false"} style={{ position: "fixed", clipPath: "inset(50%)" }}>{validation.refused ? t("validation.notSent") : ""}</p>
+      <RefusalContext.Provider value={refusal}>{connect(children)}</RefusalContext.Provider>
     </form>
   );
 }

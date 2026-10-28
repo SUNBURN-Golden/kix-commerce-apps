@@ -7,6 +7,7 @@ import type { TestProject } from "vitest/node";
 import { buildGalleryApp, buildShellFaultApp, buildStubApp, type BuiltApp } from "./build";
 import { A11Y_BASELINE, KNOWN_FINDINGS, SCREENS, VIEWPORTS, expectedCheckIds, matrixProblems, type ScreenRecord, type ViewportName } from "./a11y-matrix";
 import { A11Y_NOT_RUN, readFacets, renderA11yRecord, type A11yRecord, type FacetLine } from "./a11y-record";
+import { keyboardFacetLine } from "./journey-matrix";
 import { readChecks, readLedger } from "./run-record";
 import { startRunDiagnostics, type RunDiagnosticsWatch } from "./run-diagnostics";
 import { LOOPBACK, serveDirectory, type StaticServer } from "./static-server";
@@ -99,6 +100,8 @@ export async function teardown(): Promise<void> {
   const failures: unknown[] = [];
   try {
     const problems: string[] = [...matrixProblems()];
+    const facetLine = keyboardFacetLine();
+    console.log(facetLine);
     const ran = new Set(readChecks(recordDir).map((line) => line.checkId));
     for (const id of expectedCheckIds()) {
       if (!ran.has(id)) {
@@ -139,7 +142,10 @@ export async function teardown(): Promise<void> {
         claims: { wcagConformance: false, userAccepted: false, assistiveTechRun: false, released: false, productionQualification: false },
         screens: screenRecords(facets, ran, head),
         findings: KNOWN_FINDINGS.map(({ screenId, viewport, ruleId, status }) => ({ screenId, viewport, ruleId, status })),
-        observations: facets.flatMap((item) => (item.kind === "observation" ? [{ id: item.id, note: item.note }] : [])),
+        observations: [
+          ...facets.flatMap((item) => (item.kind === "observation" ? [{ id: item.id, note: item.note }] : [])),
+          { id: "a11y.kbd.outcome.facet", note: facetLine },
+        ],
         checkIds: [...ran].sort(),
         timing: diag.timing,
         lifecycle: diag.lifecycle,

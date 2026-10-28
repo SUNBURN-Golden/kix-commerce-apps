@@ -79,7 +79,7 @@ export function ResalePanel({
         </p>
       ) : null}
       <dl className="facts">
-        <div>
+        <div aria-live="polite">
           <dt>{t("st0")}</dt>
           <dd className="phase-name">{deskText(t, phase)}</dd>
         </div>

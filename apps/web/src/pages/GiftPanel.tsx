@@ -1,4 +1,5 @@
 import { messages as copy0 } from "../i18n/messages/pages--GiftPanel";
+import { useStepOutcome } from "../a11y/focus";
 import { messages as copy1 } from "../i18n/messages/gift-desk";
 import { messages as copy2 } from "../i18n/messages/storage-allow-list";
 import { deskText } from "../i18n/desk-translate";
@@ -23,6 +24,7 @@ const STATUS_TEXT: Record<GiftRowStatus, string> = {
 
 export function GiftPanel({ model }: { model: GiftPanelModel }) {
   const t = useT(copy0, copy1, copy2);
+  const outcome = useStepOutcome("gift", model.rows);
   const unavailable = model.path.kind === "unavailable";
   return (
     <aside className="panel gift-panel" aria-label={t("smm")} data-gift-path={model.path.kind}>
@@ -53,7 +55,7 @@ export function GiftPanel({ model }: { model: GiftPanelModel }) {
             <p className="eyebrow">{deskText(t, row.label)}</p>
             <p>{deskText(t, row.step)}</p>
             <dl className="facts">
-              <div>
+              <div {...outcome.statusProps(row.step, row.status)}>
                 <dt>{t("s1mj")}</dt>
                 <dd>
                   {deskText(t, STATUS_TEXT[row.status])}
@@ -96,7 +98,7 @@ export function GiftPanel({ model }: { model: GiftPanelModel }) {
                 </div>
               ) : null}
             </dl>
-            {row.note ? <p>{deskText(t, row.note)}</p> : null}
+            {row.note ? <p id={outcome.noteId(row.step)}>{deskText(t, row.note)}</p> : null}
             {row.receipt ? (
               <dl className="facts">
                 {row.receipt.map((field) => (
@@ -108,7 +110,10 @@ export function GiftPanel({ model }: { model: GiftPanelModel }) {
               </dl>
             ) : null}
             <div className="row-actions">
-              <ConnectivityWriteButton type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
+              <ConnectivityWriteButton type="button" disabled={!row.canSend} {...outcome.reasonProps(row.step, row.canSend, row.note)} onClick={() => {
+                outcome.markSent(row.step);
+                model.send(row.step);
+              }}>
                 {t("s1j5")}{" "}{deskText(t, row.step)}
               </ConnectivityWriteButton>
             </div>

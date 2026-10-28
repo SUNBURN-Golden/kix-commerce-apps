@@ -1,4 +1,5 @@
 import { messages as copy0 } from "../i18n/messages/pages--OrganizerPanel";
+import { useStepOutcome } from "../a11y/focus";
 import { messages as copy1 } from "../i18n/messages/organizer-desk";
 import { messages as copy2 } from "../i18n/messages/storage-allow-list";
 import { messages as copy3 } from "../i18n/messages/journey-desk";
@@ -22,6 +23,7 @@ const STATUS_TEXT: Record<OrganizerRowStatus, string> = {
 
 export function OrganizerPanel({ model }: { model: OrganizerPanelModel }) {
   const t = useT(copy0, copy1, copy2, copy3);
+  const outcome = useStepOutcome("organizer", model.rows);
   const unavailable = model.path.kind === "unavailable";
   return (
     <aside className="panel organizer-panel" aria-label={t("s163")} data-organizer-path={model.path.kind}>
@@ -50,7 +52,7 @@ export function OrganizerPanel({ model }: { model: OrganizerPanelModel }) {
             <p className="eyebrow">{deskText(t, row.label)}</p>
             <p>{deskText(t, row.step)}</p>
             <dl className="facts">
-              <div>
+              <div {...outcome.statusProps(row.step, row.status)}>
                 <dt>{t("s1mj")}</dt>
                 <dd>{deskText(t, STATUS_TEXT[row.status])}</dd>
               </div>
@@ -79,7 +81,7 @@ export function OrganizerPanel({ model }: { model: OrganizerPanelModel }) {
                 </div>
               ) : null}
             </dl>
-            {row.note ? <p>{deskText(t, row.note)}</p> : null}
+            {row.note ? <p id={outcome.noteId(row.step)}>{deskText(t, row.note)}</p> : null}
             {row.receipt ? (
               <dl className="facts">
                 {row.receipt.map((field) => (
@@ -91,7 +93,10 @@ export function OrganizerPanel({ model }: { model: OrganizerPanelModel }) {
               </dl>
             ) : null}
             <div className="row-actions">
-              <ConnectivityWriteButton type="button" disabled={!row.canSend} onClick={() => model.send(row.step)}>
+              <ConnectivityWriteButton type="button" disabled={!row.canSend} {...outcome.reasonProps(row.step, row.canSend, row.note)} onClick={() => {
+                outcome.markSent(row.step);
+                model.send(row.step);
+              }}>
                 {t("s1j5")}{" "}{deskText(t, row.step)}
               </ConnectivityWriteButton>
             </div>

@@ -108,6 +108,30 @@ describe("session recovery screen", () => {
     expect(html).not.toMatch(BANNED);
   });
 
+  it("renders a fenced activation as one focusable refusal status without sending or changing the journal", async () => {
+    const store = new MemoryStore();
+    const { recovery, identity } = await load(store, "attach-lost");
+    expect((await recovery.run("obs-0001")).kind).toBe("UNKNOWN");
+    const before = [...store.data.entries()];
+    const result = await recovery.run("obs-0001");
+    expect(result.kind).toBe("FENCED");
+    expect([...store.data.entries()]).toEqual(before);
+    const value = live({ recovery, identity, scenario: "attach-lost", last: { seq: 2, kind: "step", result } });
+    expect(value.model.lastNeedsFocus).toBe(true);
+    const html = markup(value);
+    expect(html).toContain('id="session-status" tabindex="-1" aria-live="polite" aria-busy="false"');
+    expect(html.match(/aria-live="polite"/g)).toHaveLength(1);
+    expect(html).toContain('<p data-field="last">Attach not sent. An earlier write on this subject has an unknown result');
+    expect(html).toContain("Sent 1 in this load. Blocked before sending 1.");
+    const off = html.match(/id="session-attach-obs-0001"[^>]*>/)?.[0] ?? "";
+    expect(off).toContain('aria-disabled="true"');
+    expect(off).toContain('aria-describedby="session-attach-obs-0001-reason"');
+    expect(html).toContain('<span id="session-attach-obs-0001-reason" class="muted">An earlier write');
+    expect(html).not.toContain("onDomainRefused");
+    expect(html.match(/data-kind="unknown"/g)).toHaveLength(1);
+    expect(html).not.toMatch(BANNED);
+  });
+
   it("shows an in-flight write as in progress", async () => {
     const { recovery, identity, port } = await load(new MemoryStore(), "held-response");
     const pending = recovery.run("obs-0001");

@@ -54,8 +54,9 @@ export function AssistantPage() {
           principalRef={model.principalRef}
           actions={live.actions}
         />
-        <AssistantRequest actions={live.actions} />
-        <AssistantStatus model={model} />
+        {/* A denied read holds no grant, so a request has nothing to propose against. */}
+        <AssistantRequest actions={live.actions} fencedBy={model.state === "denied" ? "dlg-status-line" : null} />
+        <AssistantStatus model={model} firstRead={live.firstRead} />
         {model.actionLabel ? (
           <button
             type="button"

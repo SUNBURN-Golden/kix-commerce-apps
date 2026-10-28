@@ -13,10 +13,13 @@ export function MarketingChrome({
   id,
   children,
   onReadAgain,
+  headingDescribedBy,
 }: {
   id?: MarketingId;
   children: ReactNode;
   onReadAgain?: () => void;
+  /** The outcome a route change lands on: the heading takes focus and names it. */
+  headingDescribedBy?: string;
 }) {
   const copy = useConnectivityCopy();
   const t = useT(copy0, copy1, copy2);
@@ -24,7 +27,7 @@ export function MarketingChrome({
 
   return (
     <section>
-      <p className="banner" role="status">
+      <p className="banner">
         {t("s1mw", { v1: surface ? ` · ${surface.status}` : "" })}
       </p>
       <nav className="tabs" aria-label={t("srx")}>
@@ -41,7 +44,7 @@ export function MarketingChrome({
           <p className="eyebrow">
             {surface.id} · <span lang="ko">{deskText(t, surface.titleKo)}</span> · {surface.status}
           </p>
-          <h2>{deskText(t, surface.titleEn)}</h2>
+          <h2 aria-describedby={headingDescribedBy}>{deskText(t, surface.titleEn)}</h2>
           <p lang="ko">{deskText(t, surface.blurbKo)}</p>
           <p className="muted">{deskText(t, surface.blurbEn)}</p>
           <p className="muted">{deskText(t, marketingPublishedLine(surface.id))}</p>

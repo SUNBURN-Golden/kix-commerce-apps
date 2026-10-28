@@ -306,6 +306,7 @@ export function usePlatformRelease(): {
   scenario: ReleaseScenario;
   model: ReleaseModel;
   heldSupported: boolean;
+  running: boolean;
   actions: ReleaseActions;
 } {
   const environment = protocol.describe().environment;
@@ -317,6 +318,8 @@ export function usePlatformRelease(): {
   const [epoch, setEpoch] = useState(0);
   const [, setTick] = useState(0);
   const [last, setLast] = useState<LastAction | null>(null);
+  // A run is one status update: its state change and its recorded result are announced together.
+  const [running, setRunning] = useState(false);
   const intentCounter = useRef(0);
   const actionSeq = useRef(0);
 
@@ -330,6 +333,7 @@ export function usePlatformRelease(): {
 
   const note = useCallback((text: string) => {
     actionSeq.current += 1;
+    setRunning(false);
     setLast({ seq: actionSeq.current, kind: "note", text });
   }, []);
 
@@ -345,10 +349,12 @@ export function usePlatformRelease(): {
         return;
       }
       const intentRef = nextIntent();
+      setRunning(true);
       void session.controller.run(intentRef).then((result) => {
         if (sessionRef.current !== session) {
           return;
         }
+        setRunning(false);
         actionSeq.current += 1;
         setLast({ seq: actionSeq.current, kind: "run", result });
       });
@@ -394,6 +400,7 @@ export function usePlatformRelease(): {
     scenario,
     model: { ...model, heldSupported: sessionRef.current.port.scenario === "held" },
     heldSupported: sessionRef.current.port.scenario === "held",
+    running,
     actions: connectedActions(actions, ['run', 'setScenario', 'newSession'], sessionRef.current?.port),
   };
 }

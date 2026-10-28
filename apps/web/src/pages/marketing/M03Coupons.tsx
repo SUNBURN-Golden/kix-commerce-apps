@@ -3,6 +3,7 @@ import { messages as copy0 } from "../../i18n/messages/pages--marketing--M03Coup
 import { messages as copy1 } from "../../i18n/messages/marketing--desk";
 import { deskText } from "../../i18n/desk-translate";
 import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
+import { RefusalScope } from "../../connectivity/refusal";
 import { ValidatedForm } from "../../forms/ValidatedForm";
 import { field } from "../../forms/validation";
 import { useState, type FormEvent } from "react";
@@ -35,10 +36,11 @@ export function M03Page() {
   return (
     <MarketingChrome id="M03" onReadAgain={refresh}>
       {error ? (
-        <p className="alert" role="alert">
+        <p className="alert" role="alert" id="coupon-refusal">
           {deskText(t, error)}
         </p>
       ) : null}
+      <RefusalScope reason={error ? "coupon-refusal" : null}>
       <ValidatedForm id="coupon-form" fields={[field("coupon-code", "validation.label.code")]} className="panel" onSubmit={onSubmit}>
         <label>
           {t("sg6")}<input id="coupon-code" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="off" />
@@ -48,6 +50,7 @@ export function M03Page() {
           <ConnectivityWriteButton type="submit">{t("s5l")}</ConnectivityWriteButton>
         </div>
       </ValidatedForm>
+      </RefusalScope>
       <ul className="program">
         {deskText(t, COUPON_FIXTURES.map((item) => {
           const applied = snapshot.coupons.find((row) => row.code === item.code);
@@ -59,7 +62,7 @@ export function M03Page() {
                   <h3 lang="ko">{deskText(t, item.titleKo)}</h3>
                   <p className="muted">{deskText(t, item.titleEn)}</p>
                 </div>
-                <p className="muted">{applied ? t("s8y", { v1: formatWhen(applied.appliedAt, clock) }) : deskText(t, item.marker)}</p>
+                <p className="muted" aria-live="polite">{applied ? t("s8y", { v1: formatWhen(applied.appliedAt, clock) }) : deskText(t, item.marker)}</p>
               </article>
             </li>
           );

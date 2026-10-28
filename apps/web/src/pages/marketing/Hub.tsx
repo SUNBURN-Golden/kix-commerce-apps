@@ -5,6 +5,7 @@ import { messages as copy3 } from "../../i18n/messages/marketing--desk";
 import { deskText } from "../../i18n/desk-translate";
 import { useT } from "../../i18n/desk-context";
 import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { MARKETING_CONTRACT_IDS, marketingPublishedLine } from "../../marketing/contracts";
 import { MARKETING_SURFACES } from "../../marketing/labels";
@@ -17,12 +18,15 @@ export function MarketingHubPage() {
   const { snapshot, refresh } = useMarketingSnapshot();
   const boundary = snapshot.boundary;
   const tier = snapshot.membership?.tier ?? "guest";
+  // Once Reset has emptied the session there is nothing left to reset; the session facts say so.
+  const [reset, setReset] = useState(false);
+  const empty = reset && !snapshot.membership && snapshot.interests.length + snapshot.coupons.length + snapshot.acceptedReferrals.length + snapshot.rewardMarkers === 0 && snapshot.consent.state === "unset";
 
   return (
     <MarketingChrome onReadAgain={refresh}>
       <header className="section-head">
         <p className="eyebrow">{t("s26f")}</p>
-        <h2>{t("shell.eyebrow.marketing")}</h2>
+        <h2 aria-describedby="marketing-session-facts">{t("shell.eyebrow.marketing")}</h2>
         <p lang="ko">{t("s27g")}</p>
         <p className="muted">
           {t("sln")}</p>
@@ -30,7 +34,7 @@ export function MarketingHubPage() {
       <article className="ticket" aria-label={t("sry")}>
         <p className="eyebrow">{t("s1jv")}</p>
         <h3>{t("s23b")}</h3>
-        <dl>
+        <dl id="marketing-session-facts" aria-live={reset ? "polite" : undefined}>
           <div>
             <dt>{t("s1mu")}</dt>
             <dd>{boundary.status}</dd>
@@ -76,8 +80,11 @@ export function MarketingHubPage() {
           <ConnectivityWriteButton
             type="button"
             className="ghost"
+            aria-disabled={empty || undefined}
+            aria-describedby={empty ? "marketing-session-facts" : undefined}
             onClick={() => {
               marketingSession.reset();
+              setReset(true);
               refresh();
             }}
           >

@@ -48,5 +48,6 @@ export function useFormValidation(fields: readonly FieldRule[], reportedIssues: 
     if (submitAttempt > 0) summaryRef.current?.focus();
   }, [submitAttempt]);
 
-  return { formRef, summaryRef, issues: [...issues, ...reportedIssues.filter((reported) => !issues.some((issue) => issue.fieldId === reported.fieldId))], validate, update };
+  const all = [...issues, ...reportedIssues.filter((reported) => !issues.some((issue) => issue.fieldId === reported.fieldId))];
+  return { formRef, summaryRef, issues: all, refused: submitAttempt > 0 && all.length > 0, validate, update };
 }

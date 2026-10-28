@@ -1,4 +1,5 @@
 import { formatWhen } from "../../format";
+import { useStepOutcome } from "../../a11y/focus";
 import { messages as copy0 } from "../../i18n/messages/pages--marketing--M05Consent";
 import { messages as copy1 } from "../../i18n/messages/consent-desk";
 import { messages as copy2 } from "../../i18n/messages/storage-allow-list";
@@ -6,6 +7,7 @@ import { messages as copy3 } from "../../i18n/messages/marketing--contracts";
 import { messages as copy4 } from "../../i18n/messages/marketing--desk";
 import { deskText } from "../../i18n/desk-translate";
 import { ConnectivityWriteButton } from "../../components/ConnectivityWriteButton";
+import { RefusalScope } from "../../connectivity/refusal";
 import type { ValidationHandle } from "../../forms/useFormValidation";
 import { ValidatedForm } from "../../forms/ValidatedForm";
 import { field } from "../../forms/validation";
@@ -126,9 +128,11 @@ function ConsentBindPanel({
 }) {
   const validation = useRef<ValidationHandle>(null);
   const t = useT(copy0, copy1, copy2, copy3, copy4);
+  const outcome = useStepOutcome("consent", model.rows);
   const unavailable = model.path.kind === "unavailable";
   return (
-    <aside className="panel" aria-label={t("sds")} data-consent-path={model.path.kind}>
+    <RefusalScope>
+    <aside className="panel" aria-label={t("sds")} data-consent-path={model.path.kind} style={{ overflowWrap: "anywhere" }}>
       <p className="eyebrow">{deskText(t, eyebrow(model))}</p>
       <h3>{t("sds")}</h3>
       <p>{t("s1ps")}</p>
@@ -204,7 +208,7 @@ function ConsentBindPanel({
             <p className="eyebrow">{deskText(t, row.label)}</p>
             <p>{deskText(t, row.step)}</p>
             <dl className="facts">
-              <div>
+              <div {...outcome.statusProps(row.step, row.status)}>
                 <dt>{t("s1mj")}</dt>
                 <dd>{deskText(t, ROW_STATUS[row.status])}</dd>
               </div>
@@ -221,7 +225,7 @@ function ConsentBindPanel({
                 <dd>{deskText(t, row.code) ?? t("common.empty")}</dd>
               </div>
             </dl>
-            {row.note ? <p>{deskText(t, row.note)}</p> : null}
+            {row.note ? <p id={outcome.noteId(row.step)}>{deskText(t, row.note)}</p> : null}
             {row.receipt ? (
               <dl className="facts">
                 {row.receipt.map((field) => (
@@ -233,9 +237,12 @@ function ConsentBindPanel({
               </dl>
             ) : null}
             <div className="row-actions">
-              <ConnectivityWriteButton type="button" disabled={!row.canSend} onClick={() => {
+              <ConnectivityWriteButton type="button" disabled={!row.canSend} {...outcome.reasonProps(row.step, row.canSend, row.note)} onClick={() => {
                 const ids = row.step === "set_consent" ? undefined : ["consent-event", "consent-subject", "consent-business", "consent-channel", "consent-purpose", "consent-version"];
-                if (validation.current?.validate(ids)) model.send(row.step);
+                if (validation.current?.validate(ids)) {
+                  outcome.markSent(row.step);
+                  model.send(row.step);
+                }
               }}>
                 {t("s1j5")}{" "}{deskText(t, row.step)}
               </ConnectivityWriteButton>
@@ -262,6 +269,7 @@ function ConsentBindPanel({
         )))}
       </dl>
     </aside>
+    </RefusalScope>
   );
 }
 

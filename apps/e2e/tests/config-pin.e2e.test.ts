@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import ts from "typescript";
 import { recordCheck } from "../src/run-record";
 import a11yConfig from "../vitest.a11y.config";
 import budgetConfig from "../vitest.budget.config";
@@ -35,7 +36,37 @@ function sourceFiles(dir: string): string[] {
   });
 }
 
+/** Inspect Vitest calls, so a fixture's setTimeout delay is not mistaken for a test override. */
+function numericTestTimeouts(text: string): string[] {
+  const source = ts.createSourceFile("test.ts", text, ts.ScriptTarget.Latest, true);
+  const overrides: string[] = [];
+  const isTestCall = (expression: ts.Expression): boolean => {
+    if (ts.isIdentifier(expression)) return ["it", "test", "describe"].includes(expression.text);
+    if (ts.isPropertyAccessExpression(expression) || ts.isElementAccessExpression(expression) || ts.isCallExpression(expression)) {
+      return isTestCall(expression.expression);
+    }
+    return false;
+  };
+  const visit = (node: ts.Node): void => {
+    if (ts.isCallExpression(node) && isTestCall(node.expression) && node.arguments.length >= 3) {
+      const last = node.arguments[node.arguments.length - 1];
+      if (ts.isNumericLiteral(last)) overrides.push(node.getText(source));
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return overrides;
+}
+
 describe("browser suite timeouts and retries are pinned", () => {
+  it("distinguishes fixture timer delays from numeric Vitest timeout overrides", () => {
+    expect(numericTestTimeouts('it("probe", async () => {\n  setTimeout(() => {\n  }, 200);\n});')).toEqual([]);
+    for (const call of ["it", "test", "describe", "it.only", "test.skip", "test.each([1])", 'test["only"]']) {
+      expect(numericTestTimeouts(`${call}("probe", () => {}, 60_000);`), call).toHaveLength(1);
+    }
+    expect(numericTestTimeouts('it("probe", () => {\n}, 60_000);')).toHaveLength(1);
+  });
+
   it("every vitest config keeps retry: 0, its testTimeout and its hookTimeout, as text and as parsed values", () => {
     for (const { file, config, testTimeout } of PINNED) {
       const text = read(file);
@@ -72,7 +103,7 @@ describe("browser suite timeouts and retries are pinned", () => {
       expect(text, `${where} sets no vitest config at run time`).not.toMatch(/\bvi\.setConfig|\bvitest\.setConfig|\btestTimeout\b|\bhookTimeout\b/);
       expect(text, `${where} retries nothing`).not.toMatch(/\bretry\s*:|\.retry\(/);
       // A numeric last argument to it/test/describe, or a { timeout } or { retry } option object, would override the config for one test.
-      expect(text, `${where} gives no test its own timeout`).not.toMatch(/^\s*\}\s*,\s*\d[\d_]*\s*\)\s*;?\s*$/m);
+      expect(numericTestTimeouts(text), `${where} gives no test its own timeout`).toEqual([]);
       expect(text, `${where} gives no test its own options`).not.toMatch(/\b(?:it|test|describe)(?:\.\w+)*\(\s*(?:"[^"\n]*"|'[^'\n]*'|`[^`\n]*`)\s*,\s*\{/);
     }
     recordCheck("harness.config-pin");

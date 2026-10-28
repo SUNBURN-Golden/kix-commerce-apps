@@ -55,7 +55,7 @@ export function BuyerScreen({
       <div className="buyer-body">
         <header className="section-head buyer-section" data-adapter-environment={model.environment}>
           <p className="eyebrow">{t("desk.buyer.workspace")}</p>
-          <h2>{t("desk.buyer.workspace")}</h2>
+          <h2 aria-describedby="buyer-evidence">{t("desk.buyer.workspace")}</h2>
           <p>{deskText(t, model.ruling)}</p>
           <p>{deskText(t, model.stubSentence)}</p>
           <p>{deskText(t, model.reloadNote)}</p>

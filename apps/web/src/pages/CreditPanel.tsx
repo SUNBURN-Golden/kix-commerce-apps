@@ -4,6 +4,7 @@ import { messages as copy1 } from "../i18n/messages/a11y--present";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
+import { RefusalScope } from "../connectivity/refusal";
 import type { CreditCaseView } from "@kix/protocol-adapter";
 import { AmountNotice, StatusMark } from "../a11y/marks";
 import { presentIntegerUnits } from "../a11y/present";
@@ -55,6 +56,7 @@ export function CreditPanel({
 }) {
   const t = useT(deskCopy, copy0, copy1);
   return (
+    <RefusalScope reason={error ? "credit-refusal" : null}>
     <aside className="panel" aria-label={t("desk.credit.title")}>
       <p className="eyebrow">{deskText(t, view?.surface) ?? t("s26e")}</p>
       <h3>{t("desk.credit.title")}</h3>
@@ -63,18 +65,18 @@ export function CreditPanel({
         {t("s1kj")}</p>
       <AmountNotice />
       {pending ? (
-        <p className="muted" role="status">
+        <p className="muted">
           <StatusMark kind="loading" /> {t("desk.booking.oneAttempt")}</p>
       ) : null}
       <p className="muted">
         {t("s9a")}</p>
       {error ? (
-        <p className="alert" role="alert">
+        <p className="alert" role="alert" id="credit-refusal">
           <StatusMark kind="blocked" /> {deskText(t, error)}
         </p>
       ) : null}
       <dl className="facts">
-        <div>
+        <div aria-live="polite">
           <dt>{t("st0")}</dt>
           <dd className="phase-name">{view?.phase ?? t("s121")}</dd>
         </div>
@@ -98,7 +100,7 @@ export function CreditPanel({
           <dt>{t("s16m")}</dt>
           <dd>{deskText(t, units(view?.outstandingExposure))}</dd>
         </div>
-        <div>
+        <div aria-live="polite">
           <dt>{t("s1fm")}</dt>
           <dd>{deskText(t, units(view?.repaidExposure))}</dd>
         </div>
@@ -193,6 +195,7 @@ export function CreditPanel({
         )))}
       </div>
     </aside>
+    </RefusalScope>
   );
 }
 

@@ -14,6 +14,7 @@ import { marketingSession } from "../../marketing/session";
 import { useMarketingSnapshot } from "../../marketing/useMarketingSnapshot";
 import { protocol } from "../../connectivity/desk-protocol";
 import { errorText, MarketingChrome } from "./MarketingChrome";
+import { useSettledFocus } from "../../a11y/focus";
 
 export function M02Page() {
   const t = useT(deskCopy, copy0, copy1);
@@ -23,6 +24,9 @@ export function M02Page() {
   const [error, setError] = useState<string | null>(null);
   const tier = snapshot.membership?.tier ?? "guest";
   const windowState = presaleWindowFor(tier);
+  const [recorded, setRecorded] = useState<string | null>(null);
+  const settled = recorded !== null && snapshot.interests.some((row) => row.eventId === recorded);
+  useSettledFocus(settled ? recorded : null, recorded === null ? null : `m02-interest-${recorded}`);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,6 +51,7 @@ export function M02Page() {
     setError(null);
     try {
       marketingSession.recordInterest(eventId);
+      setRecorded(eventId);
       refresh();
     } catch (reason) {
       setError(errorText(reason, copy0.en["e.63"]));
@@ -54,7 +59,7 @@ export function M02Page() {
   }
 
   return (
-    <MarketingChrome id="M02" onReadAgain={refresh}>
+    <MarketingChrome id="M02" onReadAgain={refresh} headingDescribedBy="m02-window-note">
       {error ? (
         <p className="alert" role="alert">
           {deskText(t, error)}
@@ -63,7 +68,7 @@ export function M02Page() {
       <article className="panel">
         <p className="eyebrow">{t("sg9")}{" "}{deskText(t, windowState)}</p>
         <h3>{windowState === "open-demo" ? t("s27c") : t("s27b")}</h3>
-        <p className="muted">
+        <p className="muted" id="m02-window-note">
           {t("sbm")}{windowState === "closed-demo" ? (" " + t("sot")) : null}{" "}
           {t("s15a")}{" "}<Link to="/">{t("sai")}</Link> {t("sls")}</p>
       </article>
@@ -80,16 +85,19 @@ export function M02Page() {
                   <h3>{deskText(t, item.title)}</h3>
                   <p className="muted">
                     {deskText(t, item.venue)} · {deskText(t, item.remainingCapacity)} {t("s1mo")}</p>
-                  {interest ? (
-                    <p>
-                      {t("soj")}{" "}{formatWhen(interest.recordedAt, clock)} · {deskText(t, interest.window)}
-                    </p>
-                  ) : null}
+                  <div id={`m02-interest-${item.eventId}`} tabIndex={-1} aria-live="polite">
+                    {interest ? (
+                      <p>
+                        {t("soj")}{" "}{formatWhen(interest.recordedAt, clock)} · {deskText(t, interest.window)}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="row-actions">
                   <ConnectivityWriteButton
                     type="button"
                     disabled={windowState !== "open-demo" || Boolean(interest)}
+                    aria-describedby={interest ? `m02-interest-${item.eventId}` : windowState !== "open-demo" ? "m02-window-note" : undefined}
                     onClick={() => record(item.eventId)}
                   >
                     {interest ? t("soj") : t("s1dq")}

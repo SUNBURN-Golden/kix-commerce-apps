@@ -75,6 +75,15 @@ export function Shell({ children }: { children: ReactNode }) {
   const identity = usePageIdentity(location.pathname);
   const documentTitle = identity.title;
   useRouteFocus(identity.key);
+  // A path change is announced once by the page title. First paint and a locale switch on the same page say nothing.
+  const [routeNote, setRouteNote] = useState("");
+  const routePath = useRef(location.pathname);
+  useEffect(() => {
+    if (routePath.current !== location.pathname) {
+      routePath.current = location.pathname;
+      setRouteNote(documentTitle);
+    }
+  }, [location.pathname, documentTitle]);
   useEffect(() => {
     document.title = documentTitle;
   }, [documentTitle]);
@@ -154,6 +163,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <a className="skip" href="#desk-main">
         {t("shell.skip")}
       </a>
+      <p role="status" data-route-note="" style={{ position: "fixed", clipPath: "inset(50%)" }}>{routeNote}</p>
       <header className="top">
         <div className="brand">
           <span className="mark">KIX</span>

@@ -122,18 +122,18 @@ export function ReleaseControls({
   );
 }
 
-export function ReleaseStatus({ model }: { model: ReleaseModel }) {
+export function ReleaseStatus({ model, running = false }: { running?: boolean; model: ReleaseModel }) {
   const t = useT(copy0, copy1, copy2, copy3);
   return (
-    <section id="rel-status" className="discovery-section" aria-labelledby="rel-status-head" tabIndex={-1}>
+    <section id="rel-status" className="discovery-section" aria-labelledby="rel-status-head" tabIndex={-1} aria-live="polite" aria-busy={model.state === "in-flight" || running}>
       <h3 id="rel-status-head">{t("s1mj")}</h3>
-      <p role="status" data-run-state={model.state}>
+      <p data-run-state={model.state}>
         <StatusMark kind={model.state === "ready" ? "selected" : model.state === "in-flight" ? "loading" : "blocked"} />{" "}
         {deskText(t, model.statusLine)}
       </p>
-      {model.detailLine ? <p className="muted">{deskText(t, model.detailLine)}</p> : null}
+      {model.detailLine ? <p className="muted" aria-live="off">{deskText(t, model.detailLine)}</p> : null}
       {model.lastLine ? (
-        <p role="status" data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
+        <p data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
           {deskText(t, model.lastLine)}
         </p>
       ) : null}
@@ -159,7 +159,7 @@ export function CandidateSection({ packet }: { packet: ReleasePacketModel }) {
   return (
     <section id="rel-candidate" className="discovery-section" aria-labelledby="rel-candidate-head">
       <h3 id="rel-candidate-head">{t("sb8")}</h3>
-      <ul className="discovery-list" aria-label={t("sb9")}>
+      <ul className="discovery-list" aria-label={t("sb9")} style={{ overflowWrap: "anywhere" }}>
         {deskText(t, packet.candidateLines.map((line) => (
           <li key={line}>{deskText(t, line)}</li>
         )))}
@@ -192,28 +192,30 @@ export function DecisionsSection({ packet }: { packet: ReleasePacketModel }) {
       <h3 id="rel-decisions-head">{t("so5")}</h3>
       <p className="muted">
         {t("shu")}</p>
-      <table className="discovery-table" aria-label={t("s1f6")}>
-        <thead>
-          <tr>
-            <th scope="col">{t("sfj")}</th>
-            <th scope="col">{t("s1mi")}</th>
-            <th scope="col">{t("s9q")}</th>
-            <th scope="col">{t("sa6")}</th>
-            <th scope="col">{t("s10r")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {deskText(t, packet.decisions.map((row) => (
-            <tr key={row.id} data-decision={row.id} data-decision-state={row.decision}>
-              <td>{deskText(t, row.title)}</td>
-              <td>{deskText(t, row.decision)}</td>
-              <td>{deskText(t, row.basis)}</td>
-              <td>{deskText(t, row.blockedBy) ?? t("common.empty")}</td>
-              <td>{deskText(t, row.note)}</td>
+      <div className="platform-scroll" role="region" aria-label={t("s1f6")} tabIndex={0}>
+        <table className="discovery-table" aria-label={t("s1f6")}>
+          <thead>
+            <tr>
+              <th scope="col">{t("sfj")}</th>
+              <th scope="col">{t("s1mi")}</th>
+              <th scope="col">{t("s9q")}</th>
+              <th scope="col">{t("sa6")}</th>
+              <th scope="col">{t("s10r")}</th>
             </tr>
-          )))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {deskText(t, packet.decisions.map((row) => (
+              <tr key={row.id} data-decision={row.id} data-decision-state={row.decision}>
+                <td>{deskText(t, row.title)}</td>
+                <td>{deskText(t, row.decision)}</td>
+                <td>{deskText(t, row.basis)}</td>
+                <td>{deskText(t, row.blockedBy) ?? t("common.empty")}</td>
+                <td>{deskText(t, row.note)}</td>
+              </tr>
+            )))}
+          </tbody>
+        </table>
+      </div>
       {deskText(t, packet.decisions.map((row) =>
         row.evidence.length > 0 ? (
           <p key={`${row.id}-evidence`} className="muted" data-decision-evidence={row.id}>

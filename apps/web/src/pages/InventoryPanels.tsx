@@ -118,7 +118,7 @@ export function QueueCard({ queue }: { queue: QueueModel }) {
   return (
     <div className="discovery-row" data-queue-state={queue.state} data-source="synthetic-inventory">
       <h3>{t("s1as")}</h3>
-      <p className="discovery-status">{deskText(t, queue.stateLine)}</p>
+      <p className="discovery-status" aria-live="polite">{deskText(t, queue.stateLine)}</p>
       {queue.positionLine ? <p>{deskText(t, queue.positionLine)}</p> : null}
       {queue.deadline ? (
         <p>
@@ -434,7 +434,7 @@ export function SelectionSection({
         data-source={model.selected ? "synthetic-inventory" : "none"}
         data-selected={model.selected ? "true" : "false"}
       >
-        <p role="status" data-inventory-status={model.state}>
+        <p role="status" aria-busy={model.state === "loading"} data-inventory-status={model.state}>
           {model.state === "loading" ? <StatusMark kind="loading" /> : null} {deskText(t, model.statusLine)}
           {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
         </p>

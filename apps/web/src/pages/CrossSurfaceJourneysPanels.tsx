@@ -201,14 +201,14 @@ export function CrossSurfaceControls({
 export function CrossSurfaceStatus({ model }: { model: XsModel }) {
   const t = useT(mergedCopy, copy0, copy1, copy2);
   return (
-    <section id="xs-status" className="discovery-section" aria-labelledby="xs-status-head" tabIndex={-1}>
+    <section id="xs-status" className="discovery-section" aria-labelledby="xs-status-head" tabIndex={-1} aria-live="polite" aria-busy={model.state === "in-progress"}>
       <h3 id="xs-status-head">{t("s1mj")}</h3>
       {model.state === "in-progress" || model.state === "empty" || model.state === "not-bound" ? (
-        <AsyncState kind={model.state === "in-progress" ? "loading" : model.state} label={t("merge.journeys")} data-screen-state={model.state}><p>{deskText(t, model.statusLine)}</p></AsyncState>
-      ) : <p role="status" data-screen-state={model.state}><StatusMark kind={model.state === "ready" ? "selected" : "blocked"} /> {deskText(t, model.statusLine)}</p>}
-      {model.detailLine ? <p className="muted">{deskText(t, model.detailLine)}</p> : null}
+        <AsyncState announcement="parent" kind={model.state === "in-progress" ? "loading" : model.state} label={t("merge.journeys")} data-screen-state={model.state}><p>{deskText(t, model.statusLine)}</p></AsyncState>
+      ) : <p data-screen-state={model.state}><StatusMark kind={model.state === "ready" ? "selected" : "blocked"} /> {deskText(t, model.statusLine)}</p>}
+      {model.detailLine ? <p className="muted" aria-live="off">{deskText(t, model.detailLine)}</p> : null}
       {model.lastLine ? (
-        <p role="status" aria-live="polite" aria-busy={false} data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
+        <p data-last-action={model.lastNeedsFocus ? "attention" : "note"}>
           {deskText(t, model.lastLine)}
         </p>
       ) : null}
