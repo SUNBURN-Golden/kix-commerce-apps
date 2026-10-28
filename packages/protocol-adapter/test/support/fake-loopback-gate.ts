@@ -22,6 +22,7 @@ export function createFakeLoopbackGate(input: {
   scenario: FakeGateScenario; port?: number;
   answer?: (base: GateAnswer, call: FakeGateCall) => GateAnswer;
   rawBody?: string;
+  streamBody?: (answer: GateAnswer, call: FakeGateCall) => ReadableStream<Uint8Array>;
 }): FakeLoopbackGate {
   const baseUrl = `http://${INTEGRATION_GATE_LOOPBACK_HOST}:${input.port ?? 8765}`;
   const calls: FakeGateCall[] = [];
@@ -52,7 +53,7 @@ export function createFakeLoopbackGate(input: {
     }
     if (input.rawBody !== undefined) base.body = input.rawBody;
     const answer = input.answer?.(base, call) ?? base;
-    const response = new Response(answer.body, { status: answer.status, headers: answer.headers });
+    const response = new Response(input.streamBody?.(answer, call) ?? answer.body, { status: answer.status, headers: answer.headers });
     if (answer.url !== undefined) Object.defineProperty(response, "url", { value: answer.url });
     return response;
   };
