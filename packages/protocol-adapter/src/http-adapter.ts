@@ -646,6 +646,11 @@ export class HttpProtocolAdapter implements CommerceProtocol {
     } catch {
       throw new ProtocolError("Integration gate is unavailable.", "GATE_UNAVAILABLE", trace);
     }
+    if (init.signal?.aborted) {
+      // A fetch double (or transport) may resolve after the timeout race ended.
+      void response.body?.cancel().catch(() => undefined);
+      throw init.signal.reason;
+    }
     if (
       response.redirected ||
       response.type === "opaqueredirect" ||
@@ -673,21 +678,27 @@ export class HttpProtocolAdapter implements CommerceProtocol {
         trace,
       );
     }
+    // Only HTTP responses need these guards; keep them off the stub entry path.
+    const { parseGateJson, readGateResponseText } = await import("./gate-json.js");
+    const signal = init.signal;
+    if (!signal) {
+      throw new ProtocolError("Integration gate exchange is missing its abort signal.", "GATE_TRANSPORT", trace);
+    }
     let text: string;
     try {
-      text = await response.text();
+      text = await readGateResponseText(response, signal);
     } catch (error) {
-      if (init.signal?.aborted) {
+      if (signal.aborted) {
         throw error;
       }
+      if (error instanceof ProtocolError) throw new ProtocolError(error.message, error.code, trace);
       throw new ProtocolError("Integration gate response body was cut off.", "GATE_UNAVAILABLE", trace);
     }
     if (!text) {
       return { ok: response.ok, status: response.status, body: undefined, trace };
     }
     try {
-      // Only HTTP responses need the JSON preflight; keep it off the stub entry path.
-      const { parseGateJson } = await import("./gate-json.js");
+      if (signal.aborted) throw signal.reason;
       return { ok: response.ok, status: response.status, body: parseGateJson(text), trace };
     } catch (error) {
       if (error instanceof ProtocolError) throw new ProtocolError(error.message, error.code, trace);
