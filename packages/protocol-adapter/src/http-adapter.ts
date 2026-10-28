@@ -557,6 +557,9 @@ export class HttpProtocolAdapter implements CommerceProtocol {
         operationId: envelope.operationId,
       });
       assertJourneyResult(parsed.body, envelope);
+      // Only HTTP responses need the shared composer checks; keep them deferred.
+      const { assertComposerResult } = await import("./composer-receipts.js");
+      assertComposerResult(parsed.body, envelope);
     } catch (error) {
       if (error instanceof GateRejectedError) {
         throw error;

@@ -231,7 +231,7 @@ describe("http adapter binding", () => {
       operationId: "op-close-1",
       sequence: 1,
       action: "close_sales",
-      result: {},
+      result: { salesStatus: "CLOSED" },
     };
     const fetchImpl: typeof fetch = async (input, init) => {
       calls.push({
@@ -315,6 +315,7 @@ describe("http adapter binding", () => {
     ).rejects.toThrow(/simulated-no-funds/);
 
     responseBody = localCallReceipt("op-close-3", "close_sales", {
+      salesStatus: "CLOSED",
       bookingId: "bkg_remote",
       eventId: "evt_lanterns",
       quantity: 1,
@@ -329,7 +330,7 @@ describe("http adapter binding", () => {
         action: "close_sales",
         body: commandBody,
       }),
-    ).resolves.toMatchObject({ result: { payment: "simulated-no-funds" } });
+    ).rejects.toMatchObject({ code: "GATE_STATUS" });
 
     responseBody = {
       eventId: "evt_lanterns",
@@ -468,6 +469,7 @@ describe("http adapter binding", () => {
     ).rejects.toThrow(/provider authorization/);
 
     responseBody = localCallReceipt("op-close-13", "close_sales", {
+      salesStatus: "CLOSED",
       eventId: "evt_lanterns",
       mode: "mock",
       references: ["F01", "F02", "F03"],
@@ -485,7 +487,7 @@ describe("http adapter binding", () => {
         action: "close_sales",
         body: commandBody,
       }),
-    ).resolves.toMatchObject({ result: { mode: "mock", references: ["F01", "F02", "F03"], phase: "CAPTURED" } });
+    ).rejects.toMatchObject({ code: "GATE_STATUS" });
     expect(calls.every((call) => call.url === `http://127.0.0.1:8765${CONTRACT_ONLY_LOCAL_CALL_PATH}`)).toBe(
       true,
     );

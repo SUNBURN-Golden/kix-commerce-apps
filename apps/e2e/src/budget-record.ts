@@ -1,7 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { LifecycleBlock } from "./lifecycle";
 import { findSensitiveInRecord } from "./redact";
-import { recordDir } from "./run-record";
+import { recordDir } from "./record-dir";
+import type { TimingBlock } from "./timing";
 
 /** One measured scenario: every run's value, in milliseconds. A tripwire reading, not a service level. */
 export interface RenderMeasurement {
@@ -35,6 +37,10 @@ export interface BudgetRecord {
   render: RenderMeasurement[];
   chunkFailure: { observations: { id: string; note: string }[] };
   ledger: { nonLoopback: number; nonGet: number; appNetworkCalls: number };
+  /** Per-test duration, wall and monotonic time, and the host clock watch. */
+  timing: TimingBlock;
+  /** Browsers, contexts and pages opened and closed, and what tests left open or pending. */
+  lifecycle: LifecycleBlock;
   notRun: string[];
 }
 

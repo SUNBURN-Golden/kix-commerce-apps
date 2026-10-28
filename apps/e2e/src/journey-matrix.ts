@@ -244,7 +244,12 @@ export const SHARED_CHECKS = [
   "harness.server",
   "harness.paths",
   "harness.external-blocked",
-  "harness.redaction","session.UNKNOWN", "journeys-page.UNKNOWN", "one-attempt.double-click", "one-attempt.keyboard", "one-attempt.reload"] as const;
+  "harness.redaction",
+  "harness.config-pin",
+  "harness.lifecycle-leak",
+  "harness.lifecycle-pending",
+  "harness.timing",
+  "harness.records","session.UNKNOWN", "journeys-page.UNKNOWN", "one-attempt.double-click", "one-attempt.keyboard", "one-attempt.reload"] as const;
 
 /** Read-only exports/search/filter controls are separate explicit reads, not send controls. */
 export const SEND_CONTROL_JOURNEYS: readonly JourneyId[] = ["box-office", "booking", "admission", "resale", "credit", "gift", "organizer", "organizer-workspace", "platform", "finance", "credit-origination", "credit-servicing", "marketing-journey", "assistant", "permissions", "notifications", "provider", "identity", "session", "mobile", "qualification", "release", "marketing-m05", "marketplace-performance"];

@@ -6,6 +6,7 @@ import type { TestProject } from "vitest/node";
 import { buildStubApp, webRoot, type BuiltApp } from "./build";
 import { BUDGET_NOT_RUN, readLines, renderBudgetRecord, type BudgetRecord, type RenderMeasurement, type SplitMeasurement } from "./budget-record";
 import { readChecks, readLedger } from "./run-record";
+import { startRunDiagnostics, type RunDiagnosticsWatch } from "./run-diagnostics";
 import { LOOPBACK, serveDirectory, type StaticServer } from "./static-server";
 
 declare module "vitest" {
@@ -32,6 +33,7 @@ export const BUDGET_CHECKS = [
 let app: BuiltApp | null = null;
 let server: StaticServer | null = null;
 let recordDir = "";
+let diagnostics: RunDiagnosticsWatch | null = null;
 
 function git(args: string[]): string {
   try {
@@ -44,54 +46,90 @@ function git(args: string[]): string {
 export async function setup(project: TestProject): Promise<void> {
   recordDir = fs.mkdtempSync(path.join(os.tmpdir(), "kix-budget-record-"));
   process.env.KIX_E2E_RECORD_DIR = recordDir;
-  app = await buildStubApp();
-  server = await serveDirectory(app.outDir);
-  project.provide("origin", server.origin);
-  project.provide("distDir", app.outDir);
-  project.provide("budgetFile", path.join(webRoot, "bundle-budget.json"));
+  diagnostics = startRunDiagnostics(project);
+  try {
+    app = await buildStubApp();
+    server = await serveDirectory(app.outDir);
+    project.provide("origin", server.origin);
+    project.provide("distDir", app.outDir);
+    project.provide("budgetFile", path.join(webRoot, "bundle-budget.json"));
+  } catch (error) {
+    try {
+      await teardown();
+    } catch (diagnosticError) {
+      throw new AggregateError([error, diagnosticError], "Setup failed; teardown diagnostics were attempted");
+    }
+    throw error;
+  }
 }
 
 /** Runs once after every test file. A missing check, a non-loopback bind or a failed assertion fails the whole run. */
 export async function teardown(): Promise<void> {
-  const problems: string[] = [];
-  const ran = new Set(readChecks(recordDir).map((line) => line.checkId));
-  for (const id of BUDGET_CHECKS) {
-    if (!ran.has(id)) {
-      problems.push(`check did not pass in this run: ${id}`);
+  const failures: unknown[] = [];
+  try {
+    const problems: string[] = [];
+    const ran = new Set(readChecks(recordDir).map((line) => line.checkId));
+    for (const id of BUDGET_CHECKS) {
+      if (!ran.has(id)) {
+        problems.push(`check did not pass in this run: ${id}`);
+      }
+    }
+    if (server && server.address !== LOOPBACK) {
+      problems.push(`server bound to ${server.address}`);
+    }
+    const ledgers = readLedger(recordDir);
+    if (ledgers.length === 0) {
+      problems.push("no browser session reported a ledger");
+    }
+    if (!diagnostics) {
+      throw new Error("The run diagnostics were not started.");
+    }
+    const diag = diagnostics.finish(recordDir, ledgers.length);
+    problems.push(...diag.problems);
+    const sum = (key: "nonLoopback" | "nonGet" | "appNetworkCalls") => ledgers.reduce((total, line) => total + line[key], 0);
+    const outFile = process.env.KIX_BUDGET_RECORD_OUT;
+    if (outFile) {
+      const record: BudgetRecord = {
+        kind: "bundle-budget-observation",
+        mode: "stub",
+        scope: "clean stub build, one runner, 5 runs per scenario; regression tripwires with generous caps",
+        bind: server?.address ?? "none",
+        date: new Date().toISOString().slice(0, 10),
+        appHead: git(["rev-parse", "HEAD"]),
+        baseMainSha: git(["merge-base", "HEAD", "origin/main"]),
+        chrome: ledgers[0]?.chrome ?? "unknown",
+        claims: { slo: false, qualification: false, productionPerformance: false, released: false },
+        split: readLines<SplitMeasurement>(recordDir, "split.jsonl")[0] ?? null,
+        render: readLines<RenderMeasurement>(recordDir, "render.jsonl"),
+        chunkFailure: { observations: readLines<{ id: string; note: string }>(recordDir, "observations.jsonl") },
+        ledger: { nonLoopback: sum("nonLoopback"), nonGet: sum("nonGet"), appNetworkCalls: sum("appNetworkCalls") },
+        timing: diag.timing,
+        lifecycle: diag.lifecycle,
+        notRun: [...BUDGET_NOT_RUN],
+      };
+      fs.writeFileSync(outFile, renderBudgetRecord(record) + "\n");
+    }
+    if (problems.length > 0) {
+      throw new Error(`Bundle budget suite is incomplete:\n${problems.join("\n")}`);
+    }
+  } catch (error) {
+    failures.push(error);
+  } finally {
+    const closed = await Promise.allSettled([server?.close()]);
+    for (const result of closed) {
+      if (result.status === "rejected") failures.push(result.reason);
+    }
+    try {
+      app?.cleanup();
+    } catch (error) {
+      failures.push(error);
+    }
+    try {
+      fs.rmSync(recordDir, { recursive: true, force: true });
+    } catch (error) {
+      failures.push(error);
     }
   }
-  if (server && server.address !== LOOPBACK) {
-    problems.push(`server bound to ${server.address}`);
-  }
-  const ledgers = readLedger(recordDir);
-  if (ledgers.length === 0) {
-    problems.push("no browser session reported a ledger");
-  }
-  const sum = (key: "nonLoopback" | "nonGet" | "appNetworkCalls") => ledgers.reduce((total, line) => total + line[key], 0);
-  const outFile = process.env.KIX_BUDGET_RECORD_OUT;
-  if (outFile) {
-    const record: BudgetRecord = {
-      kind: "bundle-budget-observation",
-      mode: "stub",
-      scope: "clean stub build, one runner, 5 runs per scenario; regression tripwires with generous caps",
-      bind: server?.address ?? "none",
-      date: new Date().toISOString().slice(0, 10),
-      appHead: git(["rev-parse", "HEAD"]),
-      baseMainSha: git(["merge-base", "HEAD", "origin/main"]),
-      chrome: ledgers[0]?.chrome ?? "unknown",
-      claims: { slo: false, qualification: false, productionPerformance: false, released: false },
-      split: readLines<SplitMeasurement>(recordDir, "split.jsonl")[0] ?? null,
-      render: readLines<RenderMeasurement>(recordDir, "render.jsonl"),
-      chunkFailure: { observations: readLines<{ id: string; note: string }>(recordDir, "observations.jsonl") },
-      ledger: { nonLoopback: sum("nonLoopback"), nonGet: sum("nonGet"), appNetworkCalls: sum("appNetworkCalls") },
-      notRun: [...BUDGET_NOT_RUN],
-    };
-    fs.writeFileSync(outFile, renderBudgetRecord(record) + "\n");
-  }
-  await server?.close();
-  app?.cleanup();
-  fs.rmSync(recordDir, { recursive: true, force: true });
-  if (problems.length > 0) {
-    throw new Error(`Bundle budget suite is incomplete:\n${problems.join("\n")}`);
-  }
+  if (failures.length === 1) throw failures[0];
+  if (failures.length > 1) throw new AggregateError(failures, "Run and cleanup failed");
 }

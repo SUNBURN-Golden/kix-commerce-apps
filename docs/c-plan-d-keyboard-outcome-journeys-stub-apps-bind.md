@@ -313,6 +313,31 @@ The final total is 2,764 bytes smaller than main. Baseline reproduction used a t
 
 PASS: all 109 visual tests (92 baseline comparisons plus harness/display checks), no baseline edits or pixel diffs. Chrome 156.0.8078.47, Node 22.20.0. Current log: `/tmp/kixc-resume-visual.log`; record: `/tmp/kixc-resume-visual.json`, ledger 0/0/0.
 
+## Merge resolution verification — 2026-10-28 KST
+
+This verification combines branch HEAD `aa7a2642a3e1de38ad7c399e7e1e9292581bd7cf` with merge target `af5659d6b5ad9a6a69892dcbae5c398a8da21223` (`origin/main` and `MERGE_HEAD`). The only textual conflict was `apps/e2e/src/a11y-global-setup.ts`. The combined teardown preserves main's timing and lifecycle diagnostics, diagnostic failures, setup-failure handling and unconditional cleanup, and this node's keyboard denominator console output and `a11y.kbd.outcome.facet` record observation. Main's `finally` cleanup supersedes the earlier success-only cleanup sequence so every server and build cleanup is attempted after a failure too. No node content is discarded. The auto-merged journey matrix keeps both the new harness checks and all 85 keyboard outcome checks.
+
+M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. The locked bindings, CI, bundle limits, `.aiops/`, `docs/aiops/` and visual baselines remain identical to the merge target. No protocol pin is moved. Main's already-merged invoker conformance work remains intact; this resolution adds no adapter change. Human acceptance: PENDING. Hosted CI and the conditional live gate are not claimed as passing. The merge remains unstaged and uncommitted for the supervisor.
+
+The first full combined journey run exposed an integration defect in main's new config-pin test: its line-based numeric-timeout regex treated this node's legitimate `setTimeout(..., 200)` probe delay as a Vitest timeout override. The run failed 1/194 (193 passed), with ledger 0/0/0 and clean lifecycle accounting; `e2e.log` and `e2e.json` retain that failure. `apps/e2e/tests/config-pin.e2e.test.ts` now parses numeric overrides on actual Vitest calls using the already-installed TypeScript parser. A regression covers the multiline timer and numeric overrides on plain, modified, parameterized and bracket-access test calls. All pinned timeouts, retries and other guard checks remain unchanged.
+
+Logs and browser records for this combined worktree are under `/tmp/kixc-keyboard-merge-MubOFh`. Node 20.19.2; the repository's retry and timeout settings are unchanged. Browser suites run sequentially with `KIX_REQUIRE_GATE=0 KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1`.
+
+| Command / check | Combined-worktree evidence |
+| --- | --- |
+| `npm run typecheck` | PASS: adapter and web; `typecheck.log`. |
+| `npm run typecheck:e2e` | PASS; `typecheck-e2e-final.log`. |
+| `KIX_REQUIRE_GATE=0 npm test` | PASS: adapter 1,466 passed / 23 conditional tests skipped; web 1,268 passed and cold-entry 6 passed; `stub-tests.log`. |
+| `npm run build` | PASS; `build.log`. |
+| `npm run budget` | PASS: initial JS 160,713, CSS 4,984 and total 778,647 gzip bytes, with unchanged limits; `budget.log`. |
+| `npm run lint` | PASS; `lint-final.log`. |
+| `KIX_E2E_RECORD_OUT=/tmp/kixc-keyboard-merge-MubOFh/e2e-final.json npm run test:e2e` | PASS: 47 files / 195 tests; keyboard facet 85/85; ledger 0/0/0, zero lifecycle leaks, pending calls/routes or cleanup errors; `e2e-final.log`, `e2e-final.json`. |
+| `KIX_A11Y_RECORD_OUT=/tmp/kixc-keyboard-merge-MubOFh/a11y.json npm run test:a11y` | PASS: 17 files / 363 tests in 579.75 seconds; all 85 keyboard outcomes and both helper tests; ledger 0/0/0 and clean lifecycle accounting; `a11y.log`, `a11y.json`. |
+| Record inspection | PASS: both records contain timing/lifecycle blocks, no diagnostic failures and all claims false. Accessibility contains exactly 85 outcome observations with one announcement and zero pointer events each, both helper check ids, and the 85/85 facet observation. |
+| Marker, whitespace and protected-path checks | PASS: no conflict markers; `git diff --check` clean; locked binding, CI, limits, protected directories and visual baselines identical to `origin/main`; `final-checks.log`. |
+
+Combined-worktree verification status: READY. The complete passing commands above supersede the retained first journey-run failure; no partial run is presented as a pass. Visual baselines are unchanged; this merge repair does not rerun the visual or browser-budget suites whose earlier branch evidence follows. No hosted CI is triggered. Human acceptance: PENDING.
+
 ## Run records — resumed verification, 2026-10-28 KST
 
 Node 22.20.0, npm 11.21.1, Chrome 156.0.8078.47. Commands use `PATH=/tmp/kix-node22/node_modules/node/bin:$PATH`. All final full commands below exited 0. Browser commands run serially, in the foreground, with unchanged repository settings and limits. The full accessibility command took 569.09 seconds, within its existing 20-minute CI job limit.
@@ -419,7 +444,7 @@ Human acceptance: PENDING.
 
 ## Files changed
 
-69 files, all within the node’s allowed app/doc paths. Visual baselines, bundle limits, protocol bindings, pins, CI and protected program/delegation files are unchanged. The obsolete untracked decision handoff was removed.
+70 files relative to the merge target, all within the node’s allowed app/doc paths (including the config-pin integration fix). Visual baselines, bundle limits, protocol bindings, pins, CI and protected program/delegation files are unchanged. The obsolete untracked decision handoff was removed.
 
 - `apps/e2e/src/a11y-global-setup.ts`
 - `apps/e2e/src/a11y-matrix.ts`
@@ -429,6 +454,7 @@ Human acceptance: PENDING.
 - `apps/e2e/src/keyboard-probes.ts`
 - `apps/e2e/src/keyboard-runner.ts`
 - `apps/e2e/tests/a11y/keyboard-outcomes.a11y.test.ts`
+- `apps/e2e/tests/config-pin.e2e.test.ts`
 - `apps/e2e/tests/matrix.e2e.test.ts`
 - `apps/web/src/a11y/focus.ts`
 - `apps/web/src/components/ConnectivityWriteButton.tsx`

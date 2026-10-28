@@ -6,6 +6,7 @@ import { ALT_STATES, KNOWN_FINDINGS, SCREENS } from "../../src/a11y-matrix";
 import { ROUTES } from "../../../web/src/shell/route-registry";
 import { A11Y_NOT_RUN, assertNoAcceptance, renderA11yRecord, type A11yRecord } from "../../src/a11y-record";
 import { recordCheck } from "../../src/run-record";
+import { lifecycleFixture, timingFixture } from "../record-fixtures";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "../../../..");
@@ -36,6 +37,8 @@ function minimalRecord(): A11yRecord {
     findings: [],
     observations: [],
     checkIds: [],
+    timing: timingFixture(),
+    lifecycle: lifecycleFixture(),
     notRun: [...A11Y_NOT_RUN],
   };
 }

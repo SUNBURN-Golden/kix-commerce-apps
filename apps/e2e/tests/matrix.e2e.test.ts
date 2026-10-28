@@ -20,6 +20,7 @@ import {
 import { KEYBOARD_DRIVES } from "../src/keyboard-outcomes";
 import { expectedCheckIds as a11yCheckIds } from "../src/a11y-matrix";
 import { NOT_RUN, renderRecord, type RunRecord } from "../src/run-record";
+import { lifecycleFixture, timingFixture } from "./record-fixtures";
 
 describe("journey matrix", () => {
   it("has exactly one cell for every journey and outcome, each with the evidence its kind needs", () => {
@@ -57,6 +58,8 @@ describe("journey matrix", () => {
       ledger: { nonLoopback: 0, nonGet: 0, appNetworkCalls: 0 },
       claims: { httpModePass: false, productionQualification: false, realPayment: false, released: false },
       checks: [{ checkId: "x", pass: true }],
+      timing: timingFixture(),
+      lifecycle: lifecycleFixture(),
       notRun: [...NOT_RUN],
     };
     const parsed = JSON.parse(renderRecord(record)) as RunRecord;

@@ -93,13 +93,15 @@ describe("app shell: page title, heading focus, not-found, boot and noscript not
 
   it("with JavaScript off the page shows the noscript note", async () => {
     const context = await suite.session().browser.newContext({ javaScriptEnabled: false, serviceWorkers: "block" });
-    await context.route("**/*", (route) => (new URL(route.request().url()).origin === suite.origin ? route.continue() : route.abort()));
-    const page = await context.newPage();
-    await page.goto(suite.origin + "/");
-    expect(await page.locator("noscript").count(), "one in the head for the style, one in the body for the note").toBe(2);
-    expect(await page.locator("body").innerText()).toContain("This desk needs JavaScript");
-    expect(await page.locator("body").innerText()).not.toContain("Loading the desk");
-    await context.close();
+    try {
+      const page = await context.newPage();
+      await page.goto(suite.origin + "/");
+      expect(await page.locator("noscript").count(), "one in the head for the style, one in the body for the note").toBe(2);
+      expect(await page.locator("body").innerText()).toContain("This desk needs JavaScript");
+      expect(await page.locator("body").innerText()).not.toContain("Loading the desk");
+    } finally {
+      await context.close();
+    }
     const probe = await suite.newPage();
     await openScreen(probe, suite.origin, "/");
     await suite.pass(probe, "a11y.shell.noscript");
@@ -108,18 +110,15 @@ describe("app shell: page title, heading focus, not-found, boot and noscript not
 
   it("while the script is held the loading note shows, and the desk replaces it when the script runs", async () => {
     const page = await suite.newPage();
-    let release: () => void = () => undefined;
-    const gate = new Promise<void>((resolve) => {
-      release = resolve;
-    });
+    const gate = suite.gate();
     await page.route("**/assets/*.js", async (route) => {
-      await gate;
+      await gate.opened;
       await route.fallback();
     });
     const loading = page.goto(suite.origin + "/", { waitUntil: "commit" });
     await page.locator("#root .boot-note").waitFor();
     expect(await page.locator("#root .boot-note").innerText()).toContain("Loading the desk");
-    release();
+    gate.release();
     await loading;
     await page.locator("#desk-main").waitFor();
     expect(await page.locator("#root .boot-note").count()).toBe(0);
