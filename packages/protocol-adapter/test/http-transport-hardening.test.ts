@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   HttpProtocolAdapter,
   GateRejectedError,
@@ -11,6 +11,7 @@ import {
   createProtocol,
   echoIntegrationGateHeaders,
 } from "../src/index.js";
+import { createComposerFixtures } from "./support/composer-loopback-fixtures.js";
 import { localCallReceipt } from "./support/receipt.js";
 import { enforceRemotePayloadGuards } from "../src/payload-guards.js";
 
@@ -305,5 +306,74 @@ describe("integration HTTP base URL", () => {
   it("refuses port 0 and keeps a default port out", () => {
     expect(() => createProtocol({ mode: "http", baseUrl: "http://127.0.0.1:0" })).toThrow(/port 0/);
     expect(() => createProtocol({ mode: "http", baseUrl: "http://127.0.0.1:80" })).toThrow(/non-default port/);
+  });
+});
+
+describe("direct HTTP envelope ownership", () => {
+  it.each(["set_consent", "authorize_marketing", "create_event"] as const)(
+    "matches deferred %s responses against the dispatched snapshot", async (action) => {
+      const fixture = (await createComposerFixtures(1)).find((item) => item.envelope.action === action);
+      if (!fixture) throw new Error("missing fixture");
+      for (const match of ["original", "mutated"] as const) {
+        const input = structuredClone(fixture.envelope);
+        const original = structuredClone(input);
+        const seen: RequestInit[] = [];
+        let release = (_response: Response) => {};
+        const deferred = new Promise<Response>((resolve) => { release = resolve; });
+        const adapter = new HttpProtocolAdapter("http://127.0.0.1:8765", async (_url, init) => {
+          seen.push(init ?? {});
+          return deferred;
+        });
+        const sending = adapter.invokeLocalCall(input);
+        if (action === "set_consent") input.body.allowed = !input.body.allowed;
+        if (action === "authorize_marketing") input.body.expectedConsentVersion = 99;
+        if (action === "create_event") {
+          input.body.eventId = "caller-mutated";
+          (input.body.seats as string[]).push("A2");
+        }
+        const response = structuredClone(fixture.receipt);
+        if (match === "mutated") {
+          if (action === "set_consent") response.result.allowed = input.body.allowed;
+          if (action === "authorize_marketing") response.result.consentVersion = input.body.expectedConsentVersion;
+          if (action === "create_event") {
+            response.result.eventId = input.body.eventId;
+            (response.result.inventoryIds as string[]).push("inv-mutated");
+          }
+        }
+        release(new Response(JSON.stringify(response), { status: 200,
+          headers: echoIntegrationGateHeaders(seen[0]) }));
+        if (match === "original") await expect(sending).resolves.toEqual(response);
+        else await expect(sending).rejects.toMatchObject({ code: "GATE_STATUS",
+          requestId: new Headers(seen[0]?.headers).get("x-request-id"),
+          correlationId: new Headers(seen[0]?.headers).get("x-correlation-id") });
+        expect(seen).toHaveLength(1);
+        expect(seen[0]?.redirect).toBe("manual");
+        expect(JSON.parse(String(seen[0]?.body))).toEqual(original);
+      }
+    },
+  );
+
+  it("fails envelope cloning or serialization before fetch without transport traces", async () => {
+    let calls = 0;
+    const adapter = new HttpProtocolAdapter("http://127.0.0.1:8765", async () => {
+      calls += 1;
+      throw new Error("must not fetch");
+    });
+    const failure = new Error("snapshot failed");
+    const injectFailures = [
+      () => vi.spyOn(globalThis, "structuredClone").mockImplementationOnce(() => { throw failure; }),
+      () => vi.spyOn(JSON, "stringify").mockImplementationOnce(() => { throw failure; }),
+    ];
+    for (const injectFailure of injectFailures) {
+      const spy = injectFailure();
+      try {
+        await expect(adapter.invokeLocalCall(CLOSE_SALES)).rejects.toBe(failure);
+        expect(failure).not.toHaveProperty("requestId");
+        expect(failure).not.toHaveProperty("correlationId");
+      } finally {
+        spy.mockRestore();
+      }
+    }
+    expect(calls).toBe(0);
   });
 });

@@ -84,3 +84,11 @@ Without `--readiness-dir`, the gate state is in-memory. Restarting the process d
 ## Hold
 
 No production deploy, no public host, no real PG, no KYC-AML, no venue scan, no bank rail, and no marketplace. External adapters in the gate document stay `forbidden`. F01–F03, B01–B05, R01–R05, P03, F04, and E06 stay 설계중 on their own desks.
+
+## Audit 8: owned direct-call envelope
+
+`HttpProtocolAdapter.invokeLocalCall` validates and synchronously clones the local-call envelope before dispatch. That owned envelope supplies both request serialization and all receipt/result matching. A caller changing the original body while the response is deferred cannot change what the dispatched request means. Clone or serialization errors occur before fetch and create no transport trace.
+
+The published POST path, envelope, receipt, domain and pins are unchanged. This adds no retry, redirect following, fallback, command binding or vendored SDK change. Deferred-response tests cover `set_consent.allowed`, `authorize_marketing.expectedConsentVersion`, and `create_event.eventId` plus the nested seats array: original-matching results succeed, mutation-only results fail with traced `GATE_STATUS`, after exactly one request with manual redirects.
+
+Regression coverage and actual local verification: [audit-8 evidence](audit-8-fix-evidence.md).

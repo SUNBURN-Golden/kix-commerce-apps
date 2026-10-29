@@ -66,3 +66,11 @@ No production deploy, no public host, no real payment, no KYC, no credit disburs
 `apps/web/test/receipt-explorer.test.tsx` covers the builder and the page. Registry, journey, gift, organizer, and consent suites stay as they are.
 
 Browser exercise is the `Browser run` section above. The live-gate job is not a local pass: `KIX_REQUIRE_GATE=0` skips it.
+
+## Audit 8: retained operations in timeline and export
+
+Consent and organizer flows project completed history in completion order, followed by current rows with operation IDs absent from that history. Deduplication is scoped to each desk/event. Null-ID blocked observations and path observations remain. Only confirmed entries project receipt fields; pending, UNKNOWN, rejection and not-sent entries export empty fields. Authorization resets remove no completed evidence.
+
+Existing source/profile adjudication, redaction, role/session isolation, complete-model export and pagination apply to history too. Selection identity still includes session, role, context, reference, action and operation ID; it excludes mutable timeline sequence. Diagnostics observe current desk rows only, so history does not replay completions. This remains a read, with `readConfirmsUnknown`, retry, fallback, production and truth flags false.
+
+Regression coverage and actual local verification: [audit-8 evidence](audit-8-fix-evidence.md).

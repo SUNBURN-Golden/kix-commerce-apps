@@ -35,6 +35,7 @@ import {
   type ReceiptExplorerModel,
   type ReceiptSource,
 } from "../src/receipt-explorer";
+import { buildReceiptTimelinePage, receiptSelectionKey } from "../src/receipt-pagination";
 import type { WorkspaceRole } from "../src/workspace/registry";
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -59,6 +60,116 @@ const DRAFT: OrganizerDraft = {
 };
 
 describe("receipt explorer", () => {
+  it.each(["success", "unknown", "rejected", "not-sent"] as const)(
+    "projects each repeated desk operation once through pending and %s", async (outcome) => {
+      let release = () => {};
+      const gate = new Promise<void>((resolve) => { release = resolve; });
+      let consentCalls = 0;
+      let organizerCalls = 0;
+      const respond = async (count: number) => {
+        if (count !== 2) return;
+        await gate;
+        if (outcome === "unknown") throw new ProtocolError("lost", "REQUEST_TIMEOUT", {
+          requestId: "req-history", correlationId: "corr-history",
+        });
+        if (outcome === "rejected") throw new GateRejectedError("refused", "FIXTURE_REJECTED", {
+          requestId: "req-history", correlationId: "corr-history",
+        }, 422);
+      };
+      const consent = stubConsent(async (input, shape) => {
+        await respond(++consentCalls);
+        return shape.invokeLocalCall(input);
+      });
+      const organizer = stubOrganizer(async (input, shape) => {
+        await respond(++organizerCalls);
+        return shape.invokeLocalCall(input);
+      });
+      const consentDraft = { subject: "subject-history", business: "business", channel: "channel", purpose: "purpose",
+        expectedConsentVersion: "0", allowed: "true" };
+      await consent.send("consent-history", "set_consent", consentDraft);
+      await organizer.send("organizer-history", "issue_invitation", DRAFT);
+      const modelFor = (role: WorkspaceRole = "operator", session = "history-session") => build({
+        screenSessionId: session, evidenceSessionId: "history-session", role,
+        consent: consent.getSnapshot(), organizer: organizer.getSnapshot(),
+      });
+      const before = modelFor();
+      const first = before.groups.flatMap((group) => group.entries).filter((entry) => entry.operationId !== null);
+      expect(first).toHaveLength(2);
+      const consentSending = consent.send("consent-history", "set_consent", { ...consentDraft, allowed: "false",
+        expectedConsentVersion: outcome === "not-sent" ? "bad" : "1" });
+      const organizerSending = organizer.send("organizer-history", "issue_invitation", { ...DRAFT, inventoryId: "inv-1",
+        expectedInventoryVersion: outcome === "not-sent" ? "bad" : "0" });
+      const pending = modelFor();
+      if (outcome !== "not-sent") {
+        const entries = pending.groups.flatMap((group) => group.entries).filter((entry) => entry.operationId !== null);
+        expect(entries).toHaveLength(4);
+        expect(entries.filter((entry) => entry.status === "in-flight")).toHaveLength(2);
+        for (const entry of entries.filter((entry) => entry.status === "in-flight")) expect(entry.fields).toEqual([]);
+        for (const entry of first) {
+          const retained = entries.find((row) => row.operationId === entry.operationId);
+          if (!retained) throw new Error("missing retained receipt");
+          expect(retained.fields).toEqual(entry.fields);
+          expect(receiptSelectionKey(pending, retained)).toBe(receiptSelectionKey(before, entry));
+        }
+      }
+      release();
+      await Promise.all([consentSending, organizerSending]);
+      const model = modelFor();
+      expect(modelFor().exportText).toBe(model.exportText);
+      const entries = model.groups.flatMap((group) => group.entries).filter((entry) => entry.operationId !== null);
+      expect(entries).toHaveLength(4);
+      expect(new Set(entries.map((entry) => receiptSelectionKey(model, entry))).size).toBe(4);
+      for (const entry of first) {
+        const retained = entries.find((row) => row.operationId === entry.operationId);
+        expect(retained?.fields).toEqual(entry.fields);
+        expect(retained?.status).toBe("confirmed");
+        expect(renderModel(model, "operator")).toContain(entry.operationId);
+      }
+      const successors = entries.filter((entry) => !first.some((row) => row.operationId === entry.operationId));
+      const expectedStatus = outcome === "success" ? "confirmed" : outcome;
+      expect(successors.map((entry) => entry.status)).toEqual([expectedStatus, expectedStatus]);
+      for (const group of model.groups) {
+        const last = group.entries.filter((entry) => entry.status === "confirmed").at(-1);
+        expect(group.lastConfirmed).toContain(last?.operationId);
+      }
+      for (const entry of successors) {
+        if (outcome !== "success") expect(entry.fields).toEqual([]);
+        const exported = model.diagnostic.entries.find((row) => row.operationId === entry.operationId);
+        expect(exported?.fields).toEqual(entry.fields);
+      }
+      expect(model.diagnostic).toMatchObject({ kind: "support-diagnostic", readConfirmsUnknown: false,
+        retry: false, fallbackToStub: false, productionReadiness: false, productionConformance: false, protocolTruth: false, publicDeploy: false });
+      expect(buildReceiptTimelinePage(model, { context: "all", status: "all", page: 1 }).entries)
+        .toEqual([...model.paths, ...model.groups.flatMap((group) => group.entries)]);
+      for (const entry of first) {
+        const hiddenRole = entry.context === "consent" ? "organizer" : "buyer";
+        expect(modelFor(hiddenRole).exportText).not.toContain(entry.operationId);
+        expect(modelFor("operator", "other-session").exportText).not.toContain(entry.operationId);
+      }
+    },
+  );
+
+  it("keeps both authorizations and consent updates in chronological detail and export", async () => {
+    const desk = stubConsent();
+    const draft = { subject: "subject-history", business: "business", channel: "channel", purpose: "purpose",
+      expectedConsentVersion: "0", allowed: "true" };
+    for (const version of ["0", "1"]) {
+      await desk.send("authorization-history", "set_consent", { ...draft, expectedConsentVersion: version });
+      await desk.send("authorization-history", "authorize_marketing", { ...draft, expectedConsentVersion: version });
+    }
+    const model = build({ screenSessionId: "auth-session", evidenceSessionId: "auth-session", role: "buyer",
+      consent: desk.getSnapshot() });
+    const entries = model.groups.flatMap((group) => group.entries);
+    expect(entries.map((entry) => entry.operationId)).toEqual(desk.getSnapshot().events[0]?.history.map((row) => row.operationId));
+    expect(entries.map((entry) => entry.action)).toEqual(["set_consent", "authorize_marketing", "set_consent", "authorize_marketing"]);
+    expect(entries.map((entry) => entry.sequence)).toEqual([1, 2, 3, 4]);
+    expect(entries[1]?.fields).toContainEqual({ key: "consentVersion", value: "0" });
+    expect(entries[3]?.fields).toContainEqual({ key: "consentVersion", value: "1" });
+    expect(model.diagnostic.entries.map((entry) => entry.operationId)).toEqual(entries.map((entry) => entry.operationId));
+    expect(model.groups[0]?.lastConfirmed).toContain(entries[3]?.operationId);
+  });
+
+
   it("links the receipt explorer and shows an empty stub page", () => {
     const home = renderAt("/");
     expect(home).toContain('href="/receipts"');
@@ -719,12 +830,18 @@ function stubGift() {
   });
 }
 
-function stubConsent() {
+function stubConsent(
+  invoke: (
+    input: { action: string; operationId: string; actor: string; body: unknown },
+    shape: ReturnType<typeof createStubConsentInvoker>,
+  ) => Promise<unknown> = async (input, shape) => shape.invokeLocalCall(input),
+) {
+  const shape = createStubConsentInvoker();
   return createConsentDesk({
     protocol: stubProtocol(),
     source: {
       source: "stub-shape",
-      invoker: createStubConsentInvoker(),
+      invoker: { invokeLocalCall: (input) => invoke(input, shape) },
     },
   });
 }

@@ -365,6 +365,7 @@ interface DeskRow {
 }
 
 interface DeskFlow {
+  history?: readonly DeskRow[];
   refId: string;
   rows: readonly DeskRow[];
 }
@@ -877,7 +878,7 @@ function projectRow(
     row.status === "confirmed" && row.receipt === null
       ? sourceCopy.en["s253"]
       : row.note;
-  const fields = (row.receipt ?? []).slice(0, 24).map((field) => ({
+  const fields = (status === "confirmed" ? row.receipt ?? [] : []).slice(0, 24).map((field) => ({
     key: field.key.slice(0, 40),
     value: field.value.length > 500 ? "[redacted]" : field.value,
   }));
@@ -961,7 +962,10 @@ function projectFlows(
   }
   const receiptSource = deskSource(source);
   for (const flow of flows) {
-    for (const row of flow.rows) {
+    const history = flow.history ?? [];
+    const completedIds = new Set(history.map((row) => row.operationId));
+    const rows = [...history, ...flow.rows.filter((row) => row.operationId === null || !completedIds.has(row.operationId))];
+    for (const row of rows) {
       const candidate = projectRow(evidenceSessionId, role, context, receiptSource, flow.refId, row, sequence.value);
       if (candidate) {
         sequence.value += 1;
@@ -1181,7 +1185,7 @@ export function buildReceiptExplorer(input: ReceiptExplorerInput): ReceiptExplor
         "consent",
         input.consent.source,
         input.consent.path,
-        input.consent.events.map((item) => ({ refId: item.eventId, rows: item.rows })),
+        input.consent.events.map((item) => ({ refId: item.eventId, rows: item.rows, history: item.history })),
         sequence,
       ),
     );
@@ -1194,7 +1198,7 @@ export function buildReceiptExplorer(input: ReceiptExplorerInput): ReceiptExplor
         "organizer",
         input.organizer.source,
         input.organizer.path,
-        input.organizer.events.map((item) => ({ refId: item.eventId, rows: item.rows })),
+        input.organizer.events.map((item) => ({ refId: item.eventId, rows: item.rows, history: item.history })),
         sequence,
       ),
     );

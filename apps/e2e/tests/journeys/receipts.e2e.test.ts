@@ -10,6 +10,56 @@ describe("receipts journey (stub, headless Chrome)", () => {
     await page.getByRole("heading", { name: "Receipt explorer" }).waitFor();
   }
 
+  it("retains repeated consent and invitation receipts through navigation and keyboard selection", async () => {
+    const page = await newDeskPage(suite.newPage, suite.origin);
+    await nav(page, "Marketing");
+    await page.locator('a.hub-card[href="/marketing/m05"]').click();
+    for (const [id, value] of [["event", "evt_repeat_consent"], ["subject", "subject-fixture"],
+      ["business", "business-fixture"], ["channel", "fixture-channel"], ["purpose", "fixture-purpose"], ["version", "0"]]) {
+      await page.locator("#consent-" + id).fill(value);
+    }
+    await page.locator("#consent-allowed").selectOption("true");
+    await press(page, "Send set_consent");
+    await press(page, "Send authorize_marketing");
+    await page.locator("#consent-version").fill("1");
+    await page.locator("#consent-allowed").selectOption("true");
+    await press(page, "Send set_consent");
+    await press(page, "Send authorize_marketing");
+    // A validation refusal must preserve the four completed operations too.
+    await page.locator("#consent-business").fill("");
+    await press(page, "Send set_consent");
+    await page.locator(".error-summary").waitFor();
+    await nav(page, "Organizer");
+    await page.locator("#organizer-event").fill("evt_repeat_org");
+    await page.locator("#organizer-version").fill("0");
+    await page.locator("#organizer-recipient").fill("guest-fixture");
+    for (const inventory of ["inv-first", "inv-second"]) {
+      await page.locator("#organizer-inventory").fill(inventory);
+      await press(page, "Send issue_invitation");
+    }
+    await openReceipts(page);
+    await page.getByRole("tab", { name: "Operator", exact: true }).click();
+    const entries = page.locator("#receipt-timeline button[data-entry-id]");
+    await poll(() => entries.count(), (count) => count === 6, "all repeated operations");
+    const exported = JSON.parse(await page.locator("#receipt-diagnostic").inputValue()) as {
+      entries: { operationId: string; fields: { key: string; value: string }[] }[];
+    };
+    expect(new Set(exported.entries.map((entry) => entry.operationId)).size).toBe(6);
+    expect(exported.entries[0]?.fields).toContainEqual({ key: "allowed", value: "true" });
+    expect(exported.entries[1]?.fields).toContainEqual({ key: "consentVersion", value: "0" });
+    expect(exported.entries[3]?.fields).toContainEqual({ key: "consentVersion", value: "1" });
+    await entries.first().focus();
+    await entries.first().press("ArrowDown");
+    expect(await entries.nth(1).evaluate((el) => el === document.activeElement)).toBe(true);
+    expect(await page.locator("#receipt-detail").innerText()).toContain("cns:evt_repeat_consent:1:authorize_marketing");
+    await entries.nth(4).click();
+    expect(await page.locator("#receipt-detail").innerText()).toContain("org:evt_repeat_org:1:issue_invitation:inv-first");
+    await entries.nth(5).click();
+    expect(await page.locator("#receipt-detail").innerText()).toContain("org:evt_repeat_org:1:issue_invitation:inv-second");
+    await suite.pass(page, "receipts.repeat-history");
+    await page.close();
+  });
+
   it("SUCCESS: one entry per operation id after a booking send, and a support export that holds ids only", async () => {
     const page = await newDeskPage(suite.newPage, suite.origin);
     await page.getByRole("link", { name: "Book" }).first().click();

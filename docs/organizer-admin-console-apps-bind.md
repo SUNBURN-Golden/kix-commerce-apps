@@ -107,3 +107,11 @@ The live invitation receipt, and the `EVENT_NOT_OPEN` rejection after `close_sal
 ## Hold
 
 No production deploy, no public host, no real payment, no KYC, no credit disbursement, no venue scan, no bank rail, and no live marketplace. No SLO. No Move, kernel, or settlement math is copied. Nothing in this change is inside kix-protocol. The web UI does not call `fetch`. The five pins stay where the gate bind put them.
+
+## Audit 8: invitation attempt ownership
+
+Every completed invitation is retained under its operation ID in page-load history. Current rows control commands; a distinct inventory invitation starts with empty receipt and trace fields. The desk snapshots submitted draft primitives before awaiting the invoker, so actor and issued-inventory bookkeeping use submitted values. Inventory deduplication and all existing write fences remain. `lastConfirmed` uses completion order, including when a later invitation is pending, UNKNOWN, rejected or not sent. History and current snapshot receipt fields are independent copies. Reset clears history; no storage, TTL or eviction policy is introduced.
+
+The identity remains `org:<eventId>:<attempt>:issue_invitation:<inventoryId>`. No new operation ID enables a retry after a fenced outcome.
+
+Regression coverage and actual local verification: [audit-8 evidence](audit-8-fix-evidence.md).
