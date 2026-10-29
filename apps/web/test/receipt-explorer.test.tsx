@@ -580,7 +580,7 @@ describe("receipt explorer", () => {
   });
 
   it("keeps the receipt sources off posts and keeps the receipt layout", () => {
-    const files = ["src/receipt-explorer.ts", "src/pages/Receipts.tsx"];
+    const files = ["src/receipt-explorer.ts", "src/receipt-pagination.ts", "src/pages/Receipts.tsx"];
     const combined = files.map((file) => readFileSync(path.join(webRoot, file), "utf8")).join("\n");
     expect(combined).not.toContain(".send(");
     expect(combined).not.toContain("invokeLocalCall");

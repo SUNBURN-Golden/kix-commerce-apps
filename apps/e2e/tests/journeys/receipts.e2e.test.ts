@@ -21,6 +21,13 @@ describe("receipts journey (stub, headless Chrome)", () => {
     expect(await entries.first().innerText()).toContain("jrn:evt_lanterns:1:create_event");
     await expectText(page, "Source stub-shape");
     const exported = await page.locator("#receipt-diagnostic").inputValue();
+    await page.getByLabel("Filter status", { exact: true }).selectOption("unknown");
+    expect(await entries.count()).toBe(0);
+    expect(await page.locator("#receipt-timeline-status").innerText()).toContain("0–0 of 0 matching; 1 total");
+    await page.getByRole("button", { name: "Last", exact: true }).press("Enter");
+    expect(await page.locator("#receipt-diagnostic").inputValue()).toBe(exported);
+    await press(page, "Clear filters");
+    expect(await entries.count()).toBe(1);
     const parsed = JSON.parse(exported) as Record<string, unknown>;
     expect(parsed.mode).toBe("stub");
     expect(parsed.productionReadiness).toBe(false);

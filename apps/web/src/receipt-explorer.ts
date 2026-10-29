@@ -85,7 +85,7 @@ const ROLE_ACTORS: Record<WorkspaceRole, readonly string[]> = {
   ],
 };
 
-const ROLE_CONTEXTS: Record<WorkspaceRole, readonly ReceiptContext[]> = {
+export const ROLE_CONTEXTS: Record<WorkspaceRole, readonly ReceiptContext[]> = {
   buyer: ["journey", "gift", "consent", "transport"],
   organizer: ["organizer", "transport"],
   operator: RECEIPT_CONTEXTS,
