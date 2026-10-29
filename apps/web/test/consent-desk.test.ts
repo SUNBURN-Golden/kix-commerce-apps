@@ -21,6 +21,93 @@ const DRAFT: ConsentDraft = {
 };
 
 describe("consent desk", () => {
+  it("keeps all authorization evidence after further consent updates and owns snapshot fields", async () => {
+    const { desk, calls } = stubDesk(async (input, shape) => shape.invokeLocalCall(input));
+    const eventId = "repeat-authorize";
+    await desk.send(eventId, "set_consent", DRAFT);
+    await desk.send(eventId, "authorize_marketing", DRAFT);
+    const original = structuredClone(desk.getSnapshot().events[0]?.history);
+    await desk.send(eventId, "set_consent", { ...DRAFT, expectedConsentVersion: "1" });
+    expect(desk.getSnapshot().events[0]?.rows[1]).toMatchObject({ operationId: null, receipt: null });
+    expect(desk.getSnapshot().events[0]?.lastConfirmed).toContain(calls[2]?.operationId);
+    await desk.send(eventId, "authorize_marketing", { ...DRAFT, expectedConsentVersion: "1" });
+    const event = desk.getSnapshot().events[0];
+    expect(event?.history.map((row) => row.operationId)).toEqual(calls.map((call) => call.operationId));
+    expect(event?.history.slice(0, 2)).toEqual(original);
+    const saved = structuredClone(event?.history);
+    const field = event?.history[0]?.receipt?.[0];
+    if (!field) throw new Error("missing receipt field");
+    field.value = "caller-mutated";
+    const currentField = event?.rows[0]?.receipt?.[0];
+    if (!currentField) throw new Error("missing current receipt field");
+    currentField.value = "caller-mutated";
+    desk.retain("another-event");
+    expect(desk.getSnapshot().events[0]?.history).toEqual(saved);
+    desk.reset();
+    expect(desk.getSnapshot().events).toEqual([]);
+  });
+
+
+  it.each(["success", "unknown", "rejected", "not-sent"] as const)(
+    "retains the first receipt when a successor is pending then %s", async (result) => {
+      const eventId = `repeat-${result}`;
+      let release = () => {};
+      const gate = new Promise<void>((resolve) => { release = resolve; });
+      const { desk, calls } = stubDesk(async (input, shape) => {
+        if (calls.length === 2) {
+          await gate;
+          if (result === "unknown") throw new ProtocolError("lost response", "REQUEST_TIMEOUT", {
+            requestId: "req-second", correlationId: "corr-second",
+          });
+          if (result === "rejected") throw new GateRejectedError("refused", "FIXTURE_REJECTED", {
+            requestId: "req-second", correlationId: "corr-second",
+          }, 422);
+        }
+        return shape.invokeLocalCall(input);
+      });
+      await desk.send(eventId, "set_consent", DRAFT);
+      const firstSnapshot = desk.getSnapshot();
+      const first = structuredClone(firstSnapshot.events[0]?.history[0]);
+      expect(first?.status).toBe("confirmed");
+      const submitted = { ...DRAFT, allowed: "false", expectedConsentVersion: result === "not-sent" ? "invalid" : "1" };
+      const sending = desk.send(eventId, "set_consent", submitted);
+      const pending = desk.getSnapshot().events[0];
+      if (result !== "not-sent") {
+        expect(pending?.rows[0]).toMatchObject({ status: "in-flight", receipt: null,
+          code: null, requestId: null, correlationId: null });
+        expect(pending?.history).toEqual([first]);
+        expect(pending?.lastConfirmed).toContain(first?.operationId);
+      }
+      release();
+      await sending;
+      const completed = desk.getSnapshot().events[0];
+      expect(completed?.history).toHaveLength(2);
+      expect(completed?.history[0]).toEqual(first);
+      expect(firstSnapshot.events[0]?.history[0]).toEqual(first);
+      const second = completed?.history[1];
+      expect(second?.operationId).not.toBe(first?.operationId);
+      expect(second?.status).toBe(result === "success" ? "confirmed" : result === "unknown" ? "unconfirmed" : result);
+      expect(completed?.history.every((row) => !row.canSend)).toBe(true);
+      expect(calls).toHaveLength(result === "not-sent" ? 1 : 2);
+      if (result === "success") {
+        expect(second?.receipt).not.toBeNull();
+        expect(completed?.lastConfirmed).toContain(second?.operationId);
+        expect(first?.receipt).toContainEqual({ key: "allowed", value: "true" });
+        expect(second?.receipt).toContainEqual({ key: "allowed", value: "false" });
+      } else {
+        expect(second?.receipt).toBeNull();
+        expect(completed?.lastConfirmed).toContain(first?.operationId);
+        expect(second?.requestId).toBe(result === "not-sent" ? null : "req-second");
+        expect(second?.correlationId).toBe(result === "not-sent" ? null : "corr-second");
+        const before = calls.length;
+        await desk.send(eventId, "set_consent", DRAFT);
+        expect(calls).toHaveLength(before);
+        expect(desk.getSnapshot().events[0]?.history).toEqual(completed?.history);
+      }
+    },
+  );
+
+
   it("confirms set_consent and authorize_marketing on the stub-shape invoker", async () => {
     const eventId = "show_lanterns";
     const { desk, calls } = stubDesk(async (input, shape) => shape.invokeLocalCall(input));

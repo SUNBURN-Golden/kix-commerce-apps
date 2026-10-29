@@ -108,6 +108,7 @@ export interface ConsentDeskSnapshot {
     eventId: string;
     pending: boolean;
     rows: ConsentRow[];
+    history: ConsentRow[];
     lastConfirmed: string;
     unconfirmed: string;
   }>;
@@ -144,6 +145,7 @@ interface ConsentRecord {
   localHalt: boolean;
   bind: ConsentBind | null;
   steps: StepRecord[];
+  history: Map<string, ConsentRow>;
 }
 
 export function consentPathStatus(
@@ -255,6 +257,7 @@ export class ConsentDesk {
       localHalt: false,
       bind: this.deps.source ? new ConsentBind(connectivityInvoker(this.deps.source.invoker)) : null,
       steps: blankSteps(),
+      history: new Map(),
     };
     this.records.set(eventId, record);
     this.publish();
@@ -273,23 +276,33 @@ export class ConsentDesk {
     if (!writesOpen(this.path)) {
       return;
     }
-    const current = record.steps.find((item) => item.step === step);
-    if (!current || !stepSendable(record, step)) {
+    const previous = record.steps.find((item) => item.step === step);
+    if (!previous || !stepSendable(record, step)) {
       return;
     }
-    if (step === "set_consent" && current.phase === "confirmed") {
+    if (step === "set_consent" && previous.phase === "confirmed") {
       record.attempt += 1;
       writeDeskAttempt("consent", eventId, record.attempt);
     }
+    const submitted = { ...draft };
     const operationId = consentOperationId(eventId, record.attempt, step);
-    current.phase = "in-flight";
-    current.operationId = operationId;
-    current.actor = actorFor(step, draft);
-    current.note = sourceCopy.en["snx"];
+    // A new operation owns no evidence from the command it replaces.
+    const current: StepRecord = {
+      step,
+      phase: "in-flight",
+      operationId,
+      actor: actorFor(step, submitted),
+      code: null,
+      requestId: null,
+      correlationId: null,
+      receipt: null,
+      note: sourceCopy.en["snx"],
+    };
+    record.steps[record.steps.indexOf(previous)] = current;
     record.pending = true;
     this.publish();
     try {
-      const outcome = await this.dispatch(record, step, operationId, draft);
+      const outcome = await this.dispatch(record, step, operationId, submitted);
       this.applyOutcome(record, step, outcome);
     } catch (error) {
       this.applyThrown(record, step, error);
@@ -300,6 +313,11 @@ export class ConsentDesk {
         stepRecord.phase = "not-sent";
         stepRecord.note = sourceCopy.en["s12l"];
         record.localHalt = true;
+      }
+      const completed = deriveRows(record, this.path).find((row) => row.step === step);
+      if (completed?.operationId && ["confirmed", "rejected", "unconfirmed", "not-sent"].includes(completed.status)
+        && !record.history.has(completed.operationId)) {
+        record.history.set(completed.operationId, { ...completed, canSend: false });
       }
       this.publish();
     }
@@ -459,11 +477,13 @@ export class ConsentDesk {
   private buildSnapshot(): ConsentDeskSnapshot {
     const events = [...this.records.values()].map((record) => {
       const rows = deriveRows(record, this.path);
+      const history = structuredClone([...record.history.values()]);
       return {
         eventId: record.eventId,
         pending: record.pending,
         rows,
-        lastConfirmed: summaryLine(sourceCopy.en["sq7"], lastRow(rows, "confirmed")),
+        history,
+        lastConfirmed: summaryLine(sourceCopy.en["sq7"], lastRow(history, "confirmed")),
         unconfirmed: summaryLine(sourceCopy.en["s251"], rows.find((row) => row.status === "unconfirmed")),
       };
     });
@@ -548,6 +568,7 @@ function blankRecord(): ConsentRecord {
     localHalt: false,
     bind: null,
     steps: blankSteps(),
+    history: new Map(),
   };
 }
 
@@ -610,7 +631,7 @@ function deriveRows(record: ConsentRecord, path: ConsentPathStatus): ConsentRow[
       code: step.code,
       requestId: step.requestId,
       correlationId: step.correlationId,
-      receipt: step.receipt,
+      receipt: step.receipt?.map((field) => ({ ...field })) ?? null,
       note: step.note,
       canSend,
     };

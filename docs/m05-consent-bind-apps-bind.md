@@ -99,3 +99,11 @@ The live `set_consent` / `authorize_marketing` receipts, and the `CONSENT_NOT_CU
 ## Hold
 
 No production deploy, no public host, no real payment, no KYC, no credit disbursement, no venue scan, no bank rail, and no live marketplace. No SLO. No Move, kernel, or settlement math is copied. Nothing in this change is inside kix-protocol. The web UI does not call `fetch`. The five pins stay where the gate bind put them.
+
+## Audit 8: attempt ownership
+
+The page-load desk retains terminal attempts by non-null operation ID, in completion order. Current rows remain command controls. A further explicit `set_consent` starts with no receipt, code or transport trace. A successful update resets the current `authorize_marketing` control without removing completed authorization evidence. `lastConfirmed` comes from the most recent confirmed historical attempt, including while its successor is pending, UNKNOWN, rejected or not sent. Snapshots copy receipt arrays and fields; reset clears this page-load history. No retention policy, storage or recovery is added. Existing write fences and `cns:<eventId>:<attempt>:<step>` identities remain.
+
+M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+
+Regression coverage and actual local verification: [audit-8 evidence](audit-8-fix-evidence.md).

@@ -258,6 +258,7 @@ describe("organizer workspace", () => {
             halted: false,
             issuedInventoryIds: [],
             rows: [],
+            history: [],
             lastConfirmed: "Last confirmed receipt: none",
             unconfirmed: "Unconfirmed request: none",
           },

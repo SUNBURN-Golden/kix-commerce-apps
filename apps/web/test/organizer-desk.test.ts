@@ -26,6 +26,104 @@ const DRAFT: OrganizerDraft = {
 };
 
 describe("organizer desk", () => {
+  it("uses the submitted invitation draft after the caller mutates it", async () => {
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const { desk, calls } = stubDesk(async (input, shape) => {
+      await gate;
+      return shape.invokeLocalCall(input);
+    });
+    const draft = { ...DRAFT, organizer: "submitted-organizer" };
+    const sending = desk.send("draft-owner", "issue_invitation", draft);
+    draft.inventoryId = "caller-mutated";
+    draft.organizer = "caller-mutated";
+    release();
+    await sending;
+    const event = desk.getSnapshot().events[0];
+    expect(event?.issuedInventoryIds).toEqual(["inv-0"]);
+    expect(event?.history[0]?.actor).toBe("submitted-organizer");
+    const original = structuredClone(event?.history);
+    const field = event?.history[0]?.receipt?.[0];
+    if (!field) throw new Error("missing receipt field");
+    field.value = "caller-mutated";
+    const currentField = event?.rows[5]?.receipt?.[0];
+    if (!currentField) throw new Error("missing current receipt field");
+    currentField.value = "caller-mutated";
+    desk.retain("another-event");
+    expect(desk.getSnapshot().events[0]?.history).toEqual(original);
+    await desk.send("draft-owner", "issue_invitation", DRAFT);
+    expect(calls).toHaveLength(1);
+    desk.reset();
+    expect(desk.getSnapshot().events).toEqual([]);
+  });
+
+
+  it.each(["success", "unknown", "rejected", "not-sent"] as const)(
+    "retains the first receipt when a successor is pending then %s", async (result) => {
+      const eventId = `repeat-${result}`;
+      let release = () => {};
+      const gate = new Promise<void>((resolve) => { release = resolve; });
+      const { desk, calls } = stubDesk(async (input, shape) => {
+        if (calls.length === 2) {
+          await gate;
+          if (result === "unknown") throw new ProtocolError("lost response", "REQUEST_TIMEOUT", {
+            requestId: "req-second", correlationId: "corr-second",
+          });
+          if (result === "rejected") throw new GateRejectedError("refused", "FIXTURE_REJECTED", {
+            requestId: "req-second", correlationId: "corr-second",
+          }, 422);
+        }
+        const receipt = await shape.invokeLocalCall(input);
+        return { ...(receipt as Record<string, unknown>), result: {
+          ticketId: `ticket-${(input.body as Record<string, unknown>).inventoryId}`, financialEntries: 0,
+        } };
+      });
+      await desk.send(eventId, "issue_invitation", DRAFT);
+      const firstSnapshot = desk.getSnapshot();
+      const first = structuredClone(firstSnapshot.events[0]?.history[0]);
+      expect(first?.status).toBe("confirmed");
+      const submitted = { ...DRAFT, inventoryId: "inv-1", expectedInventoryVersion: result === "not-sent" ? "invalid" : "0" };
+      const sending = desk.send(eventId, "issue_invitation", submitted);
+      const pending = desk.getSnapshot().events[0];
+      if (result !== "not-sent") {
+        expect(pending?.rows[5]).toMatchObject({ status: "in-flight", receipt: null,
+          code: null, requestId: null, correlationId: null });
+        expect(pending?.history).toEqual([first]);
+        expect(pending?.lastConfirmed).toContain(first?.operationId);
+      }
+      release();
+      await sending;
+      const completed = desk.getSnapshot().events[0];
+      expect(completed?.history).toHaveLength(2);
+      expect(completed?.history[0]).toEqual(first);
+      expect(firstSnapshot.events[0]?.history[0]).toEqual(first);
+      const second = completed?.history[1];
+      expect(second?.operationId).not.toBe(first?.operationId);
+      expect(second?.status).toBe(result === "success" ? "confirmed" : result === "unknown" ? "unconfirmed" : result);
+      expect(completed?.history.every((row) => !row.canSend)).toBe(true);
+      expect(calls).toHaveLength(result === "not-sent" ? 1 : 2);
+      if (result === "success") {
+        expect(second?.receipt).not.toBeNull();
+        expect(completed?.lastConfirmed).toContain(second?.operationId);
+        expect(completed?.issuedInventoryIds).toEqual(["inv-0", "inv-1"]);
+        expect(first?.receipt).toContainEqual({ key: "ticketId", value: "ticket-inv-0" });
+        expect(second?.receipt).toContainEqual({ key: "ticketId", value: "ticket-inv-1" });
+        await desk.send(eventId, "issue_invitation", submitted);
+        expect(calls).toHaveLength(2);
+      } else {
+        expect(second?.receipt).toBeNull();
+        expect(completed?.lastConfirmed).toContain(first?.operationId);
+        expect(second?.requestId).toBe(result === "not-sent" ? null : "req-second");
+        expect(second?.correlationId).toBe(result === "not-sent" ? null : "corr-second");
+        const before = calls.length;
+        await desk.send(eventId, "issue_invitation", DRAFT);
+        expect(calls).toHaveLength(before);
+        expect(desk.getSnapshot().events[0]?.history).toEqual(completed?.history);
+      }
+    },
+  );
+
+
   it("confirms the six commands on the stub-shape invoker", async () => {
     const eventId = "show_lanterns";
     const { desk, calls } = stubDesk(async (input, shape) => shape.invokeLocalCall(input));

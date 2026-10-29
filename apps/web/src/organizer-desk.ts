@@ -122,6 +122,7 @@ export interface OrganizerDeskSnapshot {
     halted: boolean;
     issuedInventoryIds: string[];
     rows: OrganizerRow[];
+    history: OrganizerRow[];
     lastConfirmed: string;
     unconfirmed: string;
   }>;
@@ -158,6 +159,7 @@ interface OrganizerRecord {
   localHalt: boolean;
   console: OrganizerConsole | null;
   steps: StepRecord[];
+  history: Map<string, OrganizerRow>;
   issued: string[];
 }
 
@@ -285,6 +287,7 @@ export class OrganizerDesk {
       localHalt: false,
       console: this.deps.source ? new OrganizerConsole(connectivityInvoker(this.deps.source.invoker)) : null,
       steps: blankSteps(),
+      history: new Map(),
       issued: [],
     };
     this.records.set(eventId, record);
@@ -314,20 +317,30 @@ export class OrganizerDesk {
     if (!writesOpen(this.path)) {
       return fencedResult("path-not-open", sourceCopy.en["s17d"]);
     }
-    const current = record.steps.find((item) => item.step === step);
-    if (!current || !stepSendable(record, step, draft)) {
+    const previous = record.steps.find((item) => item.step === step);
+    if (!previous || !stepSendable(record, step, draft)) {
       return fencedResult("already-sent", sourceCopy.en["s2z"]);
     }
-    const operationId = organizerOperationId(eventId, record.attempt, step, draft.inventoryId);
-    current.phase = "in-flight";
-    current.operationId = operationId;
-    current.actor = actorFor(step, draft);
-    current.note = sourceCopy.en["snx"];
+    const submitted = { ...draft };
+    const operationId = organizerOperationId(eventId, record.attempt, step, submitted.inventoryId);
+    // A new operation owns no evidence from the command it replaces.
+    const current: StepRecord = {
+      step,
+      phase: "in-flight",
+      operationId,
+      actor: actorFor(step, submitted),
+      code: null,
+      requestId: null,
+      correlationId: null,
+      receipt: null,
+      note: sourceCopy.en["snx"],
+    };
+    record.steps[record.steps.indexOf(previous)] = current;
     record.pending = true;
     this.publish();
     try {
-      const outcome = await this.dispatch(record, step, operationId, draft);
-      this.applyOutcome(record, step, outcome, draft);
+      const outcome = await this.dispatch(record, step, operationId, submitted);
+      this.applyOutcome(record, step, outcome, submitted);
       return outcomeResult(outcome, operationId, current.note);
     } catch (error) {
       this.applyThrown(record, step, error);
@@ -339,6 +352,11 @@ export class OrganizerDesk {
         stepRecord.phase = "not-sent";
         stepRecord.note = sourceCopy.en["s12l"];
         record.localHalt = true;
+      }
+      const completed = deriveRows(record, this.path).find((row) => row.step === step);
+      if (completed?.operationId && ["confirmed", "rejected", "unconfirmed", "not-sent"].includes(completed.status)
+        && !record.history.has(completed.operationId)) {
+        record.history.set(completed.operationId, { ...completed, canSend: false });
       }
       this.publish();
     }
@@ -488,6 +506,7 @@ export class OrganizerDesk {
   private buildSnapshot(): OrganizerDeskSnapshot {
     const events = [...this.records.values()].map((record) => {
       const rows = deriveRows(record, this.path);
+      const history = structuredClone([...record.history.values()]);
       return {
         eventId: record.eventId,
         attempt: record.attempt,
@@ -495,7 +514,8 @@ export class OrganizerDesk {
         halted: halted(record),
         issuedInventoryIds: [...record.issued],
         rows,
-        lastConfirmed: summaryLine(sourceCopy.en["sq7"], lastRow(rows, "confirmed")),
+        history,
+        lastConfirmed: summaryLine(sourceCopy.en["sq7"], lastRow(history, "confirmed")),
         unconfirmed: summaryLine(sourceCopy.en["s251"], rows.find((row) => row.status === "unconfirmed")),
       };
     });
@@ -581,6 +601,7 @@ function blankRecord(): OrganizerRecord {
     localHalt: false,
     console: null,
     steps: blankSteps(),
+    history: new Map(),
     issued: [],
   };
 }

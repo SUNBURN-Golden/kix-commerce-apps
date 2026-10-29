@@ -525,7 +525,7 @@ export class HttpProtocolAdapter implements CommerceProtocol {
    * before a request. Ambiguous responses do not prove a business rejection.
    */
   async invokeLocalCall(input: LocalCallInput): Promise<unknown> {
-    const envelope = buildLocalCallEnvelope(input);
+    const envelope = structuredClone(buildLocalCallEnvelope(input));
     const parsed = await this.exchange(this.endpoint(CONTRACT_ONLY_LOCAL_CALL_PATH), {
       method: CONTRACT_ONLY_LOCAL_CALL_METHOD,
       headers: {
