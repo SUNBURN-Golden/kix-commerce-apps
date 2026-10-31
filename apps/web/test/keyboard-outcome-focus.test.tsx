@@ -155,7 +155,7 @@ describe("route outcomes and local desks", () => {
     const m02 = renderAt("/marketing/m02");
     expect(m02).toContain('<h2 aria-describedby="m02-window-note">');
     expect(m02).toContain('<p class="muted" id="m02-window-note">');
-    expect(renderAt("/marketing/m03")).toContain('<p class="muted" aria-live="polite">');
+    expect(renderAt("/marketing/m03")).toContain('<div aria-live="polite"><p class="muted">');
     expect(renderAt("/marketing/m04")).toMatch(/<div aria-live="polite"><dt>Demo markers<\/dt>/);
   });
 
@@ -253,7 +253,7 @@ describe("a refused send is fenced with its reason", () => {
     expect(renderAt("/marketing")).toMatch(/<button[^>]*class="ghost"[^>]*>Reset marketing session/);
     expect(renderAt("/marketing")).not.toMatch(/aria-describedby="marketing-session-facts"[^>]*>Reset marketing session/);
     const source = readFileSync(new URL("../src/pages/marketing/Hub.tsx", import.meta.url), "utf8");
-    expect(source).toContain("const empty = reset && !snapshot.membership");
+    expect(source).toContain('const empty = reset && snapshot.membershipKnowledge === "known" && !snapshot.membership');
     expect(source).toContain('aria-describedby={empty ? "marketing-session-facts" : undefined}');
   });
 

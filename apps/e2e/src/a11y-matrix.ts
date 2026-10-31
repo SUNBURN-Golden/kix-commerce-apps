@@ -168,6 +168,12 @@ export const structCheckId = (screenId: string) => `a11y.struct.${screenId}`;
 export const kbdCheckId = (screenId: string) => `a11y.kbd.${screenId}`;
 
 export const STATIC_CHECK_IDS: readonly string[] = [
+  "a11y.marketing-depth.membership-unknown",
+  "a11y.marketing-depth.presale-lifecycle",
+  "a11y.marketing-depth.presale-windows",
+  "a11y.marketing-depth.coupon-expiry-conflict",
+  "a11y.marketing-depth.referral-attribution",
+  "a11y.marketing-depth.ko-empty-unknown",
   "a11y.forms.ime.booking", "a11y.forms.ime.gift", "a11y.forms.ime.organizer",
   "a11y.forms.ime.booking.guards", "a11y.forms.ime.gift.guards", "a11y.forms.ime.organizer.guards",
   "a11y.diagnostics.390", "a11y.diagnostics.1280",

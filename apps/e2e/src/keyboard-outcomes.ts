@@ -777,7 +777,7 @@ export const KEYBOARD_DRIVES = [
     journey: "marketing-m03", outcome: "SUCCESS", path: "/marketing/m03",
     setup: type("#coupon-code", "LANTERN-NOTE"),
     trigger: press("Apply demo code"),
-    outcomeSelector: 'main :text("Attached")',
+    outcomeSelector: 'main [data-coupon-state="valid"]',
     status: "main",
     focus: "TRIGGER",
   }),
