@@ -59,7 +59,7 @@ describe("stub startup boundary", () => {
     }
   });
 
-  it.skipIf(!existsSync(path.join(web, "dist/index.html")))("keeps every initial script and preload free of raw pin bytes and meets entry headroom and the repository total budget", () => {
+  it.skipIf(!existsSync(path.join(web, "dist/index.html")))("keeps every initial script and preload free of raw pin bytes and meets the tighter node targets", () => {
     const dist = path.join(web, "dist");
     const html = readFileSync(path.join(dist, "index.html"), "utf8");
     const initial = new Set<string>();
@@ -87,10 +87,6 @@ describe("stub startup boundary", () => {
     const gzip = (ref: string) => gzipSync(readFileSync(path.join(dist, ref)), { level: 9 }).length;
     expect([...initial].reduce((sum, ref) => sum + gzip(ref), 0)).toBeLessThanOrEqual(282000);
     const emitted = readdirSync(path.join(dist, "assets")).filter((name) => /\.(js|css)$/.test(name));
-    // Feature additions share the unchanged repository total allowance. The entry headroom
-    // assertion above remains stricter than the public bundle-budget.json entry ceiling.
-    const budget = JSON.parse(readFileSync(path.join(web, "bundle-budget.json"), "utf8")) as { limits: { totalGrowth: { base: number; maxRatio: number } } };
-    const totalLimit = budget.limits.totalGrowth.base * budget.limits.totalGrowth.maxRatio;
-    expect(emitted.reduce((sum, name) => sum + gzip("assets/" + name), 0)).toBeLessThanOrEqual(totalLimit);
+    expect(emitted.reduce((sum, name) => sum + gzip("assets/" + name), 0)).toBeLessThanOrEqual(785000);
   });
 });

@@ -480,7 +480,9 @@ export const KEYBOARD_DRIVES = [
   drive({
     journey: "marketing", outcome: "REJECT", path: "/marketing",
     setup: [...pressId('a.hub-card[href="/marketing/m01"]'), ...type("#membership-name", "Hub fan"), ...press("Issue demo card"), wait('main h3:text-is("Hub fan")'),
-      ...pressId('main a[href="/marketing"]'), wait("#marketing-session-facts")],
+      ...pressId('main a[href="/marketing"]'), wait("#marketing-session-facts"),
+      // Finish the preceding navigation announcement before measuring the Reset action.
+      wait('[data-route-note]:text-is("KIX Marketing")')],
     trigger: press("Reset marketing session"),
     outcomeSelector: '#marketing-session-facts dd:text-is("guest")',
     status: "#marketing-session-facts",

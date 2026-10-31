@@ -80,7 +80,7 @@ All evidence is synthetic stub mode. Mounted evidence is not browser evidence. B
 | M03/M04 | stub, browser | normal empty fixtures, desktop/en | reviewed policy/empty-state and referral-hint additions; all other baseline pixels retained | `visual.marketing-m03.desktop.en.light`, `visual.marketing-m04.desktop.en.light` | `apps/e2e/tests/visual/screens.visual.test.ts` | PASS |
 | HTTP/live gate | integration-http | private gate not exercised | no live-gate claim | `KIX_REQUIRE_GATE=0` deliberately skips gate suites | adapter suite | SKIPPED |
 
-## Command ledger
+## Initial delivery command ledger (before PR fix round 1)
 
 Verification uses Node **22.23.4**, supplied through the tool cache outside the repository; installed Chrome is `/usr/bin/google-chrome`. Browser commands set `KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1` and run sequentially. No long job is detached.
 
@@ -95,7 +95,7 @@ The final four-command CI sequence was run in order after the focused tests, wit
 | `npm ci` | PASS twice, including final CI sequence; lockfile unchanged |
 | `npm run typecheck` | PASS, including final CI sequence |
 | `npm run build` | PASS, including final CI sequence |
-| `KIX_REQUIRE_GATE=0 npm test` | Initial FAIL: two markup/source assertions, the intentional M02 historical-tier clock text, and the incidental total-budget literal. Corrected as documented; final PASS: adapter 1,663 + web 1,361 + cold-entry 6 = 3,030 tests; 23 live-gate tests SKIPPED deliberately |
+| `KIX_REQUIRE_GATE=0 npm test` | Initial FAIL: two markup/source assertions, the intentional M02 historical-tier clock text, and the 785,000-byte total target. The initial delivery relaxed that assertion; PR fix round 1 below restores it; final PASS: adapter 1,663 + web 1,361 + cold-entry 6 = 3,030 tests; 23 live-gate tests SKIPPED deliberately |
 | `node scripts/i18n-audit.mjs` | PASS: zero findings (initial and final runs) |
 | `npm run typecheck:e2e` | Initial FAIL: missing test-only Window declarations in the test program. Added an erased type import; PASS on subsequent runs |
 | `KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 npm run test:e2e` | PASS: 198 tests / 47 files |
@@ -115,6 +115,54 @@ Diagnostic build: `git archive HEAD` extracted the merged baseline to `/tmp/kix-
 Visual review command: `KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 KIX_VISUAL_UPDATE=0 KIX_VISUAL_OUT=/tmp/kix-marketing-visual npm run test:visual`. It failed only the two intentional desktop diffs; `gift.phone.ko.light` passed unchanged on this rerun. The old and actual PNGs were opened with `view_image`. M03 shows the added synthetic-policy/UNDETERMINED note and explicit empty-marker state; M04 shows the added `REF-STUB-UNATTRIBUTED` fixture code. Only those two actual PNGs were copied to `apps/e2e/visual-baselines/linux-d29b2e9b/`, and a Python script updated their SHA256 values plus `appHead`/`recordedOn` in the manifest. The other 92 baseline images and their hashes, the render profile, and tolerances (`channelDelta: 8`, `maxDiffPpm: 200`) are unchanged. Final verification uses `KIX_VISUAL_UPDATE=0`.
 
 Targeted browser diagnostic: `KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 npm exec -w @kix/e2e -- vitest run -c vitest.a11y.config.ts tests/a11y/marketing-depth.a11y.test.ts` passed all six new test bodies. The command exited 1 because the unchanged full-suite teardown requires every existing accessibility check; deliberately selecting one file omits those checks. It is diagnostic evidence only, not a full-suite pass. The final full-suite rerun is the acceptance evidence.
+
+## PR fix round 1 evidence
+
+Reviewed head: `b5f25860cb58a1da846da2ba9776a8b4b699a592`; verification below covers that head plus this uncommitted fix. No commit, push or external post is performed.
+
+The blocking finding is **fixed**, not rebutted. `apps/web/test/entry-import-graph.test.ts` is byte-identical to baseline `1fd6f014765a24bd98b4245d3da2a118ce6364ff`: initial scripts/preloads remain ≤ 282,000 and all emitted JS/CSS remain ≤ 785,000 gzip bytes. All runtime source files under `apps/web/src` are byte-identical to the reviewed head, including every ko/en message and M01–M05 behavior. Only the build's chunk grouping changes.
+
+| Clean stub build (Node 22.23.4, gzip level 9) | Reviewed head | Fixed working tree |
+| --- | ---: | ---: |
+| Initial JS | 161,460 | 161,285 |
+| Initial CSS | 4,974 | 4,974 |
+| Total emitted JS/CSS | 788,245 | 784,807 |
+| Largest lazy/shared JS chunk | 29,534 | 27,626 |
+| Emitted JS/CSS files | 94 | 89 |
+
+The fixed total saves **3,438 bytes**, leaving **193 bytes** below the restored target. `marketing-stubs` is lazy and 13,732 gzip bytes, below the unchanged 30,000-byte chunk cap. A clean `npm ci` / build reproduces the same numbers as the exploratory build. The unchanged repository budget check passes. Size report: `/tmp/kix-m01-review-final-size.json` (temporary local artifact).
+
+Exploratory builds: grouping M01–M04, hub, shared session and copy first produced 785,474 bytes and did **not** meet the restored test. Including M05 and its copy in that same marketing chunk produced the final 784,807-byte total. The first measurement is diagnostic only.
+
+The fix-round commands use Node 22.23.4 from the existing external tool cache. Static i18n/dependency/cycle scripts also run successfully under the shell's Node 20.19.2. Browser commands use `/usr/bin/google-chrome`, `KIX_E2E_NO_SANDBOX=1`, and execute sequentially. No baseline-update flag is enabled.
+
+| Fix-round command / check | Result |
+| --- | --- |
+| `npm ci` → `npm run typecheck` → `npm run build` → `KIX_REQUIRE_GATE=0 npm test` | PASS, exit 0 for the ordered sequence. Adapter 1,663 + web 1,361 + cold-entry 6 = 3,030 tests; 23 live-gate tests deliberately SKIPPED. Includes restored entry-import-graph assertions and all marketing model/mounted/contracts tests. Log: `/tmp/kix-m01-review-ci.log`. |
+| `node scripts/check-bundle-budget.mjs --dist apps/web/dist --budget apps/web/bundle-budget.json --json-out /tmp/kix-m01-review-final-size.json` | PASS: 784,807 total gzip bytes; every unchanged repository limit passes. |
+| Final `npm run typecheck` → `npm run build` → `KIX_REQUIRE_GATE=0 npm test`, after the fixture-boundary correction | PASS, exit 0; again 3,030 tests pass and 23 live-gate tests are deliberately skipped. Log: `/tmp/kix-m01-review-final-ci.log`. |
+| `npm run typecheck:e2e` | PASS. |
+| `npm run test:e2e` (Chrome environment above) | Full rerun PASS: 198 tests / 47 files. Log: `/tmp/kix-m01-review-e2e-rerun.log`; record: `/tmp/kix-m01-review-e2e-rerun-record.json`. First diagnostic failure is recorded below. |
+| Final `npm run test:a11y` (Chrome environment above) | PASS: 377 tests / 20 files, including all six marketing-depth checks and all 85 required keyboard outcome cells. Log: `/tmp/kix-m01-review-a11y-final.log`; record: `/tmp/kix-m01-review-a11y-final-record.json`. |
+| `npm run test:budget` (Chrome environment above) | PASS: 9 tests / 3 files; route loading, all size limits and chunk-failure behavior unchanged. Log: `/tmp/kix-m01-review-browser-budget.log`; record: `/tmp/kix-m01-review-budget-record.json`. |
+| `KIX_VISUAL_UPDATE=0 npm run test:visual` (Chrome environment above) | PASS: 109 tests / 3 files, all 94 committed screenshots compared with updates disabled. No baseline or tolerance changes. Log: `/tmp/kix-m01-review-visual.log`; record: `/tmp/kix-m01-review-visual-record.json`. |
+| `npm run lint`; `node scripts/i18n-audit.mjs`; `npm run deps:check`; `npm run cycle-check` | PASS: zero i18n findings, production dependency gate passes, no circular imports. |
+| `git diff --exit-code 1fd6f014765a24bd98b4245d3da2a118ce6364ff -- apps/web/test/entry-import-graph.test.ts` | PASS: regression test restored byte-for-byte. |
+| Protected-path diff against baseline; `git diff --check` | PASS: protected files unchanged; no whitespace errors. |
+
+Browser diagnostic (first fix-round full run, not a pass): `npm run test:e2e` exited 1, with 197/198 tests passing and `marketing-m02.NOT_BOUND` timing out. The unchanged diagnostics record `/tmp/kix-m01-review-e2e-record.json` classifies the failure as `withHostEvent: 1`, `withoutHostEvent: 0`; the failed test measured 22,101 ms monotonic duration versus 113,330 ms wall duration, a 91,232 ms clock step and a 19,109 ms loop stall. Its check was recorded as passed, and lifecycle cleanup and network ledgers were clean. This points to a host timing interruption; it is still recorded as a failed command. No timeout, retry, runner policy or test assertion is changed for the rerun. Initial log: `/tmp/kix-m01-review-e2e.log`.
+
+The first full accessibility run exposed a real fixture-build regression (370 tests passed, seven failed): the substituted `apps/e2e/shell-fixtures/marketing-session.ts` landed outside the new marketing chunk, creating an initialization cycle back into the grouped desk/pages. Six failures concerned the marketing fault/empty states; the seventh was a receipt-pagination timeout with a large recorded host clock step. The failed command remains in `/tmp/kix-m01-review-a11y.log` and `/tmp/kix-m01-review-a11y-record.json`.
+
+The fix keeps the test-only substituted session in the same `marketing-stubs` chunk as the production session it replaces. No test assertions, timeouts, aliases or fixture values change. The focused command `npm exec -w @kix/e2e -- vitest run -c vitest.a11y.config.ts tests/a11y/marketing-depth.a11y.test.ts tests/a11y/async-state.a11y.test.ts` then passed all 12 test bodies. Its exit 1 is expected for the selected subset because teardown requires the complete accessibility matrix; it is diagnostic only. Log: `/tmp/kix-m01-review-fixture-diagnostic.log`. Full-suite verification follows separately. A SHA256 comparison of every emitted file before and after this fixture-only correction confirms all 90 production build files (including HTML) are byte-identical. The 198-test browser journey pass therefore covers the final production bytes as well. Final `npm run budget` still measures 784,807 total gzip bytes. No browser baselines or tolerances change in this fix round.
+
+The second full accessibility run passed all six marketing-depth checks but exited 1 with 375/377 tests passing. The remaining failures were (1) hub Reset's live counter including the preceding navigation announcement (`p[data-route-note]`: KIX Marketing) as well as the Reset facts, and (2) a gallery timeout with 42,005 ms monotonic duration versus 606,081 ms wall duration and a recorded 564,078 ms host clock step. Log/record: `/tmp/kix-m01-review-a11y-rerun.log`, `/tmp/kix-m01-review-a11y-rerun-record.json`.
+
+The hub REJECT drive now explicitly waits for that preceding navigation's `[data-route-note]` text before measuring the separate Reset key. The observer still starts immediately before Reset, and the unchanged assertion still requires exactly one announcement; the refusal/focus/fence checks are unchanged. This is a setup synchronization fix, with no UI, counter, timeout or tolerance change. Final e2e typecheck and lint pass again. The final full accessibility run then passed all 377 tests as recorded in the fix-round table above.
+
+All final browser records (journeys rerun, accessibility final, budget and visual) report `nonLoopback: 0`, `nonGet: 0` and `appNetworkCalls: 0`; all final runs exit 0. Failed exploratory/host-interrupted commands above are preserved as diagnostics and are not counted as passes. M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce. No STOP condition is crossed and no decision is needed.
+
+Locked-file evidence: the worktree, reviewed head and local `origin/main` all have commerce binding Git blob `47ab5e10cbf5f8f10bed718b4dd5190fe5dfe76f`; SHA256 remains `83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249`. Protected-path diff against the pre-node baseline is empty for `.aiops`, `docs/aiops`, `packages/protocol-adapter`, CI, root manifests/lockfile and `apps/web/bundle-budget.json`.
 
 ## Files changed
 
@@ -146,6 +194,7 @@ Targeted browser diagnostic: `KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_S
 - `apps/web/test/keyboard-outcome-focus.test.tsx`
 - `apps/web/test/marketing-desk.test.ts`
 - `apps/web/test/marketing-interactions.test.tsx`
+- `apps/web/vite.config.ts` (PR fix round 1)
 - `docs/c-plan-c-m01-m04-stub-depth-stub-apps-bind.md`
 
 ## UNDETERMINED/STOP boundaries
@@ -154,6 +203,8 @@ Eligibility, presale priority, coupon duration/stacking, attribution precedence/
 
 No .aiops/, docs/aiops/, CI, locked commerce binding, protocol code, dependency, lockfile or bundle budget file changes are made. The locked binding SHA256 remains `83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249`. Bundle ceilings remain initial JS 290000, CSS 5000, chunk JS 30000, landing JS 400000, total gzip 790000. Production/truth flags remain false. Stub remains default, and existing HTTP fail-closed behavior, loopback restriction, one attempt and no fallback/retry/redirect behavior are preserved.
 
-Design deviations: a clean baseline build under Node 22 measured 784,948 gzip bytes, leaving just 52 bytes below the previous entry-import-graph test's incidental 785,000 total literal. The implementation measured 788,397, within the existing repository 790,000 total allowance. That test now reads the unchanged `bundle-budget.json` total limit, while retaining its stricter 282,000 entry assertion. No budget file, CI configuration, tolerance or owner policy value changes. This avoids a second contradictory total budget embedded in a test.
+PR fix round 1 accepts the blocking review: the 785,000-byte total in `entry-import-graph.test.ts` is an explicit regression target from `docs/c-plan-d-entry-bundle-headroom-stub-apps-bind.md`, not an incidental literal. The initial delivery's substitution of the 790,000-byte repository allowance was incorrect and is reverted byte-for-byte to the pre-node test. The owner bundle-budget ruling authorizes the repository ceiling; it does not waive this stricter target.
+
+The build now groups the marketing hub, M01–M05 pages, shared session implementation/fixtures and their bilingual copy into one lazy `marketing-stubs` chunk. Previously their code and copy were spread across separate page/shared chunks and two display-copy groups. Co-locating repeated markup and vocabulary reduces gzip overhead while preserving every source string and all runtime logic. M05's command sequence and behavior are unchanged. The explicit manual chunk retains `onlyExplicitManualChunks: true`; shared UI and protocol/pin modules keep their existing grouping. The shell-fault test session substitute receives the same chunk assignment to preserve initialization order in that isolated build. No budget file, CI configuration, tolerance or product policy changes.
 
 Added copy is consolidated in the shared marketing desk ko/en bundle rather than repeated across page bundles. Existing keyboard check identities are retained; M03 SUCCESS now targets its attached validity cell because the new unknown-fixture explanation already contains the word “attached” before submission. Dedicated mandatory marketing-depth browser checks use the existing isolated shell-fault build instead of adding another browser build. Reviewed and updated only the M03/M04 desktop English baselines and their manifest metadata/hashes. Pixel tolerances are unchanged.
