@@ -24,6 +24,11 @@ describe("marketing-m03 journey (stub, headless Chrome)", () => {
         await page.locator("#coupon-code").fill("NOT-A-FIXTURE");
         await press(page, "Apply demo code");
         await page.getByRole("alert").waitFor();
+        for (const code of ["DEMO-EXPIRED", "DEMO-FUTURE", "DEMO-UNKNOWN", "DEMO-GROUP-A", "DEMO-GROUP-B"]) {
+            await page.locator("#coupon-code").fill(code);
+            await press(page, "Apply demo code");
+        }
+        await expectText(page, "Synthetic fixture group conflict");
         await suite.pass(page, "marketing-m03.REJECT");
         await page.close();
     });

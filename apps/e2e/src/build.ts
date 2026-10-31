@@ -61,6 +61,8 @@ async function buildApp(withFaults: boolean, gallery = false): Promise<BuiltApp>
       resolve: withFaults
         ? {
             alias: [
+              // Pages import ../../marketing/session; the snapshot hook imports ./session.
+              { find: /^(?:(\.\.?\/)+marketing\/session|\.\/session)$/, replacement: path.resolve(here, "../shell-fixtures/marketing-session.ts") },
               { find: /^(\.\.?\/)+gift-source$/, replacement: path.resolve(here, "../shell-fixtures/ime-sources.ts") },
               { find: /^(\.\.?\/)+organizer-source$/, replacement: path.resolve(here, "../shell-fixtures/ime-sources.ts") },
               { find: /^\.\/pages\/Receipts$/, replacement: path.resolve(here, "../shell-fixtures/receipts-fault.ts") },

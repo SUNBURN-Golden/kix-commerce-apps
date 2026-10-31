@@ -17,6 +17,11 @@ describe("marketing-m01 journey (stub, headless Chrome)", () => {
         await press(page, "Issue demo card");
         await expectText(page, "Browser fan");
         await expectText(page, "session-only");
+        await page.locator("#membership-form select").selectOption("member");
+        await press(page, "Issue demo card");
+        await expectText(page, "member");
+        await press(page, "Clear demo card");
+        await page.locator("#m01-card-empty").waitFor();
         await suite.pass(page, "marketing-m01.SUCCESS");
         await page.close();
     });

@@ -15,8 +15,8 @@
     "channelDelta": 8,
     "maxDiffPpm": 200
   },
-  "appHead": "5be78541968af937c22abdd1fcc0899155ce1e54",
-  "recordedOn": "2026-10-28",
+  "appHead": "1fd6f014765a24bd98b4245d3da2a118ce6364ff",
+  "recordedOn": "2026-10-31",
   "shots": 94,
   "hashes": {
     "box-office.phone.en.light": "de5a27a533f6b30afecd94be6657f06129e44329b53f7b4af2e2caa9d6a4441b",
@@ -84,9 +84,9 @@
     "marketing-m02.phone.ko.light": "e3114745c2d36629fca20f320d02db251a76837995ca03cc67051a5ef7d33054",
     "marketing-m02.desktop.en.light": "46b8557885fde54613379c1df6f44a9495b0e5d614c95e023823cb11f4b1b4b6",
     "marketing-m03.phone.ko.light": "27e1562f3a82feec227fc8370b6bd2ac7e3542be87871e51da72c442dabf6327",
-    "marketing-m03.desktop.en.light": "1fa213fef85d390a04bd5789005c1e7846206b8b94448b5608ee665e9b8f5845",
+    "marketing-m03.desktop.en.light": "d301c4ea285a15cfbb99340ede1697a3a89c4da3b765253e28701cb685741c0b",
     "marketing-m04.phone.ko.light": "c7afb38beaed3234a7b6991dee35e0d4b322ce26f60a57283631f5dfb8c1ed45",
-    "marketing-m04.desktop.en.light": "826556725f44d7fd25ffcde364993623de62e9d575370e64d626cc62e80d6740",
+    "marketing-m04.desktop.en.light": "d887ce01c25ccc3a9999b09f116b0e92864e4c77204485e1864c9842a6b1b14f",
     "marketing-m05.phone.ko.light": "281429932b94c60f4ed6e993d3f93e539503c2406c760f0171262641108206e6",
     "marketing-m05.desktop.en.light": "22b19c26043dfcada34ddf073331fbf1031fec615112b3046ffaa6e4faa2846d",
     "platform.phone.ko.light": "b326573bd4891de8eb24fd85f5fa17c0f028a8db1117cf1c8dceb08655d5ee0c",

@@ -20,13 +20,17 @@ describe("marketing-m02 journey (stub, headless Chrome)", () => {
         await page.locator('main a[href="/marketing/m02"]').first().click();
         await page.getByRole("button", { name: "Record demo interest" }).first().click();
         await expectText(page, "Recorded");
-        expect(await page.locator(".program li").first().getByRole("button").isDisabled()).toBe(true);
+        expect(await page.locator(".program li").first().getByRole("button").first().isDisabled()).toBe(true);
+        await press(page, "Withdraw demo interest");
+        await expectText(page, "Withdrawn; record again explicitly");
+        await page.getByRole("button", { name: "Record demo interest" }).first().click();
+        await expectText(page, "Recorded");
         await suite.pass(page, "marketing-m02.SUCCESS");
         await page.close();
     });
     it("REJECT: existing synthetic controls and observed evidence", async () => {
         const page = await open();
-        expect(await page.locator(".program li").first().getByRole("button").isDisabled()).toBe(true);
+        expect(await page.locator(".program li").first().getByRole("button").first().isDisabled()).toBe(true);
         await expectText(page, "closed-demo");
         await suite.pass(page, "marketing-m02.REJECT");
         await page.close();

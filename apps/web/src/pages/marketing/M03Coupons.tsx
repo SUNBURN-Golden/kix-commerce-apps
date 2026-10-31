@@ -1,3 +1,4 @@
+import { AsyncStateFrame } from "../../components/AsyncStateFrame";
 import { formatWhen } from "../../format";
 import { messages as copy0 } from "../../i18n/messages/pages--marketing--M03Coupons";
 import { messages as copy1 } from "../../i18n/messages/marketing--desk";
@@ -7,7 +8,6 @@ import { RefusalScope } from "../../connectivity/refusal";
 import { ValidatedForm } from "../../forms/ValidatedForm";
 import { field } from "../../forms/validation";
 import { useState, type FormEvent } from "react";
-import { COUPON_FIXTURES } from "../../marketing/desk";
 import { marketingSession } from "../../marketing/session";
 import { useMarketingSnapshot } from "../../marketing/useMarketingSnapshot";
 import { useT } from "../../i18n/desk-context";
@@ -51,9 +51,13 @@ export function M03Page() {
         </div>
       </ValidatedForm>
       </RefusalScope>
+      <p className="muted">{t("marketing.fixtureNote")}</p>
+      {snapshot.coupons.length === 0 ? <p className="empty">{t("marketing.noCoupons")}</p> : null}
+      {snapshot.fixtures.coupons.length === 0 ? <p className="empty">{t("marketing.noFixtures")}</p> : null}
       <ul className="program">
-        {deskText(t, COUPON_FIXTURES.map((item) => {
+        {deskText(t, snapshot.fixtures.coupons.map((item) => {
           const applied = snapshot.coupons.find((row) => row.code === item.code);
+          const state = snapshot.couponStates[item.code];
           return (
             <li key={item.code}>
               <article className="row">
@@ -61,8 +65,10 @@ export function M03Page() {
                   <p className="eyebrow">{deskText(t, item.code)}</p>
                   <h3 lang="ko">{deskText(t, item.titleKo)}</h3>
                   <p className="muted">{deskText(t, item.titleEn)}</p>
+                  <p className="muted">{item.validFrom ?? t("marketing.unbounded")} · {item.expiresAt ?? t("marketing.unbounded")} · {item.conflictGroup}</p>
+                  {item.validity === "unknown" ? <AsyncStateFrame kind="unknown" word="UNKNOWN" label="" note={t("marketing.coupon.unknown")} /> : null}
                 </div>
-                <p className="muted" aria-live="polite">{applied ? t("s8y", { v1: formatWhen(applied.appliedAt, clock) }) : deskText(t, item.marker)}</p>
+                <div aria-live="polite"><p className="muted">{applied ? t("s8y", { v1: formatWhen(applied.appliedAt, clock) }) : deskText(t, item.marker)}</p>{state ? <p data-coupon-state={state}>{t(`marketing.coupon.${state}`)}</p> : null}</div>
               </article>
             </li>
           );

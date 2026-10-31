@@ -19,7 +19,6 @@ const displayCopyGroups: [string, string[]][] = [
     "discovery--fixture",
     "discovery--model",
     "discovery-workspace",
-    "marketing--desk",
     "marketing-journey",
   ]],
   ["display-copy-2", [
@@ -101,13 +100,6 @@ const displayCopyGroups: [string, string[]][] = [
     "pages--ReservationPanel",
     "pages--SessionRecoveryPanels",
     "pages--SettlementPanel",
-    "pages--marketing--Hub",
-    "pages--marketing--M01Membership",
-    "pages--marketing--M02Presale",
-    "pages--marketing--M03Coupons",
-    "pages--marketing--M04Rewards",
-    "pages--marketing--M05Consent",
-    "pages--marketing--MarketingChrome",
     "receipt-explorer",
   ]],
   ["display-copy-6", [
@@ -146,6 +138,15 @@ export default defineConfig({
           if (/\/protocol-adapter\/src\/(operational-qualification|operational-qualification-controller|platform-release|cross-surface-journeys)\.ts$/.test(id)) return "kix-review-cases";
           if (/\/protocol-adapter\/src\/(finance-operations|tenant-permissions|delegated-assistant)\.ts$/.test(id)) return "kix-operations-cases";
           if (/\/protocol-adapter\/src\/(platform-journey|provider-journey|refund-return|installable-mobile|inventory-read|discovery-read|marketplace-performance)\.ts$/.test(id)) return "kix-journey-cases";
+
+          // The session stubs share forms, fixtures and bilingual copy. Keep them in one
+          // lazy chunk so repeated markup and vocabulary compress together.
+          if (/\/src\/(pages\/marketing\/(Hub|M01Membership|M02Presale|M03Coupons|M04Rewards|M05Consent|MarketingChrome)|marketing\/(desk|fixtures|session|useMarketingSnapshot))\.tsx?$/.test(id)
+            || /\/src\/i18n\/messages\/(marketing--desk|pages--marketing--(Hub|M01Membership|M02Presale|M03Coupons|M04Rewards|M05Consent|MarketingChrome))\.ts$/.test(id)) return "marketing-stubs";
+
+          // The fault build substitutes this for marketing/session. Preserve the same
+          // chunk boundary so its constructor can use the desk before page modules run.
+          if (id.endsWith("/e2e/shell-fixtures/marketing-session.ts")) return "marketing-stubs";
 
           // Small UI helpers that many lazy desks share load as one lazy chunk; the entry never imports them.
           if (/\/src\/(a11y\/focus|components\/(AsyncState|CachedReadNotice|ConnectivityWriteButton)|connectivity\/(copy|desk-protocol|refusal|write-guard)|desk-attempts|i18n\/desk-context)\.tsx?$/.test(id)) return "desk-ui";
