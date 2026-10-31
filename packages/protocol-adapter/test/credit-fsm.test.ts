@@ -11,6 +11,7 @@ import {
   echoIntegrationGateHeaders,
   isPinnedAction,
 } from "../src/index.js";
+import { CreditCaseStore } from "../src/credit-case.js";
 import { localCallReceipt } from "./support/receipt.js";
 
 const FACE = 100_000;
@@ -803,5 +804,156 @@ async function issueRight(adapter: StubProtocolAdapter) {
     issuanceId: "iss_evt_lanterns",
     orderId: "ord_evt_lanterns",
     idempotencyKey: "issue-1",
+  });
+}
+
+it.each([
+  { field: "advanceId", value: " ", code: "INVALID_ID" },
+  { field: "claimId", value: "", code: "INVALID_ID" },
+  { field: "beneficiaryRole", value: " x", code: "INVALID_ID" },
+  ...[0, -1, 0.5, NaN, Infinity, 1_000_000_000_001].map((value) => ({ field: "amount", value, code: "INVALID_AMOUNT" })),
+  { field: "openFace", value: 0, code: "INVALID_AMOUNT" },
+])("credit rejects $field=$value with $code before creating exposure", async ({ field, value, code }) => {
+  const adapter = protocol();
+  const input = { advanceId: ADVANCE, claimId: CLAIM, beneficiaryRole: ROLE, openFace: FACE,
+    amount: OFFER, idempotencyKey: "invalid", [field]: value };
+  await expect(adapter.offerCredit(input)).rejects.toMatchObject({ code });
+  await expect(adapter.viewCredit(ADVANCE)).rejects.toMatchObject({ code: "UNKNOWN_ADVANCE" });
+  expect((await offerInput(adapter, { idempotencyKey: "valid" })).credit)
+    .toMatchObject({ phase: "OFFERED", outstandingExposure: 0, availableCredit: FACE });
+});
+
+it("credit rejects advance and settlement binding conflicts without altering exposure", async () => {
+  const adapter = protocol();
+  await offerInput(adapter);
+  await expect(offerInput(adapter, { claimId: "another", idempotencyKey: "conflict" }))
+    .rejects.toMatchObject({ code: "ADVANCE_BINDING_CONFLICT" });
+  const before = await adapter.viewCredit(ADVANCE);
+  expect(before).toMatchObject({ phase: "OFFERED", claimId: CLAIM, outstandingExposure: 0 });
+  await adapter.bindCreditSettlement({ advanceId: ADVANCE, settlementId: "first", idempotencyKey: "bind" });
+  await expect(adapter.bindCreditSettlement({ advanceId: ADVANCE, settlementId: "other", idempotencyKey: "conflict-bind" }))
+    .rejects.toMatchObject({ code: "SETTLEMENT_BINDING_CONFLICT" });
+  expect(await adapter.viewCredit(ADVANCE)).toMatchObject({ phase: "OFFERED", settlementId: "first", outstandingExposure: 0 });
+  await adapter.approveCredit({ advanceId: ADVANCE, idempotencyKey: "approve" });
+  await expect(adapter.drawCredit({ advanceId: ADVANCE, drawId: DRAW, idempotencyKey: "unknown" }))
+    .rejects.toMatchObject({ code: "UNKNOWN_SETTLEMENT" });
+  expect(await adapter.viewCredit(ADVANCE)).toMatchObject({ phase: "APPROVED", outstandingExposure: 0, availableCredit: FACE });
+  expect(await adapter.reconcileCredit({ advanceId: ADVANCE, idempotencyKey: "reconcile" })).toMatchObject({ matched: true });
+});
+
+const creditTerminalCommands = ["offer", "approve", "reject", "cancel", "bind", "draw", "repay", "close", "default"] as const;
+for (const phase of ["REJECTED", "CANCELLED", "CLOSED", "DEFAULTED"] as const) {
+  describe(`credit terminal matrix ${phase}`, () => {
+    for (const command of creditTerminalCommands) {
+      it(`${command}: refuses a fresh mutation and preserves exposure`, async () => {
+        const adapter = protocol();
+        if (phase === "REJECTED" || phase === "CANCELLED") {
+          await offerInput(adapter);
+          if (phase === "REJECTED") await adapter.rejectCredit({ advanceId: ADVANCE, idempotencyKey: "terminal", reason: "FIXTURE" });
+          else await adapter.cancelCredit({ advanceId: ADVANCE, idempotencyKey: "terminal", reason: "FIXTURE" });
+        } else {
+          await approveDraw(adapter);
+          if (phase === "CLOSED") {
+            await adapter.repayCredit({ advanceId: ADVANCE, repayId: "paid", sequence: 1, amount: OFFER, idempotencyKey: "repay" });
+            await adapter.closeCredit({ advanceId: ADVANCE, idempotencyKey: "terminal" });
+          } else await adapter.defaultCredit({ advanceId: ADVANCE, idempotencyKey: "terminal", reason: "FIXTURE" });
+        }
+        const before = await adapter.viewCredit(ADVANCE);
+        const step = { advanceId: ADVANCE, idempotencyKey: "fresh" };
+        const send = () => {
+          switch (command) {
+            case "offer": return offerInput(adapter, { idempotencyKey: "fresh" });
+            case "approve": return adapter.approveCredit(step);
+            case "reject": return adapter.rejectCredit({ ...step, reason: "new" });
+            case "cancel": return adapter.cancelCredit({ ...step, reason: "new" });
+            case "bind": return adapter.bindCreditSettlement({ ...step, settlementId: "new" });
+            case "draw": return adapter.drawCredit({ ...step, drawId: "new" });
+            case "repay": return adapter.repayCredit({ ...step, repayId: "new", sequence: 2, amount: 1 });
+            case "close": return adapter.closeCredit(step);
+            case "default": return adapter.defaultCredit({ ...step, reason: "new" });
+          }
+        };
+        const code = command === "offer" ? "ILLEGAL_TRANSITION" : "TERMINAL_IMMUTABLE";
+        await expect(send()).rejects.toMatchObject({ code });
+        await expect(send()).rejects.toMatchObject({ code });
+        expect(await adapter.viewCredit(ADVANCE)).toEqual({ ...before, lastRejectCode: code });
+        expect(await adapter.reconcileCredit({ advanceId: ADVANCE, idempotencyKey: "recon" }))
+          .toMatchObject({ matched: true, credit: { phase, outstandingExposure: before.outstandingExposure } });
+        expect(await offerInput(adapter)).toMatchObject({ duplicate: true, applied: null, credit: { phase: "OFFERED" } });
+        expect((await adapter.viewCredit(ADVANCE)).phase).toBe(phase);
+        if (phase === "CLOSED" || phase === "DEFAULTED") {
+          expect(await adapter.drawCredit({ advanceId: ADVANCE, drawId: `draw-${ADVANCE}`, idempotencyKey: "same-draw" }))
+            .toMatchObject({ duplicate: true, applied: null, credit: { phase } });
+        }
+      });
+    }
+  });
+}
+
+
+it("credit rejects unsafe settlement authority; stored refusal survives a corrected view", () => {
+  let fundsExecuted = true;
+  const store = new CreditCaseStore(() => ({ phase: "COMMITTED", fundsExecuted }));
+  store.offer({ advanceId: ADVANCE, claimId: CLAIM, openFace: FACE, amount: OFFER,
+    beneficiaryRole: ROLE, idempotencyKey: "offer" });
+  store.bindSettlement({ advanceId: ADVANCE, settlementId: "synthetic", idempotencyKey: "bind" });
+  store.approve({ advanceId: ADVANCE, idempotencyKey: "approve" });
+  const input = { advanceId: ADVANCE, drawId: DRAW, idempotencyKey: "unsafe" };
+  expect(() => store.draw(input)).toThrowError(expect.objectContaining({ code: "SETTLEMENT_VIEW_REJECTED" }));
+  expect(store.view(ADVANCE)).toMatchObject({ phase: "APPROVED", outstandingExposure: 0, reservedOpen: 0 });
+  fundsExecuted = false;
+  expect(() => store.draw(input)).toThrowError(expect.objectContaining({ code: "SETTLEMENT_VIEW_REJECTED" }));
+  expect(store.draw({ ...input, idempotencyKey: "explicit-new" })).toMatchObject({ duplicate: false,
+    fundsExecuted: false, credit: { phase: "DRAWN", outstandingExposure: OFFER } });
+  expect(store.reconcile({ advanceId: ADVANCE, idempotencyKey: "reconcile" }).matched).toBe(true);
+});
+
+const creditEdges: Record<string, Record<string, string>> = {
+  OFFERED: { approve: "APPROVED", reject: "REJECTED", cancel: "CANCELLED", bind: "OFFERED" },
+  APPROVED: { cancel: "CANCELLED", bind: "APPROVED", draw: "DRAWN" },
+  DRAWN: { repay: "DRAWN", default: "DEFAULTED" },
+};
+for (const phase of ["OFFERED", "APPROVED", "DRAWN"] as const) {
+  describe(`credit edge matrix ${phase}`, () => {
+    for (const command of creditTerminalCommands) {
+      it(`${command}: applies the permitted edge or preserves exposure on refusal`, async () => {
+        const adapter = protocol();
+        await offerInput(adapter);
+        if (phase !== "OFFERED") await adapter.approveCredit({ advanceId: ADVANCE, idempotencyKey: "setup-approve" });
+        if (phase === "DRAWN") await adapter.drawCredit({ advanceId: ADVANCE, drawId: DRAW, idempotencyKey: "setup-draw" });
+        expect(await adapter.reconcileCredit({ advanceId: ADVANCE, idempotencyKey: "before-recon" }))
+          .toMatchObject({ matched: true, credit: { phase } });
+        const before = await adapter.viewCredit(ADVANCE);
+        const input = { advanceId: ADVANCE, idempotencyKey: "edge" };
+        const send = () => {
+          switch (command) {
+            case "offer": return offerInput(adapter, { idempotencyKey: "edge" });
+            case "approve": return adapter.approveCredit(input);
+            case "reject": return adapter.rejectCredit({ ...input, reason: "FIXTURE" });
+            case "cancel": return adapter.cancelCredit({ ...input, reason: "FIXTURE" });
+            case "bind": return adapter.bindCreditSettlement({ ...input, settlementId: "synthetic" });
+            case "draw": return adapter.drawCredit({ ...input, drawId: "edge-draw" });
+            case "repay": return adapter.repayCredit({ ...input, repayId: "edge-repay", sequence: 1, amount: 30_000 });
+            case "close": return adapter.closeCredit(input);
+            case "default": return adapter.defaultCredit({ ...input, reason: "FIXTURE" });
+          }
+        };
+        const next = creditEdges[phase]?.[command];
+        if (next) {
+          const receipt = await send();
+          expect(receipt).toMatchObject({ duplicate: false, provenance: "MOCK_CREDIT_F04_ONLY", fundsExecuted: false,
+            economicFinalityClaimed: false, credit: { phase: next } });
+          expect(await send()).toMatchObject({ duplicate: true, applied: null, credit: { phase: next } });
+          if (command === "repay") expect(receipt.credit).toMatchObject({ outstandingExposure: 50_000, repaidExposure: 30_000, reservedOpen: OFFER });
+        } else {
+          const code = phase === "DRAWN" && command === "draw" ? "DUPLICATE_DRAW"
+            : phase === "DRAWN" && command === "close" ? "OUTSTANDING_REMAINS" : "ILLEGAL_TRANSITION";
+          await expect(send()).rejects.toMatchObject({ code });
+          await expect(send()).rejects.toMatchObject({ code });
+          expect(await adapter.viewCredit(ADVANCE)).toEqual({ ...before, lastRejectCode: code });
+        }
+        expect(await adapter.reconcileCredit({ advanceId: ADVANCE, idempotencyKey: "after-recon" })).toMatchObject({ matched: true });
+      });
+    }
   });
 }

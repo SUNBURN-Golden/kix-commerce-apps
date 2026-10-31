@@ -1,6 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/resale-desk";
 import { connectedHandler } from "./connectivity/write-guard";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ProtocolError, type ResaleCaseView, type ResaleRightView } from "@kix/protocol-adapter";
 import { protocol } from "./connectivity/desk-protocol";
 import type { ResaleDeskCommand } from "./pages/ResalePanel";
@@ -28,13 +28,14 @@ export function useResaleDesk(eventId: string) {
   const [right, setRight] = useState<ResaleRightView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [attempt, setAttempt] = useState(() => readAttempt(eventId));
 
-  useEffect(() => {
-    setAttempt(readAttempt(eventId));
-  }, [eventId]);
+  // One mutable bag: g = selection generation (a selection owns its reads and
+  // completion, including A → B → A); f = in-flight send (React state alone
+  // cannot guard two activations from the same render).
+  const box = useRef({ g: 0, f: false }).current;
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (requestGeneration: number) => {
+    const current = () => box.g === requestGeneration;
     const trimmed = eventId.trim();
     if (!trimmed) {
       setView(null);
@@ -42,47 +43,50 @@ export function useResaleDesk(eventId: string) {
       return;
     }
     const ids = resaleIds(trimmed);
+    let nextRight: ResaleRightView | null = null;
     try {
-      setRight(await protocol.viewResaleRight(ids.issuanceId));
+      nextRight = await protocol.viewResaleRight(ids.issuanceId);
     } catch (reason) {
-      if (reason instanceof ProtocolError && reason.code === "UNKNOWN_RIGHT") {
-        setRight(null);
-      } else {
-        throw reason;
-      }
+      if (!(reason instanceof ProtocolError && reason.code === "UNKNOWN_RIGHT")) throw reason;
     }
+    if (!current()) return;
+    setRight(nextRight);
+    let next: ResaleCaseView | null = null;
     try {
-      setView(await protocol.viewResaleCase(ids.listingId));
+      next = await protocol.viewResaleCase(ids.listingId);
     } catch (reason) {
-      if (reason instanceof ProtocolError && reason.code === "UNKNOWN_LISTING") {
-        setView(null);
-        return;
-      }
-      throw reason;
+      if (!(reason instanceof ProtocolError && reason.code === "UNKNOWN_LISTING")) throw reason;
     }
-  }, [eventId]);
+    if (current()) setView(next);
+  }, [eventId, box]);
 
   useEffect(() => {
-    let cancelled = false;
+    const requestGeneration = ++box.g;
+    box.f = false;
+    setPending(false);
+    setView(null);
+    setRight(null);
     setError(null);
-    refresh().catch((reason: unknown) => {
-      if (!cancelled) {
+    refresh(requestGeneration).catch((reason: unknown) => {
+      if (box.g === requestGeneration) {
         setError(message(reason));
       }
     });
-    return () => {
-      cancelled = true;
-    };
-  }, [refresh]);
+  }, [refresh, eventId, box]);
 
   async function run(command: ResaleDeskCommand) {
     if (!connectedHandler()) return;
     const trimmed = eventId.trim();
-    if (!trimmed || pending) {
+    if (!trimmed || box.f) {
       return;
     }
+    const requestGeneration = box.g;
+    const current = () => box.g === requestGeneration;
+    box.f = true;
     const ids = resaleIds(trimmed);
+    const attempt = readAttempt(trimmed);
     const idempotencyKey = `desk-${command}:${ids.listingId}:${attempt}`;
+    const advanceAttempt = () => writeAttempt(trimmed, readAttempt(trimmed) + 1);
     setPending(true);
     setError(null);
     try {
@@ -173,27 +177,23 @@ export function useResaleDesk(eventId: string) {
       }
       if (command === "reconcile") {
         // A second reconcile checks the case again instead of replaying this receipt.
-        setAttempt((value) => {
-          const next = value + 1;
-          writeAttempt(trimmed, next);
-          return next;
-        });
+        advanceAttempt();
       }
-      await refresh();
+      await refresh(requestGeneration);
     } catch (reason) {
-      setAttempt((value) => {
-        const next = value + 1;
-        writeAttempt(trimmed, next);
-        return next;
-      });
+      advanceAttempt();
+      if (!current()) return;
       setError(message(reason));
       try {
-        await refresh();
+        await refresh(requestGeneration);
       } catch {
         // The command error stays on the panel.
       }
     } finally {
-      setPending(false);
+      if (current()) {
+        box.f = false;
+        setPending(false);
+      }
     }
   }
 
