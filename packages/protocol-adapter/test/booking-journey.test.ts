@@ -671,3 +671,25 @@ async function journeyForFault(kind: FaultKind, seen: string[]): Promise<Booking
   const timeoutMs = kind === "timeout" ? 150 : 2000;
   return new BookingJourney(new HttpProtocolAdapter(base, fetch, { timeoutMs }));
 }
+
+it.each([0, 1, 2])("booking step %s: pre-dispatch validation preserves receipts and original NOT_SENT identity", async (at) => {
+  const seen: LocalCallInput[] = [];
+  const journey = new BookingJourney(scriptedInvoker(seen));
+  const steps = [
+    (operationId: string) => journey.createEvent(createInput(operationId)),
+    (operationId: string) => journey.prepareTrade({ operationId, tradeId: "trade-1", buyer: "buyer-a" }),
+    (operationId: string) => journey.acceptTrade({ operationId }),
+  ];
+  const names = ["create_event", "prepare_trade", "accept_trade"];
+  for (let index = 0; index < at; index += 1) await steps[index]!(`prior-${index}`);
+  const before = journey.state();
+  await expect(steps[at]!("")).rejects.toThrow(/operationId/);
+  const after = journey.state();
+  expect(after.completedThrough).toBe(before.completedThrough);
+  expect(after.halted).toMatchObject({ kind: "NOT_SENT", step: names[at], identity: { operationId: "", action: names[at] } });
+  expect(after.halted?.identity.requestId).toBeUndefined();
+  expect(after.halted?.identity.correlationId).toBeUndefined();
+  for (const send of steps) expect(await send("replacement")).toMatchObject({ kind: "FENCED" });
+  expect(journey.state().halted).toEqual(after.halted);
+  expect(seen).toHaveLength(at);
+});

@@ -686,3 +686,188 @@ describe("resale payload guards", () => {
     await expect(call("op-resale-copy")).rejects.toThrow(/production-marketplace wording/);
   });
 });
+
+async function edgeListing(adapter: StubProtocolAdapter) {
+  await issueRight(adapter);
+  await adapter.adoptResaleIssued(adoptInput());
+  await adapter.listResaleCase(listInput());
+}
+
+it.each([
+  ["NOT_HOLDER", { sellerRole: "stranger" }],
+  ["RECIPIENT_IS_HOLDER", { recipientRole: SELLER }],
+] as const)("resale %s leaves the right available for an explicit corrected listing", async (code, invalid) => {
+  const adapter = protocol();
+  await issueRight(adapter);
+  await adapter.adoptResaleIssued(adoptInput());
+  const before = await adapter.viewResaleRight(ISSUE);
+  await expect(adapter.listResaleCase(listInput({ ...invalid, idempotencyKey: "bad" }))).rejects.toMatchObject({ code });
+  await expect(adapter.viewResaleCase(LISTING)).rejects.toMatchObject({ code: "UNKNOWN_LISTING" });
+  expect(await adapter.viewResaleRight(ISSUE)).toEqual({ ...before, lastRejectCode: code });
+  expect(await adapter.listResaleCase(listInput({ idempotencyKey: "corrected" })))
+    .toMatchObject({ duplicate: false, listing: { phase: "LISTED", ownershipTransferred: false } });
+});
+
+it("resale exact expiry refuses hold and transfer; regressing the clock cannot reopen it", async () => {
+  const adapter = protocol();
+  await edgeListing(adapter);
+  await adapter.observeResalePayment({ listingId: LISTING, paymentRef: "sale", buyerRole: RECIPIENT, idempotencyKey: "pay" });
+  await adapter.advanceResaleClock({ nowAt: SALE_EXPIRES, idempotencyKey: "expiry" });
+  const before = await adapter.viewResaleCase(LISTING);
+  await expect(adapter.acceptResaleTransfer({ listingId: LISTING, transferId: "transfer", idempotencyKey: "expired-transfer" }))
+    .rejects.toMatchObject({ code: "LISTING_NOT_OPEN" });
+  await expect(adapter.advanceResaleClock({ nowAt: "2099-05-31T23:59:59.999Z", idempotencyKey: "regress" }))
+    .rejects.toMatchObject({ code: "CLOCK_REGRESSION" });
+  expect(await adapter.viewResaleCase(LISTING)).toMatchObject({ phase: before.phase, holderRole: SELLER,
+    currentVersion: 1, ownershipTransferred: false, paymentRef: "sale" });
+  await expect(adapter.listResaleCase(listInput({ listingId: "expired", idempotencyKey: "expired-list" })))
+    .rejects.toMatchObject({ code: "LISTING_NOT_OPEN" });
+  expect(await adapter.reconcileResale({ listingId: LISTING, idempotencyKey: "recon" })).toMatchObject({ matched: true });
+
+  const listed = protocol();
+  await edgeListing(listed);
+  await listed.advanceResaleClock({ nowAt: SALE_EXPIRES, idempotencyKey: "expiry" });
+  await expect(listed.holdResaleBuy({ listingId: LISTING, holdId: "hold", buyerRole: RECIPIENT, idempotencyKey: "expired" }))
+    .rejects.toMatchObject({ code: "LISTING_NOT_OPEN" });
+  await listed.cancelResaleListing({ listingId: LISTING, sellerRole: SELLER, idempotencyKey: "cancel" });
+  await expect(listed.listResaleCase(listInput({ listingId: "expired", idempotencyKey: "expired-list" })))
+    .rejects.toMatchObject({ code: "LISTING_NOT_OPEN" });
+  expect((await listed.viewResaleRight(ISSUE)).holderRole).toBe(SELLER);
+});
+
+it("resale identity and binding refusals preserve phase and ownership and reconcile cleanly", async () => {
+  const adapter = protocol();
+  await edgeListing(adapter);
+  async function refused(code: string, send: () => Promise<unknown>) {
+    const before = await adapter.viewResaleCase(LISTING);
+    await expect(send()).rejects.toMatchObject({ code });
+    expect(await adapter.viewResaleCase(LISTING)).toMatchObject({ phase: before.phase,
+      holderRole: before.holderRole, currentVersion: before.currentVersion, paymentRef: before.paymentRef,
+      settlementId: before.settlementId, ownershipTransferred: false });
+    expect(await adapter.reconcileResale({ listingId: LISTING, idempotencyKey: `recon-${code}` }))
+      .toMatchObject({ matched: true });
+  }
+  await refused("ISSUANCE_BINDING_CONFLICT", () => adapter.adoptResaleIssued({ ...adoptInput(), paymentRef: "different", idempotencyKey: "adopt-conflict" }));
+  await refused("LISTING_BINDING_CONFLICT", () => adapter.listResaleCase(listInput({ recipientRole: "other", idempotencyKey: "list-conflict" })));
+  await refused("IDEMPOTENCY_CONFLICT", () => adapter.listResaleCase(listInput({ recipientRole: "other" })));
+  await refused("RECIPIENT_MISMATCH", () => adapter.holdResaleBuy({ listingId: LISTING, holdId: "hold", buyerRole: "other", idempotencyKey: "wrong-recipient" }));
+  await refused("RECIPIENT_MISMATCH", () => adapter.observeResalePayment({ listingId: LISTING, paymentRef: "sale", buyerRole: "other", idempotencyKey: "wrong-pay-recipient" }));
+  await adapter.holdResaleBuy({ listingId: LISTING, holdId: "hold", buyerRole: RECIPIENT, idempotencyKey: "hold" });
+  await refused("HOLD_BINDING_CONFLICT", () => adapter.holdResaleBuy({ listingId: LISTING, holdId: "hold", buyerRole: "other", idempotencyKey: "hold-conflict" }));
+  await refused("BUYER_MISMATCH", () => adapter.releaseResaleHold({ holdId: "hold", buyerRole: "other", idempotencyKey: "wrong-release" }));
+  await refused("BUYER_MISMATCH", () => adapter.observeResalePayment({ listingId: LISTING, paymentRef: "sale", buyerRole: "other", idempotencyKey: "wrong-pay-buyer" }));
+  await adapter.bindResaleSettlement({ listingId: LISTING, settlementId: SETTLEMENT, idempotencyKey: "bind" });
+  await refused("SETTLEMENT_BINDING_CONFLICT", () => adapter.bindResaleSettlement({ listingId: LISTING, settlementId: "other", idempotencyKey: "bind-conflict" }));
+  await refused("PAYMENT_BINDING_CONFLICT", () => adapter.observeResalePayment({ listingId: LISTING, paymentRef: "mock-issued", buyerRole: RECIPIENT, idempotencyKey: "pay-conflict" }));
+});
+
+it("resale stored rejection stays refused after hold release; a fresh explicit action recovers", async () => {
+  const adapter = protocol();
+  await edgeListing(adapter);
+  await adapter.holdResaleBuy({ listingId: LISTING, holdId: "hold", buyerRole: RECIPIENT, idempotencyKey: "hold" });
+  const input = { listingId: LISTING, holdId: "second", buyerRole: RECIPIENT, idempotencyKey: "blocked" };
+  await expect(adapter.holdResaleBuy(input)).rejects.toMatchObject({ code: "BUYER_HOLD_LOCKED" });
+  await adapter.releaseResaleHold({ holdId: "hold", buyerRole: RECIPIENT, idempotencyKey: "release" });
+  await expect(adapter.holdResaleBuy(input)).rejects.toMatchObject({ code: "BUYER_HOLD_LOCKED" });
+  expect((await adapter.viewResaleCase(LISTING)).phase).toBe("LISTED");
+  expect(await adapter.holdResaleBuy({ ...input, idempotencyKey: "new-explicit" }))
+    .toMatchObject({ duplicate: false, listing: { phase: "BUY_HELD" } });
+});
+
+it.each(["LISTED", "BUY_HELD", "PAYMENT_NOTED"] as const)("resale binds settlement in %s without moving phase", async (phase) => {
+  const adapter = protocol();
+  await edgeListing(adapter);
+  if (phase === "BUY_HELD") await adapter.holdResaleBuy({ listingId: LISTING, holdId: "hold", buyerRole: RECIPIENT, idempotencyKey: "hold" });
+  if (phase === "PAYMENT_NOTED") await adapter.observeResalePayment({ listingId: LISTING, paymentRef: "sale", buyerRole: RECIPIENT, idempotencyKey: "pay" });
+  const input = { listingId: LISTING, settlementId: SETTLEMENT, idempotencyKey: "bind" };
+  expect(await adapter.bindResaleSettlement(input)).toMatchObject({ listing: { phase, settlementId: SETTLEMENT, economicFinalityClaimed: false } });
+  expect(await adapter.bindResaleSettlement(input)).toMatchObject({ duplicate: true, applied: null });
+});
+
+const resaleEdges: Record<string, Record<string, string>> = {
+  LISTED: { hold: "BUY_HELD", cancel: "CANCELLED", payment: "PAYMENT_NOTED", bind: "LISTED" },
+  BUY_HELD: { release: "LISTED", cancel: "CANCELLED", payment: "PAYMENT_NOTED", bind: "BUY_HELD" },
+  PAYMENT_NOTED: { bind: "PAYMENT_NOTED", transfer: "TRANSFERRED" },
+  TRANSFERRED: { close: "CLOSED" }, CLOSED: {}, CANCELLED: {},
+};
+for (const phase of ["LISTED", "BUY_HELD", "PAYMENT_NOTED", "TRANSFERRED", "CLOSED", "CANCELLED"] as const) {
+  describe(`resale edge matrix ${phase}`, () => {
+    for (const command of ["hold", "release", "cancel", "payment", "bind", "transfer", "close"] as const) {
+      it(`${command}: applies the permitted edge or preserves ownership on refusal`, async () => {
+        const adapter = protocol();
+        await edgeListing(adapter);
+        await adapter.holdResaleBuy({ listingId: LISTING, holdId: "held", buyerRole: RECIPIENT, idempotencyKey: "setup-hold" });
+        if (phase === "LISTED") await adapter.releaseResaleHold({ holdId: "held", buyerRole: RECIPIENT, idempotencyKey: "setup-release" });
+        if (["PAYMENT_NOTED", "TRANSFERRED", "CLOSED"].includes(phase))
+          await adapter.observeResalePayment({ listingId: LISTING, paymentRef: "setup-sale", buyerRole: RECIPIENT, idempotencyKey: "setup-pay" });
+        if (phase === "TRANSFERRED" || phase === "CLOSED")
+          await adapter.acceptResaleTransfer({ listingId: LISTING, transferId: "setup-transfer", idempotencyKey: "setup-transfer" });
+        if (phase === "CLOSED") await adapter.closeResaleListing({ listingId: LISTING, idempotencyKey: "setup-close" });
+        if (phase === "CANCELLED") await adapter.cancelResaleListing({ listingId: LISTING, sellerRole: SELLER, idempotencyKey: "setup-cancel" });
+        expect(await adapter.reconcileResale({ listingId: LISTING, idempotencyKey: "before-recon" }))
+          .toMatchObject({ matched: true, listing: { phase } });
+        const before = await adapter.viewResaleCase(LISTING);
+        const input = { listingId: LISTING, idempotencyKey: "edge" };
+        const send = () => {
+          switch (command) {
+            case "hold": return adapter.holdResaleBuy({ ...input, holdId: "new-hold", buyerRole: RECIPIENT });
+            case "release": return adapter.releaseResaleHold({ holdId: "held", buyerRole: RECIPIENT, idempotencyKey: "edge" });
+            case "cancel": return adapter.cancelResaleListing({ ...input, sellerRole: SELLER });
+            case "payment": return adapter.observeResalePayment({ ...input, paymentRef: "edge-sale", buyerRole: RECIPIENT });
+            case "bind": return adapter.bindResaleSettlement({ ...input, settlementId: SETTLEMENT });
+            case "transfer": return adapter.acceptResaleTransfer({ ...input, transferId: "edge-transfer" });
+            case "close": return adapter.closeResaleListing(input);
+          }
+        };
+        const next = resaleEdges[phase]?.[command];
+        if (next) {
+          const receipt = await send();
+          expect(receipt).toMatchObject({ duplicate: false, provenance: "MOCK_GATE_ONLY", fundsExecuted: false,
+            economicFinalityClaimed: false, listing: { phase: next } });
+          expect(await send()).toMatchObject({ duplicate: true, applied: null, listing: { phase: next } });
+        } else {
+          const code = phase === "CLOSED" || phase === "CANCELLED" ? "TERMINAL_IMMUTABLE"
+            : phase === "PAYMENT_NOTED" && command === "cancel" ? "COMPENSATION_UNDEFINED"
+            : phase === "PAYMENT_NOTED" && command === "payment" ? "LISTING_PAYMENT_BOUND"
+            : phase === "BUY_HELD" && command === "hold" ? "BUYER_HOLD_LOCKED" : "ILLEGAL_TRANSITION";
+          await expect(send()).rejects.toMatchObject({ code });
+          await expect(send()).rejects.toMatchObject({ code });
+          expect(await adapter.viewResaleCase(LISTING)).toEqual({ ...before, lastRejectCode: code });
+        }
+        expect(await adapter.reconcileResale({ listingId: LISTING, idempotencyKey: "after-recon" })).toMatchObject({ matched: true });
+      });
+    }
+  });
+}
+
+it.each([
+  ["showId", "wrong-show", "SHOW_BINDING_CONFLICT"],
+  ["eventId", "evt_paper_orchestra", "SHOW_BINDING_CONFLICT"],
+  ["slot", "wrong-slot", "RESERVATION_BINDING_CONFLICT"],
+  ["holderRole", "wrong-holder", "RESERVATION_BINDING_CONFLICT"],
+] as const)("resale adopt %s mismatch refuses with %s / %s and stores no right", async (field, value, code) => {
+  const adapter = protocol();
+  await issueRight(adapter);
+  await expect(adapter.adoptResaleIssued({ ...adoptInput(), [field]: value, idempotencyKey: "mismatch" }))
+    .rejects.toMatchObject({ code });
+  await expect(adapter.viewResaleRight(ISSUE)).rejects.toMatchObject({ code: "UNKNOWN_RIGHT" });
+  expect(await adapter.adoptResaleIssued(adoptInput())).toMatchObject({ duplicate: false,
+    right: { holderRole: SELLER, version: 1 } });
+});
+
+it("resale transfer identity cannot be rebound to a later listing", async () => {
+  const adapter = protocol();
+  await edgeListing(adapter);
+  await adapter.observeResalePayment({ listingId: LISTING, buyerRole: RECIPIENT, paymentRef: "first-sale", idempotencyKey: "first-pay" });
+  await adapter.acceptResaleTransfer({ listingId: LISTING, transferId: "first-transfer", idempotencyKey: "first-transfer" });
+  await adapter.listResaleCase(listInput({ listingId: "later", version: 2, sellerRole: RECIPIENT,
+    recipientRole: "buyer-3", idempotencyKey: "later-list" }));
+  await adapter.observeResalePayment({ listingId: "later", buyerRole: "buyer-3", paymentRef: "later-sale", idempotencyKey: "later-pay" });
+  const before = await adapter.viewResaleCase("later");
+  await expect(adapter.acceptResaleTransfer({ listingId: "later", transferId: "first-transfer", idempotencyKey: "rebound-transfer" }))
+    .rejects.toMatchObject({ code: "TRANSFER_BINDING_CONFLICT" });
+  expect(await adapter.viewResaleCase("later")).toEqual({ ...before, lastRejectCode: "TRANSFER_BINDING_CONFLICT" });
+  expect(await adapter.reconcileResale({ listingId: "later", idempotencyKey: "later-recon" })).toMatchObject({ matched: true });
+  expect(await adapter.acceptResaleTransfer({ listingId: "later", transferId: "later-transfer", idempotencyKey: "later-transfer" }))
+    .toMatchObject({ listing: { phase: "TRANSFERRED", holderRole: "buyer-3", currentVersion: 3, economicFinalityClaimed: false } });
+});

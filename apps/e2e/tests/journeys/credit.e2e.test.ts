@@ -67,4 +67,25 @@ describe("credit journey (stub, headless Chrome)", () => {
     await suite.pass(page, "credit.NOT_BOUND");
     await page.close();
   });
+
+  it("RECOVERY: repay fixed fixture exposure after refused close, close explicitly, then lose only the page-load case on reload", async () => {
+    const page = await newDeskPage(suite.newPage, suite.origin);
+    const credit = await openCredit(page, "evt_lanterns");
+    for (const label of ["Offer mock phase", "Approve mock phase", "Draw mock exposure", "Close mock case"]) await press(credit, label);
+    await expectFact(credit, "Last error", "OUTSTANDING_REMAINS");
+    for (const repaid of ["30000 mock units", "60000 mock units", "80000 mock units"]) {
+      await press(credit, "Note mock repayment");
+      await expectFact(credit, "Repaid exposure", repaid);
+    }
+    await press(credit, "Close mock case");
+    await expectFact(credit, "Mock phase", "CLOSED");
+    await expectFact(credit, "Outstanding exposure", "0 mock units");
+    await expectFact(credit, "Funds executed", "false");
+    expect(await alertTexts(page)).toEqual([]);
+    await suite.quiet(page, "credit before reload");
+    await page.reload();
+    await expectFact(credit, "Mock phase", "Not opened");
+    await suite.pass(page, "credit.EDGE_RECOVERY");
+    await page.close();
+  });
 });

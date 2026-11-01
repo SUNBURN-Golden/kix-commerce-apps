@@ -48,4 +48,23 @@ describe("box office journey (stub, headless Chrome)", () => {
     await suite.pass(page, "box-office.NOT_BOUND");
     await page.close();
   });
+
+  it("RECOVERY: explicit commands after an ordering rejection reach COMMITTED; reload retains no case", async () => {
+    const page = await newDeskPage(suite.newPage, suite.origin);
+    await page.getByRole("button", { name: "Mock settlement" }).first().click();
+    const settlement = page.locator("aside", { hasText: "Mock settlement case" });
+    await press(settlement, "Initiate mock case");
+    await press(settlement, "Simulate COMMITTED phase");
+    await expectFact(settlement, "Last error", "ILLEGAL_TRANSITION");
+    for (const label of ["Authorize mock phase", "Simulate CAPTURED phase", "Simulate COMMITTED phase", "Reconcile process-local"]) await press(settlement, label);
+    await expectFact(settlement, "Mock phase", "COMMITTED");
+    await expectFact(settlement, "Reconcile matched", /Matched/);
+    expect(await alertTexts(page)).toEqual([]);
+    await suite.quiet(page, "settlement before reload");
+    await page.reload();
+    await page.getByRole("button", { name: "Mock settlement" }).first().click();
+    await expectFact(settlement, "Mock phase", "Not opened");
+    await suite.pass(page, "box-office.EDGE_RECOVERY");
+    await page.close();
+  });
 });
