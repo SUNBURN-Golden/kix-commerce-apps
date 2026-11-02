@@ -151,7 +151,7 @@ describe("receipt explorer", () => {
 
   it("keeps both authorizations and consent updates in chronological detail and export", async () => {
     const desk = stubConsent();
-    const draft = { subject: "subject-history", business: "business", channel: "channel", purpose: "purpose",
+    const draft = { subject: "subject-history", business: "private-crm-business", channel: "private-crm-channel", purpose: "private-crm-purpose",
       expectedConsentVersion: "0", allowed: "true" };
     for (const version of ["0", "1"]) {
       await desk.send("authorization-history", "set_consent", { ...draft, expectedConsentVersion: version });
@@ -167,6 +167,9 @@ describe("receipt explorer", () => {
     expect(entries[3]?.fields).toContainEqual({ key: "consentVersion", value: "1" });
     expect(model.diagnostic.entries.map((entry) => entry.operationId)).toEqual(entries.map((entry) => entry.operationId));
     expect(model.groups[0]?.lastConfirmed).toContain(entries[3]?.operationId);
+    for (const privateValue of [draft.business, draft.channel, draft.purpose, "consentOperationId", "expectedConsentVersion"]) {
+      expect(model.exportText).not.toContain(privateValue);
+    }
   });
 
 

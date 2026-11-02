@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { localeCopyTemplates } from "./build-locale-copy";
 
 const appDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -128,7 +129,7 @@ const displayCopyGroups: [string, string[]][] = [
 
 export default defineConfig({
   define: { __KIX_BUILD_IDENTITY__: JSON.stringify(computeBuildIdentity()) },
-  plugins: [react()],
+  plugins: [localeCopyTemplates(), react()],
   // Preserve the existing size limits for localized copy and the shared app shell.
   build: {
     minify: "terser",

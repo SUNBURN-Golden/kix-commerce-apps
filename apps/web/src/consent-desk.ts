@@ -10,6 +10,7 @@ import {
   CONSENT_DESK_NOT_BOUND,
   CONSENT_NOT_COMPOSED,
   ProtocolError,
+  PINNED_PROTOCOL_DOMAIN,
   type ConsentStep,
   type ConsentStepOutcome,
   type TransportObservation,
@@ -98,8 +99,34 @@ export interface ConsentPanelModel {
   send: (step: ConsentStep) => void;
 }
 
+/** Private page-load evidence, never included in receipt/support exports. */
+export interface ConsentEvidenceScope {
+  domain: string;
+  eventId: string;
+  subject: string;
+  business: string;
+  channel: string;
+  purpose: string;
+}
+
+export type ConsentEvidenceResult =
+  | { allowed: boolean; consentVersion: number }
+  | { authorizedAt: number; consentVersion: number; dispatchDecision: "AUTHORIZED_FIXTURE_INTENT"; networkSendPerformed: false };
+
+export interface ConsentAttemptEvidence {
+  operationId: string;
+  step: ConsentStep;
+  scope: ConsentEvidenceScope;
+  expectedConsentVersion: number;
+  status: StepPhase;
+  code: string | null;
+  result: ConsentEvidenceResult | null;
+  consentOperationId: string | null;
+}
+
 export interface ConsentDeskSnapshot {
   source: ConsentSource | null;
+  environment: "stub" | "integration-http";
   path: ConsentPathStatus;
   template: ConsentRow[];
   notComposed: ConsentQuote[];
@@ -109,6 +136,8 @@ export interface ConsentDeskSnapshot {
     pending: boolean;
     rows: ConsentRow[];
     history: ConsentRow[];
+    halted: boolean;
+    evidence: ConsentAttemptEvidence[];
     lastConfirmed: string;
     unconfirmed: string;
   }>;
@@ -146,6 +175,7 @@ interface ConsentRecord {
   bind: ConsentBind | null;
   steps: StepRecord[];
   history: Map<string, ConsentRow>;
+  evidence: Map<string, ConsentAttemptEvidence>;
 }
 
 export function consentPathStatus(
@@ -258,6 +288,7 @@ export class ConsentDesk {
       bind: this.deps.source ? new ConsentBind(connectivityInvoker(this.deps.source.invoker)) : null,
       steps: blankSteps(),
       history: new Map(),
+      evidence: new Map(),
     };
     this.records.set(eventId, record);
     this.publish();
@@ -299,6 +330,18 @@ export class ConsentDesk {
       note: sourceCopy.en["snx"],
     };
     record.steps[record.steps.indexOf(previous)] = current;
+    const scope: ConsentEvidenceScope = {
+      domain: PINNED_PROTOCOL_DOMAIN, eventId, subject: submitted.subject,
+      business: submitted.business, channel: submitted.channel, purpose: submitted.purpose,
+    };
+    const consent = [...record.evidence.values()].reverse().find((item) => item.step === "set_consent"
+      && item.status === "confirmed" && sameConsentScope(item.scope, scope));
+    const evidence: ConsentAttemptEvidence = {
+      operationId, step, scope, expectedConsentVersion: callerInteger(submitted.expectedConsentVersion),
+      status: "in-flight", code: null, result: null,
+      consentOperationId: step === "set_consent" ? operationId : consent?.operationId ?? null,
+    };
+    record.evidence.set(operationId, evidence);
     record.pending = true;
     this.publish();
     try {
@@ -314,6 +357,8 @@ export class ConsentDesk {
         stepRecord.note = sourceCopy.en["s12l"];
         record.localHalt = true;
       }
+      evidence.status = stepRecord?.phase ?? "not-sent";
+      evidence.code = stepRecord?.code ?? null;
       const completed = deriveRows(record, this.path).find((row) => row.step === step);
       if (completed?.operationId && ["confirmed", "rejected", "unconfirmed", "not-sent"].includes(completed.status)
         && !record.history.has(completed.operationId)) {
@@ -392,6 +437,9 @@ export class ConsentDesk {
       current.requestId = null;
       current.correlationId = null;
       current.receipt = receiptFields(outcome.receipt);
+      const evidence = current.operationId ? record.evidence.get(current.operationId) : undefined;
+      // ConsentBind has validated this result against the published receipt shape.
+      if (evidence) evidence.result = structuredClone(outcome.receipt.result) as ConsentEvidenceResult;
       current.note =
         this.deps.source?.source === "stub-shape"
           ? sourceCopy.en["sdk"]
@@ -483,12 +531,15 @@ export class ConsentDesk {
         pending: record.pending,
         rows,
         history,
+        halted: halted(record),
+        evidence: structuredClone([...record.evidence.values()]),
         lastConfirmed: summaryLine(sourceCopy.en["sq7"], lastRow(history, "confirmed")),
         unconfirmed: summaryLine(sourceCopy.en["s251"], rows.find((row) => row.status === "unconfirmed")),
       };
     });
     return {
       source: this.deps.source?.source ?? null,
+      environment: this.environment,
       path: this.path,
       template: deriveRows(blankRecord(), this.path),
       notComposed: CONSENT_NOT_COMPOSED.map((entry) => ({
@@ -569,6 +620,7 @@ function blankRecord(): ConsentRecord {
     bind: null,
     steps: blankSteps(),
     history: new Map(),
+    evidence: new Map(),
   };
 }
 
@@ -690,4 +742,9 @@ function callerAllowed(raw: string): boolean {
     return false;
   }
   return undefined as unknown as boolean;
+}
+
+export function sameConsentScope(a: ConsentEvidenceScope, b: ConsentEvidenceScope): boolean {
+  return a.domain === b.domain && a.eventId === b.eventId && a.subject === b.subject
+    && a.business === b.business && a.channel === b.channel && a.purpose === b.purpose;
 }

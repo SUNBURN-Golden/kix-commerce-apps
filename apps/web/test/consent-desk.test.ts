@@ -21,6 +21,24 @@ const DRAFT: ConsentDraft = {
 };
 
 describe("consent desk", () => {
+  it("owns submitted scopes and typed outcomes, independent of drafts and snapshot mutations", async () => {
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const { desk } = stubDesk(async (input, shape) => { await gate; return shape.invokeLocalCall(input); });
+    const draft = { ...DRAFT };
+    const sending = desk.send("owned-evidence", "set_consent", draft);
+    draft.subject = "changed"; draft.channel = "changed";
+    expect(desk.getSnapshot().events[0]?.evidence[0]).toMatchObject({ status: "in-flight", scope: { subject: DRAFT.subject, channel: DRAFT.channel }, result: null });
+    release(); await sending;
+    const snapshot = desk.getSnapshot();
+    const saved = structuredClone(snapshot.events[0]?.evidence);
+    snapshot.events[0]!.evidence[0]!.scope.subject = "mutated";
+    snapshot.events[0]!.evidence[0]!.result!.consentVersion = 123;
+    desk.retain("publish-again");
+    expect(desk.getSnapshot().events[0]?.evidence).toEqual(saved);
+    expect(saved?.[0]).toMatchObject({ status: "confirmed", result: { allowed: true, consentVersion: 1 }, expectedConsentVersion: 0 });
+    desk.reset(); expect(desk.getSnapshot().events).toEqual([]);
+  });
   it("keeps all authorization evidence after further consent updates and owns snapshot fields", async () => {
     const { desk, calls } = stubDesk(async (input, shape) => shape.invokeLocalCall(input));
     const eventId = "repeat-authorize";

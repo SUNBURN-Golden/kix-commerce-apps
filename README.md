@@ -54,7 +54,7 @@ Charter labels are from Task 005. The app names those surfaces and calls an adap
 
 The Wave 6-A rows are catalogue calls, not desk bindings, and every `COMMERCE_METHODS` entry is still `not-bound`.
 
-Wave 7 marketing routes M01–M04 use the local stub in `apps/web/src/marketing`. They make no protocol call, except a display-only `listPerformances` read on M02. M05 keeps session flags there too, and posts `set_consent` then `authorize_marketing` through `ConsentBind` ([docs/m05-consent-bind-apps-bind.md](docs/m05-consent-bind-apps-bind.md)). The default invoker returns stub-shape literals. HTTP mode uses the loopback gate and does not fall back to the stub.
+Wave 7 marketing routes M01–M04 use the local stub in `apps/web/src/marketing`. They make no protocol call, except a display-only `listPerformances` read on M02. M05 keeps session flags there too, and posts `set_consent` then `authorize_marketing` through `ConsentBind` ([docs/m05-consent-bind-apps-bind.md](docs/m05-consent-bind-apps-bind.md)). The synthetic, page-load CRM workspace previews fixture audiences, channel preferences and purpose history from confirmed scope/version/attempt evidence; withdrawal excludes fans, and `channelSend` stays `none`. [CRM boundaries and verification](docs/c-plan-c-m05-crm-session-stub-apps-bind.md). The default invoker returns stub-shape literals. HTTP mode uses the loopback gate and does not fall back to the stub.
 
 | Marketing | Route | ORIGINAL_32 | Write target |
 | --- | --- | --- | --- |
@@ -63,7 +63,7 @@ Wave 7 marketing routes M01–M04 use the local stub in `apps/web/src/marketing`
 | Presale | `/marketing/m02` | M02 선예매, 설계중 | marketing session stub |
 | Coupon / promotion | `/marketing/m03` | M03 쿠폰 / 프로모션, 설계중 | marketing session stub |
 | Referral / rewards | `/marketing/m04` | M04 추천 / 리워드, 설계중 | marketing session stub |
-| CRM / data use | `/marketing/m05` | M05 CRM / 데이터 활용, 미착수 | session flags, plus `set_consent` and `authorize_marketing` |
+| CRM / data use | `/marketing/m05` | M05 CRM / 데이터 활용, 미착수 | synthetic session CRM preview and flags, plus `set_consent` and `authorize_marketing` |
 | Benefit journey (synthetic) | `/marketing/journey` | not an ORIGINAL_32 label; it promotes none | synthetic source, no write to a protocol. Reads consent, posts none |
 
 `confirmBooking` and `acceptResale` record `payment: "simulated-no-funds"`. The settlement panel renders a mock FSM case from the stub. It lists F01, F02, and F03 and does not compute shares. Limits are in [docs/settlement-depth-apps-bind.md](docs/settlement-depth-apps-bind.md).

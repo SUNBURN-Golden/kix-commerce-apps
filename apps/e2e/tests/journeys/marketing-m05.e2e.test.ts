@@ -24,6 +24,27 @@ describe("marketing-m05 journey (stub, headless Chrome)", () => {
         await page.locator('li.journey-step[data-status="confirmed"]').waitFor();
         await press(page, "Send authorize_marketing");
         expect(await page.locator('li.journey-step[data-status="confirmed"]').count()).toBe(2);
+        for (const [key, value] of [["eventId", "evt_browser_consent"], ["business", "business-fixture"], ["channel", "fixture-channel"], ["purpose", "fixture-purpose"]]) {
+            await page.locator("#crm-" + key).selectOption(value);
+        }
+        expect(await page.locator("[data-crm-count]").textContent()).toBe("Included: 1");
+        await page.locator("#crm-tier").focus();
+        await page.keyboard.press("End");
+        await page.keyboard.press("Enter");
+        await page.keyboard.press("Tab");
+        expect(await page.locator("#crm-tier").inputValue()).toBe("member");
+        expect(await page.locator("[data-crm-count]").textContent()).toBe("Included: 0");
+        await page.locator("#crm-tier").selectOption("all");
+        await press(page, "Withdraw flags");
+        expect(await page.locator("[data-crm-count]").textContent()).toBe("Included: 1");
+        await page.locator("#consent-allowed").selectOption("false");
+        await press(page, "Send set_consent");
+        expect(await page.locator("[data-crm-count]").textContent()).toBe("Included: 0");
+        expect(await page.locator('[data-crm-fan="fixture-01"]').textContent()).toContain("Confirmed withdrawal");
+        await page.reload();
+        await page.locator("#crm-tier").waitFor();
+        expect(await page.locator("[data-crm-count]").textContent()).toBe("Included: 0");
+        expect(await page.locator("#crm-eventId option").count()).toBe(1);
         await suite.pass(page, "marketing-m05.SUCCESS");
         await page.close();
     });
