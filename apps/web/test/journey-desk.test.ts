@@ -292,3 +292,78 @@ function httpDesk(
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
+
+for (const [at, step] of ["create_event", "prepare_trade", "accept_trade"].entries()) {
+  it(`journey ${step}: explicit rejection preserves prior receipts and fences every activation`, async () => {
+    const eventId = `edge-${at}`;
+    const { desk, calls } = stubDesk(async (input, shape) => {
+      if (input.action === step) throw new GateRejectedError("fixture", "FIXTURE_DECLINE",
+        { requestId: "req-edge", correlationId: "corr-edge" }, 422);
+      return shape.invokeLocalCall(input);
+    });
+    const steps = ["create_event", "prepare_trade", "accept_trade"] as const;
+    for (const prior of steps.slice(0, at)) await desk.send(eventId, prior);
+    const confirmed = desk.view(eventId).rows.slice(0, at);
+    await desk.send(eventId, steps[at]!);
+    const halted = desk.view(eventId);
+    expect(halted.rows.slice(0, at)).toEqual(confirmed);
+    expect(halted.rows[at]).toMatchObject({ status: "rejected", code: "FIXTURE_DECLINE",
+      operationId: `jrn:${eventId}:1:${step}`, requestId: "req-edge", correlationId: "corr-edge" });
+    for (const next of steps) await desk.send(eventId, next);
+    expect(calls).toHaveLength(at + 1);
+    expect(desk.view(eventId).rows).toEqual(halted.rows);
+    expect(desk.view(eventId).lastConfirmed).toBe(halted.lastConfirmed);
+    expect(desk.view(eventId).unconfirmed).toBe(halted.unconfirmed);
+    expect(halted.rows.every((row) => !row.canSend)).toBe(true);
+  });
+
+  it(`journey ${step}: concurrent duplicate and completed-step replay send once`, async () => {
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => { release = resolve; });
+    const { desk, calls } = stubDesk(async (input, shape) => {
+      if (input.action === step) await held;
+      return shape.invokeLocalCall(input);
+    });
+    const eventId = `flight-${at}`;
+    const steps = ["create_event", "prepare_trade", "accept_trade"] as const;
+    for (const prior of steps.slice(0, at)) await desk.send(eventId, prior);
+    const first = desk.send(eventId, steps[at]!);
+    await desk.send(eventId, steps[at]!);
+    expect(desk.view(eventId).rows[at]?.status).toBe("in-flight");
+    expect(calls).toHaveLength(at + 1);
+    release();
+    await first;
+    const receipt = desk.view(eventId).rows[at];
+    await desk.send(eventId, steps[at]!);
+    expect(desk.view(eventId).rows[at]).toEqual(receipt);
+    expect(receipt?.status).toBe("confirmed");
+    expect(calls).toHaveLength(at + 1);
+  });
+}
+
+for (const [at, step] of ["create_event", "prepare_trade", "accept_trade"].entries()) {
+  for (const fault of ["lost", "malformed"] as const) {
+    it(`journey ${step}: ${fault} response keeps the original unconfirmed identity and prior receipts`, async () => {
+      const eventId = `unknown-${at}-${fault}`;
+      const { desk, calls } = stubDesk(async (input, shape) => {
+        if (input.action !== step) return shape.invokeLocalCall(input);
+        if (fault === "lost") throw new ProtocolError("fixture lost answer", "GATE_UNAVAILABLE",
+          { requestId: "req-unknown", correlationId: "corr-unknown" });
+        return { ...await shape.invokeLocalCall(input) as object, extra: true };
+      });
+      const steps = ["create_event", "prepare_trade", "accept_trade"] as const;
+      for (const prior of steps.slice(0, at)) await desk.send(eventId, prior);
+      const confirmed = desk.view(eventId).rows.slice(0, at);
+      await desk.send(eventId, steps[at]!);
+      const halted = desk.view(eventId);
+      expect(halted.rows[at]).toMatchObject({ status: "unconfirmed", code: fault === "lost" ? "GATE_UNAVAILABLE" : "GATE_STATUS",
+        operationId: `jrn:${eventId}:1:${step}` });
+      if (fault === "lost") expect(halted.rows[at]).toMatchObject({ requestId: "req-unknown", correlationId: "corr-unknown" });
+      expect(halted.rows.slice(0, at)).toEqual(confirmed);
+      for (const next of steps) await desk.send(eventId, next);
+      expect(calls).toHaveLength(at + 1);
+      expect(desk.view(eventId).rows).toEqual(halted.rows);
+      expect(halted.rows.every((row) => !row.canSend)).toBe(true);
+    });
+  }
+}

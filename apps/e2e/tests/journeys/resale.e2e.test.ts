@@ -62,4 +62,27 @@ describe("resale journey (stub, headless Chrome)", () => {
     await suite.pass(page, "resale.NOT_BOUND");
     await page.close();
   });
+
+  it("RECOVERY: release a buyer hold, cancel, then refuse a terminal mutation without transferring ownership", async () => {
+    const page = await newDeskPage(suite.newPage, suite.origin);
+    await commitSettlement(page, "orchestra");
+    await bookAndIssue(page, "orchestra");
+    await nav(page, "Resale");
+    await page.getByLabel("Mock case event").selectOption("evt_paper_orchestra");
+    const resale = panel(page, "Mock resale case");
+    for (const label of ["Adopt mock right", "List mock phase", "Hold mock buyer", "Release mock hold"]) await press(resale, label);
+    await expectFact(resale, "Mock phase", "LISTED");
+    await press(resale, "Cancel mock listing");
+    await expectFact(resale, "Mock phase", "CANCELLED");
+    await press(resale, "Note simulated payment");
+    await expectFact(resale, "Last error", "TERMINAL_IMMUTABLE");
+    await expectFact(resale, "Mock phase", "CANCELLED");
+    await expectFact(resale, "Ownership transferred", "No");
+    await expectFact(resale, "Holder and version", /desk-buyer/);
+    await suite.quiet(page, "resale before reload");
+    await page.reload();
+    await expectFact(resale, "Mock phase", "Not opened");
+    await suite.pass(page, "resale.EDGE_RECOVERY");
+    await page.close();
+  });
 });

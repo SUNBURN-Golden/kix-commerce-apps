@@ -1,3 +1,4 @@
+import { AsyncStateFrame } from "../../components/AsyncStateFrame";
 import { formatWhen } from "../../format";
 import { messages as deskCopy } from "../../i18n/desk-catalogue";
 import { messages as copy0 } from "../../i18n/messages/pages--marketing--M02Presale";
@@ -21,12 +22,13 @@ export function M02Page() {
   const clock = useDisplayLocale();
   const { snapshot, refresh } = useMarketingSnapshot();
   const [performances, setPerformances] = useState<Performance[] | null>(null);
+  const [readError, setReadError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const tier = snapshot.membership?.tier ?? "guest";
-  const windowState = presaleWindowFor(tier);
+  const tier = snapshot.membershipKnowledge === "unknown" ? "unknown" : snapshot.membership?.tier ?? "guest";
+  const windowState = tier === "unknown" ? "unknown" : presaleWindowFor(tier);
   const [recorded, setRecorded] = useState<string | null>(null);
   const settled = recorded !== null && snapshot.interests.some((row) => row.eventId === recorded);
-  useSettledFocus(settled ? recorded : null, recorded === null ? null : `m02-interest-${recorded}`);
+  useSettledFocus(settled ? `${recorded}:${snapshot.interests.find((row) => row.eventId === recorded)?.state}` : null, recorded === null ? null : `m02-interest-${recorded}`);
 
   useEffect(() => {
     let cancelled = false;
@@ -39,7 +41,7 @@ export function M02Page() {
       })
       .catch((reason: unknown) => {
         if (!cancelled) {
-          setError(errorText(reason, deskCopy.en["desk.performance.loadError"]));
+          setReadError(errorText(reason, deskCopy.en["desk.performance.loadError"]));
         }
       });
     return () => {
@@ -47,10 +49,11 @@ export function M02Page() {
     };
   }, []);
 
-  function record(eventId: string) {
+  function record(eventId: string, withdraw = false) {
     setError(null);
     try {
-      marketingSession.recordInterest(eventId);
+      if (withdraw) marketingSession.withdrawInterest(eventId);
+      else marketingSession.recordInterest(eventId);
       setRecorded(eventId);
       refresh();
     } catch (reason) {
@@ -65,18 +68,22 @@ export function M02Page() {
           {deskText(t, error)}
         </p>
       ) : null}
+      {windowState === "unknown" ? <AsyncStateFrame kind="unknown" word="UNKNOWN" label="" note={t("marketing.membershipUnknown")} /> : null}
       <article className="panel">
         <p className="eyebrow">{t("sg9")}{" "}{deskText(t, windowState)}</p>
-        <h3>{windowState === "open-demo" ? t("s27c") : t("s27b")}</h3>
+        <h3>{windowState === "unknown" ? t("marketing.windowUnknown") : windowState === "open-demo" ? t("s27c") : t("s27b")}</h3>
         <p className="muted" id="m02-window-note">
-          {t("sbm")}{windowState === "closed-demo" ? (" " + t("sot")) : null}{" "}
+          {windowState === "unknown" ? t("marketing.membershipUnknown") : t("sbm")}{windowState === "closed-demo" ? (" " + t("sot")) : null}{" "}
           {t("s15a")}{" "}<Link to="/">{t("sai")}</Link> {t("sls")}</p>
       </article>
-      {performances === null && !error ? <p className="muted">{t("desk.performance.loading")}</p> : null}
+      {performances === null && !readError ? <p className="muted">{t("desk.performance.loading")}</p> : null}
+      {readError ? <AsyncStateFrame kind="error" word={t("marketing.readError")} label="" note={deskText(t, readError)} /> : null}
       {performances?.length === 0 ? <p className="empty">{t("desk.performance.empty")}</p> : null}
       <ul className="program">
         {deskText(t, performances?.map((item) => {
           const interest = snapshot.interests.find((row) => row.eventId === item.eventId);
+          const active = interest?.state === "recorded";
+          const eventWindow = marketingSession.presaleWindow(item.eventId);
           return (
             <li key={item.eventId}>
               <article className="row">
@@ -88,20 +95,24 @@ export function M02Page() {
                   <div id={`m02-interest-${item.eventId}`} tabIndex={-1} aria-live="polite">
                     {interest ? (
                       <p>
-                        {t("soj")}{" "}{formatWhen(interest.recordedAt, clock)} · {deskText(t, interest.window)}
+                        {active ? t("soj") : t("marketing.withdrawn")}{" "}{formatWhen(interest.recordedAt, clock)} · {deskText(t, interest.tier)} · {deskText(t, interest.window)}
+                        {interest.withdrawnAt ? <> · {formatWhen(interest.withdrawnAt, clock)}</> : null}
                       </p>
                     ) : null}
                   </div>
+                  {windowState === "open-demo" && eventWindow === "unknown" ? <AsyncStateFrame id={`m02-window-${item.eventId}`} kind="unknown" word="UNKNOWN" label="" note={t("marketing.windowUnknown")} /> : null}
+                  {windowState === "open-demo" && eventWindow === "closed-demo" ? <p id={`m02-window-${item.eventId}`} className="muted">{t("marketing.windowClosed")}</p> : null}
                 </div>
                 <div className="row-actions">
                   <ConnectivityWriteButton
                     type="button"
-                    disabled={windowState !== "open-demo" || Boolean(interest)}
-                    aria-describedby={interest ? `m02-interest-${item.eventId}` : windowState !== "open-demo" ? "m02-window-note" : undefined}
+                    disabled={eventWindow !== "open-demo" || active}
+                    aria-describedby={active ? `m02-interest-${item.eventId}` : windowState !== "open-demo" ? "m02-window-note" : eventWindow !== "open-demo" ? `m02-window-${item.eventId}` : undefined}
                     onClick={() => record(item.eventId)}
                   >
-                    {interest ? t("soj") : t("s1dq")}
+                    {active ? t("soj") : t("s1dq")}
                   </ConnectivityWriteButton>
+                  {active ? <ConnectivityWriteButton type="button" onClick={() => record(item.eventId, true)}>{t("marketing.withdraw")}</ConnectivityWriteButton> : null}
                 </div>
               </article>
             </li>

@@ -5,7 +5,7 @@ import { messages as copy1 } from "../i18n/messages/journey-desk";
 import { messages as copy2 } from "../i18n/messages/storage-allow-list";
 import { messages as copy3 } from "../i18n/messages/refund-return";
 import { messages as copy4 } from "../i18n/messages/workspace--registry";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ProtocolError, type Performance, type SettlementCaseView } from "../../../../packages/protocol-adapter/src/types";
 import { capacityLine } from "../a11y/present";
@@ -30,6 +30,10 @@ export function BoxOfficePage() {
   const [settlement, setSettlement] = useState<SettlementCaseView | null>(null);
   const [settlementError, setSettlementError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  // One mutable bag: g = case generation (closing or switching invalidates earlier
+  // asynchronous completions); f = in-flight send (React state alone cannot guard
+  // two activations from the same render).
+  const box = useRef({ g: 0, f: false }).current;
   const journey = useJourneyDesk("");
   const refundDesk = useRefundReturnDesk(selectedEventId ?? "");
 
@@ -54,51 +58,62 @@ export function BoxOfficePage() {
 
   const selected = performances?.find((item) => item.eventId === selectedEventId) ?? null;
 
-  async function refreshCase(eventId: string) {
+  async function refreshCase(eventId: string, generation: number) {
+    let next: SettlementCaseView | null = null;
     try {
-      setSettlement(await protocol.viewSettlement(settlementIdFor(eventId)));
+      next = await protocol.viewSettlement(settlementIdFor(eventId));
     } catch (reason) {
-      if (reason instanceof ProtocolError && reason.code === "UNKNOWN_SETTLEMENT") {
-        setSettlement(null);
-        return;
-      }
-      throw reason;
+      if (!(reason instanceof ProtocolError && reason.code === "UNKNOWN_SETTLEMENT")) throw reason;
     }
+    if (box.g === generation) setSettlement(next);
   }
 
   async function openSettlement(eventId: string) {
+    const generation = ++box.g;
+    box.f = true;
+    setSettlement(null);
     setSelectedEventId(eventId);
     setSettlementError(null);
     setPending(true);
     try {
-      await refreshCase(eventId);
+      await refreshCase(eventId, generation);
     } catch (reason) {
+      if (box.g !== generation) return;
       setSettlement(null);
       setSettlementError(message(reason, deskCopy.en["desk.boxOffice.readError"]));
     } finally {
-      setPending(false);
+      if (box.g === generation) {
+        box.f = false;
+        setPending(false);
+      }
     }
   }
 
   async function onCommand(command: SettlementDeskCommand) {
-    if (!selectedEventId || pending) {
+    if (!selectedEventId || box.f) {
       return;
     }
     const eventId = selectedEventId;
+    const generation = box.g;
+    box.f = true;
     setPending(true);
     setSettlementError(null);
     try {
       await runSettlementCommand(protocol, command, eventId);
-      await refreshCase(eventId);
+      await refreshCase(eventId, generation);
     } catch (reason) {
+      if (box.g !== generation) return;
       setSettlementError(message(reason, deskCopy.en["desk.boxOffice.commandError"]));
       try {
-        await refreshCase(eventId);
+        await refreshCase(eventId, generation);
       } catch {
         // The command error stays on the panel.
       }
     } finally {
-      setPending(false);
+      if (box.g === generation) {
+        box.f = false;
+        setPending(false);
+      }
     }
   }
 
@@ -154,6 +169,9 @@ export function BoxOfficePage() {
           pending={pending}
           onCommand={(command) => void onCommand(command)}
           onClose={() => {
+            box.g += 1;
+            box.f = false;
+            setPending(false);
             setSelectedEventId(null);
             setSettlement(null);
             setSettlementError(null);

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import ts from "typescript";
 import { SYNTHETIC_WRITERS, CATALOGUE_WRITERS } from "./support/connectivity-actions";
-import { PROTOCOL_READS, actionAllowed, connectedActions, connectivityController, connectivityPort, guardedWrite, connectivityInvoker, connectivityProtocol } from "../src/connectivity/write-guard";
+import { PROTOCOL_READS, actionAllowed, connectedActions, connectivityController, connectivityPort, guardedWrite, connectivityInvoker, connectivityProtocol, registerReadGroup, acceptRead } from "../src/connectivity/write-guard";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   BookingJourney, createStubJourneyInvoker, createStubJourneyIdentity, identitySender,
@@ -238,5 +238,28 @@ describe("read and dispatch failure distinctions", () => {
     expect(actionAllowed(port)).toBe(true);
     // Rebinding the same controller keeps its controller identity and its fences.
     expect(connectivityController(identity, port)).toBe(identity);
+  });
+});
+
+
+describe("marketing lifecycle mutation guards", () => {
+  it.each(["offline", "cached"])("refuses every mutation with unchanged state when %s", (mode) => {
+    const desk = new MarketingStubDesk(() => "2026-10-30T00:00:00.000Z");
+    desk.join({ displayName: "Fan", tier: "fan" }); desk.recordInterest("evt_lanterns");
+    const before = desk.snapshot();
+    vi.stubGlobal("location", { pathname: "/marketing/m02" });
+    const group = registerReadGroup("marketing-session");
+    acceptRead(group, connectivity.stamp());
+    connectivity.setBrowserOnline(false);
+    if (mode === "cached") connectivity.setBrowserOnline(true);
+    for (const action of [() => desk.join({ displayName: "Member", tier: "member" }), () => desk.leave(), () => desk.reset(),
+      () => desk.recordInterest("evt_paper_orchestra"), () => desk.withdrawInterest("evt_lanterns"),
+      () => desk.applyCoupon("LANTERN-NOTE"), () => desk.acceptReferral("REF-STUB-HALL"),
+      () => desk.saveConsent({ performanceNotes: true, membershipNotes: true }), () => desk.withdrawConsent()]) {
+      expect(action).toThrow(/Nothing sent/); expect(desk.snapshot()).toEqual(before);
+    }
+    connectivity.setBrowserOnline(true);
+    acceptRead(group, connectivity.stamp());
+    vi.unstubAllGlobals();
   });
 });

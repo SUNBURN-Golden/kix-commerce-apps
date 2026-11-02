@@ -597,7 +597,7 @@ const evidence: readonly RouteEvidence[] = [
   },
   {
     "route": "marketing-m01",
-    "fact": "Synchronous local demo card. Its absence is empty; no asynchronous unknown outcome, read freshness or bound producer command.",
+    "fact": "Local membership known/unknown fixture knowledge with explicit join, update, clear and recovery; no protocol response-loss UNKNOWN. Evidence: marketing-interactions.test.tsx.",
     "checks": {},
     "drivers": {
       "empty": "mount"
@@ -605,7 +605,7 @@ const evidence: readonly RouteEvidence[] = [
   },
   {
     "route": "marketing-m02",
-    "fact": "Catalogue display plus synchronous local interest markers. No unknown command outcome, read freshness or producer binding is presented.",
+    "fact": "Catalogue loading/empty/error display and local record/withdraw/re-entry markers; closed and unknown fixture windows refuse. No protocol response-loss UNKNOWN. Evidence: marketing-interactions.test.tsx.",
     "checks": {
       "empty": {
         "browser": "a11y.async.catalogue-empty"
@@ -615,13 +615,13 @@ const evidence: readonly RouteEvidence[] = [
   },
   {
     "route": "marketing-m03",
-    "fact": "Fixed coupon sample cards and synchronous session markers, not a producer or an empty collection. No unknown outcome or freshness.",
+    "fact": "Local fixture validity, exclusive expiry, malformed-date refusal, conflict groups and attached history. Empty markers and unknown fixture validity are not protocol response-loss UNKNOWN. Evidence: marketing-desk.test.ts.",
     "checks": {},
     "drivers": {}
   },
   {
     "route": "marketing-m04",
-    "fact": "Synchronous local reward counters; an empty counter is separate from unavailable producer integration. No UNKNOWN or freshness outcome.",
+    "fact": "Local referral source attribution and marker counts; missing or unknown source refuses. Empty attribution and local unknown knowledge are not protocol response-loss UNKNOWN. Evidence: marketing-interactions.test.tsx.",
     "checks": {},
     "drivers": {
       "empty": "mount"

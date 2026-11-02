@@ -1,3 +1,4 @@
+import { AsyncStateFrame } from "../../components/AsyncStateFrame";
 import { messages as copy0 } from "../../i18n/messages/pages--marketing--M01Membership";
 import { messages as copy1 } from "../../i18n/messages/marketing--desk";
 import { deskText } from "../../i18n/desk-translate";
@@ -32,8 +33,8 @@ export function M01Page() {
 
   function leave() {
     setError(null);
-    marketingSession.leave();
-    refresh();
+    try { marketingSession.leave(); refresh(); }
+    catch (reason) { setError(errorText(reason, copy0.en["e.62"])); }
   }
 
   return (
@@ -61,12 +62,12 @@ export function M01Page() {
         <p className="muted">{t("s1qr")}</p>
         <div className="row-actions">
           <ConnectivityWriteButton type="submit">{t("sow")}</ConnectivityWriteButton>
-          <ConnectivityWriteButton type="button" className="ghost" onClick={leave} disabled={!card} aria-describedby={card ? undefined : "m01-card-empty"}>
+          <ConnectivityWriteButton type="button" className="ghost" onClick={leave} disabled={!card && snapshot.membershipKnowledge === "known"} aria-describedby={card || snapshot.membershipKnowledge === "unknown" ? undefined : "m01-card-empty"}>
             {t("sco")}</ConnectivityWriteButton>
         </div>
       </ValidatedForm>
       <div aria-live="polite">
-      {card ? (
+      {snapshot.membershipKnowledge === "unknown" ? <AsyncStateFrame kind="unknown" word="UNKNOWN" label="" note={t("marketing.membershipUnknown")} announcement="parent" /> : card ? (
         <article className="ticket">
           <p className="eyebrow">{t("s1jm")}{" "}{card.status}</p>
           <h3>{deskText(t, card.displayName)}</h3>

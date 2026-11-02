@@ -18,6 +18,13 @@ describe("marketing-m04 journey (stub, headless Chrome)", () => {
         await expectText(page, "REF-STUB-HALL");
         expect(await page.locator("main article.ticket dd").first().innerText()).toBe("1");
         expect(await page.locator("main p.empty").count()).toBe(0);
+        await expectText(page, "synthetic:REF-STUB-HALL");
+        await page.locator("#referral-code").fill("REF-STUB-PAPER");
+        await press(page, "Count demo marker");
+        await expectText(page, "synthetic:REF-STUB-PAPER");
+        await page.locator("#referral-code").fill("REF-STUB-HALL");
+        await press(page, "Count demo marker");
+        await expectText(page, "already counted");
         await suite.pass(page, "marketing-m04.SUCCESS");
         await page.close();
     });

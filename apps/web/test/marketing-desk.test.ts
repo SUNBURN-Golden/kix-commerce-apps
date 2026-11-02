@@ -1,7 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { MARKETING_FIXTURES } from "../src/marketing/fixtures";
+import { describe, expect, it, vi } from "vitest";
 import { MARKETING_FORBIDDEN_CALLS } from "../src/marketing/contracts";
 import {
   COUPON_FIXTURES,
+  couponState,
+  type MemberTier,
   MARKETING_BOUNDARY,
   MarketingStubDesk,
   MarketingStubError,
@@ -186,5 +189,149 @@ describe("marketing stub desk", () => {
     expect(snapshot.acceptedReferrals).toEqual([]);
     expect(snapshot.consent.state).toBe("unset");
     expect(snapshot.boundary).toBe(MARKETING_BOUNDARY);
+  });
+});
+
+// Fixed clocks and constructor fixtures keep local knowledge separate from protocol outcomes.
+describe("marketing lifecycle and fail-closed fixture validation", () => {
+  const now = "2026-10-30T00:00:00.000Z";
+  const member = (desk: MarketingStubDesk) => desk.join({ displayName: "Fan", tier: "fan" });
+  function unchanged(desk: MarketingStubDesk, action: () => unknown, code?: string) {
+    const before = desk.snapshot();
+    let caught: unknown;
+    try { action(); } catch (error) { caught = error; }
+    expect(caught).toBeInstanceOf(MarketingStubError);
+    if (code) expect(caught).toMatchObject({ code });
+    expect(desk.snapshot()).toEqual(before);
+  }
+
+  it("updates both tiers, validates atomically and explicitly recovers unknown membership", () => {
+    const desk = new MarketingStubDesk(() => now, { ...MARKETING_FIXTURES, membershipKnowledge: "unknown" });
+    expect(desk.snapshot().membershipKnowledge).toBe("unknown");
+    unchanged(desk, () => desk.recordInterest("evt_lanterns"), "MEMBERSHIP_UNKNOWN");
+    unchanged(desk, () => desk.join({ displayName: "x".repeat(41), tier: "fan" }), "NAME_INVALID");
+    unchanged(desk, () => desk.join({ displayName: "x", tier: "guest" as MemberTier }), "TIER_INVALID");
+    member(desk);
+    expect(desk.snapshot().membershipKnowledge).toBe("known");
+    desk.join({ displayName: "Updated", tier: "member" });
+    expect(desk.snapshot().membership?.tier).toBe("member");
+    member(desk);
+    expect(desk.snapshot().membership?.tier).toBe("fan");
+    desk.leave();
+    expect(desk.snapshot().membership).toBeNull();
+    const other = new MarketingStubDesk(() => now, { ...MARKETING_FIXTURES, membershipKnowledge: "unknown" });
+    other.leave();
+    expect(other.snapshot().membershipKnowledge).toBe("known");
+    const reset = new MarketingStubDesk(() => now, { ...MARKETING_FIXTURES, membershipKnowledge: "unknown" });
+    reset.reset();
+    expect(reset.snapshot().membershipKnowledge).toBe("known");
+  });
+
+  it("withdraws once, preserves historical tier and replaces the row only on explicit re-entry", () => {
+    let at = now;
+    const desk = new MarketingStubDesk(() => at);
+    member(desk);
+    const first = desk.recordInterest(" evt_lanterns ");
+    desk.join({ displayName: "Member", tier: "member" });
+    at = "2026-10-30T00:01:00.000Z";
+    expect(desk.recordInterest("evt_lanterns")).toEqual(first);
+    const withdrawn = desk.withdrawInterest(" evt_lanterns ");
+    expect(withdrawn).toMatchObject({ state: "withdrawn", tier: "fan", recordedAt: now, withdrawnAt: at });
+    unchanged(desk, () => desk.withdrawInterest("evt_lanterns"), "INTEREST_NOT_ACTIVE");
+    at = "2026-10-30T00:02:00.000Z";
+    expect(desk.recordInterest("evt_lanterns")).toMatchObject({ state: "recorded", tier: "member", recordedAt: at, withdrawnAt: null });
+    expect(desk.snapshot().interests).toHaveLength(1);
+    desk.leave();
+    expect(desk.snapshot().interests).toEqual([]);
+  });
+
+  it("refuses blank, absent, closed and unknown windows without adding interests", () => {
+    const desk = new MarketingStubDesk(() => now, { ...MARKETING_FIXTURES, presales: [{ eventId: "closed", window: "closed-demo" }, { eventId: "unknown", window: "unknown" }] });
+    member(desk);
+    for (const eventId of [" ", "missing", "closed", "unknown"]) unchanged(desk, () => desk.recordInterest(eventId));
+    expect(desk.presaleWindow("unknown")).toBe("unknown");
+    expect(desk.presaleWindow("closed")).toBe("closed-demo");
+  });
+
+  it.each([
+    ["2026-10-29T23:59:59.999Z", "future"],
+    [now, "valid"],
+    ["2026-10-30T00:00:59.999Z", "valid"],
+    ["2026-10-30T00:01:00.000Z", "expired"],
+    ["2026-10-30T00:01:00.001Z", "expired"],
+    ["bad-clock", "invalid"],
+  ] as const)("coupon boundary at %s is %s", (at, expected) => {
+    const fixture = { ...COUPON_FIXTURES[0]!, validFrom: now, expiresAt: "2026-10-30T00:01:00.000Z" };
+    expect(couponState(fixture, at)).toBe(expected);
+    const read = vi.fn(() => at);
+    const desk = new MarketingStubDesk(read, { ...MARKETING_FIXTURES, coupons: [fixture] });
+    if (expected === "valid") { desk.applyCoupon(fixture.code); expect(read).toHaveBeenCalledTimes(1); }
+    else { unchanged(desk, () => desk.applyCoupon(fixture.code)); expect(desk.snapshot().coupons).toEqual([]); }
+  });
+
+  it.each([
+    { validFrom: "bad" }, { expiresAt: "bad" }, { expiresAt: "2026-02-30T00:00:00.000Z" },
+    { validFrom: now, expiresAt: now }, { validFrom: "2026-10-31T00:00:00.000Z", expiresAt: now },
+    { validity: "unknown" as const },
+  ])("refuses malformed or unknown validity: %j", (extra) => {
+    const fixture = { ...COUPON_FIXTURES[0]!, ...extra };
+    const desk = new MarketingStubDesk(() => now, { ...MARKETING_FIXTURES, coupons: [fixture] });
+    unchanged(desk, () => desk.applyCoupon(fixture.code));
+  });
+
+  it("keeps expired attached history and synthetic conflicts, with no silent replacement", () => {
+    let at = now;
+    const fixture = { ...COUPON_FIXTURES[0]!, expiresAt: "2026-10-30T00:01:00.000Z", conflictGroup: "test-only" };
+    const desk = new MarketingStubDesk(() => at, { ...MARKETING_FIXTURES, coupons: [fixture, { ...fixture, code: "SECOND", expiresAt: null }] });
+    desk.applyCoupon(" lantern-note ");
+    unchanged(desk, () => desk.applyCoupon("SECOND"), "COUPON_CONFLICT");
+    at = "2026-10-30T00:01:00.000Z";
+    expect(desk.snapshot().couponStates[fixture.code]).toBe("expired");
+    unchanged(desk, () => desk.applyCoupon("SECOND"), "COUPON_CONFLICT");
+    unchanged(desk, () => desk.applyCoupon(fixture.code), "COUPON_DUPLICATE");
+    expect(desk.snapshot().coupons).toHaveLength(1);
+  });
+
+  it("normalizes referrals and records source and time exactly once, refusing missing/unknown attribution", () => {
+    const desk = new MarketingStubDesk(() => now, { ...MARKETING_FIXTURES, referrals: [...MARKETING_FIXTURES.referrals,
+      { code: "MISSING", knowledge: "known" }, { code: "BLANK", knowledge: "known", sourceRef: " " }, { code: "UNKNOWN", knowledge: "unknown", sourceRef: "synthetic:unknown" }] });
+    for (const code of [" ", OWN_REFERRAL_CODE, "ABSENT", "MISSING", "BLANK", "UNKNOWN", "REF-STUB-UNATTRIBUTED"]) unchanged(desk, () => desk.acceptReferral(code));
+    desk.acceptReferral(" ref-stub-hall ");
+    expect(desk.snapshot().referralAttributions).toEqual([{ code: "REF-STUB-HALL", sourceRef: "synthetic:REF-STUB-HALL", acceptedAt: now, marker: "session-marker" }]);
+    unchanged(desk, () => desk.acceptReferral("ref-stub-hall"), "REFERRAL_DUPLICATE");
+    desk.acceptReferral("REF-STUB-PAPER");
+    expect(desk.snapshot().rewardMarkers).toBe(2);
+  });
+
+  it("copies constructor fixtures, returned records and every snapshot collection defensively", () => {
+    const fixtures = structuredClone(MARKETING_FIXTURES);
+    const desk = new MarketingStubDesk(() => now, fixtures);
+    member(desk);
+    fixtures.presales[0]!.window = "closed-demo";
+    const row = desk.recordInterest("evt_lanterns"); row.state = "withdrawn";
+    const coupon = desk.applyCoupon("LANTERN-NOTE"); coupon.code = "changed";
+    desk.acceptReferral("REF-STUB-HALL");
+    const snapshot = desk.snapshot();
+    snapshot.interests[0]!.tier = "member";
+    snapshot.coupons[0]!.code = "changed";
+    snapshot.referralAttributions[0]!.sourceRef = "changed";
+    snapshot.acceptedReferrals.push("changed");
+    snapshot.fixtures.presales[0]!.window = "unknown";
+    snapshot.fixtures.referrals[0]!.sourceRef = "changed";
+    snapshot.membership!.displayName = "changed";
+    expect(desk.snapshot().interests[0]).toMatchObject({ state: "recorded", tier: "fan" });
+    expect(desk.snapshot().coupons[0]!.code).toBe("LANTERN-NOTE");
+    expect(desk.snapshot().referralAttributions[0]!.sourceRef).toBe("synthetic:REF-STUB-HALL");
+    expect(desk.snapshot().acceptedReferrals).toHaveLength(1);
+    expect(desk.snapshot().membership!.displayName).toBe("Fan");
+    expect(new MarketingStubDesk(() => now).snapshot().interests).toEqual([]);
+  });
+
+  it("invalid clocks refuse every time-bearing marketing mutation atomically", () => {
+    let at = now;
+    const desk = new MarketingStubDesk(() => at);
+    member(desk); desk.recordInterest("evt_lanterns");
+    at = "invalid";
+    for (const action of [() => desk.withdrawInterest("evt_lanterns"), () => desk.recordInterest("evt_paper_orchestra"), () => desk.applyCoupon("LANTERN-NOTE"), () => desk.acceptReferral("REF-STUB-HALL")]) unchanged(desk, action, "CLOCK_INVALID");
   });
 });

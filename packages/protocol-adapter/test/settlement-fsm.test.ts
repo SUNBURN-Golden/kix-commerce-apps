@@ -332,3 +332,69 @@ describe("http settlement commands stay not-bound", () => {
     expect(PINNED_PROTOCOL_DOMAIN).toBe("kix:fixture:lifecycle:0.3");
   });
 });
+
+// Expectations are authored here, independently of the store's transition table.
+const settlementPaths = {
+  INITIATED: [], AUTHORIZED: ["authorize"], CAPTURED: ["authorize", "capture"],
+  COMMITTED: ["authorize", "capture", "commit"], FAILED: ["fail"], CANCELLED: ["cancel"],
+} as const;
+const settlementCommands = ["initiate", "authorize", "capture", "commit", "fail", "cancel"] as const;
+const settlementEdges: Record<string, Record<string, string>> = {
+  INITIATED: { authorize: "AUTHORIZED", fail: "FAILED", cancel: "CANCELLED" },
+  AUTHORIZED: { capture: "CAPTURED", fail: "FAILED", cancel: "CANCELLED" },
+  CAPTURED: { commit: "COMMITTED" }, COMMITTED: {}, FAILED: {}, CANCELLED: {},
+};
+for (const [phase, path] of Object.entries(settlementPaths)) {
+  describe(`settlement edge matrix ${phase}`, () => {
+    for (const command of settlementCommands) {
+      it(`${command}: applies the permitted edge or preserves the case on refusal`, async () => {
+        const adapter = new StubProtocolAdapter();
+        const settlementId = "stl-edge";
+        const send = (op: typeof settlementCommands[number], key: string) => {
+          const input = { settlementId, idempotencyKey: key, reason: "FIXTURE" };
+          switch (op) {
+            case "initiate": return adapter.initiateSettlement({ ...input, eventId: "evt_lanterns" });
+            case "authorize": return adapter.authorizeSettlement(input);
+            case "capture": return adapter.captureSettlement(input);
+            case "commit": return adapter.commitSettlement(input);
+            case "fail": return adapter.failSettlement(input);
+            case "cancel": return adapter.cancelSettlement(input);
+          }
+        };
+        await adapter.initiateSettlement({ settlementId, eventId: "evt_lanterns", idempotencyKey: "init" });
+        for (const op of path) await send(op, `setup-${op}`);
+        expect(await adapter.reconcileSettlement({ settlementId, idempotencyKey: "before-recon" }))
+          .toMatchObject({ matched: true, settlement: { phase } });
+        const before = await adapter.viewSettlement(settlementId);
+        const next = settlementEdges[phase]?.[command];
+        if (next) {
+          const receipt = await send(command, "edge");
+          expect(receipt).toMatchObject({ duplicate: false, applied: command, provenance: "MOCK_SETTLEMENT_ONLY",
+            fundsExecuted: false, settlement: { phase: next, terminal: next === "FAILED" || next === "CANCELLED" } });
+          expect(await send(command, "edge")).toMatchObject({ duplicate: true, applied: null, settlement: { phase: next } });
+        } else {
+          const code = phase === "FAILED" || phase === "CANCELLED" ? "TERMINAL_IMMUTABLE" : "ILLEGAL_TRANSITION";
+          await expect(send(command, "edge")).rejects.toMatchObject({ code });
+          await expect(send(command, "edge")).rejects.toMatchObject({ code });
+          expect(await adapter.viewSettlement(settlementId)).toEqual({ ...before, lastRejectCode: code });
+        }
+        const live = await adapter.viewSettlement(settlementId);
+        expect(await adapter.reconcileSettlement({ settlementId, idempotencyKey: "reconcile" }))
+          .toMatchObject({ matched: true, settlement: { phase: live.phase, fundsExecuted: false } });
+      });
+    }
+  });
+}
+
+it("settlement keeps a rejected key rejected after prerequisites change; a fresh local command recovers", async () => {
+  const adapter = new StubProtocolAdapter();
+  const settlementId = "stl-recover";
+  await adapter.initiateSettlement({ settlementId, eventId: "evt_lanterns", idempotencyKey: "init" });
+  const early = { settlementId, idempotencyKey: "early" };
+  await expect(adapter.captureSettlement(early)).rejects.toMatchObject({ code: "ILLEGAL_TRANSITION" });
+  await adapter.authorizeSettlement({ settlementId, idempotencyKey: "authorize" });
+  await expect(adapter.captureSettlement(early)).rejects.toMatchObject({ code: "ILLEGAL_TRANSITION" });
+  expect((await adapter.viewSettlement(settlementId)).phase).toBe("AUTHORIZED");
+  expect(await adapter.captureSettlement({ settlementId, idempotencyKey: "explicit-new" }))
+    .toMatchObject({ duplicate: false, settlement: { phase: "CAPTURED" } });
+});

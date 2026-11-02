@@ -1,3 +1,6 @@
+import { AsyncStateFrame } from "../../components/AsyncStateFrame";
+import { formatWhen } from "../../format";
+import { useDisplayLocale } from "../../i18n/locale-context";
 import { messages as copy0 } from "../../i18n/messages/pages--marketing--M04Rewards";
 import { messages as copy1 } from "../../i18n/messages/marketing--desk";
 import { deskText } from "../../i18n/desk-translate";
@@ -7,13 +10,13 @@ import { RefusalScope } from "../../connectivity/refusal";
 import { ValidatedForm } from "../../forms/ValidatedForm";
 import { field } from "../../forms/validation";
 import { useState, type FormEvent } from "react";
-import { PARTNER_REFERRAL_CODES } from "../../marketing/desk";
 import { marketingSession } from "../../marketing/session";
 import { useMarketingSnapshot } from "../../marketing/useMarketingSnapshot";
 import { errorText, MarketingChrome } from "./MarketingChrome";
 
 export function M04Page() {
   const t = useT(copy0, copy1);
+  const clock = useDisplayLocale();
   const { snapshot, refresh } = useMarketingSnapshot();
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -57,17 +60,20 @@ export function M04Page() {
         <label>
           {t("s17a")}<input id="referral-code" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="off" />
         </label>
-        <p className="muted">{t("slm")}{" "}{deskText(t, PARTNER_REFERRAL_CODES.join(", "))}.</p>
+        <p className="muted">{t("slm")}{" "}{deskText(t, snapshot.fixtures.referrals.map((row) => row.code).join(", "))}.</p>
         <div className="row-actions">
           <ConnectivityWriteButton type="submit">{t("sem")}</ConnectivityWriteButton>
         </div>
       </ValidatedForm>
       </RefusalScope>
+      <p className="muted">{t("marketing.attribution")}</p>
+      {snapshot.fixtures.referrals.some((row) => row.knowledge !== "known" || !row.sourceRef?.trim()) ? <AsyncStateFrame kind="unknown" word="UNKNOWN" label="" note={t("marketing.referralUnknown")} /> : null}
       {snapshot.acceptedReferrals.length > 0 ? (
         <p className="panel">{t("seo")}{" "}{deskText(t, snapshot.acceptedReferrals.join(", "))}</p>
       ) : (
         <p className="empty">{t("swr")}</p>
       )}
+      <ul className="program">{snapshot.referralAttributions.map((row) => <li key={row.code}>{row.code} · {row.sourceRef} · {formatWhen(row.acceptedAt, clock)} · {row.marker}</li>)}</ul>
     </MarketingChrome>
   );
 }

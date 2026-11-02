@@ -29,39 +29,17 @@ export const MARKETING_BOUNDARY = {
 
 export type DemoTier = "guest" | "fan" | "member";
 export type MemberTier = Exclude<DemoTier, "guest">;
-export type PresaleWindow = "open-demo" | "closed-demo";
+export type PresaleWindow = "open-demo" | "closed-demo" | "unknown";
 
-export const COUPON_FIXTURES = [
-  {
-    code: "LANTERN-NOTE",
-    titleKo: "랜턴 회차 안내",
-    titleEn: sourceCopy.en["sq0"],
-    marker: "session-marker",
-  },
-  {
-    code: "PAPER-NOTE",
-    titleKo: "페이퍼 오케스트라 안내",
-    titleEn: sourceCopy.en["s173"],
-    marker: "session-marker",
-  },
-  {
-    code: "FERRY-NOTE",
-    titleKo: "라스트 페리 안내",
-    titleEn: sourceCopy.en["sqb"],
-    marker: "session-marker",
-  },
-] as const;
-
-export const PARTNER_REFERRAL_CODES = ["REF-STUB-HALL", "REF-STUB-PAPER", "REF-STUB-FERRY"] as const;
-
-/** This browser session’s own demo code. It cannot be accepted by the same session. */
-export const OWN_REFERRAL_CODE = "REF-STUB-SELF";
+export { COUPON_FIXTURES, PARTNER_REFERRAL_CODES, OWN_REFERRAL_CODE } from "./fixtures";
+import { MARKETING_FIXTURES, OWN_REFERRAL_CODE, type CouponFixture, type MarketingFixtureBundle } from "./fixtures";
+export type { MarketingFixtureBundle } from "./fixtures";
 
 const MEMBERSHIP_NOTE =
   sourceCopy.en["srj"];
 
 export class MarketingStubError extends Error {
-  constructor(message: string) {
+  constructor(message: string, readonly code = "MARKETING_REFUSED") {
     super(message);
     this.name = sourceCopy.en["srz"];
   }
@@ -80,6 +58,8 @@ export interface PresaleInterest {
   tier: MemberTier;
   window: "open-demo";
   recordedAt: string;
+  state: "recorded" | "withdrawn";
+  withdrawnAt: string | null;
 }
 
 export interface AppliedCoupon {
@@ -88,6 +68,29 @@ export interface AppliedCoupon {
   titleEn: string;
   marker: "session-marker";
   appliedAt: string;
+}
+
+export interface ReferralAttribution {
+  code: string;
+  sourceRef: string;
+  acceptedAt: string;
+  marker: "session-marker";
+}
+export type CouponState = "valid" | "expired" | "future" | "unknown" | "invalid";
+
+/** Strict UTC fixture timestamps; malformed dates, rollover dates and clocks fail closed. */
+function timestamp(value: string): number {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value)) return NaN;
+  const result = Date.parse(value);
+  return Number.isFinite(result) && new Date(result).toISOString() === value ? result : NaN;
+}
+export function couponState(fixture: CouponFixture, now: string): CouponState {
+  const at = timestamp(now);
+  const from = fixture.validFrom === null ? -Infinity : timestamp(fixture.validFrom);
+  const until = fixture.expiresAt === null ? Infinity : timestamp(fixture.expiresAt);
+  if (!Number.isFinite(at) || Number.isNaN(from) || Number.isNaN(until) || from >= until) return "invalid";
+  if (fixture.validity !== "known") return "unknown";
+  return at < from ? "future" : at >= until ? "expired" : "valid";
 }
 
 export interface ConsentRecord {
@@ -102,6 +105,10 @@ export interface ConsentRecord {
 export interface MarketingSnapshot {
   boundary: typeof MARKETING_BOUNDARY;
   membership: MembershipCard | null;
+  membershipKnowledge: "known" | "unknown";
+  fixtures: MarketingFixtureBundle;
+  couponStates: Record<string, CouponState>;
+  referralAttributions: ReferralAttribution[];
   interests: PresaleInterest[];
   coupons: AppliedCoupon[];
   referralCode: string;
@@ -118,10 +125,6 @@ function normalizeCode(code: string): string {
   return code.trim().toUpperCase();
 }
 
-function isPartnerCode(code: string): code is (typeof PARTNER_REFERRAL_CODES)[number] {
-  return (PARTNER_REFERRAL_CODES as readonly string[]).includes(code);
-}
-
 function emptyConsent(): ConsentRecord {
   return {
     performanceNotes: false,
@@ -135,6 +138,9 @@ function emptyConsent(): ConsentRecord {
 
 export class MarketingStubDesk {
   private seq = 0;
+  private membershipKnowledge: "known" | "unknown";
+  private readonly fixtures: MarketingFixtureBundle;
+  private referralAttributions: ReferralAttribution[] = [];
   private membership: MembershipCard | null = null;
   private interests: PresaleInterest[] = [];
   private coupons: AppliedCoupon[] = [];
@@ -142,11 +148,38 @@ export class MarketingStubDesk {
   private rewardMarkers = 0;
   private consent: ConsentRecord = emptyConsent();
 
-  constructor(private readonly now: () => string = () => new Date().toISOString()) {}
+  constructor(private readonly now: () => string = () => new Date().toISOString(), fixtures: MarketingFixtureBundle = MARKETING_FIXTURES) {
+    this.fixtures = this.copyFixtures(fixtures);
+    this.membershipKnowledge = fixtures.membershipKnowledge;
+  }
+
+  private copyFixtures(fixtures: MarketingFixtureBundle): MarketingFixtureBundle {
+    return { ...fixtures, presales: fixtures.presales.map((row) => ({ ...row })), coupons: fixtures.coupons.map((row) => ({ ...row })), referrals: fixtures.referrals.map((row) => ({ ...row })) };
+  }
+
+  private actionTime(): string {
+    const now = this.now();
+    if (!Number.isFinite(timestamp(now))) throw new MarketingStubError(sourceCopy.en["marketing.clockInvalid"], "CLOCK_INVALID");
+    return now;
+  }
+
+  presaleWindow(eventId: string): PresaleWindow {
+    if (this.membershipKnowledge !== "known") return "unknown";
+    if (!this.membership) return "closed-demo";
+    return this.fixtures.presales.find((row) => row.eventId === eventId)?.window ?? "unknown";
+  }
 
   snapshot(): MarketingSnapshot {
+    const at = this.coupons.length ? this.now() : "";
     return {
       boundary: MARKETING_BOUNDARY,
+      membershipKnowledge: this.membershipKnowledge,
+      fixtures: this.copyFixtures(this.fixtures),
+      couponStates: Object.fromEntries(this.coupons.map((row) => {
+        const fixture = this.fixtures.coupons.find((item) => item.code === row.code);
+        return [row.code, fixture ? couponState(fixture, at) : "unknown"];
+      })),
+      referralAttributions: this.referralAttributions.map((row) => ({ ...row })),
       membership: this.membership ? { ...this.membership } : null,
       interests: this.interests.map((item) => ({ ...item })),
       coupons: this.coupons.map((item) => ({ ...item })),
@@ -161,6 +194,8 @@ export class MarketingStubDesk {
     assertConnected();
     if (typeof location !== "undefined" && cachedGroups(location.pathname).some((group) => group.label === "marketing-session")) throw new MarketingStubError(CACHED_NOT_SENT);
     this.seq = 0;
+    this.membershipKnowledge = "known";
+    this.referralAttributions = [];
     this.membership = null;
     this.interests = [];
     this.coupons = [];
@@ -174,11 +209,12 @@ export class MarketingStubDesk {
     if (typeof location !== "undefined" && cachedGroups(location.pathname).some((group) => group.label === "marketing-session")) throw new MarketingStubError(CACHED_NOT_SENT);
     const displayName = input.displayName.trim();
     if (displayName.length < 1 || displayName.length > 40) {
-      throw new MarketingStubError("Enter a display name of 1–40 characters.");
+      throw new MarketingStubError(sourceCopy.en["marketing.nameInvalid"], "NAME_INVALID");
     }
     if (input.tier !== "fan" && input.tier !== "member") {
-      throw new MarketingStubError(sourceCopy.en["sc9"]);
+      throw new MarketingStubError(sourceCopy.en["sc9"], "TIER_INVALID");
     }
+    this.membershipKnowledge = "known";
     this.seq += 1;
     this.membership = {
       memberRef: `mbr_stub_${this.seq}`,
@@ -194,6 +230,7 @@ export class MarketingStubDesk {
     assertConnected();
     if (typeof location !== "undefined" && cachedGroups(location.pathname).some((group) => group.label === "marketing-session")) throw new MarketingStubError(CACHED_NOT_SENT);
     this.membership = null;
+    this.membershipKnowledge = "known";
     this.interests = [];
   }
 
@@ -202,45 +239,70 @@ export class MarketingStubDesk {
     if (typeof location !== "undefined" && cachedGroups(location.pathname).some((group) => group.label === "marketing-session")) throw new MarketingStubError(CACHED_NOT_SENT);
     const trimmed = eventId.trim();
     if (!trimmed) {
-      throw new MarketingStubError(sourceCopy.en["scb"]);
+      throw new MarketingStubError(sourceCopy.en["scb"], "EVENT_EMPTY");
     }
+    if (this.membershipKnowledge !== "known") throw new MarketingStubError(sourceCopy.en["marketing.membershipUnknown"], "MEMBERSHIP_UNKNOWN");
+    const fixture = this.fixtures.presales.find((row) => row.eventId === trimmed);
+    if (!fixture) throw new MarketingStubError(sourceCopy.en["marketing.eventUnknown"], "EVENT_UNKNOWN");
+    if (fixture.window === "unknown") throw new MarketingStubError(sourceCopy.en["marketing.windowUnknown"], "WINDOW_UNKNOWN");
     const tier = this.membership?.tier;
-    if (!tier || presaleWindowFor(tier) !== "open-demo") {
+    if (!tier || fixture.window !== "open-demo") {
       throw new MarketingStubError(
-        sourceCopy.en["s1rk"],
+        sourceCopy.en["s1rk"], "WINDOW_CLOSED",
       );
     }
     const existing = this.interests.find((item) => item.eventId === trimmed);
-    if (existing) {
+    if (existing?.state === "recorded") {
       return { ...existing };
     }
     const created: PresaleInterest = {
       eventId: trimmed,
       tier,
       window: "open-demo",
-      recordedAt: this.now(),
+      recordedAt: this.actionTime(),
+      state: "recorded",
+      withdrawnAt: null,
     };
-    this.interests.push(created);
+    if (existing) this.interests[this.interests.indexOf(existing)] = created;
+    else this.interests.push(created);
     return { ...created };
+  }
+
+  withdrawInterest(eventId: string): PresaleInterest {
+    assertConnected();
+    if (typeof location !== "undefined" && cachedGroups(location.pathname).some((group) => group.label === "marketing-session")) throw new MarketingStubError(CACHED_NOT_SENT);
+    const row = this.interests.find((item) => item.eventId === eventId.trim() && item.state === "recorded");
+    if (!row) throw new MarketingStubError(sourceCopy.en["marketing.interestMissing"], "INTEREST_NOT_ACTIVE");
+    const at = this.actionTime();
+    row.state = "withdrawn";
+    row.withdrawnAt = at;
+    return { ...row };
   }
 
   applyCoupon(code: string): AppliedCoupon {
     assertConnected();
     if (typeof location !== "undefined" && cachedGroups(location.pathname).some((group) => group.label === "marketing-session")) throw new MarketingStubError(CACHED_NOT_SENT);
     const normalized = normalizeCode(code);
-    const fixture = COUPON_FIXTURES.find((item) => item.code === normalized);
+    const fixture = this.fixtures.coupons.find((item) => item.code === normalized);
     if (!fixture) {
-      throw new MarketingStubError(sourceCopy.en["s259"]);
+      throw new MarketingStubError(sourceCopy.en["s259"], "COUPON_UNKNOWN");
     }
     if (this.coupons.some((item) => item.code === fixture.code)) {
-      throw new MarketingStubError(sourceCopy.en["s1pq"]);
+      throw new MarketingStubError(sourceCopy.en["s1pq"], "COUPON_DUPLICATE");
+    }
+    const at = this.actionTime();
+    const state = couponState(fixture, at);
+    if (state !== "valid") throw new MarketingStubError(sourceCopy.en[`marketing.coupon.${state}`], `COUPON_${state.toUpperCase()}`);
+    // Synthetic groups retain all attached history, even after expiry. Never replace a marker.
+    if (fixture.conflictGroup && this.coupons.some((row) => this.fixtures.coupons.find((item) => item.code === row.code)?.conflictGroup === fixture.conflictGroup)) {
+      throw new MarketingStubError(sourceCopy.en["marketing.couponConflict"], "COUPON_CONFLICT");
     }
     const applied: AppliedCoupon = {
       code: fixture.code,
       titleKo: fixture.titleKo,
       titleEn: fixture.titleEn,
       marker: "session-marker",
-      appliedAt: this.now(),
+      appliedAt: at,
     };
     this.coupons.push(applied);
     return { ...applied };
@@ -251,17 +313,21 @@ export class MarketingStubDesk {
     if (typeof location !== "undefined" && cachedGroups(location.pathname).some((group) => group.label === "marketing-session")) throw new MarketingStubError(CACHED_NOT_SENT);
     const normalized = normalizeCode(code);
     if (!normalized) {
-      throw new MarketingStubError(sourceCopy.en["sif"]);
+      throw new MarketingStubError(sourceCopy.en["sif"], "REFERRAL_EMPTY");
     }
     if (normalized === OWN_REFERRAL_CODE) {
-      throw new MarketingStubError(sourceCopy.en["s23m"]);
+      throw new MarketingStubError(sourceCopy.en["s23m"], "REFERRAL_SELF");
     }
-    if (!isPartnerCode(normalized)) {
-      throw new MarketingStubError(sourceCopy.en["s25a"]);
+    const fixture = this.fixtures.referrals.find((row) => row.code === normalized);
+    if (!fixture) {
+      throw new MarketingStubError(sourceCopy.en["s25a"], "REFERRAL_UNKNOWN");
     }
     if (this.acceptedReferrals.includes(normalized)) {
-      throw new MarketingStubError(sourceCopy.en["s1pp"]);
+      throw new MarketingStubError(sourceCopy.en["s1pp"], "REFERRAL_DUPLICATE");
     }
+    if (fixture.knowledge !== "known" || !fixture.sourceRef?.trim()) throw new MarketingStubError(sourceCopy.en["marketing.referralUnknown"], "ATTRIBUTION_UNKNOWN");
+    const at = this.actionTime();
+    this.referralAttributions.push({ code: normalized, sourceRef: fixture.sourceRef, acceptedAt: at, marker: "session-marker" });
     this.acceptedReferrals.push(normalized);
     this.rewardMarkers += 1;
     return { markers: this.rewardMarkers };

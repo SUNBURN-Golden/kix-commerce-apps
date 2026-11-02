@@ -75,6 +75,14 @@ async function inject(driver: string) {
 }
 
 describe("screen async matrix", () => {
+  it("marketing fixture knowledge does not claim protocol response-loss UNKNOWN evidence", () => {
+    for (const route of ["marketing-m01", "marketing-m02", "marketing-m03", "marketing-m04"]) {
+      const cell = SCREEN_STATE_MATRIX.find((entry) => entry.route === route && entry.state === "unknown");
+      expect(cell?.kind).not.toBe("CHECKED");
+      expect(cell?.kind).not.toBe("REFERENCE");
+      expect(cell?.reason).toContain("protocol response-loss UNKNOWN");
+    }
+  });
   for (const route of ROUTES) {
     it(`${route.id}:mount-audit`, () => {
       const markup = mount(route.id);

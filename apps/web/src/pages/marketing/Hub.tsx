@@ -17,10 +17,10 @@ export function MarketingHubPage() {
   const t = useT(copy0, copy1, copy2, copy3);
   const { snapshot, refresh } = useMarketingSnapshot();
   const boundary = snapshot.boundary;
-  const tier = snapshot.membership?.tier ?? "guest";
+  const tier = snapshot.membershipKnowledge === "unknown" ? "UNKNOWN" : snapshot.membership?.tier ?? "guest";
   // Once Reset has emptied the session there is nothing left to reset; the session facts say so.
   const [reset, setReset] = useState(false);
-  const empty = reset && !snapshot.membership && snapshot.interests.length + snapshot.coupons.length + snapshot.acceptedReferrals.length + snapshot.rewardMarkers === 0 && snapshot.consent.state === "unset";
+  const empty = reset && snapshot.membershipKnowledge === "known" && !snapshot.membership && snapshot.interests.length + snapshot.coupons.length + snapshot.acceptedReferrals.length + snapshot.rewardMarkers === 0 && snapshot.consent.state === "unset";
 
   return (
     <MarketingChrome onReadAgain={refresh}>
@@ -53,7 +53,7 @@ export function MarketingHubPage() {
           </div>
           <div>
             <dt>{t("s18u")}</dt>
-            <dd>{deskText(t, snapshot.interests.length)}</dd>
+            <dd>{deskText(t, snapshot.interests.filter((row) => row.state === "recorded").length)}</dd>
           </div>
           <div>
             <dt>{t("seq")}</dt>

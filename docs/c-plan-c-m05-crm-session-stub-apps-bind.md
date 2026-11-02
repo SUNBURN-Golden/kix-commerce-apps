@@ -134,3 +134,25 @@ Build-plan deviation retained from the earlier attempt: the earlier builder reco
 The earlier stopped attempts reported browser timeouts accompanied by host clock steps and event-loop stalls. The 2026-11-02 owner ruling resolved that runner decision by selecting GitHub Actions exact-head CI. Local results above supersede earlier local observations for this continuation, but do not replace that acceptance gate. The supervisor must obtain complete green exact-head CI, including journeys, accessibility and visual comparison; no gate is waived or weakened.
 
 A local observation is not user acceptance, a screen-reader/real-device run, production readiness, legal compliance, or release approval. Stop for unmerged dependencies/contracts, new commands/public schemas, legal policy/retention values, secrets, paid services, hardware, live operations, locked binding changes, or a fail-closed rule violation. None is needed for this synthetic implementation.
+
+## Merge reconciliation — 2026-11-02
+
+Resolved the in-progress README conflict between this branch (`47ad045`) and `origin/main` (`b0ac5e1`) by retaining both the M01–M04 depth reference and the M05 synthetic CRM description/evidence link in the shared paragraph. Main's launch-gap, receipt pagination and browser-journey documentation remains present. Updated the launch-gap index's M05 entry to include the session-only preview and its integration-http `NOT_BOUND` boundary while retaining the external dependencies and undecided policies. M01–M04 remain 설계중; M05 remains 미착수. No unique content from either side was discarded. Removed one trailing blank line from main's mock-FSM evidence document to satisfy the combined diff whitespace check.
+
+M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
+
+Validation uses the existing Node 22.20.0 executable and installed locked dependencies. Logs are `/tmp/kix-m05-merge-*.log`. The unit run uses the same one-worker environment documented above; no assertions, timeouts, retries, budgets or CI settings changed.
+
+| Check on the combined working tree | Result |
+| --- | --- |
+| `npm run typecheck` | PASS; adapter and web. |
+| `npm run typecheck:e2e` | PASS. |
+| `KIX_REQUIRE_GATE=0 npm test` | PASS; adapter 1,833 passed / 23 live-gate skips, web 1,406 passed, cold-start 6 passed. Skips are not passes. |
+| `KIX_REQUIRE_GATE=0 npm test -w @kix/e2e` | PASS; 47 files / 201 tests, including all four M05 cases; 174/174 journey checks. `/tmp/kix-m05-merge-e2e-record.json` records `nonLoopback: 0`, `nonGet: 0`, `appNetworkCalls: 0` and no leaked resources after cleanup. Chrome uses the existing local executable and sandbox override documented above. |
+| `npm run build` | PASS; Vite reports a circular chunk warning between `M05CrmWorkspace` and main's `marketing-stubs` group. No runtime or build configuration was changed during this reconciliation. |
+| `npm run budget` | PASS; initial JS 160,020, initial CSS 4,974, total 781,000 gzip bytes; budgets unchanged. |
+| `npm run lint` | PASS. |
+| Tracked-file conflict-marker scan and `git diff HEAD --check` | PASS. |
+| Protected-path and source-label comparison | PASS; `.aiops/**`, `docs/aiops/**`, locked binding, protocol/SDK pins, CI and bundle budgets match `origin/main`; all five ORIGINAL_32 marketing labels retained. |
+
+No staging, commit, merge, rebase, reset, checkout, push or external comment was performed. The merge index intentionally retains README's unmerged entries for the supervisor to stage after reviewing the resolved file. Local working-tree checks do not claim exact-head GitHub Actions acceptance.

@@ -1,6 +1,6 @@
 import { messages as sourceCopy } from "./i18n/messages/credit-desk";
 import { connectedHandler } from "./connectivity/write-guard";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ProtocolError, type CreditCaseView } from "@kix/protocol-adapter";
 import { protocol } from "./connectivity/desk-protocol";
 import type { CreditDeskCommand } from "./pages/CreditPanel";
@@ -24,51 +24,54 @@ export function useCreditDesk(eventId: string) {
   const [view, setView] = useState<CreditCaseView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [attempt, setAttempt] = useState(() => readAttempt(eventId));
 
-  useEffect(() => {
-    setAttempt(readAttempt(eventId));
-  }, [eventId]);
+  // One mutable bag: g = selection generation (a selection owns its reads and
+  // completion, including A → B → A); f = in-flight send (React state alone
+  // cannot guard two activations from the same render).
+  const box = useRef({ g: 0, f: false }).current;
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (requestGeneration: number) => {
     const trimmed = eventId.trim();
     if (!trimmed) {
       setView(null);
       return;
     }
     const ids = creditIds(trimmed);
+    let next: CreditCaseView | null = null;
     try {
-      setView(await protocol.viewCredit(ids.advanceId));
+      next = await protocol.viewCredit(ids.advanceId);
     } catch (reason) {
-      if (reason instanceof ProtocolError && reason.code === "UNKNOWN_ADVANCE") {
-        setView(null);
-        return;
-      }
-      throw reason;
+      if (!(reason instanceof ProtocolError && reason.code === "UNKNOWN_ADVANCE")) throw reason;
     }
-  }, [eventId]);
+    if (box.g === requestGeneration) setView(next);
+  }, [eventId, box]);
 
   useEffect(() => {
-    let cancelled = false;
+    const requestGeneration = ++box.g;
+    box.f = false;
+    setPending(false);
+    setView(null);
     setError(null);
-    refresh().catch((reason: unknown) => {
-      if (!cancelled) {
+    refresh(requestGeneration).catch((reason: unknown) => {
+      if (box.g === requestGeneration) {
         setError(message(reason));
       }
     });
-    return () => {
-      cancelled = true;
-    };
-  }, [refresh]);
+  }, [refresh, eventId, box]);
 
   async function run(command: CreditDeskCommand) {
     if (!connectedHandler()) return;
     const trimmed = eventId.trim();
-    if (!trimmed || pending) {
+    if (!trimmed || box.f) {
       return;
     }
+    const requestGeneration = box.g;
+    const current = () => box.g === requestGeneration;
+    box.f = true;
     const ids = creditIds(trimmed);
+    const attempt = readAttempt(trimmed);
     const idempotencyKey = `desk-${command}:${ids.advanceId}:${attempt}`;
+    const advanceAttempt = () => writeAttempt(trimmed, readAttempt(trimmed) + 1);
     setPending(true);
     setError(null);
     try {
@@ -150,27 +153,23 @@ export function useCreditDesk(eventId: string) {
       }
       if (command === "reconcile") {
         // A second reconcile checks the case again instead of replaying this receipt.
-        setAttempt((value) => {
-          const next = value + 1;
-          writeAttempt(trimmed, next);
-          return next;
-        });
+        advanceAttempt();
       }
-      await refresh();
+      await refresh(requestGeneration);
     } catch (reason) {
-      setAttempt((value) => {
-        const next = value + 1;
-        writeAttempt(trimmed, next);
-        return next;
-      });
+      advanceAttempt();
+      if (!current()) return;
       setError(message(reason));
       try {
-        await refresh();
+        await refresh(requestGeneration);
       } catch {
         // The command error stays on the panel.
       }
     } finally {
-      setPending(false);
+      if (current()) {
+        box.f = false;
+        setPending(false);
+      }
     }
   }
 
