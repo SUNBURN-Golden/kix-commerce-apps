@@ -408,4 +408,3 @@ Final checks use Node 22.23.4. Browser suites run sequentially; the successful c
 
 Locked binding SHA-256: `83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249`.
 `.aiops/**`, `docs/aiops/**`, `packages/protocol-adapter/src/commerce-bindings.ts`, CI, bundle budgets, dependency manifests/lock, and protocol pins remain identical to the baseline. No git/GitHub write action was performed.
-

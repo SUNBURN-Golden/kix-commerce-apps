@@ -11,13 +11,14 @@ import { RefusalScope } from "../../connectivity/refusal";
 import type { ValidationHandle } from "../../forms/useFormValidation";
 import { ValidatedForm } from "../../forms/ValidatedForm";
 import { field } from "../../forms/validation";
-import { useRef, useState, type FormEvent } from "react";
-import { emptyConsentDraft, useConsentDesk, type ConsentDraft, type ConsentPanelModel, type ConsentRowStatus } from "../../consent-desk";
+import { useRef, useState, useSyncExternalStore, type FormEvent } from "react";
+import { consentDesk, emptyConsentDraft, useConsentDesk, type ConsentDraft, type ConsentPanelModel, type ConsentRowStatus } from "../../consent-desk";
 import { useT } from "../../i18n/desk-context";
 import { useDisplayLocale } from "../../i18n/locale-context";
 import { MARKETING_CONTRACT_ALIGNMENT } from "../../marketing/contracts";
 import { marketingSession } from "../../marketing/session";
 import { useMarketingSnapshot } from "../../marketing/useMarketingSnapshot";
+import { M05CrmWorkspace } from "./M05CrmWorkspace";
 import { MarketingChrome } from "./MarketingChrome";
 
 export function M05Page() {
@@ -30,6 +31,7 @@ export function M05Page() {
   const [draft, setDraft] = useState<ConsentDraft>(emptyConsentDraft());
   const bind = useConsentDesk(eventId, draft);
   const consent = snapshot.consent;
+  const evidence = useSyncExternalStore(consentDesk.subscribe, consentDesk.getSnapshot, consentDesk.getSnapshot);
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -97,6 +99,7 @@ export function M05Page() {
         onEventId={setEventId}
         onDraft={(partial) => setDraft((current) => ({ ...current, ...partial }))}
       />
+      <M05CrmWorkspace snapshot={evidence} flags={consent} />
     </MarketingChrome>
   );
 }

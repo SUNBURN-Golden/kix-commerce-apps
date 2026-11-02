@@ -1,5 +1,12 @@
 /** Exact catalogue keys allowed to keep source spelling in Korean; no English-prose wildcard. */
 export const VERBATIM_MESSAGES: Readonly<Record<string, string>> = {
+  "crm.UNKNOWN": "Outcome enum UNKNOWN is preserved in both locales.",
+  "crm.STALE": "Freshness enum STALE is preserved in both locales.",
+  "crm.NOT_BOUND": "Binding enum NOT_BOUND is preserved in both locales.",
+  "crm.send": "Published channelSend field name is retained verbatim.",
+  "crm.fanTier": "Existing synthetic tier token fan is preserved verbatim.",
+  "crm.memberTier": "Existing synthetic tier token member is preserved verbatim.",
+
   "merge.none": "Null consideredAction sentinel copied from the binding record",
   "merge.considered": "Existing protocol field name",
   "merge.statesSample": "Exact outcome and policy enum specimen",

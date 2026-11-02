@@ -301,11 +301,11 @@ Each entry separates current surface binding, local HTTP behavior, missing capab
 | Field | Recorded boundary |
 | --- | --- |
 | Surface | `marketing-m05` |
-| Current boundary | `published-bound` ConsentBind plus session consent flags; M05 stays 미착수. `channelSend: none`. |
-| Integration HTTP | `set_consent` then `authorize_marketing` via the existing local-call invoker; no CRM message is sent. Stub default is stub-shape; rejected/unknown/not-sent fences the next write. |
+| Current boundary | `published-bound` ConsentBind plus session consent flags and a synthetic page-load CRM workspace: consent-scoped fixture audience preview, channel preferences, purpose ledger and withdrawal effects. M05 stays 미착수. `channelSend: none`; no CRM data persists or is exported. |
+| Integration HTTP | `set_consent` then `authorize_marketing` via the existing local-call invoker; the synthetic CRM workspace stays `NOT_BOUND` with no fixture fallback. No CRM message is sent. Stub default is stub-shape; rejected/unknown/not-sent fences the next write. |
 | External dependency | Browser access needs `kix-protocol:gate-browser-access` → `browser-gate-path`. Published consent bodies do not supply a real messaging provider, authenticated audience or production credentials. Broader marketing work still waits on `kix-protocol:wave7-marketing-contracts`. |
 | Owning decision | Producer contract authority: kix-protocol; consumer promotion remains pending in the cited evidence. User retains money, keys, equipment, production and release decisions; unresolved policy values and any unassigned policy owner are `UNDETERMINED`. Consent purpose, retention and actual channel-send/provider decisions remain `UNDETERMINED`. |
-| Evidence | [m05-consent-bind-apps-bind.md](m05-consent-bind-apps-bind.md) |
+| Evidence | [m05-consent-bind-apps-bind.md](m05-consent-bind-apps-bind.md); [c-plan-c-m05-crm-session-stub-apps-bind.md](c-plan-c-m05-crm-session-stub-apps-bind.md) |
 
 ## `/platform`
 

@@ -25,7 +25,7 @@ export function paginationInput(role: WorkspaceRole = "operator", count = 5000):
   return {
     screenSessionId: FIXTURE_SESSION, evidenceSessionId: FIXTURE_SESSION, role, environment: "stub",
     journey: { ...base, journeys: [] }, gift: { ...base, gifts: [] }, organizer: { ...base, events: [] },
-    consent: { ...base, events: [], notComposed: [], deskNotBound: [] },
+    consent: { ...base, environment: "stub", events: [], notComposed: [], deskNotBound: [] },
     extra: Array.from({ length: count }, (_, index) => receiptCandidate(index)).filter((entry) => ROLE_CONTEXTS[role].includes(entry.context)),
   };
 }
