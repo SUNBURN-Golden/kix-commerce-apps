@@ -327,6 +327,16 @@ export const FIXTURE_SCREENS = [
     note: "A stale credential label is adapter-assigned. presentAdmission does not post admit.",
   },
   {
+    screenId: "resale-market",
+    route: "/resale/market",
+    note: "no fixture pass. App-internal synthetic search only. No published producer mapping or catalogue receipt.",
+  },
+  {
+    screenId: "resale-product",
+    route: "/resale/market/:productId",
+    note: "no fixture pass. App-internal simulated offers/trades, no funds. Producer mapping UNDETERMINED; no catalogue receipt.",
+  },
+  {
     screenId: "resale-desk",
     route: "/resale",
     note: "A mock stale version is not economic finality. Desk methods stay not-bound.",

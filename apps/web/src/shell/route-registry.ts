@@ -106,6 +106,8 @@ export const ROUTES = [
   route("booking", "/booking/:eventId", "Booking", "buyer", "published-bound", "booking-journey", { nav: "hidden", sample: "/booking/evt_lanterns", e2e: "booking" }),
   route("admission", "/admission", "Admission", "buyer", "stub-only", "admission-credential", { e2e: "admission" }),
   route("resale", "/resale", "Resale", "buyer", "stub-only", "resale-desk", { e2e: "resale" }),
+  route("resale-market", "/resale/market", "Resale market", "buyer", "stub-only", "resale-market", { parent: "/resale", nav: "section", e2e: "resale-market" }),
+  route("resale-product", "/resale/market/:productId", "Product detail", "buyer", "stub-only", "resale-product", { parent: "/resale/market", nav: "hidden", sample: "/resale/market/demo-001", e2e: "resale-product" }),
   route("gift", "/gift", "Gift", "buyer", "published-bound", "gift-transfer", { e2e: "gift" }),
   route("mobile", "/mobile", "Mobile shell", "buyer", "stub-only", "installable-mobile-shell", { e2e: "mobile" }),
   route("assistant", "/assistant", "Assistant", "buyer", "stub-only", "delegated-assistant", { e2e: "assistant" }),

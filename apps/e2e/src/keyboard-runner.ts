@@ -16,6 +16,7 @@ import {
 /** One keyboard-only drive to one BROWSER outcome cell. Declarative: a drive never touches the page itself. */
 export interface KeyboardDrive {
   checkId: string;
+  fixture?: "resale-reject" | "resale-lost";
   /** Full load at this path, then keys only. */
   path: string;
   /** Keys before the trigger. */

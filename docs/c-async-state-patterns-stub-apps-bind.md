@@ -69,6 +69,8 @@ C = new executable owning-route/shell check; R = exact existing executed screen 
 | `merchant` | C | R | C | N | R | R |
 | `booking` | C | R | C | C | C | C |
 | `admission` | C | C | C | A | R | A |
+| `resale-market` | C | R | C | N | A | R |
+| `resale-product` | C | R | C | R | R | R |
 | `resale` | C | C | C | A | A | A |
 | `gift` | C | A | C | R | A | R |
 | `organizer-workspace` | C | C | C | R | R | C |

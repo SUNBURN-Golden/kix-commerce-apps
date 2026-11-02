@@ -12,13 +12,15 @@ The booking adapter journey still stops after `create_event` → `prepare_trade`
 
 ## Form inventory
 
-The checkout has **16 native form declarations**, rather than the design's 15 or the node's approximate 30 onSubmit occurrences. Every declaration now uses `ValidatedForm`. This count is checked by `apps/web/test/form-validation.test.tsx`. Sources below are under `apps/web/src/pages/`; browser rows are in `apps/e2e/tests/a11y/forms.a11y.test.ts` unless noted.
+The checkout has **18 native form declarations** (16 original plus two resale marketplace forms), rather than the design's 15 or the node's approximate 30 onSubmit occurrences. Every declaration now uses `ValidatedForm`. This count is checked by `apps/web/test/form-validation.test.tsx`. Sources below are under `apps/web/src/pages/`; browser rows are in `apps/e2e/tests/a11y/forms.a11y.test.ts` unless noted.
 
 | formId | Route | Source | Controls and actions | Input checks / test pointer |
 | --- | --- | --- | --- | --- |
 | booking-form | /booking/:eventId | Booking.tsx | Quantity; Place hold / Confirm | Existing `bookingQuantityNumber` accepts digits 1–6; booking-quantity browser row and keyboard resubmit |
 | admission-gate-form | /admission | Admission.tsx | Gate argument; Enter / credential actions outside form | Required text; admission-gate row |
 | admission-event-form | /admission | Admission.tsx | Performance id; Load mock case / reservation actions outside form | Required text; admission-event row |
+| market-search-form | /resale/market | ResaleMarket.tsx | Search; local read | Optional text, 100-character cap; IME-safe shared form |
+| market-trade-form | /resale/market/:productId | ResaleMarketPanels.tsx | Variant, action, mock units; review then one explicit record | Canonical integer syntax, 15-digit form cap; no quote-policy arithmetic; resale-market.a11y.test.ts |
 | resale-form | /resale | Resale.tsx | Booking id, ask label; Open listing | Required text, existing 40-character ask-label limit; resale-booking row |
 | gift-form | /gift | Gift.tsx | Gift id, ticket id, expected version, expiresAt, recipient; external Send buttons | Offer requires all fields, integer syntax for caller numbers; accept/cancel check gift id; gift-ticket-id row, gift journey tests |
 | organizer-form | /organizer | Organizer.tsx | Event id, seats, optional quota, inventory id, expected inventory version, recipient; external Send buttons | create checks event/seats/quota, invitation checks event/inventory/version/recipient, lifecycle checks event only; organizer-seats row, organizer journey tests |

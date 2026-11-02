@@ -469,6 +469,15 @@ Each entry separates current surface binding, local HTTP behavior, missing capab
 
 Producer contracts remain kix-protocol authority; consuming a merged contract and promoting a consumer requires separately authorized work and verified evidence. Nothing here implements an unmerged dependency. If future consumption moves a catalogue/gate, both OpenAPI pins, PINNED_ACTIONS, CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha must move together. This node moves none.
 
+## Synthetic resale marketplace — 2026-11-02
+
+| Route | Surface | Source / writes | Gap / decision owner |
+| --- | --- | --- | --- |
+| `/resale/market` | `resale-market` | bounded synthetic search; no write | exact `plan-local-resale-offer-source` mapping UNDETERMINED; producer authority |
+| `/resale/market/:productId` | `resale-product` | page-load mock bid/ask and instant transitions; simulated, no funds | producer mapping, currency, fees, matching, expiry, cancellation, ownership and persistence UNDETERMINED; producer and product owner |
+
+The existing `/resale` ticket-rights FSM stays separate. Integration HTTP returns NOT_BOUND before dispatch. No protocol pin or command is consumed. Qualification is UNQUALIFIED, user acceptance PENDING and release NOT_AUTHORIZED. [Binding and actual verification](c-plan-c-resale-market-ui-stub-apps-bind.md).
+
 ## Verification and limitations
 
 The [bind/evidence record](c-plan-c-docs-launch-gap-index-stub-apps-bind.md) contains the runnable offline route/link checker, acceptance mapping and actual local command results. The checker validates README route coverage, canonical route completeness/uniqueness, shared workspace surface coverage and relative links/fragments in the three changed documents; it performs no network request. Existing guide, route, local-evidence and adapter checks are complementary and do not automatically validate this index.

@@ -69,6 +69,8 @@ One row per workspace surface. Mode is `stub (default)` plus the outcome in `int
 | booking-journey | /booking/:eventId | published-bound | stub (default); integration-http: local-command, Node loopback only | RECORDED (3 fixtures, first booking-journey.create_event.success) | RECORDED (1 fixture, first booking-journey.create_event.reject) | RECORDED (1 fixture, first booking-journey.create_event.unknown) | 3 |
 | reservation-case | /booking/:eventId | stub-only | stub (default); integration-http: NOT_BOUND | UNVERIFIED (no fixture of this class) | UNVERIFIED (no fixture of this class) | UNVERIFIED (no fixture of this class) | 14 |
 | admission-credential | /admission | stub-only | stub (default); integration-http: NOT_BOUND | UNVERIFIED (no fixture of this class) | UNVERIFIED (no fixture of this class) | UNVERIFIED (no fixture of this class) | 6 |
+| resale-market | /resale/market | stub-only | stub (default); integration-http: NOT_BOUND | UNVERIFIED (no fixture of this class) | UNVERIFIED (no fixture of this class) | UNVERIFIED (no fixture of this class) | 0 |
+| resale-product | /resale/market/:productId | stub-only | stub (default); integration-http: NOT_BOUND | UNVERIFIED (no fixture of this class) | UNVERIFIED (no fixture of this class) | UNVERIFIED (no fixture of this class) | 0 |
 | resale-desk | /resale | stub-only | stub (default); integration-http: NOT_BOUND | UNVERIFIED (no fixture of this class) | UNVERIFIED (no fixture of this class) | UNVERIFIED (no fixture of this class) | 17 |
 | gift-transfer | /gift | published-bound | stub (default); integration-http: local-command, Node loopback only | RECORDED (1 fixture, first gift-transfer.offer_gift.success) | RECORDED (1 fixture, first gift-transfer.offer_gift.reject) | RECORDED (1 fixture, first gift-transfer.offer_gift.unknown) | 0 |
 | credit-desk | /credit | stub-only | stub (default); integration-http: NOT_BOUND | UNVERIFIED (no fixture of this class) | UNVERIFIED (no fixture of this class) | UNVERIFIED (no fixture of this class) | 12 |
@@ -117,6 +119,8 @@ One row per workspace surface. Mode is `stub (default)` plus the outcome in `int
 | booking-journey | web journey-panel.test.tsx; adapter booking-journey.test.ts | a11y booking; e2e booking | waits on bind-wave4-pointers, primary-price-fee-ui; status local-command | REPO_PRESENT | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
 | reservation-case | web reservation-panel.test.tsx; adapter reservation-fsm.test.ts | a11y booking; e2e booking | binding stub-only; waits on bind-reservation-fsm; status synthetic | REPO_PRESENT | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
 | admission-credential | web admission-panel.test.tsx; adapter admission-fsm.test.ts | a11y admission; e2e admission | binding stub-only; waits on bind-admission-fsm; status synthetic | REPO_PRESENT | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
+| resale-market | web resale-market.test.tsx; adapter resale-market.test.ts | a11y resale-market; e2e resale-market | binding stub-only; status synthetic | REPO_PRESENT | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
+| resale-product | web resale-market.test.tsx; adapter resale-market.test.ts | a11y resale-product; e2e resale-product | binding stub-only; status synthetic | REPO_PRESENT | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
 | resale-desk | web resale-panel.test.tsx; adapter resale-fsm.test.ts | a11y resale; e2e resale | binding stub-only; waits on bind-resale-fsm; status synthetic | REPO_PRESENT | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
 | gift-transfer | web gift-panel.test.tsx; adapter gift-transfer.test.ts | a11y gift; e2e gift | status local-command | REPO_PRESENT | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
 | credit-desk | web credit-panel.test.tsx; adapter credit-fsm.test.ts | a11y credit; e2e credit | binding stub-only; waits on bind-credit-fsm; status synthetic | REPO_PRESENT | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
@@ -304,18 +308,18 @@ Each line has its own count. Nothing is summed, nothing is subtracted, and there
 
 - D01 live-gate skipped under KIX_REQUIRE_GATE=0: 8 adapter test files import support/reviewed-gate
 - D02 NOT_BOUND desk methods: 68 of 68
-- D03 NOT_BOUND surfaces (binding is not published-bound): 38 of 43
+- D03 NOT_BOUND surfaces (binding is not published-bound): 40 of 45
 - D04 NOT_BOUND fixtures: 68 of 265
-- D05 stub-only surfaces: 31 of 43
+- D05 stub-only surfaces: 33 of 45
 - D06 no-published-command surfaces: 6
 - D07 not-bound surfaces: 1
 - D08 published-bound surfaces (local-command, Node loopback only): 5
-- D09 user acceptance PENDING surfaces: 41 of 43; ACCEPTED 0
+- D09 user acceptance PENDING surfaces: 43 of 45; ACCEPTED 0
 - D10 user acceptance PENDING journeys: 10 of 10; ACCEPTED 0
-- D11 user acceptance PENDING a11y screens: 38 of 38; ACCEPTED 0
+- D11 user acceptance PENDING a11y screens: 40 of 40; ACCEPTED 0
 - D12 release page user acceptance: PENDING_USER_DECISION, 1 packet; realUserAcceptance false
 - D13 release decisions: install awaiting-user-decision, publish not-open, operate not-open; taken 0
-- D14 release NOT_AUTHORIZED rows: surfaces 43 of 43, journeys 10 of 10, nodes 102 of 102; RELEASED 0
+- D14 release NOT_AUTHORIZED rows: surfaces 45 of 45, journeys 10 of 10, nodes 102 of 102; RELEASED 0
 - D15 active program nodes: 60; MERGED_RECORDED 57, NOT_STARTED 3; central DONE not evaluated
 - D16 pending catalogue nodes: 42; WAITING 40, NOT_STARTED 2; counted as done 0
 - D17 distinct external prerequisites named by pending nodes: 26; completion not verified here; subtracted 0

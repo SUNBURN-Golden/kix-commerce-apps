@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import type { TestProject } from "vitest/node";
-import { buildStubApp, type BuiltApp } from "./build";
+import { buildShellFaultApp, buildStubApp, type BuiltApp } from "./build";
 import { FAULT_CHECKS, FAULT_NOT_RUN, isFaultCheck } from "./fault-matrix";
 import { expectedCheckIds, matrixProblems } from "./journey-matrix";
 import { readChecks, readLedger, renderFaultRecord, renderRecord, NOT_RUN, type RunRecord } from "./run-record";
@@ -18,6 +18,8 @@ declare module "vitest" {
 
 let app: BuiltApp | null = null;
 let server: StaticServer | null = null;
+let faultApp: BuiltApp | null = null;
+let faultServer: StaticServer | null = null;
 let recordDir = "";
 let diagnostics: RunDiagnosticsWatch | null = null;
 
@@ -37,6 +39,9 @@ export async function setup(project: TestProject): Promise<void> {
     app = await buildStubApp();
     server = await serveDirectory(app.outDir);
     project.provide("origin", server.origin);
+    faultApp = await buildShellFaultApp();
+    faultServer = await serveDirectory(faultApp.outDir);
+    project.provide("faultOrigin", faultServer.origin);
   } catch (error) {
     try {
       await teardown();
@@ -111,12 +116,13 @@ export async function teardown(): Promise<void> {
   } catch (error) {
     failures.push(error);
   } finally {
-    const closed = await Promise.allSettled([server?.close()]);
+    const closed = await Promise.allSettled([server?.close(), faultServer?.close()]);
     for (const result of closed) {
       if (result.status === "rejected") failures.push(result.reason);
     }
     try {
       app?.cleanup();
+      faultApp?.cleanup();
     } catch (error) {
       failures.push(error);
     }

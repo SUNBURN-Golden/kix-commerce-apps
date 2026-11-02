@@ -42,6 +42,8 @@ The rows below are generated from the registry by a test and compared with this 
 | `/booking/:eventId` | Booking | Buyer | published-bound | hidden | booking | booking | surface-row |
 | `/admission` | Admission | Buyer | stub-only | link | admission | admission | surface-row |
 | `/resale` | Resale | Buyer | stub-only | link | resale | resale | surface-row |
+| `/resale/market` | Resale market | Buyer | stub-only | section | resale-market | resale-market | surface-row |
+| `/resale/market/:productId` | Product detail | Buyer | stub-only | hidden | resale-product | resale-product | surface-row |
 | `/gift` | Gift | Buyer | published-bound | link | gift | gift | surface-row |
 | `/mobile` | Mobile shell | Buyer | stub-only | link | mobile | mobile | surface-row |
 | `/assistant` | Assistant | Buyer | stub-only | link | assistant | assistant | surface-row |

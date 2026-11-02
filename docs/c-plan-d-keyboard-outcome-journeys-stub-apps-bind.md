@@ -550,3 +550,16 @@ Human acceptance: PENDING.
 - `apps/web/test/session-recovery.test.tsx`
 - `apps/web/vite.config.ts`
 - `docs/c-plan-d-keyboard-outcome-journeys-stub-apps-bind.md`
+
+## Resale marketplace keyboard extension (2026-11-02)
+
+Human acceptance: PENDING. Four added drives use the same pointer guard and focus/announcement probes; new totals are 89 outcome drives and 59 NOT_APPLICABLE cells. Earlier run counts above are historical.
+
+| Check | Path | Focus rule | Live announcements | Fence | Boundary |
+| --- | --- | --- | --- | --- | --- |
+| `a11y.kbd.outcome.resale-market.SUCCESS` | /resale/market | TRIGGER | pending current run | NONE | synthetic, no funds |
+| `a11y.kbd.outcome.resale-product.SUCCESS` | /resale/market/demo-001 | STATUS | pending current run | NONE | synthetic, no funds |
+| `a11y.kbd.outcome.resale-product.REJECT` | /resale/market/demo-001 | STATUS | pending current run | FENCED | synthetic, no funds |
+| `a11y.kbd.outcome.resale-product.UNKNOWN` | /resale/market/demo-001 | STATUS | pending current run | FENCED | synthetic, no funds |
+
+NOT_APPLICABLE: `resale-market.REJECT`, `resale-market.UNKNOWN`, `resale-market.NOT_BOUND`, `resale-product.NOT_BOUND`. Listing sends no writes; HTTP stays NOT_BOUND. The adverse drives use the test-only fault build.

@@ -167,7 +167,8 @@ describe("keyboard-only outcome journeys (stub, headless Chrome)", () => {
     it(`${drive.checkId}: keys only; focus ${drive.focus}, one announcement, fence, no overflow at 360px`, async () => {
       const guard = await keyboardOnly(await suite.newPage());
       const fence = keyboardFacetFor(drive.checkId);
-      const result = await runDrive(guard, suite.origin, drive, fence);
+      if (drive.fixture) await guard.page.addInitScript((mode) => { window.__kixResaleFault = { mode: mode === "lost" ? "lost" : "reject", dispatches: 0 }; }, drive.fixture === "resale-lost" ? "lost" : "reject");
+      const result = await runDrive(guard, drive.fixture ? suite.faultOrigin ?? suite.origin : suite.origin, drive, fence);
       expect(result.problems, `live regions: ${result.liveLog.join(" | ")}`).toEqual([]);
       await guard.assertNoPointer();
       recordFacet({

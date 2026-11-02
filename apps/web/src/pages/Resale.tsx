@@ -102,6 +102,7 @@ export function ResalePage() {
         <p className="eyebrow">{t("desk.resale.eyebrow")}</p>
         <h2>{t("desk.resale.title")}</h2>
         <p className="muted">{t("desk.resale.note")}</p>
+        <Link to="/resale/market">{t("market.entry")}</Link>
       </header>
       <RefusalScope reason={error ? "resale-refusal" : null}>
       <ValidatedForm id="resale-form" busy={pending} fields={[field("resale-booking", "validation.label.bookingId"), field("resale-ask", "validation.label.askLabel", { maxLength: 40 })]} className="panel" onSubmit={(event) => void openListing(event)}>

@@ -25,6 +25,8 @@ interface RouteEvidence {
 }
 
 const evidence: readonly RouteEvidence[] = [
+  { route: "resale-market", fact: "Synthetic bounded search. No writes on the listing; product writes retain their page-load fence.", checks: { empty: { file: "resale-market.test.tsx", title: "renders empty, not-bound and UNKNOWN without clearing the fence" }, "not-bound": { file: "resale-market.test.tsx", title: "renders empty, not-bound and UNKNOWN without clearing the fence" } }, drivers: {} },
+  { route: "resale-product", fact: "Synthetic versioned quotes, explicit review and single-flight writes. Reads never resolve UNKNOWN.", checks: { empty: { file: "resale-market.test.tsx", title: "renders empty, not-bound and UNKNOWN without clearing the fence" }, unknown: { file: "resale-market.test.tsx", title: "renders empty, not-bound and UNKNOWN without clearing the fence" }, "not-bound": { file: "resale-market.test.tsx", title: "renders empty, not-bound and UNKNOWN without clearing the fence" }, stale: { file: "resale-market.test.tsx", title: "requires accepted current reads after reconnect and preserves UNKNOWN" } }, drivers: {} },
   { route: "diagnostics", fact: "Read-only page-lifetime terminal outcomes, including UNKNOWN. No command or freshness-bearing read; excluded from role onboarding.",
     checks: { empty: { file: "diagnostics.test.tsx", title: "renders empty page-load outcomes" }, unknown: { file: "diagnostics.test.tsx", title: "renders UNKNOWN without resolving it" } }, drivers: {} },
   {

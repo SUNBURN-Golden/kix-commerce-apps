@@ -1,4 +1,5 @@
-import { Suspense } from "react";
+import { observeNavigation } from "./shell/navigation-observers";
+import { Suspense, useLayoutEffect } from "react";
 import { Route, Routes, matchPath, useLocation } from "react-router-dom";
 import { Shell } from "./components/Shell";
 import { ScreenLoading } from "./components/ScreenLoading";
@@ -41,6 +42,7 @@ function RoutedScreens() {
 
 export function App() {
   const { pathname } = useLocation();
+  useLayoutEffect(() => observeNavigation(pathname), [pathname]);
   // Gallery previews own their landmarks; a Shell specimen must never be nested inside another Shell.
   if (import.meta.env.DEV) {
     const gallery = APP_ROUTES.find((entry) => entry.id === "component-gallery" && matchPath({ path: entry.path, end: true }, pathname));

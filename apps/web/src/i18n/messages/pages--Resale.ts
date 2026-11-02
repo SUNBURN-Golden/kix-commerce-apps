@@ -1,11 +1,13 @@
 export const messages = {
   en: {
+    "market.entry": "Explore the simulated resale market",
     "s13u": "off",
     "s14q": "open",
     "e.39": "face (display only)",
     "e.6": "North Station Lanterns",
   },
   ko: {
+    "market.entry": "모의 리셀 마켓 둘러보기",
     "s13u": "꺼짐",
     "s14q": "열림",
     "e.39": "액면 (표시 전용)",

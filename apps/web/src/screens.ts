@@ -14,6 +14,8 @@ const SCREEN_IMPORTS: Record<RouteId, ScreenImport> = {
   booking: () => import("./pages/Booking").then((m) => ({ default: m.BookingPage })),
   admission: () => import("./pages/Admission").then((m) => ({ default: m.AdmissionPage })),
   resale: () => import("./pages/Resale").then((m) => ({ default: m.ResalePage })),
+  "resale-market": () => import("./pages/ResaleMarket").then(m => ({ default: m.ResaleMarketPage })),
+  "resale-product": () => import("./pages/ResaleProduct").then(m => ({ default: m.ResaleProductPage })),
   gift: () => import("./pages/Gift").then((m) => ({ default: m.GiftPage })),
   mobile: () => import("./pages/InstallableMobile").then((m) => ({ default: m.InstallableMobilePage })),
   assistant: () => import("./pages/Assistant").then((m) => ({ default: m.AssistantPage })),
