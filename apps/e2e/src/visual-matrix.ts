@@ -31,6 +31,7 @@ export type VisualLocale = (typeof VISUAL_LOCALES)[number];
 export type VisualScheme = "light" | "dark" | "forced-colors";
 
 export interface VisualScreen {
+  capture?: "market-content";
   /** Reuses the registry id and concrete sample path. */
   screenId: string;
   path: string;
@@ -49,6 +50,8 @@ export const VISUAL_SCREENS: readonly VisualScreen[] = [
   { screenId: "diagnostics", path: "/diagnostics", matrix: "coverage" },
   { screenId: "inventory", path: "/inventory", matrix: "coverage" },
   { screenId: "admission", path: "/admission", matrix: "coverage" },
+  { screenId: "resale-market", path: "/resale/market", matrix: "full", capture: "market-content" },
+  { screenId: "resale-product", path: "/resale/market/demo-001", matrix: "full", capture: "market-content" },
   { screenId: "resale", path: "/resale", matrix: "coverage" },
   { screenId: "gift", path: "/gift", matrix: "coverage" },
   { screenId: "mobile", path: "/mobile", matrix: "coverage" },
@@ -125,6 +128,8 @@ export const VISUAL_MASKS: Readonly<Record<string, readonly VisualMask[]>> = {
 export const VISUAL_MASK_COLOR = "#ff00ff";
 
 export interface VisualShot {
+  capture?: "market-content";
+  state?: "review" | "result";
   screenId: string;
   path: string;
   viewport: VisualViewport;
@@ -134,6 +139,8 @@ export interface VisualShot {
 
 /** Dark scheme and forced colours (the high-contrast mode) on a few screens. They are not repeated for every screen. */
 export const VISUAL_DISPLAY_SHOTS: readonly { screenId: string; viewport: VisualViewport; locale: VisualLocale; scheme: Exclude<VisualScheme, "light"> }[] = [
+  { screenId: "resale-product", viewport: "phone", locale: "ko", scheme: "dark" },
+  { screenId: "resale-product", viewport: "desktop", locale: "en", scheme: "forced-colors" },
   { screenId: "box-office", viewport: "desktop", locale: "en", scheme: "dark" },
   { screenId: "discovery", viewport: "phone", locale: "ko", scheme: "dark" },
   { screenId: "handoff", viewport: "desktop", locale: "en", scheme: "forced-colors" },
@@ -190,10 +197,13 @@ export function visualShots(): VisualShot[] {
     }
     shots.push({ ...screen, viewport: display.viewport, locale: display.locale, scheme: display.scheme });
   }
+  for (const state of ["review","result"] as const) for (const viewport of ["phone","desktop"] as const) {
+    shots.push({ screenId: "resale-product", path: "/resale/market/demo-001", viewport, locale: viewport === "phone" ? "ko" : "en", scheme: "light", state, capture: "market-content" });
+  }
   return shots;
 }
 
-export const idOf = (shot: VisualShot): string => shotId(shot.screenId, shot.viewport, shot.locale, shot.scheme);
+export const idOf = (shot: VisualShot): string => shotId(shot.screenId, shot.viewport, shot.locale, shot.scheme) + (shot.state ? `.${shot.state}` : "");
 
 /** Checks the harness tests record. A missing one fails the run. */
 export const VISUAL_STATIC_CHECK_IDS: readonly string[] = [

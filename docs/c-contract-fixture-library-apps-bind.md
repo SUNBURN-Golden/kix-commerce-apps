@@ -54,6 +54,8 @@ Every workspace surface is one row. A desk method is one `not-bound.<method>` ca
 | `booking-journey` | `/booking/:eventId` | the six outcome rows below, plus `not-bound.placeHold`, `not-bound.releaseHold`, `not-bound.confirmBooking` |
 | `reservation-case` | `/booking/:eventId` | one `NOT_BOUND` case for each mock reservation method |
 | `admission-credential` | `/admission` | `admission-credential.label-stale`, plus the admission desk methods |
+| `resale-market` | `/resale/market` | no fixture pass; app-internal synthetic search, no producer receipt |
+| `resale-product` | `/resale/market/:productId` | no fixture pass; simulated local offers/trades, producer mapping UNDETERMINED |
 | `resale-desk` | `/resale` | `resale-desk.version-stale`, plus the resale desk methods |
 | `gift-transfer` | `/gift` | the three `offer_gift` rows below |
 | `credit-desk` | `/credit` | one `NOT_BOUND` case for each credit method. No disbursement |

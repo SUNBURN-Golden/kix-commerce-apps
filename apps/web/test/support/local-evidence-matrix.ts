@@ -178,6 +178,8 @@ export const SURFACE_TESTS: Readonly<Record<string, { web: string; adapter: stri
   "booking-journey": { web: "journey-panel.test.tsx", adapter: "booking-journey.test.ts" },
   "reservation-case": { web: "reservation-panel.test.tsx", adapter: "reservation-fsm.test.ts" },
   "admission-credential": { web: "admission-panel.test.tsx", adapter: "admission-fsm.test.ts" },
+  "resale-market": { web: "resale-market.test.tsx", adapter: "resale-market.test.ts" },
+  "resale-product": { web: "resale-market.test.tsx", adapter: "resale-market.test.ts" },
   "resale-desk": { web: "resale-panel.test.tsx", adapter: "resale-fsm.test.ts" },
   "gift-transfer": { web: "gift-panel.test.tsx", adapter: "gift-transfer.test.ts" },
   "credit-desk": { web: "credit-panel.test.tsx", adapter: "credit-fsm.test.ts" },
@@ -233,6 +235,8 @@ export const JOURNEY_TESTS: Readonly<Record<string, { adapter: string; e2e: stri
 
 /** Browser journeys suite id -> the route pattern it drives. */
 export const E2E_ROUTE: Readonly<Record<(typeof E2E_JOURNEYS)[number], string>> = {
+  "resale-market": "/resale/market",
+  "resale-product": "/resale/market/:productId",
   "box-office": "/",
   booking: "/booking/:eventId",
   admission: "/admission",

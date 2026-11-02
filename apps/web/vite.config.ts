@@ -149,6 +149,12 @@ export default defineConfig({
           // chunk boundary so its constructor can use the desk before page modules run.
           if (id.endsWith("/e2e/shell-fixtures/marketing-session.ts")) return "marketing-stubs";
 
+          // These secondary commerce desks share forms and panel markup. Compress them together
+          // as one lazy module; the landing, Gift, Admission and Credit keep separate lazy boundaries.
+          if (/\/src\/pages\/(Booking|Buyer|Resale|Organizer|ReservationPanel)\.tsx$/.test(id)) return "commerce-desks";
+          // Synthetic controllers repeat validation and fencing vocabulary; share compression only.
+          if (/\/protocol-adapter\/src\/(marketing-journey-controller|delegated-assistant-controller|refund-return-controller|credit-servicing-controller)\.ts$/.test(id)) return "synthetic-controllers";
+
           // Small UI helpers that many lazy desks share load as one lazy chunk; the entry never imports them.
           if (/\/src\/(a11y\/focus|components\/(AsyncState|CachedReadNotice|ConnectivityWriteButton)|connectivity\/(copy|desk-protocol|refusal|write-guard)|desk-attempts|i18n\/desk-context)\.tsx?$/.test(id)) return "desk-ui";
 

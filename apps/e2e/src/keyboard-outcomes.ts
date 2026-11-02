@@ -62,6 +62,10 @@ const phase = (value: string) => `[data-last-request][data-phase="${value}"]`;
 const requestPhase = (value: string) => `[data-request-seq][data-request-phase="${value}"]`;
 
 export const KEYBOARD_DRIVES = [
+  drive({ journey: "resale-market", outcome: "SUCCESS", path: "/resale/market", setup: type("#market-search", "arc"), trigger: press("Search"), outcomeSelector: '.market-card h3:text-is("Arc object")', status: ".market-grid", focus: "TRIGGER" }),
+  drive({ journey: "resale-product", outcome: "SUCCESS", path: "/resale/market/demo-001", setup: press("Review simulation"), trigger: press("Record simulation once"), outcomeSelector: '[data-market-outcome="CONFIRMED"]', focus: "STATUS" }),
+  drive({ journey: "resale-product", outcome: "REJECT", fixture: "resale-reject", path: "/resale/market/demo-001", setup: press("Review simulation"), trigger: press("Record simulation once"), outcomeSelector: '[data-market-outcome="REJECTED"]', focus: "STATUS", fence: '#market-trade-form button[type="submit"]' }),
+  drive({ journey: "resale-product", outcome: "UNKNOWN", fixture: "resale-lost", path: "/resale/market/demo-001", setup: press("Review simulation"), trigger: press("Record simulation once"), outcomeSelector: '[data-market-outcome="UNKNOWN"]', focus: "STATUS", fence: '#market-trade-form button[type="submit"]' }),
   // Box office (mock settlement case)
   drive({
     journey: "box-office", outcome: "SUCCESS", path: "/",

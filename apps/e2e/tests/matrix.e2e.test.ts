@@ -77,7 +77,7 @@ describe("journey matrix", () => {
       const line = keyboardFacetLine();
       console.log(`${line} (BROWSER cells in the matrix: ${MATRIX.filter((cell) => cell.kind === "BROWSER").length}, of which NOT_BOUND ${MATRIX.filter((cell) => cell.kind === "BROWSER" && cell.outcome === "NOT_BOUND").length} are NOT_APPLICABLE)`);
       expect(KEYBOARD_DENOMINATOR).toBe(browserTargets.length);
-      expect(KEYBOARD_DENOMINATOR).toBe(85);
+      expect(KEYBOARD_DENOMINATOR).toBe(89);
       expect(KEYBOARD_OUTCOME_CHECK_IDS).toHaveLength(KEYBOARD_DENOMINATOR);
       expect(line).toBe(`keyboard facet: ${browserTargets.length} / ${browserTargets.length} BROWSER SUCCESS/REJECT/UNKNOWN cells`);
       for (const cell of MATRIX) {
@@ -92,7 +92,7 @@ describe("journey matrix", () => {
         }
       }
       expect(MATRIX.filter((cell) => keyboardFacet(cell).kind === "NOT_APPLICABLE")).toHaveLength(MATRIX.length - KEYBOARD_DENOMINATOR);
-      expect(MATRIX.filter((cell) => keyboardFacet(cell).kind === "NOT_APPLICABLE")).toHaveLength(55);
+      expect(MATRIX.filter((cell) => keyboardFacet(cell).kind === "NOT_APPLICABLE")).toHaveLength(59);
     });
 
     it("has exactly one keyboard-only drive per check, registered in the accessibility matrix", () => {

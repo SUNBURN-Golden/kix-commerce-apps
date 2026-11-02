@@ -1,0 +1,23 @@
+.resale-market { display: grid; gap: 1.25rem; }
+.resale-market .panel { margin: 0; min-width: 0; }
+.market-notice { color: var(--stamp); font-weight: 700; font-size: .85rem; }
+.market-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,260px),1fr)); gap: 1.25rem; padding: 0; list-style: none; }
+.market-card { display: block; color: var(--ink); text-decoration: none; background: var(--card); border: 1px solid var(--line); border-radius: .75rem; padding: 1rem; height: 100%; }
+.market-card:hover { border-color: var(--stamp); }
+.market-art { display: grid; place-items: center; border-radius: .5rem; background: var(--paper); color: var(--stamp); min-height: 200px; overflow: hidden; }
+.market-art svg { width: 100%; max-height: 420px; fill: none; stroke: currentColor; stroke-width: 3; }
+.market-art-fold { color: var(--ok); }
+.market-detail { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 1.5rem; }
+.market-quotes { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; border-block: 1px solid var(--line); padding-block: 1rem; }
+.market-quotes dd { margin: .5rem 0 0; font-weight: 700; }
+.market-search { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; }
+.market-search input { flex: 1; min-width: 100px; }
+.market-chart { width: 100%; max-height: 240px; fill: none; stroke: var(--stamp); stroke-width: 2; }
+.market-chart path { stroke: var(--muted); }
+.resale-market table { width: 100%; font-size: .9rem; }
+.resale-market td, .resale-market th { overflow-wrap: anywhere; }
+.market-review { border: 1px solid var(--stamp); padding: 1rem; }
+@media (max-width: 650px) { .market-detail { grid-template-columns: minmax(0,1fr); } .market-quotes { grid-template-columns: minmax(0,1fr); } }
+@media (forced-colors: active) {
+  .resale-market button { background: var(--paper); color: var(--ink); border: 1px solid var(--line); }
+}

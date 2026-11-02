@@ -411,12 +411,21 @@ export async function openShot(page: Page, origin: string, shot: VisualShot): Pr
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
   });
   await page.waitForLoadState("networkidle");
+  if (shot.state) {
+    await page.getByRole("button", { name: shot.locale === "ko" ? "모의 거래 검토" : "Review simulation" }).click();
+    if (shot.state === "result") {
+      await page.getByRole("button", { name: shot.locale === "ko" ? "모의 거래 한 번 기록" : "Record simulation once" }).click();
+      await page.locator('[data-market-outcome="CONFIRMED"]').waitFor();
+      await page.getByRole("cell", { name: shot.locale === "ko" ? "모의 체결" : "Simulated trade", exact: true }).nth(1).waitFor();
+    }
+  }
 }
 
-/** The top of the page: full width, at most MAX_SHOT_HEIGHT tall. */
+/** Full width, bounded height. New marketplace shots start at their content so review/history stay pictured. */
 export async function takeShot(page: Page, shot: VisualShot): Promise<Buffer> {
   const size = await page.evaluate(() => ({ width: document.documentElement.clientWidth, height: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight) }));
-  const clip = { x: 0, y: 0, width: size.width, height: Math.min(size.height, MAX_SHOT_HEIGHT) };
+  const top = shot.capture === "market-content" ? await page.locator(".resale-market").evaluate(el => Math.floor(el.getBoundingClientRect().top + window.scrollY)) : 0;
+  const clip = { x: 0, y: top, width: size.width, height: Math.min(size.height - top, MAX_SHOT_HEIGHT) };
   const mask = (VISUAL_MASKS[shot.screenId] ?? []).map((spec) => maskLocator(page, spec));
   return page.screenshot({ mask, maskColor: VISUAL_MASK_COLOR, fullPage: true, clip, animations: "disabled", caret: "hide", scale: "css", type: "png" });
 }

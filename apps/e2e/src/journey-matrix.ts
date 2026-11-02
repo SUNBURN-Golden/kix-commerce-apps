@@ -6,7 +6,7 @@ export { DEV_SCREENS, GALLERY_CHECK_IDS } from "./gallery-matrix";
  * REFERENCE     the screen exists, and its text is asserted, but the outcome is not produced by a user action.
  * NOT_REACHABLE the stub cannot produce this outcome without a fault hook, so no hook is added to production source.
  */
-export const JOURNEYS = ["box-office", "booking", "admission", "resale", "credit", "gift", "organizer", "receipts",
+export const JOURNEYS = ["resale-market", "resale-product", "box-office", "booking", "admission", "resale", "credit", "gift", "organizer", "receipts",
   "buyer", "discovery", "inventory", "mobile", "assistant", "organizer-workspace", "merchant", "finance", "provider", "credit-origination", "credit-servicing", "marketing", "marketing-journey", "platform", "marketplace-performance", "permissions", "notifications", "identity", "session", "journeys", "qualification", "release", "marketing-m01", "marketing-m02", "marketing-m03", "marketing-m04", "marketing-m05"] as const;
 export type JourneyId = (typeof JOURNEYS)[number];
 
@@ -54,6 +54,14 @@ const tableReference = (journey: JourneyId, key: string): MatrixCell => ({
 });
 
 export const MATRIX: readonly MatrixCell[] = [
+  browser("resale-market", "SUCCESS"),
+  { journey: "resale-market", outcome: "REJECT", kind: "REFERENCE", pointer: "Empty search is a read, never a rejected write. Product write rejection covered on resale-product.", owner: "c-plan-c-resale-market-ui-stub" },
+  { journey: "resale-market", outcome: "UNKNOWN", kind: "REFERENCE", pointer: "Listing sends no writes. UNKNOWN remains on the page-load product controller.", owner: "c-plan-c-resale-market-ui-stub" },
+  { journey: "resale-market", outcome: "NOT_BOUND", kind: "REFERENCE", pointer: "resale-market.test.tsx: integration-http port read is NOT_BOUND before dispatch.", owner: "c-plan-c-resale-market-ui-stub" },
+  browser("resale-product", "SUCCESS"),
+  browser("resale-product", "REJECT"),
+  browser("resale-product", "UNKNOWN"),
+  { journey: "resale-product", outcome: "NOT_BOUND", kind: "REFERENCE", pointer: "resale-market.test.tsx: integration-http port is NOT_BOUND before dispatch.", owner: "c-plan-c-resale-market-ui-stub" },
   browser("box-office", "SUCCESS"),
   browser("box-office", "REJECT"),
   unreachable("box-office"),

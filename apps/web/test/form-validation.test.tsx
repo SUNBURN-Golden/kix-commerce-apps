@@ -125,7 +125,7 @@ describe("shared accessible markup", () => {
       }
       count += (source.match(/<ValidatedForm\b/g) ?? []).length;
     }
-    expect(count).toBe(16);
+    expect(count).toBe(18);
     for (const file of ["validation.ts", "useFormValidation.ts", "ValidatedForm.tsx"]) {
       const source = readFileSync(new URL(`../src/forms/${file}`, import.meta.url), "utf8");
       expect(source).not.toMatch(/fetch\(|invokeLocalCall|sessionStorage|localStorage|capture|settle_capture|Idempotency-Key/);

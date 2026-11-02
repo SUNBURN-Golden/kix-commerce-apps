@@ -45,6 +45,8 @@ One row per screen (38 screens; `/discovery/:rowId` is the same page as `/discov
 | `merchant` | `/merchant` | heading-order, landmark-unique | heading-order, landmark-unique | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
 | `booking` | `/booking/evt_lanterns` | none | none | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
 | `admission` | `/admission` | none | none | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
+| `resale-market` | `/resale/market` | OBSERVED | OBSERVED | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
+| `resale-product` | `/resale/market/demo-001` | OBSERVED | OBSERVED | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
 | `resale` | `/resale` | none | none | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
 | `gift` | `/gift` | none | none | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
 | `organizer-workspace` | `/organizer/workspace` | none | none | OBSERVED | OBSERVED | OBSERVED | NOT_RUN | PENDING | NOT_AUTHORIZED |
@@ -92,6 +94,8 @@ Every row is PENDING. This node cannot write ACCEPTED, and the record type has n
 | `merchant` | Merchant | PENDING | user (not assigned) | none | no |
 | `booking` | Booking | PENDING | user (not assigned) | none | no |
 | `admission` | Admission | PENDING | user (not assigned) | none | no |
+| `resale-market` | Resale market | PENDING | user (not assigned) | none | no |
+| `resale-product` | Product detail | PENDING | user (not assigned) | none | no |
 | `resale` | Resale | PENDING | user (not assigned) | none | no |
 | `gift` | Gift | PENDING | user (not assigned) | none | no |
 | `organizer-workspace` | Organizer workspace | PENDING | user (not assigned) | none | no |
@@ -203,3 +207,5 @@ KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 KIX_A11Y_RECORD_OUT=/
 The gallery node also fixes an inherited nested-control defect in discovery's independent projection listbox, observed in the empty/conflict search states. Projection rows retain mouse and keyboard detail opening. The original discovery results list still has the recorded OPEN nested-interactive finding; no finding exemption or existing check was relaxed.
 
 The diagnostics screen and its PENDING acceptance row were added by `c-plan-d-build-identity-diagnostics-stub`; its current local observation commands and results are in [the diagnostics binding](c-plan-d-build-identity-diagnostics-stub-apps-bind.md), independently of the historical run above.
+
+2026-11-02 resale extension: individual axe, keyboard, structure and reflow probes for both marketplace routes passed. Full accessibility suite results remain failed due to existing-test timeouts during measured host clock steps; see root DECISION_REQUIRED.md and the resale bind. These observations grant no acceptance or release.

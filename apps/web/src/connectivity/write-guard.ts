@@ -92,6 +92,8 @@ export function connectivityPort<T extends object>(port: T, label: string): T {
     if (typeof methods[key] !== "function") continue;
     const read = methods[key] as (...args: unknown[]) => Promise<unknown>;
     Object.defineProperty(result, key, { value: async (...args: unknown[]) => {
+      // A page-load source can serve several routes; show its cached-read reason on the active reader.
+      group.path = typeof location === "undefined" ? "" : location.pathname;
       const stamp = connectivity.stamp();
       group.candidate = null;
       const answer = await read.apply(port, args);

@@ -1,5 +1,6 @@
 export const messages = {
   en: {
+    "market.boundary": "Synthetic resale fixtures, no funds. Producer mapping UNDETERMINED.",
     "s2l": "A later write waits for a new page load.",
     "s6q": "A rejection stays on this track.",
     "s8f": "A stale response does not update this track.",
@@ -70,6 +71,7 @@ export const messages = {
     "p.t592": "Stage {v1}. {v2} {v3}",
   },
   ko: {
+    "market.boundary": "합성 리셀 fixture, 자금 이동 없음. Producer 매핑 UNDETERMINED(미정).",
     "s2l": "후속 쓰기는 새 페이지 로드를 기다립니다.",
     "s6q": "거부는 해당 상태 행에 남습니다.",
     "s8f": "오래된 응답은 이 상태 행을 갱신하지 않습니다.",

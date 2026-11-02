@@ -302,6 +302,8 @@ export const WORKSPACE_SURFACES = [
     implemented: true,
     pageControl: true,
   },
+  { id: "resale-market", role: "buyer", route: "/resale/market", binding: "stub-only", sender: null, actions: [], deskMethods: [], provenanceNote: sourceCopy.en["market.boundary"], taskId: "c-plan-c-resale-market-ui-stub", implemented: true, pageControl: true },
+  { id: "resale-product", role: "buyer", route: "/resale/market/:productId", binding: "stub-only", sender: null, actions: [], deskMethods: [], provenanceNote: sourceCopy.en["market.boundary"], taskId: "c-plan-c-resale-market-ui-stub", implemented: true, pageControl: true },
   {
     id: "resale-desk",
     role: "buyer",

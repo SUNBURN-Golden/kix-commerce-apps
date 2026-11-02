@@ -347,3 +347,26 @@ Both comparison runs used the temporary clock monitor and preserved failure exit
 The existing [hosted integration run](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/40244871237) passed every other required job: Typecheck/build/stub tests, Browser journeys, Accessibility observation, Bundle budget, Lint, Coverage floors, Dependency lock/license and Import cycle check. Those are historical hosted results on the original merge candidate, not new local browser-suite runs or a green hosted visual rerun. This round reran the affected visual suite on the integrated source and from a fresh install, plus the local static/build/stub/coverage/size gates above. A hosted rerun of the resulting commit remains for the supervisor; none was triggered here.
 
 Fix-round delivery status: **READY**. Keep the uncommitted main merge together with the refreshed images, manifest and this evidence update. No additional product change or owner decision is needed. Production source is inherited from merged main plus the branch's previously authorized CSS rule; all newly authored changes in this round are baseline data and this document. The result remains pixel match on one render profile, not design review, not acceptance and not release. User acceptance stays PENDING; release stays NOT_AUTHORIZED.
+
+## Resale marketplace extension (2026-11-02)
+
+Original geometric artwork and KIX tokens. Reviewed locally and verified in comparison mode; a pixel match on one render profile grants no acceptance or release.
+
+- `resale-market.phone.en.light`
+- `resale-market.phone.ko.light`
+- `resale-market.desktop.en.light`
+- `resale-market.desktop.ko.light`
+- `resale-product.phone.en.light`
+- `resale-product.phone.ko.light`
+- `resale-product.desktop.en.light`
+- `resale-product.desktop.ko.light`
+- `resale-product.phone.ko.dark`
+- `resale-product.desktop.en.forced-colors`
+- `resale-product.phone.ko.light.review`
+- `resale-product.desktop.en.light.review`
+- `resale-product.phone.ko.light.result`
+- `resale-product.desktop.en.light.result`
+
+Marketplace captures begin at `.resale-market` content (full viewport width, the same 2,000px height cap). This makes product controls, charts, history and review/result states visible beneath the tall shared shell. The whole-document overflow probes, existing route captures, masks, tolerance and pixel comparator are unchanged.
+
+Resale extension evidence: 123/123 checks passed in recording and comparison modes with 108 shots. Fourteen marketplace additions and both existing resale entry pictures were inspected; unrelated render-noise-only baseline changes were restored. Final scope and command outcomes are in [the resale binding](c-plan-c-resale-market-ui-stub-apps-bind.md).

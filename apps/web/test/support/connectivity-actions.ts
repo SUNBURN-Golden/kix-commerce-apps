@@ -1,5 +1,6 @@
 /** App-internal audit inventory. Fixture controls are guarded separately from business writes. */
 export const SYNTHETIC_WRITERS = [
+  "resale-market",
   "platform-journey", "provider-journey", "refund-return", "journey-identity", "session-recovery",
   "credit-origination", "credit-servicing", "finance-operations", "marketing-journey",
   "delegated-assistant", "tenant-permissions", "notification-inbox", "installable-mobile",

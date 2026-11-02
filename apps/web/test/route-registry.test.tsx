@@ -42,7 +42,7 @@ const countOf = (text: string, needle: string) => text.split(needle).length - 1;
 
 /** The URLs the app answered before the registry existed (App.tsx on main at the base of this node). A path may be added; none may go. */
 const LEGACY_PATTERNS = [
-  "/", "/buyer", "/discovery", "/discovery/:rowId", "/inventory", "/platform", "/merchant", "/booking/:eventId", "/admission", "/resale", "/gift",
+  "/", "/buyer", "/discovery", "/discovery/:rowId", "/inventory", "/platform", "/merchant", "/booking/:eventId", "/admission", "/resale", "/resale/market", "/resale/market/:productId", "/gift",
   "/organizer/workspace", "/organizer", "/receipts", "/handoff", "/credit/origination", "/credit/servicing", "/credit", "/finance", "/marketing",
   "/marketing/journey", "/marketing/m01", "/marketing/m02", "/marketing/m03", "/marketing/m04", "/marketing/m05", "/assistant", "/permissions",
   "/notifications", "/provider", "/marketplace-performance", "/mobile", "/qualification", "/release", "/identity", "/session", "/journeys",

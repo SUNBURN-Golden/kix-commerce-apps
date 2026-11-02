@@ -46,6 +46,8 @@ Every registry route is listed. "chrome only" means the shell around the screen 
 | `/booking/:eventId` | chrome only | Booking | chrome (nav, breadcrumb, title, loading note, error panels) in ko; screen body English; `<time>` follows the locale |
 | `/admission` | chrome only | Admission | chrome (nav, breadcrumb, title, loading note, error panels) in ko; screen body English |
 | `/resale` | chrome only | Resale | chrome (nav, breadcrumb, title, loading note, error panels) in ko; screen body English |
+| `/resale/market` | chrome only | Resale market | shell migration inventory; bilingual body in c-plan-c-resale-market-ui-stub |
+| `/resale/market/:productId` | chrome only | Product detail | shell migration inventory; bilingual body in c-plan-c-resale-market-ui-stub |
 | `/gift` | chrome only | Gift | chrome (nav, breadcrumb, title, loading note, error panels) in ko; screen body English |
 | `/mobile` | chrome only | Mobile shell | chrome (nav, breadcrumb, title, loading note, error panels) in ko; screen body English |
 | `/assistant` | chrome only | Assistant | chrome (nav, breadcrumb, title, loading note, error panels) in ko; screen body English |

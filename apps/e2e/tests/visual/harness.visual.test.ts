@@ -32,21 +32,21 @@ describe("visual harness self-checks (stub, headless Chrome)", () => {
   const suite = useBrowser(VISUAL_SESSION);
   const visual = useVisual(suite);
 
-  it("the matrix is 94 distinct shots and every id has a check id", () => {
+  it("the matrix is 108 distinct shots and every id has a check id", () => {
     const ids = visualShots().map(idOf);
-    expect(ids).toHaveLength(94);
+    expect(ids).toHaveLength(108);
     for (const screen of VISUAL_SCREENS.filter((item) => item.matrix === "coverage")) {
       expect(ids.filter((id) => id.startsWith(`${screen.screenId}.`))).toEqual([`${screen.screenId}.phone.ko.light`, `${screen.screenId}.desktop.en.light`]);
     }
-    expect(new Set(ids).size).toBe(94);
-    expect(expectedVisualCheckIds()).toHaveLength(94 + VISUAL_STATIC_CHECK_IDS.length);
+    expect(new Set(ids).size).toBe(108);
+    expect(expectedVisualCheckIds()).toHaveLength(108 + VISUAL_STATIC_CHECK_IDS.length);
     expect(new Set(visualShots().map((shot) => shot.viewport))).toEqual(new Set(["phone", "desktop"]));
     expect(new Set(visualShots().map((shot) => shot.locale))).toEqual(new Set(["en", "ko"]));
     expect(new Set(visualShots().map((shot) => shot.scheme))).toEqual(new Set(["light", "dark", "forced-colors"]));
   });
 
   it("every registry route, including hidden booking, is pictured or has an exclusion note", () => {
-    expect(ROUTES).toHaveLength(38);
+    expect(ROUTES).toHaveLength(40);
     expect(visualRouteProblems(APP_ROUTES)).toEqual([]);
     expect(visualRouteProblems(ROUTES)).toEqual([]);
     for (const nav of ["link", "section", "hidden"]) {

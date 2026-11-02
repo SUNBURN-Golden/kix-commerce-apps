@@ -28,6 +28,8 @@ export const SCREENS: readonly ScreenRow[] = [
   row("merchant", "/merchant", "Merchant"),
   row("booking", "/booking/evt_lanterns", "Booking", "/booking/:eventId"),
   row("admission", "/admission", "Admission"),
+  row("resale-market", "/resale/market", "Resale market"),
+  row("resale-product", "/resale/market/demo-001", "Product detail", "/resale/market/:productId"),
   row("resale", "/resale", "Resale"),
   row("gift", "/gift", "Gift"),
   row("organizer-workspace", "/organizer/workspace", "Organizer workspace"),

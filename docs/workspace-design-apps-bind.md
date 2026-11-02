@@ -202,3 +202,5 @@ The design pass added no screen. `c-buyer-workspace` later added `/buyer`. `c-di
 `UNDETERMINED` until a product owner sets them: refund and cancel policy values, hold-expiry copy, and price or fee display. `ReadObservationV1` is not a published read. This design does not invent a read command, a refund body, or a browser path around the gate.
 
 No production deploy, no public host, no real payment, no KYC, no credit disbursement, no venue scan, no bank rail, and no live marketplace. No SLO. No Move, kernel, or settlement math is copied. Nothing in this change is inside kix-protocol. The five pins stay where the gate bind put them.
+
+2026-11-02 synthetic extension: `/resale/market` (`resale-market`) and `/resale/market/:productId` (`resale-product`) are buyer `stub-only` surfaces. No protocol sender or desk binding. [Marketplace boundary](c-plan-c-resale-market-ui-stub-apps-bind.md).

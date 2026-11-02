@@ -32,6 +32,14 @@ English summary: one entry per route-registry route — what this screen lets yo
 
 재판매 데스크. 모의 게이트 흐름(`MOCK_GATE_ONLY`)을 읽는다. 실제 마켓플레이스 체결이 아니다. 나오는 단어: `stub-only`, `MOCK_GATE_ONLY`.
 
+## `/resale/market`
+
+리셀 마켓 합성 상품 검색. 두 상품씩 탐색하고 모의 상품 상세로 이동한다. 실제 매물이나 가격의 증거가 아니다. 나오는 단어: `stub-only`, `NOT_BOUND`, `UNDETERMINED`. 모의 거래, 자금 이동 없음.
+
+## `/resale/market/:productId`
+
+모의 상품 상세. 옵션, 즉시 구매·판매 fixture 호가, 구매입찰·판매입찰 검토와 기록, 가격 추이와 체결 내역을 본다. 실제 자금·소유권 이전은 없다. `UNKNOWN`은 읽기·언어 변경·재연결로 해제되지 않는 추가 쓰기 차단이다. 나오는 단어: `CONFIRMED`, `REJECTED`, `UNKNOWN`, `NOT_BOUND`, `STALE_VERSION`. 새로고침은 새 데모를 시작하며 재실행하지 않는다.
+
 ## `/gift`
 
 선물 이전(published-bound). 빈 본문 거절 등 stub 흐름을 본다. 실제 티켓 이전이 아니다. 나오는 단어: `published-bound`, `REJECT`, `UNKNOWN`.
