@@ -37,8 +37,12 @@ export async function readGateResponseText(response: Response, signal: AbortSign
       buffer.set(value, length);
       length = nextLength;
     }
-    // Decode once: split UTF-8 code points and BOM/replacement behavior match text().
-    return new TextDecoder().decode(buffer.subarray(0, length));
+    // Decode only after bounded EOF; preserve split code points and BOM handling.
+    try {
+      return new TextDecoder("utf-8", { fatal: true }).decode(buffer.subarray(0, length));
+    } catch {
+      throw new ProtocolError("Integration gate returned invalid UTF-8.", "GATE_STATUS");
+    }
   } finally {
     signal.removeEventListener("abort", cancel);
     reader?.releaseLock();
