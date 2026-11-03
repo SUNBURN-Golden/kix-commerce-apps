@@ -1,31 +1,37 @@
 import { SafeText } from "../safe-text";
 import { ValidatedForm } from "../forms/ValidatedForm";
 import { field } from "../forms/validation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { messages } from "../i18n/messages/resale-market";
 import { useT } from "../i18n/desk-context";
 import { useResaleMarket } from "../resale-market";
 import { AsyncState } from "../components/AsyncState";
-import { MarketArt, MarketNotice } from "./ResaleMarketPanels";
+import { MarketArt, MarketNotice, MarketReadStatus } from "./ResaleMarketPanels";
 import "./resale-market.css";
+import { useMarketReadState } from "../shell/market-read-state";
 export function ResaleMarketPage() {
   const t = useT(messages);
-  const [draft, setDraft] = useState("");
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const { state, controller } = useResaleMarket({ kind: "list", query, page });
+  const view = useMarketReadState();
+  const { query, page, visitKey } = view;
+  const [draft, setDraft] = useState(query);
+  useEffect(() => { setDraft(query); }, [query, visitKey]);
+  const market = useResaleMarket({ kind: "list", query, page });
+  const { state } = market;
   const s = state.snapshot;
-  const list = s && s.kind !== "NOT_BOUND" && s.payload.kind === "list" ? s.payload : null;
+  const list = s && s.kind !== "NOT_BOUND" && s.request.kind === "list" && s.request.query === query && s.request.page === page && s.payload.kind === "list" ? s.payload : null;
+  const unavailable = list && state.freshness === "CURRENT" && (state.readState === "ready" || state.readState === "empty") && page > Math.max(1, Math.ceil(list.total / list.pageSize));
+  useEffect(() => { if (unavailable) view.commit(query, 1, true); }, [unavailable, view, query]);
   return <section className="resale-market">
     <header className="section-head"><p className="eyebrow">KIX</p><h2>{t("market.title")}</h2><MarketNotice /><p className="muted">{t("market.lifetime")}</p></header>
-    <ValidatedForm id="market-search-form" fields={[field("market-search","validation.label.filter", { optional: true, maxLength: 100 })]} className="panel market-search" onSubmit={e => { e.preventDefault(); setQuery(draft); setPage(1); }}>
+    {view.notice ? <p role="status" data-market-read-notice>{t("market.readNotice")}</p> : null}
+    <ValidatedForm id="market-search-form" fields={[field("market-search","validation.label.filter", { optional: true, maxLength: 100 })]} className="panel market-search" onSubmit={e => { e.preventDefault(); view.commit(draft, 1); setDraft(draft.trim()); }}>
       <label htmlFor="market-search">{t("market.search")}</label><input id="market-search" value={draft} maxLength={100} onChange={e => setDraft(e.target.value)} />
       <button type="submit">{t("market.searchButton")}</button>
     </ValidatedForm>
-    {state.readState === "loading" ? <AsyncState label={t("market.title")} announcement="parent" kind="loading" /> : state.readState === "error" ? <AsyncState label={t("market.title")} kind="error" read={{ label: t("market.read"), onRead: () => { void controller.read({ kind: "list", query, page }); } }} /> : state.readState === "not-bound" ? <AsyncState label={t("market.title")} kind="not-bound"><p>{t("market.result.NOT_BOUND")}</p></AsyncState> : null}
+    <MarketReadStatus market={market} input={{ kind: "list", query, page }} list />
     {list?.products.length === 0 ? <AsyncState label={t("market.title")} kind="empty"><p>{t("market.empty")}</p></AsyncState> : null}
-    <div role="status" aria-busy={state.readState === "loading"}><ul className="market-grid">{list?.products.map(p => <li key={p.productId}><Link className="market-card" to={`/resale/market/${p.productId}`}><MarketArt artwork={p.artworkKey} /><h3>{t(p.nameKey)}</h3><p>{t(p.descriptionKey)}</p><p className="muted"><SafeText value={p.productId} /></p></Link></li>)}</ul></div>
-    <div className="actions">{page > 1 ? <button type="button" onClick={() => setPage(page-1)}>{t("market.previous")}</button> : null}{list?.nextPage ? <button type="button" onClick={() => setPage(list.nextPage ?? page)}>{t("market.next")}</button> : null}</div>
+    <div role="status" aria-busy={state.readState === "loading"}><ul className="market-grid">{list?.products.map(p => <li key={p.productId}><Link className="market-card" to={`/resale/market/${encodeURIComponent(p.productId)}${view.search}`}><MarketArt artwork={p.artworkKey} /><h3>{t(p.nameKey)}</h3><p>{t(p.descriptionKey)}</p><p className="muted"><SafeText value={p.productId} /></p></Link></li>)}</ul></div>
+    <div className="actions">{page > 1 ? <button type="button" onClick={() => view.commit(query, page-1)}>{t("market.previous")}</button> : null}{list?.nextPage ? <button type="button" onClick={() => view.commit(query, list.nextPage ?? page)}>{t("market.next")}</button> : null}</div>
   </section>;
 }
