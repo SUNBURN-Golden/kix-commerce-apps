@@ -55,6 +55,38 @@ import { renderDom, change, click, button, element } from "./support/render-dom"
 import { ResaleMarketPage } from "../src/pages/ResaleMarket";
 import { ResaleProductPage } from "../src/pages/ResaleProduct";
 describe("mounted resale marketplace", () => {
+  it("publishes stable immutable snapshots to mounted controls and keeps UNKNOWN disabled", async () => {
+    const p = createMockResaleMarket();
+    const submit = vi.fn(async (i: Parameters<typeof p.submit>[0]) => { await p.submit(i); throw new Error("lost after effect"); });
+    const c = new ResaleMarketController({ read: p.read, submit }); await c.read(read);
+    const stable = c.state(); const detail = c.detail(); let renders = 0;
+    function Live() { useSyncExternalStore(c.subscribe, c.state, c.state); ++renders; return panels(c); }
+    const off = c.subscribe(() => {
+      expect(Reflect.set(c.state(), "fenced", false)).toBe(false);
+      expect(Reflect.set(c.state(), "outcome", null)).toBe(false);
+      expect(Reflect.set(c.detail()!.quotes[0]!, "available", true)).toBe(false);
+    });
+    const { container, unmount } = await renderDom(<Live />);
+    expect(c.state()).toBe(stable); expect(c.detail()).toBe(detail);
+    expect(renders).toBe(1);
+    expect(Reflect.set(c.state(), "freshness", "STALE")).toBe(false);
+    expect(c.state()).toBe(stable); expect(renders).toBe(1);
+    await click(button(container, "Review simulation"));
+    await click(button(container, "Record simulation once"));
+    expect(c.state()).toMatchObject({ outcome: "UNKNOWN", fenced: true });
+    expect(container.textContent).toContain("UNKNOWN");
+    expect(button(container, "Review simulation").disabled).toBe(true);
+    const unknown = c.state();
+    await click(button(container, "Read current fixtures"));
+    expect(c.state()).not.toBe(unknown); expect(c.detail()).not.toBe(detail);
+    expect(c.state()).toMatchObject({ outcome: "UNKNOWN", fenced: true, freshness: "CURRENT" });
+    expect(button(container, "Review simulation").disabled).toBe(true);
+    await c.submit({ kind: "bid", productId: "demo-001", variantId: "standard", expectedVersion: 1, mockUnits: "115" });
+    expect(submit).toHaveBeenCalledTimes(1); expect(renders).toBeLessThan(12);
+    expect(stable).toMatchObject({ outcome: null, fenced: false });
+    off(); await unmount();
+  });
+
   it("searches, paginates, renders missing products and enters product detail", async () => {
     const { container, unmount } = await renderDom(<MemoryRouter><ResaleMarketPage /></MemoryRouter>);
     expect(container.textContent).toContain("Orbit object");
