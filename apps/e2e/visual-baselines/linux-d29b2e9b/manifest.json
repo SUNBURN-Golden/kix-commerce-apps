@@ -15,8 +15,8 @@
     "channelDelta": 8,
     "maxDiffPpm": 200
   },
-  "appHead": "c6594613d49d4f82545de78e98ea1a6138e3b94e",
-  "recordedOn": "2026-11-02",
+  "appHead": "a63bda10c0083d6b41007b484401034c714e114c",
+  "recordedOn": "2026-11-03",
   "shots": 108,
   "hashes": {
     "box-office.phone.en.light": "de5a27a533f6b30afecd94be6657f06129e44329b53f7b4af2e2caa9d6a4441b",
@@ -57,10 +57,10 @@
     "resale-market.phone.ko.light": "3b7e80a89d49cf244ddd362360fc332a61ab9b4419de9d9380509bbb1cb94780",
     "resale-market.desktop.en.light": "69e981c3f0b73685c950975519b2df67f600a3abe271a5e740274417465c8ef7",
     "resale-market.desktop.ko.light": "c72f5e3387ce6a84646875e6f77670ab1ecb4d2405d8d162843c63d2061240ac",
-    "resale-product.phone.en.light": "fa112e4405c3ab54e5257f1f273eb2aaea1921b9f7bb3caa79941d632947659e",
-    "resale-product.phone.ko.light": "78d5b5b80b3d536a976ead469b99c99e3c7f7b82affde526ac17a8da1c4b96a8",
-    "resale-product.desktop.en.light": "d35ff1744a96894e6b872775860a7593e1bb9dc93ccd93f0fc3a512a846e3522",
-    "resale-product.desktop.ko.light": "704c6949409e573be3132401a1144963958302d6d147e93424effc3d9067b08d",
+    "resale-product.phone.en.light": "a463ebf2d387c4f569b0598b182df89730fa70105ddca317f31e3163771f94da",
+    "resale-product.phone.ko.light": "ef60ad3cca9dd48c3f0c8f4740c91044574b670a00f4b46f19e21c46a41b2e59",
+    "resale-product.desktop.en.light": "0d1ddd3944d16d9dae747cd062bcd3386237c2dc50a763a909364af0ea754608",
+    "resale-product.desktop.ko.light": "e887ba6aa99c06982d4df5cca3f74d40f69e863caa5d7d4e7fadfeccb6aca7ca",
     "resale.phone.ko.light": "808c4b76b56440620a1f24680d338216ea3f1ce2439b99b13a7e0944af0d6545",
     "resale.desktop.en.light": "da8bf75f9647723e9ab3b94235c63e2ecdd1d95bda0bc2c84914fd0014f73ef6",
     "gift.phone.ko.light": "838f32999200d0dbafa2419575cade3d0366fff823a6f9d978d6ed919862d2a4",
@@ -117,15 +117,15 @@
     "qualification.desktop.en.light": "678760a9648e464272017b90bcad3a02ce36eaa7467e178005c06891abf5411c",
     "release.phone.ko.light": "93695cb53713c7dc64f5cfdc1e509829d4da83f2276cc2dbc83b4a8d4f2ecbed",
     "release.desktop.en.light": "d48cd00c6ab36c576cbd8ef0d30f4c71a7e5a9f3d169ef78af32b9b606e0dfa2",
-    "resale-product.phone.ko.dark": "3a270dfc8d21dd814aa3e76f71bf669760d02158a742ddfe8f2e26f4cbdb77ab",
-    "resale-product.desktop.en.forced-colors": "3bc04f6a5900f882e13ca48412c5c4a5fe57baf954f6c906e86d3461dc25bd98",
+    "resale-product.phone.ko.dark": "27afd85b9cc803c9e6404a1cb77fa266e970635a3ed16fd47c498d7d95fcaecc",
+    "resale-product.desktop.en.forced-colors": "45bbac8656afe68c64e0b31cb6fb327801c4d7ebf28bb04df03b92959aa71868",
     "box-office.desktop.en.dark": "498db60017e0538f42725d1f1f6c04009d9d8af719c5a08272028281d96d22b8",
     "discovery.phone.ko.dark": "8b0fa0ddf977bcd2844c3f0d25738f240907b70b525aa94e7ffece1e61cc164c",
     "handoff.desktop.en.forced-colors": "aef8a664234b4eddc2864b66a74d18dc5cbb77c671096e933d3987ffdf80863c",
     "booking.phone.ko.forced-colors": "588d1ea85b63847ab3483673d302929e11cb0875b9766fb09410954dd85eb0ff",
-    "resale-product.phone.ko.light.review": "173c1d8ebb069703265f7abd2287b4e327af2077a32ae0c4dba5283480d26e2a",
-    "resale-product.desktop.en.light.review": "aebeb5df406be30818cc473b8522074720e9b9f388702798b683fc9e6124f1a1",
-    "resale-product.phone.ko.light.result": "d4a91a7d22db3221d07f7a8a54598dc944afa871e68f5f01e3b1d80bd91aa7ca",
-    "resale-product.desktop.en.light.result": "f4a796aed451cafde3a86a5d9653618d3745d7bd9205fd3f653c77e5b2226111"
+    "resale-product.phone.ko.light.review": "ccd1b255ab0f38d0c39dd0a2df9c8eee544b8c85afdea16ebbe2b7fb2c6c45c7",
+    "resale-product.desktop.en.light.review": "ad0346ce4e6e80ef1ff765a527fb833e5ce2e6e54c0c05aab4fb8f4b0bf0639d",
+    "resale-product.phone.ko.light.result": "17c794b941bc2f6efdce65a64f9b40a2901986723fd0521a1c04a83613ab70d7",
+    "resale-product.desktop.en.light.result": "ea8cce25b782b13298de99341b19f12747ad7e131f2ad86fdee32c4718fa4e88"
   }
 }

@@ -1,11 +1,22 @@
 /** Test-build substitution only. No fault hook enters the production bundle. */
+import type {} from "../src/resale-fault-types";
+import { marketHistoryFixture } from "../../web/test/support/resale-market-history-fixture";
 import { createMockResaleMarket, MARKET_CLAIMS, resaleMarketPortFor as original, type ResaleMarketPort } from "../../../packages/protocol-adapter/src/../src/resale-market";
 export * from "../../../packages/protocol-adapter/src/../src/resale-market";
-declare global { interface Window { __kixResaleFault?: { mode: "reject" | "lost" | "held" | "wrong-side"; dispatches: number; release?: () => void } } }
 export function resaleMarketPortFor(environment: "stub" | "integration-http"): ResaleMarketPort {
   if (environment !== "stub") return original(environment);
   const source = createMockResaleMarket();
-  return { read: source.read, async submit(input) {
+  return { async read(input) {
+    const fault = window.__kixResaleFault;
+    if (fault) fault.reads = (fault.reads ?? 0) + 1;
+    const result = await source.read(input);
+    if (fault?.history && result.kind !== "NOT_BOUND" && result.payload.kind === "detail" && result.payload.detail) {
+      const { count, wideCount, generation, reverse } = fault.history;
+      result.payload.detail = marketHistoryFixture(result.payload.detail, count, wideCount, generation);
+      if (reverse) { result.payload.detail.offers.reverse(); result.payload.detail.trades.reverse(); }
+    }
+    return result;
+  }, async submit(input) {
     const fault = window.__kixResaleFault;
     if (!fault) return source.submit(input);
     fault.dispatches++;

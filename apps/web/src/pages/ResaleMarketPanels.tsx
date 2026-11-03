@@ -1,3 +1,5 @@
+import { buildMarketHistoryPage } from "../resale-market-pagination";
+import { ResaleMarketPagination } from "./ResaleMarketPagination";
 import { StatusMark } from "../a11y/marks";
 import { SafeText } from "../safe-text";
 import { useEffect, useRef, useState } from "react";
@@ -48,6 +50,7 @@ export function ProductPanels({ detail: d, market }: { detail: MarketDetail; mar
   const [review, setReview] = useState<ResaleMarketIntent | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const [refused, setRefused] = useState(false);
+  const [announceSnapshots, setAnnounceSnapshots] = useState(true);
   useEffect(() => {
     if (market.state.outcome && market.state.outcome !== "IN_FLIGHT") {
       resultRef.current?.focus();
@@ -59,8 +62,13 @@ export function ProductPanels({ detail: d, market }: { detail: MarketDetail; mar
   const instant = kind === "instant-buy" || kind === "instant-sell";
   const unavailable = instant && !quote?.available;
   const blocked = market.state.fenced || market.state.outcome === "IN_FLIGHT" || market.state.freshness !== "CURRENT";
-  const trades = d.trades.filter(x => x.variantId === variant);
-  const offers = d.offers.filter(x => x.variantId === variant);
+  const [tradesPage, setTradesPage] = useState(1);
+  const [offersPage, setOffersPage] = useState(1);
+  const trades = buildMarketHistoryPage(d.trades.filter(x => x.variantId === variant), tradesPage);
+  const offers = buildMarketHistoryPage(d.offers.filter(x => x.variantId === variant), offersPage);
+  // Commit clamps synchronously: subsequent growth cannot resurrect an obsolete request.
+  if (tradesPage !== (trades.page || 1)) setTradesPage(trades.page || 1);
+  if (offersPage !== (offers.page || 1)) setOffersPage(offers.page || 1);
   useEffect(() => { if (review) reviewHeading.current?.focus(); }, [review]);
   function preview() {
     if (blocked || unavailable) return;
@@ -70,6 +78,7 @@ export function ProductPanels({ detail: d, market }: { detail: MarketDetail; mar
   }
   async function submit() {
     if (!review || blocked) return;
+    setAnnounceSnapshots(false);
     await market.actions.submit(review);
     setReview(null);
     if (market.controller.state().outcome === "CONFIRMED" || market.controller.state().outcome === "REJECTED") await market.controller.read({ kind: "detail", productId: d.product.productId });
@@ -81,7 +90,7 @@ export function ProductPanels({ detail: d, market }: { detail: MarketDetail; mar
       <dl className="market-quotes">{(["ask","bid"] as const).map(side => { const q = d.quotes.find(x => x.variantId === variant && x.side === side); return <div key={side}><dt>{t(side === "ask" ? "market.instant-buy" : "market.instant-sell")}</dt><dd>{q?.available ? formatUnits(q.mockUnits,t("amount.mockUnits"),clock) : t("market.unavailable")}</dd></div>; })}</dl>
       {review ? <div className="market-review"><StatusMark kind="review" /><h4 tabIndex={-1} ref={reviewHeading}>{t("market.review")}</h4><MarketNotice /><p>{t(`market.${review.kind}`)} · {t(review.variantId === "wide" ? "market.wide" : "market.standard")}</p><p>{formatUnits("mockUnits" in review ? review.mockUnits : d.quotes.find(q => q.quoteId === review.quoteId)?.mockUnits ?? "",t("amount.mockUnits"),clock)}</p><p className="muted">{review.expectedVersion}</p><div className="actions"><button type="button" disabled={blocked} onClick={() => setReview(null)}>{t("market.back")}</button><ConnectivityWriteButton type="button" disabled={blocked} onClick={() => void submit()}>{t("market.confirm")}</ConnectivityWriteButton></div></div> :
       <ValidatedForm id="market-trade-form" fields={instant ? [] : [field("market-units","validation.label.mockUnits", { kind: "integer", maxLength: 15 })]} busy={blocked} onSubmit={preview}>
-        <MarketNotice /><label htmlFor="market-variant">{t("market.variant")}</label><select id="market-variant" value={variant} onChange={e => { setVariant(e.target.value); setRefused(false); }}>{d.product.variantIds.map(v => <option key={v} value={v}>{t(`market.${v}`)}</option>)}</select>
+        <MarketNotice /><label htmlFor="market-variant">{t("market.variant")}</label><select id="market-variant" value={variant} onChange={e => { setVariant(e.target.value); setTradesPage(1); setOffersPage(1); setRefused(false); }}>{d.product.variantIds.map(v => <option key={v} value={v}>{t(`market.${v}`)}</option>)}</select>
         <label htmlFor="market-action">{t("market.action")}</label><select id="market-action" value={kind} onChange={e => { setKind(e.target.value as typeof kind); setRefused(false); }}>{(["instant-buy","instant-sell","bid","ask"] as const).map(k => <option key={k} value={k}>{t(`market.${k}`)}</option>)}</select>
         {!instant ? <label htmlFor="market-units">{t("market.units")}<input id="market-units" inputMode="numeric" value={units} maxLength={15} onChange={e => { setUnits(e.target.value); setRefused(false); }} /></label> : null}
         {unavailable ? <p id="market-unavailable">{t("market.unavailable")}</p> : null}
@@ -90,10 +99,10 @@ export function ProductPanels({ detail: d, market }: { detail: MarketDetail; mar
       <div id="market-outcome" ref={resultRef} tabIndex={-1} role="status" aria-busy={market.state.outcome === "IN_FLIGHT"} aria-atomic="true" data-market-outcome={market.state.outcome ?? ""}>{market.state.outcome ? <><p>{t(`market.result.${market.state.outcome}`)}</p><MarketNotice /><p><SafeText value={market.state.code} /></p></> : null}</div>
       {market.state.freshness !== "CURRENT" && !market.state.fenced ? <p id="market-stale">{t("market.stale")}</p> : null}
       {market.state.fenced ? <AsyncState label={t("market.title")} announcement="parent" kind="unknown" /> : null}
-      <button type="button" disabled={market.state.outcome === "IN_FLIGHT"} onClick={() => { setReview(null); void market.controller.read({ kind: "detail", productId: d.product.productId }); }}>{t("market.read")}</button>
+      <button type="button" disabled={market.state.outcome === "IN_FLIGHT"} onClick={() => { setReview(null); setAnnounceSnapshots(true); void market.controller.read({ kind: "detail", productId: d.product.productId }); }}>{t("market.read")}</button>
     </div></div>
     <PriceChart series={d.series} />
-    <section className="panel"><h3>{t("market.history")}</h3><MarketNotice /><div className="table-scroll"><table><caption>{t("market.history")}</caption><thead><tr><th scope="col">{t("market.date")}</th><th scope="col">{t("market.units")}</th><th scope="col">{t("market.state")}</th></tr></thead><tbody>{trades.map(x => <tr key={x.tradeId}><td>{formatWhen(x.occurredAt,clock)}</td><td>{formatUnits(x.mockUnits,t("amount.mockUnits"),clock)}</td><td>{t("market.simulated")}</td></tr>)}</tbody></table></div>{!trades.length ? <p>{t("market.noRows")}</p> : null}</section>
-    <section className="panel"><h3>{t("market.offers")}</h3><MarketNotice /><ul>{offers.map(x => <li key={x.offerId}>{t(`market.${x.side}`)} · {formatUnits(x.mockUnits,t("amount.mockUnits"),clock)} · {t("market.open")}</li>)}</ul>{!offers.length ? <p>{t("market.noRows")}</p> : null}</section>
+    <section className="panel"><h3>{t("market.history")}</h3><MarketNotice /><div className="table-scroll"><table><caption>{t("market.history")}</caption><thead><tr><th scope="col">{t("market.date")}</th><th scope="col">{t("market.units")}</th><th scope="col">{t("market.state")}</th></tr></thead><tbody id="market-trades-rows">{trades.rows.map(x => <tr key={x.tradeId} data-trade-id={x.tradeId}><td>{formatWhen(x.occurredAt,clock)}</td><td>{formatUnits(x.mockUnits,t("amount.mockUnits"),clock)}</td><td>{t("market.simulated")}</td></tr>)}</tbody></table></div>{!trades.totalCount ? <p>{t("market.noRows")}</p> : null}<ResaleMarketPagination section="trades" variant={variant} projection={trades} snapshot={d.trades} announceSnapshots={announceSnapshots} onPage={setTradesPage} /></section>
+    <section className="panel"><h3>{t("market.offers")}</h3><MarketNotice /><ul id="market-offers-rows">{offers.rows.map(x => <li key={x.offerId} data-offer-id={x.offerId}>{t(`market.${x.side}`)} · {formatUnits(x.mockUnits,t("amount.mockUnits"),clock)} · {t("market.open")}</li>)}</ul>{!offers.totalCount ? <p>{t("market.noRows")}</p> : null}<ResaleMarketPagination section="offers" variant={variant} projection={offers} snapshot={d.offers} announceSnapshots={announceSnapshots} onPage={setOffersPage} /></section>
   </>;
 }

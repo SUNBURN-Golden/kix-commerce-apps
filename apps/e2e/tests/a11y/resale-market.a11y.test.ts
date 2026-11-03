@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { useBrowser } from "../../src/suite";
 import { engineComposition, confirmation } from "../../src/composition";
-import { overflowProblems } from "../../src/a11y-keyboard";
+import type {} from "../../src/resale-fault-types";
+import { runAxe } from "../../src/a11y-axe";
+import { A11Y_BASELINE, ratchet } from "../../src/a11y-matrix";
+import { tabTo, overflowProblems } from "../../src/a11y-keyboard";
 import { openScreen } from "./helpers";
 
 describe("resale market bilingual form and display", () => {
@@ -48,4 +51,46 @@ describe("resale market bilingual form and display", () => {
     expect(await page.getByRole("img",{ name: "fixture 가격 추이" }).count()).toBe(1);
     await suite.pass(page,`a11y.resale-market.${scheme}`); await page.close();
   });
+  it("keeps large-history controls focused, announces ko/en ranges and reflows with axe", async () => {
+    const page = await suite.newPage();
+    await page.addInitScript(() => { window.__kixResaleFault = { mode: "reject", dispatches: 0, history: { count: 1001, wideCount: 0 } }; });
+    await openScreen(page, suite.faultOrigin!, "/resale/market/demo-001");
+    const status = page.locator("#market-trades-status");
+    expect(await status.getAttribute("aria-live")).toBe("off");
+    expect(await tabTo(page, 'nav[aria-describedby="market-trades-status"] button:last-child')).toBe(true);
+    await page.keyboard.press("Enter");
+    expect(await status.innerText()).toContain("1001–1001 of 1001; page 21 of 21");
+    expect(await status.getAttribute("aria-live")).toBe("polite");
+    expect(await status.getAttribute("aria-atomic")).toBe("true");
+    const last = page.locator('nav[aria-describedby="market-trades-status"] button:last-child');
+    expect(await last.getAttribute("aria-disabled")).toBe("true");
+    await page.keyboard.press("Space"); expect(await page.evaluate(() => document.activeElement?.textContent)).toBe("Last page");
+    await page.keyboard.press("Shift+Tab"); expect(await page.evaluate(() => document.activeElement?.textContent)).toBe("Next page");
+    await page.keyboard.press("Tab"); expect(await page.evaluate(() => document.activeElement?.textContent)).toBe("Last page");
+    await page.locator('nav[aria-describedby="market-trades-status"] button:first-child').press("Space");
+    expect(await status.innerText()).toContain("1–50 of 1001");
+    await page.getByLabel("Variant", { exact: true }).focus();
+    await page.getByLabel("Variant", { exact: true }).selectOption("wide");
+    expect(await page.evaluate(() => document.activeElement?.id)).toBe("market-variant");
+    expect(await status.innerText()).toContain("Wide: 0–0 of 0; page 0 of 0");
+    await page.getByLabel("Variant", { exact: true }).selectOption("standard");
+    for (const locale of ["en", "ko"] as const) {
+      await page.locator(`[data-locale="${locale}"]`).click();
+      expect(await status.innerText()).toContain(locale === "en" ? "Trade history · Standard" : "체결 내역 · 기본");
+      for (const media of [{ colorScheme: "dark" as const }, { forcedColors: "active" as const }]) {
+        await page.emulateMedia(media);
+        await page.setViewportSize({ width: 320, height: 800 });
+        expect(await overflowProblems(page, "resale.history.reflow")).toEqual([]);
+        const axe = await runAxe(page, A11Y_BASELINE.tags);
+        expect(ratchet("resale-product", "narrow", axe.violations.map(v => v.ruleId)).unlisted).toEqual([]);
+        await last.focus(); await page.keyboard.press("Tab"); await page.keyboard.press("Shift+Tab");
+        expect(await last.evaluate(node => node === document.activeElement && getComputedStyle(node).outlineStyle !== "none")).toBe(true);
+        expect(await page.locator("#market-trades-rows tr").count()).toBe(50);
+        expect(await page.locator("#market-offers-rows li").count()).toBe(50);
+      }
+    }
+    expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(0);
+    await suite.quiet(page, "history pagination bilingual keyboard, axe, reflow"); await page.close();
+  });
+
 });

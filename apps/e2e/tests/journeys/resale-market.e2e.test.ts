@@ -113,4 +113,55 @@ describe("synthetic resale marketplace", () => {
     }
     await suite.pass(page,mode === "reject" ? "resale-product.REJECT" : mode === "lost" ? "resale-product.UNKNOWN" : `resale-product.${mode}`); await page.close();
   });
+  it("bounds large independent history pages, retains snapshot positions and fences UNKNOWN", async () => {
+    const page = await suite.newPage();
+    await page.addInitScript(() => { window.__kixResaleFault = { mode: "lost", dispatches: 0, history: { count: 1001, wideCount: 51 } }; });
+    await page.goto(suite.faultOrigin + "/resale/market/demo-001?lang=en&q=object&page=2");
+    await page.locator("#market-trades-rows tr").first().waitFor();
+    const initialUrl = page.url();
+    const initialReads = await page.evaluate(() => window.__kixResaleFault?.reads);
+    for (const section of ["trades", "offers"]) {
+      const nav = page.locator(`nav[aria-describedby="market-${section}-status"]`);
+      const rows = page.locator(`#market-${section}-rows > *`);
+      const seen: string[] = [];
+      for (let index = 0; index < 21; index++) {
+        expect(await rows.count()).toBe(index === 20 ? 1 : 50);
+        seen.push(...await rows.evaluateAll((nodes, attr) => nodes.map(n => n.getAttribute(attr)!), section === "trades" ? "data-trade-id" : "data-offer-id"));
+        if (index < 20) await nav.getByRole("button", { name: "Next page", exact: true }).click();
+      }
+      expect(seen).toEqual(Array.from({ length: 1001 }, (_, i) => `${section === "trades" ? "trade" : "offer"}-0-standard-${i}`));
+      await nav.getByRole("button", { name: "First page", exact: true }).click();
+    }
+    expect(page.url()).toBe(initialUrl);
+    expect(await page.evaluate(() => window.__kixResaleFault?.reads)).toBe(initialReads);
+    expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(0);
+    const trades = page.locator('nav[aria-describedby="market-trades-status"]');
+    const offers = page.locator('nav[aria-describedby="market-offers-status"]');
+    await trades.getByRole("button", { name: "Last page" }).click();
+    await offers.getByRole("button", { name: "Next page" }).click();
+    const refresh = page.getByRole("button", { name: "Read current fixtures" });
+    for (const [count, range] of [[1051, "1001–1050 of 1051; page 21 of 22"], [51, "51–51 of 51; page 2 of 2"], [1001, "51–100 of 1001; page 2 of 21"], [0, "0–0 of 0; page 0 of 0"], [1001, "1–50 of 1001; page 1 of 21"]] as const) {
+      await page.evaluate(count => { window.__kixResaleFault!.history!.count = count; }, count);
+      await refresh.click();
+      await poll(() => page.locator("#market-trades-status").innerText(), text => text.includes(range), "accepted history refresh");
+    }
+    await page.getByLabel("Variant", { exact: true }).selectOption("wide");
+    expect(await page.locator("#market-offers-status").innerText()).toContain("Wide: 1–50 of 51");
+    await page.getByLabel("Variant", { exact: true }).selectOption("standard");
+    await page.getByRole("button", { name: "Review simulation" }).click();
+    await page.getByRole("button", { name: "Record simulation once" }).click();
+    await page.locator('[data-market-outcome="UNKNOWN"]').waitFor();
+    const fencedReads = await page.evaluate(() => window.__kixResaleFault?.reads);
+    await trades.getByRole("button", { name: "Last page" }).click();
+    await offers.getByRole("button", { name: "Last page" }).click();
+    expect(await page.evaluate(() => window.__kixResaleFault?.reads)).toBe(fencedReads);
+    await refresh.click();
+    await page.locator('[data-locale="ko"]').click();
+    expect(await page.locator("#market-trades-status").innerText()).toContain("체결 내역 · 기본");
+    expect(await page.locator("#market-outcome").innerText()).toContain("UNKNOWN");
+    expect(await page.getByRole("button", { name: "모의 거래 검토" }).isDisabled()).toBe(true);
+    expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(1);
+    await suite.quiet(page, "bounded history pages, snapshot changes and UNKNOWN"); await page.close();
+  });
+
 });
