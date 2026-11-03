@@ -9,14 +9,16 @@ import { ValidatedForm } from "../forms/ValidatedForm";
 import { field } from "../forms/validation";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { AsyncState } from "../components/AsyncState";
-import type { ResaleMarketDetail, ResaleMarketIntent, ResaleMarketPricePoint } from "../../../../packages/protocol-adapter/src/resale-market";
+import type { ResaleMarketIntent } from "../../../../packages/protocol-adapter/src/resale-market";
+import type { ResaleMarketController } from "../../../../packages/protocol-adapter/src/resale-market-controller";
 import type { useResaleMarket } from "../resale-market";
+type MarketDetail = NonNullable<ReturnType<ResaleMarketController["detail"]>>;
 export function MarketNotice() { const t = useT(messages); return <p className="market-notice">{t("market.notice")}</p>; }
 /** Original code-native artwork, decorative beside the product's textual name. */
 export function MarketArt({ artwork }: { artwork: string }) {
   return <div className={`market-art market-art-${artwork}`} aria-hidden="true"><svg viewBox="0 0 320 240" focusable="false"><path d={artwork === "orbit" ? "M60 120a100 55 0 1 0 200 0a100 55 0 1 0-200 0M160 35v170" : artwork === "fold" ? "M65 170L160 45l95 125H65l95-45 95 45M160 45v80" : "M70 190V110a90 90 0 0 1 180 0v80h-45v-80a45 45 0 0 0-90 0v80Z"} /></svg></div>;
 }
-export function PriceChart({ series }: { series: ResaleMarketPricePoint[] }) {
+export function PriceChart({ series }: { series: MarketDetail["series"] }) {
   const t = useT(messages); const { clock } = useLocale();
   // Coordinate arithmetic is presentation only. Original exact digits stay in the equivalent table.
   const values = series.map(p => BigInt(p.mockUnits));
@@ -29,7 +31,7 @@ export function PriceChart({ series }: { series: ResaleMarketPricePoint[] }) {
     {series.length === 0 ? <p>{t("market.noRows")}</p> : null}
   </section>;
 }
-export function ProductPanels({ detail: d, market }: { detail: ResaleMarketDetail; market: ReturnType<typeof useResaleMarket> }) {
+export function ProductPanels({ detail: d, market }: { detail: MarketDetail; market: ReturnType<typeof useResaleMarket> }) {
   const t = useT(messages); const { clock } = useLocale();
   const [variant, setVariant] = useState<string>(d.product.variantIds[0] ?? "standard");
   const [kind, setKind] = useState<ResaleMarketIntent["kind"]>("instant-buy");
