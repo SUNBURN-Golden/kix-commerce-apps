@@ -9,11 +9,20 @@ import { ValidatedForm } from "../forms/ValidatedForm";
 import { field } from "../forms/validation";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { AsyncState } from "../components/AsyncState";
-import type { ResaleMarketIntent } from "../../../../packages/protocol-adapter/src/resale-market";
+import type { ResaleMarketRead, ResaleMarketIntent } from "../../../../packages/protocol-adapter/src/resale-market";
 import type { ResaleMarketController } from "../../../../packages/protocol-adapter/src/resale-market-controller";
 import type { useResaleMarket } from "../resale-market";
 type MarketDetail = NonNullable<ReturnType<ResaleMarketController["detail"]>>;
 export function MarketNotice() { const t = useT(messages); return <p className="market-notice">{t("market.notice")}</p>; }
+/** Shared read feedback keeps list/detail failure semantics and retry controls aligned. */
+export function MarketReadStatus({ market, input, list = false }: { market: ReturnType<typeof useResaleMarket>; input: ResaleMarketRead; list?: boolean }) {
+  const t = useT(messages);
+  const kind = market.state.readState;
+  if (kind === "loading" && (list || !market.controller.detail())) return <AsyncState label={t("market.title")} announcement={list ? "parent" : undefined} kind="loading" />;
+  if (kind === "error" || (!list && kind === "stale")) return <AsyncState label={t("market.title")} kind={kind} read={{ label: t("market.read"), onRead: () => { void market.controller.read(input); } }} />;
+  if (kind === "not-bound") return <AsyncState label={t("market.title")} kind="not-bound"><p>{t("market.result.NOT_BOUND")}</p></AsyncState>;
+  return null;
+}
 /** Original code-native artwork, decorative beside the product's textual name. */
 export function MarketArt({ artwork }: { artwork: string }) {
   return <div className={`market-art market-art-${artwork}`} aria-hidden="true"><svg viewBox="0 0 320 240" focusable="false"><path d={artwork === "orbit" ? "M60 120a100 55 0 1 0 200 0a100 55 0 1 0-200 0M160 35v170" : artwork === "fold" ? "M65 170L160 45l95 125H65l95-45 95 45M160 45v80" : "M70 190V110a90 90 0 0 1 180 0v80h-45v-80a45 45 0 0 0-90 0v80Z"} /></svg></div>;
