@@ -63,11 +63,27 @@ describe("JSON value depth before parsing", () => {
   });
 });
 
-it("preserves null-body, BOM and malformed UTF-8 replacement behavior", async () => {
+it("preserves null-body behavior", async () => {
   const signal = new AbortController().signal;
   expect(await readGateResponseText(new Response(null), signal)).toBe("");
-  const bytes = new Uint8Array([0xef, 0xbb, 0xbf, 0x22, 0xff, 0x22]);
-  expect(await readGateResponseText(new Response(bytes), signal)).toBe(await new Response(bytes).text());
+});
+
+it("strips a UTF-8 BOM while preserving explicitly encoded U+FFFD", async () => {
+  const bytes = new Uint8Array([0xef, 0xbb, 0xbf, 0x22, 0xef, 0xbf, 0xbd, 0x22]);
+  expect(await readGateResponseText(new Response(bytes), new AbortController().signal)).toBe('"\uFFFD"');
+});
+
+it("rejects malformed UTF-8 and releases the reader and abort listener after EOF", async () => {
+  const abort = new AbortController();
+  const add = vi.spyOn(abort.signal, "addEventListener");
+  const remove = vi.spyOn(abort.signal, "removeEventListener");
+  const response = new Response(new Uint8Array([0x22, 0xff, 0x22]));
+  const error: unknown = await readGateResponseText(response, abort.signal).catch((error: unknown) => error);
+  expect(error).toBeInstanceOf(ProtocolError);
+  expect(error).toMatchObject({ message: "Integration gate returned invalid UTF-8.", code: "GATE_STATUS" });
+  expect(response.body?.locked).toBe(false);
+  expect(abort.signal.aborted).toBe(false);
+  expect(remove.mock.calls[0]).toEqual(add.mock.calls[0].slice(0, 2));
 });
 
 it("cancels an already-aborted response without pulling or keeping listeners/locks", async () => {
