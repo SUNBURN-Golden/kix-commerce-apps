@@ -5,6 +5,37 @@ import { ProtocolError } from "../src/types.js";
 
 afterEach(() => vi.restoreAllMocks());
 
+describe("finite JSON numbers", () => {
+  for (const token of ["1e400", "-1e400"]) {
+    it.each([token, `{"value":${token}}`, `[${token}]`, `{"value":[0,{"nested":${token}}]}`])(
+      "rejects raw overflow at every placement: %s", (text) => {
+        expect(() => parseGateJson(text)).toThrowError(new ProtocolError(
+          "Integration gate returned a non-finite number.", "GATE_STATUS"));
+      });
+    for (const kind of ["object", "array", "mixed"] as const) {
+      it(`${token} at ${kind} depth 32 gets the numeric error`, () => {
+        expect(() => parseGateJson(nested(32, kind, token))).toThrow(/non-finite number/);
+      });
+      it(`${token} at ${kind} depth 33 fails before JSON.parse`, () => {
+        const parser = vi.spyOn(JSON, "parse");
+        expect(() => parseGateJson(nested(33, kind, token))).toThrow(/nested too deeply/);
+        expect(parser).not.toHaveBeenCalled();
+      });
+    }
+  }
+  it.each(["1.7976931348623157e308", "-1e308", "1e-300", "1.25", "0", "-0", '"1e400"',
+    '[0,-0,1.25,1e308,{"value":-1e-300,"text":"-1e400"}]'])("preserves finite values and strings: %s", (text) => {
+    expect(parseGateJson(text)).toEqual(JSON.parse(text));
+  });
+  it.each(['{"__proto__":1e400}', '{"x":"\\ud800","value":-1e400}', '{"a":0,"a":1e400}'])(
+    "checks numbers before the decoded key/string scan: %s", (text) => {
+      expect(() => parseGateJson(text)).toThrow(/non-finite number/);
+    });
+  it("still rejects a duplicate key whose earlier overflow was overwritten by JSON.parse", () => {
+    expect(() => parseGateJson('{"a":1e400,"a":0}')).toThrow(/ambiguous or unsafe JSON/);
+  });
+});
+
 function nested(depth: number, kind: "object" | "array" | "mixed", leaf: string): string {
   let text = leaf;
   for (let index = 0; index < depth; index++) {

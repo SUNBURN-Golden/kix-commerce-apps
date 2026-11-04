@@ -95,7 +95,7 @@ function isCatalogueReceipt(value: unknown): value is {
     value.domain === PINNED_PROTOCOL_DOMAIN &&
     typeof value.operationId === "string" &&
     typeof value.sequence === "number" &&
-    Number.isInteger(value.sequence) &&
+    Number.isSafeInteger(value.sequence) &&
     typeof value.action === "string" &&
     isPinnedAction(value.action) &&
     isRecord(value.result)
