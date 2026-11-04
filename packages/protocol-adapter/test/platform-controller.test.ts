@@ -52,10 +52,11 @@ function spyOn(inner: PlatformJourneyPort, options: { holdReads?: boolean } = {}
       if (!options.holdReads) {
         return inner.read(request);
       }
+      const captured = inner.read(request).then(answer => structuredClone(answer));
       return new Promise<PlatformReadOutcome>((resolve, reject) => {
         reads.push({
           release: () => {
-            inner.read(request).then(resolve, reject);
+            captured.then(resolve, reject);
           },
         });
       });
@@ -731,3 +732,51 @@ async function tupleLiterals() {
   const mod = await import("../src/index.js");
   return mod.DISCOVERY_READ_TUPLE_LITERALS;
 }
+
+// Capture the source response before the write settles; delay only its delivery.
+describe("captured response invalidation barrier", () => {
+  it.each(["confirmed", "rejected"] as const)("keeps pre-settlement reads stale after %s", async result => {
+    for (const duringWrite of [false, true]) for (const empty of [false, true]) {
+      const inner = createStubPlatformJourney();
+      let holdRead = false;
+      let releaseRead!: () => void;
+      let capturedRead!: () => void;
+      const captured = new Promise<void>(resolve => { capturedRead = resolve; });
+      const heldRead = new Promise<void>(resolve => { releaseRead = resolve; });
+      let releaseWrite!: () => void;
+      const heldWrite = new Promise<void>(resolve => { releaseWrite = resolve; });
+      let sent = 0;
+      const port: PlatformJourneyPort = { ...spyOn(inner).port,
+        async read(request) {
+          const answer = structuredClone(await inner.read(request));
+          if (holdRead) { capturedRead(); await heldRead; }
+          if (holdRead && empty && answer.kind === "ready") return { kind: "empty", watermark: answer.snapshot.watermark, generation: 1, snapshotId: 1 };
+          return answer;
+        },
+        async submit(request) {
+          ++sent;
+          await heldWrite;
+          return result === "rejected"
+            ? { kind: "rejected", step: request.step, intentRef: request.intentRef, contextKey: request.contextKey, code: "VERSION_STALE", detail: "source rejected stale evidence" }
+            : inner.submit(request);
+        },
+      };
+      const controller = new PlatformJourneyController(port, { actorRef: "platform-desk" });
+      await controller.refresh();
+      holdRead = true;
+      const writing = duringWrite ? controller.run({ step: "book", listingRef: "lst-0001", intentRef: "write" }) : null;
+      const reading = controller.refresh();
+      await captured;
+      const write = writing ?? controller.run({ step: "book", listingRef: "lst-0001", intentRef: "write" });
+      releaseWrite();
+      expect(await write).toMatchObject({ kind: result === "confirmed" ? "CONFIRMED" : "REJECTED" });
+      releaseRead(); await reading;
+      expect(controller.state()).toMatchObject({ freshness: "STALE", refreshRequired: result === "confirmed" ? "own-write" : "stale-rejection" });
+      expect(await controller.run({ step: "book", listingRef: "lst-0003", intentRef: "next" })).toMatchObject({ kind: "FENCED", fence: { reason: "snapshot-stale" } });
+      expect(sent).toBe(1);
+      holdRead = false; await controller.refresh();
+      expect(controller.state()).toMatchObject({ freshness: "CURRENT", refreshRequired: null });
+      expect(controller.gateFor({ step: "book", listingRef: "lst-0003", intentRef: "next" })).toBeNull();
+    }
+  });
+});

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createMockResaleMarket, resaleMarketPortFor, validMarketRead, validMarketWrite, type ResaleMarketIntent, type ResaleMarketPort, type ResaleMarketDetail } from "../src/resale-market";
+import { MARKET_CLAIMS, createMockResaleMarket, resaleMarketPortFor, validMarketRead, validMarketWrite, type ResaleMarketIntent, type ResaleMarketPort, type ResaleMarketDetail } from "../src/resale-market";
 import { ResaleMarketController } from "../src/resale-market-controller";
 const read = { kind: "detail", productId: "demo-001" } as const;
 const intent = (kind: "bid" | "ask" = "bid"): Extract<ResaleMarketIntent, { kind: "bid" | "ask" }> => ({ kind, productId: "demo-001", variantId: "standard", expectedVersion: 0, mockUnits: "115" });
@@ -65,5 +65,37 @@ describe("resale controller", () => {
     let releaseRead!: () => void; const held = new Promise<void>(r => { releaseRead = r; });
     const d = new ResaleMarketController({ ...p, async read(i) { if (i.kind === "detail" && i.productId === "demo-001") await held; return p.read(i); } });
     const old = d.read(read); await d.read({ kind: "detail", productId: "demo-002" }); releaseRead(); expect(await old).toEqual({ kind: "IGNORED" }); expect(d.detail()?.product.productId).toBe("demo-002");
+  });
+});
+
+
+describe("submitted resale identity", () => {
+  it.each(["confirmed", "rejected", "local", "not-bound", "late"] as const)("retains the original %s request across product navigation", async mode => {
+    const p = mode === "not-bound" ? resaleMarketPortFor("integration-http") : createMockResaleMarket();
+    let release!: () => void; const held = new Promise<void>(resolve => { release = resolve; });
+    const submit = vi.fn(async (i: ResaleMarketIntent) => {
+      if (mode === "rejected") return { kind: "REJECTED", request: i, code: "STALE_VERSION", ...MARKET_CLAIMS } as const;
+      const answer = await p.submit(i); if (mode === "late") await held; return answer;
+    });
+    const c = new ResaleMarketController({ read: p.read, submit }); await c.read(read);
+    const input = { ...intent(), ...(mode === "local" ? { expectedVersion: 99 } : {}) }; const original = structuredClone(input);
+    const writing = c.submit(input); input.variantId = "wide";
+    expect(c.state().outcomeRequest).toEqual(original);
+    expect(Object.isFrozen(c.state().outcomeRequest)).toBe(true);
+    if (mode === "late") {
+      expect(c.state().outcome).toBe("IN_FLIGHT");
+      await c.submit({ ...intent(), productId: "demo-002" });
+      expect(c.state().outcomeRequest).toEqual(original);
+    } else await writing;
+    await c.read({ kind: "detail", productId: "demo-002" });
+    if (mode !== "not-bound") expect(c.detail()?.product.productId).toBe("demo-002");
+    expect(c.state().outcomeRequest).toEqual(original);
+    release(); await writing;
+    if (mode === "late") {
+      expect(c.state()).toMatchObject({ outcome: "UNKNOWN", fenced: true, outcomeRequest: original });
+      await c.submit({ ...intent(), productId: "demo-002" }); expect(submit).toHaveBeenCalledTimes(1);
+    } else {
+      expect(c.state().outcome).toBe(mode === "confirmed" ? "CONFIRMED" : mode === "not-bound" ? "NOT_BOUND" : "REJECTED");
+    }
   });
 });

@@ -109,3 +109,54 @@ describe("refund-return controller", () => {
     expect(controller.state().intents[0]?.code).toBe("UNTRUSTED_RECEIPT");
   });
 });
+
+// Capture the source response before the write settles; delay only its delivery.
+describe("captured response invalidation barrier", () => {
+  it.each(["confirmed", "rejected"] as const)("keeps pre-settlement reads stale after %s", async result => {
+    for (const duringWrite of [false, true]) for (const empty of [false, true]) {
+      const inner = createStubRefundReturn();
+      let holdRead = false;
+      let releaseRead!: () => void;
+      let capturedRead!: () => void;
+      const captured = new Promise<void>(resolve => { capturedRead = resolve; });
+      const heldRead = new Promise<void>(resolve => { releaseRead = resolve; });
+      let releaseWrite!: () => void;
+      const heldWrite = new Promise<void>(resolve => { releaseWrite = resolve; });
+      let sent = 0;
+      const port: RefundReturnPort = { ...inner,
+        markReturnRequired: orderRef => inner.markReturnRequired(orderRef),
+        deliverHeld: () => inner.deliverHeld(),
+        deliverLate: () => inner.deliverLate(),
+        async read(request) {
+          const answer = structuredClone(await inner.read(request));
+          if (holdRead) { capturedRead(); await heldRead; }
+          if (holdRead && empty && answer.kind === "ready") return { kind: "empty", watermark: answer.snapshot.watermark, generation: 1, snapshotId: 1 };
+          return answer;
+        },
+        async submit(request) {
+          ++sent;
+          await heldWrite;
+          return result === "rejected"
+            ? { kind: "rejected", step: request.step, intentRef: request.intentRef, contextKey: request.contextKey, code: "VERSION_STALE", detail: "source rejected stale evidence" }
+            : inner.submit(request);
+        },
+      };
+      const controller = new RefundReturnController(port, { actorRef: REFUND_RETURN_DESK_ACTOR, orderRef: ORDER });
+      await controller.refresh();
+      holdRead = true;
+      const writing = duringWrite ? controller.run({ step: "adjust", intentRef: "write" }) : null;
+      const reading = controller.refresh();
+      await captured;
+      const write = writing ?? controller.run({ step: "adjust", intentRef: "write" });
+      releaseWrite();
+      expect(await write).toMatchObject({ kind: result === "confirmed" ? "CONFIRMED" : "REJECTED" });
+      releaseRead(); await reading;
+      expect(controller.state()).toMatchObject({ freshness: "STALE", refreshRequired: result === "confirmed" ? "own-write" : "stale-rejection" });
+      expect(await controller.run({ step: "refund", intentRef: "next" })).toMatchObject({ kind: "FENCED", fence: { reason: "snapshot-stale" } });
+      expect(sent).toBe(1);
+      holdRead = false; await controller.refresh();
+      expect(controller.state()).toMatchObject({ freshness: "CURRENT", refreshRequired: null });
+      expect(controller.gateFor({ step: "refund", intentRef: "next" })).toBeNull();
+    }
+  });
+});

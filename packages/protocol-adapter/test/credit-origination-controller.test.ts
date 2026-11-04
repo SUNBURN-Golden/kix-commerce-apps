@@ -43,10 +43,11 @@ function spyOn(inner: StubCreditOrigination, options: { holdReads?: boolean; hol
       if (!options.holdReads) {
         return inner.read(request);
       }
+      const captured = inner.read(request).then(answer => structuredClone(answer));
       return new Promise<OriginationReadOutcome>((resolve, reject) => {
         heldReads.push({
           release: () => {
-            inner.read(request).then(resolve, reject);
+            captured.then(resolve, reject);
           },
         });
       });
@@ -428,5 +429,56 @@ describe("origination controller requests", () => {
     expect(await scripted.submit("1000")).toMatchObject({ kind: "REJECTED", record: { phase: "tuple-changed" } });
     expect(scripted.state().behind).toBe(false);
     expect(scripted.state().fence).toBeNull();
+  });
+});
+
+describe("captured response invalidation barrier", () => {
+  it.each(["applied", "rejected", "unknown", "refused"] as const)("keeps captured ready/empty reads stale after %s", async result => {
+    for (const duringWrite of [false, true]) for (const empty of [false, true]) {
+      const inner = createStubCreditOrigination();
+      let hold = false; let release!: () => void; let capturedRead!: () => void;
+      const held = new Promise<void>(resolve => { release = resolve; });
+      const captured = new Promise<void>(resolve => { capturedRead = resolve; });
+      let releaseAct!: () => void;
+      const heldAct = new Promise<void>(resolve => { releaseAct = resolve; });
+      let sent = 0;
+      const port: OriginationPort = { ...spyOn(inner).port,
+        async read(request) {
+          const answer = structuredClone(await inner.read(request));
+          if (hold) {
+            capturedRead(); await held;
+            if (empty && answer.kind === "ready") return { kind: "empty", scope: request.scope, snapshotId: 1, watermark: answer.snapshot.watermark };
+          }
+          return answer;
+        },
+        async act(request) {
+          ++sent; await heldAct;
+          if (result === "applied" || sent > 1) return inner.act(request);
+          if (result === "unknown") return { kind: "unknown", message: "lost" };
+          if (result === "refused") return { kind: "refused", code: "CLAIM", field: "nonClaims", ref: null, detail: "untrusted claim" };
+          return { kind: "rejected", code: "STALE_POLICY", detail: "source rejected stale evidence" };
+        },
+      };
+      const controller = new CreditOriginationController(port);
+      await controller.read();
+      const writing = duringWrite ? controller.submit("100") : null;
+      hold = true; const reading = controller.read(); await captured;
+      const write = writing ?? controller.submit("100");
+      releaseAct(); expect(await write).toMatchObject({ kind: result === "applied" ? "APPLIED" : result === "rejected" ? "REJECTED" : "UNKNOWN" });
+      release(); await reading;
+      expect(controller.state()).toMatchObject({ behind: true, freshness: "STALE", readState: empty ? "empty" : "ready" });
+      await controller.submit("101"); expect(sent).toBe(1);
+      if (result === "applied") { inner.synthetic("advance-review"); inner.synthetic("advance-review"); }
+      hold = false; await controller.read();
+      expect(controller.state()).toMatchObject({ behind: false, freshness: "CURRENT" });
+      if (result === "unknown" || result === "refused") {
+        expect(await controller.requestReReview()).toMatchObject({ kind: "FENCED" });
+        expect(sent).toBe(1);
+      } else {
+        const eligible = result === "applied" ? controller.acceptCommitment() : controller.submit("101");
+        expect(await eligible).toMatchObject({ kind: "APPLIED" });
+        expect(sent).toBe(2);
+      }
+    }
   });
 });

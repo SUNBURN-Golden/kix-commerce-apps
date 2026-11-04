@@ -51,12 +51,18 @@ export function ProductPanels({ detail: d, market }: { detail: MarketDetail; mar
   const resultRef = useRef<HTMLDivElement>(null);
   const [refused, setRefused] = useState(false);
   const [announceSnapshots, setAnnounceSnapshots] = useState(true);
+  const request = market.state.outcomeRequest;
+  const matchesOutcome = request?.productId === d.product.productId && request.variantId === variant && request.kind === kind;
+  const rejectionLatched = refused && matchesOutcome;
+  const outcome = market.state.fenced ? "UNKNOWN" : matchesOutcome ? market.state.outcome : null;
+  const seenResult = useRef<object | null>(null);
   useEffect(() => {
-    if (market.state.outcome && market.state.outcome !== "IN_FLIGHT") {
+    if (matchesOutcome && request && outcome && outcome !== "IN_FLIGHT" && seenResult.current !== request) {
+      seenResult.current = request;
       resultRef.current?.focus();
-      if (market.state.outcome === "REJECTED") setRefused(true);
+      if (outcome === "REJECTED") setRefused(true);
     }
-  }, [market.state.outcome]);
+  }, [matchesOutcome, request, outcome]);
   const reviewHeading = useRef<HTMLHeadingElement>(null);
   const quote = d.quotes.find(q => q.variantId === variant && q.side === (kind === "instant-buy" ? "ask" : "bid"));
   const instant = kind === "instant-buy" || kind === "instant-sell";
@@ -94,9 +100,9 @@ export function ProductPanels({ detail: d, market }: { detail: MarketDetail; mar
         <label htmlFor="market-action">{t("market.action")}</label><select id="market-action" value={kind} onChange={e => { setKind(e.target.value as typeof kind); setRefused(false); }}>{(["instant-buy","instant-sell","bid","ask"] as const).map(k => <option key={k} value={k}>{t(`market.${k}`)}</option>)}</select>
         {!instant ? <label htmlFor="market-units">{t("market.units")}<input id="market-units" inputMode="numeric" value={units} maxLength={15} onChange={e => { setUnits(e.target.value); setRefused(false); }} /></label> : null}
         {unavailable ? <p id="market-unavailable">{t("market.unavailable")}</p> : null}
-        <ConnectivityWriteButton type="submit" disabled={blocked || unavailable || refused} aria-describedby={unavailable ? "market-unavailable" : market.state.freshness !== "CURRENT" && !market.state.fenced ? "market-stale" : blocked || refused ? "market-outcome" : undefined}>{t("market.review")}</ConnectivityWriteButton>
+        <ConnectivityWriteButton type="submit" disabled={blocked || unavailable || rejectionLatched} aria-describedby={unavailable ? "market-unavailable" : market.state.freshness !== "CURRENT" && !market.state.fenced ? "market-stale" : blocked || rejectionLatched ? "market-outcome" : undefined}>{t("market.review")}</ConnectivityWriteButton>
       </ValidatedForm>}
-      <div id="market-outcome" ref={resultRef} tabIndex={-1} role="status" aria-busy={market.state.outcome === "IN_FLIGHT"} aria-atomic="true" data-market-outcome={market.state.outcome ?? ""}>{market.state.outcome ? <><p>{t(`market.result.${market.state.outcome}`)}</p><MarketNotice /><p><SafeText value={market.state.code} /></p></> : null}</div>
+      <div id="market-outcome" ref={resultRef} tabIndex={-1} role="status" aria-busy={market.state.outcome === "IN_FLIGHT"} aria-atomic="true" data-market-outcome={outcome ?? ""}>{outcome ? <><p>{t(`market.result.${outcome}`)}</p><MarketNotice /><p><SafeText value={market.state.code} /></p></> : null}</div>
       {market.state.freshness !== "CURRENT" && !market.state.fenced ? <p id="market-stale">{t("market.stale")}</p> : null}
       {market.state.fenced ? <AsyncState label={t("market.title")} announcement="parent" kind="unknown" /> : null}
       <button type="button" disabled={market.state.outcome === "IN_FLIGHT"} onClick={() => { setReview(null); setAnnounceSnapshots(true); void market.controller.read({ kind: "detail", productId: d.product.productId }); }}>{t("market.read")}</button>
