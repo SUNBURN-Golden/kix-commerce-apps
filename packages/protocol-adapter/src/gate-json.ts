@@ -94,12 +94,17 @@ function preflightDepth(text: string): void {
   }
 }
 
-/** Standard JSON syntax, with no ambiguous keys or lone Unicode surrogates.
+/** Standard JSON syntax, with finite numbers, no ambiguous keys or lone Unicode surrogates.
  * JSON.parse creates own data properties; remote objects are never merged.
  */
 export function parseGateJson(text: string): unknown {
   preflightDepth(text);
-  const parsed: unknown = JSON.parse(text);
+  const parsed: unknown = JSON.parse(text, (_key, value: unknown) => {
+    if (typeof value === "number" && !Number.isFinite(value)) {
+      throw new ProtocolError("Integration gate returned a non-finite number.", "GATE_STATUS");
+    }
+    return value;
+  });
   // Syntax is already checked. Numbers, literals and commas need no preflight;
   // a string followed by a colon is an object key. Keep escapes intact.
   const tokens = text.match(/"(?:[^"\\]|\\.)*"|[{}[\]:]/g) ?? [];
