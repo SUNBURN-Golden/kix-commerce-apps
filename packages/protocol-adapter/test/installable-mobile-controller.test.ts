@@ -398,3 +398,72 @@ describe("mobile shell controller boundaries", () => {
     expect(controller.state().counters.droppedReads).toBe(1);
   });
 });
+
+// Capture the source response before the write settles; delay only its delivery.
+describe("captured response invalidation barrier", () => {
+  it.each(["confirmed", "rejected"] as const)("keeps pre-settlement reads stale after %s", async result => {
+    for (const duringWrite of [false, true]) for (const empty of [false, true]) {
+      const inner = createStubMobileShell();
+      let holdRead = false;
+      let releaseRead!: () => void;
+      let capturedRead!: () => void;
+      const captured = new Promise<void>(resolve => { capturedRead = resolve; });
+      const heldRead = new Promise<void>(resolve => { releaseRead = resolve; });
+      let releaseWrite!: () => void;
+      const heldWrite = new Promise<void>(resolve => { releaseWrite = resolve; });
+      let sent = 0;
+      const port: MobileShellPort = { ...portWithRead(inner, request => inner.read(request)),
+        async read(request) {
+          const answer = structuredClone(await inner.read(request));
+          if (holdRead) { capturedRead(); await heldRead; }
+          if (holdRead && empty && answer.kind === "ready") return { kind: "empty", watermark: answer.snapshot.watermark, generation: 1, snapshotId: 1 };
+          return answer;
+        },
+        async submit(request) {
+          ++sent;
+          await heldWrite;
+          return result === "rejected"
+            ? { kind: "rejected", step: request.step, intentRef: request.intentRef, contextKey: request.contextKey, code: "VERSION_STALE", detail: "source rejected stale evidence" }
+            : inner.submit(request);
+        },
+      };
+      const controller = new MobileShellController(port, { actorRef: MOBILE_DESK_ACTOR });
+      await controller.refresh();
+      holdRead = true;
+      const writing = duringWrite ? controller.run({ step: "confirm", orderRef: "ord-0001", intentRef: "write" }) : null;
+      const reading = controller.refresh();
+      await captured;
+      const write = writing ?? controller.run({ step: "confirm", orderRef: "ord-0001", intentRef: "write" });
+      releaseWrite();
+      expect(await write).toMatchObject({ kind: result === "confirmed" ? "CONFIRMED" : "REJECTED" });
+      releaseRead(); await reading;
+      expect(controller.state()).toMatchObject({ freshness: "STALE", refreshRequired: result === "confirmed" ? "own-write" : "stale-rejection" });
+      expect(await controller.run({ step: "confirm", orderRef: "ord-0002", intentRef: "next" })).toMatchObject({ kind: "FENCED", fence: { reason: "snapshot-stale" } });
+      expect(sent).toBe(1);
+      holdRead = false; await controller.refresh();
+      expect(controller.state()).toMatchObject({ freshness: "CURRENT", refreshRequired: null });
+      expect(controller.gateFor({ step: "confirm", orderRef: "ord-0002", intentRef: "next" })).toBeNull();
+    }
+  });
+});
+
+
+describe("resume invalidation ordering", () => {
+  it.each([false, true])("advances an already-set resume barrier (empty: %s)", async empty => {
+    const inner = createStubMobileShell(); let hold = false; let release!: () => void; let capturedRead!: () => void;
+    const held = new Promise<void>(resolve => { release = resolve; });
+    const captured = new Promise<void>(resolve => { capturedRead = resolve; });
+    const port = portWithRead(inner, async request => {
+      const answer = structuredClone(await inner.read(request));
+      if (hold) { capturedRead(); await held; if (empty && answer.kind === "ready") return { kind: "empty", watermark: answer.snapshot.watermark, generation: 1, snapshotId: 1 }; }
+      return answer;
+    });
+    const c = new MobileShellController(port, { actorRef: MOBILE_DESK_ACTOR });
+    await c.refresh(); c.resume(); hold = true; const reading = c.refresh(); await captured;
+    c.resume(); release(); await reading;
+    expect(c.state()).toMatchObject({ refreshRequired: "resumed", freshness: "STALE" });
+    expect(await c.run({ step: "confirm", intentRef: "blocked", orderRef: "ord-0001" })).toMatchObject({ kind: "FENCED" });
+    expect(inner.effects().submits).toBe(0);
+    hold = false; await c.refresh(); expect(c.state().refreshRequired).toBeNull();
+  });
+});

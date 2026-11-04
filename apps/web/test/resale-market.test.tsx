@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
-import { createMockResaleMarket, resaleMarketPortFor } from "../../../packages/protocol-adapter/src/resale-market";
+import { MARKET_CLAIMS, createMockResaleMarket, resaleMarketPortFor } from "../../../packages/protocol-adapter/src/resale-market";
 import { ResaleMarketController } from "../../../packages/protocol-adapter/src/resale-market-controller";
 import { PriceChart, ProductPanels } from "../src/pages/ResaleMarketPanels";
 import { LocaleContext, stateFor } from "../src/i18n/locale-context";
@@ -125,4 +125,75 @@ describe("route departure before lazy cleanup", () => {
     release(); await pending; expect(c.state().outcome).toBe("UNKNOWN"); off();
     const unchanged = c.state(); observeNavigation("/resale/market"); observeNavigation("/elsewhere"); expect(c.state()).toBe(unchanged);
   });
+});
+
+
+describe("product-attributed resale outcomes", () => {
+  it.each(["confirmed", "rejected", "unknown"] as const)("isolates %s from another product while retaining the global fence", async result => {
+    const p = createMockResaleMarket();
+    const submit = vi.fn(async (i: Parameters<typeof p.submit>[0]) => {
+      if (result === "unknown") throw new Error("lost");
+      if (result === "rejected") return { kind: "REJECTED", request: i, code: "STALE_VERSION", ...MARKET_CLAIMS } as const;
+      return p.submit(i);
+    });
+    const c = new ResaleMarketController({ read: p.read, submit }); await c.read(read);
+    function Live() { useSyncExternalStore(c.subscribe, c.state, c.state); return c.detail() ? panels(c) : null; }
+    const { container, unmount } = await renderDom(<Live />);
+    await click(button(container, "Review simulation")); await click(button(container, "Record simulation once"));
+    expect(container.querySelector("#market-outcome")?.getAttribute("data-market-outcome")).toBe(result.toUpperCase());
+    if (result === "rejected") expect(button(container, "Review simulation").disabled).toBe(true);
+    await act(async () => { await c.read({ kind: "detail", productId: "demo-002" }); });
+    const outcome = container.querySelector("#market-outcome")!;
+    expect(outcome.getAttribute("data-market-outcome")).toBe(result === "unknown" ? "UNKNOWN" : "");
+    expect(outcome.textContent).not.toMatch(/\bCONFIRMED\b/); expect(outcome.textContent).not.toMatch(/\bREJECTED\b/);
+    expect(button(container, "Review simulation").disabled).toBe(result === "unknown");
+    if (result === "unknown") {
+      expect(container.querySelector('[data-async-state="unknown"]')).not.toBeNull();
+      await c.submit({ kind: "bid", productId: "demo-002", variantId: "standard", expectedVersion: 0, mockUnits: "115" });
+      expect(submit).toHaveBeenCalledTimes(1);
+    }
+    await unmount();
+  });
+  it("scopes variant/action rendering and focuses each new same-kind terminal result once", async () => {
+    const c = new ResaleMarketController(createMockResaleMarket()); await c.read(read);
+    function Live() { useSyncExternalStore(c.subscribe, c.state, c.state); return c.detail() ? panels(c) : null; }
+    const { container, unmount } = await renderDom(<Live />);
+    await change(element(container, "#market-action"), "bid");
+    for (let i = 0; i < 2; i++) {
+      await click(button(container, "Review simulation")); await click(button(container, "Record simulation once"));
+      expect(document.activeElement).toBe(container.querySelector("#market-outcome"));
+      expect(container.querySelector("#market-outcome")?.textContent).toContain("CONFIRMED");
+    }
+    element<HTMLElement>(container, "#market-variant").focus();
+    await change(element(container, "#market-variant"), "wide");
+    expect(container.querySelector("#market-outcome")?.textContent).toBe("");
+    await change(element(container, "#market-variant"), "standard");
+    await change(element(container, "#market-action"), "ask");
+    expect(container.querySelector("#market-outcome")?.textContent).toBe("");
+    expect(document.activeElement).not.toBe(container.querySelector("#market-outcome"));
+    await unmount();
+  });
+  it("focuses and latches a new rejection even when the submitted fields are identical", async () => {
+    const p = createMockResaleMarket();
+    const submit = vi.fn(async (i: Parameters<typeof p.submit>[0]) => ({ ...MARKET_CLAIMS, kind: "REJECTED", request: i, code: "STALE_VERSION" } as const));
+    const c = new ResaleMarketController({ read: p.read, submit }); await c.read(read);
+    function Live() { useSyncExternalStore(c.subscribe, c.state, c.state); return panels(c); }
+    const { container, unmount } = await renderDom(<Live />);
+    await change(element(container, "#market-action"), "bid");
+    let previous = c.state().outcomeRequest;
+    for (let index = 0; index < 2; index++) {
+      await click(button(container, "Review simulation")); await click(button(container, "Record simulation once"));
+      expect(c.state().outcomeRequest).not.toBe(previous); previous = c.state().outcomeRequest;
+      expect(document.activeElement).toBe(container.querySelector("#market-outcome"));
+      expect(button(container, "Review simulation").disabled).toBe(true);
+      element<HTMLElement>(container, "#market-units").focus();
+      await change(element(container, "#market-units"), "116");
+      await change(element(container, "#market-units"), "115");
+      expect(button(container, "Review simulation").disabled).toBe(false);
+    }
+    expect(submit).toHaveBeenCalledTimes(2);
+    expect(submit.mock.calls[0]).toEqual(submit.mock.calls[1]);
+    await unmount();
+  });
+
 });

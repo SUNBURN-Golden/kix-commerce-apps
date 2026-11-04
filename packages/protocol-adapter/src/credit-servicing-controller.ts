@@ -172,6 +172,7 @@ export class CreditServicingController {
   private readCode: string | null = null;
   private readDetail: string | null = null;
   private floor: string | null = null;
+  private behindAfterSeq = 0;
   private readSeq = 0;
   private appliedReadSeq = 0;
   private actSeq = 0;
@@ -204,6 +205,11 @@ export class CreditServicingController {
     };
   }
 
+  private markBehind(): void {
+    this.behind = true;
+    this.behindAfterSeq = this.readSeq;
+  }
+
   private notify(): void {
     for (const listener of [...this.listeners]) {
       listener();
@@ -213,7 +219,7 @@ export class CreditServicingController {
   state(): ServicingControllerState {
     let freshness: ServicingFreshness = "UNAVAILABLE";
     if (this.readState === "ready" || this.readState === "empty") {
-      freshness = "CURRENT";
+      freshness = this.behind ? "STALE" : "CURRENT";
     } else if (this.readState === "stale") {
       freshness = "STALE";
     }
@@ -321,12 +327,12 @@ export class CreditServicingController {
       return { kind: "DROPPED", cause: "older-read" };
     }
     this.appliedReadSeq = seq;
-    this.apply(outcome);
+    this.apply(outcome, seq);
     this.notify();
     return { kind: "APPLIED", readState: this.readState };
   }
 
-  private apply(outcome: ServicingReadOutcome): void {
+  private apply(outcome: ServicingReadOutcome, seq: number): void {
     this.readCode = null;
     this.readDetail = null;
     if (outcome.kind === "ready") {
@@ -334,7 +340,7 @@ export class CreditServicingController {
       this.assessment = assessServicingSnapshot(outcome.snapshot);
       this.readState = "ready";
       this.floor = outcome.snapshot.watermark;
-      this.behind = false;
+      if (seq > this.behindAfterSeq) this.behind = false;
       return;
     }
     // Anything but a ready read leaves no row on screen.
@@ -479,9 +485,9 @@ export class CreditServicingController {
     if (record.phase === "unknown" || record.phase === "refused") {
       // The request may have applied. Nothing is sent again, and a read does not lift this.
       this.fence = { reason: "unknown-outcome", seq, action: kind };
-      this.behind = true;
+      this.markBehind();
     } else if (record.phase === "applied" || record.phase === "rejected") {
-      this.behind = true;
+      this.markBehind();
     }
     this.notify();
     if (record.phase === "applied") {

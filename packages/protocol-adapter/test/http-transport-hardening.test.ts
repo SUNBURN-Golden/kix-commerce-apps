@@ -377,3 +377,35 @@ describe("direct HTTP envelope ownership", () => {
     expect(calls).toBe(0);
   });
 });
+
+
+describe("literal-false production and truth declarations", () => {
+  const keys = ["production", "productionEndpoint", "productionReadiness", "productionConformance", "protocolTruth", "liveMoney", "publicHost", "x-kix-production-endpoint", "x-kix-production-conformance", "x-kix-protocol-truth"];
+  it.each(keys)("rejects every malformed %s declaration before rejection classification", async key => {
+    for (const value of [true, "true", "false", 0, 1, null, {}, []]) {
+      for (const nested of [false, true]) {
+        for (const status of [200, 400, 422]) {
+          const declaration = nested ? { nested: [{ deeper: { [key]: value } }] } : { [key]: value };
+          const body = status === 200 ? { ...localCallReceipt("op-close", "close_sales", { salesStatus: "CLOSED" }), ...declaration } : { rejected: true, error: "INVALID", ...declaration };
+          const seen: RequestInit[] = [];
+          const adapter = new HttpProtocolAdapter("http://127.0.0.1:8765", async (_url, init) => {
+            seen.push(init ?? {});
+            return new Response(JSON.stringify(body), { status, headers: echoIntegrationGateHeaders(init) });
+          });
+          const error: unknown = await adapter.invokeLocalCall(CLOSE_SALES).catch((failure: unknown) => failure);
+          expect(error).toBeInstanceOf(ProtocolError);
+          expect(error).not.toBeInstanceOf(GateRejectedError);
+          const headers = new Headers(seen[0]?.headers);
+          expect(headers.get("x-request-id")).toBeTruthy(); expect(headers.get("x-correlation-id")).toBeTruthy();
+          expect(error).toMatchObject({ code: "PRODUCTION_ENDPOINT", requestId: headers.get("x-request-id"), correlationId: headers.get("x-correlation-id") });
+          expect(seen).toHaveLength(1);
+        }
+      }
+    }
+  });
+  it("allows omitted and literal false declarations at every depth", () => {
+    const declarations = Object.fromEntries(keys.map(key => [key, false]));
+    expect(() => enforceRemotePayloadGuards({})).not.toThrow();
+    expect(() => enforceRemotePayloadGuards({ ...declarations, nested: [declarations, { deeper: declarations }] })).not.toThrow();
+  });
+});

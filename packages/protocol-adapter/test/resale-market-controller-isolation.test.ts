@@ -95,7 +95,8 @@ describe("resale controller evidence ownership", () => {
     const input = bid(); const expected = structuredClone(input); const pending = c.submit(input);
     Object.assign(input, { variantId: "wide", mockUnits: "999", expectedVersion: 100 });
     detailOf(response).version = 100; detailOf(response).quotes[0]!.mockUnits = "999";
-    attack(c.state());
+    attack(c.state()); attack(c.state().outcomeRequest);
+    expect(c.state().outcomeRequest).toEqual(expected);
     expect(submit).toHaveBeenCalledExactlyOnceWith(expected);
     attack(submit.mock.calls[0]![0]);
     held.resolve(await p.submit(forged ? { ...input, expectedVersion: 0 } : expected));

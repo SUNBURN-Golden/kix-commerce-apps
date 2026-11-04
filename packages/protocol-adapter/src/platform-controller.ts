@@ -176,6 +176,8 @@ export class PlatformJourneyController {
   private readDetail: string | null = null;
   private refreshRequired: PlatformRefreshCause | null = null;
   private floor: string | null = null;
+  // Reads begun at or before the latest invalidation cannot restore currentness.
+  private behindAfterSeq = 0;
   private readSeq = 0;
   private appliedReadSeq = 0;
   private intentSeq = 0;
@@ -199,6 +201,15 @@ export class PlatformJourneyController {
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  private markBehind(cause: PlatformRefreshCause): void {
+    this.refreshRequired = this.refreshRequired ?? cause;
+    this.behindAfterSeq = this.readSeq;
+  }
+
+  private clearBehind(seq: number): void {
+    if (seq > this.behindAfterSeq) this.refreshRequired = null;
   }
 
   private notify(): void {
@@ -252,6 +263,7 @@ export class PlatformJourneyController {
     this.readState = "none";
     this.readDetail = null;
     this.refreshRequired = "context-switch";
+    this.behindAfterSeq = this.readSeq;
     this.notify();
     return { ...this.context };
   }
@@ -283,14 +295,14 @@ export class PlatformJourneyController {
         this.snapshot = outcome.snapshot;
         this.readState = "ready";
         this.readDetail = null;
-        this.refreshRequired = null;
+        this.clearBehind(seq);
         this.floor = outcome.snapshot.watermark;
         break;
       case "empty":
         this.snapshot = null;
         this.readState = "empty";
         this.readDetail = null;
-        this.refreshRequired = null;
+        this.clearBehind(seq);
         break;
       case "stale":
         this.snapshot = null;
@@ -531,7 +543,7 @@ export class PlatformJourneyController {
       case "confirmed":
         intent.outcome = "CONFIRMED";
         intent.refs = { ...outcome.refs };
-        this.refreshRequired = this.refreshRequired ?? "own-write";
+        this.markBehind("own-write");
         this.notify();
         return { kind: "CONFIRMED", intent: copyIntent(intent) };
       case "rejected":
@@ -539,7 +551,7 @@ export class PlatformJourneyController {
         intent.code = outcome.code;
         intent.message = outcome.detail;
         if (PLATFORM_STALE_CLASS_CODES.includes(outcome.code)) {
-          this.refreshRequired = this.refreshRequired ?? "stale-rejection";
+          this.markBehind("stale-rejection");
         }
         this.notify();
         return { kind: "REJECTED", intent: copyIntent(intent) };
