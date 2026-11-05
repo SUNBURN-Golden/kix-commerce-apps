@@ -248,6 +248,7 @@ export const MATRIX: readonly MatrixCell[] = [
 export const SHARED_CHECKS = [
   "diagnostics.copy-keyboard", "diagnostics.no-network",
   "back-forward.read-state",
+  "mobile.lifecycle.simulated.en", "mobile.lifecycle.simulated.ko", "mobile.lifecycle.simulated.UNKNOWN",
   "connectivity.all-screens", "connectivity.no-service-worker", "connectivity.form-and-refresh", "connectivity.no-replay",
   "harness.server",
   "harness.paths",

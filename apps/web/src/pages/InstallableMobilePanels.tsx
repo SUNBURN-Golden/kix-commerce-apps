@@ -219,6 +219,11 @@ export function MobileStatus({ model }: { model: MobileModel }) {
         {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
       </p>
       <p className="muted" aria-live="off">{deskText(t, model.freshnessWord)}</p>
+      {model.lifecycleLine ? (
+        <p className="muted" aria-live="off" data-lifecycle-fence="true">
+          {deskText(t, model.lifecycleLine)}
+        </p>
+      ) : null}
       {model.cachedWord ? (
         <p className="muted" aria-live="off" data-cached="true">
           {deskText(t, model.cachedWord)}
