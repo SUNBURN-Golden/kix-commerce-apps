@@ -24,7 +24,8 @@ describe("synthetic resale market", () => {
   });
   it("rejects wrong product, variant, quote side and noncanonical digits", async () => {
     const p = createMockResaleMarket();
-    for (const [i,code] of [[{ ...intent(), productId: "missing" }, "PRODUCT_MISSING"], [{ ...intent(), variantId: "other" }, "VARIANT_MISSING"], [{ ...intent(), mockUnits: "01" }, "INVALID_INPUT"], [{ kind: "instant-buy", productId: "demo-001", variantId: "standard", expectedVersion: 0, quoteId: "demo-001-standard-bid" }, "QUOTE_MISMATCH"]] as const) expect(await p.submit(i)).toMatchObject({ kind: "REJECTED", code });
+    await expect(p.submit({ ...intent(), mockUnits: "01" })).rejects.toThrow("INVALID_INPUT");
+    for (const [i,code] of [[{ ...intent(), productId: "missing" }, "PRODUCT_MISSING"], [{ ...intent(), variantId: "other" }, "VARIANT_MISSING"], [{ kind: "instant-buy", productId: "demo-001", variantId: "standard", expectedVersion: 0, quoteId: "demo-001-standard-bid" }, "QUOTE_MISMATCH"]] as const) expect(await p.submit(i)).toMatchObject({ kind: "REJECTED", code });
   });
   it("keeps HTTP read and write NOT_BOUND without a fallback", async () => { const p = resaleMarketPortFor("integration-http"); expect((await p.read(read)).kind).toBe("NOT_BOUND"); expect((await p.submit(intent())).kind).toBe("NOT_BOUND"); });
   it("refuses mismatched identity, wrong amount, extra claims and missing flags", async () => {
