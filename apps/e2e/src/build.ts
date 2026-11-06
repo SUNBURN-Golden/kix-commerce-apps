@@ -66,6 +66,7 @@ async function buildApp(withFaults: boolean, gallery = false): Promise<BuiltApp>
               { find: /^(?:(\.\.?\/)+marketing\/session|\.\/session)$/, replacement: path.resolve(here, "../shell-fixtures/marketing-session.ts") },
               { find: /^(\.\.?\/)+gift-source$/, replacement: path.resolve(here, "../shell-fixtures/ime-sources.ts") },
               { find: /^(\.\.?\/)+organizer-source$/, replacement: path.resolve(here, "../shell-fixtures/ime-sources.ts") },
+              { find: /^\.\/pages\/Notifications$/, replacement: path.resolve(here, "../shell-fixtures/notifications-fault.tsx") },
               { find: /^\.\/pages\/Receipts$/, replacement: path.resolve(here, "../shell-fixtures/receipts-fault.ts") },
               { find: /^(\.\.?\/)+protocol$/, replacement: path.resolve(here, "../shell-fixtures/protocol-fault.ts") },
             ],
