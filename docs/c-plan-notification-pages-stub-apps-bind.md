@@ -60,12 +60,17 @@ Verification uses Node 22.23.4 (installed under `/tmp/kix-notify-node22`, outsid
 | `npm run test:budget` | PASS: 3 files, 9 tests; loopback-only browser budget checks. |
 | `KIX_VISUAL_UPDATE=1 npm run test:visual` | PASS: 3 files, 123 tests; 108 matrix shots recorded/compared. Reviewed the four affected notification/permission images. |
 | `npm run test:visual` (without update mode, after review) | PASS: 3 files, 123 tests; every matrix shot matches within the unchanged tolerance. |
+| `npm run test:e2e` | PASS: 49 files, 219 tests; ledger non-loopback/non-GET/application calls all 0. |
+| `npm run test:a11y` | PASS: 22 files, 396 tests, including all 89 keyboard SUCCESS/REJECT/UNKNOWN cells and the new notification pager suite. |
+| `npm run test:budget` | PASS: 3 files, 9 tests. Local regression observations only, not product SLOs. |
+| `KIX_VISUAL_UPDATE=1 npm run test:visual` | PASS: 123 tests; only the four affected PNGs and manifest differ from HEAD; visually reviewed. |
+| `KIX_VISUAL_UPDATE=0 npm run test:visual` | PASS: 123 tests and all 108 shots MATCH on profile linux-d29b2e9b. |
 | `git diff --check` | PASS. |
 | `git diff --exit-code HEAD -- packages .aiops docs/aiops .github apps/web/bundle-budget.json package.json package-lock.json` | PASS: prohibited/locked paths and dependency files unchanged. |
 
-The first full stub run correctly failed the unchanged 785,000-byte cold-entry assertion at 786,126 bytes; the 790,000-byte budget-file check alone was insufficient. An isolated archive of unchanged HEAD `a12df77dba5d5690f922476868eb6e7fccd755fe` measured 784,915 total gzip bytes. Notification-only prose changes and catalogue placement experiments did not free enough space; the placement experiments were discarded. Final copy keeps matching notification/tenant-permission guard explanations concise together, preserving grants versus assignments, inquiry versus export, maker/checker, UNKNOWN and stale semantics. This uses the recorded concise-copy/shared-template ruling; no limit or check was relaxed. After the announcement/selection fixes and final copy, initial JS is 160,183 bytes and total JS/CSS gzip is 785,000 bytes, at the unchanged cold-entry ceiling.
+The first full stub run correctly failed the unchanged 785,000-byte cold-entry assertion at 786,126 bytes; the 790,000-byte budget-file check alone was insufficient. An isolated archive of unchanged HEAD `a12df77dba5d5690f922476868eb6e7fccd755fe` measured 784,915 total gzip bytes. Notification-only prose changes and catalogue placement experiments did not free enough space; the placement experiments were discarded. Final copy keeps matching notification/tenant-permission guard explanations concise together, preserving grants versus assignments, inquiry versus export, maker/checker, UNKNOWN and stale semantics. This uses the c-i18n-coverage-completion-stub bundle-budget & copy scope ruling (2026-10-23 KST, KIX Commerce under the 2026-10-15 standing delegation); no limit or check was relaxed. After the announcement/selection fixes and final copy, initial JS is 160,183 bytes and total JS/CSS gzip is 785,000 bytes, at the unchanged cold-entry ceiling.
 
-Early narrow runs exposed invalid test fixture references, a test harness that unmounted its router on rerender, one unchanged merchant test timeout during competing builds, a duplicated catalogue label and an existing workspace-copy assertion. The fixture/harness were corrected, the shared label and asserted workspace wording retained, and the seven-file final narrow run passed 189 tests. No existing test assertion was removed or weakened. Full-suite copy assertions additionally required retaining “never guessed,” “destination, not a send,” and “moved a generation”; their wording was restored without weakening tests. An initial browser-only file run also failed the harness's expected full-matrix teardown. The first complete browser journey run passed the notification cases but had three unrelated timeout failures (assistant UNKNOWN, qualification REJECT, Korean resale-market history); the later complete run passed all 219 tests as recorded above.
+Early narrow runs exposed invalid test fixture references, a test harness that unmounted its router on rerender, one unchanged merchant test timeout during competing builds, a duplicated catalogue label and an existing workspace-copy assertion. The fixture/harness were corrected, the shared label and asserted workspace wording retained, and the eight-file final narrow run passed 194 tests. No existing test assertion was removed or weakened. Full-suite copy assertions additionally required retaining “never guessed,” “destination, not a send,” and “moved a generation”; their wording was restored without weakening tests. An initial browser-only file run also failed the harness's expected full-matrix teardown. The first complete browser journey run passed the notification cases but had three unrelated timeout failures (assistant UNKNOWN, qualification REJECT, Korean resale-market history); the later complete run passed all 219 tests as recorded above.
 
 Continuation verification repeated `npm ci`, the seven-file narrow suite, `npm run typecheck`, `npm run build`, `KIX_REQUIRE_GATE=0 npm test`, lint, dependency/cycle/production-audit checks, the i18n audit, bundle budget and e2e typecheck; every command exited 0 with the results above. These logs are `/tmp/kix-notify-resume-*.log`. The inherited sequential verification runner also recorded successful full coverage and browser-journey runs in `/tmp/kix-notify-results.jsonl`.
 
@@ -103,8 +108,36 @@ The reviewed baseline changes are `apps/e2e/visual-baselines/linux-d29b2e9b/{not
 - `apps/e2e/visual-baselines/linux-d29b2e9b/manifest.json`
 - `docs/c-plan-notification-pages-stub-apps-bind.md`
 
+## Files changed and visual review
+
+- `apps/web/src/notification-pagination.ts`
+- `apps/web/src/pages/Notifications.tsx`
+- `apps/web/src/pages/NotificationsPanels.tsx`
+- `apps/web/src/i18n/messages/notification-inbox.ts`
+- `apps/web/src/i18n/messages/pages--NotificationsPanels.ts`
+- `apps/web/src/i18n/messages/tenant-permissions.ts`
+- `apps/web/test/notification-pagination.test.ts`
+- `apps/web/test/notification-pagination-interactions.test.tsx`
+- `apps/web/test/support/notification-pagination-fixture.ts`
+- `apps/web/test/notification-inbox.test.tsx`
+- `apps/e2e/src/build.ts`
+- `apps/e2e/shell-fixtures/notifications-fault.tsx`
+- `apps/e2e/shell-fixtures/notifications-pagination.tsx`
+- `apps/e2e/tests/journeys/notifications.e2e.test.ts`
+- `apps/e2e/tests/a11y/notifications-pagination.a11y.test.ts`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/notifications.desktop.en.light.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/notifications.phone.ko.light.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/permissions.desktop.en.light.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/permissions.phone.ko.light.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/manifest.json`
+- `docs/c-plan-notification-pages-stub-apps-bind.md`
+
+All four changed PNGs were visually inspected: desktop English at 1280px and phone Korean at 390px on profile `linux-d29b2e9b`, with Korean glyphs present. Copy wraps within the existing framing. These normal-route baseline crops are distinct from the large-fixture pager's DOM, keyboard, announcement, axe and 320px evidence. No other PNG changed; only the four corresponding hashes and the app HEAD changed in the manifest. Comparison ran with `KIX_VISUAL_UPDATE=0` after recording.
+
+Locked bindings were also compared as raw bytes to HEAD: identical, sha256 `83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249`.
+
 ## Deviations and limits
 
-The constraints' `docs/c-plan-notification-pages-stub-apps-bind.md` path takes precedence over the objective's shorter path. Applied all design-review corrections: gated fault wrapper, optional panel props, notification-scoped locale keys, fault-origin browser fixtures, explicit removal focus, rendered/filtered/total data attributes and canonical source words. A delayed-read regression additionally prevents temporary pending selection from undoing an explicit page. The 85-byte baseline headroom required concise matching copy in `i18n/messages/tenant-permissions.ts` as well as notification catalogues; this is the additional locale-only footprint under the recorded owner copy ruling. Notification rendering also shares repeated paragraph/table markup and uses a mount ref to keep the first page announcement quiet. No other screen logic, producer, controller or bundle configuration was changed.
+The constraints' `docs/c-plan-notification-pages-stub-apps-bind.md` path takes precedence over the objective's shorter path. Applied all design-review corrections: gated fault wrapper, optional panel props, notification-scoped locale keys, fault-origin browser fixtures, explicit removal focus, rendered/filtered/total data attributes and canonical source words. A delayed-read regression additionally prevents temporary pending selection from undoing an explicit page. A cleared view restores its valid URL selection when data returns, even when membership matches the earlier snapshot. The 85-byte baseline headroom required concise matching copy in `i18n/messages/tenant-permissions.ts` as well as notification catalogues; this is the additional locale-only footprint under the recorded owner copy ruling. Notification rendering also shares repeated paragraph/table markup and uses a mount ref to keep the first page announcement quiet. No other screen logic, producer, controller or bundle configuration was changed.
 
 Real delivery channels, producer integration, retention, persistence, authoritative UNKNOWN resolution and production qualification remain UNDETERMINED or NOT_BOUND. No contract/gate update is consumed. An unmerged contract/dependency, new protocol command or policy value, equipment, money, credentials or production runtime would require a separate owner decision under the node's STOP rules. None is needed for this local projection.
