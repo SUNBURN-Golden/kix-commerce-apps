@@ -648,7 +648,7 @@ export class HttpProtocolAdapter implements CommerceProtocol {
     }
     if (init.signal?.aborted) {
       // A fetch double (or transport) may resolve after the timeout race ended.
-      void response.body?.cancel().catch(() => undefined);
+      cancelUnreadResponseBody(response);
       throw init.signal.reason;
     }
     if (
@@ -657,21 +657,25 @@ export class HttpProtocolAdapter implements CommerceProtocol {
       (response.status >= 300 && response.status < 400) ||
       !sameLoopbackOrigin(response.url, this.baseUrl)
     ) {
+      cancelUnreadResponseBody(response);
       throw new ProtocolError("Integration gate answered with a redirect. The client only talks to the loopback origin.", "GATE_TRANSPORT", trace);
     }
     const echoedRequest = response.headers.get("x-request-id");
     const echoedCorrelation = response.headers.get("x-correlation-id");
     if (echoedRequest !== trace.requestId || echoedCorrelation !== trace.correlationId) {
+      cancelUnreadResponseBody(response);
       throw new ProtocolError("Integration gate response does not match this request.", "STALE_RESPONSE", trace);
     }
     const transport = response.headers.get("x-kix-transport");
     const production = response.headers.get("x-kix-production-endpoint");
     if (transport !== INTEGRATION_GATE_TRANSPORT || production !== "false") {
+      cancelUnreadResponseBody(response);
       throw new ProtocolError("Remote transport is not the non-production integration gate.", "GATE_TRANSPORT", trace);
     }
     const protocolTruth = response.headers.get("x-kix-protocol-truth");
     const conformance = response.headers.get("x-kix-production-conformance");
     if (protocolTruth !== "false" || conformance !== "false") {
+      cancelUnreadResponseBody(response);
       throw new ProtocolError(
         "Remote transport claims protocol truth or production conformance.",
         "PRODUCTION_ENDPOINT",
@@ -682,6 +686,7 @@ export class HttpProtocolAdapter implements CommerceProtocol {
     const { parseGateJson, readGateResponseText } = await import("./gate-json.js");
     const signal = init.signal;
     if (!signal) {
+      cancelUnreadResponseBody(response);
       throw new ProtocolError("Integration gate exchange is missing its abort signal.", "GATE_TRANSPORT", trace);
     }
     let text: string;
@@ -708,6 +713,14 @@ export class HttpProtocolAdapter implements CommerceProtocol {
 
   private endpoint(path: string): string {
     return `${this.baseUrl}${path}`;
+  }
+}
+
+function cancelUnreadResponseBody(response: Response): void {
+  try {
+    void response.body?.cancel().catch(() => undefined);
+  } catch {
+    // Best-effort cleanup must preserve the original exchange error.
   }
 }
 
