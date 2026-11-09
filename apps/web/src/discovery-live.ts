@@ -12,7 +12,7 @@ import { connectedActions } from "./connectivity/write-guard";
  * This module posts nothing and reads no clock.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   DISCOVERY_DESK_SCOPE,
   DISCOVERY_PROJECTION_REVISION,
@@ -28,6 +28,7 @@ import {
   type DiscoveryRowOutcome,
   type DiscoveryStreamKind,
 } from "@kix/protocol-adapter";
+import { settleRead, unknownRead } from "./read-lifecycle";
 import { formatWhen } from "./format";
 import { protocol } from "./connectivity/desk-protocol";
 
@@ -239,137 +240,136 @@ export function useDiscoveryLiveRead(options: { rowId: string | null; detailEnab
   const [revision, setRevision] = useState<string>(DISCOVERY_PROJECTION_REVISION);
   const [filter, setFilterState] = useState<DiscoveryReadFilter>(EMPTY_DISCOVERY_FILTER);
   const [outcome, setOutcome] = useState<LiveOutcome>({ kind: "loading" });
-  const [floor, setFloor] = useState<string | null>(null);
+  const floor = useRef<string | null>(null);
   const generation = useRef(0);
+  const detailGeneration = useRef(0);
+  const sourceEpoch = useRef(0);
+  const alive = useRef(false);
   const sentCursor = useRef<DiscoveryReadCursor | null>(null);
-  const stateRef = useRef({ filter, floor });
-  stateRef.current = { filter, floor };
+  const committed = useRef<LiveOutcome>({ kind: "unknown", message: "" });
+  const [detailOutcome, setDetailOutcome] = useState<DiscoveryRowOutcome | { kind: "loading" }>({ kind: "empty" });
+  const detailOwner = useRef<string | null>(null);
+  const { rowId, detailEnabled } = options;
+  const stateRef = useRef({ filter, rowId, detailEnabled });
+  stateRef.current = { filter, rowId, detailEnabled };
 
-  const issue = useCallback((cursor: DiscoveryReadCursor | null, floorAt: string | null, filterAt: DiscoveryReadFilter) => {
-    const port = portRef.current;
-    if (!port) {
-      return;
-    }
-    const ticket = ++generation.current;
-    sentCursor.current = cursor;
-    setOutcome({ kind: "loading" });
-    void port
-      .readPage({
-        scope: DISCOVERY_DESK_SCOPE,
-        filter: filterAt,
-        pageSize: DISCOVERY_READ_PAGE_BOUND,
-        cursor,
-        watermarkFloor: floorAt,
-      })
-      .then((next) => {
-        if (ticket !== generation.current) {
-          return;
-        }
-        setOutcome(next);
-        if (next.kind === "ready") {
-          setFloor(raiseFloor(stateRef.current.floor, next.watermark));
-        }
-      });
+  // Each effect setup owns a new lifetime, including StrictMode's second setup.
+  useLayoutEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+      generation.current += 1;
+      detailGeneration.current += 1;
+      sourceEpoch.current += 1;
+    };
   }, []);
 
-  useEffect(() => {
+  const invalidate = useCallback(() => {
+    generation.current += 1;
+    detailGeneration.current += 1;
+    sourceEpoch.current += 1;
+    floor.current = null;
+    detailOwner.current = null;
+    setDetailOutcome(unknownRead());
+  }, []);
+
+  const issue = useCallback((cursor: DiscoveryReadCursor | null, floorAt: string | null, filterAt: DiscoveryReadFilter, reset = false) => {
+    const port = portRef.current;
+    if (!port || !alive.current) return;
+    const ticket = ++generation.current;
+    const epoch = sourceEpoch.current;
+    sentCursor.current = cursor;
+    setOutcome({ kind: "loading" });
+    void settleRead(
+      () => {
+        if (reset) port.reset();
+        return port.readPage({ scope: DISCOVERY_DESK_SCOPE, filter: filterAt, pageSize: DISCOVERY_READ_PAGE_BOUND, cursor, watermarkFloor: floorAt });
+      },
+      () => alive.current && ticket === generation.current && epoch === sourceEpoch.current && port === portRef.current,
+      (next) => {
+        committed.current = next;
+        setOutcome(next);
+        if (next.kind === "ready") floor.current = raiseFloor(floor.current, next.watermark);
+      },
+    );
+  }, []);
+
+  useLayoutEffect(() => {
     issue(null, null, EMPTY_DISCOVERY_FILTER);
   }, [issue]);
 
-  const resync = useCallback(
-    (nextFilter: DiscoveryReadFilter) => {
-      portRef.current?.reset();
-      setFloor(null);
-      issue(null, null, nextFilter);
-    },
-    [issue],
-  );
+  const resync = useCallback((nextFilter: DiscoveryReadFilter) => {
+    invalidate();
+    sentCursor.current = null;
+    issue(null, null, nextFilter, true);
+  }, [invalidate, issue]);
 
   const nextPage = useCallback(() => {
-    if (outcome.kind !== "ready" || outcome.nextCursor === null) {
-      return;
+    if (outcome.kind === "ready" && outcome.nextCursor !== null) {
+      issue(outcome.nextCursor, floor.current, stateRef.current.filter);
     }
-    issue(outcome.nextCursor, stateRef.current.floor, stateRef.current.filter);
   }, [issue, outcome]);
 
   const runReturn = useCallback(() => {
     const mode = liveReturnMode(outcome);
-    if (mode === "resync") {
-      resync(stateRef.current.filter);
-      return;
-    }
-    if (mode === "first") {
-      portRef.current?.reset();
-      issue(null, stateRef.current.floor, stateRef.current.filter);
-      return;
-    }
-    if (mode === "again") {
-      issue(sentCursor.current, stateRef.current.floor, stateRef.current.filter);
-    }
+    if (mode === "resync") resync(stateRef.current.filter);
+    else if (mode === "first") issue(null, floor.current, stateRef.current.filter, true);
+    else if (mode === "again") issue(sentCursor.current, floor.current, stateRef.current.filter);
   }, [issue, outcome, resync]);
 
-  const setStream = useCallback(
-    (next: DiscoveryStreamKind) => {
-      setStreamState(next);
-      setFilterState(EMPTY_DISCOVERY_FILTER);
-      portRef.current = discoveryReadPortFor(environment, { stream: next, revision });
-      resync(EMPTY_DISCOVERY_FILTER);
-    },
-    [environment, revision, resync],
-  );
+  const setStream = useCallback((next: DiscoveryStreamKind) => {
+    invalidate();
+    portRef.current = discoveryReadPortFor(environment, { stream: next, revision });
+    setStreamState(next);
+    setFilterState(EMPTY_DISCOVERY_FILTER);
+    stateRef.current.filter = EMPTY_DISCOVERY_FILTER;
+    resync(EMPTY_DISCOVERY_FILTER);
+  }, [environment, revision, invalidate, resync]);
 
-  const setFilter = useCallback(
-    (next: DiscoveryReadFilter) => {
-      setFilterState(next);
-      resync(next);
-    },
-    [resync],
-  );
+  const setFilter = useCallback((next: DiscoveryReadFilter) => {
+    stateRef.current.filter = next;
+    setFilterState(next);
+    resync(next);
+  }, [resync]);
 
   const rebuildProjection = useCallback(() => {
+    invalidate();
     const next = `${revision}+r${revision.split("+r").length}`;
     setRevision(next);
     portRef.current = discoveryReadPortFor(environment, { stream, revision: next });
-  }, [environment, stream, revision]);
-
-  const [detailOutcome, setDetailOutcome] = useState<DiscoveryRowOutcome | { kind: "loading" }>({
-    kind: "loading",
-  });
-  const detailGeneration = useRef(0);
-  const rowId = options.rowId;
-  const detailEnabled = options.detailEnabled;
+    // The committed page/cursor is retained only for the explicit REBUILT demo.
+    // No old in-flight completion can turn it back into fresh evidence.
+    setOutcome(committed.current);
+  }, [environment, stream, revision, invalidate]);
 
   const readDetail = useCallback(() => {
     const port = portRef.current;
-    if (!port || rowId === null) {
-      return;
-    }
+    const at = stateRef.current;
+    if (!port || !alive.current || at.rowId === null || !at.detailEnabled) return;
+    const id = at.rowId;
     const ticket = ++detailGeneration.current;
+    const epoch = sourceEpoch.current;
+    detailOwner.current = id;
     setDetailOutcome({ kind: "loading" });
-    void port.readRow(rowId, DISCOVERY_DESK_SCOPE).then((next) => {
-      if (ticket === detailGeneration.current) {
-        setDetailOutcome(next);
-      }
-    });
-  }, [rowId]);
+    void settleRead(
+      () => port.readRow(id, DISCOVERY_DESK_SCOPE),
+      () => alive.current && ticket === detailGeneration.current && epoch === sourceEpoch.current && port === portRef.current && stateRef.current.rowId === id && stateRef.current.detailEnabled,
+      setDetailOutcome,
+    );
+  }, []);
 
-  useEffect(() => {
-    if (rowId !== null && detailEnabled) {
-      readDetail();
-    }
+  useLayoutEffect(() => {
+    detailGeneration.current += 1;
+    detailOwner.current = null;
+    setDetailOutcome({ kind: "empty" });
+    if (rowId !== null && detailEnabled) readDetail();
+    return () => { detailGeneration.current += 1; };
   }, [rowId, detailEnabled, readDetail]);
 
   return {
-    listModel: buildLiveListModel({
-      locale,
-      stream,
-      revision,
-      filter,
-      outcome,
-      canNext: outcome.kind === "ready" && outcome.nextCursor !== null,
-    }),
+    listModel: buildLiveListModel({ locale, stream, revision, filter, outcome, canNext: outcome.kind === "ready" && outcome.nextCursor !== null }),
     listHandlers: connectedActions({ nextPage, runReturn, setStream, setFilter, rebuildProjection }, ["setStream", "rebuildProjection"]),
-    detailModel: buildLiveDetailModel({ locale, outcome: detailEnabled ? detailOutcome : { kind: "loading" } }),
+    detailModel: buildLiveDetailModel({ locale, outcome: !detailEnabled || rowId === null ? { kind: "empty" } : detailOwner.current === rowId ? detailOutcome : unknownRead() }),
     detailHandlers: { readAgain: readDetail },
   };
 }

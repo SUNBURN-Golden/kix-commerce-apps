@@ -1,3 +1,4 @@
+import { useReadRecoveryFocus } from "../read-lifecycle";
 import { formatWhen } from "../format";
 import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
@@ -431,6 +432,7 @@ export function LiveReadSection({
   onOpen: (rowId: string) => void;
 }) {
   const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
+  const recover = useReadRecoveryFocus(model.state, "discovery-live-status");
   const clock = useDisplayLocale();
   const [focus, setFocus] = useState(0);
   const rows = model.rows;
@@ -446,7 +448,7 @@ export function LiveReadSection({
       <p>{deskText(t, LIVE_READ_SCOPE_NOTE)}</p>
       <p className="muted">{deskText(t, LIVE_READ_PAGE_NOTE)}</p>
       <p className="muted">{deskText(t, model.metaLine)}</p>
-      <p role="status" data-live-status={model.state}>
+      <p id="discovery-live-status" tabIndex={-1} role="status" aria-busy={model.state === "loading"} data-live-status={model.state}>
         {deskText(t, model.statusLine)}
         {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
       </p>
@@ -496,7 +498,7 @@ export function LiveReadSection({
           {deskText(t, LIVE_READ_REBUILD_LABEL)}
         </ConnectivityWriteButton>
         {model.actionLabel ? (
-          <button type="button" className="discovery-action" onClick={() => handlers.runReturn()}>
+          <button type="button" className="discovery-action" onClick={() => recover(handlers.runReturn)}>
             {deskText(t, model.actionLabel)}
           </button>
         ) : null}
@@ -579,11 +581,14 @@ export function LiveReadDetail({
   handlers: LiveDetailHandlers;
 }) {
   const t = useT(mergedCopy, deskCopy, copy0, copy1, copy2, copy3, copy4, copy5, copy6, copy7, copy8, copy9, copy10, copy11, copy12);
+  const recover = useReadRecoveryFocus(model.state, "discovery-live-detail");
   const clock = useDisplayLocale();
   const row = model.row;
   return (
     <article
       className="discovery-detail"
+      id="discovery-live-detail"
+      tabIndex={-1}
       data-live-detail={model.state}
       data-source={row ? "synthetic-projection" : "none"}
     >
@@ -610,12 +615,12 @@ export function LiveReadDetail({
         </>
       ) : (
         <>
-          <p role="status" data-live-status={model.state}>
+          <p role="status" aria-busy={model.state === "loading"} data-live-status={model.state}>
             {deskText(t, model.statusLine)}
             {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
           </p>
           {model.actionLabel ? (
-            <button type="button" className="discovery-action" onClick={() => handlers.readAgain()}>
+            <button type="button" className="discovery-action" onClick={() => recover(handlers.readAgain)}>
               {deskText(t, model.actionLabel)}
             </button>
           ) : null}
