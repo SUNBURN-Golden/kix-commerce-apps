@@ -26,6 +26,40 @@ function live(status: SessionControllerState["status"]): SessionControllerState 
     budget: { maxRecords: 32, maxBytes: 12288, usedRecords: 0, usedBytes: 0 }, retention: "UNDETERMINED", exactlyOnceClaimed: false, durableAcrossStorageLoss: false };
 }
 describe("diagnostics read-only view", () => {
+  it.each([123456789012, 1234567890123, 12345678901234, 123456789012345, 1234567890123456, Number.MAX_SAFE_INTEGER])(
+    "keeps safe counter %s numeric, booleans typed and nullable journal values null", (counter) => {
+      const record = createOutcomeRecord(); record.observe("journey", [], flow("lost", "unconfirmed"));
+      const snapshot = record.getSnapshot();
+      const value = input({ connectivity: { ...input().connectivity, epoch: counter },
+        journal: { kind: "ready", full: false, usedRecords: counter, maxRecords: counter, usedBytes: 0, maxBytes: 12288 },
+        outcomes: snapshot.outcomes.map((row) => ({ ...row, ordinal: counter })), omittedOutcomeCount: counter });
+      const before = JSON.stringify(value);
+      const model = buildDiagnostics(value); const json = JSON.parse(model.exportText);
+      // One retained outcome adds zero to omittedOutcomeCount even at MAX_SAFE_INTEGER.
+      for (const actual of [json.connectivity.epoch, json.sessionJournal.usedRecords, json.sessionJournal.maxRecords,
+        json.outcomes[0].ordinal, json.omittedOutcomeCount]) {
+        expect(typeof actual).toBe("number"); expect(actual).toBe(counter); expect(Number.isSafeInteger(actual)).toBe(true);
+      }
+      expect(typeof json.outcomeLimit).toBe("number"); expect(json.outcomeLimit).toBe(10);
+      expect(typeof json.connectivity.writesBlocked).toBe("boolean"); expect(json.connectivity.writesBlocked).toBe(false);
+      expect(json).toMatchObject({ sent: false, notEvidence: true, notApproval: true, productionReadiness: false });
+      expect(json.outcomes[0]).toMatchObject({ outcome: "UNKNOWN", reason: "UNKNOWN", code: null });
+      expect(json.sessionJournal.cause).toBeNull();
+      expect(JSON.parse(buildDiagnostics(input()).exportText).sessionJournal).toEqual({ state: "EMPTY", cause: null, usedRecords: null, maxRecords: null });
+      expect(JSON.stringify(value)).toBe(before);
+    },
+  );
+  it("keeps default export text and key order stable", () => {
+    const model = buildDiagnostics(input());
+    const expected = {
+      kind: "kix-app-diagnostics", buildIdentity: model.view.buildIdentity, mode: "stub", origin: "none", locale: "en",
+      display: { colorScheme: "not-read", forcedColors: "not-read", reducedMotion: "not-read" },
+      connectivity: { state: "local", writesBlocked: false, epoch: 0 },
+      sessionJournal: { state: "EMPTY", cause: null, usedRecords: null, maxRecords: null }, outcomes: [], outcomeLimit: 10,
+      omittedOutcomeCount: 0, sent: false, notEvidence: true, notApproval: true, productionReadiness: false,
+    };
+    expect(model.exportText).toBe(JSON.stringify(expected, null, 2));
+  });
   it("renders empty page-load outcomes", () => {
     expect(html()).toContain("No outcome on this page load.");
     expect(html()).toContain("not-read");
@@ -111,7 +145,11 @@ describe("bounded chronological outcomes", () => {
     expect(record.getSnapshot().outcomes).toHaveLength(5);
     for (let i = 0; i < 20; i++) record.observe("gift", [], flow(`repeat:${i}`));
     expect(record.getSnapshot().outcomes.map((row) => row.ordinal)).toEqual([16,17,18,19,20,21,22,23,24,25]);
-    expect(record.getSnapshot().omittedOutcomeCount).toBe(15); expect(listener).toHaveBeenCalledTimes(25); unsub();
+    expect(record.getSnapshot().omittedOutcomeCount).toBe(15);
+    const overLimit = buildDiagnostics(input({ outcomes: [...record.getSnapshot().outcomes, ...record.getSnapshot().outcomes], omittedOutcomeCount: 123456789012 }));
+    const parsed = JSON.parse(overLimit.exportText);
+    expect(parsed.outcomes).toHaveLength(10); expect(parsed.omittedOutcomeCount).toBe(123456789022);
+    expect(typeof parsed.omittedOutcomeCount).toBe("number"); expect(listener).toHaveBeenCalledTimes(25); unsub();
     expect(createOutcomeRecord().getSnapshot()).toEqual({ outcomes: [], omittedOutcomeCount: 0 });
   });
 });
