@@ -246,6 +246,9 @@ export const MATRIX: readonly MatrixCell[] = [
 ];
 
 export const SHARED_CHECKS = [
+  "read-lifecycle.en.list", "read-lifecycle.en.detail", "read-lifecycle.en.summary", "read-lifecycle.en.page", "read-lifecycle.en.selection",
+  "read-lifecycle.ko.list", "read-lifecycle.ko.detail", "read-lifecycle.ko.summary", "read-lifecycle.ko.page", "read-lifecycle.ko.selection",
+  "read-lifecycle.write-UNKNOWN-isolation",
   "diagnostics.copy-keyboard", "diagnostics.no-network",
   "back-forward.read-state",
   "mobile.lifecycle.simulated.en", "mobile.lifecycle.simulated.ko", "mobile.lifecycle.simulated.UNKNOWN",
