@@ -10,6 +10,8 @@ import { messages as copy6 } from "../i18n/messages/organizer-desk";
 import { messages as copy7 } from "../i18n/messages/workspace--registry";
 import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
+import { useLocale } from "../i18n/locale-context";
+import { useCopyFeedback } from "../use-copy-feedback";
 import { COMMERCE_COMMAND_BINDINGS } from "@kix/protocol-adapter";
 import { AsyncState } from "../components/AsyncState";
 import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type RefObject } from "react";
@@ -121,7 +123,10 @@ function ReceiptView({
   };
   const panelId = useId();
   const exportRef = useRef<HTMLTextAreaElement>(null);
-  const [copyNote, setCopyNote] = useState<string>(copy0.en["e.34"]);
+  const { locale } = useLocale();
+  const { feedback, copy } = useCopyFeedback({ exportText: model.exportText, textareaRef: exportRef,
+    viewKey: JSON.stringify(["receipts", model.sessionId, model.role, role, model.environment,
+      model.profile, model.profileVersion, model.domain, locale]) });
 
   function chooseRole(next: WorkspaceRole) {
     setSelected(null);
@@ -174,21 +179,6 @@ function ReceiptView({
     if (id) {
       setSelected(id);
     }
-  }
-
-  function onCopy() {
-    const node = exportRef.current;
-    node?.focus();
-    node?.select();
-    const clipboard = navigator.clipboard;
-    if (!clipboard || typeof clipboard.writeText !== "function") {
-      setCopyNote(copy0.en["e.35"]);
-      return;
-    }
-    void clipboard.writeText(model.exportText).then(
-      () => setCopyNote(copy0.en["e.36"]),
-      () => setCopyNote(copy0.en["e.35"]),
-    );
   }
 
   return (
@@ -357,9 +347,9 @@ function ReceiptView({
               value={model.exportText}
               aria-label={t("s1ni")}
             />
-            <button type="button" className="receipt-action" onClick={onCopy}>
+            <button type="button" className="receipt-action" onClick={copy}>
               {t("see")}</button>
-            <p role={copyNote === copy0.en["e.34"] ? undefined : "status"}>{deskText(t, copyNote)}</p>
+            <p id="receipt-copy-feedback" role={feedback === "idle" ? undefined : "status"} aria-live={feedback === "idle" ? "off" : "polite"}>{t(feedback === "idle" ? "e.34" : feedback === "selected" ? "e.35" : "e.36")}</p>
           </section>
         </div>
       </div>
