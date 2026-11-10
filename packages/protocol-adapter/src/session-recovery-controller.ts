@@ -37,13 +37,14 @@ import { sha256Hex } from "./sha256.js";
 export type SessionFence =
   | { reason: "not-bound" }
   | { reason: "evidence-lost"; cause: EvidenceLostCause }
-  | { reason: "unavailable"; cause: "NO_STORE" | "WRITE_REFUSED" }
+  | { reason: "unavailable"; cause: "NO_STORE" | "WRITE_REFUSED" | "COUNTER_EXHAUSTED" }
   | { reason: "unresolved"; intentRef: string; scope: string; code: string | null; recovered: boolean; earlierLoad: boolean; inFlight: boolean }
   | { reason: "underlying"; identity: IdentityFence };
 
 export type SessionNotSentReason =
   | "unknown-target"
   | "field-refused"
+  | "counter-exhausted"
   | "journal-full"
   | "write-refused"
   | "duplicate-intent"
@@ -286,6 +287,8 @@ export class SessionRecoveryController {
             fence: status.kind === "evidence-lost" ? { reason: "evidence-lost", cause: status.cause } : { reason: "unavailable", cause: status.kind === "unavailable" ? status.cause : "NO_STORE" },
           };
         }
+        case "COUNTER_EXHAUSTED":
+          return this.notSent("counter-exhausted", "COUNTER_EXHAUSTED");
         case "JOURNAL_FULL":
           return this.notSent("journal-full", "The session journal is full. Nothing is evicted, so nothing more is sent from this tab session.");
         case "WRITE_REFUSED":
