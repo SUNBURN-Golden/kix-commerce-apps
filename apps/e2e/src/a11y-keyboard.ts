@@ -37,7 +37,7 @@ export async function skipLinkProblems(page: Page): Promise<string[]> {
  * Walks the page with Tab from the top. Flags a stop with no accessible name, a stop with no visible focus mark,
  * an element reached twice before focus leaves the document (a trap), and a walk that never ends.
  */
-export async function tabWalkProblems(page: Page): Promise<{ problems: string[]; stops: number }> {
+export async function tabWalkProblems(page: Page, afterTab?: () => Promise<void>): Promise<{ problems: string[]; stops: number }> {
   await page.evaluate(() => {
     document.querySelectorAll("[data-a11y-seen]").forEach((el) => el.removeAttribute("data-a11y-seen"));
     (document.activeElement as HTMLElement | null)?.blur();
@@ -48,6 +48,7 @@ export async function tabWalkProblems(page: Page): Promise<{ problems: string[];
   let stops = 0;
   for (; stops < MAX_STOPS; stops += 1) {
     await page.keyboard.press("Tab");
+    await afterTab?.();
     const stop = await page.evaluate((): Stop => {
       const el = document.activeElement as HTMLElement | null;
       if (!el || el === document.body || el === document.documentElement) {

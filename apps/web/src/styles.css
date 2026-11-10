@@ -848,11 +848,6 @@ a.panel {
   min-width: 44px;
 }
 
-.discovery :is(a, button, input, select):focus-visible,
-.discovery .discovery-scale:focus-visible {
-  outline: 2px solid var(--line);
-  outline-offset: 3px;
-}
 
 @media (max-width: 720px) {
   .discovery {
@@ -865,6 +860,9 @@ a.panel {
   }
 
   .discovery-nav {
+    /* Spaced/wrapped section links must leave room for the focused desk control. */
+    max-height: 35vh;
+    overflow: auto;
     order: 2;
     position: sticky;
     bottom: 0;
@@ -1261,7 +1259,7 @@ main:focus-visible {
 }
 
 /* Route registry navigation: grouped surface nav, menu fold, breadcrumb. */
-nav[aria-label="Surfaces"] {
+.top > nav {
   display: block;
   flex: 1 1 32rem;
   min-width: 0;
@@ -1359,7 +1357,7 @@ nav a[aria-current="page"] {
 }
 
 @media (max-width: 720px) {
-  nav[aria-label="Surfaces"] {
+  .top > nav {
     flex-basis: auto;
   }
 
@@ -1517,5 +1515,13 @@ button[data-connectivity-write][aria-disabled="true"] { cursor: not-allowed; }
 
 /* Protocol field names in the marketplace session notes must wrap on phones. */
 #mperf-session {
+  overflow-wrap: anywhere;
+}
+
+/* Long status/field words remain readable with expanded text spacing at 320px. */
+:is(.merchant, .finance) .discovery-row,
+.finance .section-head,
+[data-session-state],
+[data-identity-state] > table {
   overflow-wrap: anywhere;
 }

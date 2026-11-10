@@ -1,3 +1,4 @@
+import { spacingCoverageProblems } from "./text-spacing-matrix";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -78,7 +79,7 @@ function screenRecords(facets: FacetLine[], checks: Set<string>, head: string): 
     const reflow = manual("reflow");
     const structure = manual("structure");
     const withFindings =
-      keyboard === "FINDING" || reflow === "FINDING" || structure === "FINDING" || Object.values(automated).some((entry) => entry.violations.length > 0);
+      facets.some((item) => item.kind === "spacing" && item.observation.routeId === screen.screenId && item.observation.result === "FINDING") || keyboard === "FINDING" || reflow === "FINDING" || structure === "FINDING" || Object.values(automated).some((entry) => entry.violations.length > 0);
     return {
       screenId: screen.screenId,
       path: screen.path,
@@ -89,7 +90,7 @@ function screenRecords(facets: FacetLine[], checks: Set<string>, head: string): 
       assistiveTech: "NOT_RUN",
       userAcceptance: { state: "PENDING", decider: "user", baseline: "none", evidenceHead: head, inheritedFrom: null },
       release: "NOT_AUTHORIZED",
-      traceCheckIds: [...checks].filter((id) => id.split(".").includes(screen.screenId) || id === `a11y.reflow.${screen.screenId}`).sort(),
+      traceCheckIds: [...checks].filter((id) => id.split(".").includes(screen.screenId) || id === `a11y.reflow.${screen.screenId}` || facets.some((item) => item.kind === "spacing" && item.observation.routeId === screen.screenId && item.observation.checkId === id)).sort(),
       outcome: withFindings ? "OBSERVED_WITH_FINDINGS" : "OBSERVED_CLEAN",
     };
   });
@@ -123,9 +124,10 @@ export async function teardown(): Promise<void> {
     const diag = diagnostics.finish(recordDir, ledgers.length);
     problems.push(...diag.problems);
     const sum = (key: "nonLoopback" | "nonGet" | "appNetworkCalls") => ledgers.reduce((total, line) => total + line[key], 0);
+    const facets = readFacets(recordDir);
+    problems.push(...spacingCoverageProblems(SCREENS, facets.flatMap((item) => item.kind === "spacing" ? [item.observation] : [])));
     const outFile = process.env.KIX_A11Y_RECORD_OUT;
     if (outFile) {
-      const facets = readFacets(recordDir);
       const head = git(["rev-parse", "HEAD"]);
       const record: A11yRecord = {
         kind: "a11y-observation",
@@ -141,6 +143,7 @@ export async function teardown(): Promise<void> {
         ledger: { nonLoopback: sum("nonLoopback"), nonGet: sum("nonGet"), appNetworkCalls: sum("appNetworkCalls") },
         claims: { wcagConformance: false, userAccepted: false, assistiveTechRun: false, released: false, productionQualification: false },
         screens: screenRecords(facets, ran, head),
+        textSpacing: facets.flatMap((item) => item.kind === "spacing" ? [item.observation] : []),
         findings: KNOWN_FINDINGS.map(({ screenId, viewport, ruleId, status }) => ({ screenId, viewport, ruleId, status })),
         observations: [
           ...facets.flatMap((item) => (item.kind === "observation" ? [{ id: item.id, note: item.note }] : [])),
