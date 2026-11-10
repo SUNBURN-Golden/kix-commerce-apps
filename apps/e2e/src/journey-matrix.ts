@@ -246,6 +246,13 @@ export const MATRIX: readonly MatrixCell[] = [
 ];
 
 export const SHARED_CHECKS = [
+  "copy-feedback.receipts.en.success", "copy-feedback.receipts.en.absent", "copy-feedback.receipts.en.throw", "copy-feedback.receipts.en.reject",
+  "copy-feedback.receipts.ko.success", "copy-feedback.receipts.ko.absent", "copy-feedback.receipts.ko.throw", "copy-feedback.receipts.ko.reject",
+  "copy-feedback.diagnostics.en.success", "copy-feedback.diagnostics.en.absent", "copy-feedback.diagnostics.en.throw", "copy-feedback.diagnostics.en.reject",
+  "copy-feedback.diagnostics.ko.success", "copy-feedback.diagnostics.ko.absent", "copy-feedback.diagnostics.ko.throw", "copy-feedback.diagnostics.ko.reject",
+  "read-lifecycle.en.list", "read-lifecycle.en.detail", "read-lifecycle.en.summary", "read-lifecycle.en.page", "read-lifecycle.en.selection",
+  "read-lifecycle.ko.list", "read-lifecycle.ko.detail", "read-lifecycle.ko.summary", "read-lifecycle.ko.page", "read-lifecycle.ko.selection",
+  "read-lifecycle.write-UNKNOWN-isolation",
   "diagnostics.copy-keyboard", "diagnostics.no-network",
   "back-forward.read-state",
   "mobile.lifecycle.simulated.en", "mobile.lifecycle.simulated.ko", "mobile.lifecycle.simulated.UNKNOWN",

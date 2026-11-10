@@ -1,4 +1,9 @@
-export function sweepExport(text: string): string {
+/** Redact a permitted text leaf before serialization. Never pass serialized JSON. */
+export function redactSupportText(text: string): string;
+export function redactSupportText(text: null): null;
+export function redactSupportText(text: string | null): string | null;
+export function redactSupportText(text: string | null): string | null {
+  if (text === null) return null;
   return text
     .replace(/bearer\s+[A-Za-z0-9._~+/=-]{8,}/gi, "[redacted-token]")
     .replace(/(?:sk|pk|rk|tok|api)_[A-Za-z0-9_-]{6,}/gi, "[redacted-token]")
@@ -7,5 +12,10 @@ export function sweepExport(text: string): string {
     .replace(/\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b/g, "[redacted-account]")
     .replace(/\b\d{12,19}\b/g, "[redacted-account]")
     .replace(/\+\d{8,15}\b/g, "[redacted-phone]");
+}
+
+/** Compatibility name for scalar callers only; this does not process JSON. */
+export function sweepExport(text: string): string {
+  return redactSupportText(text);
 }
 

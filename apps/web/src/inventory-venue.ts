@@ -15,7 +15,7 @@ import { connectedActions } from "./connectivity/write-guard";
  * M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   INVENTORY_DESK_SCOPE,
   INVENTORY_GENERATION,
@@ -35,6 +35,7 @@ import {
   type InventorySummaryOutcome,
   type InventoryUnit,
 } from "@kix/protocol-adapter";
+import { settleRead, unknownRead } from "./read-lifecycle";
 import { formatWhen } from "./format";
 import { protocol } from "./connectivity/desk-protocol";
 
@@ -593,7 +594,6 @@ export function useInventoryRead(options: {
   }
   const [scenario, setScenarioState] = useState<InventoryScenario>("clean");
   const [servedGeneration, setServedGeneration] = useState<number>(INVENTORY_GENERATION);
-  const [epoch, setEpoch] = useState(0);
   const [freeOnly, setFreeOnlyState] = useState(false);
   const [summary, setSummary] = useState<SummaryState>({ kind: "loading" });
   const [page, setPage] = useState<PageState | null>(null);
@@ -607,227 +607,219 @@ export function useInventoryRead(options: {
   const snapshotCount = useRef(0);
   const sentCursor = useRef<InventoryReadCursor | null>(null);
   const seenRows = useRef<ReadonlyMap<string, string>>(new Map());
-  const summaryKey = useRef("");
-  const pageKey = useRef("");
-  const selectionKey = useRef("");
-  const latest = useRef({ sectionId: options.sectionId, unitId: options.unitId, quantity: options.quantity, freeOnly, snapshot });
-  latest.current = { sectionId: options.sectionId, unitId: options.unitId, quantity: options.quantity, freeOnly, snapshot };
-  const { setLocation } = options;
+  const alive = useRef(false);
+  const sourceEpoch = useRef(0);
+  const heldSnapshot = useRef<Snapshot | null>(null);
+  const pagePending = useRef(false);
+  const [pageVersion, setPageVersion] = useState(0);
+  const pageOwner = useRef("");
+  const selectionOwner = useRef("");
+  const latest = useRef({ sectionId: options.sectionId, unitId: options.unitId, quantity: options.quantity, freeOnly });
+  latest.current = { sectionId: options.sectionId, unitId: options.unitId, quantity: options.quantity, freeOnly };
+  const { setLocation, sectionId, unitId, quantity } = options;
+  const pageContext = useCallback(() => JSON.stringify([heldSnapshot.current?.id, latest.current.sectionId, latest.current.freeOnly]), []);
+  const selectionContext = useCallback(() => JSON.stringify([pageContext(), latest.current.unitId, latest.current.quantity]), [pageContext]);
+
+  useLayoutEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+      sourceEpoch.current += 1;
+      summaryTicket.current += 1;
+      pageTicket.current += 1;
+      selectionTicket.current += 1;
+    };
+  }, []);
+
+  const invalidateDependents = useCallback(() => {
+    pageTicket.current += 1;
+    selectionTicket.current += 1;
+    sentCursor.current = null;
+    seenRows.current = new Map();
+    pagePending.current = false;
+    pageOwner.current = "";
+    selectionOwner.current = "";
+    setPage(null);
+    setSelection(null);
+  }, []);
+
+  const invalidateSource = useCallback(() => {
+    sourceEpoch.current += 1;
+    summaryTicket.current += 1;
+    floor.current = null;
+    invalidateDependents();
+  }, [invalidateDependents]);
 
   const issueSummary = useCallback(() => {
     const port = portRef.current;
-    if (!port) {
-      return;
-    }
+    if (!port || !alive.current) return;
+    invalidateDependents();
+    heldSnapshot.current = null;
+    setSnapshot(null);
     const ticket = ++summaryTicket.current;
+    const source = sourceEpoch.current;
     setSummary({ kind: "loading" });
-    void port.readSummary({ scope: INVENTORY_DESK_SCOPE, watermarkFloor: floor.current }).then((next) => {
-      if (ticket !== summaryTicket.current) {
-        return;
-      }
-      setSummary(next);
-      if (next.kind === "ready") {
-        floor.current = raiseFloor(floor.current, next.watermark);
-        snapshotCount.current += 1;
-        setSnapshot({
-          id: snapshotCount.current,
-          generation: next.generation,
-          modes: Object.fromEntries(next.sections.map((section) => [section.sectionId, section.mode])),
-          sections: next.sections,
-        });
-      } else {
-        setSnapshot(null);
-      }
-    });
-  }, []);
+    void settleRead(
+      () => port.readSummary({ scope: INVENTORY_DESK_SCOPE, watermarkFloor: floor.current }),
+      () => alive.current && ticket === summaryTicket.current && source === sourceEpoch.current && port === portRef.current,
+      (next) => {
+        setSummary(next);
+        if (next.kind === "ready") {
+          floor.current = raiseFloor(floor.current, next.watermark);
+          heldSnapshot.current = {
+            id: ++snapshotCount.current,
+            generation: next.generation,
+            modes: Object.fromEntries(next.sections.map((section) => [section.sectionId, section.mode])),
+            sections: next.sections,
+          };
+          setSnapshot(heldSnapshot.current);
+        }
+      },
+    );
+  }, [invalidateDependents]);
 
   const issuePage = useCallback((cursor: InventoryReadCursor | null) => {
     const port = portRef.current;
-    const { sectionId, snapshot: held, freeOnly: only } = latest.current;
-    if (!port || !held || sectionId === null) {
-      return;
-    }
-    const mode = held.modes[sectionId];
-    if (mode === undefined) {
-      pageTicket.current += 1;
-      setPage({
-        kind: "invalid-request",
-        code: "SECTION",
-        detail: sourceMessage(sourceCopy.en["p.t235"], { v1: sectionId }),
-      });
-      return;
-    }
+    const held = heldSnapshot.current;
+    const { sectionId: at, freeOnly: only } = latest.current;
+    if (!port || !alive.current || !held || at === null) return;
     const ticket = ++pageTicket.current;
+    const source = sourceEpoch.current;
+    const context = pageContext();
+    const mode = held.modes[at];
+    // Paging/filtering preserves the location, but selection evidence must be read
+    // again against this page's observed labels before it can select a unit.
+    selectionTicket.current += 1;
+    selectionOwner.current = "";
+    setSelection(unknownRead());
+    seenRows.current = new Map();
     sentCursor.current = cursor;
+    pageOwner.current = context;
+    pagePending.current = true;
     setPage({ kind: "loading" });
-    void port
-      .readPage({
-        scope: INVENTORY_DESK_SCOPE,
-        sectionId,
-        expectedMode: mode,
-        heldGeneration: held.generation,
-        pageSize: INVENTORY_PAGE_BOUND,
-        cursor,
-        freeOnly: only,
-        watermarkFloor: floor.current,
-      })
-      .then((next) => {
-        if (ticket !== pageTicket.current) {
-          return;
-        }
-        setPage(next);
-        if (next.kind === "ready") {
-          floor.current = raiseFloor(floor.current, next.watermark);
-          seenRows.current = new Map(next.rows.map((row) => [row.unitId, inventoryUnitLabel(row)]));
-        }
-      });
-  }, []);
+    const finish = (next: InventoryPageOutcome) => {
+      pagePending.current = false;
+      setPage(next);
+      if (next.kind === "ready") {
+        floor.current = raiseFloor(floor.current, next.watermark);
+        seenRows.current = new Map(next.rows.map((row) => [row.unitId, inventoryUnitLabel(row)]));
+      }
+      setPageVersion((value) => value + 1);
+    };
+    void settleRead(
+      () => mode === undefined ? Promise.resolve({ kind: "invalid-request", code: "SECTION", detail: sourceMessage(sourceCopy.en["p.t235"], { v1: at }) } as InventoryPageOutcome) : port.readPage({ scope: INVENTORY_DESK_SCOPE, sectionId: at, expectedMode: mode, heldGeneration: held.generation, pageSize: INVENTORY_PAGE_BOUND, cursor, freeOnly: only, watermarkFloor: floor.current }),
+      () => alive.current && ticket === pageTicket.current && source === sourceEpoch.current && port === portRef.current && context === pageContext(),
+      finish,
+    );
+  }, [pageContext]);
 
   const issueSelection = useCallback(() => {
     const port = portRef.current;
-    const { sectionId, unitId, quantity, snapshot: held } = latest.current;
-    if (!port || !held || sectionId === null || unitId === null) {
-      return;
-    }
-    const mode = held.modes[sectionId];
-    if (mode === undefined) {
-      selectionTicket.current += 1;
-      setSelection({
-        kind: "invalid-request",
-        code: "SECTION",
-        detail: sourceMessage(sourceCopy.en["p.t235"], { v1: sectionId }),
-      });
-      return;
-    }
+    const held = heldSnapshot.current;
+    const { sectionId: at, unitId: unit, quantity: count } = latest.current;
+    if (!port || !alive.current || !held || at === null || unit === null || pagePending.current) return;
     const ticket = ++selectionTicket.current;
+    const pageAt = pageTicket.current;
+    const source = sourceEpoch.current;
+    const context = selectionContext();
+    const mode = held.modes[at];
+    selectionOwner.current = context;
     setSelection({ kind: "loading" });
-    void port
-      .readSelection({
-        scope: INVENTORY_DESK_SCOPE,
-        sectionId,
-        unitId,
-        expectedMode: mode,
-        heldGeneration: held.generation,
-        quantity,
-        seenAs: seenRows.current.get(unitId) ?? null,
-        watermarkFloor: floor.current,
-      })
-      .then((next) => {
-        if (ticket !== selectionTicket.current) {
-          return;
-        }
+    void settleRead(
+      () => mode === undefined ? Promise.resolve({ kind: "invalid-request", code: "SECTION", detail: sourceMessage(sourceCopy.en["p.t235"], { v1: at }) } as InventorySelectionOutcome) : port.readSelection({ scope: INVENTORY_DESK_SCOPE, sectionId: at, unitId: unit, expectedMode: mode, heldGeneration: held.generation, quantity: count, seenAs: seenRows.current.get(unit) ?? null, watermarkFloor: floor.current }),
+      () => alive.current && ticket === selectionTicket.current && pageAt === pageTicket.current && source === sourceEpoch.current && port === portRef.current && context === selectionContext(),
+      (next) => {
         setSelection(next);
-        if (next.kind === "ready") {
-          floor.current = raiseFloor(floor.current, next.selection.unit.watermark);
-        }
-      });
-  }, []);
+        if (next.kind === "ready") floor.current = raiseFloor(floor.current, next.selection.unit.watermark);
+      },
+    );
+  }, [selectionContext]);
 
-  useEffect(() => {
-    const key = String(epoch);
-    if (summaryKey.current === key) {
-      return;
-    }
-    summaryKey.current = key;
+  // No content-key dedupe: every setup issues once, every cleanup invalidates.
+  // StrictMode cleanup/setup therefore always replaces the cancelled request.
+  useLayoutEffect(() => {
     issueSummary();
-  }, [epoch, issueSummary]);
+    return () => { summaryTicket.current += 1; };
+  }, [issueSummary]);
 
-  const snapshotId = snapshot === null ? null : snapshot.id;
-  const sectionId = options.sectionId;
-  const unitId = options.unitId;
-  const quantity = options.quantity;
+  const snapshotId = snapshot?.id ?? null;
+  useLayoutEffect(() => {
+    invalidateDependents();
+    if (sectionId !== null && snapshotId !== null) issuePage(null);
+    return () => {
+      pageTicket.current += 1;
+      selectionTicket.current += 1;
+      seenRows.current = new Map();
+    };
+  }, [snapshotId, sectionId, freeOnly, invalidateDependents, issuePage]);
 
-  useEffect(() => {
-    if (sectionId === null || snapshotId === null) {
-      pageKey.current = "";
-      setPage(null);
-      return;
-    }
-    const key = `${snapshotId}:${sectionId}:${String(freeOnly)}`;
-    if (pageKey.current === key) {
-      return;
-    }
-    pageKey.current = key;
-    issuePage(null);
-  }, [snapshotId, sectionId, freeOnly, issuePage]);
+  useLayoutEffect(() => {
+    selectionTicket.current += 1;
+    selectionOwner.current = "";
+    setSelection(null);
+    if (sectionId !== null && unitId !== null && snapshotId !== null) issueSelection();
+    return () => { selectionTicket.current += 1; };
+  }, [snapshotId, sectionId, unitId, quantity, freeOnly, pageVersion, issueSelection]);
 
-  useEffect(() => {
-    if (sectionId === null || unitId === null || snapshotId === null) {
-      selectionKey.current = "";
-      setSelection(null);
-      return;
-    }
-    const key = `${snapshotId}:${sectionId}:${unitId}:${String(quantity)}`;
-    if (selectionKey.current === key) {
-      return;
-    }
-    selectionKey.current = key;
-    issueSelection();
-  }, [snapshotId, sectionId, unitId, quantity, issueSelection]);
-
-  const readSummaryAgain = useCallback(() => issueSummary(), [issueSummary]);
-
+  const readSummaryAgain = issueSummary;
   const nextPage = useCallback(() => {
-    if (page === null || page.kind !== "ready" || page.nextCursor === null) {
-      return;
-    }
-    issuePage(page.nextCursor);
-  }, [issuePage, page]);
-
+    if (page?.kind === "ready" && page.nextCursor !== null && pageOwner.current === pageContext()) issuePage(page.nextCursor);
+  }, [issuePage, page, pageContext]);
   const readPageAgain = useCallback(() => issuePage(sentCursor.current), [issuePage]);
+  const readSelectionAgain = issueSelection;
+  const setFreeOnly = useCallback((next: boolean) => {
+    if (latest.current.freeOnly === next) return;
+    invalidateDependents();
+    latest.current.freeOnly = next;
+    setFreeOnlyState(next);
+  }, [invalidateDependents]);
 
-  const readSelectionAgain = useCallback(() => issueSelection(), [issueSelection]);
-
-  const setFreeOnly = useCallback((next: boolean) => setFreeOnlyState(next), []);
-
-  const setScenario = useCallback(
-    (next: InventoryScenario) => {
-      portRef.current = inventoryReadPortFor(environment, { scenario: next, generation: servedGeneration });
-      floor.current = null;
-      setScenarioState(next);
-      setEpoch((current) => current + 1);
-    },
-    [environment, servedGeneration],
-  );
+  const setScenario = useCallback((next: InventoryScenario) => {
+    invalidateSource();
+    heldSnapshot.current = null;
+    setSnapshot(null);
+    portRef.current = inventoryReadPortFor(environment, { scenario: next, generation: servedGeneration });
+    setScenarioState(next);
+    issueSummary();
+  }, [environment, servedGeneration, invalidateSource, issueSummary]);
 
   const advanceGeneration = useCallback(() => {
+    invalidateSource();
+    // Keep the held generation only for the explicit generation-changed refusal.
+    // No pending read can replenish its page or selection/freshness evidence.
+    setSummary((current) => current.kind === "loading" ? unknownRead() : current);
     const next = servedGeneration + 1;
     portRef.current = inventoryReadPortFor(environment, { scenario, generation: next });
     setServedGeneration(next);
-  }, [environment, scenario, servedGeneration]);
+  }, [environment, scenario, servedGeneration, invalidateSource]);
 
-  const runReturn = useCallback(
-    (stage: InventoryStage) => {
-      const outcome: AnyOutcome | null = stage === "summary" ? summary : stage === "page" ? page : selection;
-      if (outcome === null) {
-        return;
-      }
-      const mode = inventoryReturnMode(stage, outcome);
-      const { sectionId: at } = latest.current;
-      if (mode === "again") {
-        if (stage === "summary") {
-          issueSummary();
-        } else if (stage === "page") {
-          issuePage(sentCursor.current);
-        } else {
-          issueSelection();
-        }
-      } else if (mode === "page") {
-        setLocation(at === null ? {} : { section: at });
-        issuePage(null);
-      } else if (mode === "first") {
-        issuePage(null);
-      } else if (mode === "summary") {
-        setLocation({});
-        issueSummary();
-      } else if (mode === "resync") {
-        floor.current = null;
-        setLocation({});
-        issueSummary();
-      }
-    },
-    [issuePage, issueSelection, issueSummary, page, selection, setLocation, summary],
-  );
+  const runReturn = useCallback((stage: InventoryStage) => {
+    const outcome: AnyOutcome | null = stage === "summary" ? summary : stage === "page" ? page : selection;
+    if (outcome === null) return;
+    const mode = inventoryReturnMode(stage, outcome);
+    const { sectionId: at } = latest.current;
+    if (mode === "again") {
+      if (stage === "summary") issueSummary();
+      else if (stage === "page") issuePage(sentCursor.current);
+      else issueSelection();
+    } else if (mode === "page") {
+      selectionTicket.current += 1;
+      selectionOwner.current = "";
+      setSelection(null);
+      latest.current.unitId = null;
+      setLocation(at === null ? {} : { section: at });
+      issuePage(null);
+    } else if (mode === "first") issuePage(null);
+    else if (mode === "summary" || mode === "resync") {
+      invalidateDependents();
+      if (mode === "resync") floor.current = null;
+      latest.current.sectionId = null;
+      latest.current.unitId = null;
+      setLocation({});
+      // This action is the sole summary-read owner; the route effect reads no summary.
+      issueSummary();
+    }
+  }, [invalidateDependents, issuePage, issueSelection, issueSummary, page, selection, setLocation, summary]);
 
   const heldSections = snapshot === null ? null : snapshot.sections;
   const section = sectionId === null || heldSections === null ? null : (heldSections.find((item) => item.sectionId === sectionId) ?? null);
@@ -844,16 +836,16 @@ export function useInventoryRead(options: {
       heldGeneration: snapshot === null ? null : snapshot.generation,
     }),
     pageModel:
-      sectionId === null
+      sectionId === null || snapshot === null
         ? null
         : buildPageModel({
             locale,
-            outcome: page ?? { kind: "loading" },
+            outcome: pageOwner.current === pageContext() ? page ?? unknownRead() : unknownRead(),
             sectionId,
             section,
             freeOnly,
           }),
-    selectionModel: unitId === null || sectionId === null ? null : buildSelectionModel({ locale, outcome: selection ?? { kind: "loading" } }),
+    selectionModel: unitId === null || sectionId === null || snapshot === null ? null : buildSelectionModel({ locale, outcome: selectionOwner.current === selectionContext() ? selection ?? unknownRead() : unknownRead() }),
     actions: connectedActions({
       readSummaryAgain,
       nextPage,

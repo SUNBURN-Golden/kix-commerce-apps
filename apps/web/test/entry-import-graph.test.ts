@@ -87,6 +87,12 @@ describe("stub startup boundary", () => {
     const gzip = (ref: string) => gzipSync(readFileSync(path.join(dist, ref)), { level: 9 }).length;
     expect([...initial].reduce((sum, ref) => sum + gzip(ref), 0)).toBeLessThanOrEqual(282000);
     const emitted = readdirSync(path.join(dist, "assets")).filter((name) => /\.(js|css)$/.test(name));
-    expect(emitted.reduce((sum, name) => sum + gzip("assets/" + name), 0)).toBeLessThanOrEqual(785000);
+    // 2026-10-23 owner ruling permits total gzip <= 790000; the configured
+    // budget owns total growth. Keep this node's tighter initial target above.
+    const budget = JSON.parse(readFileSync(path.join(web, "bundle-budget.json"), "utf8")) as {
+      limits: { totalGrowth: { base: number; maxRatio: number } };
+    };
+    const totalLimit = Math.min(790000, budget.limits.totalGrowth.base * budget.limits.totalGrowth.maxRatio);
+    expect(emitted.reduce((sum, name) => sum + gzip("assets/" + name), 0)).toBeLessThanOrEqual(totalLimit);
   });
 });

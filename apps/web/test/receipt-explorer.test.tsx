@@ -377,10 +377,28 @@ describe("receipt explorer", () => {
     expect(model.groups[0]?.entries[0]?.fields.map((field) => field.key)).toEqual(["comment", "label"]);
     expect(model.groups[0]?.entries[0]?.omittedFieldCount).toBe(6);
     expect(model.diagnostic.readConfirmsUnknown).toBe(false);
+    const json = JSON.parse(model.exportText);
+    expect(json.omittedFieldCount).toBe(6);
+    expect(json.entries).toContainEqual(expect.objectContaining({ status: "unknown", operationId: "op-secret-case",
+      fields: [{ key: "comment", value: "[redacted]" }, { key: "label", value: "confirmed" }] }));
     for (const secret of SECRETS) {
       expect(html).not.toContain(secret);
       expect(model.exportText).not.toContain(secret);
     }
+  });
+
+  it("redacts untrusted pin-like fields and retains allowed quotes without changing receipt evidence", () => {
+    const raw = candidate({ fields: [
+      { key: "pinDigest", value: "1234567890123456" },
+      { key: "label", value: '"safe"' },
+      { key: "comment", value: 'tab\tline\nquote"slash\\' },
+    ] });
+    const before = JSON.stringify(raw);
+    const model = build({ screenSessionId: "sess-a", evidenceSessionId: "sess-a", role: "buyer", extra: [raw] });
+    expect(JSON.parse(model.exportText).entries[0].fields).toEqual([
+      { key: "pinDigest", value: "[redacted]" }, { key: "label", value: '"safe"' }, { key: "comment", value: "[redacted]" },
+    ]);
+    expect(JSON.stringify(raw)).toBe(before);
   });
 
   it("quarantines a different actor without printing the actor", () => {
@@ -880,11 +898,29 @@ function build(
   overrides: Partial<ReceiptExplorerInput> &
     Pick<ReceiptExplorerInput, "screenSessionId" | "evidenceSessionId" | "role">,
 ): ReceiptExplorerModel {
-  return buildReceiptExplorer({
+  const model = buildReceiptExplorer({
     environment: "stub",
     ...emptyDesks(),
     ...overrides,
   });
+  // Every fixture (empty, populated, UNKNOWN, quarantined and HTTP-classified) must parse.
+  const json = JSON.parse(model.exportText);
+  expect(json).toEqual(model.diagnostic);
+  expect(Object.keys(json)).toEqual(["kind", "sessionId", "role", "mode", "profile", "profileVersion", "domain",
+    "productionReadiness", "productionConformance", "protocolTruth", "publicDeploy", "retry", "fallbackToStub",
+    "readConfirmsUnknown", "entries", "quarantine", "recordedNotSent", "omittedFieldCount", "note"]);
+  for (const row of json.entries) {
+    expect(Object.keys(row)).toEqual(["operationId", "action", "status", "source", "profile", "profileVersion", "code", "codeClass",
+      "unconfirmedReason", "nextAction", "requestId", "correlationId", "refId", "actorLabel", "context", "fields"]);
+    for (const field of row.fields) expect(Object.keys(field)).toEqual(["key", "value"]);
+  }
+  for (const row of json.quarantine) expect(Object.keys(row)).toEqual(["reason", "action", "operationId"]);
+  for (const row of json.recordedNotSent) expect(Object.keys(row)).toEqual(["sender", "action", "reason"]);
+  for (const flag of ["productionReadiness", "productionConformance", "protocolTruth", "publicDeploy", "retry", "fallbackToStub", "readConfirmsUnknown"]) {
+    expect(json[flag]).toBe(false);
+  }
+  expect(typeof json.omittedFieldCount).toBe("number");
+  return model;
 }
 
 async function runJourney(

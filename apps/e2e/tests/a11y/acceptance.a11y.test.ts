@@ -34,6 +34,7 @@ function minimalRecord(): A11yRecord {
     ledger: { nonLoopback: 0, nonGet: 0, appNetworkCalls: 0 },
     claims: { wcagConformance: false, userAccepted: false, assistiveTechRun: false, released: false, productionQualification: false },
     screens: [],
+    textSpacing: [],
     findings: [],
     observations: [],
     checkIds: [],

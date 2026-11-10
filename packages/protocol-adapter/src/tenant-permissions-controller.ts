@@ -160,7 +160,7 @@ export interface TenantControllerState {
   behind: boolean;
   fence: TenantFence | null;
   last: TenantActRecord | null;
-  /** Unknown outcomes left in sessions this page no longer holds. They are not forgotten. */
+  /** Distinct unresolved requests whose original UI incarnation is no longer current. */
   earlierUnknown: number;
   counters: TenantCounters;
 }
@@ -229,9 +229,14 @@ export class TenantPermissionsController {
   private actSeq = 0;
   private behind = false;
   private inFlight: TenantActionKind | null = null;
-  private fence: TenantFence | null = null;
+  /** Resource fences outlive UI incarnations. No read or navigation resolves a request. */
+  private readonly unresolvedByResource = new Map<string, {
+    context: TenantContext;
+    request: Parameters<TenantPermissionsPort["act"]>[0];
+    record: TenantActRecord;
+    fence: TenantFence;
+  }>();
   private last: TenantActRecord | null = null;
-  private earlierUnknown = 0;
   private actsDone = 0;
   private readonly counters: TenantCounters = { reads: 0, exports: 0, acts: 0, notSent: 0, droppedReads: 0, droppedExports: 0 };
   private readonly listeners = new Set<() => void>();
@@ -271,7 +276,7 @@ export class TenantPermissionsController {
       freshness = "STALE";
     }
     const verdict = this.exportValue === null ? null : judgeTenantExport(this.snapshot, this.exportValue);
-    return {
+    return structuredClone({
       context: { ...this.context, scope: { ...this.context.scope } },
       readState: this.readState,
       readCode: this.readCode,
@@ -285,17 +290,29 @@ export class TenantPermissionsController {
           : { phase: this.exportPhase, code: this.exportCode, detail: this.exportDetail, value: this.exportValue, verdict },
       behind: this.behind,
       fence: this.currentFence(),
-      last: this.last,
-      earlierUnknown: this.earlierUnknown,
+      last: this.last ?? this.retainedLast(),
+      earlierUnknown: [...this.unresolvedByResource.values()].filter((entry) => entry.context.key !== this.context.key).length,
       counters: { ...this.counters },
-    };
+    });
+  }
+
+  private resourceKey(): string {
+    return JSON.stringify([this.context.environment, this.context.domain, this.context.scope.tenantId]);
+  }
+
+  /** Publish retained details only to the original principal and role. */
+  private retainedLast(): TenantActRecord | null {
+    const retained = this.unresolvedByResource.get(this.resourceKey());
+    if (!retained || retained.context.actorRef !== this.context.actorRef) return null;
+    if (retained.context.scope.role !== this.context.scope.role) return null;
+    return retained.record;
   }
 
   private currentFence(): TenantFence | null {
     if (this.inFlight !== null) {
       return { reason: "in-flight", action: this.inFlight };
     }
-    return this.fence;
+    return structuredClone(this.unresolvedByResource.get(this.resourceKey())?.fence ?? null);
   }
 
   private clearView(): void {
@@ -316,9 +333,6 @@ export class TenantPermissionsController {
     if (this.inFlight !== null) {
       return null;
     }
-    if (this.fence !== null) {
-      this.earlierUnknown += 1;
-    }
     const parts = {
       environment: this.context.environment,
       domain: this.context.domain,
@@ -337,7 +351,6 @@ export class TenantPermissionsController {
     this.floor = null;
     this.roleGeneration = null;
     this.behind = false;
-    this.fence = null;
     this.last = null;
     this.notify();
     return { ...this.context, scope: { ...this.context.scope } };
@@ -408,9 +421,24 @@ export class TenantPermissionsController {
       return { kind: "DROPPED", cause: "older-read" };
     }
     this.appliedReadSeq = seq;
-    this.apply(outcome, this.actsDone === actsAtStart);
+    this.apply(structuredClone(outcome), this.actsDone === actsAtStart);
     this.notify();
     return { kind: "APPLIED", readState: this.readState };
+  }
+
+  /** One explicit read under the current source assignment; never adopts role-stale.actual. */
+  recoverRole(focusRef: string | null = null): Promise<TenantReadResult | { kind: "NOT_SENT"; reason: "in-flight" }> {
+    if (this.inFlight !== null) return Promise.resolve({ kind: "NOT_SENT", reason: "in-flight" });
+    const parts = { ...this.context, incarnation: this.context.incarnation + 1 };
+    this.context = { ...parts, key: contextKeyOf(parts) };
+    this.clearView();
+    this.readState = "none";
+    this.readCode = null;
+    this.readDetail = null;
+    this.roleGeneration = null;
+    this.notify();
+    // Dynamic read() dispatch also runs the app's accepted-read connectivity decoration.
+    return this.read(focusRef);
   }
 
   private apply(outcome: TenantReadOutcome, noActSince: boolean): void {
@@ -441,7 +469,7 @@ export class TenantPermissionsController {
         return;
       case "role-stale":
         this.readState = "role-stale";
-        this.readDetail = `The role assignment moved to generation ${outcome.actual} at the source; this view was built under ${outcome.expected}. Read again under the current assignment.`;
+        this.readDetail = `The role assignment moved to generation ${outcome.actual} at the source; this view was built under ${outcome.expected}. Use generation recovery to read under the current assignment.`;
         return;
       case "denied":
         this.readState = "denied";
@@ -555,7 +583,7 @@ export class TenantPermissionsController {
     switch (outcome.kind) {
       case "ready":
         this.exportPhase = "loaded";
-        this.exportValue = outcome.export;
+        this.exportValue = structuredClone(outcome.export);
         return;
       case "denied":
         this.exportPhase = "denied";
@@ -604,11 +632,11 @@ export class TenantPermissionsController {
     if (this.inFlight !== null) {
       return { allowed: false, reason: `A ${this.inFlight} request is in flight. One request goes at a time.` };
     }
-    if (this.fence !== null) {
+    if (this.currentFence() !== null) {
       return {
         allowed: false,
         reason:
-          "An earlier request has an unknown outcome and may have been recorded. Nothing is sent again from here. Switching the tenant, the actor, or the role, or starting a new synthetic session, begins a new context and counts this unknown outcome.",
+          "An earlier request has an unknown outcome and may have been recorded. Nothing is sent again from here. Reads, context switches and generation recovery do not resolve it. This resource stays fenced.",
       };
     }
     if (this.readState !== "ready" || this.snapshot === null || this.assessment === null) {
@@ -669,18 +697,21 @@ export class TenantPermissionsController {
     this.actSeq += 1;
     const seq = this.actSeq;
     this.counters.acts += 1;
+    const originalContext = structuredClone(this.context);
+    const resourceKey = this.resourceKey();
+    const request: Parameters<TenantPermissionsPort["act"]>[0] = {
+      contextKey: key,
+      actorRef: this.context.actorRef,
+      // The write carries the assignment generation the read was built under,
+      // so the source rejects a write whose role moved underneath it.
+      scope: { ...this.context.scope, roleGeneration: this.snapshot.roleGeneration },
+      action: built,
+    };
     this.inFlight = kind;
     this.notify();
     let outcome: TenantActOutcome;
     try {
-      outcome = await this.port.act({
-        contextKey: key,
-        actorRef: this.context.actorRef,
-        // The write carries the assignment generation the read was built under,
-        // so the source rejects a write whose role moved underneath it.
-        scope: { ...this.context.scope, roleGeneration: this.snapshot.roleGeneration },
-        action: built,
-      });
+      outcome = await this.port.act(structuredClone(request));
     } catch (error) {
       outcome = { kind: "unknown", message: failureText(error) };
     }
@@ -689,7 +720,10 @@ export class TenantPermissionsController {
     const record = this.record(seq, built, outcome);
     this.last = record;
     if (record.phase === "unknown" || record.phase === "refused") {
-      this.fence = { reason: "unknown-outcome", seq, action: kind };
+      this.unresolvedByResource.set(resourceKey, structuredClone({
+        context: originalContext, request, record,
+        fence: { reason: "unknown-outcome" as const, seq, action: kind },
+      }));
       this.behind = true;
     } else if (record.phase === "applied" || record.phase === "rejected") {
       this.behind = true;

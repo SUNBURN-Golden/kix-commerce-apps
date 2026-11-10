@@ -6,7 +6,7 @@ import { PINNED_ACTIONS, PINNED_PROTOCOL_DOMAIN } from "../src/openapi-contract-
 import { createSdk0MockScenario } from "../src/sdk0-mock-scenarios.js";
 import { ProtocolError } from "../src/types.js";
 import { createComposerFixtures, runComposerTarget, type ComposerAction } from "./support/composer-loopback-fixtures.js";
-import { createFakeLoopbackGate, type FakeLoopbackGate } from "./support/fake-loopback-gate.js";
+import { createFakeLoopbackGate, type FakeLoopbackGate, type GateAnswer } from "./support/fake-loopback-gate.js";
 
 const encoder = new TextEncoder();
 const limit = MAX_GATE_RESPONSE_BYTES;
@@ -24,8 +24,9 @@ const pad = (text: string, size: number) => text + " ".repeat(size - encoder.enc
 function nested(depth: number): string { return "[".repeat(depth) + "0" + "]".repeat(depth); }
 
 type End = "eof" | "error" | "stall";
-function streamed(chunks: Uint8Array[], end: End = "eof", cancellation: "resolve" | "reject" | "hang" = "resolve") {
+function streamed(chunks: Uint8Array[], end: End = "eof", cancellation: "resolve" | "reject" | "hang" | "deferred" = "resolve") {
   const stats = { pulls: 0, cancels: 0 };
+  let rejectCancellation!: (error: Error) => void;
   let index = 0;
   const body = new ReadableStream<Uint8Array>({
     pull(controller) {
@@ -38,9 +39,10 @@ function streamed(chunks: Uint8Array[], end: End = "eof", cancellation: "resolve
       stats.cancels++;
       if (cancellation === "reject") return Promise.reject(new Error("cancel rejected"));
       if (cancellation === "hang") return new Promise<void>(() => undefined);
+      if (cancellation === "deferred") return new Promise<void>((_resolve, reject) => { rejectCancellation = reject; });
     },
   }, { highWaterMark: 0 }); // No producer prefetch: assertions count requested chunks.
-  return { body, stats };
+  return { body, stats, rejectCancellation: () => rejectCancellation(new Error("late cancellation rejection")) };
 }
 function chunksFor(text: string, multiple: boolean) {
   const bytes = encoder.encode(text);
@@ -73,6 +75,7 @@ describe("actual response bytes independently of Content-Length", () => {
           // Valid bodies must actually reach EOF; overflow must not ask for more.
           const accepted = size <= limit;
           const validSource = accepted ? streamed(chunks) : source;
+          const cancel = vi.spyOn(validSource.body, "cancel");
           const gate = createFakeLoopbackGate({ scenario: fixture, streamBody: () => validSource.body,
             answer: (base) => ({ ...base, headers: { ...base.headers,
               ...(advertised === undefined ? {} : { "content-length": advertised }) } }) });
@@ -80,6 +83,7 @@ describe("actual response bytes independently of Content-Length", () => {
           if (accepted) {
             await expect(result).resolves.toEqual(fixture.receipt);
             expect(validSource.stats).toEqual({ pulls: chunks.length + 1, cancels: 0 });
+            expect(cancel).not.toHaveBeenCalled();
           } else {
             const error: unknown = await result.catch((error: unknown) => error);
             expect(error).toBeInstanceOf(ProtocolError);
@@ -212,26 +216,176 @@ describe.each(["booking", "gift", "organizer", "consent"] as const)("%s UNKNOWN 
 
 it.each([400, 422])("still recognizes a valid explicit rejection at exactly the byte limit (%i)", async (status) => {
   const source = streamed(chunksFor(pad('{"rejected":true,"error":"INVALID"}', limit), true));
+  const cancel = vi.spyOn(source.body, "cancel");
   const gate = createFakeLoopbackGate({ scenario: fixture, streamBody: () => source.body, answer: (base) => ({ ...base, status }) });
   await expect(new HttpProtocolAdapter(gate.baseUrl, gate.fetch).invokeLocalCall(fixture.envelope)).rejects.toBeInstanceOf(GateRejectedError);
+  expect(cancel).not.toHaveBeenCalled();
   expect(source.stats.cancels).toBe(0);
   assertOneFetch(gate);
 }, HEAVY_MS);
 
-it.each(["redirect", "trace", "transport", "production"] as const)("checks %s before consuming or parsing the body", async (kind) => {
-  const source = streamed([new Uint8Array(limit + 1)]);
-  const gate = createFakeLoopbackGate({ scenario: fixture, streamBody: () => source.body, answer: (base) => ({ ...base,
-    status: kind === "redirect" ? 307 : 200, headers: { ...base.headers,
-      ...(kind === "trace" ? { "x-request-id": "wrong" } : kind === "transport" ? { "x-kix-transport": "wrong" }
-        : kind === "production" ? { "x-kix-protocol-truth": "true" } : {}) } }) });
-  await expect(new HttpProtocolAdapter(gate.baseUrl, gate.fetch).invokeLocalCall(fixture.envelope)).rejects.toMatchObject({
-    code: kind === "trace" ? "STALE_RESPONSE" : kind === "production" ? "PRODUCTION_ENDPOINT" : "GATE_TRANSPORT",
-  });
-  expect(source.stats.pulls).toBe(0);
+type EarlyRejection = {
+  name: string; code: string; message: string; status?: number; url?: string;
+  headers?: Record<string, string | null>; redirected?: boolean; type?: ResponseType;
+};
+const redirectError = { code: "GATE_TRANSPORT", message: "Integration gate answered with a redirect. The client only talks to the loopback origin." };
+const traceError = { code: "STALE_RESPONSE", message: "Integration gate response does not match this request." };
+const transportError = { code: "GATE_TRANSPORT", message: "Remote transport is not the non-production integration gate." };
+const productionError = { code: "PRODUCTION_ENDPOINT", message: "Remote transport claims protocol truth or production conformance." };
+const earlyRejections: EarlyRejection[] = [
+  { name: "followed redirect", redirected: true, ...redirectError },
+  { name: "opaque redirect", type: "opaqueredirect", ...redirectError },
+  ...[300, 307, 399].map((status) => ({ name: `redirect status ${status}`, status, ...redirectError })),
+  ...["http://example.invalid:8765/", "http://127.0.0.1:8766/", "https://127.0.0.1:8765/", "not a URL"]
+    .map((url) => ({ name: `foreign/malformed origin ${url}`, url, ...redirectError })),
+  ...["x-request-id", "x-correlation-id"].flatMap((header) => [null, "wrong"].map((value) => ({
+    name: `${header}=${value}`, headers: { [header]: value }, ...traceError,
+  }))),
+  ...["x-kix-transport", "x-kix-production-endpoint"].flatMap((header) => [null, "wrong"].map((value) => ({
+    name: `${header}=${value}`, headers: { [header]: value }, ...transportError,
+  }))),
+  ...["x-kix-protocol-truth", "x-kix-production-conformance"].flatMap((header) => [null, "true"].map((value) => ({
+    name: `${header}=${value}`, headers: { [header]: value }, ...productionError,
+  }))),
+  { name: "redirect before all header failures", status: 307, headers: { "x-request-id": "wrong",
+    "x-kix-transport": "wrong", "x-kix-protocol-truth": "true" }, ...redirectError },
+  { name: "trace before transport and truth", headers: { "x-correlation-id": "wrong",
+    "x-kix-transport": "wrong", "x-kix-production-conformance": "true" }, ...traceError },
+  { name: "transport before truth", headers: { "x-kix-production-endpoint": "true",
+    "x-kix-protocol-truth": "true" }, ...transportError },
+];
+const disposalModes = ["resolve", "reject", "hang", "null", "throw", "deferred"] as const;
+type DisposalMode = typeof disposalModes[number];
+function unreadSource(mode: DisposalMode) {
+  const source = streamed([new Uint8Array(limit + 1)], "eof", mode === "null" || mode === "throw" ? "resolve" : mode);
+  const cancel = vi.spyOn(source.body, "cancel");
+  if (mode === "throw") cancel.mockImplementation(() => { throw new Error("synchronous cancel failure"); });
+  const getReader = vi.spyOn(source.body, "getReader");
+  return { ...source, cancel, getReader, responseBody: mode === "null" ? null : source.body };
+}
+function earlyAnswer(base: GateAnswer, fault: EarlyRejection): GateAnswer {
+  const headers = { ...base.headers };
+  for (const [name, value] of Object.entries(fault.headers ?? {})) {
+    if (value === null) delete headers[name];
+    else headers[name] = value;
+  }
+  return { ...base, body: null, headers, status: fault.status ?? base.status, url: fault.url ?? base.url };
+}
+function observeResponse(response: Response, fault: Pick<EarlyRejection, "redirected" | "type"> = {}) {
+  if (fault.redirected !== undefined) Object.defineProperty(response, "redirected", { value: fault.redirected });
+  if (fault.type !== undefined) Object.defineProperty(response, "type", { value: fault.type });
+  return [vi.spyOn(response, "text"), vi.spyOn(response, "json"), vi.spyOn(response, "arrayBuffer")];
+}
+function assertUnreadDisposal(source: ReturnType<typeof unreadSource>, mode: DisposalMode) {
+  expect(source.cancel).toHaveBeenCalledTimes(mode === "null" ? 0 : 1);
+  expect(source.stats).toEqual({ pulls: 0, cancels: mode === "null" || mode === "throw" ? 0 : 1 });
+  // As in gate-json/gate-numeric-safety tests, observe consumption rather than spying on an ESM export.
+  // No reader or Response convenience read means no response bytes can reach parseGateJson.
+  expect(source.getReader).not.toHaveBeenCalled();
   expect(source.body.locked).toBe(false);
-}, HEAVY_MS);
+  expect(vi.getTimerCount()).toBe(0);
+}
 
-it.each([false, true])("times out a fetch ignoring abort; late resolution=%s cannot consume or parse", async (late) => {
+describe.each(["local-call", "health", "ready"] as const)("%s unread early rejection disposal", (entry) => {
+  describe.each(disposalModes)("cancel=%s", (mode) => {
+    it.each(earlyRejections)("$name keeps the original error without waiting for cleanup", async (fault) => {
+      const source = unreadSource(mode);
+      const gate = createFakeLoopbackGate({ scenario: fixture,
+        ...(mode === "null" ? {} : { streamBody: () => source.body }), answer: (base) => earlyAnswer(base, fault) });
+      let sent: RequestInit | undefined;
+      let reads: ReturnType<typeof observeResponse> = [];
+      const fetchDouble = vi.fn<typeof fetch>(async (url, init) => {
+        sent = init;
+        let response: Response;
+        if (entry === "local-call") response = await gate.fetch(url, init);
+        else {
+          expect(String(url)).toBe(`${gate.baseUrl}/${entry}`);
+          expect(init?.method).toBe("GET");
+          const answer = earlyAnswer({ status: 200, body: null, headers: echoIntegrationGateHeaders(init), url: String(url) }, fault);
+          response = new Response(source.responseBody, { status: answer.status, headers: answer.headers });
+          Object.defineProperty(response, "url", { value: answer.url });
+        }
+        reads = observeResponse(response, fault);
+        return response;
+      });
+      const adapter = new HttpProtocolAdapter(gate.baseUrl, fetchDouble, { timeoutMs: 50 });
+      const pending = entry === "local-call" ? adapter.invokeLocalCall(fixture.envelope)
+        : entry === "health" ? adapter.readGateHealth() : adapter.readGateReady();
+      // Do not advance the deadline: a hanging/deferred cancellation cannot delay rejection.
+      const error: unknown = await pending.catch((error: unknown) => error);
+      expect(error).toBeInstanceOf(ProtocolError);
+      expect(error).not.toBeInstanceOf(GateRejectedError);
+      const headers = new Headers(sent?.headers);
+      expect(error).toMatchObject({ code: fault.code, message: fault.message,
+        requestId: headers.get("x-request-id"), correlationId: headers.get("x-correlation-id") });
+      expect(error).not.toMatchObject({ code: "REQUEST_TIMEOUT" });
+      expect(sent?.signal?.aborted).toBe(false);
+      expect(sent?.redirect).toBe("manual");
+      expect(headers.has("idempotency-key")).toBe(false);
+      expect(fetchDouble).toHaveBeenCalledOnce();
+      if (entry === "local-call") assertOneFetch(gate);
+      assertUnreadDisposal(source, mode);
+      for (const read of reads) expect(read).not.toHaveBeenCalled();
+      if (mode === "deferred") source.rejectCancellation();
+      // Flush rejected cancellation promises after the exchange has settled. Vitest's
+      // default unhandled-rejection detection stays enabled.
+      await vi.advanceTimersByTimeAsync(0);
+      expect(sent?.signal?.aborted).toBe(false);
+    });
+  });
+});
+
+describe.each(["booking", "gift", "organizer", "consent"] as const)("%s early rejection UNKNOWN and fence", (composer) => {
+  it.each(earlyRejections)("$name preserves progress and blocks follow-up writes", async (fault) => {
+    const action = composer === "gift" ? "accept_gift" : composer === "consent" ? "authorize_marketing" : "close_sales";
+    const target = composer === "booking" ? success("prepare_trade") : composerFixtures.find((item) => item.envelope.action === action)!;
+    const source = unreadSource("hang");
+    const gate = createFakeLoopbackGate({ scenario: target, streamBody: () => source.body,
+      answer: (base) => earlyAnswer(base, fault) });
+    let reads: ReturnType<typeof observeResponse> = [];
+    const adapter = new HttpProtocolAdapter(gate.baseUrl, async (url, init) => {
+      const response = await gate.fetch(url, init);
+      reads = observeResponse(response, fault);
+      return response;
+    }, { timeoutMs: 50 });
+    const meta = adapter.describe();
+    let thrown: unknown;
+    const invoked: string[] = [];
+    const invoker: LocalCallInvoker = { invokeLocalCall: async (input) => {
+      invoked.push(input.action);
+      if (input.action !== target.envelope.action) {
+        const prior = composer === "booking" ? success("create_event") : composerFixtures.find((item) => item.envelope.action === input.action)!;
+        expect(input).toEqual(prior.envelope);
+        return structuredClone(prior.receipt);
+      }
+      try { return await adapter.invokeLocalCall(input); }
+      catch (error) { thrown = error; throw error; }
+    } };
+    const replay = composer === "booking" ? await runJourneyTarget(invoker) : await runComposerTarget(action as ComposerAction, 7, invoker);
+    expect(thrown).toBeInstanceOf(ProtocolError);
+    expect(thrown).not.toBeInstanceOf(GateRejectedError);
+    expect(thrown).toMatchObject({ code: fault.code, message: fault.message, ...traceFor(gate) });
+    expect(replay.outcome).toMatchObject({ kind: "UNKNOWN", code: fault.code, identity: { ...target.envelope, ...traceFor(gate) } });
+    expect(replay.state().halted).toMatchObject({ kind: "UNKNOWN", identity: { ...target.envelope, ...traceFor(gate) } });
+    const confirmed = composer === "booking" ? { completedThrough: "create_event" }
+      : composer === "gift" ? { offered: true, resolvedBy: null }
+      : composer === "consent" ? { consented: true, allowed: true, authorized: false } : { sent: [] };
+    expect(replay.state()).toMatchObject(confirmed);
+    const state = replay.state();
+    const sent = [...invoked];
+    expect(await replay.fence()).toMatchObject({ kind: "FENCED", blockedBy: { reason: "halted" } });
+    expect(replay.state()).toEqual(state);
+    expect(invoked).toEqual(sent);
+    expect(adapter.describe()).toEqual(meta);
+    expect(meta).toMatchObject({ adapter: "http", environment: "integration-http", liveChain: false,
+      fundsMovement: "none", publicDeploy: false, productionConformance: false, protocolTruth: false });
+    assertUnreadDisposal(source, "hang");
+    for (const read of reads) expect(read).not.toHaveBeenCalled();
+    assertOneFetch(gate);
+  });
+});
+
+it.each(["unresolved", ...disposalModes] as const)("times out a fetch ignoring abort; late resolution=%s cannot consume or parse", async (mode) => {
   let resolve!: (response: Response) => void;
   let sent: RequestInit | undefined;
   const fetchDouble = vi.fn<typeof fetch>((_url, init) => { sent = init; return new Promise<Response>((done) => { resolve = done; }); });
@@ -240,15 +394,47 @@ it.each([false, true])("times out a fetch ignoring abort; late resolution=%s can
     requestId: new Headers(sent?.headers).get("x-request-id"), correlationId: new Headers(sent?.headers).get("x-correlation-id") });
   await vi.advanceTimersByTimeAsync(50);
   await assertion;
-  if (late) {
-    const source = streamed([encoder.encode(rawReceipt)]);
+  if (mode !== "unresolved") {
+    const source = unreadSource(mode);
     const parser = vi.spyOn(JSON, "parse");
-    resolve(new Response(source.body, { headers: echoIntegrationGateHeaders(sent) }));
+    const response = new Response(source.responseBody, { headers: echoIntegrationGateHeaders(sent) });
+    const reads = observeResponse(response);
+    resolve(response);
     await vi.advanceTimersByTimeAsync(0);
-    expect(source.stats).toEqual({ pulls: 0, cancels: 1 });
-    expect(source.body.locked).toBe(false);
+    assertUnreadDisposal(source, mode);
+    for (const read of reads) expect(read).not.toHaveBeenCalled();
     expect(parser).not.toHaveBeenCalled();
+    if (mode === "deferred") source.rejectCancellation();
+    await vi.advanceTimersByTimeAsync(0);
   }
+  expect(fetchDouble).toHaveBeenCalledOnce();
+});
+
+it.each(disposalModes)("defensively disposes a response if the injected fetch removes the abort signal (%s)", async (mode) => {
+  const source = unreadSource(mode);
+  let sent: RequestInit | undefined;
+  let signal: AbortSignal | null | undefined;
+  let reads: ReturnType<typeof observeResponse> = [];
+  const fetchDouble = vi.fn<typeof fetch>(async (_url, init) => {
+    sent = init;
+    signal = init?.signal;
+    // This cannot happen with native fetch; exercise the defensive branch without
+    // exporting the cleanup helper or accessing private adapter methods.
+    delete init!.signal;
+    const response = new Response(source.responseBody, { headers: echoIntegrationGateHeaders(init) });
+    reads = observeResponse(response);
+    return response;
+  });
+  const pending = new HttpProtocolAdapter("http://127.0.0.1:8765", fetchDouble, { timeoutMs: 50 }).invokeLocalCall(fixture.envelope);
+  const error: unknown = await pending.catch((error: unknown) => error);
+  expect(error).toBeInstanceOf(ProtocolError);
+  expect(error).toMatchObject({ code: "GATE_TRANSPORT", message: "Integration gate exchange is missing its abort signal.",
+    requestId: new Headers(sent?.headers).get("x-request-id"), correlationId: new Headers(sent?.headers).get("x-correlation-id") });
+  assertUnreadDisposal(source, mode);
+  expect(signal?.aborted).toBe(false);
+  for (const read of reads) expect(read).not.toHaveBeenCalled();
+  if (mode === "deferred") source.rejectCancellation();
+  await vi.advanceTimersByTimeAsync(0);
   expect(fetchDouble).toHaveBeenCalledOnce();
 });
 
@@ -275,6 +461,7 @@ describe.each(["health", "ready"] as const)("/%s response guards", (probe) => {
         productionConformance: false, protocolTruth: false, localFileJournal: false,
         ...(probe === "ready" ? { liveMoney: false, durable: false, commandCount: PINNED_ACTIONS.length, domain: PINNED_PROTOCOL_DOMAIN } : {}) };
       const source = kind === "exact" ? streamed(chunksFor(pad(JSON.stringify(body), limit), true)) : invalidSource(kind);
+      const cancel = vi.spyOn(source.body, "cancel");
       let sent: RequestInit | undefined;
       const fetchDouble = vi.fn<typeof fetch>(async (url, init) => {
         expect(String(url)).toBe(`http://127.0.0.1:8765/${probe}`);
@@ -292,6 +479,7 @@ describe.each(["health", "ready"] as const)("/%s response guards", (probe) => {
       });
       if (kind === "stall") await vi.advanceTimersByTimeAsync(50);
       await assertion;
+      if (kind === "exact") expect(cancel).not.toHaveBeenCalled();
       expect(source.stats.cancels).toBe(kind === "bytes" || kind === "stall" ? 1 : 0);
       expect(source.body.locked).toBe(false);
       expect(fetchDouble).toHaveBeenCalledOnce();

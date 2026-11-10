@@ -1,3 +1,4 @@
+import type { TextSpacingObservation } from "./text-spacing";
 import fs from "node:fs";
 import path from "node:path";
 import type { LifecycleBlock } from "./lifecycle";
@@ -8,6 +9,7 @@ import type { ManualFacet, ScreenRecord, ViewportName } from "./a11y-matrix";
 
 /** One line per observation. Only ids, rule ids and fixed words are written: no DOM text and no typed values. */
 export type FacetLine =
+  | { kind: "spacing"; observation: TextSpacingObservation }
   | { kind: "axe"; screenId: string; viewport: ViewportName; violations: string[]; incomplete: string[] }
   | { kind: "keyboard" | "reflow" | "structure"; screenId: string; result: ManualFacet; problems: string[] }
   | { kind: "observation"; id: string; note: string };
@@ -48,6 +50,7 @@ export interface A11yRecord {
     productionQualification: false;
   };
   screens: ScreenRecord[];
+  textSpacing: TextSpacingObservation[];
   findings: { screenId: string; viewport: ViewportName; ruleId: string; status: "OPEN" | "FIXED" }[];
   observations: { id: string; note: string }[];
   checkIds: string[];
@@ -59,6 +62,7 @@ export interface A11yRecord {
 }
 
 export const A11Y_NOT_RUN = [
+  "real user stylesheets (synthetic four-declaration override only)",
   "screen reader (NVDA, JAWS, VoiceOver, TalkBack)",
   "real device and touch",
   "browser zoom (a 200% root font size probe is an approximation only)",
@@ -85,6 +89,13 @@ export function renderA11yRecord(record: A11yRecord): string {
   assertNoAcceptance(record);
   if (Object.values(record.claims).some((claim) => claim !== false)) {
     throw new Error("Every claim in the accessibility record must be false.");
+  }
+  for (const row of record.textSpacing) {
+    for (const problem of row.problems) {
+      if (!/^\[data-spacing-node="\d{1,6}"\]$/.test(problem.target) && problem.target !== "tab-walk") {
+        throw new Error("Spacing targets must be structural identifiers, never DOM text.");
+      }
+    }
   }
   const hits = findSensitiveInRecord(record);
   if (hits.length > 0) {

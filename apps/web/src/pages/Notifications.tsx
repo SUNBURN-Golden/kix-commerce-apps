@@ -1,3 +1,6 @@
+import { useContext, useState } from "react";
+import { UNSAFE_LocationContext } from "react-router-dom";
+import { buildNotificationPage, filterNotificationRows, notificationPageForItem, type NotificationFilter } from "../notification-pagination";
 import { useReadState } from "../shell/read-state-params";
 import { readSettled, ReadView, ReadFilter } from "./ReadState";
 import { messages as copy0 } from "../i18n/messages/pages--Notifications";
@@ -19,12 +22,28 @@ import {
 } from "./NotificationsPanels";
 
 export function NotificationsPage() {
+  return <NotificationsScreen live={useNotificationInbox()} />;
+}
+
+export function NotificationsScreen({ live }: { live: ReturnType<typeof useNotificationInbox> }) {
   const t = useT(copy0, copy1);
-  const live = useNotificationInbox();
+  const location = useContext(UNSAFE_LocationContext)?.location;
   const model = live.model;
-  const rowsFor = (filter?: string) => model.rows.filter((row) => !filter || filter === "all" || (filter === "read" ? row.readWord === "Read" : row.readWord === "Unread"));
+  const rowsFor = (filter?: string) => filterNotificationRows(model.rows, (filter ?? "all") as NotificationFilter);
   const read = useReadState("notifications", { filter: ["all", "unread", "read"], item: (values) =>  !readSettled(model.state) ? null : rowsFor(values.filter).map((row) => row.notificationRef) });
-  const view = { ...model, rows: rowsFor(read.values.filter) };
+  const filter = (read.values.filter ?? "all") as NotificationFilter;
+  const filtered = rowsFor(filter);
+  // References/order, URL visits and selection drive restoration; model allocation does not.
+  const [position, setPosition] = useState({ key: "", filter, page: 1 });
+  // A pending read temporarily hides validated selection. Restore only after membership settles.
+  const key = readSettled(model.state)
+    ? JSON.stringify([location?.key, filter, read.values.item, filtered.map((row) => row.notificationRef)])
+    : position.key;
+  const requested = key === position.key && position.page !== 0 ? position.page
+    : notificationPageForItem(filtered, read.values.item) ?? (filter === position.filter ? position.page : 1);
+  const page = buildNotificationPage(model.rows, { filter, page: requested });
+  // Commit normalization, including zero, so a later growing snapshot cannot resurrect an old page.
+  if (key !== position.key || position.page !== page.page) setPosition({ key, filter, page: page.page });
   // A block, a refusal, a denial, a read that did not answer, or an unknown result takes focus to the status region.
   useRestoreFocus(model.focusToken, "notify-status");
 
@@ -57,7 +76,7 @@ export function NotificationsPage() {
         ) : null}
         <NotifyAuthoritySection model={model} />
         <NotifyFocusSection model={model} />
-        <NotifyInboxSection model={view} actions={live.actions} />
+        <NotifyInboxSection model={model} actions={live.actions} page={page} onPageChange={(next) => setPosition({ key, filter, page: next })} />
         <NotifyInquirySection model={model} actions={live.actions} />
         <NotifyRequestsSection model={model} />
         <NotifySessionSection session={model.session} />

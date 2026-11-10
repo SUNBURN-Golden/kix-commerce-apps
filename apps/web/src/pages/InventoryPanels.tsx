@@ -1,3 +1,4 @@
+import { useReadRecoveryFocus } from "../read-lifecycle";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
 import { messages as copy0 } from "../i18n/messages/pages--InventoryPanels";
 import { messages as copy1 } from "../i18n/messages/discovery--model";
@@ -134,16 +135,19 @@ export function QueueCard({ queue }: { queue: QueueModel }) {
 }
 
 export function SummarySection({ model, actions }: { model: SummaryModel; actions: InventoryActions }) {
+  const recover = useReadRecoveryFocus(model.state, "inventory-summary-status");
   const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5);
   return (
     <section id="inventory-summary" className="discovery-section" data-inventory-state={model.state}>
       <h3>{t("s1ne")}</h3>
-      <p role="status" data-inventory-status={model.state}>
+      {/* Ready queue observations have their own polite owner; this status owns failures. */}
+      <p id="inventory-summary-status" tabIndex={-1} role="status" aria-busy={model.state === "loading"}
+        aria-live={model.queue ? "off" : undefined} data-inventory-status={model.state}>
         {model.state === "loading" ? <StatusMark kind="loading" /> : null} {deskText(t, model.statusLine)}
         {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
       </p>
       {model.actionLabel ? (
-        <button type="button" className="discovery-action" onClick={() => actions.runReturn("summary")}>
+        <button type="button" className="discovery-action" onClick={() => recover(() => actions.runReturn("summary"))}>
           {deskText(t, model.actionLabel)}
         </button>
       ) : null}
@@ -352,6 +356,7 @@ export function PageSection({
   onOpen: (unitId: string) => void;
   onSelectPool: (unitId: string) => void;
 }) {
+  const recover = useReadRecoveryFocus(model.state, "inventory-page-status");
   const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5);
   const seatRows = model.rows.filter((row) => row.mode === "seat");
   const poolRows = model.rows.filter((row) => row.mode === "ga");
@@ -360,7 +365,8 @@ export function PageSection({
       <h3>{t("s16u")}{" "}{deskText(t, model.sectionLabel)}</h3>
       <p className="muted">{deskText(t, INVENTORY_PAGE_NOTE)}</p>
       <p className="muted">{deskText(t, model.metaLine)}</p>
-      <p role="status" data-inventory-status={model.state}>
+      <p id="inventory-page-status" tabIndex={-1} role="status" aria-busy={model.state === "loading"}
+        aria-live={model.state === "queue-blocked" && model.queue ? "off" : undefined} data-inventory-status={model.state}>
         {model.state === "loading" ? <StatusMark kind="loading" /> : null} {deskText(t, model.statusLine)}
         {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
       </p>
@@ -385,7 +391,7 @@ export function PageSection({
           </>
         ) : null}
         {model.actionLabel ? (
-          <button type="button" className="discovery-action" onClick={() => actions.runReturn("page")}>
+          <button type="button" className="discovery-action" onClick={() => recover(() => actions.runReturn("page"))}>
             {deskText(t, model.actionLabel)}
           </button>
         ) : null}
@@ -418,6 +424,7 @@ export function SelectionSection({
   actions: InventoryActions;
   onClear: () => void;
 }) {
+  const recover = useReadRecoveryFocus(model.state, "inventory-selection-status");
   const t = useT(deskCopy, copy0, copy1, copy2, copy3, copy4, copy5);
   return (
     <section
@@ -434,7 +441,7 @@ export function SelectionSection({
         data-source={model.selected ? "synthetic-inventory" : "none"}
         data-selected={model.selected ? "true" : "false"}
       >
-        <p role="status" aria-busy={model.state === "loading"} data-inventory-status={model.state}>
+        <p id="inventory-selection-status" tabIndex={-1} role="status" aria-busy={model.state === "loading"} data-inventory-status={model.state}>
           {model.state === "loading" ? <StatusMark kind="loading" /> : null} {deskText(t, model.statusLine)}
           {model.detailLine ? t("sgg", { detailLine: model.detailLine }) : ""}
         </p>
@@ -465,7 +472,7 @@ export function SelectionSection({
         ) : null}
         <div className="discovery-controls">
           {model.actionLabel ? (
-            <button type="button" className="discovery-action" onClick={() => actions.runReturn("selection")}>
+            <button type="button" className="discovery-action" onClick={() => recover(() => actions.runReturn("selection"))}>
               {deskText(t, model.actionLabel)}
             </button>
           ) : null}

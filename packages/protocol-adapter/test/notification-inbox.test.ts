@@ -576,3 +576,22 @@ describe("not-bound port and effects", () => {
     expect(port.effects()).toEqual({ reads: 2, inquiries: 1, acts: 1 });
   });
 });
+
+it("runtime capabilities and detached read arrays cannot grant sensitive detail to another instance", async () => {
+  const baseline = [...notifyCapabilities("buyer")];
+  expect(() => (notifyCapabilities("buyer") as string[]).push("read-sensitive")).toThrow(TypeError);
+  expect(notifyCapabilities("constructor")).toEqual([]);
+  expect(notifyCapabilities("__proto__")).toEqual([]);
+  const source = createStubNotificationInbox();
+  const request = readRequest(NOTIFY_BUYER_ACTOR, SCOPE_BUYER);
+  const first = await source.read(request);
+  if (first.kind !== "ready") throw Error("Expected fixture read");
+  const rows = structuredClone(first.snapshot.notifications);
+  (first.snapshot.capabilities as string[]).push("read-sensitive");
+  first.snapshot.capabilities = [];
+  first.snapshot.notifications[0]!.read = true;
+  for (const port of [source, createStubNotificationInbox()]) {
+    const next = await port.read(request);
+    expect(next).toMatchObject({ kind: "ready", snapshot: { capabilities: baseline, notifications: rows } });
+  }
+});
