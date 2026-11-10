@@ -20,9 +20,12 @@ export function resaleMarketPortFor(environment: "stub" | "integration-http"): R
     const fault = window.__kixResaleFault;
     if (!fault) return source.submit(input);
     fault.dispatches++;
+    (fault.requests ??= []).push(structuredClone(input));
     if (fault.mode === "reject") return { ...MARKET_CLAIMS, kind: "REJECTED", request: input, code: "STALE_VERSION" };
     if (fault.mode === "wrong-side") return source.submit({ ...input, kind: "instant-buy", quoteId: `${input.productId}-${input.variantId}-bid` });
     const result = await source.submit(input);
+    (fault.results ??= []).push(structuredClone(result));
+    if (fault.mode === "normal") return result;
     if (fault.mode === "lost") throw new Error("fixture effect followed by lost answer");
     await new Promise<void>(resolve => { fault.release = resolve; });
     return result;

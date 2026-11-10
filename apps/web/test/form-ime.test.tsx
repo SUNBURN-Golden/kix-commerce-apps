@@ -3,7 +3,7 @@ import { act, createRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { ValidatedForm } from "../src/forms/ValidatedForm";
 import type { ValidationHandle } from "../src/forms/useFormValidation";
-import { field } from "../src/forms/validation";
+import { field, type FieldRule } from "../src/forms/validation";
 import { LocaleProvider } from "../src/i18n/LocaleProvider";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { BookingPage } from "../src/pages/Booking";
@@ -21,12 +21,12 @@ const compose = (type: string, data = "") => new CompositionEvent(type, { bubble
 const key = (type: string, extra: KeyboardEventInit = {}) => new KeyboardEvent(type, { key: "Enter", bubbles: true, cancelable: true, ...extra });
 const turn = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 5)); });
 
-async function harness(locale: "ko" | "en" = "ko") {
+async function harness(locale: "ko" | "en" = "ko", fields: FieldRule[] = rules) {
   const send = vi.fn();
   const validation = createRef<ValidationHandle>();
   function Form() {
     const [value, setValue] = useState("1");
-    return <LocaleProvider initial={locale}><ValidatedForm fields={rules} validationRef={validation} onSubmit={send}>
+    return <LocaleProvider initial={locale}><ValidatedForm fields={fields} validationRef={validation} onSubmit={send}>
       <label htmlFor="draft">Quantity<input id="draft" value={value} onChange={(event) => setValue(event.target.value)} aria-describedby="hint" /></label>
       <p id="hint">Hint</p><button>Send</button>
     </ValidatedForm><button onClick={() => { if (validation.current?.validate()) send(); }}>External</button></LocaleProvider>;
@@ -38,6 +38,34 @@ async function harness(locale: "ko" | "en" = "ko") {
 }
 
 describe("IME form transactions (automated DOM sequences, no native IME claim)", () => {
+  it.each(["start-key-end", "start-end-key", "legacy-229"])("keeps exact 30-digit mock units behind the %s confirmation guard", async order => {
+    const { input, form, send, container } = await harness("ko", [field("draft", "validation.label.mockUnits", { kind: "mockUnits" })]);
+    const value = "999999999999999999999999999999";
+    await dispatch(input, compose("compositionstart")); await change(input, value);
+    await act(async () => {
+      if (order !== "start-key-end") input.dispatchEvent(compose("compositionend", value));
+      const down = key("keydown", order === "legacy-229" ? { keyCode: 229 } : { isComposing: order === "start-key-end" });
+      input.dispatchEvent(down); expect(down.defaultPrevented).toBe(true);
+      form.requestSubmit(); input.dispatchEvent(key("keydown", { repeat: true })); form.requestSubmit();
+      if (order === "start-key-end") input.dispatchEvent(compose("compositionend", value));
+    });
+    expect(input.value).toBe(value); expect(send).not.toHaveBeenCalled();
+    expect(container.querySelector(".error-summary")).toBeNull();
+    await dispatch(input, key("keyup")); await dispatch(form, new Event("submit", { bubbles: true, cancelable: true }));
+    expect(send).toHaveBeenCalledTimes(1); expect(input.value).toBe(value);
+  });
+
+  it.each(["ko", "en"] as const)("defers invalid mock-unit preedit until composition ends and blur validates (%s)", async locale => {
+    const { input, container, send } = await harness(locale, [field("draft", "validation.label.mockUnits", { kind: "mockUnits" })]);
+    await dispatch(input, compose("compositionstart")); await change(input, "한글");
+    await act(async () => input.blur());
+    expect(input.getAttribute("aria-invalid")).toBe("false");
+    expect(container.querySelector("#draft-format-error")).toBeNull();
+    await dispatch(input, compose("compositionend", "한글")); await turn();
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    expect(input.value).toBe("한글"); expect(send).not.toHaveBeenCalled();
+    expect(container.querySelector(".error-summary:focus")).toBeNull();
+  });
   it.each(["start-key-end", "start-end-key", "legacy-229"])("suppresses %s confirmation, imperative validation and repeated Enter, then accepts an immediate fresh Enter", async (order) => {
     const { input, form, send, validation, container } = await harness();
     await dispatch(input, compose("compositionstart"));

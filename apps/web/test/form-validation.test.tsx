@@ -8,9 +8,26 @@ import { FORM_MESSAGES, type FormMessageKey } from "../src/forms/catalogue";
 import { placeholdersOf } from "../src/i18n/translate";
 import { field, validateValue } from "../src/forms/validation";
 import { LocaleProvider } from "../src/i18n/LocaleProvider";
+import { canonicalUnits } from "../../../packages/protocol-adapter/src/resale-market";
 
 const integer = field("version", "validation.label.version", { kind: "integer" });
 describe("app-local input syntax", () => {
+  it("matches the model's exact mock-unit grammar while keeping other integer rules", () => {
+    const units = field("market-units", "validation.label.mockUnits", { kind: "mockUnits" });
+    const valid = ["0", "1", "9007199254740993", "12345678901234567890123456789", "999999999999999999999999999999"];
+    const invalid = ["", " ", "00", "01", "+1", "-1", "1.0", "1e3", "1,000", "1_000", "1 000", "１", "١", " 0", "0 ", "9".repeat(31), "9".repeat(100)];
+    for (const value of [...valid, ...invalid]) {
+      expect(validateValue(units, value) === null, value).toBe(canonicalUnits(value));
+      expect(canonicalUnits(value), value).toBe(valid.includes(value));
+    }
+    expect(validateValue(units, "01")?.messageKey).toBe("validation.integer");
+    for (const kind of ["integer", "positiveInteger", "bookingQuantity"] as const) {
+      const rule = field("other", "validation.label.quantity", { kind });
+      expect(validateValue(rule, "1")).toBeNull();
+      for (const value of valid.slice(2)) expect(validateValue(rule, value)).not.toBeNull();
+      expect(validateValue(rule, "0") === null).toBe(kind === "integer");
+    }
+  });
   it.each(["", " ", "-1", "1.5", "1e3", "01", "+1", " 1", "9007199254740992"])("rejects noncanonical caller integer %j", (raw) => {
     expect(validateValue(integer, raw)).not.toBeNull();
   });
