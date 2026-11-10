@@ -360,6 +360,10 @@ describe("servicing controller requests", () => {
     expect(port.effects().acts).toBe(1);
     expect(await controller.approveProposal("prp-0001")).toMatchObject({ kind: "FENCED" });
     expect(port.effects().acts).toBe(1);
+    controller.switchScope(SERVICING_OWN_REF);
+    await controller.read();
+    expect((await controller.approveProposal("prp-0001")).kind).toBe("FENCED");
+    expect(controller.state().counters.acts).toBe(1);
   });
 
   it("serialises requests: one in flight, a second is fenced, and the context cannot change under it", async () => {
@@ -385,7 +389,7 @@ describe("servicing controller requests", () => {
     await controller.proposeAdjustment("ins-0002", "note", "x");
     expect(controller.state().fence).not.toBeNull();
     controller.switchScope(SERVICING_OWN_REF);
-    expect(controller.state()).toMatchObject({ fence: null, earlierUnknown: 1 });
+    expect(controller.state()).toMatchObject({ fence: { reason: "unknown-outcome" }, earlierUnknown: 1 });
     controller.switchActor(SERVICING_APPROVER_ACTOR);
     expect(controller.state().context.actorRef).toBe(SERVICING_APPROVER_ACTOR);
   });
@@ -483,4 +487,39 @@ describe("captured response invalidation barrier", () => {
       }
     }
   });
+});
+
+// Audit 10: navigation changes view identity, never unresolved resource identity.
+it("retains exact unresolved identity through same-scope and A→B→A navigation", async () => {
+  const { controller } = controllerFor("act-lost");
+  await controller.read();
+  const original = controller.state().context;
+  expect((await controller.proposeAdjustment("ins-0002", "note", "x")).kind).toBe("UNKNOWN");
+  const record = controller.state().last;
+  controller.switchScope(SERVICING_OWN_REF);
+  expect(controller.state().snapshot).toBeNull();
+  await controller.read();
+  expect((await controller.proposeAdjustment("ins-0002", "note", "x")).kind).toBe("FENCED");
+  controller.switchScope(SERVICING_FOREIGN_REF);
+  expect(controller.state().fence).toBeNull();
+  controller.switchScope(SERVICING_OWN_REF);
+  controller.switchScope(SERVICING_OWN_REF);
+  await controller.read();
+  expect(controller.state().context.key).not.toBe(original.key);
+  expect(controller.state().last).toEqual(record);
+  expect(controller.state().earlierUnknown).toBe(1);
+  expect(controller.canSend("propose-adjustment").allowed).toBe(false);
+  expect((await controller.proposeAdjustment("ins-0002", "note", "x")).kind).toBe("FENCED");
+  expect(controller.state().counters.acts).toBe(1);
+});
+
+it("another actor cannot bypass the shared resource fence or read the original request", async () => {
+  const { controller } = controllerFor("act-lost");
+  await controller.read();
+  await controller.proposeAdjustment("ins-0002", "note", "x");
+  controller.switchActor(SERVICING_APPROVER_ACTOR);
+  expect(controller.state().last).toBeNull();
+  await controller.read();
+  expect((await controller.proposeAdjustment("ins-0002", "note", "x")).kind).toBe("FENCED");
+  expect(controller.state().counters.acts).toBe(1);
 });

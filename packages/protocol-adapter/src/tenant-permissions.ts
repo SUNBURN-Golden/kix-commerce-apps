@@ -114,6 +114,7 @@ export type TenantActor = (typeof TENANT_ACTORS)[number];
 
 /** The four desk roles: buyer, organizer, settlement staff, support staff. */
 export const TENANT_ROLES = ["buyer", "organizer", "settler", "support"] as const;
+Object.freeze(TENANT_ROLES);
 export type TenantRole = (typeof TENANT_ROLES)[number];
 
 /**
@@ -129,6 +130,7 @@ export const TENANT_CAPABILITIES = [
   "approve-change",
   "export-sensitive",
 ] as const;
+Object.freeze(TENANT_CAPABILITIES);
 export type TenantCapability = (typeof TENANT_CAPABILITIES)[number];
 
 const ROLE_CAPABILITIES: Readonly<Record<TenantRole, readonly TenantCapability[]>> = {
@@ -137,10 +139,12 @@ const ROLE_CAPABILITIES: Readonly<Record<TenantRole, readonly TenantCapability[]
   settler: ["read-own", "read-tenant", "propose-account-change", "export-sensitive"],
   support: ["read-own", "read-tenant", "read-audit", "propose-role-revoke"],
 };
+for (const values of Object.values(ROLE_CAPABILITIES)) Object.freeze(values);
+Object.freeze(ROLE_CAPABILITIES);
 
 /** The capabilities a role holds. An unknown role holds none. */
 export function tenantCapabilities(role: string): readonly TenantCapability[] {
-  return (ROLE_CAPABILITIES as Record<string, readonly TenantCapability[]>)[role] ?? [];
+  return Object.hasOwn(ROLE_CAPABILITIES, role) ? (ROLE_CAPABILITIES as Record<string, readonly TenantCapability[]>)[role] ?? [] : [];
 }
 
 /** The two sensitive change kinds. Each has one maker role and one checker role. */
@@ -152,6 +156,7 @@ export const TENANT_MAKER_CAPABILITY: Readonly<Record<TenantChangeKind, TenantCa
   "account-change": "propose-account-change",
   "role-revoke": "propose-role-revoke",
 };
+Object.freeze(TENANT_MAKER_CAPABILITY);
 
 /** The checker capability every approval needs. A different actor approves than proposed. */
 export const TENANT_CHECKER_CAPABILITY: TenantCapability = "approve-change";
@@ -161,6 +166,7 @@ export const TENANT_CHANGE_TARGET_KIND: Readonly<Record<TenantChangeKind, "accou
   "account-change": "account",
   "role-revoke": "member",
 };
+Object.freeze(TENANT_CHANGE_TARGET_KIND);
 
 /** What a person may do on this desk. The export and the audit read stay their own rows. */
 export interface TenantAuthorityRow {
@@ -189,13 +195,15 @@ export const TENANT_ROLE_RESOURCES: Readonly<Record<TenantRole, readonly TenantR
   settler: ["member", "account", "proposal"],
   support: ["member", "case", "proposal", "audit"],
 };
+for (const values of Object.values(TENANT_ROLE_RESOURCES)) Object.freeze(values);
+Object.freeze(TENANT_ROLE_RESOURCES);
 
 export function tenantRoleResources(role: string): readonly TenantResourceKind[] {
-  return (TENANT_ROLE_RESOURCES as Record<string, readonly TenantResourceKind[]>)[role] ?? [];
+  return Object.hasOwn(TENANT_ROLE_RESOURCES, role) ? (TENANT_ROLE_RESOURCES as Record<string, readonly TenantResourceKind[]>)[role] ?? [] : [];
 }
 
 /** The change kinds whose proposals a role may see in the last read. */
-export const TENANT_PROPOSAL_READER_ROLES: readonly TenantRole[] = ["organizer", "settler", "support"];
+export const TENANT_PROPOSAL_READER_ROLES: readonly TenantRole[] = Object.freeze(["organizer", "settler", "support"]);
 
 // ---------------------------------------------------------------------------
 // Codes and enums.
@@ -1408,7 +1416,7 @@ export class StubTenantPermissions implements TenantPermissionsPort {
       return refused;
     }
     this.audit(roleScope, String(request.actorRef), "read", null, "allowed", `Read answered for role ${roleScope.role}.`);
-    return { kind: "ready", snapshot };
+    return { kind: "ready", snapshot: structuredClone(snapshot) };
   }
 
   /** Resolves a deep-open ref against the role's visibility. Anything else is denied, not empty. */
@@ -1591,7 +1599,7 @@ export class StubTenantPermissions implements TenantPermissionsPort {
       scope: { ...scope },
       actorRef: String(request.actorRef),
       roleGeneration: this.generationOf(gated.assignment.memberRef),
-      visibleKinds: tenantRoleResources(scope.role),
+      visibleKinds: [...tenantRoleResources(scope.role)],
       members: this.membersFor(scope, String(request.actorRef), tenantRoleResources(scope.role)),
       orders: [],
       events: [],

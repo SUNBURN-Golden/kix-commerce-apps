@@ -1,3 +1,4 @@
+import { c224, c228 } from "./shared-copy";
 import { c210, c209, c208, c207, c206, c205, c204, c203, c202, c201, c200, c199, c198, c197, c196, c195, c194, c193, c192, c191 } from "./shared-copy";
 import { c41, c40, c46, c39, c38, c101, c100, c99, c37, c36, c34, c98, c33, c97, c96, c95, c32, c94, c93, c45, c31, c30, c44, c29, c28, c92, c91, c90, c27, c89, c88, c87, c26, c25, c24, c23, c22, c21, c86, c19, c85, c84, c18, c83, c17, c82, c16, c81, c80, c79, c15, c14, c13, c78, c77, c76, c75, c12, c74, c43, c73, c72, c71, c70, c69, c42, c11 } from "./shared-copy";
 export const messages = {
@@ -182,7 +183,7 @@ export const messages = {
     "p.t149": c201,
     "p.t150": c88,
     "p.t151": c89,
-    "p.t152": "Request {v1} ({v2}) has an unknown outcome and may have been recorded. Nothing is sent again from here, and a read does not resolve it. Switching the scope or the actor, or starting a new synthetic session, begins a new context and counts this unknown outcome.",
+    "p.t152": c224,
     "p.t153": "The source resolved this case in a later cut. It now states {v1} with difference {v2}. This page did not resolve it, and no approval did. The earlier mismatch is not replayed here.",
     "p.t154": "The source expected {v1} ({v2}) and found no matching observation{v3}. Whether anything was paid is not known here.{v4}",
     "p.t155": " on cut {v1}",
@@ -409,7 +410,7 @@ export const messages = {
     "p.t149": "원본이 내보내기를 거부했습니다 ({v1}).",
     "p.t150": "내보내기 응답을 거부했습니다 ({v1}).",
     "p.t151": "내보내기 요청을 거부했습니다 ({v1}).",
-    "p.t152": "요청 {v1} ({v2}) 결과가 미확인이며 기록되었을 수 있습니다. 재전송하지 않으며 조회로 해소되지 않습니다. 범위·행위자 전환이나 새 합성 세션은 새 문맥을 열며 미확인을 집계합니다.",
+    "p.t152": c228,
     "p.t153": "원본이 후속 기준점에서 사례를 해소했습니다. 현재 {v1}, 차이 {v2}입니다. 화면이나 인가자가 해소하지 않았으며 이전 불일치를 재실행하지 않습니다.",
     "p.t154": "원본 예상 {v1} ({v2})의 대응 관측이 없습니다{v3}. 지불 여부는 미확인입니다.{v4}",
     "p.t155": " 기준점 {v1}에서",
