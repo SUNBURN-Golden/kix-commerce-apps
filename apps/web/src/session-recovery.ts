@@ -138,13 +138,14 @@ export function sessionFenceLine(fence: SessionFence): string {
     case "evidence-lost":
       return sourceMessage(sourceCopy.en["p.t413"], { v1: SESSION_EVIDENCE_LOST, v2: fence.cause, v3: evidenceLostCauseLine(fence.cause) });
     case "unavailable":
+      if (fence.cause === "COUNTER_EXHAUSTED") return sourceCopy.en["sj.load"];
       return sourceMessage(sourceCopy.en["p.t414"], { v1: fence.cause });
     case "unresolved": {
       if (fence.inFlight) {
         return sourceMessage(sourceCopy.en["p.t237"], { v1: fence.intentRef });
       }
-      const where = fence.recovered ? " It was in flight when the page went away." : "";
-      const earlier = fence.earlierLoad ? " It was sent in an earlier page load." : "";
+      const where = fence.recovered ? ` ${sourceCopy.en["sp9"]}` : "";
+      const earlier = fence.earlierLoad ? ` ${sourceCopy.en["spb"]}` : "";
       return sourceMessage(sourceCopy.en["p.t415"], { v1: fence.intentRef, v2: fence.code ?? "no code", v3: where, v4: earlier });
     }
     case "underlying":
@@ -172,6 +173,7 @@ export function sessionRunResultLine(result: SessionRunResult): string {
     case "FENCED":
       return sourceMessage(sourceCopy.en["p.t242"], { v1: sessionFenceLine(result.fence) });
     case "NOT_SENT":
+      if (result.reason === "counter-exhausted") return sourceCopy.en["sj.seq"];
       return sourceMessage(sourceCopy.en["p.t242"], { v1: result.detail });
     default: {
       const exhaustive: never = result;
@@ -184,7 +186,7 @@ export type SessionLastAction =
   | { seq: number; kind: "step"; result: SessionRunResult }
   | { seq: number; kind: "note"; text: string };
 
-function recordKind(record: SessionRecord, load: number): SessionRecordKind {
+function recordKind(record: SessionRecord, load: number | null): SessionRecordKind {
   if (record.outcome === "IN_FLIGHT") {
     return "in-flight";
   }
@@ -194,10 +196,10 @@ function recordKind(record: SessionRecord, load: number): SessionRecordKind {
   if (record.outcome === "REJECTED") {
     return "rejected";
   }
-  return record.loadNo < load ? "history" : "this-load";
+  return (load === null || record.loadNo < load) ? "history" : "this-load";
 }
 
-function recordLine(record: SessionRecord, kind: SessionRecordKind, load: number): string {
+function recordLine(record: SessionRecord, kind: SessionRecordKind, load: number | null): string {
   const base = sourceMessage(sourceCopy.en["p.t575"], { v1: record.intentRef, v2: record.scope, v3: record.outcome, v4: record.code ? ` (${record.code})` : "" });
   switch (kind) {
     case "history":
@@ -205,7 +207,7 @@ function recordLine(record: SessionRecord, kind: SessionRecordKind, load: number
     case "recovered-unknown":
       return sourceMessage(sourceCopy.en["p.t420"], { v1: base });
     case "unknown":
-      return sourceMessage(sourceCopy.en["p.t421"], { v1: base, v2: record.loadNo < load ? " It was sent in an earlier page load." : "" });
+      return sourceMessage(sourceCopy.en["p.t421"], { v1: base, v2: (load === null || record.loadNo < load) ? ` ${sourceCopy.en["spb"]}` : "" });
     case "in-flight":
       return sourceMessage(sourceCopy.en["p.t422"], { v1: base });
     case "rejected":
@@ -236,6 +238,9 @@ function statusFor(state: SessionScreenState, snapshot: SessionControllerState |
       return { statusLine: sourceMessage(sourceCopy.en["p.t425"], { v1: SESSION_EVIDENCE_LOST }), detailLine: evidenceLostCauseLine(cause) };
     }
     case "unavailable":
+      if (snapshot?.status.kind === "unavailable" && snapshot.status.cause === "COUNTER_EXHAUSTED") {
+        return { statusLine: sourceCopy.en["sj.load"], detailLine: sourceCopy.en["s118"] };
+      }
       return { statusLine: sourceCopy.en["s23o"], detailLine: sourceCopy.en["s9e"] };
     case "full":
       return { statusLine: sourceCopy.en["s1xz"], detailLine: sourceCopy.en["s118"] };
@@ -301,7 +306,8 @@ export function buildSessionModel(input: {
     };
   });
 
-  const load = snapshot?.load ?? 0;
+  const loadExhausted = snapshot?.status.kind === "unavailable" && snapshot.status.cause === "COUNTER_EXHAUSTED";
+  const load = snapshot === null || loadExhausted || snapshot.load === 0 ? null : snapshot.load;
   const records: SessionRecordRow[] = (snapshot?.records ?? []).map((record) => {
     const kind = recordKind(record, load);
     return {
@@ -333,7 +339,7 @@ export function buildSessionModel(input: {
         ? sourceCopy.en["spd"]
         : sourceMessage(sourceCopy.en["p.t426"], { v1: budget.usedRecords, v2: budget.maxRecords, v3: budget.usedBytes, v4: budget.maxBytes }),
     countersLine: sourceMessage(sourceCopy.en["p.t427"], { v1: counters.sent, v2: counters.fenced, v3: counters.notSent, v4: counters.recoveredUnknown }),
-    loadLine: load === 0 ? sourceCopy.en["svt"] : sourceMessage(sourceCopy.en["p.t428"], { v1: load }),
+    loadLine: load === null ? sourceCopy.en["svt"] : sourceMessage(sourceCopy.en["p.t428"], { v1: load }),
     observationLines: (snapshot?.observations ?? []).map(
       (item) => sourceMessage(sourceCopy.en["p.t429"], { v1: item.observed, v2: item.intentRef }),
     ),

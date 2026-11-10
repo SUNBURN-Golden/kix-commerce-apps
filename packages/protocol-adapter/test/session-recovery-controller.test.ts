@@ -12,6 +12,7 @@ import {
   type SessionJournal,
   type SessionSender,
 } from "../src/index.js";
+import { invalidCounterFixtures, journalBlob, journalRecord, MAX_COUNTER as M } from "./support/session-journal-fixtures.js";
 import { FakeSessionStore } from "./support/fake-session-store.js";
 
 interface Spy {
@@ -292,5 +293,86 @@ describe("session recovery controller", () => {
     const text = store.getItem("kix-session-journal") as string;
     expect(text).not.toContain(JOURNEY_IDENTITY_DESK_ACTOR);
     expect(text).not.toContain("|");
+  });
+});
+
+describe("counter refusals before synthetic dispatch", () => {
+  for (const { name, raw } of invalidCounterFixtures()) {
+    it(`fences ${name} on open and before dispatch`, async () => {
+      for (const injected of [false, true]) {
+        const store = new FakeSessionStore();
+        const spy = { submits: 0 };
+        if (!injected) store.data.set("kix-session-journal", raw);
+        const page = await load(store, spy, "clean");
+        if (injected) store.data.set("kix-session-journal", raw);
+        for (const target of [FIRST, SECOND]) {
+          expect(await page.controller.run(target)).toMatchObject({ kind: "FENCED", fence: { reason: "evidence-lost", cause: "CORRUPT" } });
+        }
+        expect(spy.submits).toBe(0);
+        expect(page.stub.effects().attaches).toBe(0);
+        const again = await load(store, spy, "clean");
+        expect(await again.controller.run(FIRST)).toMatchObject({ kind: "FENCED" });
+        expect(spy.submits).toBe(0);
+      }
+    });
+  }
+
+  it.each(["loads", "nextSeq"] as const)("refuses exhausted %s without writes or attaches and retains UNKNOWN on reload and rebind", async (counter) => {
+    const store = new FakeSessionStore();
+    const unresolved = { ...journalRecord, scope: "sub-0001" };
+    store.data.set("kix-session-journal", journalBlob({ loads: 1, nextSeq: 2, [counter]: M }, [unresolved]));
+    const spy = { submits: 0 };
+    for (let i = 0; i < 3; i += 1) {
+      const page = await load(store, spy, "clean");
+      const before = store.data.get("kix-session-journal");
+      const sets = store.sets;
+      page.controller.rebind(identitySender(page.identity, { bound: true }), "changed-context");
+      expect(page.controller.resume()).toBe(0);
+      expect(await page.controller.run(FIRST)).toMatchObject(counter === "loads"
+        ? { kind: "FENCED", fence: { reason: "unavailable", cause: "COUNTER_EXHAUSTED" } }
+        : { kind: "FENCED", fence: { reason: "unresolved", scope: unresolved.scope } });
+      expect(await page.controller.run(SECOND)).toMatchObject(counter === "loads" ? { kind: "FENCED" } : { kind: "NOT_SENT", reason: "counter-exhausted" });
+      expect(store.data.get("kix-session-journal")).toBe(before);
+      expect(store.sets).toBe(sets);
+      expect(page.journal.records()).toEqual([unresolved]);
+      expect(spy.submits).toBe(0);
+      expect(page.stub.effects().attaches).toBe(0);
+    }
+  });
+
+  it("settles the last allocated intent and retains its reference across reload", async () => {
+    const store = new FakeSessionStore();
+    store.data.set("kix-session-journal", journalBlob({ nextSeq: M - 1 }));
+    const spy = { submits: 0 };
+    const page = await load(store, spy, "clean");
+    expect(await page.controller.run(FIRST)).toMatchObject({ kind: "CONFIRMED", record: { seq: M - 1, intentRef: `intent-${M - 1}` } });
+    await page.identity.refresh();
+    const before = store.data.get("kix-session-journal");
+    const sets = store.sets;
+    expect(await page.controller.run(SECOND)).toMatchObject({ kind: "NOT_SENT", reason: "counter-exhausted" });
+    expect(store.sets).toBe(sets);
+    expect(store.data.get("kix-session-journal")).toBe(before);
+    expect(page.journal.load()).toBe(2);
+    expect(page.journal.nextSeq()).toBe(M);
+    const reopened = await load(store, spy, "clean");
+    expect(reopened.journal.records()).toEqual(page.journal.records());
+    expect(await reopened.controller.run(FIRST)).toMatchObject({ kind: "NOT_SENT", reason: "counter-exhausted" });
+    expect(spy.submits).toBe(1);
+    expect(reopened.stub.effects().attaches).toBe(0);
+  });
+
+  it("keeps a late answer as an observation when digest-valid numeric damage appears during send", async () => {
+    const store = new FakeSessionStore();
+    const spy = { submits: 0 };
+    const page = await load(store, spy, "held-response");
+    const pending = page.controller.run(FIRST);
+    await Promise.resolve();
+    store.data.set("kix-session-journal", journalBlob({ loads: M + 1 }));
+    page.stub.deliverHeld();
+    expect(await pending).toMatchObject({ kind: "UNKNOWN", observed: "confirmed" });
+    expect(page.controller.state().status).toEqual({ kind: "evidence-lost", cause: "CORRUPT" });
+    expect(await page.controller.run(SECOND)).toMatchObject({ kind: "FENCED" });
+    expect(spy.submits).toBe(1);
+    expect((await load(store, spy)).controller.state().status).toEqual({ kind: "evidence-lost", cause: "CORRUPT" });
   });
 });

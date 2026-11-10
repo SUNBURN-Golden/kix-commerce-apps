@@ -2,6 +2,8 @@ import { c218, c217 } from "./shared-copy";
 import { c61, c55 } from "./shared-copy";
 export const messages = {
   en: {
+    "sj.load": "No safe load (COUNTER_EXHAUSTED). Every write is held.",
+    "sj.seq": "Attach not sent (COUNTER_EXHAUSTED): intent sequence exhausted.",
     "s9d": "A write is in flight. Nothing is confirmed yet.",
     "s9e": "A write is recorded before it is sent, so nothing goes out without that record.",
     "s25": "After a reload or a tab resume, an intent that was not settled is UNKNOWN. This page sends nothing to settle it, and no new write or compensation goes out for that subject. Neither a read nor a late answer resolves it.",
@@ -55,6 +57,8 @@ export const messages = {
     "p.t575": "{v1} on {v2}: {v3}{v4}.",
   },
   ko: {
+    "sj.load": "로드 번호 소진 (COUNTER_EXHAUSTED). 모든 쓰기를 보류합니다.",
+    "sj.seq": "연결 미전송 (COUNTER_EXHAUSTED): 요청 순번이 소진되었습니다.",
     "s9d": "쓰기 진행 중입니다. 아직 확인된 결과가 없습니다.",
     "s9e": "쓰기는 전송 전에 기록합니다. 기록 없이는 전송하지 않습니다.",
     "s25": "새로고침이나 탭 복귀 후 미결 요청은 UNKNOWN입니다. 이를 해소하는 전송이나 해당 대상의 새 쓰기·보상을 보내지 않습니다. 조회나 늦은 응답으로도 해소되지 않습니다.",
