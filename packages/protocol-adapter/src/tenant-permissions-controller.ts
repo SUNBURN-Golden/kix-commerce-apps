@@ -14,6 +14,7 @@ import {
   type TenantActionKind,
   type TenantActionRequest,
   type TenantActOutcome,
+  type TenantActRequest,
   type TenantAssessment,
   type TenantCapability,
   type TenantEligibility,
@@ -198,6 +199,21 @@ function failureText(error: unknown): string {
   return error instanceof Error && error.message.length > 0 ? error.message : "The call failed.";
 }
 
+/** Scalar-only record fields can be copied even when structuredClone is unavailable. */
+function copyRecord(record: TenantActRecord): TenantActRecord {
+  return { ...record, action: { ...record.action }, receipt: record.receipt && { ...record.receipt } };
+}
+
+/** Context fields are scalars; a plain copy detaches it without needing structuredClone. */
+function copyContext(context: TenantContext): TenantContext {
+  return { ...context, scope: { ...context.scope } };
+}
+
+/** The port gets its own request envelope, so mutation there never reaches retained evidence. */
+function copyActRequest(request: TenantActRequest): TenantActRequest {
+  return { ...request, scope: { ...request.scope }, action: { ...request.action } };
+}
+
 /** The capability a request kind needs at the source. */
 function capabilityFor(kind: TenantActionKind): TenantCapability {
   if (kind === "approve-proposal") {
@@ -268,6 +284,7 @@ export class TenantPermissionsController {
     }
   }
 
+  /** Each call publishes a fresh graph; neither port nor subscriber owns retained evidence. */
   state(): TenantControllerState {
     let freshness: TenantFreshness = "UNAVAILABLE";
     if (this.readState === "ready" || this.readState === "empty") {
@@ -276,7 +293,8 @@ export class TenantPermissionsController {
       freshness = "STALE";
     }
     const verdict = this.exportValue === null ? null : judgeTenantExport(this.snapshot, this.exportValue);
-    return structuredClone({
+    const last = this.last ?? this.retainedLast();
+    const state: TenantControllerState = {
       context: { ...this.context, scope: { ...this.context.scope } },
       readState: this.readState,
       readCode: this.readCode,
@@ -284,16 +302,29 @@ export class TenantPermissionsController {
       snapshot: this.snapshot,
       assessment: this.assessment,
       freshness,
-      export:
-        this.exportPhase === "none" && this.exportValue === null
-          ? { ...NO_EXPORT }
-          : { phase: this.exportPhase, code: this.exportCode, detail: this.exportDetail, value: this.exportValue, verdict },
+      export: { phase: this.exportPhase, code: this.exportCode, detail: this.exportDetail, value: this.exportValue, verdict },
       behind: this.behind,
       fence: this.currentFence(),
-      last: this.last ?? this.retainedLast(),
+      last: last && copyRecord(last),
       earlierUnknown: [...this.unresolvedByResource.values()].filter((entry) => entry.context.key !== this.context.key).length,
       counters: { ...this.counters },
-    });
+    };
+    try {
+      return structuredClone(state);
+    } catch (error) {
+      // The synchronous UI accessor must fail closed without hiding an UNKNOWN
+      // fence or exposing any retained graph. Metadata above is already detached.
+      return {
+        ...state,
+        readState: "unavailable",
+        readCode: null,
+        readDetail: failureText(error),
+        snapshot: null,
+        assessment: null,
+        freshness: "UNAVAILABLE",
+        export: { ...NO_EXPORT, phase: "unavailable", detail: failureText(error) },
+      };
+    }
   }
 
   private resourceKey(): string {
@@ -312,7 +343,9 @@ export class TenantPermissionsController {
     if (this.inFlight !== null) {
       return { reason: "in-flight", action: this.inFlight };
     }
-    return structuredClone(this.unresolvedByResource.get(this.resourceKey())?.fence ?? null);
+    // Fence fields are scalars; a fresh copy detaches the caller from retained evidence.
+    const fence = this.unresolvedByResource.get(this.resourceKey())?.fence ?? null;
+    return fence && { ...fence };
   }
 
   private clearView(): void {
@@ -399,14 +432,14 @@ export class TenantPermissionsController {
     this.counters.reads += 1;
     let outcome: TenantReadOutcome;
     try {
-      outcome = await this.port.read({
+      outcome = structuredClone(await this.port.read({
         contextKey: key,
         actorRef: this.context.actorRef,
         scope: { ...this.context.scope },
         focusRef,
         roleFloor: this.roleGeneration,
         watermarkFloor: this.floor,
-      });
+      }));
     } catch (error) {
       outcome = { kind: "unknown", message: failureText(error) };
     }
@@ -547,11 +580,11 @@ export class TenantPermissionsController {
     this.counters.exports += 1;
     let outcome: TenantExportOutcome;
     try {
-      outcome = await this.port.readExport({
+      outcome = structuredClone(await this.port.readExport({
         contextKey: key,
         actorRef: this.context.actorRef,
         scope: { ...this.context.scope },
-      });
+      }));
     } catch (error) {
       outcome = { kind: "unknown", message: failureText(error) };
     }
@@ -694,24 +727,28 @@ export class TenantPermissionsController {
       return this.notSent(built.notSent, built.detail);
     }
     const key = this.context.key;
-    this.actSeq += 1;
-    const seq = this.actSeq;
-    this.counters.acts += 1;
-    const originalContext = structuredClone(this.context);
-    const resourceKey = this.resourceKey();
-    const request: Parameters<TenantPermissionsPort["act"]>[0] = {
+    // Capture the complete envelope before notifying reentrant subscribers.
+    // The port may mutate its copy; the original built action belongs to the record.
+    const request: TenantActRequest = {
       contextKey: key,
       actorRef: this.context.actorRef,
       // The write carries the assignment generation the read was built under,
       // so the source rejects a write whose role moved underneath it.
       scope: { ...this.context.scope, roleGeneration: this.snapshot.roleGeneration },
-      action: built,
+      action: { ...built },
     };
+    this.actSeq += 1;
+    const seq = this.actSeq;
+    this.counters.acts += 1;
+    const originalContext = copyContext(this.context);
+    const resourceKey = this.resourceKey();
     this.inFlight = kind;
     this.notify();
     let outcome: TenantActOutcome;
     try {
-      outcome = await this.port.act(structuredClone(request));
+      // Hand the port its own detached envelope, then own the outcome before
+      // committing any success, including its receipt.
+      outcome = structuredClone(await this.port.act(copyActRequest(request)));
     } catch (error) {
       outcome = { kind: "unknown", message: failureText(error) };
     }
@@ -729,13 +766,9 @@ export class TenantPermissionsController {
       this.behind = true;
     }
     this.notify();
-    if (record.phase === "applied") {
-      return { kind: "APPLIED", record };
-    }
-    if (record.phase === "unknown" || record.phase === "refused") {
-      return { kind: "UNKNOWN", record };
-    }
-    return { kind: "REJECTED", record };
+    const resultKind = record.phase === "applied" ? "APPLIED"
+      : record.phase === "unknown" || record.phase === "refused" ? "UNKNOWN" : "REJECTED";
+    return { kind: resultKind, record: copyRecord(record) };
   }
 
   private record(seq: number, action: TenantActionRequest, outcome: TenantActOutcome): TenantActRecord {
