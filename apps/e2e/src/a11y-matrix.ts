@@ -1,3 +1,4 @@
+import { SPACING_EXTRA_IDS, SPACING_LOCALES, spacingCheckId } from "./text-spacing-matrix";
 import { GALLERY_CHECK_IDS } from "./gallery-matrix";
 import { KEYBOARD_OUTCOME_CHECK_IDS } from "./journey-matrix";
 /**
@@ -227,7 +228,7 @@ export const STATIC_CHECK_IDS: readonly string[] = [
 
 export function expectedCheckIds(): string[] {
   // Keyboard outcome checks: one per BROWSER SUCCESS/REJECT/UNKNOWN journey cell (tests/a11y/keyboard-outcomes.a11y.test.ts).
-  const ids = [...STATIC_CHECK_IDS, ...GALLERY_CHECK_IDS, ...ALT_STATES.map((state) => altCheckId(state.id)), ...KEYBOARD_OUTCOME_CHECK_IDS];
+  const ids = [...SPACING_EXTRA_IDS, ...SCREENS.flatMap((screen) => SPACING_LOCALES.map((locale) => spacingCheckId(screen.screenId, locale))), ...STATIC_CHECK_IDS, ...GALLERY_CHECK_IDS, ...ALT_STATES.map((state) => altCheckId(state.id)), ...KEYBOARD_OUTCOME_CHECK_IDS];
   for (const screen of SCREENS) {
     ids.push(kbdCheckId(screen.screenId), reflowCheckId(screen.screenId), structCheckId(screen.screenId));
     for (const viewport of Object.keys(VIEWPORTS) as ViewportName[]) {

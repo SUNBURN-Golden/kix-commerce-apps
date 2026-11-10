@@ -392,6 +392,12 @@ export function ScaleList({ onOpen, scaleTotal }: { onOpen: (rowId: string) => v
           event.preventDefault();
           setScrollTop(next.scrollTop);
           setFocus(next.focus);
+          // Expanded text can make an option taller than the synthetic row estimate.
+          // Keep the active option in the keyboard scroll viewport after React renders it.
+          const list = event.currentTarget;
+          requestAnimationFrame(() => {
+            if (list.isConnected) list.querySelector(`#discovery-scale-scale-${next.focus}`)?.scrollIntoView({ block: "nearest", inline: "nearest" });
+          });
           if (next.open) {
             onOpen(`scale-${next.focus}`);
           }

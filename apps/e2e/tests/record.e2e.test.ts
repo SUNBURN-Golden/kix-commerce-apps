@@ -74,6 +74,7 @@ describe("run records written by the teardown", () => {
           outcome: "OBSERVED_CLEAN",
         },
       ],
+      textSpacing: [{ checkId: "a11y.spacing.discovery.en", routeId: "discovery", path: "/discovery", locale: "en", state: "default", viewport: { width: 320, height: 568 }, result: "FINDING", textNodesChecked: 3, controlsChecked: 2, nativeControlsChecked: 0, scrollRegionsChecked: 0, problems: [{ code: "spacing.text-clipped", target: '[data-spacing-node="7"]' }] }],
       findings: [],
       observations: [],
       checkIds: [],
@@ -82,6 +83,11 @@ describe("run records written by the teardown", () => {
       notRun: [...A11Y_NOT_RUN],
     };
     const parsed = JSON.parse(renderA11yRecord(a11y)) as A11yRecord;
+    expect(parsed.textSpacing[0]?.problems[0]).toEqual({ code: "spacing.text-clipped", target: '[data-spacing-node="7"]' });
+    expect(Object.values(parsed.claims).every((claim) => claim === false)).toBe(true);
+    expect(findSensitiveInRecord(parsed)).toEqual([]);
+    expect(() => renderA11yRecord({ ...a11y, textSpacing: [{ ...a11y.textSpacing[0]!, problems: [{ code: "spacing.text-clipped", target: "private DOM label" }] }] })).toThrow(/structural/);
+    for (const name of Object.keys(a11y.claims)) expect(() => renderA11yRecord({ ...a11y, claims: { ...a11y.claims, [name]: true } } as A11yRecord)).toThrow(/claim/);
     expect(parsed.appHead).toBe(MERGE_ID_WITH_DIGIT_RUN);
     expect(parsed.screens[0]!.userAcceptance.evidenceHead).toBe(MERGE_ID_WITH_DIGIT_RUN);
     expect(() => renderFaultRecord({ ...fault, note: "12345678901" })).toThrow(/long-digits/);
