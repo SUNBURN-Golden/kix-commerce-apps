@@ -78,6 +78,14 @@ import {
 
 const HOLD_MS = 10 * 60 * 1000;
 
+function holdExpiresAt(now: number): string {
+  const expiry = new Date(now + HOLD_MS);
+  if (!Number.isFinite(expiry.getTime())) {
+    throw new ProtocolError("Stub hold expiry is outside the Date range.");
+  }
+  return expiry.toISOString();
+}
+
 const DEFAULT_SEED: Performance[] = [
   {
     eventId: "evt_lanterns",
@@ -193,14 +201,17 @@ export class StubProtocolAdapter implements CommerceProtocol {
   }
 
   async listPerformances(): Promise<Performance[]> {
-    this.sweepExpiredHolds();
+    const now = this.readHoldClock();
+    this.sweepExpiredHolds(now);
     return this.performances.map((item) => ({ ...item }));
   }
 
   async placeHold(input: { eventId: string; quantity: number }): Promise<Hold> {
-    this.sweepExpiredHolds();
     const performance = this.requirePerformance(input.eventId);
     const quantity = requireQuantity(input.quantity);
+    const now = this.readHoldClock();
+    const expiresAt = holdExpiresAt(now);
+    this.sweepExpiredHolds(now);
     if (quantity > performance.remainingCapacity) {
       throw new ProtocolError("Not enough remaining capacity for that hold.");
     }
@@ -209,7 +220,7 @@ export class StubProtocolAdapter implements CommerceProtocol {
       holdId: this.nextId("hold"),
       eventId: performance.eventId,
       quantity,
-      expiresAt: new Date(this.now() + HOLD_MS).toISOString(),
+      expiresAt,
       surface: SURFACES.booking,
       consumed: false,
       expired: false,
@@ -228,8 +239,7 @@ export class StubProtocolAdapter implements CommerceProtocol {
    * An abandoned hold gives its capacity back once it expires. The desk does
    * not have to confirm or release it first.
    */
-  private sweepExpiredHolds(): void {
-    const now = this.now();
+  private sweepExpiredHolds(now: number): void {
     for (const hold of this.holds.values()) {
       if (!hold.consumed && Date.parse(hold.expiresAt) <= now) {
         this.expireHold(hold);
@@ -247,7 +257,7 @@ export class StubProtocolAdapter implements CommerceProtocol {
    * A hold that expired answers HOLD_EXPIRED whether or not a sweep ended it
    * first. A confirmed or released hold is HOLD_NOT_ACTIVE.
    */
-  private requireActiveHold(holdId: string): HoldRecord {
+  private requireActiveHold(holdId: string, now: number): HoldRecord {
     const hold = this.holds.get(holdId);
     if (hold?.expired) {
       throw new ProtocolError("Hold has expired.", "HOLD_EXPIRED");
@@ -255,7 +265,7 @@ export class StubProtocolAdapter implements CommerceProtocol {
     if (!hold || hold.consumed) {
       throw new ProtocolError("Hold is not active.", "HOLD_NOT_ACTIVE");
     }
-    if (Date.parse(hold.expiresAt) <= this.now()) {
+    if (Date.parse(hold.expiresAt) <= now) {
       this.expireHold(hold);
       throw new ProtocolError("Hold has expired.", "HOLD_EXPIRED");
     }
@@ -263,13 +273,15 @@ export class StubProtocolAdapter implements CommerceProtocol {
   }
 
   async releaseHold(holdId: string): Promise<void> {
-    const hold = this.requireActiveHold(holdId);
+    const now = this.readHoldClock();
+    const hold = this.requireActiveHold(holdId, now);
     hold.consumed = true;
     this.requirePerformance(hold.eventId).remainingCapacity += hold.quantity;
   }
 
   async confirmBooking(holdId: string): Promise<Booking> {
-    const hold = this.requireActiveHold(holdId);
+    const now = this.readHoldClock();
+    const hold = this.requireActiveHold(holdId, now);
     hold.consumed = true;
     const bookingId = this.nextId("bkg");
     const booking: Booking = {
@@ -653,6 +665,19 @@ export class StubProtocolAdapter implements CommerceProtocol {
 
   async rejectUnsupportedCredit(kind: string): Promise<never> {
     return this.creditCases.rejectUnsupported(kind);
+  }
+
+  private readHoldClock(): number {
+    let now: number;
+    try {
+      now = this.now();
+    } catch {
+      throw new ProtocolError("Stub hold clock must return a valid Date timestamp.");
+    }
+    if (!Number.isFinite(now) || !Number.isFinite(new Date(now).getTime())) {
+      throw new ProtocolError("Stub hold clock must return a valid Date timestamp.");
+    }
+    return now;
   }
 
   private requirePerformance(eventId: string): Performance {

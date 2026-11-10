@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -39,6 +40,8 @@ import {
 import { TenantPermissionsPage } from "../src/pages/TenantPermissions";
 import { WORKSPACE_RULING, WORKSPACE_SURFACES } from "../src/workspace/registry";
 
+import { change, click, element, renderDom } from "./support/render-dom";
+
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = path.resolve(webRoot, "../..");
 
@@ -56,6 +59,7 @@ const POSITIVE_CLAIMS = [
 
 const NO_ACTIONS: TenantActions = {
   refresh() {},
+  recoverRole() {},
   openResource() {},
   loadExport() {},
   proposeAccountChange() {},
@@ -601,4 +605,29 @@ describe("tenant mutation isolation in fresh page models", () => {
     expect(markup).toMatch(/id="tenant-account-acc-0001"[^>]*data-enabled="false"/);
     expect(r.controller.state().counters.acts).toBe(1);
   });
+});
+
+
+it.each(["clean", "act-lost"])("mounted recovery control obtains generation 2 on the same source (%s)", async (scenario) => {
+  const { container } = await renderDom(<MemoryRouter initialEntries={["/permissions"]}><TenantPermissionsPage /></MemoryRouter>);
+  await change(element(container, "#tenant-scenario"), scenario);
+  await click(element(container, "#tenant-apply-scenario"));
+  await change(element(container, "#tenant-actor"), "person-settler");
+  await click(element(container, "#tenant-apply-actor"));
+  await change(element(container, "#tenant-role"), "settler");
+  await click(element(container, "#tenant-apply-role"));
+  await click(element(container, "#tenant-account-acc-0001"));
+  await click(element(container, "#tenant-rotate-role"));
+  await click(element(container, "#tenant-refresh"));
+  expect(element(container, "#tenant-status").getAttribute("data-tenant-state")).toBe("role-stale");
+  const counters = element(container, "#tenant-session").textContent!;
+  const reads = Number(/Reads (\d+)/.exec(counters)![1]);
+  await click(element(container, "#tenant-return-action"));
+  expect(element(container, "#tenant-status").getAttribute("data-tenant-state")).toBe("ready");
+  expect(element(container, "#tenant-status").textContent).toContain("Assignment read generation 2");
+  expect(element(container, "#tenant-session").textContent).toContain(`Reads ${reads + 1}.`);
+  expect(element(container, "#tenant-session").textContent).toContain("Requests 1.");
+  expect(container.querySelectorAll("[data-proposal]")).toHaveLength(1);
+  expect(element(container, "#tenant-account-acc-0002").getAttribute("data-enabled")).toBe(scenario === "clean" ? "true" : "false");
+  if (scenario === "act-lost") expect(container.querySelector("[data-fence=true]")).not.toBeNull();
 });

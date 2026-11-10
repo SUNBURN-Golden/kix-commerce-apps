@@ -1,4 +1,4 @@
-import { sweepExport } from "./receipt-redaction";
+import { redactSupportText } from "./receipt-redaction";
 export { sweepExport } from "./receipt-redaction";
 import { messages as sourceCopy } from "./i18n/messages/receipt-explorer";
 import { sourceMessage } from "./i18n/source-message";
@@ -1102,7 +1102,7 @@ function buildDiagnostic(
   const omittedFieldCount = entries.reduce((sum, entry) => sum + entry.omittedFieldCount, 0);
   return {
     kind: "support-diagnostic",
-    sessionId: model.sessionId,
+    sessionId: redactSupportText(model.sessionId),
     role: model.role,
     mode: model.environment,
     profile: model.profile,
@@ -1116,28 +1116,32 @@ function buildDiagnostic(
     fallbackToStub: false,
     readConfirmsUnknown: false,
     entries: entries.map((entry) => ({
-      operationId: entry.operationId,
-      action: entry.action,
+      operationId: redactSupportText(entry.operationId),
+      action: redactSupportText(entry.action),
       status: entry.status,
       source: entry.source,
       profile: entry.profile,
       profileVersion: entry.profileVersion,
-      code: entry.code,
+      code: redactSupportText(entry.code),
       codeClass: entry.codeClass,
-      unconfirmedReason: entry.unconfirmedReason,
-      nextAction: entry.nextAction,
-      requestId: entry.requestId,
-      correlationId: entry.correlationId,
-      refId: entry.refId,
-      actorLabel: entry.actorLabel,
+      unconfirmedReason: redactSupportText(entry.unconfirmedReason),
+      nextAction: redactSupportText(entry.nextAction),
+      requestId: redactSupportText(entry.requestId),
+      correlationId: redactSupportText(entry.correlationId),
+      refId: redactSupportText(entry.refId),
+      actorLabel: redactSupportText(entry.actorLabel),
       context: entry.context,
-      fields: entry.fields,
+      fields: entry.fields.map((field) => ({ key: redactSupportText(field.key), value: redactSupportText(field.value) })),
     })),
-    quarantine: model.quarantine,
-    recordedNotSent: model.recorded.map((entry) => ({
-      sender: entry.sender,
-      action: entry.action,
+    quarantine: model.quarantine.map((entry) => ({
       reason: entry.reason,
+      action: redactSupportText(entry.action),
+      operationId: redactSupportText(entry.operationId),
+    })),
+    recordedNotSent: model.recorded.map((entry) => ({
+      sender: redactSupportText(entry.sender),
+      action: redactSupportText(entry.action),
+      reason: redactSupportText(entry.reason),
     })),
     omittedFieldCount,
     note: `${RECEIPT_READ_NOTE} ${RECEIPT_STUB_SENTENCE} ${RECEIPT_SESSION_NOTE}`,
@@ -1264,7 +1268,7 @@ export function buildReceiptExplorer(input: ReceiptExplorerInput): ReceiptExplor
   return {
     ...base,
     diagnostic,
-    exportText: sweepExport(JSON.stringify(diagnostic, null, 2)),
+    exportText: JSON.stringify(diagnostic, null, 2),
     sessionDropped,
   };
 }

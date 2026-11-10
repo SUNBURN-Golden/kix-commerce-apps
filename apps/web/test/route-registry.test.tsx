@@ -5,6 +5,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { App } from "../src/App";
+import { SurfaceNav } from "../src/components/SurfaceNav";
+import { LocaleProvider } from "../src/i18n/LocaleProvider";
 import { Breadcrumb } from "../src/components/Breadcrumb";
 import { MARKETING_SURFACES } from "../src/marketing/labels";
 import { NotFoundPage } from "../src/pages/NotFound";
@@ -177,6 +179,17 @@ describe("registry against the matrices and the evidence doc", () => {
 });
 
 describe("grouped nav, current page, breadcrumb and landmarks (server markup)", () => {
+  it("keeps the layout selector independent of the translated landmark name", () => {
+    for (const locale of ["ko", "en"] as const) {
+      const html = renderToStaticMarkup(<LocaleProvider initial={locale}><MemoryRouter><SurfaceNav /></MemoryRouter></LocaleProvider>);
+      expect(html).toContain('<nav aria-label=');
+      expect(html).toContain('aria-controls="surface-menu"');
+    }
+    const css = read("apps/web/src/styles.css");
+    expect(css).not.toContain('nav[aria-label="Surfaces"]');
+    expect(css).toContain(".top > nav {");
+  });
+
   it("marks at most one link current, and the right one, on every route", () => {
     for (const item of ROUTES) {
       const nav = surfacesNav(page(item.sample));

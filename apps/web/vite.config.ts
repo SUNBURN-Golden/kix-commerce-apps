@@ -155,6 +155,10 @@ export default defineConfig({
           // Synthetic controllers repeat validation and fencing vocabulary; share compression only.
           if (/\/protocol-adapter\/src\/(marketing-journey-controller|delegated-assistant-controller|refund-return-controller|credit-servicing-controller)\.ts$/.test(id)) return "synthetic-controllers";
 
+          // The two bounded read desks share lifecycle fencing and status markup.
+          // Compress them together behind their existing lazy route boundaries.
+          if (/\/src\/(pages\/(Discovery|DiscoveryPanels|Inventory|InventoryPanels)|discovery-live|inventory-venue|read-lifecycle)\.tsx?$/.test(id)) return "read-desks";
+
           // Small UI helpers that many lazy desks share load as one lazy chunk; the entry never imports them.
           if (/\/src\/(a11y\/focus|components\/(AsyncState|CachedReadNotice|ConnectivityWriteButton)|connectivity\/(copy|desk-protocol|refusal|write-guard)|desk-attempts|i18n\/desk-context)\.tsx?$/.test(id)) return "desk-ui";
 

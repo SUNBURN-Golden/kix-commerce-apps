@@ -350,7 +350,7 @@ describe("tenant controller sends", () => {
     expect(controller.state().behind).toBe(true);
   });
 
-  it("an unknown request outcome fences every later request until a new context", async () => {
+  it("an unknown request outcome fences every later request across new contexts", async () => {
     const inner = createStubTenantPermissions();
     const port: TenantPermissionsPort = {
       environment: inner.environment,
@@ -381,6 +381,9 @@ describe("tenant controller sends", () => {
     const controller = new TenantPermissionsController(spy.port, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
     await controller.read();
     const pending = controller.proposeAccountChange("acc-0001", "first");
+    const key = controller.state().context.key;
+    expect(await controller.recoverRole()).toEqual({ kind: "NOT_SENT", reason: "in-flight" });
+    expect(controller.state().context.key).toBe(key);
     const during = await controller.proposeAccountChange("acc-0002", "second");
     expect(during.kind).toBe("FENCED");
     if (during.kind === "FENCED") {
@@ -851,4 +854,131 @@ describe("tenant copy failures stay closed", () => {
     expect(controller.state()).toEqual(expected);
     if (unknown) expect((await controller.proposeAccountChange("acc-0001", "again")).kind).toBe("FENCED");
   });
+});
+
+// Audit 10: navigation changes view identity, never unresolved resource identity.
+it("retains exact unresolved identity through same-scope and A→B→A navigation", async () => {
+  const { controller } = controllerFor("act-lost", { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+  await controller.read();
+  const original = controller.state().context;
+  expect((await controller.proposeAccountChange("acc-0001", "x")).kind).toBe("UNKNOWN");
+  const record = controller.state().last;
+  controller.switchRole("settler");
+  expect(controller.state().snapshot).toBeNull();
+  await controller.read();
+  expect((await controller.proposeAccountChange("acc-0001", "x")).kind).toBe("FENCED");
+  controller.switchTenant(TENANT_FOREIGN);
+  expect(controller.state().fence).toBeNull();
+  controller.switchTenant(TENANT_OWN);
+  controller.switchRole("settler");
+  await controller.read();
+  expect(controller.state().context.key).not.toBe(original.key);
+  expect(controller.state().last).toEqual(record);
+  expect(controller.state().earlierUnknown).toBe(1);
+  expect(controller.canSend("propose-account-change").allowed).toBe(false);
+  expect((await controller.proposeAccountChange("acc-0001", "x")).kind).toBe("FENCED");
+  expect(controller.state().counters.acts).toBe(1);
+});
+
+it("another actor cannot bypass the shared resource fence or read the original request", async () => {
+  const { controller } = controllerFor("act-lost", { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+  await controller.read();
+  await controller.proposeAccountChange("acc-0001", "x");
+  controller.switchActor(TENANT_ORGANIZER_ACTOR);
+  expect(controller.state().last).toBeNull();
+  await controller.read();
+  expect((await controller.proposeAccountChange("acc-0001", "x")).kind).toBe("FENCED");
+  expect(controller.state().counters.acts).toBe(1);
+});
+
+it("detaches both port-owned and published snapshots, assessments and export material", async () => {
+  const inner = createStubTenantPermissions();
+  const captured = await inner.read({ contextKey: "test", actorRef: TENANT_SETTLER_ACTOR, scope: { tenantId: TENANT_OWN, role: "settler" }, focusRef: null, roleFloor: null, watermarkFloor: null });
+  if (captured.kind !== "ready") throw Error("Expected fixture read");
+  const port = spyOn(inner).port;
+  port.read = async () => captured;
+  const controller = new TenantPermissionsController(port, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+  await controller.read();
+  await controller.loadExport();
+  const before = controller.state();
+  captured.snapshot.visibleKinds = [];
+  (captured.snapshot.accounts as unknown[]).length = 0;
+  const published = controller.state();
+  (published.snapshot!.accounts as unknown[]).length = 0;
+  published.snapshot!.visibleKinds = [];
+  if (published.assessment) (published.assessment.accountTargets as unknown[]).length = 0;
+  if (published.export.value) (published.export.value.rows as unknown[]).length = 0;
+  expect(controller.state()).toEqual(before);
+  expect(controller.canSend("propose-account-change").allowed).toBe(true);
+});
+
+it.each(["clean", "act-lost"] as const)("explicit generation recovery preserves source records and UNKNOWN (%s)", async (scenario) => {
+  const inner = createStubTenantPermissions({ scenario });
+  const spy = spyOn(inner);
+  const controller = new TenantPermissionsController(spy.port, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+  await controller.read();
+  await controller.proposeAccountChange("acc-0001", "retained proposal");
+  const original = spy.actRequests[0];
+  const record = controller.state().last;
+  inner.synthetic("rotate-role", "mbr-0003");
+  await controller.read();
+  expect(controller.state().readState).toBe("role-stale");
+  // Ordinary refresh remains an ordinary read, never a generation reset.
+  await controller.read();
+  expect(spy.readRequests.at(-1)?.roleFloor).toBe(1);
+  const reads = spy.readRequests.length;
+  await controller.recoverRole();
+  expect(spy.readRequests).toHaveLength(reads + 1);
+  expect(spy.readRequests.at(-1)).toMatchObject({ actorRef: original!.actorRef, scope: { tenantId: TENANT_OWN, role: "settler" }, roleFloor: null, watermarkFloor: expect.any(String) });
+  expect(controller.state().snapshot).toMatchObject({ roleGeneration: 2, proposals: [expect.objectContaining({ note: "retained proposal" })] });
+  expect(controller.state().last).toEqual(record);
+  expect(controller.canSend("propose-account-change").allowed).toBe(scenario === "clean");
+  if (scenario === "act-lost") {
+    expect((await controller.proposeAccountChange("acc-0002", "blocked")).kind).toBe("FENCED");
+    expect(spy.actRequests).toEqual([original]);
+  } else {
+    await controller.proposeAccountChange("acc-0002", "new proposal");
+    expect(spy.actRequests.at(-1)?.scope.roleGeneration).toBe(2);
+  }
+});
+
+it("recovery drops obsolete read/export work and revoked assignments remain denied", async () => {
+  const inner = createStubTenantPermissions();
+  const options = { holdReads: false, holdExports: true };
+  const spy = spyOn(inner, options);
+  const controller = new TenantPermissionsController(spy.port, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+  await controller.read();
+  options.holdReads = true;
+  const oldRead = controller.read();
+  const oldExport = controller.loadExport();
+  inner.synthetic("rotate-role", "mbr-0003");
+  const recovery = controller.recoverRole();
+  spy.heldReads[1]!.release();
+  expect(await recovery).toMatchObject({ kind: "APPLIED", readState: "ready" });
+  spy.heldReads[0]!.release();
+  spy.heldExports[0]!.release();
+  expect(await oldRead).toMatchObject({ kind: "DROPPED", cause: "context-changed" });
+  expect(await oldExport).toMatchObject({ kind: "DROPPED", cause: "context-changed" });
+  options.holdReads = false;
+  inner.synthetic("revoke-role", "mbr-0003");
+  expect(await controller.recoverRole()).toMatchObject({ kind: "APPLIED", readState: "denied" });
+  expect(controller.state().snapshot).toBeNull();
+  expect(spy.actRequests).toHaveLength(0);
+});
+
+it("an untrusted tenant approval stays fenced across role and actor changes", async () => {
+  const { controller } = controllerFor("approve-claims-applied", { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+  await controller.read();
+  await controller.proposeAccountChange("acc-0001", "stage");
+  controller.switchActor(TENANT_ORGANIZER_ACTOR);
+  controller.switchRole("organizer");
+  await controller.read();
+  expect(await controller.approveProposal("ppr-0001")).toMatchObject({ kind: "UNKNOWN", record: { phase: "refused" } });
+  controller.switchRole("support");
+  expect(controller.state().last).toBeNull();
+  expect((await controller.approveProposal("ppr-0001")).kind).toBe("FENCED");
+  controller.switchRole("organizer");
+  await controller.read();
+  expect((await controller.approveProposal("ppr-0001")).kind).toBe("FENCED");
+  expect(controller.state().counters.acts).toBe(2);
 });

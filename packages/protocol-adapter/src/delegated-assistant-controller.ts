@@ -203,6 +203,28 @@ function copyProposal(proposal: DelegationProposal): DelegationProposal {
   return { ...proposal };
 }
 
+function copyGrant(grant: DelegationGrant): DelegationGrant {
+  return { ...grant, allowedActions: [...grant.allowedActions] };
+}
+
+function copySnapshot(snapshot: DelegationSnapshot): DelegationSnapshot {
+  return {
+    ...snapshot,
+    grants: snapshot.grants.map(copyGrant),
+    listings: snapshot.listings.map((listing) => ({ ...listing })),
+    drafts: snapshot.drafts.map((draft) => ({ ...draft })),
+    nonClaims: { ...snapshot.nonClaims },
+  };
+}
+
+function copyTurn(turn: DelegationTurn): DelegationTurn {
+  return turn.kind === "clarify" ? { ...turn, missing: [...turn.missing] } : { ...turn };
+}
+
+function copyTurnRecord(record: DelegationTurnRecord): DelegationTurnRecord {
+  return { ...record, turn: copyTurn(record.turn) };
+}
+
 export class DelegationAssistantController {
   private context: DelegationContext;
   private snapshot: DelegationSnapshot | null = null;
@@ -270,11 +292,11 @@ export class DelegationAssistantController {
       readState: this.readState,
       readDetail: this.readDetail,
       readCode: this.readCode,
-      snapshot: this.snapshot,
+      snapshot: this.snapshot === null ? null : copySnapshot(this.snapshot),
       freshness,
       refreshRequired: this.refreshRequired,
       proposals: this.proposals.map(copyProposal),
-      turns: this.turns.map((turn) => ({ ...turn })),
+      turns: this.turns.map(copyTurnRecord),
       intents: this.intents.map(copyIntent),
       quarantined: this.quarantined.map((item) => ({ ...item })),
       counters: { ...this.counters },
@@ -347,7 +369,7 @@ export class DelegationAssistantController {
     }
     this.turns.push({ seq, excerpt: text.trim().slice(0, 160), turn, proposalRef });
     this.notify();
-    return turn;
+    return copyTurn(turn);
   }
 
   /** Marks an open proposal dismissed. A dismissed proposal can never be approved. */
@@ -401,11 +423,11 @@ export class DelegationAssistantController {
     this.readCode = null;
     switch (outcome.kind) {
       case "ready":
-        this.snapshot = outcome.snapshot;
+        this.snapshot = copySnapshot(outcome.snapshot);
         this.readState = "ready";
         this.readDetail = null;
         this.clearBehind(seq);
-        this.floor = outcome.snapshot.watermark;
+        this.floor = this.snapshot.watermark;
         break;
       case "empty":
         this.snapshot = null;
@@ -818,11 +840,11 @@ export function projectDelegation(state: DelegationControllerState): DelegationP
     .filter((intent) => intent.outcome === "UNKNOWN" || intent.outcome === "IN_FLIGHT")
     .map(copyIntent);
   return {
-    grants: snapshot ? snapshot.grants : [],
+    grants: snapshot ? snapshot.grants.map(copyGrant) : [],
     listings,
     drafts,
-    proposals: state.proposals,
-    turns: state.turns,
+    proposals: state.proposals.map(copyProposal),
+    turns: state.turns.map(copyTurnRecord),
     rejections,
     unlinkedIntents,
     freshness: state.freshness,

@@ -1,7 +1,7 @@
 import type { SessionControllerState, SessionJournalPeek } from "@kix/protocol-adapter";
 import type { ConnectivitySnapshot } from "../connectivity/store";
 import type { Locale } from "../i18n/locales";
-import { sweepExport } from "../receipt-redaction";
+import { redactSupportText } from "../receipt-redaction";
 import { buildIdentity } from "./build-identity";
 import type { DisplayPreferences } from "./display-prefs";
 import { DIAGNOSTICS_OUTCOME_LIMIT, type DiagnosticOutcome } from "./outcomes";
@@ -24,21 +24,34 @@ export interface DiagnosticsInput {
   outcomes: readonly DiagnosticOutcome[]; omittedOutcomeCount: number;
 }
 export function buildDiagnostics(input: DiagnosticsInput) {
+  const journal = journalView(input.journal, input.liveJournal);
   const view = {
-    kind: "kix-app-diagnostics", buildIdentity, mode: input.mode,
-    origin: input.mode === "stub" ? "none" : "loopback", locale: input.locale,
-    display: { colorScheme: input.display.colorScheme, forcedColors: input.display.forcedColors, reducedMotion: input.display.reducedMotion },
+    kind: "kix-app-diagnostics",
+    // Only this imported build identity is trusted; input fields never gain a pin exemption.
+    buildIdentity: {
+      appVersion: buildIdentity.appVersion,
+      pinDigestAlgorithm: buildIdentity.pinDigestAlgorithm,
+      pinDigest: buildIdentity.pinDigest,
+      pins: {
+        contractOnlyOpenApiSha256: buildIdentity.pins.contractOnlyOpenApiSha256,
+        integrationGateOpenApiSha256: buildIdentity.pins.integrationGateOpenApiSha256,
+        sdk0ManifestSha256: buildIdentity.pins.sdk0ManifestSha256,
+        sdk0CatalogueSha256: buildIdentity.pins.sdk0CatalogueSha256,
+      },
+    }, mode: input.mode,
+    origin: input.mode === "stub" ? "none" : "loopback", locale: redactSupportText(input.locale),
+    display: { colorScheme: redactSupportText(input.display.colorScheme), forcedColors: redactSupportText(input.display.forcedColors), reducedMotion: redactSupportText(input.display.reducedMotion) },
     connectivity: { state: input.connectivity.state, writesBlocked: input.connectivity.writesBlocked, epoch: input.connectivity.epoch },
-    sessionJournal: journalView(input.journal, input.liveJournal),
+    sessionJournal: { state: journal.state, cause: redactSupportText(journal.cause), usedRecords: journal.usedRecords, maxRecords: journal.maxRecords },
     outcomes: input.outcomes.slice(-DIAGNOSTICS_OUTCOME_LIMIT).map((row) => ({
-      ordinal: row.ordinal, context: row.context, journeyRef: row.journeyRef, action: row.action,
-      operationId: row.operationId, requestId: row.requestId, correlationId: row.correlationId,
-      outcome: row.outcome, code: row.code, reason: row.reason,
+      ordinal: row.ordinal, context: redactSupportText(row.context), journeyRef: redactSupportText(row.journeyRef), action: redactSupportText(row.action),
+      operationId: redactSupportText(row.operationId), requestId: redactSupportText(row.requestId), correlationId: redactSupportText(row.correlationId),
+      outcome: redactSupportText(row.outcome), code: redactSupportText(row.code), reason: redactSupportText(row.reason),
     })),
     outcomeLimit: DIAGNOSTICS_OUTCOME_LIMIT,
     omittedOutcomeCount: input.omittedOutcomeCount + Math.max(0, input.outcomes.length - DIAGNOSTICS_OUTCOME_LIMIT),
     sent: false, notEvidence: true, notApproval: true, productionReadiness: false,
   };
-  return { view, exportText: sweepExport(JSON.stringify(view, null, 2)) };
+  return { view, exportText: JSON.stringify(view, null, 2) };
 }
 export type DiagnosticsModel = ReturnType<typeof buildDiagnostics>;

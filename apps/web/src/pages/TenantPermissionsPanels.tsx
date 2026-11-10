@@ -208,6 +208,7 @@ export function TenantControls({
 }) {
   const t = useT(copy0, copy1, copy2);
   const [focusText, setFocusText] = useState("");
+  const assignment = model.members.find((row) => row.actorRef === actorRef && row.role === role && row.state === "active");
   return (
     <section id="tenant-controls" className="discovery-section" aria-label={t("s1o9")}>
       <div className="discovery-controls">
@@ -238,6 +239,9 @@ export function TenantControls({
           applyLabel={t("s1o7")}
           onApply={(next) => actions.switchRole(next as TenantRole)}
         />
+        {assignment ? <ConnectivityWriteButton type="button" id="tenant-rotate-role" className="discovery-action" onClick={() => actions.rotateRole(assignment.memberRef)}>
+          {t("audit.rotate")}
+        </ConnectivityWriteButton> : null}
         <button type="button" id="tenant-refresh" className="discovery-action" onClick={() => actions.refresh()}>
           {t("s1ax")}</button>
         <button type="button" id="tenant-switch-tenant" className="discovery-action" onClick={() => actions.switchTenant()}>
