@@ -14,6 +14,7 @@ import {
   type TenantActionKind,
   type TenantActionRequest,
   type TenantActOutcome,
+  type TenantActRequest,
   type TenantAssessment,
   type TenantCapability,
   type TenantEligibility,
@@ -198,6 +199,11 @@ function failureText(error: unknown): string {
   return error instanceof Error && error.message.length > 0 ? error.message : "The call failed.";
 }
 
+/** Scalar-only record fields can be copied even when structuredClone is unavailable. */
+function copyRecord(record: TenantActRecord): TenantActRecord {
+  return { ...record, action: { ...record.action }, receipt: record.receipt && { ...record.receipt } };
+}
+
 /** The capability a request kind needs at the source. */
 function capabilityFor(kind: TenantActionKind): TenantCapability {
   if (kind === "approve-proposal") {
@@ -263,6 +269,7 @@ export class TenantPermissionsController {
     }
   }
 
+  /** Each call publishes a fresh graph; neither port nor subscriber owns retained evidence. */
   state(): TenantControllerState {
     let freshness: TenantFreshness = "UNAVAILABLE";
     if (this.readState === "ready" || this.readState === "empty") {
@@ -271,7 +278,7 @@ export class TenantPermissionsController {
       freshness = "STALE";
     }
     const verdict = this.exportValue === null ? null : judgeTenantExport(this.snapshot, this.exportValue);
-    return {
+    const state: TenantControllerState = {
       context: { ...this.context, scope: { ...this.context.scope } },
       readState: this.readState,
       readCode: this.readCode,
@@ -279,23 +286,36 @@ export class TenantPermissionsController {
       snapshot: this.snapshot,
       assessment: this.assessment,
       freshness,
-      export:
-        this.exportPhase === "none" && this.exportValue === null
-          ? { ...NO_EXPORT }
-          : { phase: this.exportPhase, code: this.exportCode, detail: this.exportDetail, value: this.exportValue, verdict },
+      export: { phase: this.exportPhase, code: this.exportCode, detail: this.exportDetail, value: this.exportValue, verdict },
       behind: this.behind,
       fence: this.currentFence(),
-      last: this.last,
+      last: this.last && copyRecord(this.last),
       earlierUnknown: this.earlierUnknown,
       counters: { ...this.counters },
     };
+    try {
+      return structuredClone(state);
+    } catch (error) {
+      // The synchronous UI accessor must fail closed without hiding an UNKNOWN
+      // fence or exposing any retained graph. Metadata above is already detached.
+      return {
+        ...state,
+        readState: "unavailable",
+        readCode: null,
+        readDetail: failureText(error),
+        snapshot: null,
+        assessment: null,
+        freshness: "UNAVAILABLE",
+        export: { ...NO_EXPORT, phase: "unavailable", detail: failureText(error) },
+      };
+    }
   }
 
   private currentFence(): TenantFence | null {
     if (this.inFlight !== null) {
       return { reason: "in-flight", action: this.inFlight };
     }
-    return this.fence;
+    return this.fence && { ...this.fence };
   }
 
   private clearView(): void {
@@ -386,14 +406,14 @@ export class TenantPermissionsController {
     this.counters.reads += 1;
     let outcome: TenantReadOutcome;
     try {
-      outcome = await this.port.read({
+      outcome = structuredClone(await this.port.read({
         contextKey: key,
         actorRef: this.context.actorRef,
         scope: { ...this.context.scope },
         focusRef,
         roleFloor: this.roleGeneration,
         watermarkFloor: this.floor,
-      });
+      }));
     } catch (error) {
       outcome = { kind: "unknown", message: failureText(error) };
     }
@@ -519,11 +539,11 @@ export class TenantPermissionsController {
     this.counters.exports += 1;
     let outcome: TenantExportOutcome;
     try {
-      outcome = await this.port.readExport({
+      outcome = structuredClone(await this.port.readExport({
         contextKey: key,
         actorRef: this.context.actorRef,
         scope: { ...this.context.scope },
-      });
+      }));
     } catch (error) {
       outcome = { kind: "unknown", message: failureText(error) };
     }
@@ -666,6 +686,14 @@ export class TenantPermissionsController {
       return this.notSent(built.notSent, built.detail);
     }
     const key = this.context.key;
+    // Capture the complete envelope before notifying reentrant subscribers.
+    // The port may mutate its copy; the original built action belongs to the record.
+    const request: TenantActRequest = {
+      contextKey: key,
+      actorRef: this.context.actorRef,
+      scope: { ...this.context.scope, roleGeneration: this.snapshot.roleGeneration },
+      action: { ...built },
+    };
     this.actSeq += 1;
     const seq = this.actSeq;
     this.counters.acts += 1;
@@ -673,14 +701,8 @@ export class TenantPermissionsController {
     this.notify();
     let outcome: TenantActOutcome;
     try {
-      outcome = await this.port.act({
-        contextKey: key,
-        actorRef: this.context.actorRef,
-        // The write carries the assignment generation the read was built under,
-        // so the source rejects a write whose role moved underneath it.
-        scope: { ...this.context.scope, roleGeneration: this.snapshot.roleGeneration },
-        action: built,
-      });
+      // Own the outcome before committing any success, including its receipt.
+      outcome = structuredClone(await this.port.act(request));
     } catch (error) {
       outcome = { kind: "unknown", message: failureText(error) };
     }
@@ -695,13 +717,9 @@ export class TenantPermissionsController {
       this.behind = true;
     }
     this.notify();
-    if (record.phase === "applied") {
-      return { kind: "APPLIED", record };
-    }
-    if (record.phase === "unknown" || record.phase === "refused") {
-      return { kind: "UNKNOWN", record };
-    }
-    return { kind: "REJECTED", record };
+    const resultKind = record.phase === "applied" ? "APPLIED"
+      : record.phase === "unknown" || record.phase === "refused" ? "UNKNOWN" : "REJECTED";
+    return { kind: resultKind, record: copyRecord(record) };
   }
 
   private record(seq: number, action: TenantActionRequest, outcome: TenantActOutcome): TenantActRecord {
