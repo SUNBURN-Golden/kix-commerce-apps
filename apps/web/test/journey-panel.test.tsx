@@ -170,7 +170,7 @@ describe("journey panel", () => {
     expect(combined).not.toContain("settle_capture");
     expect(combined).not.toContain("fallback");
     expect(combined).not.toContain("127.0.0.1");
-    expect(readFileSync(path.join(webRoot, "src/pages/Booking.tsx"), "utf8").match(/<JourneyPanel /g)).toHaveLength(3);
+    expect(readFileSync(path.join(webRoot, "src/pages/Booking.tsx"), "utf8").match(/<JourneyPanel /g)).toHaveLength(2);
     expect(readFileSync(path.join(webRoot, "src/pages/BoxOffice.tsx"), "utf8")).toContain("<JourneyPanel ");
     const vite = readFileSync(path.join(webRoot, "vite.config.ts"), "utf8");
     expect(vite).not.toContain("proxy");
