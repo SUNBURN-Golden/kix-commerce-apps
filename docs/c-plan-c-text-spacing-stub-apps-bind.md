@@ -180,6 +180,32 @@ The full accessibility run's spacing file passed **50/50 tests in 154.331s**, wi
 
 The diagnostic rerun does not reproduce that gallery closure, but it also does not establish a passing full accessibility suite. Its M05 timeout is a separate failed observation; without an aggregate timing record its cause is unestablished. No records from different runs are combined. The implementation is ready for supervisor exact-head CI review under the recorded 2026-11-09 runner ruling; **full accessibility CI must be green before acceptance**. These local failures are disclosed review evidence, not a new unanswered owner decision. No code, timeout, assertion, retry, baseline, budget or CI change was made to obtain a passing claim. There is no outstanding `DECISION_REQUIRED.md`.
 
+## Fix round 1 verification — 2026-11-10
+
+The supervisor recorded `FAIL:timeout-3h` after review round r1 passed. The evidence shows this was a stale-head polling artifact, not a failing check at the PR head:
+
+- Round r1 reviewed `0798c77`. The supervisor then merged `origin/main` into the branch and pushed merge commit `1579a4c` ("Merge remote-tracking branch 'origin/main' into agent/kixc-c-plan-c-text-spacing-stub", 2026-11-10 10:53 KST).
+- Commerce apps CI run [42738941119](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/42738941119) ran on `head_sha=1579a4c` (started 2026-11-10T01:53:31Z). Every check completed `SUCCESS`, including `Typecheck, build, and test (stub)`, `Accessibility observation (stub, headless Chrome)`, `Browser journeys (stub, headless Chrome)`, `Adapter tests against the reviewed gate`, `Visual baselines`, `Bundle budget`, `Lint`, `Coverage floors`, dependency/audit/cycle checks and all CodeQL analyses.
+- The recorded timeout is explained by polling the pre-sync head: the supervisor's `ci_state` returns `PENDING` while `statusCheckRollup.headRefOid` differs from the head it is waiting on, so the 3-hour wait ran against `0798c77` after the PR head had become the green `1579a4c`. No check failed on `1579a4c`.
+
+This fix round therefore changes no probe, assertion, threshold, timeout, baseline or CI file. The worktree was fast-forwarded to `1579a4c` and the relevant checks were re-run locally against that head:
+
+| Command actually run | Result |
+| --- | --- |
+| `npm run typecheck` | PASS (adapter + web) |
+| `npm run typecheck:e2e` | PASS |
+| `npm run build` | PASS (Vite built in 6.47s) |
+| `KIX_REQUIRE_GATE=0 npm test` | PASS: adapter 2998 passed / 23 live-gate skipped (81 files), web 1641 passed (110 files), cold entry 6 passed |
+| `npm run test:e2e` | PASS: 249 tests, 52 files, 409.85s |
+| `KIX_E2E_CHROME=/usr/bin/google-chrome KIX_E2E_NO_SANDBOX=1 npm run test:a11y` | PASS: 446 tests, 23 files, 773.11s; keyboard facet 89/89 cells; teardown completeness (80 production spacing rows plus state/fixture rows) satisfied |
+| `npm run budget` | PASS: initialJsGzip=160080, initialCssGzip=4997, totalGzip=785887; every route limit unchanged |
+| `npm run test:budget` | PASS: 9 tests, 3 files |
+| `git diff --exit-code origin/main -- packages/protocol-adapter/src/commerce-bindings.ts .aiops docs/aiops .github` | PASS (locked binding and forbidden paths unchanged) |
+
+These local runs used this runner's Node `v24.22.1` (hosted CI pins Node 22) and `/usr/bin/google-chrome` with `KIX_E2E_NO_SANDBOX=1`; they are synthetic browser observations, not user acceptance, conformance or release. The full accessibility suite passed locally without the environmental timeouts seen in the earlier sessions, and hosted exact-head CI remains the acceptance gate.
+
+Both non-blocking r1 review notes are acknowledged and deliberately left unchanged in this round rather than adding browser work: (1) `probeTextSpacing` maps every Tab-walk problem to one `spacing.control-unreachable`/`tab-walk` entry, which is an evidence-labeling imprecision (the existing keyboard facets still detect traps, missing names and missing focus marks), and (2) the negative fixture does not include an expected-but-not-tabbable control, so `spacing.control-unreachable` is exercised by clean production routes rather than a failing twin. Neither weakens a check; they are possible follow-up refinements.
+
 ## Changed-file inventory
 
 - `apps/e2e/src/a11y-global-setup.ts`
