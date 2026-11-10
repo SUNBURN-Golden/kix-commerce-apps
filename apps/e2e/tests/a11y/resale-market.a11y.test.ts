@@ -9,33 +9,73 @@ import { openScreen } from "./helpers";
 
 describe("resale market bilingual form and display", () => {
   const suite = useBrowser();
-  it("keeps IME confirmation in edit, focuses invalid summary and records only after explicit review", async () => {
-    const page = await suite.newPage();
-    await openScreen(page,suite.origin,"/resale/market/demo-001?lang=ko");
-    await page.getByLabel("거래 방식",{ exact: true }).selectOption("bid");
-    await page.locator("#market-units").fill("");
-    await engineComposition(page,"#market-units",false,async () => {
-      await page.locator("#market-trade-form").evaluate(el => (el as HTMLFormElement).requestSubmit());
-      expect(await page.getByRole("heading",{ name: "모의 거래 검토" }).count()).toBe(0);
-    });
-    await confirmation(page,"#market-units","key-first");
-    expect(await page.getByRole("heading",{ name: "모의 거래 검토" }).count()).toBe(0);
-    await page.locator("#market-units").fill("01");
-    // End the browser's preedit turn explicitly before the separate deliberate submit.
-    await page.locator("#market-units").blur();
-    expect(await page.locator("#market-units").getAttribute("aria-invalid")).toBe("true");
-    expect(await page.locator(".error-summary:focus").count()).toBe(0);
-    await page.getByRole("button",{ name: "모의 거래 검토" }).click();
-    await page.locator(".error-summary:focus").waitFor();
-    expect(await page.locator(".error-summary:focus").count()).toBe(1);
-    await page.locator("#market-units").fill("117"); await page.getByRole("button",{ name: "모의 거래 검토" }).click();
-    await page.getByRole("heading",{ name: "모의 거래 검토" }).waitFor();
-    await page.locator('[data-locale="en"]').click();
-    await page.getByRole("heading",{ name: "Review simulation" }).waitFor();
-    await page.getByRole("button",{ name: "Record simulation once" }).click();
-    await page.locator('[data-market-outcome="CONFIRMED"]').waitFor();
-    expect(await page.getByText("117 mock units",{ exact: false }).count()).toBeGreaterThan(0);
-    await suite.pass(page,"a11y.resale-market.ime"); await page.close();
+  it("keeps bilingual exact-unit IME, errors and keyboard review/confirm safe", async () => {
+    for (const locale of ["ko", "en"] as const) {
+      const page = await suite.newPage();
+      await page.addInitScript(() => { window.__kixResaleFault = { mode: "normal", dispatches: 0 }; });
+      await openScreen(page, suite.faultOrigin!, `/resale/market/demo-001?lang=${locale}`);
+      await page.locator("#market-action").selectOption("bid");
+      const input = page.locator("#market-units");
+      const review = page.getByRole("button", { name: locale === "ko" ? "모의 거래 검토" : "Review simulation" });
+      const error = () => page.locator("#market-units-format-error");
+      const errorCopy = (language: "ko" | "en") => language === "ko" ? "숫자로 된 0 이상의 정수를 입력하세요." : "Enter a whole number using digits only (0 or greater).";
+      await input.fill("");
+      await engineComposition(page, "#market-units", false, async () => {
+        await page.locator("#market-trade-form").evaluate(el => (el as HTMLFormElement).requestSubmit());
+        expect(await error().count()).toBe(0);
+        expect(await input.getAttribute("aria-invalid")).toBe("false");
+        expect(await page.locator(".market-review").count()).toBe(0);
+        expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(0);
+      });
+      await input.blur();
+      expect(await error().innerText()).toBe(errorCopy(locale));
+      expect(await input.getAttribute("aria-invalid")).toBe("true");
+      expect(await page.locator(".error-summary:focus").count()).toBe(0);
+      await input.fill("01"); await input.blur();
+      expect(await input.getAttribute("aria-invalid")).toBe("true");
+      expect(await input.getAttribute("aria-describedby")).toBe("market-units-format-error");
+      expect(await error().innerText()).toBe(errorCopy(locale));
+      const other = locale === "ko" ? "en" : "ko";
+      await page.locator(`[data-locale="${other}"]`).click();
+      expect(await input.inputValue()).toBe("01");
+      expect(await error().innerText()).toBe(errorCopy(other));
+      await page.locator(`[data-locale="${locale}"]`).click();
+      await review.click(); await page.locator(".error-summary:focus").waitFor();
+      await page.keyboard.press("Tab");
+      expect(await page.evaluate(() => document.activeElement?.getAttribute("href"))).toBe("#market-units");
+      await page.keyboard.press("Enter");
+      expect(await page.evaluate(() => document.activeElement?.id)).toBe("market-units");
+      const value = "999999999999999999999999999999";
+      await input.fill(value);
+      expect(await error().count()).toBe(0);
+      for (const order of ["key-first", "end-first", "229"] as const) {
+        await confirmation(page, "#market-units", order);
+        expect(await input.inputValue()).toBe(value);
+        expect(await page.locator(".market-review").count()).toBe(0);
+        expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(0);
+      }
+      await input.press("Enter"); await page.locator(".market-review h4:focus").waitFor();
+      expect(await page.locator(".market-review p").nth(2).innerText()).toBe(`${value} ${locale === "ko" ? "모의 단위" : "mock units"}`);
+      expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(0);
+      await page.keyboard.press("Tab"); await page.keyboard.press("Enter"); // Back to edit.
+      expect(await input.inputValue()).toBe(value);
+      await input.press("Enter"); await page.locator(".market-review h4:focus").waitFor();
+      await page.locator(`[data-locale="${other}"]`).click();
+      expect(await page.locator(".market-review p").nth(2).innerText()).toBe(`${value} ${other === "ko" ? "모의 단위" : "mock units"}`);
+      // Resume at the heading after the locale control; Tab traverses back, then confirm.
+      await page.locator(".market-review h4").focus();
+      await page.keyboard.press("Tab"); await page.keyboard.press("Tab");
+      expect(await page.evaluate(() => document.activeElement?.textContent)).toBe(other === "ko" ? "모의 거래 한 번 기록" : "Record simulation once");
+      await page.keyboard.press(locale === "ko" ? "Enter" : "Space");
+      await page.locator('[data-market-outcome="CONFIRMED"]').waitFor();
+      expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(1);
+      expect(await page.evaluate(() => window.__kixResaleFault?.requests?.[0])).toMatchObject({ kind: "bid", mockUnits: value });
+      expect(await page.locator("#market-offers-rows li").innerText()).toContain(`${value} ${other === "ko" ? "모의 단위" : "mock units"}`);
+      // Extend the existing observation rather than adding a matrix cell or keyboard drive.
+      if (locale === "en") await suite.pass(page, "a11y.resale-market.ime");
+      else await suite.quiet(page, "exact-unit Korean IME and keyboard");
+      await page.close();
+    }
   });
   it.each(["dark","forced-colors"] as const)("keeps localized chart and history readable under %s at 320px", async scheme => {
     const page = await suite.newPage();

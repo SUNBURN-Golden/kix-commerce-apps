@@ -4,6 +4,110 @@ import { useBrowser } from "../../src/suite";
 import { poll, newDeskPage } from "../../src/desk";
 describe("synthetic resale marketplace", () => {
   const suite = useBrowser();
+  it.each((["ko", "en"] as const).flatMap(lang => (["bid", "ask"] as const).map(kind => ({ lang, kind }))))("preserves exact units through review, source records and offers ($lang/$kind)", async ({ lang, kind }) => {
+    const page = await suite.newPage();
+    await page.addInitScript(() => { window.__kixResaleFault = { mode: "normal", dispatches: 0 }; });
+    await page.goto(suite.faultOrigin + `/resale/market/demo-001?lang=${lang}`);
+    await page.locator("#market-action").selectOption(kind);
+    const review = page.getByRole("button", { name: lang === "ko" ? "모의 거래 검토" : "Review simulation" });
+    const confirm = page.getByRole("button", { name: lang === "ko" ? "모의 거래 한 번 기록" : "Record simulation once" });
+    const values = ["0", "9007199254740993", "12345678901234567890123456789", "999999999999999999999999999999"];
+    for (const [index, value] of values.entries()) {
+      await page.locator("#market-units").fill(value);
+      expect(await page.locator("#market-units").inputValue()).toBe(value);
+      await review.click();
+      const amount = `${value} ${lang === "ko" ? "모의 단위" : "mock units"}`;
+      expect(await page.locator(".market-review p").nth(2).innerText()).toBe(amount);
+      expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(index);
+      await confirm.click(); await page.locator('[data-market-outcome="CONFIRMED"]').waitFor();
+      const probe = await page.evaluate(() => window.__kixResaleFault!);
+      const request = { kind, productId: "demo-001", variantId: "standard", expectedVersion: index, mockUnits: value };
+      expect(probe.dispatches).toBe(index + 1); expect(probe.requests?.[index]).toEqual(request);
+      expect(probe.results?.[index]).toMatchObject({ kind: "CONFIRMED", request, record: { side: kind, mockUnits: value, state: "open" }, source: "synthetic", unit: "mock-unit", fundsExecuted: false, economicFinalityClaimed: false, productionEndpoint: false, protocolTruth: false, productionConformance: false });
+      expect(await page.locator("#market-offers-rows li").nth(index).innerText()).toContain(amount);
+      expect(await page.locator("#market-units").inputValue()).toBe(value);
+    }
+    await suite.quiet(page, "exact synthetic unit strings"); await page.close();
+  });
+
+  it("retains invalid bulk input and the typed 31st digit without dispatch or truncation", async () => {
+    const page = await suite.newPage();
+    await page.addInitScript(() => { window.__kixResaleFault = { mode: "normal", dispatches: 0 }; });
+    await page.goto(suite.faultOrigin + "/resale/market/demo-001");
+    await page.locator("#market-action").selectOption("bid");
+    const input = page.locator("#market-units");
+    expect(await input.getAttribute("maxlength")).toBeNull();
+    for (const value of ["00", "01", "+1", "-1", "1.0", "1e3", "1,000", "1_000", "1 000", " 0", "0 ", "１", "9".repeat(31), "9".repeat(100)]) {
+      await input.fill(""); await input.focus(); await page.keyboard.insertText(value);
+      await page.getByRole("button", { name: "Review simulation" }).click();
+      expect(await input.inputValue()).toBe(value);
+      expect(await input.getAttribute("aria-invalid")).toBe("true");
+      expect(await page.locator(".market-review").count()).toBe(0);
+      expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(0);
+      expect(await page.locator("#market-offers-rows li").count()).toBe(0);
+    }
+    await input.fill("9".repeat(30)); await input.press("End"); await input.pressSequentially("9");
+    expect(await input.inputValue()).toBe("9".repeat(31));
+    await input.press("Enter"); await page.locator(".error-summary:focus").waitFor();
+    expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(0);
+    await suite.quiet(page, "untruncated invalid amounts"); await page.close();
+  });
+
+  it("blocks a reviewed long offer offline and never replays it on reconnect", async () => {
+    const page = await suite.newPage();
+    await page.addInitScript(() => { window.__kixResaleFault = { mode: "normal", dispatches: 0 }; });
+    await page.goto(suite.faultOrigin + "/resale/market/demo-001");
+    await page.locator("#market-action").selectOption("ask");
+    await page.locator("#market-units").fill("999999999999999999999999999999");
+    await page.getByRole("button", { name: "Review simulation" }).click();
+    await suite.session().context.setOffline(true); await page.locator('[data-connectivity-state="offline"]').waitFor();
+    const confirm = page.getByRole("button", { name: /^Record simulation once/ });
+    await confirm.focus(); await page.keyboard.press("Enter"); await page.keyboard.press("Space");
+    expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(0);
+    await suite.session().context.setOffline(false); await page.locator('[data-connectivity-state="local"]').waitFor();
+    expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(0);
+    await confirm.focus(); await page.keyboard.press("Enter");
+    expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(0);
+    await page.getByRole("button", { name: "Read current fixtures" }).click();
+    expect(await page.locator("#market-units").inputValue()).toBe("999999999999999999999999999999");
+    expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(0);
+    await suite.quiet(page, "offline long offer without replay"); await page.close();
+  });
+  it.each(["reject", "lost", "held"] as const)("keeps the existing %s guard with a 30-digit offer", async mode => {
+    const page = await suite.newPage();
+    await page.addInitScript(mode => { window.__kixResaleFault = { mode, dispatches: 0 }; }, mode);
+    await page.goto(suite.faultOrigin + "/resale/market/demo-001");
+    await page.locator("#market-action").selectOption("bid");
+    const value = "999999999999999999999999999999";
+    await page.locator("#market-units").fill(value);
+    await page.getByRole("button", { name: "Review simulation" }).click();
+    await page.getByRole("button", { name: "Record simulation once" }).focus();
+    await page.keyboard.press("Enter"); await page.keyboard.press("Enter"); await page.keyboard.press("Space");
+    expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(1);
+    expect(await page.evaluate(() => window.__kixResaleFault?.requests?.[0])).toMatchObject({ kind: "bid", mockUnits: value });
+    if (mode === "held") {
+      await page.locator('[data-market-outcome="IN_FLIGHT"]').waitFor();
+      await poll(() => page.evaluate(() => typeof window.__kixResaleFault?.release), type => type === "function", "held response");
+      await page.evaluate(() => window.__kixResaleFault?.release?.());
+      await page.locator('[data-market-outcome="CONFIRMED"]').waitFor();
+      expect(await page.locator("#market-offers-rows").innerText()).toContain(value);
+    } else {
+      await page.locator(`[data-market-outcome="${mode === "lost" ? "UNKNOWN" : "REJECTED"}"]`).waitFor();
+      expect(await page.getByRole("button", { name: "Review simulation" }).isDisabled()).toBe(true);
+      if (mode === "reject") expect(await page.locator("#market-outcome").innerText()).toContain("STALE_VERSION");
+      else {
+        await suite.session().context.setOffline(true); await page.locator('[data-connectivity-state="offline"]').waitFor();
+        await suite.session().context.setOffline(false); await page.locator('[data-connectivity-state="local"]').waitFor();
+        await page.getByRole("button", { name: "Read current fixtures" }).click();
+        await page.getByRole("link", { name: "Resale market", exact: true }).last().click();
+        await page.locator(".market-card").first().click();
+        await page.locator('[data-market-outcome="UNKNOWN"]').waitFor();
+        expect(await page.getByRole("button", { name: "Review simulation" }).isDisabled()).toBe(true);
+      }
+    }
+    expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(1);
+    await suite.quiet(page, "long offer guard"); await page.close();
+  });
   it("searches bilingual fixtures and paginates without requests", async () => {
     const page = await newDeskPage(suite.newPage,suite.origin);
     await page.goto(suite.origin + "/resale/market");
