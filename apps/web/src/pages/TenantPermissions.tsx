@@ -64,7 +64,7 @@ export function TenantPermissionsPage() {
             type="button"
             id="tenant-return-action"
             className="discovery-action"
-            onClick={() => (model.state === "tuple-changed" ? live.actions.newSession() : live.actions.refresh())}
+            onClick={() => (model.state === "role-stale" ? live.actions.recoverRole() : model.state === "tuple-changed" ? live.actions.newSession() : live.actions.refresh())}
           >
             {deskText(t, model.actionLabel)}
           </button>

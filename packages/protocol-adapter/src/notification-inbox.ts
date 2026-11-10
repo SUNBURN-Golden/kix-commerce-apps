@@ -139,6 +139,7 @@ export const NOTIFY_CAPABILITIES = [
   "read-sensitive",
   "read-inquiry",
 ] as const;
+Object.freeze(NOTIFY_CAPABILITIES);
 export type NotifyCapability = (typeof NOTIFY_CAPABILITIES)[number];
 
 const NOTIFY_ROLE_CAPABILITIES: Readonly<Record<NotifyRole, readonly NotifyCapability[]>> = {
@@ -147,10 +148,12 @@ const NOTIFY_ROLE_CAPABILITIES: Readonly<Record<NotifyRole, readonly NotifyCapab
   settler: ["read-inbox", "mark-read", "resolve-action", "read-sensitive", "read-inquiry"],
   support: ["read-inbox", "mark-read", "resolve-action", "read-sensitive", "read-inquiry"],
 };
+for (const values of Object.values(NOTIFY_ROLE_CAPABILITIES)) Object.freeze(values);
+Object.freeze(NOTIFY_ROLE_CAPABILITIES);
 
 /** The capabilities a role holds on the inbox. An unknown role holds none. */
 export function notifyCapabilities(role: string): readonly NotifyCapability[] {
-  return (NOTIFY_ROLE_CAPABILITIES as Record<string, readonly NotifyCapability[]>)[role] ?? [];
+  return Object.hasOwn(NOTIFY_ROLE_CAPABILITIES, role) ? (NOTIFY_ROLE_CAPABILITIES as Record<string, readonly NotifyCapability[]>)[role] ?? [] : [];
 }
 
 /** What a person may do on this surface. The capability rows stay separate. */
@@ -1422,7 +1425,7 @@ export class StubNotificationInbox implements NotificationInboxPort {
     if (refused !== null) {
       return refused;
     }
-    return { kind: "ready", snapshot };
+    return { kind: "ready", snapshot: structuredClone(snapshot) };
   }
 
   private nonClaims(): NotifyNonClaims {

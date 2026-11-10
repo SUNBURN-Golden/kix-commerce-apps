@@ -2,6 +2,8 @@ import { c229, c228, c210, c209, c227, c206, c205, c226, c225, c224, c204, c203,
 import { c41, c40, c46, c39, c38, c132, c101, c100, c99, c37, c36, c34, c98, c33, c97, c96, c95, c94, c93, c45, c31, c30, c44, c29, c28, c131, c130, c92, c91, c90, c89, c88, c87, c26, c25, c24, c23, c86, c19, c85, c84, c18, c83, c17, c82, c81, c80, c79, c15, c13, c78, c77, c76, c75, c12, c74, c73, c72, c71, c70, c69, c42 } from "./shared-copy";
 export const messages = {
   en: {
+    "audit.rotate": "Rotate synthetic assignment",
+    "audit.recover": "Read current assignment generation",
     "so": "A different actor approves a proposal; a second role is the same person. Approval records no change. Only source application changes membership/account; this page applies nothing.",
     "s1b": "A deep-open names a resource reference copied from a row or a URL. It is never guessed.",
     "s2f": "Source checks every assignment and capability on reads, exports and requests; hidden controls enforce nothing.",
@@ -162,6 +164,8 @@ export const messages = {
     "p.t9": c31,
   },
   ko: {
+    "audit.rotate": "합성 배정 세대 변경",
+    "audit.recover": "현재 배정 세대 조회",
     "so": "제안은 다른 행위자가 인가합니다. 두 역할의 동일인은 같은 행위자입니다. 인가는 기록일 뿐, 구성원·계정 변경은 원본 적용 후에만 생기며 화면은 적용하지 않습니다.",
     "s1b": "직접 열기는 행이나 URL에서 복사한 자원 참조를 사용합니다. 추측하지 않습니다.",
     "s2f": "숨김·비활성화는 집행이 아닙니다. 모든 조회·내보내기·요청은 원본의 배정·기능 검사를 거칩니다.",

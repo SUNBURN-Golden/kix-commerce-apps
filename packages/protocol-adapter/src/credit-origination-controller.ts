@@ -120,7 +120,7 @@ export interface OriginationControllerState {
   behind: boolean;
   fence: OriginationFence | null;
   last: OriginationActRecord | null;
-  /** Unknown outcomes left in sessions this page no longer holds. They are not forgotten. */
+  /** Distinct unresolved requests whose original UI incarnation is no longer current. */
   earlierUnknown: number;
   counters: OriginationCounters;
 }
@@ -168,9 +168,14 @@ export class CreditOriginationController {
   private actSeq = 0;
   private behind = false;
   private inFlight: OriginationActionKind | null = null;
-  private fence: OriginationFence | null = null;
+  /** Resource fences outlive UI incarnations. No read or navigation resolves a request. */
+  private readonly unresolvedByResource = new Map<string, {
+    context: OriginationContext;
+    request: Parameters<OriginationPort["act"]>[0];
+    record: OriginationActRecord;
+    fence: OriginationFence;
+  }>();
   private last: OriginationActRecord | null = null;
-  private earlierUnknown = 0;
   private readonly counters: OriginationCounters = { reads: 0, acts: 0, notSent: 0, droppedReads: 0 };
   private readonly listeners = new Set<() => void>();
 
@@ -213,7 +218,7 @@ export class CreditOriginationController {
     } else if (this.readState === "stale") {
       freshness = "STALE";
     }
-    return {
+    return structuredClone({
       context: { ...this.context, scope: { ...this.context.scope } },
       readState: this.readState,
       readCode: this.readCode,
@@ -223,17 +228,28 @@ export class CreditOriginationController {
       freshness,
       behind: this.behind,
       fence: this.currentFence(),
-      last: this.last,
-      earlierUnknown: this.earlierUnknown,
+      last: this.last ?? this.retainedLast(),
+      earlierUnknown: [...this.unresolvedByResource.values()].filter((entry) => entry.context.key !== this.context.key).length,
       counters: { ...this.counters },
-    };
+    });
+  }
+
+  private resourceKey(): string {
+    return JSON.stringify([this.context.environment, this.context.domain, this.context.scope.tenantId, this.context.scope.applicantRef]);
+  }
+
+  /** Publish retained details only to the original principal and role. */
+  private retainedLast(): OriginationActRecord | null {
+    const retained = this.unresolvedByResource.get(this.resourceKey());
+    if (!retained || retained.context.actorRef !== this.context.actorRef) return null;
+    return retained.record;
   }
 
   private currentFence(): OriginationFence | null {
     if (this.inFlight !== null) {
       return { reason: "in-flight", action: this.inFlight };
     }
-    return this.fence;
+    return structuredClone(this.unresolvedByResource.get(this.resourceKey())?.fence ?? null);
   }
 
   private clearView(): void {
@@ -251,9 +267,6 @@ export class CreditOriginationController {
     if (this.inFlight !== null) {
       return null;
     }
-    if (this.fence !== null) {
-      this.earlierUnknown += 1;
-    }
     const parts = {
       environment: this.context.environment,
       domain: this.context.domain,
@@ -268,7 +281,6 @@ export class CreditOriginationController {
     this.readDetail = null;
     this.floor = null;
     this.behind = false;
-    this.fence = null;
     this.last = null;
     this.notify();
     return { ...this.context, scope: { ...this.context.scope } };
@@ -302,7 +314,7 @@ export class CreditOriginationController {
       return { kind: "DROPPED", cause: "older-read" };
     }
     this.appliedReadSeq = seq;
-    this.apply(outcome, seq);
+    this.apply(structuredClone(outcome), seq);
     this.notify();
     return { kind: "APPLIED", readState: this.readState };
   }
@@ -374,10 +386,10 @@ export class CreditOriginationController {
     if (this.inFlight !== null) {
       return { allowed: false, reason: `A ${this.inFlight} request is in flight. One request goes at a time.` };
     }
-    if (this.fence !== null) {
+    if (this.currentFence() !== null) {
       return {
         allowed: false,
-        reason: "An earlier request has an unknown outcome and may have applied. Nothing is sent again from here. Start a new synthetic session to clear it.",
+        reason: "An earlier request has an unknown outcome and may have applied. Nothing is sent again from here. Context changes and reads do not resolve it.",
       };
     }
     if (this.readState !== "ready" || this.snapshot === null || this.assessment === null) {
@@ -433,16 +445,19 @@ export class CreditOriginationController {
     this.actSeq += 1;
     const seq = this.actSeq;
     this.counters.acts += 1;
+    const originalContext = structuredClone(this.context);
+    const resourceKey = this.resourceKey();
+    const request: Parameters<OriginationPort["act"]>[0] = {
+      contextKey: key,
+      actorRef: this.context.actorRef,
+      scope: { ...this.context.scope },
+      action: built,
+    };
     this.inFlight = kind;
     this.notify();
     let outcome: OriginationActOutcome;
     try {
-      outcome = await this.port.act({
-        contextKey: key,
-        actorRef: this.context.actorRef,
-        scope: { ...this.context.scope },
-        action: built,
-      });
+      outcome = await this.port.act(structuredClone(request));
     } catch (error) {
       outcome = { kind: "unknown", message: failureText(error) };
     }
@@ -451,7 +466,10 @@ export class CreditOriginationController {
     this.last = record;
     if (record.phase === "unknown" || record.phase === "refused") {
       // The request may have applied. Nothing is sent again, and a read does not lift this.
-      this.fence = { reason: "unknown-outcome", seq, action: kind };
+      this.unresolvedByResource.set(resourceKey, structuredClone({
+        context: originalContext, request, record,
+        fence: { reason: "unknown-outcome" as const, seq, action: kind },
+      }));
       this.markBehind();
     } else if (record.phase === "applied" || record.phase === "rejected") {
       this.markBehind();

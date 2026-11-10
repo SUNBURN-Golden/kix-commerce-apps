@@ -153,7 +153,7 @@ export interface NotifyControllerState {
   behind: boolean;
   fence: NotifyFence | null;
   last: NotifyActRecord | null;
-  /** Unknown outcomes left in sessions this page no longer holds. They are not forgotten. */
+  /** Distinct unresolved requests whose original UI incarnation is no longer current. */
   earlierUnknown: number;
   counters: NotifyCounters;
 }
@@ -218,9 +218,14 @@ export class NotificationInboxController {
   private actSeq = 0;
   private behind = false;
   private inFlight: NotifyActionKind | null = null;
-  private fence: NotifyFence | null = null;
+  /** Resource fences outlive UI incarnations. No read or navigation resolves a request. */
+  private readonly unresolvedByResource = new Map<string, {
+    context: NotifyContext;
+    request: Parameters<NotificationInboxPort["act"]>[0];
+    record: NotifyActRecord;
+    fence: NotifyFence;
+  }>();
   private last: NotifyActRecord | null = null;
-  private earlierUnknown = 0;
   private actsDone = 0;
   private readonly counters: NotifyCounters = { reads: 0, inquiries: 0, acts: 0, notSent: 0, droppedReads: 0, droppedInquiries: 0 };
   private readonly listeners = new Set<() => void>();
@@ -259,7 +264,7 @@ export class NotificationInboxController {
     } else if (this.readState === "stale" || this.readState === "generation-stale") {
       freshness = "STALE";
     }
-    return {
+    return structuredClone({
       context: { ...this.context, scope: { ...this.context.scope } },
       readState: this.readState,
       readCode: this.readCode,
@@ -273,17 +278,29 @@ export class NotificationInboxController {
           : { phase: this.inquiryPhase, code: this.inquiryCode, detail: this.inquiryDetail, value: this.inquiryValue },
       behind: this.behind,
       fence: this.currentFence(),
-      last: this.last,
-      earlierUnknown: this.earlierUnknown,
+      last: this.last ?? this.retainedLast(),
+      earlierUnknown: [...this.unresolvedByResource.values()].filter((entry) => entry.context.key !== this.context.key).length,
       counters: { ...this.counters },
-    };
+    });
+  }
+
+  private resourceKey(): string {
+    return JSON.stringify([this.context.environment, this.context.domain, this.context.scope.tenantId, this.context.actorRef]);
+  }
+
+  /** Publish retained details only to the original principal and role. */
+  private retainedLast(): NotifyActRecord | null {
+    const retained = this.unresolvedByResource.get(this.resourceKey());
+    if (!retained || retained.context.actorRef !== this.context.actorRef) return null;
+    if (retained.context.scope.role !== this.context.scope.role) return null;
+    return retained.record;
   }
 
   private currentFence(): NotifyFence | null {
     if (this.inFlight !== null) {
       return { reason: "in-flight", action: this.inFlight };
     }
-    return this.fence;
+    return structuredClone(this.unresolvedByResource.get(this.resourceKey())?.fence ?? null);
   }
 
   private clearView(): void {
@@ -304,9 +321,6 @@ export class NotificationInboxController {
     if (this.inFlight !== null) {
       return null;
     }
-    if (this.fence !== null) {
-      this.earlierUnknown += 1;
-    }
     const parts = {
       environment: this.context.environment,
       domain: this.context.domain,
@@ -325,7 +339,6 @@ export class NotificationInboxController {
     this.floor = null;
     this.grantGeneration = null;
     this.behind = false;
-    this.fence = null;
     this.last = null;
     this.notify();
     return { ...this.context, scope: { ...this.context.scope } };
@@ -396,7 +409,7 @@ export class NotificationInboxController {
       return { kind: "DROPPED", cause: "older-read" };
     }
     this.appliedReadSeq = seq;
-    this.apply(outcome, this.actsDone === actsAtStart);
+    this.apply(structuredClone(outcome), this.actsDone === actsAtStart);
     this.notify();
     return { kind: "APPLIED", readState: this.readState };
   }
@@ -549,7 +562,7 @@ export class NotificationInboxController {
     switch (outcome.kind) {
       case "ready":
         this.inquiryPhase = "loaded";
-        this.inquiryValue = outcome.inquiry;
+        this.inquiryValue = structuredClone(outcome.inquiry);
         return;
       case "denied":
         this.inquiryPhase = "denied";
@@ -598,11 +611,11 @@ export class NotificationInboxController {
     if (this.inFlight !== null) {
       return { allowed: false, reason: `A ${this.inFlight} request is in flight. One request goes at a time.` };
     }
-    if (this.fence !== null) {
+    if (this.currentFence() !== null) {
       return {
         allowed: false,
         reason:
-          "An earlier request has an unknown outcome and may have been recorded. Nothing is sent again from here. Switching the tenant, the actor, or the role, or starting a new synthetic session, begins a new context and counts this unknown outcome.",
+          "An earlier request has an unknown outcome and may have been recorded. Nothing is sent again from here. Reads, context switches and generation recovery do not resolve it. This resource stays fenced.",
       };
     }
     if (this.readState !== "ready" || this.snapshot === null || this.assessment === null) {
@@ -662,18 +675,21 @@ export class NotificationInboxController {
     this.actSeq += 1;
     const seq = this.actSeq;
     this.counters.acts += 1;
+    const originalContext = structuredClone(this.context);
+    const resourceKey = this.resourceKey();
+    const request: Parameters<NotificationInboxPort["act"]>[0] = {
+      contextKey: key,
+      actorRef: this.context.actorRef,
+      // The request carries the grant generation the read was built under,
+      // so the source rejects a request whose grant moved underneath it.
+      scope: { ...this.context.scope, grantGeneration: this.snapshot.grantGeneration },
+      action: built,
+    };
     this.inFlight = kind;
     this.notify();
     let outcome: NotifyActOutcome;
     try {
-      outcome = await this.port.act({
-        contextKey: key,
-        actorRef: this.context.actorRef,
-        // The request carries the grant generation the read was built under,
-        // so the source rejects a request whose grant moved underneath it.
-        scope: { ...this.context.scope, grantGeneration: this.snapshot.grantGeneration },
-        action: built,
-      });
+      outcome = await this.port.act(structuredClone(request));
     } catch (error) {
       outcome = { kind: "unknown", message: failureText(error) };
     }
@@ -682,7 +698,10 @@ export class NotificationInboxController {
     const record = this.record(seq, built, outcome);
     this.last = record;
     if (record.phase === "unknown" || record.phase === "refused") {
-      this.fence = { reason: "unknown-outcome", seq, action: kind };
+      this.unresolvedByResource.set(resourceKey, structuredClone({
+        context: originalContext, request, record,
+        fence: { reason: "unknown-outcome" as const, seq, action: kind },
+      }));
       this.behind = true;
     } else if (record.phase === "applied" || record.phase === "rejected") {
       this.behind = true;

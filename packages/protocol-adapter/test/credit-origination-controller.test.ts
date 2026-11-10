@@ -362,6 +362,10 @@ describe("origination controller requests", () => {
     expect(port.effects().acts).toBe(1);
     expect(await controller.submit("1000")).toMatchObject({ kind: "FENCED" });
     expect(port.effects().acts).toBe(1);
+    controller.switchScope(ORIGINATION_OWN_REF);
+    await controller.read();
+    expect((await controller.submit("1000")).kind).toBe("FENCED");
+    expect(controller.state().counters.acts).toBe(1);
   });
 
   it("serialises requests: one in flight, a second is fenced, and the scope cannot change under it", async () => {
@@ -386,7 +390,7 @@ describe("origination controller requests", () => {
     await controller.submit("1000");
     expect(controller.state().fence).not.toBeNull();
     controller.switchScope(ORIGINATION_OWN_REF);
-    expect(controller.state()).toMatchObject({ fence: null, earlierUnknown: 1 });
+    expect(controller.state()).toMatchObject({ fence: { reason: "unknown-outcome" }, earlierUnknown: 1 });
   });
 
   it("is not sent on a not-bound port, and the port is never called", async () => {
@@ -481,4 +485,28 @@ describe("captured response invalidation barrier", () => {
       }
     }
   });
+});
+
+// Audit 10: navigation changes view identity, never unresolved resource identity.
+it("retains exact unresolved identity through same-scope and A→B→A navigation", async () => {
+  const { controller } = controllerFor("act-lost");
+  await controller.read();
+  const original = controller.state().context;
+  expect((await controller.submit("1000")).kind).toBe("UNKNOWN");
+  const record = controller.state().last;
+  controller.switchScope(ORIGINATION_OWN_REF);
+  expect(controller.state().snapshot).toBeNull();
+  await controller.read();
+  expect((await controller.submit("1000")).kind).toBe("FENCED");
+  controller.switchScope(ORIGINATION_FOREIGN_REF);
+  expect(controller.state().fence).toBeNull();
+  controller.switchScope(ORIGINATION_OWN_REF);
+  controller.switchScope(ORIGINATION_OWN_REF);
+  await controller.read();
+  expect(controller.state().context.key).not.toBe(original.key);
+  expect(controller.state().last).toEqual(record);
+  expect(controller.state().earlierUnknown).toBe(1);
+  expect(controller.canSend("submit").allowed).toBe(false);
+  expect((await controller.submit("1000")).kind).toBe("FENCED");
+  expect(controller.state().counters.acts).toBe(1);
 });
