@@ -1,4 +1,6 @@
-import { ReadRow } from "./ReadState";
+import { buildNotificationPage, type NotificationPage } from "../notification-pagination";
+import { focusControl } from "../a11y/focus";
+import { ReadRow, readSettled } from "./ReadState";
 import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { messages as copy0 } from "../i18n/messages/pages--NotificationsPanels";
 import { messages as copy1 } from "../i18n/messages/notification-inbox";
@@ -7,7 +9,7 @@ import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { AsyncState } from "../components/AsyncState";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
   NOTIFY_ACTORS,
@@ -136,19 +138,9 @@ export function NotifyBanner({
       <p className="discovery-banner" data-provenance="synthetic" data-source="synthetic-notification-inbox">
         SYNTHETIC. {deskText(t, NOTIFY_SOURCE_LINE)}
       </p>
-      <p>{deskText(t, NOTIFY_BOUNDARY)}</p>
-      <p>{deskText(t, NOTIFY_DEDUPE_NOTE)}</p>
-      <p>{deskText(t, NOTIFY_CURRENT_NOTE)}</p>
-      <p>{deskText(t, NOTIFY_SENSITIVE_NOTE)}</p>
-      <p>{deskText(t, NOTIFY_ACTION_NOTE)}</p>
-      <p>{deskText(t, NOTIFY_INQUIRY_NOTE)}</p>
+      {[NOTIFY_BOUNDARY, NOTIFY_DEDUPE_NOTE, NOTIFY_CURRENT_NOTE, NOTIFY_SENSITIVE_NOTE, NOTIFY_ACTION_NOTE, NOTIFY_INQUIRY_NOTE].map((line) => <p key={line}>{deskText(t, line)}</p>)}
       <p data-hide-note="true">{deskText(t, NOTIFY_HIDE_NOTE)}</p>
-      <p>{deskText(t, NOTIFY_SCOPE_NOTE)}</p>
-      <p>{deskText(t, NOTIFY_ACTOR_NOTE)}</p>
-      <p>{deskText(t, NOTIFY_CLAIM_NOTE)}</p>
-      <p>{deskText(t, NOTIFY_READ_NOTE)}</p>
-      <p>{deskText(t, NOTIFY_SESSION_NOTE)}</p>
-      <p>{deskText(t, WORKSPACE_RULING)}</p>
+      {[NOTIFY_SCOPE_NOTE, NOTIFY_ACTOR_NOTE, NOTIFY_CLAIM_NOTE, NOTIFY_READ_NOTE, NOTIFY_SESSION_NOTE, WORKSPACE_RULING].map((line) => <p key={line}>{deskText(t, line)}</p>)}
       <p data-hold-record="not-bound">{deskText(t, model.session.holdLine)}</p>
       <p data-not-composed="recorded">{deskText(t, model.session.notComposedLine)}</p>
     </header>
@@ -359,13 +351,42 @@ export function NotifyFocusSection({ model }: { model: NotifyModel }) {
   );
 }
 
-export function NotifyInboxSection({ model, actions }: { model: NotifyModel; actions: NotifyActions }) {
+export function NotifyInboxSection({ model, actions, page = buildNotificationPage(model.rows, { filter: "all", page: 1 }), onPageChange }: {
+  model: NotifyModel; actions: NotifyActions; page?: NotificationPage; onPageChange?: (page: number) => void;
+}) {
   const t = useT(mergedCopy, copy0, copy1, copy2);
+  const focused = useRef<HTMLElement | null>(null);
+  const lastAttention = useRef(model.focusToken);
+  const mounted = useRef(false);
+  useLayoutEffect(() => {
+    const previous = focused.current;
+    const active = document.activeElement;
+    const attention = model.focusToken && model.focusToken !== lastAttention.current;
+    if (previous && !previous.isConnected && (!active || active === document.body || !active.isConnected) && !attention) {
+      focusControl("notify-page-status");
+    }
+    if (previous && !previous.isConnected) focused.current = null;
+    lastAttention.current = model.focusToken;
+    mounted.current = true;
+  });
   return (
-    <section id="notify-inbox" className="discovery-section" aria-label={t("snt")} data-row-count={model.rows.length}>
+    <section id="notify-inbox" className="discovery-section" aria-label={t("snt")} data-row-count={page.rows.length} data-filtered-count={page.filteredCount} data-total-count={page.totalCount}
+      onFocusCapture={(event) => { focused.current = event.target; }}
+      onBlurCapture={(event) => { if (event.relatedTarget) focused.current = null; }}>
       <h3>{t("snt")}</h3>
       <p className="muted">
         {t("s7l")}</p>
+      <p id="notify-page-status" tabIndex={-1} role="status" aria-live={mounted.current && model.focusToken === lastAttention.current && (page.totalCount > 0 || readSettled(model.state)) ? "polite" : "off"} aria-atomic="true">
+        {t("notify.page.range", { start: page.start, end: page.end, filtered: page.filteredCount, total: page.totalCount })}{" "}
+        {t("notify.page.number", { page: page.page, pages: page.pageCount })}
+      </p>
+      <nav aria-label={t("notify.page.navigation")}>
+        {([["first", 1], ["previous", page.page - 1], ["next", page.page + 1], ["last", page.pageCount]] as const).map(([label, next]) => {
+          const unavailable = !onPageChange || !page.pageCount || (label === "first" || label === "previous" ? page.page <= 1 : page.page >= page.pageCount);
+          return <button key={label} type="button" className="discovery-action" aria-controls="notify-inbox" aria-disabled={unavailable}
+            onClick={() => { if (!unavailable) onPageChange?.(next); }}>{t(`notify.page.${label}`)}</button>;
+        })}
+      </nav>
       {model.markBlock ? (
         <p id="notify-mark-reason" className="muted" data-blocked-reason="true" data-block="mark-read">
           <WordMark word={t("status.transport.blocked")} /> {t("ss3")}{" "}{deskText(t, model.markBlock)}
@@ -376,14 +397,14 @@ export function NotifyInboxSection({ model, actions }: { model: NotifyModel; act
           <WordMark word={t("status.transport.blocked")} /> {t("s1gi")}{" "}{deskText(t, model.resolveBlock)}
         </p>
       ) : null}
-      {model.rows.length === 0 ? <p data-state="empty">{t("swf")}</p> : null}
-      {model.rows.length > 0 ? (
+      {page.rows.length === 0 ? <p data-state="empty">{t(page.totalCount ? "notify.page.empty" : "swf")}</p> : null}
+      {page.rows.length > 0 ? (
         <ul className="discovery-list" aria-label={t("s11u")}>
-          {deskText(t, model.rows.map((row) => (
+          {deskText(t, page.rows.map((row) => (
             <ReadRow as="li" name="item" value={row.notificationRef}
               key={row.notificationRef}
               data-notification={row.notificationRef}
-              data-notification-read={row.readWord === copy0.en["s1av"] ? "true" : "false"}
+              data-notification-read={row.readWord === copy1.en["s1av"] ? "true" : "false"}
               data-issue-state={row.issueState}
             >
               <Synthetic /> <strong>{deskText(t, row.notificationRef)}</strong> {deskText(t, row.kindWord)} {t("s1je")}{" "}{deskText(t, row.seq)}). {deskText(t, row.headline)}{" "}
@@ -418,28 +439,19 @@ export function NotifyInboxSection({ model, actions }: { model: NotifyModel; act
         </ul>
       ) : null}
       <ScrollTable label={t("s11p")}>
-        {model.rows.length > 0 ? (
+        {page.rows.length > 0 ? (
           <table className="finance-cuts">
             <caption>{t("sfo")}</caption>
             <thead>
               <tr>
-                <th scope="col">{t("s11o")}</th>
-                <th scope="col">{t("sfn")}</th>
-                <th scope="col">{t("sps")}</th>
-                <th scope="col">{t("s1jd")}</th>
-                <th scope="col">{t("s1av")}</th>
-                <th scope="col">{t("sos")}</th>
+                {(["s11o", "sfn", "sps", "s1jd", "s1av", "sos"] as const).map((key) => <th key={key} scope="col">{t(key)}</th>)}
               </tr>
             </thead>
             <tbody>
-              {deskText(t, model.rows.map((row) => (
+              {deskText(t, page.rows.map((row) => (
                 <tr key={row.notificationRef} data-notification-row={row.notificationRef}>
                   <th scope="row">{deskText(t, row.notificationRef)}</th>
-                  <td>{deskText(t, row.dedupeKey)}</td>
-                  <td>{deskText(t, row.kindWord)}</td>
-                  <td>{deskText(t, row.seq)}</td>
-                  <td>{deskText(t, row.readWord)}</td>
-                  <td>{deskText(t, row.issueWord)}</td>
+                  {(["dedupeKey", "kindWord", "seq", "readWord", "issueWord"] as const).map((key) => <td key={key}>{deskText(t, row[key])}</td>)}
                 </tr>
               )))}
             </tbody>
@@ -532,10 +544,7 @@ export function NotifySessionSection({ session }: { session: NotifySessionModel 
   return (
     <section id="notify-session" className="discovery-section" aria-label={t("s1js")}>
       <h3>{t("s1js")}</h3>
-      <p className="muted">{deskText(t, session.contextLine)}</p>
-      <p className="muted">{deskText(t, session.capabilityLine)}</p>
-      <p className="muted">{deskText(t, session.countersLine)}</p>
-      <p className="muted">{deskText(t, session.earlierUnknownLine)}</p>
+      {[session.contextLine, session.capabilityLine, session.countersLine, session.earlierUnknownLine].map((line) => <p key={line} className="muted">{deskText(t, line)}</p>)}
       <p className="muted" data-hold-record="not-bound">
         {deskText(t, session.holdLine)}
       </p>

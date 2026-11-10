@@ -95,7 +95,7 @@ function isCatalogueReceipt(value: unknown): value is {
     value.domain === PINNED_PROTOCOL_DOMAIN &&
     typeof value.operationId === "string" &&
     typeof value.sequence === "number" &&
-    Number.isInteger(value.sequence) &&
+    Number.isSafeInteger(value.sequence) &&
     typeof value.action === "string" &&
     isPinnedAction(value.action) &&
     isRecord(value.result)
@@ -124,18 +124,12 @@ function rejectTransportProductionClaims(value: unknown, depth: number): void {
   if (!isRecord(value)) {
     return;
   }
-  if (
-    value.production === true ||
-    value.productionEndpoint === true ||
-    value.productionReadiness === true ||
-    value.productionConformance === true ||
-    value.protocolTruth === true ||
-    value.liveMoney === true ||
-    value.publicHost === true ||
-    value["x-kix-production-endpoint"] === true ||
-    value["x-kix-production-conformance"] === true ||
-    value["x-kix-protocol-truth"] === true
-  ) {
+  const flags = [
+    "production", "productionEndpoint", "productionReadiness", "productionConformance",
+    "protocolTruth", "liveMoney", "publicHost", "x-kix-production-endpoint",
+    "x-kix-production-conformance", "x-kix-protocol-truth",
+  ];
+  if (flags.some(key => Object.hasOwn(value, key) && value[key] !== false)) {
     throw new ProtocolError("Remote payload claims a production endpoint.", "PRODUCTION_ENDPOINT");
   }
   for (const child of Object.values(value)) {

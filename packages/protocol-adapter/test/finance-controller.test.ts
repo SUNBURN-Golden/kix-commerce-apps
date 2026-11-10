@@ -435,7 +435,7 @@ describe("finance controller requests", () => {
     expect(state.behind).toBe(true);
     expect(state.fence).toBeNull();
     // The rows on screen are still the last read's. Only the next read shows the proposal.
-    expect(state.snapshot).toBe(before);
+    expect(state.snapshot).toEqual(before);
     expect(state.snapshot?.proposals).toEqual([]);
     expect(state.counters.acts).toBe(1);
     await controller.read();
@@ -494,7 +494,7 @@ describe("finance controller requests", () => {
       phase: "applied",
       receipt: { kind: "approval-recorded", economicStateChanged: false, confirmationForcesMatch: false },
     });
-    expect(approver.state().snapshot).toBe(before);
+    expect(approver.state().snapshot).toEqual(before);
     expect(approver.state().snapshot?.proposals[0]?.state).toBe("pending");
     expect(await approver.approveProposal("prp-0001")).toMatchObject({ kind: "NOT_SENT", reason: "stale-read" });
     await approver.read();
@@ -571,6 +571,10 @@ describe("finance controller requests", () => {
     await approver.read();
     expect(approver.state().snapshot?.proposals[0]?.state).toBe("approval-recorded");
     expect(approver.state().fence).not.toBeNull();
+    approver.switchScope(FINANCE_OWN_REF);
+    await approver.read();
+    expect((await approver.approveProposal("prp-0001")).kind).toBe("FENCED");
+    expect(approver.state().counters.acts).toBe(1);
   });
 
   it("serialises requests: one in flight, a second is fenced, and the context cannot change under it", async () => {
@@ -595,7 +599,7 @@ describe("finance controller requests", () => {
     await controller.proposeCorrection("rcs-0001", "link-observation", "n");
     expect(controller.state().earlierUnknown).toBe(0);
     controller.switchActor(FINANCE_APPROVER_ACTOR);
-    expect(controller.state()).toMatchObject({ earlierUnknown: 1, fence: null, last: null, behind: false });
+    expect(controller.state()).toMatchObject({ earlierUnknown: 1, fence: { reason: "unknown-outcome" }, last: null, behind: false });
     controller.switchScope(FINANCE_OWN_REF);
     expect(controller.state().earlierUnknown).toBe(1);
   });
@@ -652,4 +656,39 @@ describe("finance controller requests", () => {
       expect(result, phase).toMatchObject({ kind: "REJECTED", record: { phase } });
     }
   });
+});
+
+// Audit 10: navigation changes view identity, never unresolved resource identity.
+it("retains exact unresolved identity through same-scope and A→B→A navigation", async () => {
+  const { controller } = controllerFor("act-lost");
+  await controller.read();
+  const original = controller.state().context;
+  expect((await controller.proposeCorrection("rcs-0001", "link-observation", "n")).kind).toBe("UNKNOWN");
+  const record = controller.state().last;
+  controller.switchScope(FINANCE_OWN_REF);
+  expect(controller.state().snapshot).toBeNull();
+  await controller.read();
+  expect((await controller.proposeCorrection("rcs-0001", "link-observation", "n")).kind).toBe("FENCED");
+  controller.switchScope(FINANCE_FOREIGN_REF);
+  expect(controller.state().fence).toBeNull();
+  controller.switchScope(FINANCE_OWN_REF);
+  controller.switchScope(FINANCE_OWN_REF);
+  await controller.read();
+  expect(controller.state().context.key).not.toBe(original.key);
+  expect(controller.state().last).toEqual(record);
+  expect(controller.state().earlierUnknown).toBe(1);
+  expect(controller.canSend("propose-correction").allowed).toBe(false);
+  expect((await controller.proposeCorrection("rcs-0001", "link-observation", "n")).kind).toBe("FENCED");
+  expect(controller.state().counters.acts).toBe(1);
+});
+
+it("another actor cannot bypass the shared resource fence or read the original request", async () => {
+  const { controller } = controllerFor("act-lost");
+  await controller.read();
+  await controller.proposeCorrection("rcs-0001", "link-observation", "n");
+  controller.switchActor(FINANCE_APPROVER_ACTOR);
+  expect(controller.state().last).toBeNull();
+  await controller.read();
+  expect((await controller.proposeCorrection("rcs-0001", "link-observation", "n")).kind).toBe("FENCED");
+  expect(controller.state().counters.acts).toBe(1);
 });

@@ -300,7 +300,7 @@ describe("notification inbox controller requests", () => {
     expect(client.state().fence?.reason).toBe("unknown-outcome");
     const still = await client.resolveAction("ntf-0004");
     expect(still.kind).toBe("FENCED");
-    // A new context counts the unknown outcome and lifts the fence.
+    // Another subject has its own inbox. The original subject stays fenced on return.
     const next = client.switchActor(NOTIFY_SETTLER_ACTOR);
     expect(next).not.toBeNull();
     expect(client.state().earlierUnknown).toBe(1);
@@ -317,6 +317,10 @@ describe("notification inbox controller requests", () => {
       expect(result.record.code).toBe("CLAIM");
     }
     expect(client.state().fence?.reason).toBe("unknown-outcome");
+    client.switchRole("buyer");
+    await client.read();
+    expect((await client.resolveAction("ntf-0001")).kind).toBe("FENCED");
+    expect(client.state().counters.acts).toBe(1);
   });
 
   it("one request at a time: a second request while one is in flight never leaves", async () => {
@@ -459,4 +463,76 @@ describe("controller context switching", () => {
     expect(buyer.state().readState).toBe("denied");
     expect(buyer.state().readCode).toBe("GRANT_DENIED");
   });
+});
+
+// Audit 10: navigation changes view identity, never unresolved resource identity.
+it("retains exact unresolved identity through same-scope and A→B→A navigation", async () => {
+  const { client } = controller({ scenario: "act-lost" });
+  await client.read();
+  const original = client.state().context;
+  expect((await client.markRead("ntf-0001")).kind).toBe("UNKNOWN");
+  const record = client.state().last;
+  client.switchRole("buyer");
+  expect(client.state().snapshot).toBeNull();
+  await client.read();
+  expect((await client.markRead("ntf-0001")).kind).toBe("FENCED");
+  client.switchActor(NOTIFY_SETTLER_ACTOR);
+  expect(client.state().fence).toBeNull();
+  client.switchActor(NOTIFY_BUYER_ACTOR);
+  client.switchRole("buyer");
+  await client.read();
+  expect(client.state().context.key).not.toBe(original.key);
+  expect(client.state().last).toEqual(record);
+  expect(client.state().earlierUnknown).toBe(1);
+  expect(client.canSend("mark-read").allowed).toBe(false);
+  expect((await client.markRead("ntf-0001")).kind).toBe("FENCED");
+  expect(client.state().counters.acts).toBe(1);
+});
+
+it("published capabilities, nested rows and assessments cannot change controller eligibility", async () => {
+  const { client } = controller({ scenario: "clean" });
+  await client.read();
+  const before = client.state();
+  const published = client.state();
+  published.snapshot!.capabilities = [];
+  (published.snapshot!.notifications as unknown[]).length = 0;
+  if (published.assessment) (published.assessment.markable as unknown[]).length = 0;
+  expect(client.state()).toEqual(before);
+  expect(client.canSend("mark-read").allowed).toBe(true);
+});
+
+it("detaches injected port snapshots before publishing capabilities and inquiry material", async () => {
+  const source = createStubNotificationInbox();
+  const captured = await source.read({ contextKey: "source", actorRef: NOTIFY_BUYER_ACTOR, scope: { tenantId: "ten-0001", role: "buyer" }, focusRef: null, grantFloor: null, watermarkFloor: null });
+  if (captured.kind !== "ready") throw Error("Expected fixture read");
+  source.read = async () => captured;
+  const client = new NotificationInboxController(source);
+  await client.read();
+  await client.loadInquiry("nqy-0001");
+  const before = client.state();
+  const published = client.state();
+  if (published.inquiry.value) {
+    published.inquiry.value.lines[0]!.text = "tampered material";
+    published.inquiry.value.declaration.authorityRecord = true as unknown as false;
+  }
+  captured.snapshot.capabilities = [];
+  captured.snapshot.notifications = [];
+  expect(client.state()).toEqual(before);
+  expect(client.canSend("mark-read").allowed).toBe(true);
+});
+
+it("roles on the same inbox subject cannot bypass or expose an unresolved request", async () => {
+  const { client } = controller({ scenario: "act-lost" });
+  await client.read();
+  await client.markRead("ntf-0001");
+  const original = client.state().last;
+  client.switchRole("organizer");
+  expect(client.state().last).toBeNull();
+  await client.read();
+  expect((await client.markRead("ntf-0001")).kind).toBe("FENCED");
+  client.switchRole("buyer");
+  await client.read();
+  expect(client.state().last).toEqual(original);
+  expect(client.state().counters.acts).toBe(1);
+  expect(client.state().earlierUnknown).toBe(1);
 });

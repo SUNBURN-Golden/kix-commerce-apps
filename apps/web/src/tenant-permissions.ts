@@ -381,7 +381,7 @@ function statusFor(
       return {
         statusLine: sourceCopy.en["s1xe"],
         detailLine: detail ?? sourceCopy.en["s1b6"],
-        actionLabel: sourceCopy.en["s1ax"],
+        actionLabel: sourceCopy.en["audit.recover"],
       };
     case "denied":
       return {
@@ -818,6 +818,7 @@ function actResultLine(kind: TenantActionKind, result: TenantActResult): { text:
 
 export interface TenantActions {
   refresh(): void;
+  recoverRole(): void;
   openResource(ref: string): void;
   loadExport(): void;
   proposeAccountChange(accountRef: string, note: string): void;
@@ -924,6 +925,9 @@ export function useTenantPermissions(): {
   );
 
   const actions: TenantActions = {
+    recoverRole() {
+      void sessionRef.current?.controller.recoverRole();
+    },
     refresh() {
       void sessionRef.current?.controller.read();
     },

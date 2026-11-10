@@ -210,6 +210,8 @@ export class MobileShellController {
   private readDetail: string | null = null;
   private refreshRequired: MobileRefreshCause | null = null;
   private floor: string | null = null;
+  // Reads begun at or before the latest invalidation cannot restore currentness.
+  private behindAfterSeq = 0;
   private readSeq = 0;
   private appliedReadSeq = 0;
   private intentSeq = 0;
@@ -247,6 +249,15 @@ export class MobileShellController {
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  private markBehind(cause: MobileRefreshCause): void {
+    this.refreshRequired = this.refreshRequired ?? cause;
+    this.behindAfterSeq = this.readSeq;
+  }
+
+  private clearBehind(seq: number): void {
+    if (seq > this.behindAfterSeq) this.refreshRequired = null;
   }
 
   private notify(): void {
@@ -305,6 +316,7 @@ export class MobileShellController {
     this.readState = "none";
     this.readDetail = null;
     this.refreshRequired = "context-switch";
+    this.behindAfterSeq = this.readSeq;
     this.notify();
     return { ...this.context };
   }
@@ -316,6 +328,7 @@ export class MobileShellController {
    * withdraw stays unknown and is never re-executed.
    */
   resume(): void {
+    this.behindAfterSeq = this.readSeq;
     if (this.snapshot !== null && this.refreshRequired === null) {
       this.refreshRequired = "resumed";
       this.notify();
@@ -362,14 +375,14 @@ export class MobileShellController {
         this.snapshot = outcome.snapshot;
         this.readState = "ready";
         this.readDetail = null;
-        this.refreshRequired = null;
+        this.clearBehind(seq);
         this.floor = outcome.snapshot.watermark;
         break;
       case "empty":
         this.snapshot = null;
         this.readState = "empty";
         this.readDetail = null;
-        this.refreshRequired = null;
+        this.clearBehind(seq);
         break;
       case "stale":
         // The source answered behind the floor. The held snapshot stays as a
@@ -421,7 +434,7 @@ export class MobileShellController {
    */
   private requireFreshReadForCachedCopy(): void {
     if (this.snapshot !== null) {
-      this.refreshRequired = this.refreshRequired ?? "cached-read";
+      this.markBehind("cached-read");
     }
   }
 
@@ -674,7 +687,7 @@ export class MobileShellController {
         }
         intent.outcome = "CONFIRMED";
         intent.refs = { ...outcome.refs };
-        this.refreshRequired = this.refreshRequired ?? "own-write";
+        this.markBehind("own-write");
         this.notify();
         return { kind: "CONFIRMED", intent: copyIntent(intent) };
       }
@@ -683,7 +696,7 @@ export class MobileShellController {
         intent.code = outcome.code;
         intent.message = outcome.detail;
         if ((MOBILE_STALE_CLASS_CODES as readonly string[]).includes(outcome.code)) {
-          this.refreshRequired = this.refreshRequired ?? "stale-rejection";
+          this.markBehind("stale-rejection");
         }
         this.notify();
         return { kind: "REJECTED", intent: copyIntent(intent) };

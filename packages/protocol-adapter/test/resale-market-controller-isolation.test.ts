@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { ResaleMarketController } from "../src/resale-market-controller";
-import { createMockResaleMarket, resaleMarketPortFor, validMarketRead, validMarketWrite, type ResaleMarketDetail, type ResaleMarketIntent, type ResaleMarketReadResult, type ResaleMarketWriteResult } from "../src/resale-market";
+import { createMockResaleMarket, resaleMarketPortFor, validMarketRead, type ResaleMarketDetail, type ResaleMarketIntent, type ResaleMarketReadResult, type ResaleMarketWriteResult } from "../src/resale-market";
 
 const read = { kind: "detail", productId: "demo-001" } as const;
 const bid = (): ResaleMarketIntent => ({ kind: "bid", productId: read.productId, variantId: "standard", expectedVersion: 0, mockUnits: "115" });
@@ -95,7 +95,8 @@ describe("resale controller evidence ownership", () => {
     const input = bid(); const expected = structuredClone(input); const pending = c.submit(input);
     Object.assign(input, { variantId: "wide", mockUnits: "999", expectedVersion: 100 });
     detailOf(response).version = 100; detailOf(response).quotes[0]!.mockUnits = "999";
-    attack(c.state());
+    attack(c.state()); attack(c.state().outcomeRequest);
+    expect(c.state().outcomeRequest).toEqual(expected);
     expect(submit).toHaveBeenCalledExactlyOnceWith(expected);
     attack(submit.mock.calls[0]![0]);
     held.resolve(await p.submit(forged ? { ...input, expectedVersion: 0 } : expected));
@@ -198,17 +199,17 @@ describe("resale controller evidence ownership", () => {
   });
 
   it.each(["builtin", "clone", "validation"])("fences post-dispatch %s failures without advancing versions", async fault => {
-    const p = createMockResaleMarket(); const input = Object.assign(bid(), { metadata: {} });
-    const baseline = detailOf(await p.read(read)); const receipt = await p.submit(input);
+    const p = createMockResaleMarket(); const input = bid();
+    const receipt = await p.submit(input);
     if (receipt.kind !== "CONFIRMED") throw new Error("fixture");
     if (fault === "builtin") {
-      Object.assign(receipt.request, { metadata: new Map() });
-      expect(validMarketWrite(receipt, input, baseline)).toBe(true);
+      Object.assign(receipt, { extra: new Map() });
     } else if (fault === "clone") Object.assign(receipt, { extra: () => {} });
     else receipt.version = 99;
     const sourceRead = vi.fn(async () => { const r = await createMockResaleMarket().read(read); return r; });
     const submit = vi.fn(async () => receipt); const c = new ResaleMarketController({ read: sourceRead, submit });
     await c.read(read); await c.submit(input);
+    expect(submit).toHaveBeenCalledExactlyOnceWith(input);
     expect(c.state()).toMatchObject({ outcome: "UNKNOWN", code: "UNCONFIRMED_RESPONSE", fenced: true, freshness: "STALE" });
     await c.read(read); expect(c.state().readState).toBe("ready"); expect(c.detail()?.version).toBe(0);
     await c.submit(input); expect(submit).toHaveBeenCalledTimes(1); expect(c.state().fenced).toBe(true);

@@ -30,6 +30,7 @@ import {
   MobileShellController,
   mobileShellPortFor,
   projectMobile,
+  type MobileControllerState,
   type MobileFence,
   type MobileIdentityRow,
   type MobileIntent,
@@ -79,6 +80,8 @@ export const MOBILE_SUPPORT_NOTE =
 export const MOBILE_HOLD_NOTE = sourceMessage(sourceCopy.en["p.t8"], { v1: MOBILE_HOLD_NOT_BOUND.reason });
 
 export const MOBILE_AMOUNT_NOTE = sourceMessage(sourceCopy.en["p.t185"], { v1: MOBILE_UNIT });
+
+const MOBILE_LIFECYCLE_NOTE = sourceCopy.en["mobile.lifecycle.refreshRequired"];
 
 export const SCENARIO_NOTES: Readonly<Record<MobileScenario, string>> = {
   clean: sourceCopy.en["so3"],
@@ -224,6 +227,8 @@ export interface MobileModel {
   state: MobileScreenState;
   statusLine: string;
   detailLine: string;
+  /** The web lifecycle fence explanation. Null while no lifecycle fence is up. */
+  lifecycleLine: string | null;
   actionLabel: string | null;
   freshnessWord: string;
   cachedWord: string | null;
@@ -330,6 +335,19 @@ function attentionFor(last: LastAction | null): boolean {
 
 function control(fence: MobileFence | null): ControlModel {
   return fence === null ? { enabled: true, reason: null } : { enabled: false, reason: fenceLine(fence) };
+}
+
+type DistOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
+type MobileDraft = DistOmit<MobileStepInput, "intentRef">;
+
+/**
+ * Controller reasons that stay visible while the web lifecycle fence is up.
+ * An unknown outcome, an in-flight write, a bind absence, or a refused
+ * environment says more than the lifecycle sentence and is not replaced by it.
+ */
+function preservesLifecycleReason(reason: MobileFence["reason"]): boolean {
+  return reason === "in-flight" || reason === "unknown-outcome" ||
+    reason === "not-bound" || reason === "environment";
 }
 
 function readStateToScreen(readState: MobileReadState, refreshRequired: MobileRefreshCause | null): MobileScreenState {
@@ -475,9 +493,27 @@ function describeVaultItem(item: MobileVaultView, present: ControlModel): VaultI
 export function buildMobileModel(input: {
   controller: MobileShellController;
   last: LastAction | null;
+  lifecycleFenced?: boolean;
 }): MobileModel {
   const { controller } = input;
-  const state = controller.state();
+  const fenced = input.lifecycleFenced === true;
+  const held = controller.state();
+  const state = fenced
+    ? {
+        ...held,
+        readState: held.readState === "ready" || held.readState === "empty" ? "stale" : held.readState,
+        refreshRequired: held.refreshRequired ?? "resumed",
+        cached: held.snapshot !== null,
+        freshness: "STALE",
+      } as MobileControllerState
+    : held;
+  const controlFor = (draft: MobileDraft): ControlModel => {
+    const fence = controller.gateFor({ ...draft, intentRef: GATE_PREVIEW } as MobileStepInput);
+    if (!fenced || (fence !== null && preservesLifecycleReason(fence.reason))) {
+      return control(fence);
+    }
+    return { enabled: false, reason: MOBILE_LIFECYCLE_NOTE };
+  };
   const screen = readStateToScreen(state.readState, state.refreshRequired);
   const status = statusFor(screen, state.readDetail);
   const projection = projectMobile(state);
@@ -496,7 +532,6 @@ export function buildMobileModel(input: {
     : sourceCopy.en["sva"];
 
   const install: InstallModel | null = (() => {
-    const gate = controller.gateFor({ step: "install", intentRef: GATE_PREVIEW });
     const installView = projection.install;
     if (installView === null) {
       return {
@@ -504,8 +539,8 @@ export function buildMobileModel(input: {
         installLine: sourceCopy.en["svr"],
         shellLine: sourceCopy.en["syn"],
         updateLine: null,
-        install: control(gate),
-        update: control(controller.gateFor({ step: "update", intentRef: GATE_PREVIEW })),
+        install: controlFor({ step: "install" }),
+        update: controlFor({ step: "update" }),
       };
     }
     return {
@@ -520,8 +555,8 @@ export function buildMobileModel(input: {
         installView.update === null
           ? null
           : sourceMessage(sourceCopy.en["p.t520"], { v1: installView.update.updateRef, v2: installView.update.toShell, v3: installView.update.note }),
-      install: control(gate),
-      update: control(controller.gateFor({ step: "update", intentRef: GATE_PREVIEW })),
+      install: controlFor({ step: "install" }),
+      update: controlFor({ step: "update" }),
     };
   })();
 
@@ -538,7 +573,7 @@ export function buildMobileModel(input: {
           ? sourceCopy.en["syi"]
           : sourceMessage(sourceCopy.en["p.t204"], { v1: sessionView.actorRef }),
       verdictLine: sessionView.note,
-      reconnect: control(controller.gateFor({ step: "reconnect", intentRef: GATE_PREVIEW })),
+      reconnect: controlFor({ step: "reconnect" }),
     };
   })();
 
@@ -553,10 +588,10 @@ export function buildMobileModel(input: {
   };
 
   const vault = projection.vault.map((item) =>
-    describeVaultItem(item, control(controller.gateFor({ step: "present", intentRef: GATE_PREVIEW, vaultRef: item.vaultRef }))),
+    describeVaultItem(item, controlFor({ step: "present", vaultRef: item.vaultRef })),
   );
 
-  const order: OrderViewModel | null = projection.order === null ? null : describeOrder(projection.order, controller);
+  const order: OrderViewModel | null = projection.order === null ? null : describeOrder(projection.order, controlFor);
 
   const intents: IntentRow[] = state.intents.map((intent) => ({
     seq: intent.seq,
@@ -605,6 +640,7 @@ export function buildMobileModel(input: {
     state: screen,
     statusLine: status.statusLine,
     detailLine: status.detailLine,
+    lifecycleLine: fenced ? MOBILE_LIFECYCLE_NOTE : null,
     actionLabel: status.actionLabel,
     freshnessWord,
     cachedWord,
@@ -625,7 +661,7 @@ export function buildMobileModel(input: {
 
 function describeOrder(
   order: NonNullable<ReturnType<typeof projectMobile>["order"]>,
-  controller: MobileShellController,
+  controlFor: (draft: MobileDraft) => ControlModel,
 ): OrderViewModel {
   const writeLine = (view: { outcome: string; code: string | null } | null, verb: string): string => {
     if (view === null) {
@@ -655,8 +691,8 @@ function describeOrder(
     versionLine: sourceMessage(sourceCopy.en["p.t213"], { v1: order.version, v2: order.paymentRef ?? "none", v3: order.withdrawalRef ?? "none" }),
     confirmLine: writeLine(order.confirm, sourceCopy.en["sdh"]),
     withdrawLine: writeLine(order.withdraw, sourceCopy.en["s26p"]),
-    confirm: control(controller.gateFor({ step: "confirm", intentRef: GATE_PREVIEW, orderRef: order.orderRef })),
-    withdraw: control(controller.gateFor({ step: "withdraw", intentRef: GATE_PREVIEW, orderRef: order.orderRef })),
+    confirm: controlFor({ step: "confirm", orderRef: order.orderRef }),
+    withdraw: controlFor({ step: "withdraw", orderRef: order.orderRef }),
   };
 }
 
@@ -681,10 +717,47 @@ export interface MobileActions {
   setClockMode(next: MobileClockMode): void;
 }
 
+/**
+ * Web-local lifecycle state. It is in memory only: no storage, service
+ * worker, device capability, or restoration inference is added. The
+ * generation is a monotonic counter, not a clock value.
+ */
+interface MobileLifecycleState {
+  generation: number;
+  explicitReadRequired: boolean;
+  /** Effect lifetime identity. Null before mount and after cleanup. */
+  lifetime: object | null;
+}
+
 interface Session {
+  lifecycle: MobileLifecycleState;
   port: MobileShellPort;
   controller: MobileShellController;
 }
+
+function createSession(
+  environment: "stub" | "integration-http",
+  scenario: MobileScenario,
+  clock: { current: MobileClockMode },
+): Session {
+  const port = connectivityPort(mobileShellPortFor(environment, { scenario }), "installable-mobile");
+  return {
+    lifecycle: { generation: 0, explicitReadRequired: false, lifetime: null },
+    port,
+    controller: connectivityController(new MobileShellController(port, {
+      actorRef: MOBILE_DESK_ACTOR,
+      deviceNow: () =>
+        clock.current === "in-step" ? MOBILE_AS_OF : clock.current === "skewed" ? "2026-10-14T00:00:00.000Z" : null,
+    }), port),
+  };
+}
+
+/** Current document visibility, read only in client effects and actions. */
+function documentHidden(): boolean {
+  return typeof document !== "undefined" && (document.visibilityState === "hidden" || document.hidden);
+}
+
+type ReadOrigin = "initial" | "post-write" | "explicit";
 
 export function useMobileShell(): {
   environment: "stub" | "integration-http";
@@ -697,15 +770,7 @@ export function useMobileShell(): {
   const clockRef = useRef<MobileClockMode>("in-step");
   const sessionRef = useRef<Session | null>(null);
   if (sessionRef.current === null) {
-    const port = connectivityPort(mobileShellPortFor(environment, { scenario: "clean" }), "installable-mobile");
-    sessionRef.current = {
-      port,
-      controller: connectivityController(new MobileShellController(port, {
-        actorRef: MOBILE_DESK_ACTOR,
-        deviceNow: () =>
-          clockRef.current === "in-step" ? MOBILE_AS_OF : clockRef.current === "skewed" ? "2026-10-14T00:00:00.000Z" : null,
-      }), port),
-    };
+    sessionRef.current = createSession(environment, "clean", clockRef);
   }
   const [scenario, setScenarioState] = useState<MobileScenario>("clean");
   const [clockMode, setClockModeState] = useState<MobileClockMode>("in-step");
@@ -714,16 +779,6 @@ export function useMobileShell(): {
   const [last, setLast] = useState<LastAction | null>(null);
   const intentCounter = useRef(0);
   const actionSeq = useRef(0);
-
-  useEffect(() => {
-    const session = sessionRef.current;
-    if (session === null) {
-      return undefined;
-    }
-    const off = session.controller.subscribe(() => setTick((value) => value + 1));
-    void session.controller.refresh();
-    return off;
-  }, [epoch]);
 
   const note = useCallback((text: string) => {
     actionSeq.current += 1;
@@ -735,37 +790,165 @@ export function useMobileShell(): {
     return `intent-${intentCounter.current}`;
   }, []);
 
+  /**
+   * The web lifecycle fence. An app return or a restored page makes every
+   * held observation stale; it never sends a read or a write by itself. The
+   * generation is a monotonic in-memory counter, not a clock value, and no
+   * evidence is persisted across a real browser restoration.
+   */
+  const invalidate = useCallback((session: Session) => {
+    if (sessionRef.current !== session) {
+      return;
+    }
+    session.lifecycle.generation += 1;
+    session.lifecycle.explicitReadRequired = true;
+    session.controller.resume();
+    if (session.lifecycle.lifetime !== null) {
+      setTick((value) => value + 1);
+    }
+  }, []);
+
+  /**
+   * The only path to the source read. An explicit read clears the fence only
+   * when it started visible, after the latest invalidation, and landed
+   * APPLIED on ready or empty evidence that is still current for the same
+   * session, lifetime and context. Initial and post-write reads never clear.
+   */
+  const read = useCallback(async (session: Session, origin: ReadOrigin) => {
+    const visibleAtStart = !documentHidden();
+    const generation = session.lifecycle.generation;
+    const lifetime = session.lifecycle.lifetime;
+    const contextKey = session.controller.state().context.key;
+    const result = await session.controller.refresh();
+    if (sessionRef.current !== session || session.lifecycle.lifetime !== lifetime) {
+      return;
+    }
+    const state = session.controller.state();
+    if (
+      origin === "explicit" &&
+      visibleAtStart &&
+      result.kind === "APPLIED" &&
+      (result.readState === "ready" || result.readState === "empty") &&
+      state.context.key === contextKey &&
+      state.freshness === "CURRENT" &&
+      session.lifecycle.generation === generation
+    ) {
+      session.lifecycle.explicitReadRequired = false;
+    }
+    setTick((value) => value + 1);
+  }, []);
+
+  useEffect(() => {
+    const session = sessionRef.current;
+    if (session === null) {
+      return undefined;
+    }
+    const lifetime = {};
+    session.lifecycle.lifetime = lifetime;
+    const stillLive = () => sessionRef.current === session && session.lifecycle.lifetime === lifetime;
+    const off = session.controller.subscribe(() => {
+      if (stillLive()) {
+        setTick((value) => value + 1);
+      }
+    });
+    let hidden = documentHidden();
+    let awaitingPageshow = false;
+    // A visible foreground edge is one restoration. Its persisted pageshow is
+    // the same restoration and must not invalidate a read that followed it.
+    // pagehide ends the pair; an unpaired persisted pageshow is a new one.
+    const onVisibility = () => {
+      if (!stillLive()) {
+        return;
+      }
+      const nextHidden = documentHidden();
+      if (nextHidden === hidden) {
+        return;
+      }
+      hidden = nextHidden;
+      awaitingPageshow = !nextHidden;
+      invalidate(session);
+    };
+    const onPageHide = () => {
+      if (!stillLive()) {
+        return;
+      }
+      awaitingPageshow = false;
+      hidden = true;
+      invalidate(session);
+    };
+    const onPageShow = (event: Event) => {
+      if (!stillLive()) {
+        return;
+      }
+      if ((event as PageTransitionEvent).persisted !== true) {
+        return;
+      }
+      hidden = false;
+      if (awaitingPageshow) {
+        awaitingPageshow = false;
+        return;
+      }
+      invalidate(session);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("pageshow", onPageShow);
+    if (hidden) {
+      invalidate(session);
+    }
+    void read(session, "initial");
+    return () => {
+      session.lifecycle.lifetime = null;
+      off();
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("pageshow", onPageShow);
+    };
+  }, [epoch, invalidate, read]);
+
   const run = useCallback(
-    async (input: MobileStepInput) => {
+    async (draft: MobileDraft) => {
       const session = sessionRef.current;
       if (session === null) {
         return;
       }
+      // A lifecycle fence refuses before an intent reference is allocated, so
+      // a blocked press cannot consume intent-1.
+      if (session.lifecycle.explicitReadRequired) {
+        note(MOBILE_LIFECYCLE_NOTE);
+        return;
+      }
+      const input = { ...draft, intentRef: nextIntent() } as MobileStepInput;
+      const generation = session.lifecycle.generation;
+      const lifetime = session.lifecycle.lifetime;
+      const contextKey = session.controller.state().context.key;
       const result = await session.controller.run(input);
-      if (sessionRef.current !== session) {
+      if (
+        sessionRef.current !== session ||
+        session.lifecycle.lifetime !== lifetime ||
+        session.controller.state().context.key !== contextKey
+      ) {
         return;
       }
       actionSeq.current += 1;
       setLast({ seq: actionSeq.current, kind: "step", step: input.step, result });
-      // A quarantined result belongs to a context this page left, so it has nothing to refresh.
-      if (result.kind === "CONFIRMED" || result.kind === "REJECTED" || result.kind === "UNKNOWN") {
-        await session.controller.refresh();
+      // A quarantined result belongs to a context this page left, so it has
+      // nothing to refresh. A result spanning a suspension never refreshes
+      // away the resume fence either: only an explicit read may clear it.
+      if (
+        (result.kind === "CONFIRMED" || result.kind === "REJECTED" || result.kind === "UNKNOWN") &&
+        session.lifecycle.generation === generation &&
+        !session.lifecycle.explicitReadRequired
+      ) {
+        await read(session, "post-write");
       }
     },
-    [],
+    [note, nextIntent, read],
   );
 
   const startSession = useCallback(
     (next: MobileScenario, text: string) => {
-      const port = connectivityPort(mobileShellPortFor(environment, { scenario: next }), "installable-mobile");
-      sessionRef.current = {
-        port,
-        controller: connectivityController(new MobileShellController(port, {
-          actorRef: MOBILE_DESK_ACTOR,
-          deviceNow: () =>
-            clockRef.current === "in-step" ? MOBILE_AS_OF : clockRef.current === "skewed" ? "2026-10-14T00:00:00.000Z" : null,
-        }), port),
-      };
+      sessionRef.current = createSession(environment, next, clockRef);
       intentCounter.current = 0;
       setScenarioState(next);
       setEpoch((value) => value + 1);
@@ -776,32 +959,36 @@ export function useMobileShell(): {
 
   const actions: MobileActions = {
     refresh() {
-      void sessionRef.current?.controller.refresh();
+      const session = sessionRef.current;
+      if (session === null) {
+        return;
+      }
+      void read(session, "explicit");
     },
     install() {
-      void run({ step: "install", intentRef: nextIntent() });
+      void run({ step: "install" });
     },
     update() {
-      void run({ step: "update", intentRef: nextIntent() });
+      void run({ step: "update" });
     },
     reconnect() {
-      void run({ step: "reconnect", intentRef: nextIntent() });
+      void run({ step: "reconnect" });
     },
     present(vaultRef) {
-      void run({ step: "present", intentRef: nextIntent(), vaultRef });
+      void run({ step: "present", vaultRef });
     },
     confirm(orderRef) {
-      void run({ step: "confirm", intentRef: nextIntent(), orderRef });
+      void run({ step: "confirm", orderRef });
     },
     withdraw(orderRef) {
-      void run({ step: "withdraw", intentRef: nextIntent(), orderRef });
+      void run({ step: "withdraw", orderRef });
     },
     resume() {
       const session = sessionRef.current;
       if (session === null) {
         return;
       }
-      session.controller.resume();
+      invalidate(session);
       note(sourceCopy.en["s1qb"]);
     },
     dropConnection() {
@@ -893,7 +1080,11 @@ export function useMobileShell(): {
     environment,
     scenario,
     clockMode,
-    model: buildMobileModel({ controller: session.controller, last }),
+    model: buildMobileModel({
+      controller: session.controller,
+      last,
+      lifecycleFenced: session.lifecycle.explicitReadRequired,
+    }),
     actions: connectedActions(actions, ['install', 'update', 'present', 'confirm', 'withdraw', 'dropConnection', 'restoreConnection', 'offerUpdate', 'expireSession', 'newSession', 'setScenario'], sessionRef.current?.port),
   };
 }

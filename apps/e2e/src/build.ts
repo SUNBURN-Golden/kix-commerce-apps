@@ -58,6 +58,22 @@ async function buildApp(withFaults: boolean, gallery = false): Promise<BuiltApp>
       mode: "production",
       define: gallery ? { "import.meta.env.DEV": "true" } : undefined,
       logLevel: "warn",
+      // Replace only the two app factory imports, avoiding the existing package alias
+      // entirely. The fixture's relative original import resolves to the same canonical
+      // packages/protocol-adapter/src/index.ts as the unchanged app alias.
+      plugins: withFaults ? [{
+        name: "test-only-read-port-fault",
+        enforce: "pre",
+        transform(code, id) {
+          const factory = id === path.join(webRoot, "src/discovery-live.ts") ? "discoveryReadPortFor"
+            : id === path.join(webRoot, "src/inventory-venue.ts") ? "inventoryReadPortFor" : null;
+          if (!factory) return null;
+          const token = `  ${factory},\n`;
+          if (!code.includes(token)) throw new Error(`Missing read-port seam in ${id}`);
+          const fixture = path.resolve(here, "../shell-fixtures/read-port-fault.ts");
+          return code.replace(token, "") + `\nimport { ${factory} } from ${JSON.stringify(fixture)};\n`;
+        },
+      }] : [],
       resolve: withFaults
         ? {
             alias: [
@@ -66,6 +82,7 @@ async function buildApp(withFaults: boolean, gallery = false): Promise<BuiltApp>
               { find: /^(?:(\.\.?\/)+marketing\/session|\.\/session)$/, replacement: path.resolve(here, "../shell-fixtures/marketing-session.ts") },
               { find: /^(\.\.?\/)+gift-source$/, replacement: path.resolve(here, "../shell-fixtures/ime-sources.ts") },
               { find: /^(\.\.?\/)+organizer-source$/, replacement: path.resolve(here, "../shell-fixtures/ime-sources.ts") },
+              { find: /^\.\/pages\/Notifications$/, replacement: path.resolve(here, "../shell-fixtures/notifications-fault.tsx") },
               { find: /^\.\/pages\/Receipts$/, replacement: path.resolve(here, "../shell-fixtures/receipts-fault.ts") },
               { find: /^(\.\.?\/)+protocol$/, replacement: path.resolve(here, "../shell-fixtures/protocol-fault.ts") },
             ],

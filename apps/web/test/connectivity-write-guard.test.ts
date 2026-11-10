@@ -263,3 +263,43 @@ describe("marketing lifecycle mutation guards", () => {
     vi.unstubAllGlobals();
   });
 });
+
+it.each(["clean", "act-lost"] as const)("tenant generation recovery promotes only accepted connectivity evidence (%s)", async (scenario) => {
+  const { TenantPermissionsController, createStubTenantPermissions, TENANT_SETTLER_ACTOR } = await import("@kix/protocol-adapter");
+  connectivity.setBrowserOnline(true);
+  const source = createStubTenantPermissions({ scenario });
+  const original = source.read.bind(source);
+  const read = vi.spyOn(source, "read");
+  const port = connectivityPort(source, "audit10-tenant");
+  const controller = connectivityController(new TenantPermissionsController(port, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" }), port);
+  await controller.read();
+  await controller.proposeAccountChange("acc-0001", "keep this source");
+  connectivity.setBrowserOnline(false);
+  connectivity.setBrowserOnline(true);
+  source.synthetic("rotate-role", "mbr-0003");
+  await controller.read();
+  expect(controller.state().readState).toBe("role-stale");
+  expect(actionAllowed(port)).toBe(false);
+  read.mockResolvedValueOnce({ kind: "unknown", message: "recovery unavailable" });
+  await controller.recoverRole();
+  expect(controller.state().snapshot).toBeNull();
+  expect(actionAllowed(port)).toBe(false);
+  const held = deferred<Awaited<ReturnType<typeof source.read>>>();
+  read.mockImplementationOnce(() => held.promise);
+  const oldRecovery = controller.recoverRole();
+  controller.switchRole("settler");
+  held.resolve(await original({ contextKey: "old", actorRef: TENANT_SETTLER_ACTOR, scope: { tenantId: "ten-0001", role: "settler" }, focusRef: null, roleFloor: null, watermarkFloor: null }));
+  expect(await oldRecovery).toMatchObject({ kind: "DROPPED" });
+  expect(actionAllowed(port)).toBe(false);
+  const before = controller.state().counters;
+  await controller.recoverRole();
+  expect(controller.state().snapshot?.roleGeneration).toBe(2);
+  expect(controller.state().snapshot?.proposals).toHaveLength(1);
+  expect(controller.state().counters).toMatchObject({ reads: before.reads + 1, acts: before.acts });
+  expect(actionAllowed(port)).toBe(true);
+  expect(controller.canSend("propose-account-change").allowed).toBe(scenario === "clean");
+  if (scenario === "act-lost") {
+    expect((await controller.proposeAccountChange("acc-0002", "blocked")).kind).toBe("FENCED");
+    expect(controller.state().counters.acts).toBe(1);
+  }
+});

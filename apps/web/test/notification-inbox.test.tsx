@@ -499,7 +499,7 @@ describe("notification inbox not-bound and registry", () => {
   });
 
   it("keeps the new screen free of sends, clocks, timers, stores, and the booking, capture, and hold vocabulary", () => {
-    const files = ["src/notification-inbox.ts", "src/pages/Notifications.tsx", "src/pages/NotificationsPanels.tsx"];
+    const files = ["src/notification-inbox.ts", "src/notification-pagination.ts", "src/pages/Notifications.tsx", "src/pages/NotificationsPanels.tsx"];
     const combined = files.map((file) => readFileSync(path.join(webRoot, file), "utf8")).join("\n");
     for (const token of [
       "fetch(",

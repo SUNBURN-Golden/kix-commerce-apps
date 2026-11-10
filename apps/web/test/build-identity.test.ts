@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest";
 import { KIX_SDK_0_PIN, OPENAPI_CONTRACT_PIN, OPENAPI_INTEGRATION_GATE_PIN } from "@kix/protocol-adapter";
 import { computeBuildIdentity, PIN_DIGEST_FIELDS } from "../build-identity";
 import { buildIdentity } from "../src/diagnostics/build-identity";
-import { sweepExport } from "../src/receipt-redaction";
+import { buildDiagnostics } from "../src/diagnostics/model";
+import { createConnectivityStore } from "../src/connectivity/store";
 
 const pins = { OPENAPI_CONTRACT_PIN, OPENAPI_INTEGRATION_GATE_PIN, KIX_SDK_0_PIN };
 describe("deterministic app-internal build identity", () => {
@@ -15,7 +16,10 @@ describe("deterministic app-internal build identity", () => {
     expect(computeBuildIdentity()).toEqual(computeBuildIdentity());
     expect(buildIdentity.pinDigest).toBe(createHash("sha256").update(JSON.stringify(fields)).digest("hex"));
     expect(buildIdentity.appVersion).toBe(JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version);
-    expect(sweepExport(JSON.stringify(buildIdentity))).toBe(JSON.stringify(buildIdentity));
+    const model = buildDiagnostics({ mode: "stub", locale: "en", display: { colorScheme: "light", forcedColors: "no", reducedMotion: "no" },
+      connectivity: createConnectivityStore("stub", true).getSnapshot(), journal: { kind: "empty" }, liveJournal: null, outcomes: [], omittedOutcomeCount: 0 });
+    expect(JSON.parse(model.exportText).buildIdentity).toEqual(buildIdentity);
+    expect(JSON.parse(model.exportText).buildIdentity).toEqual(model.view.buildIdentity);
   });
   it("covers independently enumerated digest fields and explicitly checks the excluded alias", () => {
     for (const [name, pin] of Object.entries(pins)) {

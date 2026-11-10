@@ -113,6 +113,30 @@ describe("synthetic resale marketplace", () => {
     }
     await suite.pass(page,mode === "reject" ? "resale-product.REJECT" : mode === "lost" ? "resale-product.UNKNOWN" : `resale-product.${mode}`); await page.close();
   });
+  it.each(["confirmed", "reject", "lost"] as const)("isolates %s after real cross-product navigation", async mode => {
+    const page = mode === "confirmed" ? await newDeskPage(suite.newPage, suite.origin) : await suite.newPage();
+    if (mode !== "confirmed") await page.addInitScript(mode => { window.__kixResaleFault = { mode, dispatches: 0 }; }, mode);
+    const origin = mode === "confirmed" ? suite.origin : suite.faultOrigin;
+    await page.goto(origin + "/resale/market/demo-001");
+    await page.getByRole("button", { name: "Review simulation" }).click();
+    await page.getByRole("button", { name: "Record simulation once" }).click();
+    await page.locator(`[data-market-outcome="${mode === "confirmed" ? "CONFIRMED" : mode === "reject" ? "REJECTED" : "UNKNOWN"}"]`).waitFor();
+    await page.getByRole("link", { name: "Resale market", exact: true }).last().click();
+    await page.getByRole("link").filter({ has: page.getByRole("heading", { name: "Fold object" }) }).click();
+    await page.getByLabel("Action", { exact: true }).waitFor();
+    expect(await page.locator("#market-outcome").getAttribute("data-market-outcome")).toBe(mode === "lost" ? "UNKNOWN" : "");
+    expect(await page.getByRole("button", { name: "Review simulation" }).isDisabled()).toBe(mode === "lost");
+    if (mode === "lost") {
+      await page.getByRole("button", { name: "Read current fixtures" }).click();
+      expect(await page.locator("#market-outcome").innerText()).toContain("UNKNOWN");
+      expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(1);
+    } else {
+      await page.getByRole("button", { name: "Review simulation" }).click();
+      await page.getByRole("heading", { name: "Review simulation" }).waitFor();
+      if (mode === "reject") expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(1);
+    }
+    await suite.quiet(page, "cross-product outcome isolation"); await page.close();
+  });
   it("bounds large independent history pages, retains snapshot positions and fences UNKNOWN", async () => {
     const page = await suite.newPage();
     await page.addInitScript(() => { window.__kixResaleFault = { mode: "lost", dispatches: 0, history: { count: 1001, wideCount: 51 } }; });

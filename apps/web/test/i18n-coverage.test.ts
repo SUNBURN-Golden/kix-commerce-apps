@@ -105,7 +105,7 @@ describe("complete route catalogue", () => {
 
   it("localizes stored messages and templates while retaining untrusted values and enums", () => {
     const t = makeTranslate("ko", screenMessages);
-    expect(deskText(t, "Request 4 (submit) has an unknown outcome and may have applied. Nothing is sent again from here. Start a new synthetic session to clear it.")).toContain("미확인");
+    expect(deskText(t, "Request 4 (submit) has an unknown outcome and may have been recorded (UNKNOWN). Reads, context switches and generation recovery do not resolve it. This resource stays fenced.")).toContain("미확인");
     expect(deskText(t, "Watermark 2026-10-13T00:00:00.000Z. Read 1 on this port.")).toBe("워터마크 2026-10-13T00:00:00.000Z. 이 포트의 조회 1.");
     for (const value of ["UNKNOWN", "NOT_BOUND", "STALE", "open", "confirmed", "create_event", "<script>untrusted</script>"]) {
       expect(deskText(t, value)).toBe(value);

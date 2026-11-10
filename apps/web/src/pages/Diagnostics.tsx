@@ -1,8 +1,9 @@
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import { peekSessionJournal } from "@kix/protocol-adapter";
 import { connectivity } from "../connectivity/store";
 import { protocol } from "../connectivity/desk-protocol";
 import { useLocale } from "../i18n/locale-context";
+import { useCopyFeedback } from "../use-copy-feedback";
 import { useT } from "../i18n/desk-context";
 import { messages } from "../i18n/messages/pages--Diagnostics";
 import { pageSessionJournalState } from "../session-recovery";
@@ -24,16 +25,10 @@ export function DiagnosticsPage() {
 export function DiagnosticsView({ model }: { model: DiagnosticsModel }) {
   const t = useT(messages);
   const ref = useRef<HTMLTextAreaElement>(null);
-  const [note, setNote] = useState<"diag.idle" | "diag.selected" | "diag.copied">("diag.idle");
   const v = model.view;
-  function copy() {
-    ref.current?.focus();
-    ref.current?.select();
-    setNote("diag.selected");
-    if (navigator.clipboard?.writeText) {
-      void navigator.clipboard.writeText(model.exportText).then(() => setNote("diag.copied"), () => setNote("diag.selected"));
-    }
-  }
+  const { locale } = useLocale();
+  const { feedback, copy } = useCopyFeedback({ exportText: model.exportText, textareaRef: ref,
+    viewKey: JSON.stringify(["diagnostics", v.mode, locale]) });
   const displayValue = (value: string | number) => value === "yes" ? t("diag.yes") : value === "no" ? t("diag.no") : value;
   const fields = [
     ["diag.mode", v.mode], ["diag.origin", v.origin], ["diag.locale", v.locale],
@@ -66,7 +61,7 @@ export function DiagnosticsView({ model }: { model: DiagnosticsModel }) {
     <section className="panel receipt-export"><h3>{t("diag.export")}</h3>
       <label htmlFor="diagnostics-export">{t("diag.export")}</label>
       <textarea id="diagnostics-export" ref={ref} value={model.exportText} readOnly spellCheck={false} />
-      <button id="diagnostics-copy" type="button" onClick={copy}>{t("diag.copy")}</button><p role="status">{t(note)}</p>
+      <button id="diagnostics-copy" type="button" onClick={copy}>{t("diag.copy")}</button><p role="status" aria-live={feedback === "idle" ? "off" : "polite"}>{t(`diag.${feedback}`)}</p>
     </section>
   </section>;
 }

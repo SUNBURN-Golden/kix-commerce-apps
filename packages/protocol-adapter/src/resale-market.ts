@@ -19,6 +19,29 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 const obj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 const str = (v: unknown): v is string => typeof v === "string" && v.length > 0 && v.length <= 100;
 const integer = (v: unknown): v is number => Number.isSafeInteger(v) && Number(v) >= 0;
+/** Capture only validated own data fields; no accessor or caller-owned object escapes. */
+export function captureMarketIntent(value: unknown): ResaleMarketIntent | null {
+  try {
+    if (!obj(value)) return null;
+    if (![Object.prototype, null].includes(Object.getPrototypeOf(value))) return null;
+    const ownKeys = Reflect.ownKeys(value);
+    if (ownKeys.length !== 5) return null;
+    const fields: Record<PropertyKey, unknown> = Object.create(null);
+    for (const key of ownKeys) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (!descriptor || !("value" in descriptor)) return null;
+      fields[key] = descriptor.value;
+    }
+    const offer = fields.kind === "bid" || fields.kind === "ask";
+    if (!offer && fields.kind !== "instant-buy" && fields.kind !== "instant-sell") return null;
+    const identifier = (v: unknown) => str(v) && /\S/.test(v);
+    // Five keys and five valid required values exclude any extra or missing key.
+    const valid = identifier(fields.productId) && identifier(fields.variantId) && integer(fields.expectedVersion) && integer(fields.expectedVersion + 1) && (offer ? canonicalUnits(fields.mockUnits) : identifier(fields.quoteId));
+    return valid ? fields as ResaleMarketIntent : null;
+  } catch { return null; }
+}
+/** App-internal total guard for shape inspection; not a package entrypoint export. */
+export function validMarketIntent(value: unknown): value is ResaleMarketIntent { return captureMarketIntent(value) !== null; }
 const time = (v: unknown): v is string => typeof v === "string" && /^2026-11-0[1-9]T\d{2}:\d{2}:\d{2}Z$/.test(v) && Number.isFinite(Date.parse(v));
 function claims(v: unknown): boolean {
   if (!obj(v)) return false;
@@ -29,8 +52,9 @@ function claims(v: unknown): boolean {
 }
 const keys = (v: Record<string, unknown>, names: string[]) => Object.keys(v).every(k => names.includes(k));
 const claimKeys = Object.keys(MARKET_CLAIMS);
+const unique = (values: unknown[]) => new Set(values).size === values.length;
 function product(v: unknown): v is ResaleMarketProduct {
-  return obj(v) && keys(v,["productId","nameKey","descriptionKey","artworkKey","variantIds"]) && str(v.productId) && ["orbit", "fold", "arc"].includes(String(v.artworkKey)) && v.nameKey === `market.${v.artworkKey}` && v.descriptionKey === "market.description" && Array.isArray(v.variantIds) && v.variantIds.length > 0 && v.variantIds.every(x => ["standard", "wide"].includes(x)) && new Set(v.variantIds).size === v.variantIds.length;
+  return obj(v) && keys(v,["productId","nameKey","descriptionKey","artworkKey","variantIds"]) && str(v.productId) && ["orbit", "fold", "arc"].includes(String(v.artworkKey)) && v.nameKey === `market.${v.artworkKey}` && v.descriptionKey === "market.description" && Array.isArray(v.variantIds) && v.variantIds.length > 0 && v.variantIds.every(x => ["standard", "wide"].includes(x)) && unique(v.variantIds);
 }
 function record(v: unknown, p: ResaleMarketProduct, trade: boolean): boolean {
   return obj(v) && keys(v,trade ? ["tradeId","productId","variantId","mockUnits","occurredAt","state"] : ["offerId","productId","variantId","side","mockUnits","state"]) && v.productId === p.productId && p.variantIds.some(x => x === v.variantId) && canonicalUnits(v.mockUnits) && (trade ? str(v.tradeId) && v.state === "simulated" && time(v.occurredAt) : str(v.offerId) && v.state === "open" && ["bid","ask"].includes(String(v.side)));
@@ -38,7 +62,7 @@ function record(v: unknown, p: ResaleMarketProduct, trade: boolean): boolean {
 export function validMarketDetail(v: unknown): v is ResaleMarketDetail {
   if (!obj(v) || !claims(v) || !keys(v,[...claimKeys,"product","version","quotes","offers","trades","series"]) || !product(v.product) || !integer(v.version)) return false;
   const p = v.product;
-  return Array.isArray(v.quotes) && v.quotes.length === p.variantIds.length * 2 && new Set(v.quotes.map(q => obj(q) ? q.quoteId : null)).size === v.quotes.length && new Set(v.quotes.map(q => obj(q) ? `${q.variantId}:${q.side}` : "")).size === v.quotes.length && v.quotes.every(q => obj(q) && keys(q,["quoteId","productId","variantId","side","mockUnits","version","available"]) && str(q.quoteId) && q.productId === p.productId && p.variantIds.some(x => x === q.variantId) && ["bid","ask"].includes(String(q.side)) && canonicalUnits(q.mockUnits) && q.version === v.version && typeof q.available === "boolean") && Array.isArray(v.offers) && v.offers.every(x => record(x,p,false)) && Array.isArray(v.trades) && v.trades.every(x => record(x,p,true)) && Array.isArray(v.series) && v.series.every(x => obj(x) && keys(x,["occurredAt","mockUnits"]) && canonicalUnits(x.mockUnits) && time(x.occurredAt));
+  return Array.isArray(v.quotes) && v.quotes.length === p.variantIds.length * 2 && unique(v.quotes.map(q => obj(q) ? q.quoteId : null)) && unique(v.quotes.map(q => obj(q) ? `${q.variantId}:${q.side}` : "")) && v.quotes.every(q => obj(q) && keys(q,["quoteId","productId","variantId","side","mockUnits","version","available"]) && str(q.quoteId) && q.productId === p.productId && p.variantIds.some(x => x === q.variantId) && ["bid","ask"].includes(String(q.side)) && canonicalUnits(q.mockUnits) && q.version === v.version && typeof q.available === "boolean") && Array.isArray(v.offers) && v.offers.every(x => record(x,p,false)) && Array.isArray(v.trades) && v.trades.every(x => record(x,p,true)) && Array.isArray(v.series) && v.series.every(x => obj(x) && keys(x,["occurredAt","mockUnits"]) && canonicalUnits(x.mockUnits) && time(x.occurredAt));
 }
 export function validMarketRead(v: unknown, input: ResaleMarketRead): v is ResaleMarketReadResult {
   if (!obj(v) || !claims(v)) return false;
@@ -49,12 +73,15 @@ export function validMarketRead(v: unknown, input: ResaleMarketRead): v is Resal
   return p.kind === "list" && Array.isArray(p.products) && p.products.length <= 2 && p.products.every(product) && p.page === input.page && p.pageSize === 2 && integer(p.total) && (p.nextPage === null || p.nextPage === input.page + 1 && p.total > input.page * 2) && (v.kind === "empty") === (p.products.length === 0);
 }
 export function intentRejection(i: ResaleMarketIntent, d: ResaleMarketDetail): MarketRejection | null {
+  const request = captureMarketIntent(i);
+  if (!request) return "INVALID_INPUT";
+  i = request;
   if (i.productId !== d.product.productId) return "PRODUCT_MISSING";
   if (!d.product.variantIds.some(x => x === i.variantId)) return "VARIANT_MISSING";
   if (i.expectedVersion !== d.version) return "STALE_VERSION";
-  if (i.kind === "bid" || i.kind === "ask") return canonicalUnits(i.mockUnits) ? null : "INVALID_INPUT";
+  if (i.kind === "bid" || i.kind === "ask") return null;
   const q = d.quotes.find(x => x.quoteId === i.quoteId);
-  if (!q || q.variantId !== i.variantId || q.side !== (i.kind === "instant-buy" ? "ask" : "bid")) return "QUOTE_MISMATCH";
+  if (!q || q.productId !== i.productId || q.variantId !== i.variantId || q.version !== d.version || q.side !== (i.kind === "instant-buy" ? "ask" : "bid")) return "QUOTE_MISMATCH";
   return q.available ? null : "QUOTE_UNAVAILABLE";
 }
 export function validMarketWrite(v: unknown, i: ResaleMarketIntent, d: ResaleMarketDetail): v is ResaleMarketWriteResult {
@@ -84,12 +111,32 @@ export function createMockResaleMarket(): ResaleMarketPort {
       return copy({ ...MARKET_CLAIMS, kind: products.length ? "ready" : "empty", request: input, payload: { kind: "list", products, page: input.page, pageSize: 2, total: hits.length, nextPage: input.page*2 < hits.length ? input.page+1 : null } });
     },
     async submit(input) {
+      // Capture before lookup or allocation; malformed calls have no request identity.
+      const request = captureMarketIntent(input);
+      if (!request) throw new Error("INVALID_INPUT");
+      input = request;
       const d = details.find(x => x.product.productId === input.productId);
       const code = d ? intentRejection(input,d) : "PRODUCT_MISSING";
-      if (code || !d) return copy({ ...MARKET_CLAIMS, kind: "REJECTED", request: input, code: code ?? "PRODUCT_MISSING" });
+      if (code || !d) return { ...MARKET_CLAIMS, kind: "REJECTED", request: input, code: code ?? "PRODUCT_MISSING" };
+      const scope = { productId: input.productId, variantId: input.variantId };
       let item: ResaleMarketOffer | ResaleMarketTrade;
-      if (input.kind === "bid" || input.kind === "ask") { item = { offerId: `offer-${++seq}`, productId: input.productId, variantId: input.variantId, side: input.kind, mockUnits: input.mockUnits, state: "open" }; d.offers.push(item); }
-      else { const q = d.quotes.find(x => x.quoteId === input.quoteId); if (!q) throw new Error("unreachable"); q.available = false; item = { tradeId: `trade-${++seq}`, productId: input.productId, variantId: input.variantId, mockUnits: q.mockUnits, occurredAt: "2026-11-07T12:00:00Z", state: "simulated" }; d.trades.push(item); }
+      switch (input.kind) {
+        case "bid":
+        case "ask":
+          item = { offerId: `offer-${++seq}`, ...scope, side: input.kind, mockUnits: input.mockUnits, state: "open" };
+          d.offers.push(item);
+          break;
+        case "instant-buy":
+        case "instant-sell": {
+          const q = d.quotes.find(x => x.quoteId === input.quoteId);
+          if (!q) throw new Error("INVALID_INPUT");
+          q.available = false;
+          item = { tradeId: `trade-${++seq}`, ...scope, mockUnits: q.mockUnits, occurredAt: "2026-11-07T12:00:00Z", state: "simulated" };
+          d.trades.push(item);
+          break;
+        }
+        default: throw new Error("INVALID_INPUT");
+      }
       d.version++; d.quotes.forEach(q => { q.version = d.version; });
       return copy({ ...MARKET_CLAIMS, kind: "CONFIRMED", request: input, version: d.version, record: item });
     },

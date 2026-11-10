@@ -262,7 +262,7 @@ describe("a refused send is fenced with its reason", () => {
     expect(credit).not.toContain('role="status"');
     expect(credit).toContain('<p class="muted"><span');
     // The selection detail renders only after the synthetic read settles, so its source is pinned here.
-    expect(readFileSync(new URL("../src/pages/InventoryPanels.tsx", import.meta.url), "utf8")).toContain('<p role="status" aria-busy={model.state === "loading"} data-inventory-status={model.state}>');
+    expect(readFileSync(new URL("../src/pages/InventoryPanels.tsx", import.meta.url), "utf8")).toContain('<p id="inventory-selection-status" tabIndex={-1} role="status" aria-busy={model.state === "loading"} data-inventory-status={model.state}>');
     expect(stepLive("create_event", "create_event", "ready")).toEqual({});
     expect(stepLive("create_event", "create_event", "in-flight")).toEqual({ "aria-live": "polite", "aria-busy": true });
     expect(stepLive("create_event", "create_event", "confirmed")).toEqual({ "aria-live": "polite", "aria-busy": false });
