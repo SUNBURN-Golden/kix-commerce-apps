@@ -9,7 +9,27 @@ export function resaleMarketPortFor(environment: "stub" | "integration-http"): R
   return { async read(input) {
     const fault = window.__kixResaleFault;
     if (fault) fault.reads = (fault.reads ?? 0) + 1;
+    if (input.kind === "list") {
+      if (fault?.list?.mode === "held") await new Promise<void>(resolve => { fault.releaseRead = resolve; });
+      if (fault?.list?.mode === "error") throw new Error("fixture list error");
+      if (fault?.list?.mode === "not-bound") return { ...MARKET_CLAIMS, kind: "NOT_BOUND" };
+    }
     const result = await source.read(input);
+    if (fault?.missingProduct && result.kind !== "NOT_BOUND" && result.payload.kind === "detail") {
+      result.payload.detail = null; result.kind = "empty";
+    }
+    if (fault?.list && result.kind !== "NOT_BOUND" && result.payload.kind === "list") {
+      if (fault.list.productIds) {
+        const products = [];
+        for (const productId of fault.list.productIds) {
+          const detail = await source.read({ kind: "detail", productId });
+          if (detail.kind !== "NOT_BOUND" && detail.payload.kind === "detail" && detail.payload.detail) products.push(detail.payload.detail.product);
+        }
+        result.payload.products = products;
+        result.kind = products.length ? "ready" : "empty";
+      }
+      if (fault.list.total !== undefined) result.payload.total = fault.list.total;
+    }
     if (fault?.history && result.kind !== "NOT_BOUND" && result.payload.kind === "detail" && result.payload.detail) {
       const { count, wideCount, generation, reverse } = fault.history;
       result.payload.detail = marketHistoryFixture(result.payload.detail, count, wideCount, generation);

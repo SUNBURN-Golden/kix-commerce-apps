@@ -1,6 +1,7 @@
 import type {} from "../../src/resale-fault-types";
 import { describe, expect, it } from "vitest";
 import { useBrowser } from "../../src/suite";
+import { tabTo, skipLinkProblems } from "../../src/a11y-keyboard";
 import { poll, newDeskPage } from "../../src/desk";
 describe("synthetic resale marketplace", () => {
   const suite = useBrowser();
@@ -58,6 +59,90 @@ describe("synthetic resale marketplace", () => {
     expect(await page.getByRole("link", { name: lang === "ko" ? "리셀 마켓" : "Resale market", exact: true }).last().getAttribute("href")).toBe(`/resale/market?lang=${lang}&q=object&page=2`);
     await suite.quiet(page, "malformed read context"); await page.close();
   });
+  it.each(["en", "ko"] as const)("restores originating later-page cards with keyboard and click (%s)", async lang => {
+    for (const viewport of [{ width: 320, height: 568 }, { width: 1280, height: 800 }]) {
+      for (const mode of ["back", "return", "click"] as const) {
+        const page = await suite.newPage();
+        await page.setViewportSize(viewport);
+        await page.addInitScript(() => { window.__kixResaleFault = { mode: "reject", dispatches: 0 }; });
+        const path = `/resale/market?lang=${lang}&q=object&page=2`;
+        await page.goto(suite.faultOrigin + path);
+        await page.locator('[data-market-product-id="demo-003"]').waitFor();
+        await page.keyboard.press("Tab");
+        expect(await page.evaluate(() => document.activeElement?.getAttribute("href"))).toBe("#desk-main");
+        expect(await tabTo(page, '[data-market-product-id="demo-003"]')).toBe(true);
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        const saved = await page.evaluate(() => ({ y: scrollY, top: document.activeElement!.getBoundingClientRect().top }));
+        if (mode === "click") await page.locator('[data-market-product-id="demo-003"]').click();
+        else await page.keyboard.press("Enter");
+        await page.locator("[data-market-return]").waitFor();
+        if (mode === "back") await page.goBack();
+        else if (mode === "click") await page.locator("[data-market-return]").click();
+        else { expect(await tabTo(page, "[data-market-return]")).toBe(true); await page.keyboard.press("Enter"); }
+        await poll(() => page.evaluate(() => document.activeElement?.getAttribute("data-market-product-id")), id => id === "demo-003", "origin card focused");
+        expect(new URL(page.url()).pathname + new URL(page.url()).search).toBe(path);
+        expect(await page.locator("#market-search").inputValue()).toBe("object");
+        const restored = await page.evaluate(() => {
+          const rect = document.activeElement!.getBoundingClientRect();
+          return { y: scrollY, top: rect.top, bottom: rect.bottom, height: rect.height, viewport: innerHeight, max: document.documentElement.scrollHeight - innerHeight };
+        });
+        expect(restored.top).toBeGreaterThanOrEqual(-1);
+        expect(restored.top).toBeLessThan(restored.viewport);
+        if (restored.height <= restored.viewport) expect(restored.bottom).toBeLessThanOrEqual(restored.viewport + 1);
+        expect(Math.abs(restored.y - Math.max(0, Math.min(saved.y + saved.top - restored.top, restored.max)))).toBeLessThanOrEqual(2);
+        if (viewport.width === 320) expect(saved.y).toBeGreaterThan(0);
+        expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(0);
+        // A successful explicit PUSH can be opened and returned again; Forward never re-arms it.
+        await page.keyboard.press("Enter"); await page.locator("[data-market-return]").waitFor(); await page.goBack();
+        await poll(() => page.locator('[data-market-product-id="demo-003"]:focus').count(), count => count === 1, "repeat opening return");
+        await suite.quiet(page, "return focus matrix"); await page.close();
+      }
+    }
+  });
+  it("uses heading fallbacks after reload, missing products, changed lists and direct entry", async () => {
+    const page = await suite.newPage();
+    await page.addInitScript(() => { window.__kixResaleFault = { mode: "reject", dispatches: 0 }; });
+    await page.goto(suite.faultOrigin + "/resale/market/demo-003?lang=en&q=object&page=2");
+    await page.locator("[data-market-return]").click();
+    await poll(() => page.evaluate(() => document.activeElement?.id), id => id === "market-results-heading", "direct-product heading fallback");
+    await page.locator(".market-card").click(); await page.reload(); await page.locator("[data-market-return]").click();
+    await poll(() => page.evaluate(() => document.activeElement?.id), id => id === "market-results-heading", "reload heading fallback");
+    for (const replacement of [["demo-001"], []]) {
+      await page.locator(".market-card").click();
+      await page.evaluate(productIds => { window.__kixResaleFault!.list = { productIds }; }, replacement);
+      await page.locator("[data-market-return]").click();
+      await poll(() => page.evaluate(() => document.activeElement?.id), id => id === "market-results-heading", "missing-card heading fallback");
+      await page.evaluate(() => { window.__kixResaleFault!.list = undefined; });
+      await suite.quiet(page, "before reload"); await page.reload(); await page.locator(".market-card").waitFor();
+    }
+    await page.evaluate(() => { window.__kixResaleFault!.missingProduct = true; });
+    await page.locator(".market-card").click();
+    await page.getByText("Product unavailable. Return to the market.").waitFor();
+    await page.locator("[data-market-return]").click();
+    await poll(() => page.locator('[data-market-product-id="demo-003"]:focus').count(), count => count === 1, "missing detail retains known list origin");
+    await suite.quiet(page, "before direct load"); await page.goto(suite.faultOrigin + "/resale/market?lang=en");
+    await page.locator(".market-card").first().waitFor(); expect(await skipLinkProblems(page)).toEqual([]);
+    expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(0);
+    await suite.quiet(page, "safe entry fallbacks"); await page.close();
+  });
+  it.each([false, true])("waits for delayed reads without focus theft; interaction=%s", async interact => {
+    const page = await suite.newPage();
+    await page.addInitScript(() => { window.__kixResaleFault = { mode: "reject", dispatches: 0 }; });
+    await page.goto(suite.faultOrigin + "/resale/market?q=object&page=2");
+    await page.locator(".market-card").click(); await page.locator("[data-market-return]").waitFor();
+    await page.evaluate(() => { window.__kixResaleFault!.list = { mode: "held" }; });
+    await page.goBack(); await poll(() => page.evaluate(() => typeof window.__kixResaleFault?.releaseRead), kind => kind === "function", "list read held");
+    if (interact) { expect(await tabTo(page, "#market-search")).toBe(true); await page.keyboard.type("draft"); }
+    const before = await page.evaluate(() => ({ active: document.activeElement?.id, y: scrollY }));
+    await page.evaluate(() => window.__kixResaleFault?.releaseRead?.());
+    await page.locator(".market-card").waitFor();
+    if (interact) {
+      await page.waitForTimeout(100);
+      expect(await page.evaluate(() => ({ active: document.activeElement?.id, y: scrollY }))).toEqual(before);
+    } else await poll(() => page.locator(".market-card:focus").count(), count => count === 1, "delayed origin focus");
+    expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(0);
+    await suite.quiet(page, "delayed list return"); await page.close();
+  });
   it("reviews and records bids, asks and both instant sides; navigation retains state", async () => {
     const page = await newDeskPage(suite.newPage,suite.origin); await page.goto(suite.origin + "/resale/market/demo-001");
     await page.getByLabel("Action",{ exact: true }).waitFor();
@@ -108,7 +193,13 @@ describe("synthetic resale marketplace", () => {
       await page.getByLabel("상품 검색").fill("궤도"); await page.getByRole("button", { name: "검색", exact: true }).click();
       await poll(() => page.locator(".market-card").count(), count => count === 1, "committed query result");
       await page.locator(".market-card").click(); await page.locator('[data-market-outcome="UNKNOWN"]').waitFor();
-      expect(await page.getByRole("button",{ name: "모의 거래 검토" }).isDisabled()).toBe(true);
+      await page.goBack(); await page.locator(".market-card").waitFor();
+      await page.locator(".market-card").click();
+      await page.locator("[data-market-return]").click();
+      await page.locator('[data-locale="en"]').click();
+      await page.locator(".market-card").click(); await page.locator('[data-market-outcome="UNKNOWN"]').waitFor();
+      await page.getByRole("button", { name: "Read current fixtures" }).click();
+      expect(await page.getByRole("button",{ name: "Review simulation", exact: true }).isDisabled()).toBe(true);
       expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(1);
     }
     await suite.pass(page,mode === "reject" ? "resale-product.REJECT" : mode === "lost" ? "resale-product.UNKNOWN" : `resale-product.${mode}`); await page.close();

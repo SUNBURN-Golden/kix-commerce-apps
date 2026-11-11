@@ -5,10 +5,47 @@ import type {} from "../../src/resale-fault-types";
 import { runAxe } from "../../src/a11y-axe";
 import { A11Y_BASELINE, ratchet } from "../../src/a11y-matrix";
 import { tabTo, overflowProblems } from "../../src/a11y-keyboard";
+import { poll } from "../../src/desk";
 import { openScreen } from "./helpers";
 
 describe("resale market bilingual form and display", () => {
   const suite = useBrowser();
+  it.each(["en", "ko"] as const)("keeps return focus visible, continues Tab and announces heading fallback (%s)", async lang => {
+    const page = await suite.newPage();
+    await page.addInitScript(() => { window.__kixResaleFault = { mode: "reject", dispatches: 0, list: { productIds: ["demo-001", "demo-003"], total: 4 } }; });
+    for (const size of [{ width: 320, height: 568 }, { width: 1280, height: 800 }]) {
+      await page.setViewportSize(size);
+      await openScreen(page, suite.faultOrigin!, `/resale/market?lang=${lang}&q=object&page=2`, size.width === 320 ? "narrow" : "desktop");
+      await page.setViewportSize(size);
+      expect(await tabTo(page, '[data-market-product-id="demo-003"]')).toBe(true);
+      const saved = await page.evaluate(() => scrollY);
+      if (size.width === 320) expect(saved).toBeGreaterThan(0);
+      await page.keyboard.press("Enter");
+      expect(await tabTo(page, "[data-market-return]")).toBe(true);
+      // Reorder a valid two-card response. Identity, rather than index, selects the target.
+      await page.evaluate(() => { window.__kixResaleFault!.list!.productIds = ["demo-003", "demo-001"]; });
+      await page.keyboard.press("Enter");
+      await poll(() => page.locator('[data-market-product-id="demo-003"]:focus').count(), count => count === 1, "reordered card focus");
+      expect(await page.locator(".market-card:focus").evaluate(el => getComputedStyle(el).outlineStyle !== "none")).toBe(true);
+      expect(await overflowProblems(page, "resale.return.reflow")).toEqual([]);
+      await page.keyboard.press("Tab");
+      expect(await page.locator('[data-market-product-id="demo-001"]:focus').count()).toBe(1);
+      await page.keyboard.press("Shift+Tab"); await page.keyboard.press("Enter");
+      await page.evaluate(() => { window.__kixResaleFault!.list!.productIds = ["demo-001"]; });
+      expect(await tabTo(page, "[data-market-return]")).toBe(true); await page.keyboard.press("Enter");
+      await poll(() => page.evaluate(() => document.activeElement?.id), id => id === "market-results-heading", "localized fallback");
+      const heading = page.locator("#market-results-heading");
+      expect(await heading.innerText()).toBe(lang === "ko" ? "리셀 마켓" : "Resale market");
+      expect(await heading.getAttribute("tabindex")).toBe("-1");
+      const axe = await runAxe(page, A11Y_BASELINE.tags);
+      expect(ratchet("resale-market", size.width === 320 ? "narrow" : "desktop", axe.violations.map(v => v.ruleId)).unlisted).toEqual([]);
+      await page.keyboard.press("Tab"); expect(await page.locator("#market-search:focus").count()).toBe(1);
+      await page.evaluate(() => { window.__kixResaleFault!.list!.productIds = ["demo-001", "demo-003"]; });
+      await suite.quiet(page, "return accessibility");
+    }
+    expect(await page.evaluate(() => window.__kixResaleFault?.dispatches)).toBe(0);
+    await page.close();
+  });
   it("keeps IME confirmation in edit, focuses invalid summary and records only after explicit review", async () => {
     const page = await suite.newPage();
     await openScreen(page,suite.origin,"/resale/market/demo-001?lang=ko");
