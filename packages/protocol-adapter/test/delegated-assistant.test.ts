@@ -18,6 +18,9 @@ import {
   projectDelegation,
   refuseDelegationSnapshot,
   type DelegationAssistantPort,
+  type DelegationGrant,
+  type DelegationSnapshot,
+  type DelegationTurn,
   type DelegationReadOutcome,
   type DelegationScenario,
   type DelegationStepResult,
@@ -762,7 +765,15 @@ describe("delegation assistant controller", () => {
   });
 
   it("keeps the not-bound port not-bound end to end", async () => {
-    const port = createNotBoundDelegationAssistant();
+    const inner = createNotBoundDelegationAssistant();
+    const sent: DelegationWriteRequest[] = [];
+    const port: DelegationAssistantPort = {
+      ...inner,
+      submit(request) {
+        sent.push(request);
+        return inner.submit(request);
+      },
+    };
     const controller = new DelegationAssistantController(port, { actorRef: DELEGATION_DESK_ACTOR, principalRef: DELEGATION_OWN_PRINCIPAL });
     expect(await controller.refresh()).toEqual({ kind: "APPLIED", readState: "not-bound" });
     controller.interpret("draft an order for lst-0001");
@@ -770,6 +781,286 @@ describe("delegation assistant controller", () => {
     const result = await approve(controller, proposalRef);
     expect(result).toMatchObject({ kind: "FENCED", fence: { reason: "not-bound" } });
     expect(controller.state().counters.sent).toBe(0);
+    expect(sent).toHaveLength(0);
   });
 });
 
+
+// Deliberately bypass readonly array types to exercise ordinary JavaScript callers.
+type Mutable<T> = { -readonly [K in keyof T]: Mutable<T[K]> };
+
+function snapshotOf(controller: DelegationAssistantController): Mutable<DelegationSnapshot> {
+  const snapshot = controller.state().snapshot;
+  expect(snapshot).not.toBeNull();
+  if (snapshot === null) throw new Error("Expected accepted evidence");
+  return snapshot as Mutable<DelegationSnapshot>;
+}
+
+function attackTurn(turn: DelegationTurn): void {
+  turn.detail = "rewritten history";
+  switch (turn.kind) {
+    case "answer": turn.question = "session"; break;
+    case "proposal": turn.step = "cancel-draft"; turn.targetRef = "drf-9999"; break;
+    case "clarify": (turn.missing as string[]).splice(0, turn.missing.length, "action"); break;
+    case "refused": turn.code = "EMPTY"; break;
+  }
+}
+
+function attackSnapshot(snapshot: Mutable<DelegationSnapshot>): void {
+  snapshot.snapshotId = 999;
+  snapshot.generation = 999;
+  snapshot.watermark = "999999";
+  snapshot.scenario = "empty";
+  snapshot.principalRef = DELEGATION_FOREIGN_PRINCIPAL;
+  for (const grant of snapshot.grants) {
+    grant.principalRef = DELEGATION_FOREIGN_PRINCIPAL;
+    grant.targetEventRef = "evt-9999";
+    grant.notAfter = "never";
+    grant.adoptedMode = "query";
+    grant.requestedMode = "query";
+    grant.commandBudget = 999;
+    grant.commandsUsed = 0;
+    grant.version = 999;
+    grant.state = "revoked";
+    grant.allowedActions.splice(0, grant.allowedActions.length, "cancel-draft");
+  }
+  snapshot.listings[0]!.title = "rewritten listing";
+  snapshot.listings[0]!.state = "closed";
+  snapshot.drafts[0]!.grantRef = "grt-9999";
+  snapshot.drafts[0]!.grantVersion = 999;
+  snapshot.drafts[0]!.state = "cancelled";
+  for (const key of Object.keys(snapshot.nonClaims)) Reflect.set(snapshot.nonClaims, key, true);
+  snapshot.grants.splice(0, 1, { ...snapshot.grants[1]! });
+  snapshot.listings[0] = { ...snapshot.listings[1]! };
+  snapshot.listings.length = 0;
+  snapshot.drafts.splice(0);
+}
+
+describe("delegation assistant evidence ownership", () => {
+  it.each(["port", "state"] as const)("detaches %s snapshots, including staged drafts and all non-claims", async (boundary) => {
+    const retained: DelegationSnapshot[] = [];
+    const inner = createStubDelegationAssistant();
+    const { port, sent } = spyPort(inner, {
+      rewriteRead(outcome) {
+        if (outcome.kind === "ready") retained.push(outcome.snapshot);
+        return outcome;
+      },
+    });
+    const controller = new DelegationAssistantController(port, { actorRef: DELEGATION_DESK_ACTOR, principalRef: DELEGATION_OWN_PRINCIPAL });
+    await controller.refresh();
+    const beforeWrite = controller.state();
+    const oldSnapshot = structuredClone(beforeWrite);
+    expect((await approve(controller, propose(controller, "draft an order for lst-0001"))).kind).toBe("CONFIRMED");
+    await controller.refresh();
+    const proposalRef = propose(controller, "cancel draft drf-0001");
+    const input = { proposalRef, intentRef: intentRef() };
+    const baseline = structuredClone(controller.state());
+    expect(baseline.snapshot?.drafts).toHaveLength(1);
+    expect(controller.gateFor(input)).toBeNull();
+    attackSnapshot(boundary === "port" ? retained.at(-1)! as Mutable<DelegationSnapshot> : snapshotOf(controller));
+    expect(controller.state()).toEqual(baseline);
+    expect(beforeWrite).toEqual(oldSnapshot);
+    expect(controller.gateFor(input)).toBeNull();
+    expect(sent).toHaveLength(1);
+    expect(controller.interpret("what drafts are staged")).toMatchObject({ kind: "answer", question: "drafts" });
+    expect((await controller.approve(input)).kind).toBe("CONFIRMED");
+    expect(sent).toHaveLength(2);
+    expect(sent[1]).toMatchObject({ step: "cancel-draft", draftRef: "drf-0001", grantRef: "grt-0001", expectedGrantVersion: 4 });
+    await controller.refresh();
+    expect(baseline.snapshot?.drafts[0]?.state).toBe("staged");
+    expect(controller.state().snapshot?.drafts[0]?.state).toBe("cancelled");
+    expect(beforeWrite).toEqual(oldSnapshot);
+  });
+
+  for (const boundary of ["port", "state", "projection"] as const) {
+    it.each([
+      ["mode-capped", "clean", "grt-0002", "lst-0003"],
+      ["action-not-granted", "clean", "grt-0001", "lst-0001"],
+      ["budget-exhausted", "budget-spent", "grt-0001", "lst-0001"],
+    ] as const)(`${boundary} mutation cannot bypass %s or reach submit`, async (reason, scenario, grantRef, listingRef) => {
+      const retained: DelegationSnapshot[] = [];
+      const { port, sent } = spyPort(createStubDelegationAssistant({ scenario }), {
+        rewriteRead(outcome) {
+          if (outcome.kind === "ready") {
+            // Accept a valid, narrowed command grant while all other gates are open.
+            if (reason === "action-not-granted") {
+              outcome.snapshot = { ...outcome.snapshot, grants: outcome.snapshot.grants.map((grant) =>
+                grant.grantRef === grantRef ? { ...grant, allowedActions: ["cancel-draft"] } : grant) };
+              expect(refuseDelegationSnapshot(outcome.snapshot, DELEGATION_OWN_PRINCIPAL)).toBeNull();
+            }
+            retained.push(outcome.snapshot);
+          }
+          return outcome;
+        },
+      });
+      const controller = new DelegationAssistantController(port, { actorRef: DELEGATION_DESK_ACTOR, principalRef: DELEGATION_OWN_PRINCIPAL });
+      await controller.refresh();
+      const proposalRef = propose(controller, `draft an order for ${listingRef}`);
+      const input = { proposalRef, intentRef: intentRef() };
+      const baseline = structuredClone(controller.state());
+      const fence = controller.gateFor(input);
+      expect(fence).toMatchObject({ reason, grantRef });
+      const grants = boundary === "port" ? retained[0]!.grants
+        : boundary === "state" ? controller.state().snapshot!.grants : projectDelegation(controller.state()).grants;
+      const grant = grants.find((item) => item.grantRef === grantRef)! as Mutable<DelegationGrant>;
+      if (reason === "mode-capped") grant.adoptedMode = "command";
+      if (reason === "action-not-granted") grant.allowedActions.push("draft-order");
+      if (reason === "budget-exhausted") { grant.commandBudget = 999; grant.commandsUsed = 0; }
+      expect(controller.state()).toEqual(baseline);
+      expect(controller.gateFor(input)).toEqual(fence);
+      expect(await controller.approve(input)).toEqual({ kind: "FENCED", fence });
+      expect(controller.state().proposals).toEqual(baseline.proposals);
+      expect(sent).toHaveLength(0);
+    });
+  }
+
+  it.each(["interpret", "state", "projection"] as const)("detaches every turn variant at the %s boundary", async (boundary) => {
+    const { port, sent } = spyPort(createStubDelegationAssistant());
+    const controller = new DelegationAssistantController(port, { actorRef: DELEGATION_DESK_ACTOR, principalRef: DELEGATION_OWN_PRINCIPAL });
+    await controller.refresh();
+    const returned = ["what grants do I have", "draft an order for lst-0001", "draft an order", "pay for lst-0001"]
+      .map((text) => controller.interpret(text));
+    const baseline = structuredClone(controller.state());
+    expect(baseline.turns.map((record) => record.turn.kind)).toEqual(["answer", "proposal", "clarify", "refused"]);
+    const input = { proposalRef: baseline.proposals[0]!.proposalRef, intentRef: intentRef() };
+    expect(controller.gateFor(input)).toBeNull();
+    const turns = boundary === "interpret" ? returned : (boundary === "state" ? controller.state() : projectDelegation(controller.state())).turns.map((record) => record.turn);
+    turns.forEach(attackTurn);
+    expect(controller.state()).toEqual(baseline);
+    expect(controller.state().counters.refusedRequests).toBe(1);
+    expect(controller.gateFor(input)).toBeNull();
+    expect(sent).toHaveLength(0);
+    expect((await controller.approve(input)).kind).toBe("CONFIRMED");
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({ step: "draft-order", listingRef: "lst-0001", grantRef: "grt-0001", expectedGrantVersion: 4 });
+    expect(controller.state().turns).toEqual(baseline.turns);
+  });
+
+  it("makes projections independent of their supplied state and each other", async () => {
+    const { controller } = await ready();
+    expect((await approve(controller, propose(controller, "draft an order for lst-0001"))).kind).toBe("CONFIRMED");
+    await controller.refresh();
+    const proposalRef = propose(controller, "cancel draft drf-0001");
+    controller.interpret("draft an order");
+    const input = { proposalRef, intentRef: intentRef() };
+    const state = controller.state();
+    const baseline = structuredClone(state);
+    const projection = projectDelegation(state) as Mutable<ReturnType<typeof projectDelegation>>;
+    const second = projectDelegation(state);
+    const expected = structuredClone(second);
+    projection.grants[0]!.adoptedMode = "query";
+    projection.grants[0]!.allowedActions.length = 0;
+    projection.grants[0]!.commandBudget = 0;
+    projection.grants.splice(0);
+    projection.proposals[1]!.state = "dismissed";
+    projection.proposals[1]!.targetRef = "drf-9999";
+    projection.proposals.splice(0);
+    projection.turns.forEach((record) => { attackTurn(record.turn); record.proposalRef = "prp-9999"; record.excerpt = "rewritten"; });
+    projection.turns.length = 0;
+    projection.drafts[0]!.state = "cancelled";
+    projection.drafts.splice(0);
+    projection.listings[0]!.title = "rewritten";
+    projection.listings[0]!.drafts[0]!.grantRef = "grt-9999";
+    projection.listings[0]!.drafts.length = 0;
+    projection.listings.length = 0;
+    expect(state).toEqual(baseline);
+    expect(second).toEqual(expected);
+    expect(projectDelegation(state)).toEqual(expected);
+    expect(controller.state()).toEqual(baseline);
+    expect(controller.gateFor(input)).toBeNull();
+    expect((await controller.approve(input)).kind).toBe("CONFIRMED");
+    expect(controller.state().counters.sent).toBe(2);
+    expect(state).toEqual(baseline);
+  });
+
+  it("detaches retained confirmed receipts and returned approval history", async () => {
+    const retained: Extract<DelegationWriteOutcome, { kind: "confirmed" }>[] = [];
+    const { port, sent } = spyPort(createStubDelegationAssistant(), {
+      rewrite(outcome) { if (outcome.kind === "confirmed") retained.push(outcome); return outcome; },
+    });
+    const controller = new DelegationAssistantController(port, { actorRef: DELEGATION_DESK_ACTOR, principalRef: DELEGATION_OWN_PRINCIPAL });
+    await controller.refresh();
+    const result = await approve(controller, propose(controller, "draft an order for lst-0001"));
+    expect(result.kind).toBe("CONFIRMED");
+    if (result.kind !== "CONFIRMED") throw new Error("Expected confirmation");
+    await controller.refresh();
+    const proposalRef = propose(controller, "cancel draft drf-0001");
+    const input = { proposalRef, intentRef: intentRef() };
+    const baseline = structuredClone(controller.state());
+    for (const receipt of [retained[0]!.receipt, result.intent.receipt!, controller.state().intents[0]!.receipt!]) {
+      receipt.draftRef = "drf-9999";
+      receipt.listingRef = "lst-9999";
+      receipt.grantRef = "grt-9999";
+      receipt.grantVersion = 999;
+      receipt.state = "cancelled";
+      for (const key of Object.keys(receipt.nonClaims)) Reflect.set(receipt.nonClaims, key, true);
+    }
+    result.intent.outcome = "UNKNOWN";
+    result.intent.targetRef = "lst-9999";
+    expect(controller.state()).toEqual(baseline);
+    expect(projectDelegation(controller.state()).drafts[0]?.linked).toBe(true);
+    expect(controller.gateFor(input)).toBeNull();
+    expect((await controller.approve(input)).kind).toBe("CONFIRMED");
+    expect(sent).toHaveLength(2);
+  });
+
+  it("keeps held writes single-flight despite mutations to intent and proposal views", async () => {
+    const inner = createStubDelegationAssistant({ scenario: "held-response" });
+    const { port, sent } = spyPort(inner);
+    const controller = new DelegationAssistantController(port, { actorRef: DELEGATION_DESK_ACTOR, principalRef: DELEGATION_OWN_PRINCIPAL });
+    await controller.refresh();
+    const first = propose(controller, "draft an order for lst-0001");
+    const second = propose(controller, "draft an order for lst-0002");
+    const firstInput = { proposalRef: first, intentRef: intentRef() };
+    const pending = controller.approve(firstInput);
+    const baseline = structuredClone(controller.state());
+    const state = controller.state() as Mutable<ReturnType<typeof controller.state>>;
+    const projection = projectDelegation(state) as Mutable<ReturnType<typeof projectDelegation>>;
+    for (const intent of [state.intents[0]!, projection.unlinkedIntents[0]!]) {
+      intent.outcome = "CONFIRMED"; intent.grantRef = "grt-9999"; intent.intentRef = "rewritten";
+    }
+    for (const proposal of [state.proposals[0]!, projection.proposals[0]!]) {
+      proposal.state = "open"; proposal.targetRef = "lst-0003";
+    }
+    state.intents.length = 0;
+    state.proposals.splice(0);
+    state.context.key = "rewritten";
+    state.counters.sent = 0;
+    projection.unlinkedIntents.splice(0);
+    expect(controller.state()).toEqual(baseline);
+    expect(codeOf(await controller.approve(firstInput))).toBe("FENCED:duplicate-intent");
+    const next = { proposalRef: second, intentRef: intentRef() };
+    expect(controller.gateFor(next)).toEqual({ reason: "in-flight", intentRef: firstInput.intentRef });
+    expect(codeOf(await controller.approve(next))).toBe("FENCED:in-flight");
+    expect(sent).toHaveLength(1);
+    expect(inner.deliverHeld()).toBe(1);
+    expect((await pending).kind).toBe("CONFIRMED");
+    expect(sent[0]).toMatchObject({ listingRef: "lst-0001", grantRef: "grt-0001", expectedGrantVersion: 4 });
+    expect(baseline.intents[0]?.outcome).toBe("IN_FLIGHT");
+  });
+
+  it("keeps UNKNOWN fenced after return, state, and projection mutation and a fresh read", async () => {
+    const { port, sent } = spyPort(createStubDelegationAssistant({ scenario: "draft-lost" }));
+    const controller = new DelegationAssistantController(port, { actorRef: DELEGATION_DESK_ACTOR, principalRef: DELEGATION_OWN_PRINCIPAL });
+    await controller.refresh();
+    const result = await approve(controller, propose(controller, "draft an order for lst-0001"));
+    expect(result.kind).toBe("UNKNOWN");
+    if (result.kind !== "UNKNOWN") throw new Error("Expected unknown");
+    await controller.refresh();
+    const proposalRef = propose(controller, "draft an order for lst-0002");
+    const input = { proposalRef, intentRef: intentRef() };
+    const baseline = structuredClone(controller.state());
+    const fence = controller.gateFor(input);
+    expect(fence?.reason).toBe("unknown-outcome");
+    for (const intent of [result.intent, controller.state().intents[0]!, projectDelegation(controller.state()).unlinkedIntents[0]!]) {
+      intent.outcome = "CONFIRMED"; intent.code = null; intent.grantRef = "grt-9999";
+    }
+    expect(controller.state()).toEqual(baseline);
+    expect(controller.gateFor(input)).toEqual(fence);
+    expect(await controller.approve(input)).toEqual({ kind: "FENCED", fence });
+    await controller.refresh();
+    expect(controller.gateFor(input)).toEqual(fence);
+    expect(await controller.approve(input)).toEqual({ kind: "FENCED", fence });
+    expect(sent).toHaveLength(1);
+  });
+});

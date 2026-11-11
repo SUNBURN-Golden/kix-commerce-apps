@@ -732,8 +732,8 @@ describe("inventory screen as mounted", () => {
         <App />
       </MemoryRouter>,
     );
-    expect(markup).toContain('id="inventory-page"');
-    expect(markup).toContain('id="inventory-selection"');
+    expect(markup).not.toContain('id="inventory-page"');
+    expect(markup).not.toContain('id="inventory-selection"');
     expect(markup).not.toContain('role="option"');
     expect(markup).not.toContain('data-selected="true"');
   });

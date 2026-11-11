@@ -592,3 +592,25 @@ describe("assessment helpers", () => {
     expect(assessment.memberTargets.length).toBeGreaterThan(0);
   });
 });
+
+it("runtime authority tables and detached visibleKinds cannot expand another source's permissions", async () => {
+  const capabilities = tenantCapabilities("buyer");
+  expect(() => (capabilities as string[]).push("export-sensitive")).toThrow(TypeError);
+  expect(() => (tenantRoleResources("buyer") as string[]).push("account")).toThrow(TypeError);
+  expect(tenantCapabilities("constructor")).toEqual([]);
+  expect(tenantRoleResources("__proto__")).toEqual([]);
+  const source = createStubTenantPermissions();
+  const request = readRequest(TENANT_BUYER_ACTOR, SCOPE_BUYER);
+  const first = await source.read(request);
+  expect(first.kind).toBe("ready");
+  if (first.kind !== "ready") throw Error("Expected fixture read");
+  (first.snapshot.visibleKinds as string[]).push("account");
+  first.snapshot.visibleKinds = ["account"];
+  first.snapshot.members[0]!.role = "settler";
+  for (const port of [source, createStubTenantPermissions()]) {
+    const next = await port.read(request);
+    expect(next).toMatchObject({ kind: "ready", snapshot: { visibleKinds: ["member", "order"], accounts: [] } });
+    expect(await port.read({ ...request, focusRef: "acc-0001" })).toMatchObject({ kind: "denied", code: "RESOURCE_DENIED" });
+    expect(await port.readExport({ contextKey: "test", actorRef: request.actorRef, scope: request.scope })).toMatchObject({ kind: "denied", code: "EXPORT_DENIED" });
+  }
+});

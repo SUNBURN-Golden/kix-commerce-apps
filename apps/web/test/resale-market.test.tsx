@@ -51,10 +51,77 @@ describe("resale market rendering", () => {
   });
 });
 
-import { renderDom, change, click, button, element } from "./support/render-dom";
+import { renderDom, change, click, button, element, dispatch } from "./support/render-dom";
+import { FORM_MESSAGES } from "../src/forms/catalogue";
+import { formatUnits } from "../src/format";
 import { ResaleMarketPage } from "../src/pages/ResaleMarket";
 import { ResaleProductPage } from "../src/pages/ResaleProduct";
 describe("mounted resale marketplace", () => {
+  it.each((["en", "ko"] as const).flatMap(locale => (["bid", "ask"] as const).map(kind => ({ locale, kind }))))("preserves exact mock units through edit, review, one submission and offers ($locale/$kind)", async ({ locale, kind }) => {
+    const p = createMockResaleMarket(); const submit = vi.fn(p.submit);
+    const c = new ResaleMarketController({ read: p.read, submit }); await c.read(read);
+    let language = locale;
+    function Live() { useSyncExternalStore(c.subscribe, c.state, c.state); return panels(c, language); }
+    const { container, rerender } = await renderDom(<Live />);
+    await change(element(container, "#market-action"), kind);
+    const reviewLabel = () => language === "ko" ? "모의 거래 검토" : "Review simulation";
+    const values = ["0", "9007199254740993", "12345678901234567890123456789", "999999999999999999999999999999"];
+    for (const [index, value] of values.entries()) {
+      const input = element<HTMLInputElement>(container, "#market-units");
+      expect(input.hasAttribute("maxlength")).toBe(false);
+      await change(input, value); expect(input.value).toBe(value);
+      language = language === "ko" ? "en" : "ko"; await rerender(<Live />);
+      expect(input.value).toBe(value);
+      await click(button(container, reviewLabel()));
+      const label = language === "ko" ? "모의 단위" : "mock units";
+      const exact = `${value} ${label}`;
+      expect(formatUnits(value, label, language === "ko" ? "ko-KR" : "en-GB")).toBe(exact);
+      expect(container.querySelector(".market-review p:nth-of-type(3)")?.textContent).toBe(exact);
+      expect(document.activeElement).toBe(container.querySelector(".market-review h4"));
+      expect(submit).toHaveBeenCalledTimes(index);
+      await click(button(container, language === "ko" ? "입력으로 돌아가기" : "Back to edit"));
+      expect(element<HTMLInputElement>(container, "#market-units").value).toBe(value);
+      await click(button(container, reviewLabel()));
+      await click(button(container, language === "ko" ? "모의 거래 한 번 기록" : "Record simulation once"));
+      expect(submit).toHaveBeenCalledTimes(index + 1);
+      expect(submit.mock.calls[index][0]).toEqual({ kind, productId: "demo-001", variantId: "standard", expectedVersion: index, mockUnits: value });
+      expect(c.state()).toMatchObject({ outcome: "CONFIRMED", outcomeRequest: { mockUnits: value } });
+      expect(c.detail()?.offers[index]).toMatchObject({ side: kind, mockUnits: value, state: "open" });
+      expect(container.querySelectorAll("#market-offers-rows li")[index]?.textContent).toContain(exact);
+    }
+  });
+
+  it.each(["ko", "en"] as const)("retains malformed drafts, links localized errors and focuses only deliberate refusal (%s)", async locale => {
+    const p = createMockResaleMarket(); const submit = vi.fn(p.submit);
+    const c = new ResaleMarketController({ read: p.read, submit }); await c.read(read);
+    const snapshot = c.detail();
+    const { container } = await renderDom(panels(c, locale));
+    await change(element(container, "#market-action"), "ask");
+    const input = element<HTMLInputElement>(container, "#market-units");
+    const review = button(container, locale === "ko" ? "모의 거래 검토" : "Review simulation");
+    for (const value of ["00", "01", "+1", "-1", "1.0", "1e3", "1,000", "1_000", "1 000", "１", " 0", "0 ", "9".repeat(31), "9".repeat(100)]) {
+      await change(input, value); await act(async () => input.focus());
+      await act(async () => review.focus());
+      expect(document.activeElement).toBe(review);
+      expect(input.value).toBe(value);
+      expect(input.getAttribute("aria-invalid")).toBe("true");
+      expect(input.getAttribute("aria-describedby")).toBe("market-units-format-error");
+      expect(element(container, "#market-units-format-error").textContent).toBe(FORM_MESSAGES[locale]["validation.integer"]);
+      await click(review);
+      expect(document.activeElement).toBe(container.querySelector(".error-summary"));
+      await click(element(container, '.error-summary a[href="#market-units"]'));
+      expect(document.activeElement).toBe(input);
+      expect(container.querySelector(".market-review")).toBeNull();
+      expect(submit).not.toHaveBeenCalled(); expect(c.detail()).toBe(snapshot);
+    }
+    await dispatch(input, new CompositionEvent("compositionstart", { bubbles: true }));
+    await change(input, "999999999999999999999999999999");
+    await dispatch(input, new CompositionEvent("compositionend", { bubbles: true }));
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 5)); });
+    expect(input.getAttribute("aria-invalid")).toBe("false");
+    await click(review); expect(container.querySelector(".market-review")).not.toBeNull();
+    expect(submit).not.toHaveBeenCalled();
+  });
   it("publishes stable immutable snapshots to mounted controls and keeps UNKNOWN disabled", async () => {
     const p = createMockResaleMarket();
     const submit = vi.fn(async (i: Parameters<typeof p.submit>[0]) => { await p.submit(i); throw new Error("lost after effect"); });

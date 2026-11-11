@@ -157,7 +157,7 @@ export interface FinanceControllerState {
   behind: boolean;
   fence: FinanceFence | null;
   last: FinanceActRecord | null;
-  /** Unknown outcomes left in sessions this page no longer holds. They are not forgotten. */
+  /** Distinct unresolved requests whose original UI incarnation is no longer current. */
   earlierUnknown: number;
   counters: FinanceCounters;
 }
@@ -221,9 +221,14 @@ export class FinanceOperationsController {
   private actSeq = 0;
   private behind = false;
   private inFlight: FinanceActionKind | null = null;
-  private fence: FinanceFence | null = null;
+  /** Resource fences outlive UI incarnations. No read or navigation resolves a request. */
+  private readonly unresolvedByResource = new Map<string, {
+    context: FinanceContext;
+    request: Parameters<FinanceOperationsPort["act"]>[0];
+    record: FinanceActRecord;
+    fence: FinanceFence;
+  }>();
   private last: FinanceActRecord | null = null;
-  private earlierUnknown = 0;
   /** Requests that reached the source and came back, in any way. A read compares it with its start. */
   private actsDone = 0;
   private readonly counters: FinanceCounters = { reads: 0, exports: 0, acts: 0, notSent: 0, droppedReads: 0, droppedExports: 0 };
@@ -264,7 +269,7 @@ export class FinanceOperationsController {
       freshness = "STALE";
     }
     const verdict = this.exportValue === null ? null : judgeFinanceExport(this.snapshot, this.assessment, this.exportValue);
-    return {
+    return structuredClone({
       context: { ...this.context, scope: { ...this.context.scope } },
       readState: this.readState,
       readCode: this.readCode,
@@ -278,17 +283,28 @@ export class FinanceOperationsController {
           : { phase: this.exportPhase, code: this.exportCode, detail: this.exportDetail, value: this.exportValue, verdict },
       behind: this.behind,
       fence: this.currentFence(),
-      last: this.last,
-      earlierUnknown: this.earlierUnknown,
+      last: this.last ?? this.retainedLast(),
+      earlierUnknown: [...this.unresolvedByResource.values()].filter((entry) => entry.context.key !== this.context.key).length,
       counters: { ...this.counters },
-    };
+    });
+  }
+
+  private resourceKey(): string {
+    return JSON.stringify([this.context.environment, this.context.domain, this.context.scope.tenantId, this.context.scope.bookRef]);
+  }
+
+  /** Publish retained details only to the original principal and role. */
+  private retainedLast(): FinanceActRecord | null {
+    const retained = this.unresolvedByResource.get(this.resourceKey());
+    if (!retained || retained.context.actorRef !== this.context.actorRef) return null;
+    return retained.record;
   }
 
   private currentFence(): FinanceFence | null {
     if (this.inFlight !== null) {
       return { reason: "in-flight", action: this.inFlight };
     }
-    return this.fence;
+    return structuredClone(this.unresolvedByResource.get(this.resourceKey())?.fence ?? null);
   }
 
   private clearView(): void {
@@ -309,9 +325,6 @@ export class FinanceOperationsController {
     if (this.inFlight !== null) {
       return null;
     }
-    if (this.fence !== null) {
-      this.earlierUnknown += 1;
-    }
     const parts = {
       environment: this.context.environment,
       domain: this.context.domain,
@@ -326,7 +339,6 @@ export class FinanceOperationsController {
     this.readDetail = null;
     this.floor = null;
     this.behind = false;
-    this.fence = null;
     this.last = null;
     this.notify();
     return { ...this.context, scope: { ...this.context.scope } };
@@ -380,7 +392,7 @@ export class FinanceOperationsController {
       return { kind: "DROPPED", cause: "older-read" };
     }
     this.appliedReadSeq = seq;
-    this.apply(outcome, this.actsDone === actsAtStart);
+    this.apply(structuredClone(outcome), this.actsDone === actsAtStart);
     this.notify();
     return { kind: "APPLIED", readState: this.readState };
   }
@@ -572,11 +584,11 @@ export class FinanceOperationsController {
     if (this.inFlight !== null) {
       return { allowed: false, reason: `A ${this.inFlight} request is in flight. One request goes at a time.` };
     }
-    if (this.fence !== null) {
+    if (this.currentFence() !== null) {
       return {
         allowed: false,
         reason:
-          "An earlier request has an unknown outcome and may have been recorded. Nothing is sent again from here. Switching the scope or the actor, or starting a new synthetic session, begins a new context and counts this unknown outcome.",
+          "An earlier request has an unknown outcome and may have been recorded. Nothing is sent again from here. Reads, context switches and generation recovery do not resolve it. This resource stays fenced.",
       };
     }
     if (this.readState !== "ready" || this.snapshot === null || this.assessment === null) {
@@ -641,16 +653,19 @@ export class FinanceOperationsController {
     this.actSeq += 1;
     const seq = this.actSeq;
     this.counters.acts += 1;
+    const originalContext = structuredClone(this.context);
+    const resourceKey = this.resourceKey();
+    const request: Parameters<FinanceOperationsPort["act"]>[0] = {
+      contextKey: key,
+      actorRef: this.context.actorRef,
+      scope: { ...this.context.scope },
+      action: built,
+    };
     this.inFlight = kind;
     this.notify();
     let outcome: FinanceActOutcome;
     try {
-      outcome = await this.port.act({
-        contextKey: key,
-        actorRef: this.context.actorRef,
-        scope: { ...this.context.scope },
-        action: built,
-      });
+      outcome = await this.port.act(structuredClone(request));
     } catch (error) {
       outcome = { kind: "unknown", message: failureText(error) };
     }
@@ -660,7 +675,10 @@ export class FinanceOperationsController {
     this.last = record;
     if (record.phase === "unknown" || record.phase === "refused") {
       // The request may have applied. Nothing is sent again, and a read does not lift this.
-      this.fence = { reason: "unknown-outcome", seq, action: kind };
+      this.unresolvedByResource.set(resourceKey, structuredClone({
+        context: originalContext, request, record,
+        fence: { reason: "unknown-outcome" as const, seq, action: kind },
+      }));
       this.behind = true;
     } else if (record.phase === "applied" || record.phase === "rejected") {
       this.behind = true;

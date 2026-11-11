@@ -5,6 +5,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { createProtocol, type CommerceProtocol } from "@kix/protocol-adapter";
 import { BoxOfficePage } from "../src/pages/BoxOffice";
 import { BuyerPage } from "../src/pages/Buyer";
+import { createBookingContextStore } from "../src/booking-context";
+import { protocol } from "../src/connectivity/desk-protocol";
 import { BookingPage } from "../src/pages/Booking";
 import { DiscoveryPage } from "../src/pages/Discovery";
 import { ResalePage } from "../src/pages/Resale";
@@ -87,7 +89,7 @@ for (const screen of screens) {
         await p.observeReservationPayment({ ...ids, paymentRef: "mock-noted", idempotencyKey: "clock-payment" });
         await p.issueReservation({ ...ids, idempotencyKey: "clock-issue" });
       }
-      const { container } = await renderDom(<LocaleProvider><MemoryRouter initialEntries={[screen.route]}><Routes><Route path={screen.path} element={screen.page} /></Routes></MemoryRouter></LocaleProvider>);
+      const { container } = await renderDom(<LocaleProvider><MemoryRouter initialEntries={[screen.route]}><Routes><Route path={screen.path} element={screen.name === "Booking" ? <BookingPage store={createBookingContextStore({ port: protocol })} /> : screen.page} /></Routes></MemoryRouter></LocaleProvider>);
       if (screen.name === "Booking") await click(element(container, '#booking-form button[type="submit"]'));
       if (screen.name === "Resale") {
         await click(button(container, resaleCopy[lang]["e.1"]));

@@ -111,6 +111,37 @@ Per the owner ruling, **GitHub Actions exact-head CI is the browser runner of re
 - The first full a11y run failed only on the unrelated existing `gallery.locale-preferences` check; the immediate full rerun passed 398/398. Both runs are recorded; nothing was waived.
 - No commit, push, PR, issue, external comment, aiops edit, adapter binding edit or protocol change was made.
 
+## Merge with origin/main (bd74bea, PR #142) — conflict resolution
+
+Main moved after this node's PR passed review and CI. The supervisor's `git merge origin/main` stopped with two conflicts; this session resolved them in the worktree by editing files only (no `git add`/`commit`/`merge`/`rebase`/`reset`/`checkout`/`push`; the supervisor stages and commits). Both sides' intent is kept:
+
+- `apps/e2e/src/resale-fault-types.ts` — union of both extensions of the shared base shape: main's `"normal"` mode plus typed `requests?: ResaleMarketIntent[]` / `results?: ResaleMarketWriteResult[]` (market-exact-units), and this node's `list?`, `missingProduct?`, `releaseRead?` (return-focus delayed/missing/changed reads). The type-only adapter import comes from main; no runtime/product import is added. The auto-merged `apps/e2e/shell-fixtures/resale-market.ts` already implements every one of these options.
+- `apps/e2e/tests/a11y/resale-market.a11y.test.ts` — this node's bilingual return-focus case (en/ko × 320×568/1280×800, reordered identities, heading fallback, Tab continuation, focus-visible, axe, reflow, zero dispatches) is kept unchanged, followed by main's rewritten `"keeps bilingual exact-unit IME, errors and keyboard review/confirm safe"` case. The older `"keeps IME confirmation in edit…"` case is genuinely superseded: this branch's copy was byte-identical to the merge base, and main's c-plan-market-exact-units-stub rewrite covers the same intent (composition never submits, invalid-summary focus only on explicit review, record only after explicit confirm) extended to both locales, the format-error copy/`aria-describedby`, and the full 30-digit range with dispatch/request assertions. No other content was dropped; the dark/forced-colors and large-history cases are unchanged.
+- No README or matrix list needed reconciliation: neither node edited README.md, and `journey-matrix.ts` / `a11y-matrix.ts` merged with this node's "no new suite.pass IDs or matrix cells" property intact (main's exact-unit case reuses the existing `a11y.resale-market.ime` cell).
+
+Post-merge verification (this worktree, combined state; supersedes the pre-merge ledger numbers above for the merged tree):
+
+| Command actually run | Result |
+| --- | --- |
+| `npm run typecheck` | PASS (protocol-adapter and web). |
+| `npm run typecheck:e2e` | PASS. |
+| `KIX_REQUIRE_GATE=0 npm test` | PASS: adapter **3,091 passed / 23 skipped** (76 files passed, 5 skipped); web **1,720 passed** (113 files); cold-entry 6 passed. Live-gate suites skipped for lack of a kix-protocol checkout; skipped is not a pass. |
+| `npm run build` | PASS. |
+| `npm run budget` | PASS: initial JS **160,206** ≤ 290,000; initial CSS 4,997 ≤ 5,000; largest chunk 27,512 ≤ 30,000; total **788,195** ≤ 790,000 (recorded owner-ruling ceiling); every route chunk within its limit. |
+| `KIX_REQUIRE_GATE=0 npm run test:e2e` | PASS: **53 files, 267 tests**, full mandatory matrix teardown green (89/89 keyboard BROWSER cells). |
+| `KIX_REQUIRE_GATE=0 npm run test:a11y` | PASS: **23 files, 448 tests** including the resolved `resale-market.a11y.test.ts` (return-focus en/ko and main's exact-unit IME case), full mandatory matrix teardown green. |
+| `KIX_REQUIRE_GATE=0 npm run test:budget` | PASS: 3 files, 9 tests. |
+| `KIX_REQUIRE_GATE=0 npm run test:visual` | PASS: 3 files, 123 tests against committed baselines; no baseline updated. |
+| `npm run lint` | PASS (exit 0). |
+| `npm run coverage:check` | PASS: web statements 94.54% ≥ 83.6%; all coverage floors met. |
+| `npm run deps:check` | PASS: 4 package.json files, 630 lockfile entries. |
+| `npm run cycle-check` | PASS: no circular imports. |
+| `npm run audit:warn` | PASS: 0 production vulnerabilities. |
+| `git diff --check` | PASS; whole-tree conflict-marker scan clean. |
+| `git hash-object packages/protocol-adapter/src/commerce-bindings.ts` | PASS: unchanged locked blob `47ab5e10cbf5f8f10bed718b4dd5190fe5dfe76f` (identical in HEAD, MERGE_HEAD and working tree). |
+
+The two resolved files remain unmerged in the index by design; staging and the merge commit are the supervisor's step. GitHub Actions exact-head CI remains the browser runner of record per the owner ruling.
+
 ## Risks and STOP boundary
 
 The emitted-assets size STOP is resolved by the owner ruling; the configured budgets and every other check remain in force and passed locally. If exact-head CI is not fully green, acceptance waits on that run; no local result substitutes for it.

@@ -80,7 +80,7 @@ export type EvidenceLostCause = "CORRUPT" | "UNSUPPORTED_VERSION" | "LOST_DURING
 export type JournalStatus =
   | { kind: "ready" }
   | { kind: "evidence-lost"; cause: EvidenceLostCause }
-  | { kind: "unavailable"; cause: "NO_STORE" | "WRITE_REFUSED" };
+  | { kind: "unavailable"; cause: "NO_STORE" | "WRITE_REFUSED" | "COUNTER_EXHAUSTED" };
 
 export type JournalRefusal =
   | "FIELD_REFUSED"
@@ -88,7 +88,8 @@ export type JournalRefusal =
   | "WRITE_REFUSED"
   | "EVIDENCE_LOST"
   | "UNAVAILABLE"
-  | "DUPLICATE_INTENT";
+  | "DUPLICATE_INTENT"
+  | "COUNTER_EXHAUSTED";
 
 export type BeginResult = { ok: true; record: SessionRecord } | { ok: false; reason: JournalRefusal };
 
@@ -98,7 +99,7 @@ export type SettleResult =
 
 export type ScopeBlock =
   | { reason: "evidence-lost"; cause: EvidenceLostCause }
-  | { reason: "unavailable"; cause: "NO_STORE" | "WRITE_REFUSED" }
+  | { reason: "unavailable"; cause: "NO_STORE" | "WRITE_REFUSED" | "COUNTER_EXHAUSTED" }
   | { reason: "unresolved"; record: SessionRecord; recovered: boolean; earlierLoad: boolean };
 
 interface Envelope {
@@ -154,12 +155,20 @@ function sameKeys(value: Record<string, unknown>, keys: readonly string[]): bool
   return own.length === keys.length && keys.every((key) => own.includes(key));
 }
 
+function isPositiveSafeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
+}
+
+function incrementCounter(value: number): number | null {
+  return isPositiveSafeInteger(value) && value < Number.MAX_SAFE_INTEGER ? value + 1 : null;
+}
+
 function parseRecord(value: unknown, loads: number, nextSeq: number): SessionRecord | null {
   if (!isPlainObject(value) || !sameKeys(value, RECORD_KEYS)) {
     return null;
   }
   const { seq, intentRef, scope, contextTag, outcome, code, loadNo } = value;
-  if (!Number.isInteger(seq) || (seq as number) < 1 || (seq as number) >= nextSeq) {
+  if (!isPositiveSafeInteger(seq) || seq >= nextSeq) {
     return null;
   }
   if (typeof intentRef !== "string" || !TOKEN.test(intentRef) || typeof scope !== "string" || !TOKEN.test(scope)) {
@@ -174,7 +183,7 @@ function parseRecord(value: unknown, loads: number, nextSeq: number): SessionRec
   if (code !== null && (typeof code !== "string" || !CODE.test(code))) {
     return null;
   }
-  if (!Number.isInteger(loadNo) || (loadNo as number) < 1 || (loadNo as number) > loads) {
+  if (!isPositiveSafeInteger(loadNo) || loadNo > loads) {
     return null;
   }
   return { seq: seq as number, intentRef, scope, contextTag, outcome: outcome as SessionOutcome, code, loadNo: loadNo as number };
@@ -203,7 +212,7 @@ function parseEnvelope(raw: string, budget: SessionJournalBudget): Parsed {
     return bad("CORRUPT");
   }
   const { loads, nextSeq, records, digest } = value;
-  if (!Number.isInteger(loads) || (loads as number) < 1 || !Number.isInteger(nextSeq) || (nextSeq as number) < 1) {
+  if (!isPositiveSafeInteger(loads) || !isPositiveSafeInteger(nextSeq)) {
     return bad("CORRUPT");
   }
   if (!Array.isArray(records) || records.length > budget.maxRecords || typeof digest !== "string") {
@@ -226,6 +235,18 @@ function parseEnvelope(raw: string, budget: SessionJournalBudget): Parsed {
     return bad("CORRUPT");
   }
   return { kind: "ok", env };
+}
+
+function quarantinedCause(text: string, requireVersion = false): EvidenceLostCause {
+  try {
+    const value: unknown = JSON.parse(text);
+    if (isPlainObject(value) && (!requireVersion || value.v === SESSION_JOURNAL_VERSION) && (value.cause === "CORRUPT" || value.cause === "UNSUPPORTED_VERSION" || value.cause === "LOST_DURING_SESSION")) {
+      return value.cause;
+    }
+  } catch {
+    // A damaged quarantine entry still means evidence was lost.
+  }
+  return "CORRUPT";
 }
 
 export interface OpenSessionJournalOptions {
@@ -255,7 +276,7 @@ export class SessionJournal {
     return this.current.kind === "ready" ? { kind: "ready" } : { ...this.current };
   }
 
-  /** The page load number of this journal. Zero when there is no ready journal. */
+  /** The stored load counter, retained even when no new load can be acquired. Zero without an envelope. */
   load(): number {
     return this.env === null ? 0 : this.env.loads;
   }
@@ -300,7 +321,7 @@ export class SessionJournal {
       return this;
     }
     if (quarantined !== null) {
-      this.current = { kind: "evidence-lost", cause: this.quarantinedCause(quarantined) };
+      this.current = { kind: "evidence-lost", cause: quarantinedCause(quarantined) };
       return this;
     }
     if (raw === null) {
@@ -318,27 +339,20 @@ export class SessionJournal {
       return this;
     }
     const env = parsed.env;
-    env.loads += 1;
+    const nextLoad = incrementCounter(env.loads);
     this.recoveredAtOpen = this.markInFlight(env, "RECOVERED_AFTER_RELOAD");
     this.env = env;
     this.lastWritten = raw;
+    if (nextLoad === null) {
+      this.current = { kind: "unavailable", cause: "COUNTER_EXHAUSTED" };
+      return this;
+    }
+    env.loads = nextLoad;
     if (this.persist(env) !== null) {
       // The store still holds the older blob. Its in-flight records recover the same way on the next load.
       this.dirty = true;
     }
     return this;
-  }
-
-  private quarantinedCause(text: string): EvidenceLostCause {
-    try {
-      const value: unknown = JSON.parse(text);
-      if (isPlainObject(value) && (value.cause === "CORRUPT" || value.cause === "UNSUPPORTED_VERSION" || value.cause === "LOST_DURING_SESSION")) {
-        return value.cause;
-      }
-    } catch {
-      // A damaged quarantine entry still means evidence was lost.
-    }
-    return "CORRUPT";
   }
 
   /** Moves the damaged blob aside, or records that the blob is gone. If that write fails, the original stays where it is and the hold lasts this page load only. */
@@ -424,7 +438,7 @@ export class SessionJournal {
       this.quarantine(null, "LOST_DURING_SESSION");
       return this.status();
     }
-    if (this.dirty || raw === this.lastWritten) {
+    if (raw === this.lastWritten) {
       return this.status();
     }
     const parsed = parseEnvelope(raw, this.budget);
@@ -432,8 +446,12 @@ export class SessionJournal {
       this.quarantine(raw, parsed.cause);
       return this.status();
     }
-    this.env = parsed.env;
-    this.lastWritten = raw;
+    // Valid older storage must not replace UNKNOWN evidence after a refused write.
+    // Keep lastWritten as the restore target while the in-memory state is ahead.
+    if (!this.dirty) {
+      this.env = parsed.env;
+      this.lastWritten = raw;
+    }
     return this.status();
   }
 
@@ -485,6 +503,10 @@ export class SessionJournal {
     if (env.records.length >= this.budget.maxRecords) {
       return { ok: false, reason: "JOURNAL_FULL" };
     }
+    const nextSeq = incrementCounter(env.nextSeq);
+    if (nextSeq === null) {
+      return { ok: false, reason: "COUNTER_EXHAUSTED" };
+    }
     const record: SessionRecord = {
       seq: env.nextSeq,
       intentRef: input.intentRef,
@@ -494,7 +516,7 @@ export class SessionJournal {
       code: null,
       loadNo: env.loads,
     };
-    const next: Envelope = { ...env, nextSeq: env.nextSeq + 1, records: [...env.records, record] };
+    const next: Envelope = { ...env, nextSeq, records: [...env.records, record] };
     // Leave room for every open record to settle as UNKNOWN with the longest code, so a settle never overflows.
     const worst: Envelope = {
       ...next,
@@ -545,7 +567,7 @@ export class SessionJournal {
    * the store holds it.
    */
   markUnknown(intentRef: string, code: string): boolean {
-    if (this.env === null || !CODE.test(code)) {
+    if (this.gateStatus() !== null || this.env === null || !CODE.test(code)) {
       return false;
     }
     const target = this.env.records.find((item) => item.intentRef === intentRef);
@@ -584,7 +606,7 @@ export type SessionJournalPeek =
   | { kind: "empty" }
   | { kind: "ready"; usedRecords: number; maxRecords: number; usedBytes: number; maxBytes: number; full: boolean }
   | { kind: "evidence-lost"; cause: EvidenceLostCause }
-  | { kind: "unavailable"; cause: "NO_STORE" };
+  | { kind: "unavailable"; cause: "NO_STORE" | "COUNTER_EXHAUSTED" };
 
 /** Inspection only: no load increment, recovery, quarantine write, or removal. */
 export function peekSessionJournal(store: Pick<SessionStorePort, "getItem"> | null, budget = SESSION_JOURNAL_BUDGET): SessionJournalPeek {
@@ -592,18 +614,13 @@ export function peekSessionJournal(store: Pick<SessionStorePort, "getItem"> | nu
   try {
     const marker = store.getItem(SESSION_JOURNAL_QUARANTINE_KEY);
     if (marker !== null) {
-      let cause: EvidenceLostCause = "CORRUPT";
-      try {
-        const value: unknown = JSON.parse(marker);
-        if (isPlainObject(value) && value.v === SESSION_JOURNAL_VERSION &&
-            (value.cause === "CORRUPT" || value.cause === "UNSUPPORTED_VERSION" || value.cause === "LOST_DURING_SESSION")) cause = value.cause;
-      } catch { /* A malformed quarantine marker is evidence loss too. */ }
-      return { kind: "evidence-lost", cause };
+      return { kind: "evidence-lost", cause: quarantinedCause(marker, true) };
     }
     const raw = store.getItem(SESSION_JOURNAL_KEY);
     if (raw === null) return { kind: "empty" };
     const parsed = parseEnvelope(raw, budget);
     if (parsed.kind !== "ok") return { kind: "evidence-lost", cause: parsed.cause };
+    if (incrementCounter(parsed.env.loads) === null) return { kind: "unavailable", cause: "COUNTER_EXHAUSTED" };
     const usedBytes = byteLength(raw);
     const usedRecords = parsed.env.records.length;
     return { kind: "ready", usedRecords, usedBytes, ...budget, full: usedRecords >= budget.maxRecords || usedBytes >= budget.maxBytes };

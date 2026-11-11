@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -39,6 +40,8 @@ import {
 import { TenantPermissionsPage } from "../src/pages/TenantPermissions";
 import { WORKSPACE_RULING, WORKSPACE_SURFACES } from "../src/workspace/registry";
 
+import { change, click, element, renderDom } from "./support/render-dom";
+
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = path.resolve(webRoot, "../..");
 
@@ -56,6 +59,7 @@ const POSITIVE_CLAIMS = [
 
 const NO_ACTIONS: TenantActions = {
   refresh() {},
+  recoverRole() {},
   openResource() {},
   loadExport() {},
   proposeAccountChange() {},
@@ -545,4 +549,85 @@ describe("tenant permissions not-bound and registry", () => {
     expect(markup).toContain('data-provenance="synthetic"');
     expectClean(markup);
   });
+});
+
+describe("tenant mutation isolation in fresh page models", () => {
+  it("keeps a self approval blocked after a caller repairs its copied evidence", async () => {
+    const r = rig("self-approval", TENANT_DUAL_ACTOR, "organizer");
+    await ready(r);
+    const view = r.controller.state();
+    view.snapshot!.proposals[0]!.proposedBy = TENANT_SETTLER_ACTOR;
+    view.assessment!.approvable = view.snapshot!.proposals;
+    const model = modelOf(r);
+    expect(await r.controller.approveProposal("ppr-0001")).toMatchObject({ kind: "NOT_SENT" });
+    const markup = pageHtml(model, "self-approval", "stub", TENANT_DUAL_ACTOR, "organizer");
+    expect(markup).toContain('data-block="approve"');
+    expect(markup).toMatch(/id="tenant-approve-ppr-0001"[^>]*data-enabled="false"/);
+    expect(r.controller.state().counters.acts).toBe(0);
+  });
+
+  it("keeps a withheld export hidden after a caller changes its copied verdict and rows", async () => {
+    const r = rig("export-leak", TENANT_SETTLER_ACTOR, "settler");
+    await ready(r);
+    await r.controller.loadExport();
+    const view = r.controller.state();
+    view.export.verdict!.current = true;
+    view.export.verdict!.reasons = [];
+    view.export.value!.scope.tenantId = view.context.scope.tenantId;
+    view.export.value!.scopeDeclaration.sharedOutsideTenant = false;
+    view.export.value!.rows[0]!.label = "mutated export text";
+    const model = modelOf(r);
+    expect(model.export.verdictWord).toBe("withheld");
+    const markup = pageHtml(model, "export-leak", "stub", TENANT_SETTLER_ACTOR, "settler");
+    expect(markup).not.toContain("data-export-row=");
+    expect(markup).not.toContain("acc-9001");
+    expect(markup).not.toContain("Foreign payout account");
+    expect(markup).not.toContain("mutated export text");
+  });
+
+  it("keeps UNKNOWN controls fenced after result and state mutation and a refresh", async () => {
+    const r = rig("act-lost", TENANT_SETTLER_ACTOR, "settler");
+    await ready(r);
+    const result = await r.controller.proposeAccountChange("acc-0001", "original");
+    if (result.kind !== "UNKNOWN") throw new Error("UNKNOWN fixture required");
+    result.record.phase = "applied";
+    result.record.action = { kind: "approve-proposal", proposalRef: "ppr-9999" };
+    const view = r.controller.state();
+    if (view.fence?.reason === "unknown-outcome") view.fence.seq = 999;
+    view.fence = null;
+    view.behind = false;
+    view.last = null;
+    await ready(r);
+    expect((await r.controller.proposeAccountChange("acc-0001", "again")).kind).toBe("FENCED");
+    const markup = pageHtml(modelOf(r), "act-lost", "stub", TENANT_SETTLER_ACTOR, "settler");
+    expect(markup).toContain('data-request-phase="unknown"');
+    expect(markup).toContain('data-fence="true"');
+    expect(markup).toMatch(/id="tenant-account-acc-0001"[^>]*data-enabled="false"/);
+    expect(r.controller.state().counters.acts).toBe(1);
+  });
+});
+
+
+it.each(["clean", "act-lost"])("mounted recovery control obtains generation 2 on the same source (%s)", async (scenario) => {
+  const { container } = await renderDom(<MemoryRouter initialEntries={["/permissions"]}><TenantPermissionsPage /></MemoryRouter>);
+  await change(element(container, "#tenant-scenario"), scenario);
+  await click(element(container, "#tenant-apply-scenario"));
+  await change(element(container, "#tenant-actor"), "person-settler");
+  await click(element(container, "#tenant-apply-actor"));
+  await change(element(container, "#tenant-role"), "settler");
+  await click(element(container, "#tenant-apply-role"));
+  await click(element(container, "#tenant-account-acc-0001"));
+  await click(element(container, "#tenant-rotate-role"));
+  await click(element(container, "#tenant-refresh"));
+  expect(element(container, "#tenant-status").getAttribute("data-tenant-state")).toBe("role-stale");
+  const counters = element(container, "#tenant-session").textContent!;
+  const reads = Number(/Reads (\d+)/.exec(counters)![1]);
+  await click(element(container, "#tenant-return-action"));
+  expect(element(container, "#tenant-status").getAttribute("data-tenant-state")).toBe("ready");
+  expect(element(container, "#tenant-status").textContent).toContain("Assignment read generation 2");
+  expect(element(container, "#tenant-session").textContent).toContain(`Reads ${reads + 1}.`);
+  expect(element(container, "#tenant-session").textContent).toContain("Requests 1.");
+  expect(container.querySelectorAll("[data-proposal]")).toHaveLength(1);
+  expect(element(container, "#tenant-account-acc-0002").getAttribute("data-enabled")).toBe(scenario === "clean" ? "true" : "false");
+  if (scenario === "act-lost") expect(container.querySelector("[data-fence=true]")).not.toBeNull();
 });

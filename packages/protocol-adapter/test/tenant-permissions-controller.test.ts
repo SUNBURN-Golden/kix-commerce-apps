@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   TENANT_BUYER_ACTOR,
   TENANT_DUAL_ACTOR,
@@ -11,6 +11,8 @@ import {
   TenantPermissionsController,
   createNotBoundTenantPermissions,
   createStubTenantPermissions,
+  judgeTenantExport,
+  tenantExportRowsFor,
   type StubTenantPermissions,
   type TenantActOutcome,
   type TenantActRequest,
@@ -348,7 +350,7 @@ describe("tenant controller sends", () => {
     expect(controller.state().behind).toBe(true);
   });
 
-  it("an unknown request outcome fences every later request until a new context", async () => {
+  it("an unknown request outcome fences every later request across new contexts", async () => {
     const inner = createStubTenantPermissions();
     const port: TenantPermissionsPort = {
       environment: inner.environment,
@@ -379,6 +381,9 @@ describe("tenant controller sends", () => {
     const controller = new TenantPermissionsController(spy.port, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
     await controller.read();
     const pending = controller.proposeAccountChange("acc-0001", "first");
+    const key = controller.state().context.key;
+    expect(await controller.recoverRole()).toEqual({ kind: "NOT_SENT", reason: "in-flight" });
+    expect(controller.state().context.key).toBe(key);
     const during = await controller.proposeAccountChange("acc-0002", "second");
     expect(during.kind).toBe("FENCED");
     if (during.kind === "FENCED") {
@@ -509,4 +514,471 @@ describe("support role workspace on the desk", () => {
     expect(state.snapshot?.visibleKinds).toEqual(["member", "order"]);
     expect(state.snapshot?.members.map((row) => row.actorRef)).toEqual([TENANT_BUYER_ACTOR]);
   });
+});
+
+/** Mutate every nested scalar, including readonly collections, as an untyped consumer could. */
+function corruptEvidence(value: unknown, seen = new Set<object>()): void {
+  if (value === null || typeof value !== "object" || seen.has(value)) return;
+  seen.add(value);
+  for (const [key, child] of Object.entries(value)) {
+    if (child !== null && typeof child === "object") corruptEvidence(child, seen);
+    else Reflect.set(value, key, typeof child === "number" ? child + 99 : typeof child === "boolean" ? !child : "mutated");
+  }
+}
+
+/** Retains the actual port objects, deliberately without the spyOn helper's copies. */
+function retainedPort(scenario: TenantScenario = "clean") {
+  const inner = createStubTenantPermissions({ scenario });
+  const reads: TenantReadOutcome[] = [];
+  const exports: TenantExportOutcome[] = [];
+  const acts: TenantActRequest[] = [];
+  const outcomes: TenantActOutcome[] = [];
+  const port: TenantPermissionsPort = {
+    environment: inner.environment,
+    source: inner.source,
+    scenario: inner.scenario,
+    synthetic: (control, ref) => inner.synthetic(control, ref),
+    async read(request) {
+      const outcome = structuredClone(await inner.read(request));
+      reads.push(outcome);
+      return outcome;
+    },
+    async readExport(request) {
+      const outcome = structuredClone(await inner.readExport(request));
+      exports.push(outcome);
+      return outcome;
+    },
+    async act(request) {
+      acts.push(request);
+      const outcome = await inner.act(request);
+      outcomes.push(outcome);
+      return outcome;
+    },
+  };
+  return { port, reads, exports, acts, outcomes };
+}
+
+describe("tenant evidence ownership", () => {
+  it.each([
+    [TENANT_BUYER_ACTOR, "buyer", "ord-0001"],
+    [TENANT_ORGANIZER_ACTOR, "organizer", "evn-0001"],
+    [TENANT_SETTLER_ACTOR, "settler", "acc-0001"],
+    [TENANT_SUPPORT_ACTOR, "support", "tck-0001"],
+  ] as const)("detaches all snapshot and assessment rows for %s / %s", async (actorRef, role, focus) => {
+    const retained = retainedPort("proposal-pending");
+    const controller = new TenantPermissionsController(retained.port, { actorRef, role });
+    // Generate source audit evidence before opening a permitted resource.
+    await controller.read("acc-9999");
+    await controller.read(focus);
+    const expected = controller.state();
+    expect(expected.snapshot?.focus).not.toBeNull();
+    const sendable = controller.canSend("approve-proposal");
+    for (const response of retained.reads) corruptEvidence(response);
+    corruptEvidence(controller.state());
+    expect(controller.state()).toEqual(expected);
+    expect(controller.state()).not.toBe(controller.state());
+    expect(controller.canSend("approve-proposal")).toEqual(sendable);
+    await controller.read();
+    expect(controller.state().readState).toBe("ready"); // floors and scope still belong to the controller
+  });
+
+  it("cannot turn a self proposal into an approvable proposal through either evidence boundary", async () => {
+    const retained = retainedPort("self-approval");
+    const controller = new TenantPermissionsController(retained.port, { actorRef: TENANT_DUAL_ACTOR, role: "organizer" });
+    await controller.read();
+    const response = retained.reads[0]!;
+    const publicState = controller.state();
+    if (response.kind !== "ready" || publicState.snapshot === null || publicState.assessment === null) throw new Error("ready fixture required");
+    response.snapshot.proposals[0]!.proposedBy = TENANT_SETTLER_ACTOR;
+    publicState.snapshot.proposals[0]!.proposedBy = TENANT_SETTLER_ACTOR;
+    publicState.snapshot.proposals[0]!.state = "pending";
+    publicState.assessment.approvable = publicState.snapshot.proposals;
+    corruptEvidence(publicState.assessment.pending);
+    expect(controller.canSend("approve-proposal").allowed).toBe(false);
+    expect(await controller.approveProposal("ppr-0001")).toMatchObject({ kind: "NOT_SENT", reason: "blocked" });
+    expect(retained.acts).toHaveLength(0);
+  });
+
+  it.each(["clean", "export-leak"] as const)("owns export rows, declarations and verdicts in %s", async (scenario) => {
+    const retained = retainedPort(scenario);
+    const controller = new TenantPermissionsController(retained.port, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+    await controller.read();
+    await controller.loadExport();
+    const expected = controller.state();
+    expect(expected.export.verdict?.current).toBe(scenario === "clean");
+    for (const response of retained.exports) corruptEvidence(response);
+    const view = controller.state();
+    if (view.export.verdict) { view.export.verdict.current = true; view.export.verdict.reasons = []; }
+    corruptEvidence(view);
+    expect(controller.state()).toEqual(expected);
+    expect(controller.canExport().allowed).toBe(true);
+  });
+
+  it("cannot repair a withheld export through retained or public evidence", async () => {
+    const retained = retainedPort("export-leak");
+    const controller = new TenantPermissionsController(retained.port, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+    await controller.read();
+    await controller.loadExport();
+    const expected = controller.state();
+    const response = retained.exports[0]!;
+    if (response.kind !== "ready" || expected.snapshot === null) throw new Error("ready fixture required");
+    const repair = { ...response.export, rows: tenantExportRowsFor(expected.snapshot), declaredRowCount: tenantExportRowsFor(expected.snapshot).length };
+    expect(judgeTenantExport(expected.snapshot, repair).current).toBe(true); // the attack really would enable display
+    Object.assign(response.export, repair);
+    const publicView = controller.state();
+    Object.assign(publicView.export.value!, repair);
+    publicView.export.verdict = { current: true, reasons: [] };
+    expect(controller.state()).toEqual(expected);
+    expect(controller.state().export.verdict?.current).toBe(false);
+  });
+
+  it("cannot change tenant scope through retained snapshots or published context", async () => {
+    const retained = retainedPort();
+    const controller = new TenantPermissionsController(retained.port, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+    await controller.read();
+    const expected = controller.state();
+    for (const response of retained.reads) {
+      if (response.kind === "ready") {
+        response.snapshot.scope.tenantId = TENANT_FOREIGN;
+        response.snapshot.scope.role = "organizer";
+        response.snapshot.actorRef = TENANT_ORGANIZER_ACTOR;
+      }
+    }
+    const view = controller.state();
+    view.context.scope.tenantId = TENANT_FOREIGN;
+    view.context.scope.role = "organizer";
+    view.context.actorRef = TENANT_ORGANIZER_ACTOR;
+    view.context.key = "attacker|key";
+    if (view.snapshot !== null) {
+      view.snapshot.scope.tenantId = TENANT_FOREIGN;
+      view.snapshot.actorRef = TENANT_ORGANIZER_ACTOR;
+    }
+    expect(controller.state().context).toEqual(expected.context);
+    expect(controller.state().snapshot?.scope).toEqual(expected.snapshot?.scope);
+    expect(await controller.proposeAccountChange("acc-0001", "original")).toMatchObject({ kind: "APPLIED" });
+    expect(retained.acts.at(-1)).toMatchObject({
+      contextKey: expected.context.key,
+      actorRef: TENANT_SETTLER_ACTOR,
+      scope: { tenantId: TENANT_OWN, role: "settler" },
+    });
+  });
+
+  it("keeps read/export scope and later write context despite mutation of exact received requests", async () => {
+    const retained = retainedPort();
+    const reads: TenantReadRequest[] = [];
+    const exports: TenantExportRequest[] = [];
+    const controller = new TenantPermissionsController({
+      ...retained.port,
+      async read(request) {
+        reads.push(request);
+        const response = await retained.port.read(request);
+        corruptEvidence(request);
+        return response;
+      },
+      async readExport(request) {
+        exports.push(request);
+        const response = await retained.port.readExport(request);
+        corruptEvidence(request);
+        return response;
+      },
+    }, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+    await controller.read();
+    await controller.loadExport();
+    const expected = controller.state().context;
+    expect(controller.state().export.verdict?.current).toBe(true);
+    await controller.read();
+    expect(await controller.proposeAccountChange("acc-0001", "original")).toMatchObject({ kind: "APPLIED" });
+    expect(retained.acts[0]).toMatchObject({ contextKey: expected.key, actorRef: expected.actorRef, scope: { ...expected.scope, roleGeneration: 1 } });
+    expect(reads).toHaveLength(2);
+    expect(exports).toHaveLength(1);
+    expect(controller.state().context).toEqual(expected);
+  });
+
+  it.each([
+    [TENANT_SETTLER_ACTOR, "settler", "propose-account-change"],
+    [TENANT_SUPPORT_ACTOR, "support", "propose-role-revoke"],
+    [TENANT_ORGANIZER_ACTOR, "organizer", "approve-proposal"],
+  ] as const)("captures %s / %s / %s before reentrant notification and isolates exact dispatch and receipt", async (actorRef, role, kind) => {
+    const retained = retainedPort(kind === "approve-proposal" ? "proposal-pending" : "clean");
+    let release!: (outcome: TenantActOutcome) => void;
+    let received!: TenantActRequest;
+    let original!: TenantActRequest;
+    let calls = 0;
+    const port: TenantPermissionsPort = {
+      ...retained.port,
+      act(request) {
+        calls += 1;
+        received = request; // retain the EXACT object, then mutate synchronously and while pending
+        original = structuredClone(request);
+        corruptEvidence(request);
+        return new Promise((resolve) => { release = resolve; });
+      },
+    };
+    const controller = new TenantPermissionsController(port, { actorRef, role });
+    await controller.read();
+    let reentrant: Promise<unknown> | undefined;
+    let attacked = false;
+    controller.subscribe(() => {
+      const view = controller.state();
+      if (view.fence?.reason !== "in-flight" || attacked) return;
+      attacked = true;
+      corruptEvidence(view);
+      expect(controller.switchTenant(TENANT_FOREIGN)).toBeNull();
+      reentrant = controller.approveProposal("ppr-0001");
+    });
+    const pending = kind === "propose-account-change" ? controller.proposeAccountChange("acc-0001", "original note")
+      : kind === "propose-role-revoke" ? controller.proposeRoleRevoke("mbr-0001", "original note")
+        : controller.approveProposal("ppr-0001");
+    expect(await reentrant).toMatchObject({ kind: "FENCED", fence: { reason: "in-flight", action: kind } });
+    corruptEvidence(received);
+    const outcome = await retained.port.act(original);
+    const expectedReceipt = outcome.kind === "applied" ? structuredClone(outcome.receipt) : null;
+    release(outcome);
+    const result = await pending;
+    expect(result.kind).toBe("APPLIED");
+    if (result.kind !== "APPLIED") throw new Error("applied fixture required");
+    expect(result.record).toMatchObject({ seq: 1, action: original.action, receipt: expectedReceipt });
+    expect(received.action).not.toBe(result.record.action);
+    expect(result.record).not.toBe(controller.state().last);
+    const expected = controller.state();
+    corruptEvidence(outcome);
+    corruptEvidence(result.record);
+    corruptEvidence(controller.state().last);
+    expect(controller.state()).toEqual(expected);
+    expect(calls).toBe(1);
+    await controller.read();
+    await controller.loadExport();
+    expect(controller.state().context).toEqual(expected.context);
+    expect(controller.state().snapshot?.roleGeneration).toBe(original.scope.roleGeneration);
+  });
+
+  it.each(["unknown", "refused", "rejected"] as const)("isolates %s records and preserves UNKNOWN fences across refresh", async (phase) => {
+    const retained = retainedPort();
+    const outcome: TenantActOutcome = phase === "unknown" ? { kind: "unknown", message: "lost" }
+      : phase === "refused" ? { kind: "refused", code: "SCOPE_LEAK", field: "scope", ref: null, detail: "refused" }
+        : { kind: "rejected", code: "ROLE_STALE", detail: "rotated" };
+    let calls = 0;
+    const controller = new TenantPermissionsController({ ...retained.port, act: async () => { calls += 1; return outcome; } }, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+    await controller.read();
+    const result = await controller.proposeAccountChange("acc-0001", "original");
+    expect(result.kind).toBe(phase === "rejected" ? "REJECTED" : "UNKNOWN");
+    if (!("record" in result)) throw new Error("record required");
+    const expected = controller.state();
+    corruptEvidence(outcome);
+    corruptEvidence(result.record);
+    corruptEvidence(controller.state());
+    expect(controller.state()).toEqual(expected);
+    if (phase === "rejected") return;
+    expect(expected.behind).toBe(true);
+    for (let round = 0; round < 2; round += 1) {
+      await controller.read();
+      await controller.loadExport();
+      for (const next of [
+        await controller.proposeAccountChange("acc-0001", "again"),
+        await controller.proposeRoleRevoke("mbr-0001", "again"),
+        await controller.approveProposal("ppr-0001"),
+      ]) {
+        expect(next).toEqual({ kind: "FENCED", fence: { reason: "unknown-outcome", seq: 1, action: "propose-account-change" } });
+        corruptEvidence(next);
+      }
+      expect(controller.state().fence).toEqual(expected.fence);
+    }
+    expect(calls).toBe(1);
+  });
+});
+
+describe("tenant copy failures stay closed", () => {
+  function failNextCopy() {
+    return vi.spyOn(globalThis, "structuredClone").mockImplementationOnce(() => { throw new Error("copy unavailable"); });
+  }
+
+  it("does not retain a read response when detachment fails", async () => {
+    const inner = createStubTenantPermissions();
+    const response = structuredClone(await inner.read({ contextKey: "fixture", actorRef: TENANT_SETTLER_ACTOR, scope: { tenantId: TENANT_OWN, role: "settler" }, focusRef: null, roleFloor: null, watermarkFloor: null }));
+    const controller = new TenantPermissionsController({ ...spyOn(inner).port, read: async () => response }, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+    const spy = failNextCopy();
+    try { await controller.read(); } finally { spy.mockRestore(); }
+    const expected = controller.state();
+    expect(expected).toMatchObject({ readState: "unavailable", readDetail: "copy unavailable", snapshot: null, assessment: null, freshness: "UNAVAILABLE" });
+    corruptEvidence(response);
+    expect(controller.state()).toEqual(expected);
+    expect(controller.canSend("propose-account-change").allowed).toBe(false);
+  });
+
+  it("discards an earlier export when the next export cannot be detached", async () => {
+    const inner = createStubTenantPermissions();
+    const response = await inner.readExport({ contextKey: "fixture", actorRef: TENANT_SETTLER_ACTOR, scope: { tenantId: TENANT_OWN, role: "settler" } });
+    const controller = new TenantPermissionsController({ ...spyOn(inner).port, readExport: async () => response }, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+    await controller.read();
+    await controller.loadExport();
+    expect(controller.state().export.phase).toBe("loaded");
+    const spy = failNextCopy();
+    try { await controller.loadExport(); } finally { spy.mockRestore(); }
+    expect(controller.state().export).toEqual({ phase: "unavailable", code: null, detail: "copy unavailable", value: null, verdict: null });
+    corruptEvidence(response);
+    expect(controller.state().export.value).toBeNull();
+  });
+
+  it("treats a dispatched success with a copy failure as UNKNOWN without committing its receipt", async () => {
+    const retained = retainedPort();
+    const response: TenantActOutcome = { kind: "applied", receipt: { kind: "proposal-recorded", proposalRef: "ppr-0001", targetRef: "acc-0001", changeKind: "account-change", resourceChanged: false, approvalChangesResource: false } };
+    let calls = 0;
+    const controller = new TenantPermissionsController({ ...retained.port, act: async () => { calls += 1; return response; } }, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+    await controller.read();
+    const spy = failNextCopy();
+    let result;
+    try { result = await controller.proposeAccountChange("acc-0001", "original"); } finally { spy.mockRestore(); }
+    expect(result).toMatchObject({ kind: "UNKNOWN", record: { phase: "unknown", receipt: null, detail: "copy unavailable" } });
+    expect(controller.state()).toMatchObject({ behind: true, fence: { reason: "unknown-outcome", seq: 1, action: "propose-account-change" } });
+    corruptEvidence(response);
+    await controller.read();
+    await controller.loadExport();
+    for (const later of [await controller.proposeAccountChange("acc-0001", "again"), await controller.proposeRoleRevoke("mbr-0001", "again"), await controller.approveProposal("ppr-0001")]) expect(later.kind).toBe("FENCED");
+    expect(calls).toBe(1);
+    expect(controller.state().last?.receipt).toBeNull();
+  });
+
+  it.each([false, true])("state() does not throw or expose retained evidence on copy failure (unknown=%s)", async (unknown) => {
+    const retained = retainedPort();
+    const controller = new TenantPermissionsController(unknown ? { ...retained.port, act: async () => ({ kind: "unknown", message: "lost" }) } : retained.port, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+    await controller.read();
+    await controller.loadExport();
+    await controller.proposeAccountChange("acc-0001", "original");
+    const expected = controller.state();
+    const spy = failNextCopy();
+    let closed;
+    try { closed = controller.state(); } finally { spy.mockRestore(); }
+    expect(closed).toMatchObject({ readState: "unavailable", readDetail: "copy unavailable", snapshot: null, assessment: null, freshness: "UNAVAILABLE", export: { phase: "unavailable", value: null, verdict: null }, fence: expected.fence, last: expected.last });
+    expect(closed.last).not.toBe(expected.last);
+    corruptEvidence(closed);
+    expect(controller.state()).toEqual(expected);
+    if (unknown) expect((await controller.proposeAccountChange("acc-0001", "again")).kind).toBe("FENCED");
+  });
+});
+
+// Audit 10: navigation changes view identity, never unresolved resource identity.
+it("retains exact unresolved identity through same-scope and A→B→A navigation", async () => {
+  const { controller } = controllerFor("act-lost", { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+  await controller.read();
+  const original = controller.state().context;
+  expect((await controller.proposeAccountChange("acc-0001", "x")).kind).toBe("UNKNOWN");
+  const record = controller.state().last;
+  controller.switchRole("settler");
+  expect(controller.state().snapshot).toBeNull();
+  await controller.read();
+  expect((await controller.proposeAccountChange("acc-0001", "x")).kind).toBe("FENCED");
+  controller.switchTenant(TENANT_FOREIGN);
+  expect(controller.state().fence).toBeNull();
+  controller.switchTenant(TENANT_OWN);
+  controller.switchRole("settler");
+  await controller.read();
+  expect(controller.state().context.key).not.toBe(original.key);
+  expect(controller.state().last).toEqual(record);
+  expect(controller.state().earlierUnknown).toBe(1);
+  expect(controller.canSend("propose-account-change").allowed).toBe(false);
+  expect((await controller.proposeAccountChange("acc-0001", "x")).kind).toBe("FENCED");
+  expect(controller.state().counters.acts).toBe(1);
+});
+
+it("another actor cannot bypass the shared resource fence or read the original request", async () => {
+  const { controller } = controllerFor("act-lost", { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+  await controller.read();
+  await controller.proposeAccountChange("acc-0001", "x");
+  controller.switchActor(TENANT_ORGANIZER_ACTOR);
+  expect(controller.state().last).toBeNull();
+  await controller.read();
+  expect((await controller.proposeAccountChange("acc-0001", "x")).kind).toBe("FENCED");
+  expect(controller.state().counters.acts).toBe(1);
+});
+
+it("detaches both port-owned and published snapshots, assessments and export material", async () => {
+  const inner = createStubTenantPermissions();
+  const captured = await inner.read({ contextKey: "test", actorRef: TENANT_SETTLER_ACTOR, scope: { tenantId: TENANT_OWN, role: "settler" }, focusRef: null, roleFloor: null, watermarkFloor: null });
+  if (captured.kind !== "ready") throw Error("Expected fixture read");
+  const port = spyOn(inner).port;
+  port.read = async () => captured;
+  const controller = new TenantPermissionsController(port, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+  await controller.read();
+  await controller.loadExport();
+  const before = controller.state();
+  captured.snapshot.visibleKinds = [];
+  (captured.snapshot.accounts as unknown[]).length = 0;
+  const published = controller.state();
+  (published.snapshot!.accounts as unknown[]).length = 0;
+  published.snapshot!.visibleKinds = [];
+  if (published.assessment) (published.assessment.accountTargets as unknown[]).length = 0;
+  if (published.export.value) (published.export.value.rows as unknown[]).length = 0;
+  expect(controller.state()).toEqual(before);
+  expect(controller.canSend("propose-account-change").allowed).toBe(true);
+});
+
+it.each(["clean", "act-lost"] as const)("explicit generation recovery preserves source records and UNKNOWN (%s)", async (scenario) => {
+  const inner = createStubTenantPermissions({ scenario });
+  const spy = spyOn(inner);
+  const controller = new TenantPermissionsController(spy.port, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+  await controller.read();
+  await controller.proposeAccountChange("acc-0001", "retained proposal");
+  const original = spy.actRequests[0];
+  const record = controller.state().last;
+  inner.synthetic("rotate-role", "mbr-0003");
+  await controller.read();
+  expect(controller.state().readState).toBe("role-stale");
+  // Ordinary refresh remains an ordinary read, never a generation reset.
+  await controller.read();
+  expect(spy.readRequests.at(-1)?.roleFloor).toBe(1);
+  const reads = spy.readRequests.length;
+  await controller.recoverRole();
+  expect(spy.readRequests).toHaveLength(reads + 1);
+  expect(spy.readRequests.at(-1)).toMatchObject({ actorRef: original!.actorRef, scope: { tenantId: TENANT_OWN, role: "settler" }, roleFloor: null, watermarkFloor: expect.any(String) });
+  expect(controller.state().snapshot).toMatchObject({ roleGeneration: 2, proposals: [expect.objectContaining({ note: "retained proposal" })] });
+  expect(controller.state().last).toEqual(record);
+  expect(controller.canSend("propose-account-change").allowed).toBe(scenario === "clean");
+  if (scenario === "act-lost") {
+    expect((await controller.proposeAccountChange("acc-0002", "blocked")).kind).toBe("FENCED");
+    expect(spy.actRequests).toEqual([original]);
+  } else {
+    await controller.proposeAccountChange("acc-0002", "new proposal");
+    expect(spy.actRequests.at(-1)?.scope.roleGeneration).toBe(2);
+  }
+});
+
+it("recovery drops obsolete read/export work and revoked assignments remain denied", async () => {
+  const inner = createStubTenantPermissions();
+  const options = { holdReads: false, holdExports: true };
+  const spy = spyOn(inner, options);
+  const controller = new TenantPermissionsController(spy.port, { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+  await controller.read();
+  options.holdReads = true;
+  const oldRead = controller.read();
+  const oldExport = controller.loadExport();
+  inner.synthetic("rotate-role", "mbr-0003");
+  const recovery = controller.recoverRole();
+  spy.heldReads[1]!.release();
+  expect(await recovery).toMatchObject({ kind: "APPLIED", readState: "ready" });
+  spy.heldReads[0]!.release();
+  spy.heldExports[0]!.release();
+  expect(await oldRead).toMatchObject({ kind: "DROPPED", cause: "context-changed" });
+  expect(await oldExport).toMatchObject({ kind: "DROPPED", cause: "context-changed" });
+  options.holdReads = false;
+  inner.synthetic("revoke-role", "mbr-0003");
+  expect(await controller.recoverRole()).toMatchObject({ kind: "APPLIED", readState: "denied" });
+  expect(controller.state().snapshot).toBeNull();
+  expect(spy.actRequests).toHaveLength(0);
+});
+
+it("an untrusted tenant approval stays fenced across role and actor changes", async () => {
+  const { controller } = controllerFor("approve-claims-applied", { actorRef: TENANT_SETTLER_ACTOR, role: "settler" });
+  await controller.read();
+  await controller.proposeAccountChange("acc-0001", "stage");
+  controller.switchActor(TENANT_ORGANIZER_ACTOR);
+  controller.switchRole("organizer");
+  await controller.read();
+  expect(await controller.approveProposal("ppr-0001")).toMatchObject({ kind: "UNKNOWN", record: { phase: "refused" } });
+  controller.switchRole("support");
+  expect(controller.state().last).toBeNull();
+  expect((await controller.approveProposal("ppr-0001")).kind).toBe("FENCED");
+  controller.switchRole("organizer");
+  await controller.read();
+  expect((await controller.approveProposal("ppr-0001")).kind).toBe("FENCED");
+  expect(controller.state().counters.acts).toBe(2);
 });

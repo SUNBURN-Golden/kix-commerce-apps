@@ -6,21 +6,17 @@ import {
   SESSION_JOURNAL_KEY,
   SESSION_JOURNAL_QUARANTINE_KEY,
   openSessionJournal,
+  peekSessionJournal,
 } from "../src/index.js";
 import { sha256Hex } from "../src/sha256.js";
 import { FakeSessionStore } from "./support/fake-session-store.js";
+
+import { invalidCounterFixtures, journalBlob as blob, journalRecord, MAX_COUNTER as M } from "./support/session-journal-fixtures.js";
 
 const TAG = "0123456789abcdef";
 
 function begin(journal: ReturnType<typeof openSessionJournal>, n: number, scope = `subject-${n}`) {
   return journal.begin({ intentRef: `intent-${n}`, scope, contextTag: TAG });
-}
-
-/** Builds a blob in the v1 shape with a valid digest, for hand-made damage. */
-function blob(overrides: Record<string, unknown> = {}, records: unknown[] = []): string {
-  const base = { v: 1, loads: 1, nextSeq: 1, records };
-  const digest = sha256Hex(JSON.stringify([base.v, base.loads, base.nextSeq, base.records]));
-  return JSON.stringify({ ...base, digest, ...overrides });
 }
 
 describe("session journal", () => {
@@ -29,7 +25,9 @@ describe("session journal", () => {
     const journal = openSessionJournal(store);
     expect(journal.status()).toEqual({ kind: "ready" });
     expect(journal.load()).toBe(1);
+    expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(blob());
     expect(begin(journal, 1)).toMatchObject({ ok: true, record: { seq: 1, outcome: "IN_FLIGHT", loadNo: 1 } });
+    expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(blob({ nextSeq: 2 }, [{ ...journalRecord, outcome: "IN_FLIGHT", code: null }]));
     // The record is in the store before anything is sent.
     expect(store.getItem(SESSION_JOURNAL_KEY)).toContain("intent-1");
     expect(journal.settle("intent-1", "CONFIRMED", null)).toMatchObject({ ok: true, record: { outcome: "CONFIRMED" } });
@@ -338,5 +336,148 @@ describe("session journal source", () => {
     for (const banned of ["localStorage", "document.cookie", "indexedDB", "fetch(", "Date", "Math.random(", "setTimeout", "retry", "fallback", "Number(", "parseInt", "BigInt", ".reduce(", "Idempotency", "capture", "placeHold", "commerce-bindings"]) {
       expect(source.includes(banned), banned).toBe(false);
     }
+  });
+});
+
+describe("journal counter integrity", () => {
+  const corrupt = { kind: "evidence-lost", cause: "CORRUPT" };
+  for (const { name, raw } of invalidCounterFixtures()) {
+    it(`rejects digest-valid ${name} on inspection, open, reopen, begin and settle`, () => {
+      const env = JSON.parse(raw);
+      // An independent canary: checksum damage cannot explain these numeric rejections.
+      expect(env.digest).toBe(sha256Hex(JSON.stringify([env.v, env.loads, env.nextSeq, env.records])));
+      if (name.endsWith("=-0")) expect(raw).toContain(":-0");
+      const store = new FakeSessionStore();
+      store.data.set(SESSION_JOURNAL_KEY, raw);
+      expect(peekSessionJournal({ getItem: (key) => store.getItem(key) })).toEqual(corrupt);
+      expect(store.sets).toBe(0);
+      expect(store.data.get(SESSION_JOURNAL_KEY)).toBe(raw);
+      const opened = openSessionJournal(store);
+      expect(opened.status()).toEqual(corrupt);
+      expect(openSessionJournal(store).status()).toEqual(corrupt);
+      expect(opened.scopeBlock("any")).toEqual({ reason: "evidence-lost", cause: "CORRUPT" });
+      expect(JSON.parse(store.data.get(SESSION_JOURNAL_QUARANTINE_KEY)!).raw).toBe(raw);
+      for (const operation of ["begin", "settle", "markUnknown", "recoverInFlight"] as const) {
+        const liveStore = new FakeSessionStore();
+        const live = openSessionJournal(liveStore);
+        begin(live, 1);
+        liveStore.data.set(SESSION_JOURNAL_KEY, raw);
+        if (operation === "begin") expect(begin(live, 2)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+        if (operation === "settle") expect(live.settle("intent-1", "CONFIRMED", null)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+        if (operation === "markUnknown") expect(live.markUnknown("intent-1", "TAB_RESUMED")).toBe(false);
+        if (operation === "recoverInFlight") expect(live.recoverInFlight("TAB_RESUMED")).toBe(0);
+        expect(live.status()).toEqual(corrupt);
+        expect(peekSessionJournal(liveStore)).toEqual(corrupt);
+        expect(openSessionJournal(liveStore).status()).toEqual(corrupt);
+      }
+    });
+  }
+
+  it("distinguishes integer safety from integer-ness and detects a wrong digest", () => {
+    expect(Number.isInteger(M + 1)).toBe(true);
+    expect(Number.isSafeInteger(M + 1)).toBe(false);
+    const store = new FakeSessionStore();
+    store.data.set(SESSION_JOURNAL_KEY, blob({ digest: "0".repeat(64) }));
+    expect(openSessionJournal(store).status()).toEqual(corrupt);
+    store.data.clear();
+    store.data.set(SESSION_JOURNAL_KEY, blob());
+    expect(openSessionJournal(store).status()).toEqual({ kind: "ready" });
+  });
+
+  it("acquires the last safe load, then refuses all writes on subsequent opens without touching storage", () => {
+    const store = new FakeSessionStore();
+    store.data.set(SESSION_JOURNAL_KEY, blob({ loads: M - 1, nextSeq: 4 }, [
+      { ...journalRecord, loadNo: M - 1 },
+      { ...journalRecord, seq: 2, intentRef: "intent-2", outcome: "CONFIRMED", code: null, loadNo: M - 1 },
+      { ...journalRecord, seq: 3, intentRef: "intent-3", outcome: "IN_FLIGHT", code: null, loadNo: M - 1 },
+    ]));
+    const last = openSessionJournal(store);
+    expect(last.status()).toEqual({ kind: "ready" });
+    expect(last.load()).toBe(M);
+    // The last acquired page can still allocate and settle a safe sequence.
+    expect(begin(last, 4)).toMatchObject({ ok: true });
+    expect(last.settle("intent-4", "CONFIRMED", null).ok).toBe(true);
+    // Include records from load M, so load exhaustion cannot mislabel them as current.
+    expect(begin(last, 5)).toMatchObject({ ok: true });
+    const raw = store.data.get(SESSION_JOURNAL_KEY);
+    const sets = store.sets;
+    for (let i = 0; i < 3; i += 1) {
+      const blocked = openSessionJournal(store);
+      expect(blocked.status()).toEqual({ kind: "unavailable", cause: "COUNTER_EXHAUSTED" });
+      expect(blocked.load()).toBe(M);
+      expect(blocked.records().map((r) => r.intentRef)).toEqual(last.records().map((r) => r.intentRef));
+      expect(blocked.records()[4]).toMatchObject({ outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD", loadNo: M });
+      expect(blocked.recoveredCount()).toBe(1);
+      expect(begin(blocked, 6)).toEqual({ ok: false, reason: "UNAVAILABLE" });
+      expect(blocked.settle("intent-5", "CONFIRMED", null)).toEqual({ ok: false, reason: "UNAVAILABLE" });
+      expect(blocked.markUnknown("intent-5", "TAB_RESUMED")).toBe(false);
+      expect(blocked.recoverInFlight("TAB_RESUMED")).toBe(0);
+      expect(blocked.scopeBlock("subject-1")).toEqual({ reason: "unavailable", cause: "COUNTER_EXHAUSTED" });
+      expect(blocked.scopeBlock("other")).toEqual(blocked.scopeBlock("subject-1"));
+      expect(blocked.verify()).toEqual(blocked.status());
+      expect(store.data.get(SESSION_JOURNAL_KEY)).toBe(raw);
+      expect(store.sets).toBe(sets);
+      expect(store.data.has(SESSION_JOURNAL_QUARANTINE_KEY)).toBe(false);
+      expect(peekSessionJournal(store)).toEqual(blocked.status());
+    }
+  });
+
+  it("allocates the final safe sequence, refuses further begins, and still settles without increments", () => {
+    const store = new FakeSessionStore();
+    const writes: string[] = [];
+    const set = store.setItem.bind(store);
+    store.setItem = (key, value) => { writes.push(value); set(key, value); };
+    store.data.set(SESSION_JOURNAL_KEY, blob({ loads: M - 2, nextSeq: M - 1 }, [{ ...journalRecord, seq: M - 2, loadNo: M - 2 }]));
+    const journal = openSessionJournal(store);
+    expect(journal.status()).toEqual({ kind: "ready" });
+    expect(begin(journal, M - 1)).toMatchObject({ ok: true, record: { seq: M - 1, loadNo: M - 1 } });
+    expect(journal.nextSeq()).toBe(M);
+    const before = store.data.get(SESSION_JOURNAL_KEY);
+    const sets = store.sets;
+    expect(begin(journal, M)).toEqual({ ok: false, reason: "COUNTER_EXHAUSTED" });
+    expect(store.data.get(SESSION_JOURNAL_KEY)).toBe(before);
+    expect(store.sets).toBe(sets);
+    expect(journal.settle(`intent-${M - 1}`, "CONFIRMED", null)).toMatchObject({ ok: true });
+    expect(journal.nextSeq()).toBe(M);
+    expect(journal.load()).toBe(M - 1);
+    expect(peekSessionJournal(store)).toMatchObject({ kind: "ready" });
+    const reopened = openSessionJournal(store);
+    expect(reopened.status()).toEqual({ kind: "ready" });
+    expect(reopened.nextSeq()).toBe(M);
+    expect(reopened.scopeBlock("subject-1")).toMatchObject({ reason: "unresolved", record: { seq: M - 2, outcome: "UNKNOWN" } });
+    expect(begin(reopened, M)).toEqual({ ok: false, reason: "COUNTER_EXHAUSTED" });
+    for (const text of writes) {
+      const env = JSON.parse(text);
+      for (const n of [env.loads, env.nextSeq, ...env.records.flatMap((r: { seq: number; loadNo: number }) => [r.seq, r.loadNo])]) {
+        expect(Number.isSafeInteger(n) && n > 0).toBe(true);
+      }
+    }
+  });
+
+  it("checks changed storage while dirty and retains UNKNOWN over older valid evidence", () => {
+    const store = new FakeSessionStore();
+    const journal = openSessionJournal(store);
+    const older = store.data.get(SESSION_JOURNAL_KEY)!;
+    begin(journal, 1);
+    const lastWritten = store.data.get(SESSION_JOURNAL_KEY)!;
+    store.partialThenThrow = 10;
+    store.faultOnce = true;
+    expect(journal.markUnknown("intent-1", "JOURNAL_SETTLE_FAILED")).toBe(false);
+    expect(store.data.get(SESSION_JOURNAL_KEY)).toBe(lastWritten);
+    const sets = store.sets;
+    expect(journal.verify()).toEqual({ kind: "ready" });
+    expect(journal.records()[0]?.outcome).toBe("UNKNOWN");
+    store.data.set(SESSION_JOURNAL_KEY, older);
+    expect(journal.verify()).toEqual({ kind: "ready" });
+    expect(journal.records()[0]?.outcome).toBe("UNKNOWN");
+    expect(store.sets).toBe(sets);
+    // A later failed write still restores lastWritten, not the older valid blob.
+    store.partialThenThrow = 10;
+    store.faultOnce = true;
+    expect(begin(journal, 2)).toEqual({ ok: false, reason: "WRITE_REFUSED" });
+    expect(store.data.get(SESSION_JOURNAL_KEY)).toBe(lastWritten);
+    store.data.set(SESSION_JOURNAL_KEY, blob({ nextSeq: M + 1 }));
+    expect(journal.verify()).toEqual(corrupt);
+    expect(openSessionJournal(store).status()).toEqual(corrupt);
   });
 });
