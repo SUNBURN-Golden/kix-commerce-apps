@@ -13,10 +13,15 @@ import {
   createStubJourneyIdentity,
   identitySender,
   openSessionJournal,
+  peekSessionJournal,
   type JourneyIdentityScenario,
   type SessionStorePort,
 } from "@kix/protocol-adapter";
 import { fixturesForScreen } from "../../../packages/protocol-adapter/src/contract-fixtures";
+import { journalBlob, journalRecord, MAX_COUNTER as M } from "../../../packages/protocol-adapter/test/support/session-journal-fixtures";
+import { LocaleProvider } from "../src/i18n/LocaleProvider";
+import { messages as counterCopy } from "../src/i18n/messages/session-recovery";
+import { journalView } from "../src/diagnostics/model";
 import { App } from "../src/App";
 import { LOCAL_SURFACE_EVIDENCE } from "../src/handoff/packet";
 import { SessionRecoveryPanel } from "../src/pages/SessionRecoveryPanels";
@@ -342,5 +347,50 @@ describe("session recovery registration and boundaries", () => {
     expect(readme).toContain("docs/c-session-recovery-stub-apps-bind.md");
     expect(readme).toContain("/session");
     expect(closeout).toContain("docs/c-session-recovery-stub-apps-bind.md");
+  });
+});
+
+describe("counter exhaustion presentation", () => {
+  it.each(["en", "ko"] as const)("shows an unacquired exhausted load and retained history in %s", async (locale) => {
+    const store = new MemoryStore();
+    const raw = journalBlob({ loads: M, nextSeq: 4 }, [
+      { ...journalRecord, loadNo: M },
+      { ...journalRecord, seq: 2, intentRef: "intent-2", outcome: "CONFIRMED", code: null, loadNo: M },
+      { ...journalRecord, seq: 3, intentRef: "intent-3", outcome: "IN_FLIGHT", code: null, loadNo: M },
+    ]);
+    store.data.set(SESSION_JOURNAL_KEY, raw);
+    const { recovery, identity, port } = await load(store, "clean");
+    const result = await recovery.run("obs-0001");
+    const value = live({ recovery, identity, last: { seq: 1, kind: "step", result } });
+    const html = renderToStaticMarkup(<LocaleProvider initial={locale}><MemoryRouter><SessionRecoveryPanel live={value} /></MemoryRouter></LocaleProvider>);
+    expect(html).toContain('data-session-state="unavailable"');
+    expect(html).toContain(counterCopy[locale]["sj.load"]);
+    expect(html).toContain(counterCopy[locale]["s118"]);
+    expect(html).toContain(counterCopy[locale]["svt"]);
+    expect(html).toContain('data-kind="history"');
+    expect(html).toContain(`data-load="${M}"`);
+    expect(html).not.toContain('data-kind="this-load"');
+    expect(html).not.toContain('data-kind="in-flight"');
+    expect(value.model.items.every((row) => !row.attach.enabled)).toBe(true);
+    expect(value.model.records.map((row) => row.kind)).toEqual(["unknown", "history", "recovered-unknown"]);
+    expect(port.effects().attaches).toBe(0);
+    expect(store.data.get(SESSION_JOURNAL_KEY)).toBe(raw);
+    expect(journalView(peekSessionJournal(store), recovery.state())).toMatchObject({ state: "UNAVAILABLE", cause: "COUNTER_EXHAUSTED" });
+  });
+
+  it.each(["en", "ko"] as const)("localizes the sequence refusal in %s while keeping the journal ready", async (locale) => {
+    const store = new MemoryStore();
+    store.data.set(SESSION_JOURNAL_KEY, journalBlob({ nextSeq: M }));
+    const { recovery, identity, port } = await load(store, "clean");
+    const before = store.data.get(SESSION_JOURNAL_KEY);
+    const result = await recovery.run("obs-0001");
+    expect(result).toMatchObject({ kind: "NOT_SENT", reason: "counter-exhausted" });
+    const value = live({ recovery, identity, last: { seq: 1, kind: "step", result } });
+    const html = renderToStaticMarkup(<LocaleProvider initial={locale}><MemoryRouter><SessionRecoveryPanel live={value} /></MemoryRouter></LocaleProvider>);
+    expect(value.model.state).toBe("empty");
+    expect(html).toContain(counterCopy[locale]["sj.seq"]);
+    expect(port.effects().attaches).toBe(0);
+    expect(store.data.get(SESSION_JOURNAL_KEY)).toBe(before);
+    expect(journalView(peekSessionJournal(store), recovery.state())).toMatchObject({ state: "OK", cause: null });
   });
 });

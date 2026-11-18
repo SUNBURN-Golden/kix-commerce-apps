@@ -246,6 +246,7 @@ export const MATRIX: readonly MatrixCell[] = [
 ];
 
 export const SHARED_CHECKS = [
+  "booking.context.hold", "booking.context.release", "booking.context.confirm", "booking.context.refresh",
   "copy-feedback.receipts.en.success", "copy-feedback.receipts.en.absent", "copy-feedback.receipts.en.throw", "copy-feedback.receipts.en.reject",
   "copy-feedback.receipts.ko.success", "copy-feedback.receipts.ko.absent", "copy-feedback.receipts.ko.throw", "copy-feedback.receipts.ko.reject",
   "copy-feedback.diagnostics.en.success", "copy-feedback.diagnostics.en.absent", "copy-feedback.diagnostics.en.throw", "copy-feedback.diagnostics.en.reject",

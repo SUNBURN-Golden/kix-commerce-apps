@@ -107,7 +107,50 @@ Node 22.23.4 was selected from the local npm cache for npm, build and test comma
 | `git grep -n 'BeautifulMind-JT/kix-protocol' -- . ':!docs/**' ':!README.md' ':!.aiops/**'` | No matches. |
 | `git diff --check` and `git diff --exit-code -- .aiops docs/aiops DECISION_REQUIRED.md packages/protocol-adapter/src/commerce-bindings.ts package-lock.json` | Passed. The pinned producer worktree also reported clean. |
 
-Exact-head GitHub Actions evidence remains pending supervisor submission. Both **Typecheck, build, and test (stub)** and **Adapter tests against the reviewed gate** must report success. The live job must check out the repository and SHA named above. The checked-in workflow still requires its read token for that checkout.
+Exact-head GitHub Actions run [44210764730](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44210764730) (PR #144, head `1544f04855ab5d05db1308bb8984d68c36948419`, merge with main `3c0dbc23fbd8fc86953d8e100ebdae41f09a44a7`) reported **Typecheck, build, and test (stub)** and **Adapter tests against the reviewed gate** SUCCESS, the latter checking out `SUNBURN-Golden/kix-protocol` at `8ba7f6c36373ac0ec49246f51f7471c164ac3a28`. Every other job passed except **Visual baselines (stub, headless Chrome)**, which failed six pixel comparisons. Fix round 1 below addresses that job. A fresh exact-head run remains pending supervisor submission. The checked-in workflow still requires its read token for that checkout.
+
+## Fix round 1 — visual baseline maintenance (2026-11-18)
+
+The six failing comparisons had two distinct causes, established before any baseline changed:
+
+1. **Pin-move content (four light shots).** The diagnostics screens render the build-identity pin digest and the vendored file SHA256 values; the journey-context identity screens render the pin tuple. The pin move changes those strings. Reviewed diffs show the differences confined to the digest panel (diagnostics) and the single pin-tuple line (identity); the rendered values equal the pin constants and the PIN_FACTS ledger above (`2248ff67…`, `d05beb48…`, `eec17505…`, `3162d47c…`, tuple `8ba7f6c36373…`). Layout probes passed; the diagnostics panel's downstream shift is text re-wrap of the new digests, not a layout defect.
+2. **Runner Chrome drift (two forced-colors shots).** Main's own green run [42994636719](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/42994636719) (2026-11-11) used runner image provisioner `20261028.624`; the failing PR run used `20261103.629`, whose Google Chrome is 157.0.8103.50 against the recorded 156.0.8078.47. Chrome 157's forced-colors mode draws link underlines and button labels differently (handoff nav links and "Skip the guide"; booking "안내 건너뛰기" and "예약 신청"). Light-mode rendering is unchanged: all four light-shot actual pictures from the CI artifact are byte-identical to local Chrome 156 renders. This drift is environmental and would fail any PR's visual job on the new image; it is not a pin-bundle defect.
+
+Verification of the cause: Chrome for Testing **157.0.8103.50** (free public download, isolated under `/tmp/kix-chrome157/`, selected with the harness's existing `KIX_E2E_CHROME`) reproduces all six CI failures with the exact CI pixel counts, and **all six CI artifact actual pictures are byte-identical to its local renders** on the merged tree. The font fingerprint stays `linux-d29b2e9b` with vendored Hangul present, because `FONTCONFIG_FILE` pins the four OFL fonts; the Chrome version is not part of the profile key.
+
+`git merge --no-commit --no-ff origin/main` (`3c0dbc2`) applied cleanly and is left staged and uncommitted for the supervisor, as in the sibling visual fix round. Main's four merged PRs touch no baseline, workflow, budget or visual-harness file. Recording then ran on the merged tree with `KIX_VISUAL_UPDATE=1` and Chrome 157; the recorder's exact-RGBA rule refreshed 14 of 108 PNGs and retained 94 byte-identical. Every refreshed picture was reviewed: full old/new/diff inspection for the six substantive shots, and per-pixel numerical review plus a representative crop for the eight drift shots. The eight drifts are 1–4 pixels each, every changed channel exactly 1/255 in the shared banner background, zero pixels above channelDelta 8 — the same class the coverage binding recorded for the 155→156 Chrome update. No tolerance, mask, viewport, harness, threshold or workflow change was made; `TOLERANCE` stays channelDelta 8 / maxDiffPpm 200 and a size change still always fails.
+
+| Refreshed shot | Exact changed pixels | Above channelDelta 8 | Cause |
+| --- | --- | --- | --- |
+| `diagnostics.desktop.en.light` | 86460 | 83056 | New pin digest and vendored SHA256 panel |
+| `diagnostics.phone.ko.light` | 24262 | 22591 | Same panel, Korean |
+| `identity.desktop.en.light` | 714 | 653 | Pin tuple line |
+| `identity.phone.ko.light` | 571 | 531 | Pin tuple line, Korean |
+| `handoff.desktop.en.forced-colors` | 6817 | 6787 | Chrome 157 forced-colors links/buttons |
+| `booking.phone.ko.forced-colors` | 2587 | 2545 | Chrome 157 forced-colors buttons |
+| `handoff.desktop.en.light` | 4 | 0 | 1/255 banner drift |
+| `handoff.desktop.ko.light` | 4 | 0 | 1/255 banner drift |
+| `handoff.phone.en.light` | 3 | 0 | 1/255 banner drift |
+| `marketing-m03.phone.ko.light` | 1 | 0 | 1/255 banner drift |
+| `marketing-m04.phone.ko.light` | 1 | 0 | 1/255 banner drift |
+| `marketing-m05.desktop.en.light` | 4 | 0 | 1/255 banner drift |
+| `marketing-m05.phone.ko.light` | 3 | 0 | 1/255 banner drift |
+| `permissions.phone.ko.light` | 4 | 0 | 1/255 banner drift |
+
+The six substantive new baselines are byte-identical to the CI artifact actual pictures, so the committed set matches what the failing runner produced. The manifest records Chrome 157.0.8103.50, `recordedOn` 2026-11-18, appHead `1544f04855ab5d05db1308bb8984d68c36948419` (merge and baselines uncommitted at recording time), 108 shots and the unchanged tolerance; all 108 hashes were independently recomputed and match, and every PNG stays within the 2000px cap. Because the profile key excludes the Chrome version, a local Chrome 156 comparison now differs on the two forced-colors shots; the committed set targets the CI runner's Chrome, exactly as the coverage binding's 155→156 update did. Future runner-image Chrome updates are repo-wide baseline maintenance, outside this node.
+
+| Command (merged tree, Node v24.22.1 local) | Result |
+| --- | --- |
+| `KIX_VISUAL_UPDATE=1 KIX_E2E_CHROME=/tmp/kix-chrome157/chrome-linux64/chrome KIX_E2E_NO_SANDBOX=1 npm run test:visual` | PASS: 123/123 tests, complete 108-shot recording, manifest written. Recording is not comparison evidence. |
+| `CI=1 KIX_E2E_CHROME=/tmp/kix-chrome157/chrome-linux64/chrome KIX_E2E_NO_SANDBOX=1 KIX_VISUAL_RECORD_OUT=… KIX_VISUAL_OUT=… npm run test:visual` | PASS: 123/123, 3 files; 108 MATCH, summed diffPixels 0; profile linux-d29b2e9b, Chrome 157.0.8103.50; bind 127.0.0.1; ledger nonLoopback/nonGet/appNetworkCalls all 0; all claims false. |
+| `npm run typecheck`, `npm run typecheck:e2e` | PASS. |
+| `npm test` | PASS: 3091 adapter tests (23 gate-only skipped), 1720 web tests, 6 cold-start tests. |
+| `KIX_PROTOCOL_ROOT=/workspace/commerce-run/integration/kix-protocol-8ba7f6c KIX_REQUIRE_GATE=1 npm test -w @kix/protocol-adapter` | PASS: 81 files, 3114/3114 tests, no skips; pinned checkout still clean afterwards. |
+| `npm run build`, `npm run budget` | PASS: initial JS gzip 160194, CSS 4997, total 802755 ≤ 802884; every route cap passes. |
+| `npm run lint` | PASS. |
+| Independent SHA-256 recomputation of all 108 manifest hashes; byte comparison of the 94 retained PNGs; `git diff --check`; locked-file comparison | PASS. `commerce-bindings.ts` SHA256 remains `83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249`; `.aiops/`, `docs/aiops/`, the visual harness and all thresholds unchanged. |
+
+Browser journeys and accessibility are not re-run locally this round: the only authored change is baseline PNG data, which only the visual suite consumes, and both jobs already reported SUCCESS on the exact-head merged tree at Chrome 157 in run 44210764730. This round's baseline refresh is maintenance, not design review, not acceptance and not a release; user acceptance stays PENDING and release NOT_AUTHORIZED.
 
 ## Changed files
 
@@ -159,3 +202,23 @@ Exact-head GitHub Actions evidence remains pending supervisor submission. Both *
 - `packages/protocol-adapter/vendor/kix-sdk-0/sdk-pin.json`
 - `packages/protocol-adapter/vendor/kix-sdk-0/src/client.ts`
 - `packages/protocol-adapter/vendor/kix-sdk-0/types/catalogue.d.ts`
+
+Fix round 1 adds only baseline data and this document:
+
+- `apps/e2e/visual-baselines/linux-d29b2e9b/manifest.json`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/booking.phone.ko.forced-colors.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/diagnostics.desktop.en.light.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/diagnostics.phone.ko.light.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/handoff.desktop.en.forced-colors.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/handoff.desktop.en.light.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/handoff.desktop.ko.light.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/handoff.phone.en.light.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/identity.desktop.en.light.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/identity.phone.ko.light.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/marketing-m03.phone.ko.light.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/marketing-m04.phone.ko.light.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/marketing-m05.desktop.en.light.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/marketing-m05.phone.ko.light.png`
+- `apps/e2e/visual-baselines/linux-d29b2e9b/permissions.phone.ko.light.png`
+
+The staged `origin/main` merge (`3c0dbc2`) is integration content owned by the supervisor, not authored by this round.

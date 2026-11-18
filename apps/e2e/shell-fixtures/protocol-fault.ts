@@ -19,6 +19,20 @@ export const protocol = new Proxy(real, {
         throw new Error("Bearer sk_live_FAKE0123456789abcdef shell describe failed");
       };
     }
+    // Inert by default; this module is present only in the opt-in shell-fault build.
+    const bookingProbe = (window as unknown as { __kixBookingFence?: {
+      held: string[]; calls: Array<{ method: string; args: unknown[] }>; releases: Record<string, () => void>;
+    } }).__kixBookingFence;
+    if (bookingProbe && ["placeHold", "releaseHold", "confirmBooking", "listPerformances"].includes(String(key))) {
+      return async (...args: unknown[]) => {
+        const method = String(key);
+        bookingProbe.calls.push({ method, args });
+        if (bookingProbe.held.includes(method)) {
+          await new Promise<void>((resolve) => { bookingProbe.releases[method] = resolve; });
+        }
+        return (Reflect.get(target, key) as (...input: unknown[]) => Promise<unknown>).apply(target, args);
+      };
+    }
     if (key === "placeHold") {
       return async (input: Parameters<typeof real.placeHold>[0]) => {
         const probe = (window as unknown as { __kixFormDeferred?: { attempts: number; release?: () => void } }).__kixFormDeferred;
