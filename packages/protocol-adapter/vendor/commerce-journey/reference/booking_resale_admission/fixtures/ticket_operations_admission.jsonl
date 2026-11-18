@@ -1,0 +1,7 @@
+{"arguments": {"admission_id": "entry-1", "expires_ms": 1060000, "gate_role": "gate-a", "idempotency_key": "entry-key", "presentation_id": "ticket-1"}, "operation": "authorize_admission", "surface": "admission"}
+{"arguments": {"idempotency_key": "list-key", "listing_id": "list-1", "offer_id": "offer-1"}, "operation": "list_resale", "surface": "resale"}
+{"arguments": {"consume_id": "consume-1", "gate_role": "gate-a", "idempotency_key": "consume-key", "presentation_id": "ticket-1"}, "operation": "consume", "surface": "admission"}
+{"arguments": {"idempotency_key": "after-consume", "listing_id": "after-consume", "offer_id": "offer-1"}, "operation": "list_resale", "surface": "resale"}
+{"arguments": {"admission_id": "entry-1", "expires_ms": 1060000, "gate_role": "gate-a", "idempotency_key": "entry-key", "presentation_id": "ticket-1"}, "operation": "authorize_admission", "surface": "admission"}
+{"arguments": {"consume_id": "consume-1", "gate_role": "gate-a", "idempotency_key": "consume-key", "presentation_id": "ticket-1"}, "operation": "consume", "surface": "admission"}
+{"arguments": {"right_id": "issue-1"}, "operation": "view", "surface": "admission"}

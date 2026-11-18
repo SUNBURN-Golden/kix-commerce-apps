@@ -1,0 +1,30 @@
+[
+  {
+    "legId": "card",
+    "providerRef": "mock-pg",
+    "routeRef": "original-card",
+    "amount": {
+      "asset": {
+        "namespace": "fiat",
+        "reference": "KRW",
+        "decimals": 0,
+        "maxAtoms": "340282366920938463463374607431768211455"
+      },
+      "atoms": "30000"
+    }
+  },
+  {
+    "legId": "bank",
+    "providerRef": "mock-pg",
+    "routeRef": "original-bank",
+    "amount": {
+      "asset": {
+        "namespace": "fiat",
+        "reference": "KRW",
+        "decimals": 0,
+        "maxAtoms": "340282366920938463463374607431768211455"
+      },
+      "atoms": "18600"
+    }
+  }
+]

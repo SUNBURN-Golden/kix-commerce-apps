@@ -137,7 +137,7 @@ export default defineConfig({
           if (/\/protocol-adapter\/src\/(openapi-contract-pin|integration-gate-pin)\.ts$/.test(id) || /\/vendor\/kix-protocol\..*\.json\?raw$/.test(id)) return "kix-openapi-pins";
           if (/\/protocol-adapter\/src\/contract-fixtures\.ts$/.test(id)) return "kix-fixture-catalogue";
           if (/\/protocol-adapter\/src\/(operational-qualification|operational-qualification-controller|platform-release|cross-surface-journeys)\.ts$/.test(id)) return "kix-review-cases";
-          if (/\/protocol-adapter\/src\/(finance-operations|tenant-permissions|delegated-assistant)\.ts$/.test(id)) return "kix-operations-cases";
+          if (/\/protocol-adapter\/src\/(finance-operations|tenant-permissions|delegated-assistant|merchant-operations)\.ts$/.test(id)) return "kix-operations-cases";
           if (/\/protocol-adapter\/src\/(platform-journey|provider-journey|refund-return(?:-controller)?|installable-mobile|inventory-read|discovery-read|marketplace-performance)\.ts$/.test(id)) return "kix-journey-cases";
 
           // The session stubs share forms, fixtures and bilingual copy. Keep them in one
@@ -162,6 +162,12 @@ export default defineConfig({
 
           // Small UI helpers that many lazy desks share load as one lazy chunk; the entry never imports them.
           if (/\/src\/(a11y\/focus|components\/(AsyncState|CachedReadNotice|ConnectivityWriteButton)|connectivity\/(copy|desk-protocol|refusal|write-guard)|desk-attempts|i18n\/desk-context)\.tsx?$/.test(id)) return "desk-ui";
+
+          // Keep secondary routes lazy while sharing compression across their repeated panels.
+          if (/\/src\/pages\/(Platform|ProviderJourney|InstallableMobile)(Panels)?\.tsx$/.test(id)) return "Platform";
+          if (/\/src\/pages\/(Assistant|MarketingJourney)(Panels)?\.tsx$/.test(id)) return "Assistant";
+          if (/\/src\/pages\/(PlatformRelease|OperationalQualification)(Panels)?\.tsx$/.test(id)) return "PlatformRelease";
+          if (/\/src\/(organizer|consent|gift)-desk\.ts$/.test(id)) return "catalogue-desks";
 
           const copy = /\/src\/i18n\/messages\/([^/]+)\.ts$/.exec(id)?.[1];
           if (copy) return displayCopyGroups.find(([, files]) => files.includes(copy))?.[0];

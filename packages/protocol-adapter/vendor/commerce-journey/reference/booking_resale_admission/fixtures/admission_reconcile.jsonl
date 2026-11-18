@@ -1,0 +1,14 @@
+{"arguments": {"admission_id": "entry-1", "expires_ms": 1060000, "gate_role": "gate-a", "idempotency_key": "entry-key-1", "presentation_id": "ticket-1"}, "operation": "authorize_admission"}
+{"arguments": {"idempotency_key": "recon-1", "right_id": "issue-1"}, "operation": "reconcile"}
+{"arguments": {"consume_id": "consume-1", "gate_role": "gate-a", "idempotency_key": "consume-key-1", "presentation_id": "ticket-1"}, "operation": "consume"}
+{"arguments": {"idempotency_key": "recon-1", "right_id": "issue-1"}, "operation": "reconcile"}
+{"arguments": {"right_id": "issue-1"}, "operation": "view"}
+{"arguments": {"idempotency_key": "recon-current", "right_id": "issue-1"}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": "entry-key-1", "right_id": "issue-1"}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": "recon-1", "right_id": "other"}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": "recon-1", "right_id": "issue-1"}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": "missing-key", "right_id": "missing"}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": "missing-key", "right_id": "missing"}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": "missing-key", "right_id": "issue-1"}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": "invalid-subject", "right_id": null}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": null, "right_id": "issue-1"}, "operation": "reconcile"}

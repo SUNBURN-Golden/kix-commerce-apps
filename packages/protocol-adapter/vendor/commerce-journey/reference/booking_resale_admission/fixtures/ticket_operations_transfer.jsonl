@@ -1,0 +1,16 @@
+{"arguments": {"idempotency_key": "list-key", "listing_id": "list-1", "offer_id": "offer-1"}, "operation": "list_resale", "surface": "resale"}
+{"arguments": {"buyer_role": "buyer-2", "hold_id": "buy-hold", "idempotency_key": "buy-key", "listing_id": "list-1"}, "operation": "hold_buy", "surface": "resale"}
+{"arguments": {"amount": 8000, "buyer_role": "buyer-2", "idempotency_key": "payment-key", "listing_id": "list-1", "payment_ref": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"}, "operation": "observe_resale_payment", "surface": "resale"}
+{"arguments": {"idempotency_key": "bind-key", "listing_id": "list-1", "settlement_id": "resale-claim"}, "operation": "bind_settlement", "surface": "resale"}
+{"arguments": {"idempotency_key": "transfer-key", "listing_id": "list-1", "transfer_id": "transfer-1"}, "operation": "accept_resale", "surface": "resale"}
+{"arguments": {"idempotency_key": "transfer-key", "listing_id": "list-1", "transfer_id": "transfer-1"}, "operation": "accept_resale", "surface": "resale"}
+{"arguments": {"idempotency_key": "close-key", "listing_id": "list-1"}, "operation": "close", "surface": "resale"}
+{"arguments": {"idempotency_key": "transfer-key", "listing_id": "list-1", "transfer_id": "transfer-1"}, "operation": "accept_resale", "surface": "resale"}
+{"arguments": {"listing_id": "list-1"}, "operation": "view", "surface": "resale"}
+{"arguments": {"right_id": "issue-1"}, "operation": "view_right", "surface": "resale"}
+{"arguments": {"holder_role": "buyer-1", "right_id": "issue-1", "version": 1}, "operation": "view_presentation", "surface": "resale"}
+{"arguments": {"holder_role": "buyer-2", "right_id": "issue-1", "version": 2}, "operation": "view_presentation", "surface": "resale"}
+{"arguments": {"admission_id": "entry-1", "expires_ms": 1060000, "gate_role": "gate-a", "idempotency_key": "entry-key", "presentation_id": "ticket-1"}, "operation": "authorize_admission", "surface": "admission"}
+{"arguments": {"admission_id": "recipient-entry", "expires_ms": 1060000, "gate_role": "gate-a", "idempotency_key": "recipient-entry-key", "presentation_id": "recipient-1"}, "operation": "authorize_admission", "surface": "admission"}
+{"arguments": {"right_id": "issue-1"}, "operation": "view", "surface": "admission"}
+{"arguments": {"holder_role": "buyer-2", "right_id": "issue-1", "version": 2}, "operation": "view_credential", "surface": "admission"}

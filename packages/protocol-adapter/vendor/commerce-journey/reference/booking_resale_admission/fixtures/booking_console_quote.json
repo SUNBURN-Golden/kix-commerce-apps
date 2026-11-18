@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "kix:commerce:2",
+  "orderId": "calculation-order",
+  "orderVersion": 1,
+  "scope": {
+    "issuerId": "fixture-issuer",
+    "eventId": "fixture-event",
+    "performanceId": "fixture-performance"
+  },
+  "policyRef": "fixture-policy",
+  "expiresAt": 1,
+  "lines": [
+    {
+      "lineId": "L1",
+      "inventoryId": "fixture-inventory",
+      "gross": {
+        "asset": {
+          "namespace": "fiat",
+          "reference": "KRW",
+          "decimals": 0,
+          "maxAtoms": "340282366920938463463374607431768211455"
+        },
+        "atoms": "10001"
+      }
+    }
+  ],
+  "discounts": []
+}

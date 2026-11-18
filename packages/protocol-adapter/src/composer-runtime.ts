@@ -2,7 +2,8 @@
  * Command bodies, readers, state transitions and fences are unchanged. */
 import { readCreateReceipt, readPrepareReceipt, readAcceptReceipt, type CreatedEvent, type PreparedTrade } from "./journey-receipts.js";
 import { COMMERCE_COMMAND_BINDINGS } from "./commerce-bindings.js";
-import { GateRejectedError } from "./http-adapter.js";
+import { classifyThrown } from "./call-outcome.js";
+export { classifyThrown } from "./call-outcome.js";
 import { type LocalCallInput, buildLocalCallEnvelope } from "./local-call.js";
 import { PINNED_PROTOCOL_DOMAIN } from "./openapi-contract-pin.js";
 import { assertLocalCallReceipt } from "./payload-guards.js";
@@ -386,34 +387,6 @@ export function snapshot(body: Record<string, unknown>): Record<string, unknown>
 /** Halt storage and each public snapshot own their nested command body. */
 function copyCallIdentity(identity: CallIdentity): CallIdentity {
   return { ...identity, body: snapshot(identity.body) };
-}
-
-interface ThrownClass {
-  disposition: "not-sent" | "rejected" | "unknown";
-  code: string;
-  requestId?: string;
-  correlationId?: string;
-}
-
-export function classifyThrown(error: unknown): ThrownClass {
-  if (error instanceof GateRejectedError) {
-    return {
-      disposition: "rejected",
-      code: error.code ?? "GATE_REJECTED",
-      requestId: error.requestId,
-      correlationId: error.correlationId,
-    };
-  }
-  if (error instanceof ProtocolError && error.requestId === undefined && error.correlationId === undefined) {
-    return { disposition: "not-sent", code: error.code ?? "NOT_SENT" };
-  }
-  const code = error instanceof ProtocolError && error.code ? error.code : "UNKNOWN";
-  return {
-    disposition: "unknown",
-    code,
-    requestId: error instanceof ProtocolError ? error.requestId : undefined,
-    correlationId: error instanceof ProtocolError ? error.correlationId : undefined,
-  };
 }
 
 export function traceIdentity(base: CallIdentity, error: unknown): CallIdentity {

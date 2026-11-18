@@ -1,0 +1,13 @@
+{"arguments": {"idempotency_key": "ticket-clock", "now_ms": 1000000, "subject_id": "clock"}, "operation": "set_clock", "surface": "booking"}
+{"arguments": {"currency": "KRW", "debtor_role": "fixture-merchant", "gross": 10001, "idempotency_key": "second-init-1", "policy": {"fee_bps": 0, "fee_payee": "platform", "kind": "PRIMARY_FEE_BPS", "residual_payee": "organizer"}, "settlement_id": "claim-2", "trade_id": "fixture-trade-2"}, "operation": "initiate", "surface": "settlement"}
+{"arguments": {"idempotency_key": "second-bind", "reservation_id": "reserve-2", "settlement_id": "claim-2"}, "operation": "bind_settlement", "surface": "booking"}
+{"arguments": {"idempotency_key": "second-issue", "issuance_id": "issue-2", "order_id": "order-2"}, "operation": "issue", "surface": "booking"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"idempotency_key": "second-auth-claim-1", "settlement_id": "claim-2"}, "operation": "authorize", "surface": "settlement"}
+{"arguments": {"idempotency_key": "second-capture-1", "settlement_id": "claim-2"}, "operation": "capture", "surface": "settlement"}
+{"arguments": {"adjustment": 0, "adjustment_reason": null, "amount": 10001, "fee": 0, "gross": 10001, "held": 0, "idempotency_key": "second-commit-1", "movement_id": "fixture-movement-2", "settlement_id": "claim-2", "tax": 0}, "operation": "commit", "surface": "settlement"}
+{"arguments": {"idempotency_key": "second-issue", "issuance_id": "issue-2", "order_id": "order-2"}, "operation": "issue", "surface": "booking"}
+{"arguments": {"idempotency_key": "second-issue-fresh", "issuance_id": "issue-2", "order_id": "order-2"}, "operation": "issue", "surface": "booking"}
+{"arguments": {"currency": "KRW", "debtor_role": "fixture-merchant", "gross": 10001, "idempotency_key": "second-init-1", "policy": {"fee_bps": 0, "fee_payee": "platform", "kind": "PRIMARY_FEE_BPS", "residual_payee": "organizer"}, "settlement_id": "claim-2", "trade_id": "fixture-trade-2"}, "operation": "initiate", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"reservation_id": "reserve-2"}, "operation": "view", "surface": "booking"}

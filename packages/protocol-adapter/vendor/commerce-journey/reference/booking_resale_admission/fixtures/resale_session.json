@@ -1,0 +1,167 @@
+{
+  "fixture_version": 1,
+  "provenance": "MOCK_GATE_ONLY",
+  "setup": [
+    {
+      "machine": "reservation",
+      "operation": "set_clock",
+      "subject_id": "clock",
+      "idempotency_key": "ticket-clock",
+      "body": {
+        "now_ms": 1000000
+      }
+    },
+    {
+      "machine": "reservation",
+      "operation": "register_show",
+      "subject_id": "show-1",
+      "idempotency_key": "show",
+      "body": {
+        "organizer_role": "organizer",
+        "capacity": 2,
+        "gate_roles": [
+          "gate-a",
+          "gate-b"
+        ],
+        "primary_price": 10001,
+        "resale_cap": 20000,
+        "resale_allowed": true,
+        "organizer_bps": 1,
+        "platform_bps": 1
+      }
+    },
+    {
+      "machine": "resale",
+      "operation": "set_clock",
+      "subject_id": "clock",
+      "idempotency_key": "resale-clock",
+      "body": {
+        "now_ms": 1000000
+      }
+    },
+    {
+      "machine": "reservation",
+      "operation": "hold",
+      "subject_id": "reserve-1",
+      "idempotency_key": "hold-1",
+      "body": {
+        "show_id": "show-1",
+        "slot": 0,
+        "buyer_role": "buyer-1",
+        "expires_ms": 1120000
+      }
+    },
+    {
+      "machine": "reservation",
+      "operation": "confirm",
+      "subject_id": "order-1",
+      "idempotency_key": "confirm-1",
+      "body": {
+        "reservation_id": "reserve-1",
+        "amount": 10001,
+        "quote_ref": "quote-1"
+      }
+    },
+    {
+      "machine": "reservation",
+      "operation": "observe_payment",
+      "subject_id": "order-1",
+      "idempotency_key": "payment-1",
+      "body": {
+        "payment_ref": "abababababababababababababababababababababababababababababababab",
+        "amount": 10001
+      }
+    },
+    {
+      "machine": "reservation",
+      "operation": "issue",
+      "subject_id": "issue-1",
+      "idempotency_key": "issue-1",
+      "body": {
+        "order_id": "order-1"
+      }
+    },
+    {
+      "machine": "resale",
+      "operation": "adopt_issued",
+      "subject_id": "issue-1",
+      "idempotency_key": "resale-adopt-1",
+      "body": {
+        "show_id": "show-1",
+        "slot": 0,
+        "buyer_role": "buyer-1",
+        "expires_ms": 1120000,
+        "order_id": "order-1",
+        "amount": 10001,
+        "payment_ref": "abababababababababababababababababababababababababababababababab",
+        "reservation_id": "reserve-1",
+        "quote_ref": "quote-1",
+        "organizer_role": "organizer",
+        "capacity": 2,
+        "gate_roles": [
+          "gate-a",
+          "gate-b"
+        ],
+        "primary_price": 10001,
+        "resale_cap": 20000,
+        "resale_allowed": true,
+        "organizer_bps": 1,
+        "platform_bps": 1
+      }
+    },
+    {
+      "machine": "settlement",
+      "operation": "initiate",
+      "subject_id": "resale-claim",
+      "idempotency_key": "resale-initiate",
+      "body": {
+        "trade_id": "fixture-resale-trade",
+        "gross": 8000,
+        "debtor_role": "fixture-merchant",
+        "currency": "KRW",
+        "policy": {
+          "kind": "PRIMARY_FEE_BPS",
+          "fee_bps": 0,
+          "residual_payee": "organizer",
+          "fee_payee": "platform"
+        }
+      }
+    },
+    {
+      "machine": "settlement",
+      "operation": "authorize",
+      "subject_id": "resale-claim",
+      "idempotency_key": "resale-authorize",
+      "body": {}
+    },
+    {
+      "machine": "settlement",
+      "operation": "capture",
+      "subject_id": "resale-claim",
+      "idempotency_key": "resale-capture",
+      "body": {}
+    },
+    {
+      "machine": "settlement",
+      "operation": "commit",
+      "subject_id": "resale-claim",
+      "idempotency_key": "resale-commit",
+      "body": {
+        "movement_id": "fixture-resale-movement",
+        "gross": 8000,
+        "amount": 8000,
+        "fee": 0,
+        "tax": 0,
+        "held": 0,
+        "adjustment": 0,
+        "adjustment_reason": null
+      }
+    }
+  ],
+  "offers": [
+    {
+      "offer_id": "offer-1",
+      "recorded_text": "{\"amount\": 8000, \"expires_ms\": 1120000, \"offer_id\": \"offer-1\", \"recipient_role\": \"buyer-2\", \"reservation_id\": \"reserve-1\", \"right_id\": \"issue-1\", \"seller_role\": \"buyer-1\", \"version\": 1}"
+    }
+  ]
+}

@@ -1,8 +1,9 @@
+import type { CommerceJourneyCases } from "./commerce-journey-stub.js";
+import type { CommerceJourneyCall, JourneyProof } from "./commerce-journey-command.js";
 import {
   ADMISSION_CASE_NOTE,
   AdmissionCaseStore,
   admissionBoundaryPresentation,
-  type AdmissionSources,
 } from "./admission-case.js";
 import { CreditCaseStore } from "./credit-case.js";
 import { localStubObservation } from "./operational-error.js";
@@ -122,13 +123,32 @@ interface HoldRecord extends Hold {
  * The reservation case, the resale case, and the credit case use protocol phase names at the UI contract only.
  * None of these paths is Move, and none of them is the protocol machine.
  */
+function createCaseStores() {
+  const settlement = new SettlementCaseStore();
+  const reservation = new ReservationCaseStore((id) => settlement.view(id).phase);
+  const resale = new ResaleCaseStore((id) => reservation.view(id), (id) => settlement.view(id));
+  const admission = new AdmissionCaseStore({
+    viewReservation: (id) => reservation.view(id),
+    authorizeReservation: (input) => reservation.authorizeAdmission(input),
+    consumeReservation: (input) => reservation.consume(input),
+    viewResaleRight: (id) => resale.viewRight(id),
+    viewResalePresentation: (input) => resale.viewPresentation(input),
+    viewSettlement: (id) => ({
+      fundsExecuted: settlement.view(id).fundsExecuted,
+      economicFinalityClaimed: false,
+      admissionGranted: false,
+    }),
+  });
+  return { settlement, reservation, resale, admission };
+}
+
 export class StubProtocolAdapter implements CommerceProtocol {
   private readonly performances: Performance[];
   private readonly holds = new Map<string, HoldRecord>();
   private readonly bookings = new Map<string, Booking>();
   private readonly listings = new Map<string, ResaleListing>();
   private readonly admitted = new Set<string>();
-  private readonly settlementCases = new SettlementCaseStore();
+  private readonly settlementCases: SettlementCaseStore;
   private readonly reservationCases: ReservationCaseStore;
   private readonly resaleCases: ResaleCaseStore;
   private readonly admissionCases: AdmissionCaseStore;
@@ -137,50 +157,21 @@ export class StubProtocolAdapter implements CommerceProtocol {
 
   constructor(seed: Performance[] = DEFAULT_SEED, private readonly now: () => number = Date.now) {
     this.performances = seed.map((item) => ({ ...item }));
-    this.creditCases = new CreditCaseStore((settlementId) => {
-      const view = this.settlementCases.view(settlementId);
-      return { phase: view.phase, fundsExecuted: view.fundsExecuted };
-    });
-    this.reservationCases = new ReservationCaseStore((settlementId) => this.settlementCases.view(settlementId).phase);
-    this.resaleCases = new ResaleCaseStore(
-      (reservationId) => {
-        const view = this.reservationCases.view(reservationId);
-        return {
-          phase: view.phase,
-          rightId: view.rightId,
-          buyerRole: view.buyerRole,
-          admissionId: view.admissionId,
-          showId: view.showId,
-          slot: view.slot,
-          eventId: view.eventId,
-          economicFinalityClaimed: view.economicFinalityClaimed,
-          fundsExecuted: view.fundsExecuted,
-        };
-      },
-      (settlementId) => {
-        const view = this.settlementCases.view(settlementId);
-        return { phase: view.phase, fundsExecuted: view.fundsExecuted };
-      },
-    );
-    this.admissionCases = new AdmissionCaseStore(this.admissionSources());
+    const { settlement, reservation, resale, admission } = createCaseStores();
+    this.settlementCases = settlement;
+    this.reservationCases = reservation;
+    this.resaleCases = resale;
+    this.admissionCases = admission;
+    this.creditCases = new CreditCaseStore((id) => settlement.view(id));
   }
 
-  private admissionSources(): AdmissionSources {
-    return {
-      viewReservation: (reservationId) => this.reservationCases.view(reservationId),
-      authorizeReservation: (input) => this.reservationCases.authorizeAdmission(input),
-      consumeReservation: (input) => this.reservationCases.consume(input),
-      viewResaleRight: (rightId) => this.resaleCases.viewRight(rightId),
-      viewResalePresentation: (input) => this.resaleCases.viewPresentation(input),
-      viewSettlement: (settlementId) => {
-        const view = this.settlementCases.view(settlementId);
-        return {
-          fundsExecuted: view.fundsExecuted,
-          economicFinalityClaimed: false,
-          admissionGranted: false,
-        };
-      },
-    };
+  private journeyCases: CommerceJourneyCases | undefined;
+
+  async advanceCommerceJourney(input: CommerceJourneyCall): Promise<JourneyProof> {
+    const { runStubCommerceJourney } = await import("./commerce-journey-stub.js");
+    // Its fixed logical clock and identities belong to this fixture journey.
+    const cases = this.journeyCases ??= { ...createCaseStores(), refunds: new Set(), attemptedKeys: new Set() };
+    return runStubCommerceJourney(input, cases);
   }
 
   describe(): AdapterMeta {

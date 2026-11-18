@@ -1,0 +1,6 @@
+{"surface": "settlement", "operation": "bind_refund", "arguments": {"settlement_id": "claim-1", "idempotency_key": "refund-bind-1", "refund_id": "refund-1", "amount": 10001, "beneficiary_role": "fixture-buyer-1", "reason": "fixture-caller-request"}}
+{"surface": "settlement", "operation": "observe_recorded_cancel_acceptance", "arguments": {"settlement_id": "claim-1", "source_id": "acceptance-full", "idempotency_key": "accept-full"}}
+{"surface": "settlement", "operation": "view", "arguments": {"settlement_id": "claim-1"}}
+{"surface": "booking", "operation": "view", "arguments": {"reservation_id": "reserve-1"}}
+{"surface": "resale", "operation": "view_right", "arguments": {"right_id": "issue-1"}}
+{"surface": "admission", "operation": "view", "arguments": {"right_id": "issue-1"}}

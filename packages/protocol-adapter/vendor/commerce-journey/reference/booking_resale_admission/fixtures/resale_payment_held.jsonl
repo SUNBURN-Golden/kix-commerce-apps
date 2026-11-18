@@ -1,0 +1,15 @@
+{"arguments": {"idempotency_key": "list-key", "listing_id": "list-1", "offer_id": "offer-1"}, "operation": "list_resale"}
+{"arguments": {"buyer_role": "buyer-2", "hold_id": "buy-hold", "idempotency_key": "buy-key", "listing_id": "list-1"}, "operation": "hold_buy"}
+{"arguments": {"idempotency_key": "payment-key", "listing_id": "list-1", "recording_id": "payment-1"}, "operation": "observe_recorded_payment"}
+{"arguments": {"listing_id": "list-1"}, "operation": "view"}
+{"arguments": {"idempotency_key": "payment-key", "listing_id": "list-1", "recording_id": "payment-alias"}, "operation": "observe_recorded_payment"}
+{"arguments": {"idempotency_key": "bind-key", "listing_id": "list-1", "settlement_id": "resale-claim"}, "operation": "bind_settlement"}
+{"arguments": {"idempotency_key": "transfer-key", "listing_id": "list-1", "transfer_id": "transfer-1"}, "operation": "accept_resale"}
+{"arguments": {"idempotency_key": "transfer-key", "listing_id": "list-1", "transfer_id": "transfer-1"}, "operation": "accept_resale"}
+{"arguments": {"idempotency_key": "close-key", "listing_id": "list-1"}, "operation": "close"}
+{"arguments": {"idempotency_key": "transfer-key", "listing_id": "list-1", "transfer_id": "transfer-1"}, "operation": "accept_resale"}
+{"arguments": {"idempotency_key": "payment-key", "listing_id": "list-1", "recording_id": "payment-1"}, "operation": "observe_recorded_payment"}
+{"arguments": {"listing_id": "list-1"}, "operation": "view"}
+{"arguments": {"right_id": "issue-1"}, "operation": "view_right"}
+{"arguments": {"holder_role": "buyer-1", "right_id": "issue-1", "version": 1}, "operation": "view_presentation"}
+{"arguments": {"holder_role": "buyer-2", "right_id": "issue-1", "version": 2}, "operation": "view_presentation"}

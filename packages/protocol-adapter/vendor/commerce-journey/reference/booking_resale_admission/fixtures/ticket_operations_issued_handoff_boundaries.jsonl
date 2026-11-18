@@ -1,0 +1,17 @@
+{"arguments": {"idempotency_key": "second-resale-adopt", "reservation_id": "missing", "right_id": "issue-2"}, "operation": "adopt_issued_from_booking", "surface": "resale"}
+{"arguments": {"idempotency_key": "second-resale-adopt", "reservation_id": "reserve-2", "right_id": "issue-2"}, "operation": "adopt_issued_from_booking", "surface": "resale"}
+{"arguments": {"idempotency_key": "second-resale-adopt", "reservation_id": "reserve-2", "right_id": "wrong"}, "operation": "adopt_issued_from_booking", "surface": "resale"}
+{"arguments": {"idempotency_key": "second-admission-adopt", "reservation_id": "missing", "right_id": "issue-2"}, "operation": "adopt_issued_from_booking", "surface": "admission"}
+{"arguments": {"idempotency_key": "second-admission-adopt", "reservation_id": "reserve-2", "right_id": "issue-2"}, "operation": "adopt_issued_from_booking", "surface": "admission"}
+{"arguments": {"idempotency_key": "second-admission-adopt", "reservation_id": "reserve-2", "right_id": "wrong"}, "operation": "adopt_issued_from_booking", "surface": "admission"}
+{"arguments": {"idempotency_key": "ticket-clock", "now_ms": 1000000, "subject_id": "clock"}, "operation": "set_clock", "surface": "booking"}
+{"arguments": {"idempotency_key": "second-bind", "reservation_id": "reserve-2", "settlement_id": "claim-2"}, "operation": "bind_settlement", "surface": "booking"}
+{"arguments": {"idempotency_key": "second-issue", "issuance_id": "issue-2", "order_id": "order-2"}, "operation": "issue", "surface": "booking"}
+{"arguments": {"idempotency_key": "second-resale-adopt", "reservation_id": "reserve-2", "right_id": "issue-2"}, "operation": "adopt_issued_from_booking", "surface": "resale"}
+{"arguments": {"idempotency_key": "second-admission-adopt", "reservation_id": "reserve-2", "right_id": "issue-2"}, "operation": "adopt_issued_from_booking", "surface": "admission"}
+{"arguments": {"idempotency_key": "second-resale-adopt", "reservation_id": "reserve-2", "right_id": "issue-2"}, "operation": "adopt_issued_from_booking", "surface": "resale"}
+{"arguments": {"idempotency_key": "fresh-resale", "reservation_id": "reserve-2", "right_id": "issue-2"}, "operation": "adopt_issued_from_booking", "surface": "resale"}
+{"arguments": {"idempotency_key": "second-resale-adopt", "reservation_id": "reserve-1", "right_id": "issue-1"}, "operation": "adopt_issued_from_booking", "surface": "resale"}
+{"arguments": {"idempotency_key": "second-admission-adopt", "reservation_id": "reserve-2", "right_id": "issue-2"}, "operation": "adopt_issued_from_booking", "surface": "admission"}
+{"arguments": {"idempotency_key": "fresh-admission", "reservation_id": "reserve-2", "right_id": "issue-2"}, "operation": "adopt_issued_from_booking", "surface": "admission"}
+{"arguments": {"idempotency_key": "second-admission-adopt", "reservation_id": "reserve-1", "right_id": "issue-1"}, "operation": "adopt_issued_from_booking", "surface": "admission"}

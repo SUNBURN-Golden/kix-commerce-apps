@@ -1,0 +1,8 @@
+{"operation":"list_resale_inputs","arguments":{"listing_id":"request-list-1","right_id":"issue-1","version":1,"seller_role":"buyer-1","recipient_role":"buyer-2","amount":8000,"expires_ms":1120000,"idempotency_key":"request-list-key","reservation_id":null}}
+{"operation":"list_resale_inputs","arguments":{"listing_id":"request-list-1","right_id":"issue-1","version":1,"seller_role":"buyer-1","recipient_role":"buyer-2","amount":8000,"expires_ms":1120000,"idempotency_key":"request-list-key","reservation_id":null}}
+{"operation":"hold_buy","arguments":{"hold_id":"request-hold","listing_id":"request-list-1","buyer_role":"buyer-2","idempotency_key":"request-hold-key"}}
+{"operation":"release_hold","arguments":{"hold_id":"request-hold","buyer_role":"buyer-2","idempotency_key":"request-release-key"}}
+{"operation":"cancel_listing","arguments":{"listing_id":"request-list-1","seller_role":"buyer-1","idempotency_key":"request-cancel-key"}}
+{"operation":"list_resale_inputs","arguments":{"listing_id":"request-list-1","right_id":"issue-1","version":1,"seller_role":"buyer-1","recipient_role":"buyer-2","amount":8000,"expires_ms":1120000,"idempotency_key":"request-list-key","reservation_id":null}}
+{"operation":"view","arguments":{"listing_id":"request-list-1"}}
+{"operation":"view_right","arguments":{"right_id":"issue-1"}}

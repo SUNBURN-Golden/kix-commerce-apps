@@ -1,0 +1,114 @@
+import { classifyThrown } from "./call-outcome.js";
+import { collectLinks, type CommerceJourneyCall, type CommerceJourneyPort, type CommerceJourneyStep, type JourneyLinks, type JourneyProof } from "./commerce-journey-command.js";
+
+const RESALE = [
+  "reserve-A", "order-A", "payment-A", "issue-A", "resale-clock", "adopt-A", "list-A", "hold-A",
+  "resale-payment-A", "settle-resale-initiate", "settle-resale-authorize", "settle-resale-capture", "bind-resale",
+  "settle-resale-commit", "accept-A", "distribute-resale",
+] as const;
+const ADMISSION = ["reserve-B", "order-B", "payment-B", "issue-B", "admission-clock", "adopt-B", "authorize-B", "consume-B"] as const;
+const REFUND = [
+  "reserve-C", "order-C", "cancel-C", "settle-cancel-initiate", "settle-cancel", "settle-fail-initiate", "settle-fail",
+  "settle-refund-initiate", "settle-refund-authorize", "settle-refund-capture", "bind-refund", "observe-mock-acceptance",
+] as const;
+export const JOURNEY_BRANCHES = { resale: RESALE, admission: ADMISSION, refund: REFUND } as const;
+export type CommerceJourneyBranch = keyof typeof JOURNEY_BRANCHES;
+
+const DECLINE: Partial<Record<CommerceJourneyStep, CommerceJourneyStep>> = {
+  "reserve-A": "hold-over-capacity", "order-A": "hold-occupied-slot",
+  "issue-A": "cancel-after-payment", "issue-B": "cancel-after-payment",
+  "settle-resale-commit": "accept-A-before-commit",
+  "settle-cancel-initiate": "issue-cancelled",
+};
+
+type Fact<State extends string> = { state: "NO_EVIDENCE" } | { state: State; proof: JourneyProof };
+export interface CommerceJourneyFacts {
+  paymentObservation: Fact<"OBSERVED">;
+  ticketIssuance: Fact<"ISSUED">;
+  admission: Fact<"AUTHORIZED" | "CONSUMED_ONCE">;
+  resale: Fact<"TRANSFERRED">;
+  reservationCancellation: Fact<"CANCELLED">;
+  refundBinding: Fact<"BOUND">;
+  refundAcceptance: Fact<"MOCK_ACCEPTANCE_OBSERVED">;
+}
+
+type DispatchedCall = Pick<CommerceJourneyCall, "step" | "operationId" | "idempotencyKey">;
+type Failure = DispatchedCall & {
+  kind: "UNKNOWN" | "REJECTED" | "NOT_SENT";
+  code: string;
+  requestId?: string;
+  correlationId?: string;
+};
+export type CommerceJourneyOutcome = Failure | (DispatchedCall & { kind: "CONFIRMED"; proof: JourneyProof });
+
+type MintAttempt = (step: CommerceJourneyStep) => Omit<DispatchedCall, "step">;
+
+/** One controller owns one fixture branch for the page load, including on route re-entry. */
+export class CommerceJourney {
+  private readonly plan: readonly CommerceJourneyStep[];
+  private readonly tried = new Set<CommerceJourneyStep>();
+  private cursor = 0;
+  private links: JourneyLinks = {};
+  private readonly facts: CommerceJourneyFacts = {
+    paymentObservation: { state: "NO_EVIDENCE" },
+    ticketIssuance: { state: "NO_EVIDENCE" },
+    admission: { state: "NO_EVIDENCE" },
+    resale: { state: "NO_EVIDENCE" },
+    reservationCancellation: { state: "NO_EVIDENCE" },
+    refundBinding: { state: "NO_EVIDENCE" },
+    refundAcceptance: { state: "NO_EVIDENCE" },
+  };
+  private pending: CommerceJourneyStep | null = null;
+  private last: CommerceJourneyOutcome | null = null;
+  private confirmed: CommerceJourneyStep | null = null;
+
+  constructor(branch: CommerceJourneyBranch, private readonly port: CommerceJourneyPort, private readonly mint: MintAttempt) {
+    this.plan = ["reservation-clock", "register-show", ...JOURNEY_BRANCHES[branch]];
+  }
+
+  state() {
+    const next = this.plan[this.cursor];
+    const decline = next ? DECLINE[next] : this.confirmed === "consume-B" ? "double-consume" : undefined;
+    const fenced = this.last?.kind === "UNKNOWN" || this.last?.kind === "NOT_SENT" ||
+      (next !== undefined && this.tried.has(next));
+    return {
+      facts: { ...this.facts }, pending: this.pending, last: this.last, confirmed: this.confirmed, fenced, next,
+      decline: decline && !this.tried.has(decline) ? decline : undefined,
+    };
+  }
+
+  async run(step: CommerceJourneyStep): Promise<CommerceJourneyOutcome | undefined> {
+    const { next, decline, fenced } = this.state();
+    if (fenced || this.pending || (step !== next && step !== decline)) return;
+    const attempt = { step, ...this.mint(step) };
+    this.pending = step;
+    this.tried.add(step);
+    try {
+      const proof = await this.port.advanceCommerceJourney({ ...attempt, links: this.links });
+      this.confirmed = step;
+      this.cursor += 1;
+      this.links = { ...this.links, ...collectLinks(step, proof) };
+      this.recordFact(step, proof);
+      this.last = { ...attempt, kind: "CONFIRMED", proof };
+    } catch (error) {
+      const { disposition, ...detail } = classifyThrown(error);
+      this.last = { ...attempt, ...detail, kind: disposition === "rejected" ? "REJECTED" : disposition === "not-sent" ? "NOT_SENT" : "UNKNOWN" };
+    } finally {
+      this.pending = null;
+    }
+    return this.last;
+  }
+
+  private recordFact(step: CommerceJourneyStep, proof: JourneyProof) {
+    switch (step) {
+      case "payment-A": case "payment-B": this.facts.paymentObservation = { state: "OBSERVED", proof }; break;
+      case "issue-A": case "issue-B": this.facts.ticketIssuance = { state: "ISSUED", proof }; break;
+      case "authorize-B": this.facts.admission = { state: "AUTHORIZED", proof }; break;
+      case "consume-B": this.facts.admission = { state: "CONSUMED_ONCE", proof }; break;
+      case "accept-A": this.facts.resale = { state: "TRANSFERRED", proof }; break;
+      case "cancel-C": this.facts.reservationCancellation = { state: "CANCELLED", proof }; break;
+      case "bind-refund": this.facts.refundBinding = { state: "BOUND", proof }; break;
+      case "observe-mock-acceptance": this.facts.refundAcceptance = { state: "MOCK_ACCEPTANCE_OBSERVED", proof }; break;
+    }
+  }
+}

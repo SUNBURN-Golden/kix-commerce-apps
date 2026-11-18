@@ -1,0 +1,1168 @@
+{
+  "fixture_version": 1,
+  "provenance": "OFFLINE_CONFORMANCE_FIXTURE_ONLY",
+  "domain": "kix:fixture:fsm-catalogue:0.3",
+  "description": "One deterministic offline commerce journey through the published FSM catalogue: reservation, primary payment observation, issuance, resale listing and transfer, admission, settlement distribution, cancellation, failure, refund and adverse refusals. Command receipts are the only evidence; no read API is bound and no funds, finality, venue or production fact is claimed.",
+  "show": {
+    "show_id": "show-journey",
+    "organizer_role": "organizer-1",
+    "capacity": 4,
+    "gate_roles": [
+      "gate-1",
+      "gate-2"
+    ],
+    "primary_price": 12000,
+    "resale_cap": 15000,
+    "resale_allowed": true,
+    "organizer_bps": 100,
+    "platform_bps": 100
+  },
+  "actors": {
+    "organizer-1": "show organizer role label (fixture only, not a legal person)",
+    "platform-1": "platform fee payee role label",
+    "gate-1": "admission gate role label",
+    "gate-2": "second admission gate role label",
+    "buyer-A": "slot 0 primary buyer and resale seller",
+    "buyer-B": "resale recipient, slot 1 holder and admission subject",
+    "buyer-C": "slot 2 buyer cancelled before issue",
+    "buyer-D": "refund beneficiary role label and refused hold buyer"
+  },
+  "settlement_policy": {
+    "kind": "PRIMARY_FEE_BPS",
+    "fee_bps": 100,
+    "residual_payee": "organizer-1",
+    "fee_payee": "platform-1"
+  },
+  "clocks": {
+    "reservation_now_ms": 1000000,
+    "reservation_and_listing_expires_ms": 1900000,
+    "admission_now_ms": 1000000,
+    "admission_expires_ms": 1100000
+  },
+  "steps": [
+    {
+      "id": "reservation-clock",
+      "group": "reservation",
+      "action": "reservation_set_clock",
+      "body": {
+        "subject_id": "clock",
+        "idempotency_key": "key-reservation-clock",
+        "now_ms": 1000000
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "set_clock",
+        "paths": {
+          "logical_time_ms": 1000000
+        }
+      }
+    },
+    {
+      "id": "register-show",
+      "group": "reservation",
+      "action": "reservation_register_show",
+      "body": {
+        "show_id": "show-journey",
+        "organizer_role": "organizer-1",
+        "capacity": 4,
+        "gate_roles": [
+          "gate-1",
+          "gate-2"
+        ],
+        "primary_price": 12000,
+        "resale_cap": 15000,
+        "resale_allowed": true,
+        "organizer_bps": 100,
+        "platform_bps": 100,
+        "idempotency_key": "key-register-show"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "register_show",
+        "paths": {
+          "show.show_id": "show-journey",
+          "show.capacity": 4,
+          "show.primary_price": 12000,
+          "show.payment_ref_count": 0
+        }
+      }
+    },
+    {
+      "id": "reserve-A",
+      "group": "reservation",
+      "action": "reservation_hold",
+      "body": {
+        "reservation_id": "reserve-A",
+        "idempotency_key": "key-reserve-A",
+        "show_id": "show-journey",
+        "slot": 0,
+        "buyer_role": "buyer-A",
+        "expires_ms": 1900000
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "hold",
+        "paths": {
+          "reservation.reservation_id": "reserve-A",
+          "reservation.phase": "HELD",
+          "reservation.slot": 0,
+          "reservation.slot_state": "RESERVED"
+        }
+      }
+    },
+    {
+      "id": "reserve-B",
+      "group": "reservation",
+      "action": "reservation_hold",
+      "body": {
+        "reservation_id": "reserve-B",
+        "idempotency_key": "key-reserve-B",
+        "show_id": "show-journey",
+        "slot": 1,
+        "buyer_role": "buyer-B",
+        "expires_ms": 1900000
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "hold",
+        "paths": {
+          "reservation.reservation_id": "reserve-B",
+          "reservation.phase": "HELD",
+          "reservation.slot": 1,
+          "reservation.buyer_role": "buyer-B"
+        }
+      }
+    },
+    {
+      "id": "reserve-C",
+      "group": "reservation",
+      "action": "reservation_hold",
+      "body": {
+        "reservation_id": "reserve-C",
+        "idempotency_key": "key-reserve-C",
+        "show_id": "show-journey",
+        "slot": 2,
+        "buyer_role": "buyer-C",
+        "expires_ms": 1900000
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "hold",
+        "paths": {
+          "reservation.reservation_id": "reserve-C",
+          "reservation.phase": "HELD",
+          "reservation.slot": 2
+        }
+      }
+    },
+    {
+      "id": "order-A",
+      "group": "reservation",
+      "action": "reservation_confirm",
+      "body": {
+        "order_id": "order-A",
+        "idempotency_key": "key-order-A",
+        "reservation_id": "reserve-A",
+        "amount": 12000,
+        "quote_ref": "quote-A"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "confirm",
+        "paths": {
+          "reservation.phase": "CONFIRMED",
+          "reservation.order_id": "order-A",
+          "reservation.amount": 12000,
+          "reservation.currency": "KRW",
+          "reservation.quote_ref": "quote-A",
+          "reservation.buyer_role": "buyer-A"
+        }
+      }
+    },
+    {
+      "id": "order-B",
+      "group": "reservation",
+      "action": "reservation_confirm",
+      "body": {
+        "order_id": "order-B",
+        "idempotency_key": "key-order-B",
+        "reservation_id": "reserve-B",
+        "amount": 12000,
+        "quote_ref": "quote-B"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "confirm",
+        "paths": {
+          "reservation.phase": "CONFIRMED",
+          "reservation.order_id": "order-B",
+          "reservation.amount": 12000
+        }
+      }
+    },
+    {
+      "id": "order-C",
+      "group": "reservation",
+      "action": "reservation_confirm",
+      "body": {
+        "order_id": "order-C",
+        "idempotency_key": "key-order-C",
+        "reservation_id": "reserve-C",
+        "amount": 12000,
+        "quote_ref": "quote-C"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "confirm",
+        "paths": {
+          "reservation.phase": "CONFIRMED",
+          "reservation.order_id": "order-C"
+        }
+      }
+    },
+    {
+      "id": "payment-A",
+      "group": "reservation",
+      "action": "reservation_observe_payment",
+      "body": {
+        "order_id": "order-A",
+        "idempotency_key": "key-payment-A",
+        "payment_ref": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+        "amount": 12000
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "observe_payment",
+        "paths": {
+          "reservation.phase": "PAYMENT_NOTED",
+          "reservation.payment_ref": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+          "reservation.order_id": "order-A",
+          "reservation.amount": 12000
+        }
+      }
+    },
+    {
+      "id": "payment-B",
+      "group": "reservation",
+      "action": "reservation_observe_payment",
+      "body": {
+        "order_id": "order-B",
+        "idempotency_key": "key-payment-B",
+        "payment_ref": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+        "amount": 12000
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "observe_payment",
+        "paths": {
+          "reservation.phase": "PAYMENT_NOTED",
+          "reservation.payment_ref": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+          "reservation.order_id": "order-B"
+        }
+      }
+    },
+    {
+      "id": "issue-A",
+      "group": "reservation",
+      "action": "reservation_issue",
+      "body": {
+        "issuance_id": "issue-A",
+        "idempotency_key": "key-issue-A",
+        "order_id": "order-A"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "issue",
+        "paths": {
+          "reservation.phase": "ISSUED",
+          "reservation.payment_ref": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+          "reservation.issuance_id": "issue-A",
+          "reservation.settlement_gate": "UNBOUND",
+          "evidence.issuance_id": "issue-A",
+          "evidence.right_id": "issue-A",
+          "evidence.chain_issued": false,
+          "evidence.kind": 1,
+          "evidence.holder_role": "buyer-A",
+          "evidence.version": 1,
+          "evidence.generation": 1,
+          "funds_executed": false
+        }
+      }
+    },
+    {
+      "id": "issue-B",
+      "group": "reservation",
+      "action": "reservation_issue",
+      "body": {
+        "issuance_id": "issue-B",
+        "idempotency_key": "key-issue-B",
+        "order_id": "order-B"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "issue",
+        "paths": {
+          "reservation.phase": "ISSUED",
+          "reservation.payment_ref": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+          "reservation.issuance_id": "issue-B",
+          "reservation.settlement_gate": "UNBOUND",
+          "evidence.issuance_id": "issue-B",
+          "evidence.right_id": "issue-B",
+          "evidence.chain_issued": false,
+          "evidence.kind": 1,
+          "evidence.holder_role": "buyer-B",
+          "evidence.version": 1,
+          "evidence.generation": 1,
+          "funds_executed": false
+        }
+      }
+    },
+    {
+      "id": "cancel-C",
+      "group": "reservation",
+      "action": "reservation_cancel",
+      "body": {
+        "reservation_id": "reserve-C",
+        "idempotency_key": "key-cancel-C"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "cancel",
+        "paths": {
+          "reservation.phase": "CANCELLED",
+          "reservation.terminal": true,
+          "reservation.slot_state": "FREE"
+        }
+      }
+    },
+    {
+      "id": "resale-clock",
+      "group": "resale",
+      "action": "resale_set_clock",
+      "body": {
+        "subject_id": "clock",
+        "idempotency_key": "key-resale-clock",
+        "now_ms": 1000000
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "set_clock",
+        "paths": {
+          "logical_time_ms": 1000000
+        }
+      }
+    },
+    {
+      "id": "adopt-A",
+      "group": "resale",
+      "action": "resale_adopt_issued",
+      "body": {
+        "show_id": "show-journey",
+        "organizer_role": "organizer-1",
+        "capacity": 4,
+        "gate_roles": [
+          "gate-1",
+          "gate-2"
+        ],
+        "primary_price": 12000,
+        "resale_cap": 15000,
+        "resale_allowed": true,
+        "organizer_bps": 100,
+        "platform_bps": 100,
+        "right_id": "issue-A",
+        "idempotency_key": "key-adopt-A",
+        "reservation_id": "reserve-A",
+        "slot": 0,
+        "buyer_role": "buyer-A",
+        "expires_ms": 1900000,
+        "order_id": "order-A",
+        "amount": 12000,
+        "quote_ref": "quote-A",
+        "payment_ref": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "adopt_issued",
+        "paths": {
+          "ticket.right_id": "issue-A",
+          "ticket.reservation_id": "reserve-A",
+          "ticket.holder_role": "buyer-A",
+          "ticket.version": 1,
+          "ticket.eligible": true,
+          "right.state": "ACTIVE",
+          "right.generation": 1,
+          "funds_executed": false
+        }
+      }
+    },
+    {
+      "id": "list-A",
+      "group": "resale",
+      "action": "resale_list_resale",
+      "body": {
+        "listing_id": "listing-A",
+        "idempotency_key": "key-list-A",
+        "right_id": "issue-A",
+        "version": 1,
+        "seller_role": "buyer-A",
+        "recipient_role": "buyer-B",
+        "amount": 12000,
+        "expires_ms": 1900000,
+        "reservation_id": "reserve-A"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "list_resale",
+        "paths": {
+          "listing.listing_id": "listing-A",
+          "listing.phase": "LISTED",
+          "listing.amount": 12000,
+          "listing.seller_role": "buyer-A",
+          "listing.recipient_role": "buyer-B",
+          "listing.expired": false,
+          "listing.attached": true,
+          "right.listing_id": "listing-A",
+          "right.state": "ACTIVE"
+        }
+      }
+    },
+    {
+      "id": "hold-A",
+      "group": "resale",
+      "action": "resale_hold_buy",
+      "body": {
+        "hold_id": "hold-A",
+        "idempotency_key": "key-hold-A",
+        "listing_id": "listing-A",
+        "buyer_role": "buyer-B"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "hold_buy",
+        "paths": {
+          "listing.listing_id": "listing-A",
+          "listing.phase": "BUY_HELD",
+          "listing.hold_id": "hold-A",
+          "listing.buyer_role": "buyer-B"
+        }
+      }
+    },
+    {
+      "id": "resale-payment-A",
+      "group": "resale",
+      "action": "resale_observe_resale_payment",
+      "body": {
+        "listing_id": "listing-A",
+        "idempotency_key": "key-resale-payment-A",
+        "payment_ref": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+        "amount": 12000,
+        "buyer_role": "buyer-B"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "observe_resale_payment",
+        "paths": {
+          "listing.phase": "PAYMENT_NOTED",
+          "listing.payment_ref": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+          "right.version": 1
+        }
+      }
+    },
+    {
+      "id": "settle-resale-initiate",
+      "group": "settlement",
+      "action": "settlement_initiate",
+      "body": {
+        "settlement_id": "settle-resale",
+        "idempotency_key": "key-settle-resale-initiate",
+        "trade_id": "trade-resale-A",
+        "gross": 12000,
+        "debtor_role": "buyer-B",
+        "policy": {
+          "kind": "PRIMARY_FEE_BPS",
+          "fee_bps": 100,
+          "residual_payee": "organizer-1",
+          "fee_payee": "platform-1"
+        }
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "initiate",
+        "paths": {
+          "settlement.phase": "INITIATED",
+          "settlement.gross": 12000,
+          "settlement.currency": "KRW",
+          "settlement.debtor_role": "buyer-B",
+          "settlement.mock_authorized": false
+        }
+      }
+    },
+    {
+      "id": "settle-resale-authorize",
+      "group": "settlement",
+      "action": "settlement_authorize",
+      "body": {
+        "settlement_id": "settle-resale",
+        "idempotency_key": "key-settle-resale-authorize"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "authorize",
+        "paths": {
+          "settlement.phase": "AUTHORIZED",
+          "settlement.mock_authorized": true
+        }
+      }
+    },
+    {
+      "id": "settle-resale-capture",
+      "group": "settlement",
+      "action": "settlement_capture",
+      "body": {
+        "settlement_id": "settle-resale",
+        "idempotency_key": "key-settle-resale-capture"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "capture",
+        "paths": {
+          "settlement.phase": "CAPTURED",
+          "settlement.claim.gross": 12000
+        }
+      }
+    },
+    {
+      "id": "bind-resale",
+      "group": "settlement",
+      "action": "resale_bind_settlement",
+      "body": {
+        "listing_id": "listing-A",
+        "idempotency_key": "key-bind-resale",
+        "settlement_id": "settle-resale"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "bind_settlement",
+        "paths": {
+          "listing.settlement_id": "settle-resale",
+          "listing.settlement_gate": "BOUND"
+        }
+      }
+    },
+    {
+      "id": "accept-A-before-commit",
+      "group": "settlement",
+      "action": "resale_accept_resale",
+      "body": {
+        "transfer_id": "transfer-A-1",
+        "idempotency_key": "key-accept-1",
+        "listing_id": "listing-A"
+      },
+      "expect_error": "SETTLEMENT_NOT_COMMITTED"
+    },
+    {
+      "id": "settle-resale-commit",
+      "group": "settlement",
+      "action": "settlement_commit",
+      "body": {
+        "settlement_id": "settle-resale",
+        "idempotency_key": "key-settle-resale-commit",
+        "movement_id": "mv-resale",
+        "gross": 12000,
+        "amount": 12000,
+        "fee": 0,
+        "tax": 0,
+        "held": 0,
+        "adjustment": 0
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "commit",
+        "paths": {
+          "settlement.phase": "COMMITTED",
+          "settlement.commit_movement_id": "mv-resale",
+          "settlement.claim.confirmed_cash": 12000,
+          "settlement.claim.distributed_cash": 0
+        }
+      }
+    },
+    {
+      "id": "accept-A",
+      "group": "settlement",
+      "action": "resale_accept_resale",
+      "body": {
+        "transfer_id": "transfer-A-2",
+        "idempotency_key": "key-accept-2",
+        "listing_id": "listing-A"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "accept_resale",
+        "paths": {
+          "listing.phase": "TRANSFERRED",
+          "listing.ownership_transferred": true,
+          "listing.settlement_gate": "MOCK_COMMIT_OBSERVED",
+          "right.holder_role": "buyer-B",
+          "right.version": 2,
+          "evidence.transfer_id": "transfer-A-2",
+          "evidence.right_id": "issue-A",
+          "evidence.from_role": "buyer-A",
+          "evidence.to_role": "buyer-B",
+          "evidence.version_after": 2,
+          "evidence.amount": 12000,
+          "evidence.seller_due": 11760,
+          "evidence.organizer_due": 120,
+          "evidence.platform_due": 120,
+          "evidence.funds_executed": false,
+          "evidence.chain_owner_current": false
+        }
+      }
+    },
+    {
+      "id": "distribute-resale",
+      "group": "settlement",
+      "action": "settlement_distribute",
+      "body": {
+        "settlement_id": "settle-resale",
+        "idempotency_key": "key-distribute-resale",
+        "order": [
+          "organizer-1",
+          "platform-1"
+        ]
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "distribute",
+        "paths": {
+          "settlement.phase": "COMMITTED",
+          "settlement.claim.distributed_cash": 12000,
+          "settlement.claim.undistributed_cash": 0,
+          "effect.organizer-1": 11880,
+          "effect.platform-1": 120,
+          "funds_executed": false
+        }
+      }
+    },
+    {
+      "id": "admission-clock",
+      "group": "admission",
+      "action": "admission_set_clock",
+      "body": {
+        "subject_id": "clock",
+        "idempotency_key": "key-admission-clock",
+        "now_ms": 1000000
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "set_clock",
+        "paths": {
+          "logical_time_ms": 1000000
+        }
+      }
+    },
+    {
+      "id": "adopt-B",
+      "group": "admission",
+      "action": "admission_adopt_issued",
+      "body": {
+        "show_id": "show-journey",
+        "organizer_role": "organizer-1",
+        "capacity": 4,
+        "gate_roles": [
+          "gate-1",
+          "gate-2"
+        ],
+        "primary_price": 12000,
+        "resale_cap": 15000,
+        "resale_allowed": true,
+        "organizer_bps": 100,
+        "platform_bps": 100,
+        "right_id": "issue-B",
+        "idempotency_key": "key-adopt-B",
+        "reservation_id": "reserve-B",
+        "slot": 1,
+        "buyer_role": "buyer-B",
+        "expires_ms": 1900000,
+        "order_id": "order-B",
+        "amount": 12000,
+        "quote_ref": "quote-B",
+        "payment_ref": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "adopt_issued",
+        "paths": {
+          "credential.phase": "ELIGIBLE",
+          "credential.right_id": "issue-B",
+          "credential.reservation_id": "reserve-B",
+          "credential.slot": 1,
+          "credential.holder_role": "buyer-B",
+          "credential.version": 1,
+          "offline_admission": false,
+          "admission_routing_production": false
+        }
+      }
+    },
+    {
+      "id": "authorize-B",
+      "group": "admission",
+      "action": "admission_authorize_admission",
+      "body": {
+        "admission_id": "admit-B",
+        "idempotency_key": "key-admit-B",
+        "right_id": "issue-B",
+        "version": 1,
+        "holder_role": "buyer-B",
+        "gate_role": "gate-1",
+        "request": "1111111111111111111111111111111111111111111111111111111111111111",
+        "expires_ms": 1100000
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "authorize_admission",
+        "paths": {
+          "credential.phase": "AUTHORIZED",
+          "credential.admission_id": "admit-B",
+          "credential.gate_role": "gate-1",
+          "credential.reservation_id": "reserve-B",
+          "admission.state": "AUTHORIZED",
+          "admission.admission_id": "admit-B",
+          "admission.request": "1111111111111111111111111111111111111111111111111111111111111111",
+          "right.admission_id": "admit-B"
+        }
+      }
+    },
+    {
+      "id": "consume-B",
+      "group": "admission",
+      "action": "admission_consume",
+      "body": {
+        "consume_id": "consume-B",
+        "idempotency_key": "key-consume-B",
+        "right_id": "issue-B",
+        "version": 1,
+        "gate_role": "gate-1",
+        "request": "1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "consume",
+        "paths": {
+          "credential.phase": "CONSUMED",
+          "credential.terminal": true,
+          "credential.consume_id": "consume-B",
+          "credential.version_after": 2,
+          "credential.admission_id": null,
+          "credential.state": "CONSUMED",
+          "evidence.decision": "CONSUMED_ONCE",
+          "evidence.consume_id": "consume-B",
+          "evidence.right_id": "issue-B",
+          "evidence.version_after": 2,
+          "evidence.admission_routing_production": false,
+          "evidence.private_proof_verified": false,
+          "admission_routing_production": false,
+          "private_proof_verified": false,
+          "offline_admission": false,
+          "right.state": "CONSUMED",
+          "right.version": 2
+        }
+      }
+    },
+    {
+      "id": "settle-cancel-initiate",
+      "group": "refund",
+      "action": "settlement_initiate",
+      "body": {
+        "settlement_id": "settle-cancel",
+        "idempotency_key": "key-settle-cancel-initiate",
+        "trade_id": "trade-cancel-A",
+        "gross": 12000,
+        "debtor_role": "buyer-C",
+        "policy": {
+          "kind": "PRIMARY_FEE_BPS",
+          "fee_bps": 100,
+          "residual_payee": "organizer-1",
+          "fee_payee": "platform-1"
+        }
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "initiate",
+        "paths": {
+          "settlement.phase": "INITIATED",
+          "settlement.trade_id": "trade-cancel-A"
+        }
+      }
+    },
+    {
+      "id": "settle-cancel",
+      "group": "refund",
+      "action": "settlement_cancel",
+      "body": {
+        "settlement_id": "settle-cancel",
+        "idempotency_key": "key-settle-cancel",
+        "reason": "synthetic-cancel"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "cancel",
+        "paths": {
+          "settlement.phase": "CANCELLED",
+          "settlement.terminal": true,
+          "settlement.cancel_reason": "synthetic-cancel",
+          "funds_executed": false
+        }
+      }
+    },
+    {
+      "id": "settle-fail-initiate",
+      "group": "refund",
+      "action": "settlement_initiate",
+      "body": {
+        "settlement_id": "settle-fail",
+        "idempotency_key": "key-settle-fail-initiate",
+        "trade_id": "trade-fail-A",
+        "gross": 12000,
+        "debtor_role": "buyer-C",
+        "policy": {
+          "kind": "PRIMARY_FEE_BPS",
+          "fee_bps": 100,
+          "residual_payee": "organizer-1",
+          "fee_payee": "platform-1"
+        }
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "initiate",
+        "paths": {
+          "settlement.phase": "INITIATED"
+        }
+      }
+    },
+    {
+      "id": "settle-fail",
+      "group": "refund",
+      "action": "settlement_fail",
+      "body": {
+        "settlement_id": "settle-fail",
+        "idempotency_key": "key-settle-fail",
+        "reason": "synthetic-fail"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "fail",
+        "paths": {
+          "settlement.phase": "FAILED",
+          "settlement.terminal": true,
+          "settlement.failure_reason": "synthetic-fail",
+          "funds_executed": false
+        }
+      }
+    },
+    {
+      "id": "settle-refund-initiate",
+      "group": "refund",
+      "action": "settlement_initiate",
+      "body": {
+        "settlement_id": "settle-refund",
+        "idempotency_key": "key-settle-refund-initiate",
+        "trade_id": "trade-refund-A",
+        "gross": 12000,
+        "debtor_role": "buyer-C",
+        "policy": {
+          "kind": "PRIMARY_FEE_BPS",
+          "fee_bps": 100,
+          "residual_payee": "organizer-1",
+          "fee_payee": "platform-1"
+        }
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "initiate",
+        "paths": {
+          "settlement.phase": "INITIATED"
+        }
+      }
+    },
+    {
+      "id": "settle-refund-authorize",
+      "group": "refund",
+      "action": "settlement_authorize",
+      "body": {
+        "settlement_id": "settle-refund",
+        "idempotency_key": "key-settle-refund-authorize"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "authorize",
+        "paths": {
+          "settlement.phase": "AUTHORIZED"
+        }
+      }
+    },
+    {
+      "id": "settle-refund-capture",
+      "group": "refund",
+      "action": "settlement_capture",
+      "body": {
+        "settlement_id": "settle-refund",
+        "idempotency_key": "key-settle-refund-capture"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "capture",
+        "paths": {
+          "settlement.phase": "CAPTURED",
+          "settlement.claim.gross": 12000,
+          "settlement.claim.refund_face": 0
+        }
+      }
+    },
+    {
+      "id": "bind-refund",
+      "group": "refund",
+      "action": "settlement_bind_refund",
+      "body": {
+        "settlement_id": "settle-refund",
+        "idempotency_key": "key-bind-refund",
+        "refund_id": "refund-C",
+        "amount": 12000,
+        "beneficiary_role": "buyer-D",
+        "reason": "synthetic-refund"
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "bind_refund",
+        "paths": {
+          "settlement.phase": "CAPTURED",
+          "settlement.claim.refund_face": 12000,
+          "settlement.claim.refund_accepted": 0,
+          "settlement.claim.refund_outstanding": 12000,
+          "settlement.claim.refund_beneficiary": "buyer-D",
+          "settlement.claim.refund_bearer_policy": "FIXTURE_FULL_GROSS_RECLASS",
+          "settlement.claim.fixture_reclassified": true,
+          "settlement.claim.distribution_blocked": false,
+          "settlement.claim.legal_debtor_bound": false,
+          "settlement.claim.bank_debit_observed": false,
+          "settlement.claim.funds_executed": false
+        }
+      }
+    },
+    {
+      "id": "observe-mock-acceptance",
+      "group": "refund",
+      "action": "settlement_observe_mock_cancel_acceptance",
+      "body": {
+        "settlement_id": "settle-refund",
+        "idempotency_key": "key-observe-acceptance",
+        "source_id": "mock-accept-C",
+        "amount": 12000
+      },
+      "expect": {
+        "duplicate": false,
+        "applied": "observe_mock_cancel_acceptance",
+        "paths": {
+          "settlement.phase": "CAPTURED",
+          "settlement.claim.refund_face": 12000,
+          "settlement.claim.refund_accepted": 12000,
+          "settlement.claim.refund_outstanding": 0,
+          "settlement.claim.fixture_reclassified": true,
+          "settlement.claim.distribution_blocked": false,
+          "settlement.claim.refund_beneficiary": "buyer-D",
+          "funds_executed": false
+        }
+      }
+    },
+    {
+      "id": "hold-over-capacity",
+      "group": "adverse",
+      "action": "reservation_hold",
+      "body": {
+        "reservation_id": "reserve-X",
+        "idempotency_key": "key-reserve-X",
+        "show_id": "show-journey",
+        "slot": 4,
+        "buyer_role": "buyer-D",
+        "expires_ms": 1900000
+      },
+      "expect_error": "SLOT"
+    },
+    {
+      "id": "hold-occupied-slot",
+      "group": "adverse",
+      "action": "reservation_hold",
+      "body": {
+        "reservation_id": "reserve-Y",
+        "idempotency_key": "key-reserve-Y",
+        "show_id": "show-journey",
+        "slot": 0,
+        "buyer_role": "buyer-D",
+        "expires_ms": 1900000
+      },
+      "expect_error": "SLOT_OCCUPIED"
+    },
+    {
+      "id": "issue-cancelled",
+      "group": "adverse",
+      "action": "reservation_issue",
+      "body": {
+        "issuance_id": "issue-C",
+        "idempotency_key": "key-issue-C",
+        "order_id": "order-C"
+      },
+      "expect_error": "TERMINAL_IMMUTABLE"
+    },
+    {
+      "id": "double-consume",
+      "group": "adverse",
+      "action": "admission_consume",
+      "body": {
+        "consume_id": "consume-B2",
+        "idempotency_key": "key-consume-B2",
+        "right_id": "issue-B",
+        "version": 1,
+        "gate_role": "gate-1",
+        "request": "1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      "expect_error": "ALREADY_CONSUMED"
+    },
+    {
+      "id": "replay-consume-B",
+      "group": "adverse",
+      "action": "admission_consume",
+      "body": {
+        "consume_id": "consume-B",
+        "idempotency_key": "key-consume-B",
+        "right_id": "issue-B",
+        "version": 1,
+        "gate_role": "gate-1",
+        "request": "1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      "expect": {
+        "duplicate": true,
+        "applied": null,
+        "paths": {
+          "credential.phase": "CONSUMED",
+          "credential.consume_id": "consume-B",
+          "evidence.decision": "CONSUMED_ONCE",
+          "evidence.consume_id": "consume-B",
+          "admission_routing_production": false,
+          "offline_admission": false
+        },
+        "journal": [
+          {
+            "machine": "admission",
+            "delta": 0
+          },
+          {
+            "machine": "reservation",
+            "delta": 0
+          }
+        ]
+      },
+      "replay_of": "consume-B"
+    }
+  ],
+  "final_expect": {
+    "fsm_command_count": 44,
+    "read_queries": [
+      "list_shows",
+      "get_show",
+      "get_booking",
+      "list_bookings",
+      "get_right",
+      "get_presentation",
+      "list_open_listings",
+      "get_listing",
+      "get_admission",
+      "get_credential",
+      "get_settlement",
+      "get_credit_advance",
+      "get_credit_claim"
+    ],
+    "distinct_identifiers": [
+      "reserve-B",
+      "order-B",
+      "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "issue-B",
+      "admit-B",
+      "consume-B",
+      "listing-A",
+      "transfer-A-2"
+    ],
+    "separate_facts": [
+      {
+        "fact": "payment-observation",
+        "step": "payment-B",
+        "path": "reservation.payment_ref",
+        "value": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2"
+      },
+      {
+        "fact": "issuance-receipt",
+        "step": "issue-B",
+        "path": "reservation.issuance_id",
+        "value": "issue-B"
+      },
+      {
+        "fact": "issuance-right",
+        "step": "issue-B",
+        "path": "evidence.right_id",
+        "value": "issue-B"
+      },
+      {
+        "fact": "admission-receipt",
+        "step": "authorize-B",
+        "path": "credential.admission_id",
+        "value": "admit-B"
+      },
+      {
+        "fact": "admission-consume-receipt",
+        "step": "consume-B",
+        "path": "evidence.consume_id",
+        "value": "consume-B"
+      },
+      {
+        "fact": "resale-listing",
+        "step": "list-A",
+        "path": "listing.listing_id",
+        "value": "listing-A"
+      },
+      {
+        "fact": "resale-transfer",
+        "step": "accept-A",
+        "path": "evidence.transfer_id",
+        "value": "transfer-A-2"
+      }
+    ],
+    "receipt_invariants": {
+      "funds_executed": false,
+      "external_payment": "UNSUPPORTED"
+    },
+    "always_false_flags": [
+      "funds_executed",
+      "economic_finality_claimed",
+      "venue_credential_reissued",
+      "offline_admission",
+      "admission_routing_production",
+      "legal_debtor_bound",
+      "bank_debit_observed",
+      "external_return_closed",
+      "right_cancelled",
+      "admission_granted",
+      "provider_authorization_executed",
+      "chain_owner_current",
+      "chain_issued",
+      "private_proof_verified",
+      "buyer_evidence_available",
+      "chain_grant_current",
+      "cross_channel_exclusive",
+      "role_authenticated",
+      "organizer_authenticated",
+      "durable",
+      "quote_policy_approved",
+      "discount_applied",
+      "provider_fact_live",
+      "compensation_defined"
+    ]
+  }
+}

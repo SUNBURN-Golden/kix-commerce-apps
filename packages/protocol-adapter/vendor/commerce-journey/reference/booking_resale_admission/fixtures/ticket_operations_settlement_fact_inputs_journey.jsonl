@@ -1,0 +1,8 @@
+{"arguments": {"adjustment": 100, "adjustment_reason": "synthetic", "amount": 5500, "fee": 200, "gross": 6000, "held": 100, "idempotency_key": "manual-commit", "movement_id": "initial", "settlement_id": "claim-2", "tax": 100}, "operation": "commit", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"adjustment": 0, "adjustment_reason": null, "amount": 3801, "fee": 200, "gross": 4001, "held": 0, "idempotency_key": "later", "movement_id": "later", "settlement_id": "claim-2", "tax": 0}, "operation": "observe_statement", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"idempotency_key": "distribution", "order": ["platform", "organizer"], "settlement_id": "claim-2"}, "operation": "distribute", "surface": "settlement"}
+{"arguments": {"amount": 4000, "beneficiary_role": "buyer-3", "idempotency_key": "refund", "reason": "synthetic", "refund_id": "refund", "settlement_id": "claim-2"}, "operation": "bind_refund", "surface": "settlement"}
+{"arguments": {"amount": 1000, "idempotency_key": "accept", "settlement_id": "claim-2", "source_id": "accept"}, "operation": "observe_mock_cancel_acceptance", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}

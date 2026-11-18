@@ -1,0 +1,15 @@
+load_quote
+reference/booking_resale_admission/fixtures/commerce_console_free_quote.json
+simulate_quote
+SUBMIT_QUOTE
+compose_legs
+0
+plan_payments
+999
+SUBMIT_PLAN
+select_lines
+["L1"]
+propose_line_refund
+SUBMIT_REFUND
+show
+quit

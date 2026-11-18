@@ -1,0 +1,16 @@
+[
+  {
+    "legId": "large",
+    "providerRef": "mock-pg",
+    "routeRef": "original-large",
+    "amount": {
+      "asset": {
+        "namespace": "fiat",
+        "reference": "KRW",
+        "decimals": 0,
+        "maxAtoms": "340282366920938463463374607431768211455"
+      },
+      "atoms": "9007199254740993"
+    }
+  }
+]

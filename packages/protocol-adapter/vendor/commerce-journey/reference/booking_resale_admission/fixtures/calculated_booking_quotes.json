@@ -1,0 +1,106 @@
+{
+  "fixture_version": 1,
+  "provenance": "CALCULATION_ONLY",
+  "calculations": [
+    {
+      "recording_id": "calc-1",
+      "reservation_id": "reserve-1",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":1,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}}],\"discounts\":[]}"
+    },
+    {
+      "recording_id": "calc-alias",
+      "reservation_id": "reserve-1",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":1,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}}],\"discounts\":[]}"
+    },
+    {
+      "recording_id": "calc-changed",
+      "reservation_id": "reserve-1",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":2,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}}],\"discounts\":[]}"
+    },
+    {
+      "recording_id": "calc-price",
+      "reservation_id": "reserve-1",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":1,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10000\"}}],\"discounts\":[]}"
+    },
+    {
+      "recording_id": "calc-malformed",
+      "reservation_id": "reserve-1",
+      "request_text": "{"
+    },
+    {
+      "recording_id": "calc-mismatch",
+      "reservation_id": "other",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":1,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}}],\"discounts\":[]}"
+    },
+    {
+      "recording_id": "calc-expired",
+      "reservation_id": "reserve-2",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":1,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}}],\"discounts\":[]}"
+    },
+    {
+      "recording_id": "calc-asset",
+      "reservation_id": "reserve-1",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":1,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":2,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}}],\"discounts\":[]}"
+    },
+    {
+      "recording_id": "calc-discount",
+      "reservation_id": "reserve-1",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":1,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}}],\"discounts\":[{\"ruleId\":\"zero\",\"bearerRef\":\"fixture-bearer\",\"kind\":\"FIXED\",\"value\":\"0\",\"eligibleLineIds\":[\"L1\"],\"capAtoms\":null}]}"
+    },
+    {
+      "recording_id": "calc-multiple",
+      "reservation_id": "reserve-1",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":1,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}},{\"lineId\":\"L2\",\"inventoryId\":\"other-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}}],\"discounts\":[]}"
+    },
+    {
+      "recording_id": "desk-calc-1",
+      "reservation_id": "desk-reserve-1",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":1,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}}],\"discounts\":[]}"
+    },
+    {
+      "recording_id": "desk-calc-alias",
+      "reservation_id": "desk-reserve-1",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":1,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}}],\"discounts\":[]}"
+    },
+    {
+      "recording_id": "desk-calc-changed",
+      "reservation_id": "desk-reserve-1",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":2,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}}],\"discounts\":[]}"
+    },
+    {
+      "recording_id": "desk-calc-price",
+      "reservation_id": "desk-reserve-1",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":1,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10000\"}}],\"discounts\":[]}"
+    },
+    {
+      "recording_id": "desk-calc-malformed",
+      "reservation_id": "desk-reserve-1",
+      "request_text": "{"
+    },
+    {
+      "recording_id": "desk-calc-mismatch",
+      "reservation_id": "desk-other",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":1,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}}],\"discounts\":[]}"
+    },
+    {
+      "recording_id": "desk-calc-expired",
+      "reservation_id": "desk-reserve-2",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":1,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}}],\"discounts\":[]}"
+    },
+    {
+      "recording_id": "desk-calc-asset",
+      "reservation_id": "desk-reserve-1",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":1,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":2,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}}],\"discounts\":[]}"
+    },
+    {
+      "recording_id": "desk-calc-discount",
+      "reservation_id": "desk-reserve-1",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":1,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}}],\"discounts\":[{\"ruleId\":\"zero\",\"bearerRef\":\"fixture-bearer\",\"kind\":\"FIXED\",\"value\":\"0\",\"eligibleLineIds\":[\"L1\"],\"capAtoms\":null}]}"
+    },
+    {
+      "recording_id": "desk-calc-multiple",
+      "reservation_id": "desk-reserve-1",
+      "request_text": "{\"schemaVersion\":\"kix:commerce:2\",\"orderId\":\"calculation-order\",\"orderVersion\":1,\"scope\":{\"issuerId\":\"fixture-issuer\",\"eventId\":\"fixture-event\",\"performanceId\":\"fixture-performance\"},\"policyRef\":\"fixture-policy\",\"expiresAt\":1,\"lines\":[{\"lineId\":\"L1\",\"inventoryId\":\"fixture-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}},{\"lineId\":\"L2\",\"inventoryId\":\"other-inventory\",\"gross\":{\"asset\":{\"namespace\":\"fiat\",\"reference\":\"KRW\",\"decimals\":0,\"maxAtoms\":\"340282366920938463463374607431768211455\"},\"atoms\":\"10001\"}}],\"discounts\":[]}"
+    }
+  ]
+}
