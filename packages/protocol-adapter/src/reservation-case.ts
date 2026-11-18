@@ -33,7 +33,7 @@ import {
  * Phase names, idempotency echoes, terminal immutability, duplicate consume,
  * settlement-coupling refusal, and reconcile `matched` follow the kix-protocol
  * in-memory FSM at the UI contract only.
- * Authoritative machine: BeautifulMind-JT/kix-protocol
+ * Authoritative machine: SUNBURN-Golden/kix-protocol
  * `reference/booking_resale_admission/reservation_fsm.py`
  * on main `a47828dd4517c5a7397e09eb6b563a64e4265c82`
  * (feature `2183d0b5b5010ec2692c43c277e99926ad9250db`).
@@ -44,7 +44,7 @@ import {
  * Catalog capacity on the Wave 4 hold pointer is a separate desk counter.
  */
 export const RESERVATION_DEPTH_BASELINE = {
-  protocolRepo: "BeautifulMind-JT/kix-protocol",
+  protocolRepo: "SUNBURN-Golden/kix-protocol",
   protocolMainSha: "a47828dd4517c5a7397e09eb6b563a64e4265c82",
   featureCommit: "2183d0b5b5010ec2692c43c277e99926ad9250db",
   fsmPath: "reference/booking_resale_admission/reservation_fsm.py",

@@ -5,14 +5,19 @@
 // No base URL. Actor is not an authentication result. No delivery inference.
 
 export const OPENAPI_PIN = {
-  "commandCount": 40,
+  "commandCount": 84,
   "contractStatus": "contract-only",
+  "coreCommandCount": 40,
   "domain": "kix:fixture:lifecycle:0.3",
-  "gitBlob": "93d6661f9db3a215d45762f7a29a92130f692dab",
+  "fsmCommandCount": 44,
+  "fsmSourceGitBlob": "3771a8739b906a478b54c597df37e27d1afc5f21",
+  "fsmSourcePath": "docs/contracts/openapi/fsm-command-contract.json",
+  "fsmSourceSha256": "342e97cb37b199622d7bb436ca9164690d969b797058aaa539ff417cab01411c",
+  "gitBlob": "ed23b98fde4ce02607ffda2ba9488ed510645de2",
   "liveHttpServer": false,
   "openapiPath": "docs/contracts/openapi/kix-protocol.contract-only.openapi.json",
   "productionEndpoint": false,
-  "sha256": "fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e",
+  "sha256": "2248ff67aa0f43cb98bdd492f63b36fce64c53def6a403a97a7987a128b2d2dc",
   "sourceAuthentication": "FIXTURE_ONLY",
   "sourceGitBlob": "619ae21c82ca3df5661bd3831613f15fa65225ff",
   "sourcePath": "reference/v0.3-rc1/protocol_contract.json",
@@ -63,6 +68,50 @@ export const COMMANDS = [
   "set_consent",
   "settle_capture",
   "void_unissued",
+  "settlement_initiate",
+  "settlement_authorize",
+  "settlement_capture",
+  "settlement_commit",
+  "settlement_fail",
+  "settlement_cancel",
+  "settlement_observe_statement",
+  "settlement_distribute",
+  "settlement_bind_refund",
+  "settlement_observe_mock_cancel_acceptance",
+  "reservation_set_clock",
+  "reservation_register_show",
+  "reservation_hold",
+  "reservation_release",
+  "reservation_confirm",
+  "reservation_cancel",
+  "reservation_observe_payment",
+  "reservation_bind_settlement",
+  "reservation_issue",
+  "reservation_authorize_admission",
+  "reservation_consume",
+  "resale_set_clock",
+  "resale_adopt_issued",
+  "resale_list_resale",
+  "resale_hold_buy",
+  "resale_release_hold",
+  "resale_cancel_listing",
+  "resale_observe_resale_payment",
+  "resale_bind_settlement",
+  "resale_accept_resale",
+  "resale_close",
+  "admission_set_clock",
+  "admission_adopt_issued",
+  "admission_authorize_admission",
+  "admission_consume",
+  "credit_offer",
+  "credit_approve",
+  "credit_reject",
+  "credit_cancel",
+  "credit_bind_settlement",
+  "credit_draw",
+  "credit_repay",
+  "credit_close",
+  "credit_default",
 ] as const;
 
 export type CommandName = (typeof COMMANDS)[number];
@@ -108,6 +157,50 @@ export const ACTION_BODY_MAP = {
   "set_consent": "#/components/schemas/set_consent",
   "settle_capture": "#/components/schemas/settle_capture",
   "void_unissued": "#/components/schemas/void_unissued",
+  "settlement_initiate": "#/components/schemas/settlement_initiate",
+  "settlement_authorize": "#/components/schemas/settlement_authorize",
+  "settlement_capture": "#/components/schemas/settlement_capture",
+  "settlement_commit": "#/components/schemas/settlement_commit",
+  "settlement_fail": "#/components/schemas/settlement_fail",
+  "settlement_cancel": "#/components/schemas/settlement_cancel",
+  "settlement_observe_statement": "#/components/schemas/settlement_observe_statement",
+  "settlement_distribute": "#/components/schemas/settlement_distribute",
+  "settlement_bind_refund": "#/components/schemas/settlement_bind_refund",
+  "settlement_observe_mock_cancel_acceptance": "#/components/schemas/settlement_observe_mock_cancel_acceptance",
+  "reservation_set_clock": "#/components/schemas/reservation_set_clock",
+  "reservation_register_show": "#/components/schemas/reservation_register_show",
+  "reservation_hold": "#/components/schemas/reservation_hold",
+  "reservation_release": "#/components/schemas/reservation_release",
+  "reservation_confirm": "#/components/schemas/reservation_confirm",
+  "reservation_cancel": "#/components/schemas/reservation_cancel",
+  "reservation_observe_payment": "#/components/schemas/reservation_observe_payment",
+  "reservation_bind_settlement": "#/components/schemas/reservation_bind_settlement",
+  "reservation_issue": "#/components/schemas/reservation_issue",
+  "reservation_authorize_admission": "#/components/schemas/reservation_authorize_admission",
+  "reservation_consume": "#/components/schemas/reservation_consume",
+  "resale_set_clock": "#/components/schemas/resale_set_clock",
+  "resale_adopt_issued": "#/components/schemas/resale_adopt_issued",
+  "resale_list_resale": "#/components/schemas/resale_list_resale",
+  "resale_hold_buy": "#/components/schemas/resale_hold_buy",
+  "resale_release_hold": "#/components/schemas/resale_release_hold",
+  "resale_cancel_listing": "#/components/schemas/resale_cancel_listing",
+  "resale_observe_resale_payment": "#/components/schemas/resale_observe_resale_payment",
+  "resale_bind_settlement": "#/components/schemas/resale_bind_settlement",
+  "resale_accept_resale": "#/components/schemas/resale_accept_resale",
+  "resale_close": "#/components/schemas/resale_close",
+  "admission_set_clock": "#/components/schemas/admission_set_clock",
+  "admission_adopt_issued": "#/components/schemas/admission_adopt_issued",
+  "admission_authorize_admission": "#/components/schemas/admission_authorize_admission",
+  "admission_consume": "#/components/schemas/admission_consume",
+  "credit_offer": "#/components/schemas/credit_offer",
+  "credit_approve": "#/components/schemas/credit_approve",
+  "credit_reject": "#/components/schemas/credit_reject",
+  "credit_cancel": "#/components/schemas/credit_cancel",
+  "credit_bind_settlement": "#/components/schemas/credit_bind_settlement",
+  "credit_draw": "#/components/schemas/credit_draw",
+  "credit_repay": "#/components/schemas/credit_repay",
+  "credit_close": "#/components/schemas/credit_close",
+  "credit_default": "#/components/schemas/credit_default",
 } as const;
 
 export const COMMAND_SCHEMAS = {
@@ -1784,4 +1877,1322 @@ export const COMMAND_SCHEMAS = {
     ],
     "type": "object"
   },
+  "settlement_initiate": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "settlement_id",
+      "idempotency_key",
+      "trade_id",
+      "gross",
+      "debtor_role",
+      "policy"
+    ],
+    "properties": {
+      "settlement_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "trade_id": {
+        "type": "string"
+      },
+      "gross": {
+        "type": "integer"
+      },
+      "debtor_role": {
+        "type": "string"
+      },
+      "policy": {
+        "type": "object"
+      },
+      "currency": {
+        "type": "string"
+      }
+    }
+  },
+  "settlement_authorize": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "settlement_id",
+      "idempotency_key"
+    ],
+    "properties": {
+      "settlement_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      }
+    }
+  },
+  "settlement_capture": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "settlement_id",
+      "idempotency_key"
+    ],
+    "properties": {
+      "settlement_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      }
+    }
+  },
+  "settlement_commit": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "settlement_id",
+      "idempotency_key",
+      "movement_id",
+      "gross",
+      "amount",
+      "fee",
+      "tax",
+      "held",
+      "adjustment"
+    ],
+    "properties": {
+      "settlement_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "movement_id": {
+        "type": "string"
+      },
+      "gross": {
+        "type": "integer"
+      },
+      "amount": {
+        "type": "integer"
+      },
+      "fee": {
+        "type": "integer"
+      },
+      "tax": {
+        "type": "integer"
+      },
+      "held": {
+        "type": "integer"
+      },
+      "adjustment": {
+        "type": "integer"
+      },
+      "adjustment_reason": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "settlement_fail": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "settlement_id",
+      "idempotency_key",
+      "reason"
+    ],
+    "properties": {
+      "settlement_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      }
+    }
+  },
+  "settlement_cancel": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "settlement_id",
+      "idempotency_key",
+      "reason"
+    ],
+    "properties": {
+      "settlement_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      }
+    }
+  },
+  "settlement_observe_statement": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "settlement_id",
+      "idempotency_key",
+      "movement_id",
+      "gross",
+      "amount",
+      "fee",
+      "tax",
+      "held",
+      "adjustment"
+    ],
+    "properties": {
+      "settlement_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "movement_id": {
+        "type": "string"
+      },
+      "gross": {
+        "type": "integer"
+      },
+      "amount": {
+        "type": "integer"
+      },
+      "fee": {
+        "type": "integer"
+      },
+      "tax": {
+        "type": "integer"
+      },
+      "held": {
+        "type": "integer"
+      },
+      "adjustment": {
+        "type": "integer"
+      },
+      "adjustment_reason": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "settlement_distribute": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "settlement_id",
+      "idempotency_key",
+      "order"
+    ],
+    "properties": {
+      "settlement_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "order": {
+        "type": "array"
+      }
+    }
+  },
+  "settlement_bind_refund": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "settlement_id",
+      "idempotency_key",
+      "refund_id",
+      "amount",
+      "beneficiary_role",
+      "reason"
+    ],
+    "properties": {
+      "settlement_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "refund_id": {
+        "type": "string"
+      },
+      "amount": {
+        "type": "integer"
+      },
+      "beneficiary_role": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      }
+    }
+  },
+  "settlement_observe_mock_cancel_acceptance": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "settlement_id",
+      "idempotency_key",
+      "source_id",
+      "amount"
+    ],
+    "properties": {
+      "settlement_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "source_id": {
+        "type": "string"
+      },
+      "amount": {
+        "type": "integer"
+      }
+    }
+  },
+  "reservation_set_clock": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "subject_id",
+      "idempotency_key",
+      "now_ms"
+    ],
+    "properties": {
+      "subject_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "now_ms": {
+        "type": "integer"
+      }
+    }
+  },
+  "reservation_register_show": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "show_id",
+      "idempotency_key",
+      "organizer_role",
+      "capacity",
+      "gate_roles",
+      "primary_price",
+      "resale_cap",
+      "resale_allowed",
+      "organizer_bps",
+      "platform_bps"
+    ],
+    "properties": {
+      "show_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "organizer_role": {
+        "type": "string"
+      },
+      "capacity": {
+        "type": "integer"
+      },
+      "gate_roles": {
+        "type": "array"
+      },
+      "primary_price": {
+        "type": "integer"
+      },
+      "resale_cap": {
+        "type": "integer"
+      },
+      "resale_allowed": {
+        "type": "boolean"
+      },
+      "organizer_bps": {
+        "type": "integer"
+      },
+      "platform_bps": {
+        "type": "integer"
+      }
+    }
+  },
+  "reservation_hold": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "reservation_id",
+      "idempotency_key",
+      "show_id",
+      "slot",
+      "buyer_role",
+      "expires_ms"
+    ],
+    "properties": {
+      "reservation_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "show_id": {
+        "type": "string"
+      },
+      "slot": {
+        "type": "integer"
+      },
+      "buyer_role": {
+        "type": "string"
+      },
+      "expires_ms": {
+        "type": "integer"
+      }
+    }
+  },
+  "reservation_release": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "reservation_id",
+      "idempotency_key"
+    ],
+    "properties": {
+      "reservation_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      }
+    }
+  },
+  "reservation_confirm": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "order_id",
+      "idempotency_key",
+      "reservation_id",
+      "amount"
+    ],
+    "properties": {
+      "order_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "reservation_id": {
+        "type": "string"
+      },
+      "amount": {
+        "type": "integer"
+      },
+      "quote_ref": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "reservation_cancel": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "reservation_id",
+      "idempotency_key"
+    ],
+    "properties": {
+      "reservation_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      }
+    }
+  },
+  "reservation_observe_payment": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "order_id",
+      "idempotency_key",
+      "payment_ref",
+      "amount"
+    ],
+    "properties": {
+      "order_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "payment_ref": {
+        "type": "string"
+      },
+      "amount": {
+        "type": "integer"
+      }
+    }
+  },
+  "reservation_bind_settlement": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "reservation_id",
+      "idempotency_key",
+      "settlement_id"
+    ],
+    "properties": {
+      "reservation_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "settlement_id": {
+        "type": "string"
+      }
+    }
+  },
+  "reservation_issue": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "issuance_id",
+      "idempotency_key",
+      "order_id"
+    ],
+    "properties": {
+      "issuance_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "order_id": {
+        "type": "string"
+      }
+    }
+  },
+  "reservation_authorize_admission": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "admission_id",
+      "idempotency_key",
+      "right_id",
+      "version",
+      "holder_role",
+      "gate_role",
+      "request",
+      "expires_ms"
+    ],
+    "properties": {
+      "admission_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "right_id": {
+        "type": "string"
+      },
+      "version": {
+        "type": "integer"
+      },
+      "holder_role": {
+        "type": "string"
+      },
+      "gate_role": {
+        "type": "string"
+      },
+      "request": {
+        "type": "string"
+      },
+      "expires_ms": {
+        "type": "integer"
+      }
+    }
+  },
+  "reservation_consume": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "consume_id",
+      "idempotency_key",
+      "right_id",
+      "version",
+      "gate_role",
+      "request"
+    ],
+    "properties": {
+      "consume_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "right_id": {
+        "type": "string"
+      },
+      "version": {
+        "type": "integer"
+      },
+      "gate_role": {
+        "type": "string"
+      },
+      "request": {
+        "type": "string"
+      }
+    }
+  },
+  "resale_set_clock": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "subject_id",
+      "idempotency_key",
+      "now_ms"
+    ],
+    "properties": {
+      "subject_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "now_ms": {
+        "type": "integer"
+      }
+    }
+  },
+  "resale_adopt_issued": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "right_id",
+      "idempotency_key",
+      "show_id",
+      "organizer_role",
+      "capacity",
+      "gate_roles",
+      "primary_price",
+      "resale_cap",
+      "resale_allowed",
+      "organizer_bps",
+      "platform_bps",
+      "slot",
+      "buyer_role",
+      "expires_ms",
+      "order_id",
+      "amount",
+      "payment_ref"
+    ],
+    "properties": {
+      "right_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "show_id": {
+        "type": "string"
+      },
+      "organizer_role": {
+        "type": "string"
+      },
+      "capacity": {
+        "type": "integer"
+      },
+      "gate_roles": {
+        "type": "array"
+      },
+      "primary_price": {
+        "type": "integer"
+      },
+      "resale_cap": {
+        "type": "integer"
+      },
+      "resale_allowed": {
+        "type": "boolean"
+      },
+      "organizer_bps": {
+        "type": "integer"
+      },
+      "platform_bps": {
+        "type": "integer"
+      },
+      "slot": {
+        "type": "integer"
+      },
+      "buyer_role": {
+        "type": "string"
+      },
+      "expires_ms": {
+        "type": "integer"
+      },
+      "order_id": {
+        "type": "string"
+      },
+      "amount": {
+        "type": "integer"
+      },
+      "payment_ref": {
+        "type": "string"
+      },
+      "reservation_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "quote_ref": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "resale_list_resale": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "listing_id",
+      "idempotency_key",
+      "right_id",
+      "version",
+      "seller_role",
+      "recipient_role",
+      "amount",
+      "expires_ms"
+    ],
+    "properties": {
+      "listing_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "right_id": {
+        "type": "string"
+      },
+      "version": {
+        "type": "integer"
+      },
+      "seller_role": {
+        "type": "string"
+      },
+      "recipient_role": {
+        "type": "string"
+      },
+      "amount": {
+        "type": "integer"
+      },
+      "expires_ms": {
+        "type": "integer"
+      },
+      "reservation_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "resale_hold_buy": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "hold_id",
+      "idempotency_key",
+      "listing_id",
+      "buyer_role"
+    ],
+    "properties": {
+      "hold_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "listing_id": {
+        "type": "string"
+      },
+      "buyer_role": {
+        "type": "string"
+      }
+    }
+  },
+  "resale_release_hold": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "hold_id",
+      "idempotency_key",
+      "buyer_role"
+    ],
+    "properties": {
+      "hold_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "buyer_role": {
+        "type": "string"
+      }
+    }
+  },
+  "resale_cancel_listing": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "listing_id",
+      "idempotency_key",
+      "seller_role"
+    ],
+    "properties": {
+      "listing_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "seller_role": {
+        "type": "string"
+      }
+    }
+  },
+  "resale_observe_resale_payment": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "listing_id",
+      "idempotency_key",
+      "payment_ref",
+      "amount"
+    ],
+    "properties": {
+      "listing_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "payment_ref": {
+        "type": "string"
+      },
+      "amount": {
+        "type": "integer"
+      },
+      "buyer_role": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "resale_bind_settlement": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "listing_id",
+      "idempotency_key",
+      "settlement_id"
+    ],
+    "properties": {
+      "listing_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "settlement_id": {
+        "type": "string"
+      }
+    }
+  },
+  "resale_accept_resale": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "transfer_id",
+      "idempotency_key",
+      "listing_id"
+    ],
+    "properties": {
+      "transfer_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "listing_id": {
+        "type": "string"
+      }
+    }
+  },
+  "resale_close": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "listing_id",
+      "idempotency_key"
+    ],
+    "properties": {
+      "listing_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      }
+    }
+  },
+  "admission_set_clock": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "subject_id",
+      "idempotency_key",
+      "now_ms"
+    ],
+    "properties": {
+      "subject_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "now_ms": {
+        "type": "integer"
+      }
+    }
+  },
+  "admission_adopt_issued": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "right_id",
+      "idempotency_key",
+      "show_id",
+      "organizer_role",
+      "capacity",
+      "gate_roles",
+      "primary_price",
+      "resale_cap",
+      "resale_allowed",
+      "organizer_bps",
+      "platform_bps",
+      "slot",
+      "buyer_role",
+      "expires_ms",
+      "order_id",
+      "amount",
+      "payment_ref"
+    ],
+    "properties": {
+      "right_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "show_id": {
+        "type": "string"
+      },
+      "organizer_role": {
+        "type": "string"
+      },
+      "capacity": {
+        "type": "integer"
+      },
+      "gate_roles": {
+        "type": "array"
+      },
+      "primary_price": {
+        "type": "integer"
+      },
+      "resale_cap": {
+        "type": "integer"
+      },
+      "resale_allowed": {
+        "type": "boolean"
+      },
+      "organizer_bps": {
+        "type": "integer"
+      },
+      "platform_bps": {
+        "type": "integer"
+      },
+      "slot": {
+        "type": "integer"
+      },
+      "buyer_role": {
+        "type": "string"
+      },
+      "expires_ms": {
+        "type": "integer"
+      },
+      "order_id": {
+        "type": "string"
+      },
+      "amount": {
+        "type": "integer"
+      },
+      "payment_ref": {
+        "type": "string"
+      },
+      "reservation_id": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "quote_ref": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "admission_authorize_admission": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "admission_id",
+      "idempotency_key",
+      "right_id",
+      "version",
+      "holder_role",
+      "gate_role",
+      "request",
+      "expires_ms"
+    ],
+    "properties": {
+      "admission_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "right_id": {
+        "type": "string"
+      },
+      "version": {
+        "type": "integer"
+      },
+      "holder_role": {
+        "type": "string"
+      },
+      "gate_role": {
+        "type": "string"
+      },
+      "request": {
+        "type": "string"
+      },
+      "expires_ms": {
+        "type": "integer"
+      },
+      "external_dependency": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "admission_consume": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "consume_id",
+      "idempotency_key",
+      "right_id",
+      "version",
+      "gate_role",
+      "request"
+    ],
+    "properties": {
+      "consume_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "right_id": {
+        "type": "string"
+      },
+      "version": {
+        "type": "integer"
+      },
+      "gate_role": {
+        "type": "string"
+      },
+      "request": {
+        "type": "string"
+      },
+      "external_dependency": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "credit_offer": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "advance_id",
+      "idempotency_key",
+      "face",
+      "amount",
+      "beneficiary_role"
+    ],
+    "properties": {
+      "advance_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "face": {
+        "type": "object"
+      },
+      "amount": {
+        "type": "integer"
+      },
+      "beneficiary_role": {
+        "type": "string"
+      },
+      "product": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "credit_approve": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "advance_id",
+      "idempotency_key"
+    ],
+    "properties": {
+      "advance_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      }
+    }
+  },
+  "credit_reject": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "advance_id",
+      "idempotency_key",
+      "reason"
+    ],
+    "properties": {
+      "advance_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      }
+    }
+  },
+  "credit_cancel": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "advance_id",
+      "idempotency_key",
+      "reason"
+    ],
+    "properties": {
+      "advance_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      }
+    }
+  },
+  "credit_bind_settlement": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "advance_id",
+      "idempotency_key",
+      "settlement_id"
+    ],
+    "properties": {
+      "advance_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "settlement_id": {
+        "type": "string"
+      }
+    }
+  },
+  "credit_draw": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "advance_id",
+      "idempotency_key",
+      "draw_id"
+    ],
+    "properties": {
+      "advance_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "draw_id": {
+        "type": "string"
+      }
+    }
+  },
+  "credit_repay": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "advance_id",
+      "idempotency_key",
+      "repay_id",
+      "sequence",
+      "amount"
+    ],
+    "properties": {
+      "advance_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "repay_id": {
+        "type": "string"
+      },
+      "sequence": {
+        "type": "integer"
+      },
+      "amount": {
+        "type": "integer"
+      }
+    }
+  },
+  "credit_close": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "advance_id",
+      "idempotency_key"
+    ],
+    "properties": {
+      "advance_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      }
+    }
+  },
+  "credit_default": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "advance_id",
+      "idempotency_key",
+      "reason"
+    ],
+    "properties": {
+      "advance_id": {
+        "type": "string"
+      },
+      "idempotency_key": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      }
+    }
+  },
+} as const;
+
+export const FSM_COMMAND_MACHINES = {
+  "settlement_initiate": "settlement",
+  "settlement_authorize": "settlement",
+  "settlement_capture": "settlement",
+  "settlement_commit": "settlement",
+  "settlement_fail": "settlement",
+  "settlement_cancel": "settlement",
+  "settlement_observe_statement": "settlement",
+  "settlement_distribute": "settlement",
+  "settlement_bind_refund": "settlement",
+  "settlement_observe_mock_cancel_acceptance": "settlement",
+  "reservation_set_clock": "reservation",
+  "reservation_register_show": "reservation",
+  "reservation_hold": "reservation",
+  "reservation_release": "reservation",
+  "reservation_confirm": "reservation",
+  "reservation_cancel": "reservation",
+  "reservation_observe_payment": "reservation",
+  "reservation_bind_settlement": "reservation",
+  "reservation_issue": "reservation",
+  "reservation_authorize_admission": "reservation",
+  "reservation_consume": "reservation",
+  "resale_set_clock": "resale",
+  "resale_adopt_issued": "resale",
+  "resale_list_resale": "resale",
+  "resale_hold_buy": "resale",
+  "resale_release_hold": "resale",
+  "resale_cancel_listing": "resale",
+  "resale_observe_resale_payment": "resale",
+  "resale_bind_settlement": "resale",
+  "resale_accept_resale": "resale",
+  "resale_close": "resale",
+  "admission_set_clock": "admission",
+  "admission_adopt_issued": "admission",
+  "admission_authorize_admission": "admission",
+  "admission_consume": "admission",
+  "credit_offer": "credit",
+  "credit_approve": "credit",
+  "credit_reject": "credit",
+  "credit_cancel": "credit",
+  "credit_bind_settlement": "credit",
+  "credit_draw": "credit",
+  "credit_repay": "credit",
+  "credit_close": "credit",
+  "credit_default": "credit",
 } as const;

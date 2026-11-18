@@ -122,10 +122,10 @@ describe("admission desk labels", () => {
     expect(ADMISSION_DEPTH_BASELINE.protocolMainSha).toBe("3b6bdd26f61bb828af3781946b63a3a3fa03187b");
     expect(ADMISSION_DEPTH_BASELINE.featureCommit).toBe("38a3d68f714100e385ba9e2b7716ed2e5b890d12");
     expect(OPENAPI_CONTRACT_PIN.openApiFileSha256).toBe(
-      "fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e",
+      "2248ff67aa0f43cb98bdd492f63b36fce64c53def6a403a97a7987a128b2d2dc",
     );
     expect(OPENAPI_INTEGRATION_GATE_PIN.openApiFileSha256).toBe(
-      "2a2af554cb1a8b128f2cf1b1d5b8cf6b1c8fa90adf30865dbc3e64932b3bd13f",
+      "d05beb48c234b924af086b886ce9bb524dc34407ad2e4a57f1e8af84255820f6",
     );
     expect(OPENAPI_INTEGRATION_GATE_PIN.sourceProtocolContractSha256).toBe(
       "ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",

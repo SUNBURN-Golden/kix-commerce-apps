@@ -4,8 +4,8 @@ import { readFileSync } from "node:fs";
 /** Ordered, app-internal inputs. No runtime configuration participates. */
 export const PIN_DIGEST_FIELDS = [
   ["OPENAPI_CONTRACT_PIN", ["protocolMainSha", "openApiFileSha256", "infoVersion", "sourceProtocolContractSha256"]],
-  ["OPENAPI_INTEGRATION_GATE_PIN", ["protocolMergeSha", "protocolFeatureSha", "openApiFileSha256", "infoVersion", "sourceProtocolContractSha256"]],
-  ["KIX_SDK_0_PIN", ["producerMergeSha", "producerHeadSha", "producerProvenanceSha256", "producerSourceSha256", "manifestSha256", "sidecarSha256", "profileSha256", "catalogueSha256", "generatorSha256", "clientSha256", "jsonschemaSha256", "manifestHelperSha256", "sdkPinFileSha256", "verifierSha256"]],
+  ["OPENAPI_INTEGRATION_GATE_PIN", ["protocolMergeSha", "protocolFeatureSha", "openApiFileSha256", "infoVersion", "sourceProtocolContractSha256", "fsmSourceSha256"]],
+  ["KIX_SDK_0_PIN", ["producerMergeSha", "producerHeadSha", "producerProvenanceSha256", "producerSourceSha256", "manifestSha256", "sidecarSha256", "profileSha256", "catalogueSha256", "generatorSha256", "clientSha256", "jsonschemaSha256", "manifestHelperSha256", "sdkPinFileSha256", "verifierSha256", "fsmSourceSha256"]],
 ] as const;
 const sources = ["openapi-contract-pin", "integration-gate-pin", "sdk-pin"];
 

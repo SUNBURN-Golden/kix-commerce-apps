@@ -205,11 +205,25 @@ function main() {
 
   if (!sameKeys(keysOf(manifest.source_references), ["extension_profile", "fixture_profile"])) {
     errors.push("source_references field set drift");
-  } else if (
-    manifest.source_references.extension_profile !== false ||
-    manifest.source_references.fixture_profile !== "reference/v0.3-rc1/protocol_contract.json"
-  ) {
+  } else if (manifest.source_references.fixture_profile !== "reference/v0.3-rc1/protocol_contract.json") {
     errors.push("source_references drift");
+  } else {
+    const extension = manifest.source_references.extension_profile;
+    if (extension !== false) {
+      if (!sameKeys(keysOf(extension), ["gitBlob", "path", "sha256"])) {
+        errors.push("extension_profile field set drift");
+      } else if (extension.path !== "docs/contracts/openapi/fsm-command-contract.json") {
+        errors.push("extension_profile path drift");
+      } else {
+        const extensionBytes = readExact(resolve(ROOT, extension.path), errors, "extension_profile");
+        if (
+          extensionBytes &&
+          (sha256Hex(extensionBytes) !== extension.sha256 || gitBlobId(extensionBytes) !== extension.gitBlob)
+        ) {
+          errors.push("extension_profile bytes drift");
+        }
+      }
+    }
   }
 
   if (!Array.isArray(manifest.vectors)) {

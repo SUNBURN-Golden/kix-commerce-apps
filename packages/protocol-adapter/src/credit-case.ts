@@ -25,7 +25,7 @@ import {
  * Phase names, idempotency echoes, duplicate draw, terminal immutability,
  * repayment order, and the open-face ceiling follow the kix-protocol
  * in-memory FSM at the UI contract only.
- * Authoritative machine: BeautifulMind-JT/kix-protocol
+ * Authoritative machine: SUNBURN-Golden/kix-protocol
  * `reference/credit_advance_f04/credit_fsm.py`
  * on main `8c1a4db7cfe70b0e772a2ef0f24492967c84f7f1`
  * (feature `4608460ba1fe57165e88e74f6e8d8c23e8e53277`).
@@ -39,7 +39,7 @@ import {
  * Credit commands do not write booking or resale ownership.
  */
 export const CREDIT_DEPTH_BASELINE = {
-  protocolRepo: "BeautifulMind-JT/kix-protocol",
+  protocolRepo: "SUNBURN-Golden/kix-protocol",
   protocolMainSha: "8c1a4db7cfe70b0e772a2ef0f24492967c84f7f1",
   featureCommit: "4608460ba1fe57165e88e74f6e8d8c23e8e53277",
   fsmPath: "reference/credit_advance_f04/credit_fsm.py",

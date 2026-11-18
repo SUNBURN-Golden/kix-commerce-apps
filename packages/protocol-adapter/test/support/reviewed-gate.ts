@@ -59,8 +59,8 @@ if (!REVIEWED_GATE_RUNS) {
 }
 
 /**
- * The reviewed merge and the feature commit share one tree. Either checkout
- * is the published gate. A dirty tree or any other HEAD is refused.
+ * CI runs the reviewed merge. A local feature checkout is accepted solely
+ * when its tree equals the merge tree. A dirty tree or any other HEAD is refused.
  */
 export function assertReviewedCheckout(root: string): void {
   const gateDoc = path.join(root, OPENAPI_INTEGRATION_GATE_PIN.openApiPath);

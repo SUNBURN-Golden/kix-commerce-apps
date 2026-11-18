@@ -32,7 +32,7 @@ import {
  *
  * Phase names and the refusal codes follow the kix-protocol in-memory FSM at
  * the UI contract only.
- * Authoritative machine: BeautifulMind-JT/kix-protocol
+ * Authoritative machine: SUNBURN-Golden/kix-protocol
  * `reference/booking_resale_admission/admission_fsm.py`
  * on main `3b6bdd26f61bb828af3781946b63a3a3fa03187b`
  * (feature `38a3d68f714100e385ba9e2b7716ed2e5b890d12`).
@@ -44,7 +44,7 @@ import {
  * credential still matches the bound reservation and ownership reads.
  */
 export const ADMISSION_DEPTH_BASELINE = {
-  protocolRepo: "BeautifulMind-JT/kix-protocol",
+  protocolRepo: "SUNBURN-Golden/kix-protocol",
   protocolMainSha: "3b6bdd26f61bb828af3781946b63a3a3fa03187b",
   featureCommit: "38a3d68f714100e385ba9e2b7716ed2e5b890d12",
   fsmPath: "reference/booking_resale_admission/admission_fsm.py",

@@ -5,17 +5,17 @@ import { sha256Hex } from "./sha256.js";
 import { ProtocolError } from "./types.js";
 
 /**
- * Published contract-only OpenAPI pin from BeautifulMind-JT/kix-protocol.
+ * Published contract-only OpenAPI pin from SUNBURN-Golden/kix-protocol.
  * The file is the local-call catalogue. It is not a live HTTP server,
  * not a production endpoint, and not a conformance claim.
  * POST on this file's path is an OpenAPI grammar slot, not protocol law.
  * The non-production integration-gate transport is a separate pin.
  */
 export const OPENAPI_CONTRACT_PIN = {
-  protocolRepo: "BeautifulMind-JT/kix-protocol",
-  protocolMainSha: "a744b0a036d7e1edb48416871af20cd182f23df4",
+  protocolRepo: "SUNBURN-Golden/kix-protocol",
+  protocolMainSha: "8ba7f6c36373ac0ec49246f51f7471c164ac3a28",
   openApiPath: "docs/contracts/openapi/kix-protocol.contract-only.openapi.json",
-  openApiFileSha256: "fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e",
+  openApiFileSha256: "2248ff67aa0f43cb98bdd492f63b36fce64c53def6a403a97a7987a128b2d2dc",
   infoVersion: "0.3-rc1+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
   sourceProtocolContractPath: "reference/v0.3-rc1/protocol_contract.json",
   sourceProtocolContractSha256: "ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",

@@ -32,7 +32,7 @@ function probe(status: "up" | "ready", extra: Record<string, unknown> = {}): Rec
     protocolTruth: false,
     localFileJournal: false,
     ...(status === "ready"
-      ? { liveMoney: false, durable: false, commandCount: 40, domain: PINNED_PROTOCOL_DOMAIN }
+      ? { liveMoney: false, durable: false, commandCount: 84, domain: PINNED_PROTOCOL_DOMAIN }
       : {}),
     ...extra,
   };

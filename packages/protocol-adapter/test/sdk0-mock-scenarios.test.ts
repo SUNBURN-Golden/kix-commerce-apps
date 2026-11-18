@@ -32,10 +32,10 @@ describe("p-sdk-0 offline scenario kit", () => {
     const scenarios = SDK0_MOCK_SCENARIO_IDS.map((fixtureId) => createSdk0MockScenario({ fixtureId, seed: 7 }));
     expect(new Set(scenarios.map((s) => s.klass))).toEqual(new Set(FIXTURE_CLASSES));
     expect(SDK0_MOCK_PROVENANCE).toMatchObject({
-      producerMergeSha: "a74e7c459d3be6754ac3cf24503e43c7bc312358",
+      producerMergeSha: KIX_SDK_0_PIN.producerMergeSha,
       manifestSha256: KIX_SDK_0_PIN.manifestSha256,
       catalogueSha256: KIX_SDK_0_PIN.catalogueSha256,
-      profileKind: "BOOTSTRAP", profileRevision: "bootstrap-1", grants: "catalogue-schema-binding only",
+      profileKind: "BOOTSTRAP", profileRevision: "bootstrap-2", grants: "catalogue-schema-binding only",
       semanticConformance: false, productionEndpoint: false, protocolTruth: false,
     });
     expect(FIXTURE_TUPLE_LITERALS).toMatchObject(KIX_SDK_0_CONSUMPTION_DIGESTS);

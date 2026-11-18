@@ -33,7 +33,7 @@ import {
  * Phase names, idempotency echoes, single-active listing, stale version
  * rejection, terminal immutability, and post-transfer invalidation follow
  * the kix-protocol in-memory FSM at the UI contract only.
- * Authoritative machine: BeautifulMind-JT/kix-protocol
+ * Authoritative machine: SUNBURN-Golden/kix-protocol
  * `reference/booking_resale_admission/resale_fsm.py`
  * on main `ef942b7713c7468e8851c6b372b64d42b5333ad8`
  * (feature `70c6d52d4289e23d0d4141b7f3a6b310eea236f2`).
@@ -44,7 +44,7 @@ import {
  * A bound transfer reads the mock settlement phase. It does not post money.
  */
 export const RESALE_DEPTH_BASELINE = {
-  protocolRepo: "BeautifulMind-JT/kix-protocol",
+  protocolRepo: "SUNBURN-Golden/kix-protocol",
   protocolMainSha: "ef942b7713c7468e8851c6b372b64d42b5333ad8",
   featureCommit: "70c6d52d4289e23d0d4141b7f3a6b310eea236f2",
   fsmPath: "reference/booking_resale_admission/resale_fsm.py",

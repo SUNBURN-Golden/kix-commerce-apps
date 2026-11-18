@@ -1,6 +1,6 @@
 /**
  * Names of kix-protocol surfaces this app consumes.
- * Definitions and Move/kernel behavior stay in BeautifulMind-JT/kix-protocol.
+ * Definitions and Move/kernel behavior stay in SUNBURN-Golden/kix-protocol.
  * These ids are charter labels (Task 005), not a reimplementation.
  */
 export const SURFACES = {

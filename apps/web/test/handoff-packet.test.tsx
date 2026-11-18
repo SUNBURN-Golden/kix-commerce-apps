@@ -237,7 +237,7 @@ describe("local handoff packet", () => {
     expect(consumed.catalogueSha256).toBe(KIX_SDK_0_PIN.catalogueSha256);
     expect(consumed.profileSha256).toBe(KIX_SDK_0_PIN.profileSha256);
     expect(consumed.profileKind).toBe("BOOTSTRAP");
-    expect(consumed.profileRevision).toBe("bootstrap-1");
+    expect(consumed.profileRevision).toBe(KIX_SDK_0_PIN.profileRevision);
     expect(consumed.grants).toBe("catalogue-schema-binding only");
     expect(consumed.connected).toBe(false);
     expect(consumed.implementedHere).toBe(true);
@@ -419,7 +419,7 @@ describe("local handoff packet", () => {
     expect(readme).toContain(KIX_SDK_0_PIN.manifestSha256);
     expect(readme).toContain(KIX_SDK_0_PIN.catalogueSha256);
     expect(readme).toContain(KIX_SDK_0_PIN.profileSha256);
-    expect(readme).toContain("bootstrap-1");
+    expect(readme).toContain("bootstrap-2");
     expect(readme).toContain("catalogue-schema-binding only");
     for (const item of ORIGINAL10_EVIDENCE) {
       expect(doc).toContain(item.id);

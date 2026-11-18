@@ -281,7 +281,7 @@ describeGate("loopback integration gate", () => {
       liveMoney: false,
       durable: false,
       localFileJournal: false,
-      commandCount: 40,
+      commandCount: 84,
       domain: PINNED_PROTOCOL_DOMAIN,
     });
     expect(ready).not.toHaveProperty("journalRecords");

@@ -51,8 +51,8 @@ describe("contract-only OpenAPI pin", () => {
   });
 
   it("records the merged protocol tip and contract-only flags", () => {
-    expect(OPENAPI_CONTRACT_PIN.protocolRepo).toBe("BeautifulMind-JT/kix-protocol");
-    expect(OPENAPI_CONTRACT_PIN.protocolMainSha).toBe("a744b0a036d7e1edb48416871af20cd182f23df4");
+    expect(OPENAPI_CONTRACT_PIN.protocolRepo).toBe("SUNBURN-Golden/kix-protocol");
+    expect(OPENAPI_CONTRACT_PIN.protocolMainSha).toBe("8ba7f6c36373ac0ec49246f51f7471c164ac3a28");
     expect(OPENAPI_CONTRACT_PIN.openApiPath).toBe("docs/contracts/openapi/kix-protocol.contract-only.openapi.json");
     expect(OPENAPI_CONTRACT_PIN.infoVersion).toBe(
       "0.3-rc1+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
@@ -64,24 +64,24 @@ describe("contract-only OpenAPI pin", () => {
     expect(OPENAPI_CONTRACT_PIN.liveHttpServer).toBe(false);
     expect(OPENAPI_CONTRACT_PIN.productionEndpoint).toBe(false);
     expect(OPENAPI_CONTRACT_PIN.openApiFileSha256).toBe(
-      "fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e",
+      "2248ff67aa0f43cb98bdd492f63b36fce64c53def6a403a97a7987a128b2d2dc",
     );
-    expect(SETTLEMENT_DEPTH_BASELINE.protocolRepo).toBe("BeautifulMind-JT/kix-protocol");
+    expect(SETTLEMENT_DEPTH_BASELINE.protocolRepo).toBe("SUNBURN-Golden/kix-protocol");
     expect(SETTLEMENT_DEPTH_BASELINE.protocolMainSha).toBe("85145eb33799a7c712890ff81708def8a7d61ee5");
     expect(SETTLEMENT_DEPTH_BASELINE.featureCommit).toBe("838370d9ce8e8aeeceeb94f3b4d212204e7ecf19");
     expect(SETTLEMENT_DEPTH_BASELINE.fsmPath).toBe("reference/settlement_f01_f03/settlement_fsm.py");
     expect(SETTLEMENT_DEPTH_BASELINE.provenance).toBe("MOCK_SETTLEMENT_ONLY");
-    expect(RESERVATION_DEPTH_BASELINE.protocolRepo).toBe("BeautifulMind-JT/kix-protocol");
+    expect(RESERVATION_DEPTH_BASELINE.protocolRepo).toBe("SUNBURN-Golden/kix-protocol");
     expect(RESERVATION_DEPTH_BASELINE.protocolMainSha).toBe("a47828dd4517c5a7397e09eb6b563a64e4265c82");
     expect(RESERVATION_DEPTH_BASELINE.featureCommit).toBe("2183d0b5b5010ec2692c43c277e99926ad9250db");
     expect(RESERVATION_DEPTH_BASELINE.fsmPath).toBe("reference/booking_resale_admission/reservation_fsm.py");
     expect(RESERVATION_DEPTH_BASELINE.provenance).toBe("MOCK_GATE_ONLY");
-    expect(RESALE_DEPTH_BASELINE.protocolRepo).toBe("BeautifulMind-JT/kix-protocol");
+    expect(RESALE_DEPTH_BASELINE.protocolRepo).toBe("SUNBURN-Golden/kix-protocol");
     expect(RESALE_DEPTH_BASELINE.protocolMainSha).toBe("ef942b7713c7468e8851c6b372b64d42b5333ad8");
     expect(RESALE_DEPTH_BASELINE.featureCommit).toBe("70c6d52d4289e23d0d4141b7f3a6b310eea236f2");
     expect(RESALE_DEPTH_BASELINE.fsmPath).toBe("reference/booking_resale_admission/resale_fsm.py");
     expect(RESALE_DEPTH_BASELINE.provenance).toBe("MOCK_GATE_ONLY");
-    expect(CREDIT_DEPTH_BASELINE.protocolRepo).toBe("BeautifulMind-JT/kix-protocol");
+    expect(CREDIT_DEPTH_BASELINE.protocolRepo).toBe("SUNBURN-Golden/kix-protocol");
     expect(CREDIT_DEPTH_BASELINE.protocolMainSha).toBe("8c1a4db7cfe70b0e772a2ef0f24492967c84f7f1");
     expect(CREDIT_DEPTH_BASELINE.featureCommit).toBe("4608460ba1fe57165e88e74f6e8d8c23e8e53277");
     expect(CREDIT_DEPTH_BASELINE.fsmPath).toBe("reference/credit_advance_f04/credit_fsm.py");
@@ -93,7 +93,7 @@ describe("contract-only OpenAPI pin", () => {
     expect(isPinnedAction("default")).toBe(false);
     expect(isPinnedAction("reconcile")).toBe(false);
     expect(isPinnedAction("reject_external")).toBe(false);
-    expect(PINNED_ACTIONS).toHaveLength(40);
+    expect(PINNED_ACTIONS).toHaveLength(84);
     expect(PINNED_ACTIONS).toBe(GENERATED_COMMANDS);
     expect(isPinnedAction("admit")).toBe(true);
     expect(isPinnedAction("invokeLocalCall")).toBe(false);
@@ -172,9 +172,9 @@ describe("integration-gate OpenAPI pin", () => {
   });
 
   it("records the merged protocol tip and non-production flags", () => {
-    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolRepo).toBe("BeautifulMind-JT/kix-protocol");
-    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha).toBe("52a9b5cbf7777df55d2d2062cb8d99d862b423bb");
-    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolFeatureSha).toBe("c7238bc24a399a6cabbab87ac23dbfd7e9c252dd");
+    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolRepo).toBe("SUNBURN-Golden/kix-protocol");
+    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha).toBe("8ba7f6c36373ac0ec49246f51f7471c164ac3a28");
+    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolFeatureSha).toBe("648859b1c9cda424f1a4615ac5155edf46fd0524");
     expect(OPENAPI_INTEGRATION_GATE_PIN.openApiPath).toBe(
       "docs/contracts/openapi/kix-protocol.integration-gate.openapi.json",
     );
@@ -199,7 +199,7 @@ describe("integration-gate OpenAPI pin", () => {
     expect(OPENAPI_INTEGRATION_GATE_PIN.maxInFlight).toBe(8);
     expect(OPENAPI_INTEGRATION_GATE_PIN.readinessJournalDefaultEnabled).toBe(false);
     expect(OPENAPI_INTEGRATION_GATE_PIN.contractOnlyOpenApiFileSha256).toBe(
-      "fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e",
+      "2248ff67aa0f43cb98bdd492f63b36fce64c53def6a403a97a7987a128b2d2dc",
     );
     expect(OPENAPI_CONTRACT_PIN.liveHttpServer).toBe(false);
     expect(OPENAPI_CONTRACT_PIN.productionEndpoint).toBe(false);

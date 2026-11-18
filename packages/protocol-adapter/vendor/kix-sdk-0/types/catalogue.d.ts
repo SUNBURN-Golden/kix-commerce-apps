@@ -9,7 +9,12 @@ import type { JsonSchema } from "#kix-sdk-0/jsonschema";
 export declare const OPENAPI_PIN: {
   readonly commandCount: number;
   readonly contractStatus: string;
+  readonly coreCommandCount: number;
   readonly domain: string;
+  readonly fsmCommandCount: number;
+  readonly fsmSourceGitBlob: string;
+  readonly fsmSourcePath: string;
+  readonly fsmSourceSha256: string;
   readonly gitBlob: string;
   readonly liveHttpServer: boolean;
   readonly openapiPath: string;
@@ -65,6 +70,50 @@ export declare const COMMANDS: readonly [
   "set_consent",
   "settle_capture",
   "void_unissued",
+  "settlement_initiate",
+  "settlement_authorize",
+  "settlement_capture",
+  "settlement_commit",
+  "settlement_fail",
+  "settlement_cancel",
+  "settlement_observe_statement",
+  "settlement_distribute",
+  "settlement_bind_refund",
+  "settlement_observe_mock_cancel_acceptance",
+  "reservation_set_clock",
+  "reservation_register_show",
+  "reservation_hold",
+  "reservation_release",
+  "reservation_confirm",
+  "reservation_cancel",
+  "reservation_observe_payment",
+  "reservation_bind_settlement",
+  "reservation_issue",
+  "reservation_authorize_admission",
+  "reservation_consume",
+  "resale_set_clock",
+  "resale_adopt_issued",
+  "resale_list_resale",
+  "resale_hold_buy",
+  "resale_release_hold",
+  "resale_cancel_listing",
+  "resale_observe_resale_payment",
+  "resale_bind_settlement",
+  "resale_accept_resale",
+  "resale_close",
+  "admission_set_clock",
+  "admission_adopt_issued",
+  "admission_authorize_admission",
+  "admission_consume",
+  "credit_offer",
+  "credit_approve",
+  "credit_reject",
+  "credit_cancel",
+  "credit_bind_settlement",
+  "credit_draw",
+  "credit_repay",
+  "credit_close",
+  "credit_default",
 ];
 
 export declare type CommandName = (typeof COMMANDS)[number];

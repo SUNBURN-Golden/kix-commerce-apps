@@ -19,7 +19,7 @@ import {
  *
  * Phase names, idempotency echoes, terminal immutability, and reconcile
  * `matched` follow the kix-protocol in-memory FSM at the UI contract only.
- * Authoritative machine: BeautifulMind-JT/kix-protocol
+ * Authoritative machine: SUNBURN-Golden/kix-protocol
  * `reference/settlement_f01_f03/settlement_fsm.py`
  * on main `85145eb33799a7c712890ff81708def8a7d61ee5`
  * (feature `838370d9ce8e8aeeceeb94f3b4d212204e7ecf19`).
@@ -29,7 +29,7 @@ import {
  * The journal is process-local. It is not the protocol journal and not a ledger.
  */
 export const SETTLEMENT_DEPTH_BASELINE = {
-  protocolRepo: "BeautifulMind-JT/kix-protocol",
+  protocolRepo: "SUNBURN-Golden/kix-protocol",
   protocolMainSha: "85145eb33799a7c712890ff81708def8a7d61ee5",
   featureCommit: "838370d9ce8e8aeeceeb94f3b4d212204e7ecf19",
   fsmPath: "reference/settlement_f01_f03/settlement_fsm.py",
