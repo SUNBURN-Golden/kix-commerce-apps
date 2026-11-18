@@ -23,9 +23,9 @@ import { ProtocolError } from "./types.js";
  * copied. This module does not compute finance or rights, does not send, and
  * does not retry.
  *
- * Catalogue v2 records the already-consumed p-sdk-0 BOOTSTRAP digests.
+ * Catalogue v2 records the consumed p-sdk-0 BOOTSTRAP digests.
  * The v1 tuple remains historical and cannot pass as current evidence.
- * No protocol catalogue or gate change is consumed.
+ * This version consumes the 84-command catalogue at kix-protocol main 8ba7f6c.
  */
 
 export const FIXTURE_CATALOGUE_VERSION = "2" as const;
@@ -67,8 +67,9 @@ export const FIXTURE_NEVER_SUCCESS_ACTIONS = [
 ] as const;
 
 /**
- * Copy of PINNED_ACTIONS, unchanged between catalogue versions 1 and 2.
- * assertCatalogueBound refuses the catalogue when the live list differs.
+ * Historical catalogue v1 action literal (40 core commands). It stays fixed so
+ * FIXTURE_V1_TUPLE_KEY keeps its recorded value. Catalogue v2 uses the separate
+ * 84-action literal below; assertCatalogueBound checks the live list against it.
  */
 export const FIXTURE_PINNED_ACTIONS_LITERAL = [
   "abort_effect",
@@ -113,6 +114,97 @@ export const FIXTURE_PINNED_ACTIONS_LITERAL = [
   "void_unissued",
 ] as const;
 
+/**
+ * Catalogue v2 action literal: the pinned 84-command set (40 core plus 44 FSM).
+ * Keeping this separate leaves the v1 tuple key untouched.
+ */
+export const FIXTURE_PINNED_ACTIONS_LITERAL_V2 = [
+  "abort_effect",
+  "abort_trade",
+  "accept_gift",
+  "accept_trade",
+  "adjust_pg_cancel",
+  "admit",
+  "advance_clock",
+  "authorize_marketing",
+  "cancel_event",
+  "cancel_gift",
+  "cancel_listing",
+  "capture",
+  "claim_effect",
+  "close_delegation",
+  "close_sales",
+  "commit_trade",
+  "complete_event",
+  "create_event",
+  "create_listing",
+  "delegate",
+  "dispatch_effect",
+  "expire_trade",
+  "finalize_effect",
+  "issue_invitation",
+  "observe_dispatch_lookup",
+  "observe_effect",
+  "observe_funding",
+  "observe_recovery",
+  "observe_return",
+  "offer_gift",
+  "open_admission",
+  "prepare_effect",
+  "prepare_trade",
+  "refund_ticket",
+  "release_inventory",
+  "reserve_listing",
+  "send_effect",
+  "set_consent",
+  "settle_capture",
+  "void_unissued",
+  "settlement_initiate",
+  "settlement_authorize",
+  "settlement_capture",
+  "settlement_commit",
+  "settlement_fail",
+  "settlement_cancel",
+  "settlement_observe_statement",
+  "settlement_distribute",
+  "settlement_bind_refund",
+  "settlement_observe_mock_cancel_acceptance",
+  "reservation_set_clock",
+  "reservation_register_show",
+  "reservation_hold",
+  "reservation_release",
+  "reservation_confirm",
+  "reservation_cancel",
+  "reservation_observe_payment",
+  "reservation_bind_settlement",
+  "reservation_issue",
+  "reservation_authorize_admission",
+  "reservation_consume",
+  "resale_set_clock",
+  "resale_adopt_issued",
+  "resale_list_resale",
+  "resale_hold_buy",
+  "resale_release_hold",
+  "resale_cancel_listing",
+  "resale_observe_resale_payment",
+  "resale_bind_settlement",
+  "resale_accept_resale",
+  "resale_close",
+  "admission_set_clock",
+  "admission_adopt_issued",
+  "admission_authorize_admission",
+  "admission_consume",
+  "credit_offer",
+  "credit_approve",
+  "credit_reject",
+  "credit_cancel",
+  "credit_bind_settlement",
+  "credit_draw",
+  "credit_repay",
+  "credit_close",
+  "credit_default",
+] as const;
+
 export interface FixtureTupleParts {
   catalogueVersion: string;
   contractOpenApiSha256: string;
@@ -149,17 +241,17 @@ export const FIXTURE_V1_TUPLE_LITERALS: FixtureTupleParts = {
 /** Independently recorded v2 expectations, checked against the verified live pins. */
 export const FIXTURE_TUPLE_LITERALS: FixtureTupleParts & SdkConsumptionDigests = {
   catalogueVersion: FIXTURE_CATALOGUE_VERSION,
-  contractOpenApiSha256: "fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e",
+  contractOpenApiSha256: "2248ff67aa0f43cb98bdd492f63b36fce64c53def6a403a97a7987a128b2d2dc",
   contractInfoVersion: "0.3-rc1+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
-  contractMainSha: "a744b0a036d7e1edb48416871af20cd182f23df4",
-  gateOpenApiSha256: "2a2af554cb1a8b128f2cf1b1d5b8cf6b1c8fa90adf30865dbc3e64932b3bd13f",
-  protocolMergeSha: "52a9b5cbf7777df55d2d2062cb8d99d862b423bb",
-  protocolFeatureSha: "c7238bc24a399a6cabbab87ac23dbfd7e9c252dd",
+  contractMainSha: "8ba7f6c36373ac0ec49246f51f7471c164ac3a28",
+  gateOpenApiSha256: "d05beb48c234b924af086b886ce9bb524dc34407ad2e4a57f1e8af84255820f6",
+  protocolMergeSha: "8ba7f6c36373ac0ec49246f51f7471c164ac3a28",
+  protocolFeatureSha: "648859b1c9cda424f1a4615ac5155edf46fd0524",
   sourceProtocolContractSha256: "ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
   domain: "kix:fixture:lifecycle:0.3",
-  pinnedActions: FIXTURE_PINNED_ACTIONS_LITERAL,
-  sdkDigest: "891ddd65f29262603bd0f76746a9308c810a71d4afd717b0f4d2e3f7d46dbaa2",
-  manifestDigest: "1cce4ee5a9aa64ef40825c0e6dedf920050e594cf20ea0aaf087ecbde46f0cca",
+  pinnedActions: FIXTURE_PINNED_ACTIONS_LITERAL_V2,
+  sdkDigest: "3162d47c51ffad755f80086850bbcbb7ae4a846c4df47ffa57b0e44f9eced0b5",
+  manifestDigest: "eec1750532d319ea06d8ae61bafa77316067088a84a9b70d20a1f6966dfba1e0",
   vectorDigest: "canonical-encoding:3446c13847bb153df06c1d5d3b7f09cd3b1648ac10bb0cc76d7b65c7014e99c2 mixed-input:9e2441ddefc22a2f8c7be230436620908b735b128b9445b7a5a916e4d86a2e19",
 };
 

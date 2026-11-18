@@ -59,14 +59,14 @@ function getPath(root: Record<string, unknown>, dotted: string): unknown {
 
 describe("p-sdk-0 vendored tuple pin", () => {
   it("hashes the vendored manifest, profile, sidecar, catalogue, generator, and vectors", () => {
-    expect(sha256(vendored("compat/manifests/manifest.bootstrap-1.json"))).toBe(KIX_SDK_0_PIN.manifestSha256);
-    expect(sha256(vendored("compat/manifests/manifest.bootstrap-1.json.sha256"))).toBe(
+    expect(sha256(vendored("compat/manifests/manifest.bootstrap-2.json"))).toBe(KIX_SDK_0_PIN.manifestSha256);
+    expect(sha256(vendored("compat/manifests/manifest.bootstrap-2.json.sha256"))).toBe(
       KIX_SDK_0_PIN.sidecarSha256,
     );
-    expect(vendored("compat/manifests/manifest.bootstrap-1.json.sha256").toString("utf8")).toBe(
+    expect(vendored("compat/manifests/manifest.bootstrap-2.json.sha256").toString("utf8")).toBe(
       `${KIX_SDK_0_PIN.manifestSha256}\n`,
     );
-    expect(sha256(vendored("compat/profiles/bootstrap-1.profile.json"))).toBe(KIX_SDK_0_PIN.profileSha256);
+    expect(sha256(vendored("compat/profiles/bootstrap-2.profile.json"))).toBe(KIX_SDK_0_PIN.profileSha256);
     expect(sha256(vendored("generated/catalogue.ts"))).toBe(KIX_SDK_0_PIN.catalogueSha256);
     expect(sha256(vendored("generate/generate_client.mjs"))).toBe(KIX_SDK_0_PIN.generatorSha256);
     expect(sha256(vendored("src/client.ts"))).toBe(KIX_SDK_0_PIN.clientSha256);
@@ -85,12 +85,12 @@ describe("p-sdk-0 vendored tuple pin", () => {
 
   it("records the producer commit, the BOOTSTRAP profile, and the non-claims", () => {
     expect(KIX_SDK_0_PIN.producerRepo).toBe("SUNBURN-Golden/kix-protocol");
-    expect(KIX_SDK_0_PIN.producerMergeSha).toBe("a74e7c459d3be6754ac3cf24503e43c7bc312358");
-    expect(KIX_SDK_0_PIN.producerSourceCommit).toBe("7481b0e16ce9b903abbffa62249bb91cd9e63cfe");
-    expect(KIX_SDK_0_PIN.producerSourceTree).toBe("8495c7651e456cead3a8812b9e6fb183f818acd2");
+    expect(KIX_SDK_0_PIN.producerMergeSha).toBe("8ba7f6c36373ac0ec49246f51f7471c164ac3a28");
+    expect(KIX_SDK_0_PIN.producerSourceCommit).toBe("c2cde86e21a6e5ba6f24a56548636db6d0a34c6f");
+    expect(KIX_SDK_0_PIN.producerSourceTree).toBe("394084b15e01bbe4a5612aeb3431f3278c43dd85");
     expect(KIX_SDK_0_PIN.manifestSchemaVersion).toBe("kix-compat-manifest/1");
     expect(KIX_SDK_0_PIN.profileKind).toBe("BOOTSTRAP");
-    expect(KIX_SDK_0_PIN.profileRevision).toBe("bootstrap-1");
+    expect(KIX_SDK_0_PIN.profileRevision).toBe("bootstrap-2");
     expect(KIX_SDK_0_PIN.grants).toBe("catalogue-schema-binding only");
     expect(KIX_SDK_0_PIN.semanticConformance).toBe(false);
     expect(KIX_SDK_0_PIN.liveHttpServer).toBe(false);
@@ -100,7 +100,7 @@ describe("p-sdk-0 vendored tuple pin", () => {
     expect(requireSdkPin()).toBe(KIX_SDK_0_PIN);
     const manifest = manifestValue();
     expect(manifest.profile_kind).toBe("BOOTSTRAP");
-    expect(manifest.profile_revision).toBe("bootstrap-1");
+    expect(manifest.profile_revision).toBe("bootstrap-2");
     expect(manifest.profile_sha256).toBe(KIX_SDK_0_PIN.profileSha256);
     const profile = parseStrict(VENDORED_SDK_PIN_INPUTS.profileRaw) as Record<string, unknown>;
     expect(profile.non_claims).toEqual([
@@ -116,7 +116,7 @@ describe("p-sdk-0 vendored tuple pin", () => {
     expect(() => assertSdkPin()).not.toThrow();
   });
 
-  it("rejects producer provenance that does not bind the reviewed head, completion checks, and merge", { timeout: 30_000 }, () => {
+  it("binds target and SDK introduction provenance to their respective merges and checks", { timeout: 30_000 }, () => {
     const original = parseStrict(VENDORED_SDK_PIN_INPUTS.producerProvenanceRaw) as Record<string, unknown>;
     const cases: ReadonlyArray<readonly [string, unknown, string]> = [
       ["schema", "unknown", "producer provenance schema drift"],
@@ -126,8 +126,8 @@ describe("p-sdk-0 vendored tuple pin", () => {
       ["merge.headSha", "0".repeat(40), "producer merge binding drift"],
       ["merge.mergeSha", "0".repeat(40), "producer merge binding drift"],
       ["merge.mergeTree", "0".repeat(40), "producer merge binding drift"],
+      ["merge.mergedAt", "2026-01-01T00:00:00Z", "producer merge binding drift"],
       ["merge.mergedBy", "other", "producer merge binding drift"],
-      ["merge.parentShas", [], "producer merge binding drift"],
       ["producer", null, "producer tuple provenance drift"],
       ["producer.sourceCommit", "0".repeat(40), "producer tuple provenance drift"],
       ["producer.sourceTree", "0".repeat(40), "producer tuple provenance drift"],
@@ -135,17 +135,15 @@ describe("p-sdk-0 vendored tuple pin", () => {
       ["producer.manifestSha256", "0".repeat(64), "producer tuple provenance drift"],
       ["producer.profileKind", "SEMANTIC_CONFORMANCE", "producer tuple provenance drift"],
       ["producer.profileRevision", "other", "producer tuple provenance drift"],
-      ["review", null, "producer independent A3 review drift"],
-      ["review.auditFloor", "A2", "producer independent A3 review drift"],
-      ["review.assessment", "UNKNOWN", "producer independent A3 review drift"],
-      ["review.builder", "reviewer", "producer independent A3 review drift"],
-      ["review.reviewer", "builder", "producer independent A3 review drift"],
-      ["review.headSha", "0".repeat(40), "producer independent A3 review drift"],
-      ["review.commentId", 0, "producer independent A3 review drift"],
-      ["checks.0.checkRunId", 0, "producer completion check drift: kernel"],
-      ["checks.0.headSha", "0".repeat(40), "producer completion check drift: kernel"],
-      ["checks.0.conclusion", "failure", "producer completion check drift: kernel"],
-      ["checks", [], "producer completion check drift: protocol"],
+      ["checks.0.checkRunId", 0, "producer completion check drift: CodeQL"],
+      ["checks.0.checkRunId", 129692154327, "producer completion check drift: CodeQL"],
+      ["checks.0.headSha", "0".repeat(40), "producer completion check drift: CodeQL"],
+      ["checks.0.conclusion", "failure", "producer completion check drift: CodeQL"],
+      ["checks", [], "producer completion checks drift"],
+      ["sdkIntroduction", null, "SDK introduction provenance field set drift"],
+      ["sdkIntroduction.merge.mergeSha", KIX_SDK_0_PIN.producerMergeSha, "SDK introduction merge binding drift"],
+      ["sdkIntroduction.checks.0.checkRunId", 131558666657, "SDK introduction completion check drift: CodeQL"],
+      ["sdkIntroduction.checks.0.conclusion", "success", "SDK introduction completion check drift: CodeQL"],
     ];
     for (const [dotted, value, expected] of cases) {
       const changed = structuredClone(original);
@@ -182,8 +180,8 @@ describe("p-sdk-0 vendored tuple pin", () => {
     };
     for (const manifestRaw of [
       changed("profile_kind", "SEMANTIC_CONFORMANCE"),
-      changed("profile_revision", "bootstrap-2"),
-      changed("producer.repository", "BeautifulMind-JT/kix-protocol"),
+      changed("profile_revision", "bootstrap-3"),
+      changed("producer.repository", "foreign/kix-protocol"),
       changed("producer.source_commit", "0".repeat(40)),
       changed("producer.source_tree", "0".repeat(40)),
       changed("producer.protocol_domain", "other-domain"),
@@ -224,7 +222,14 @@ describe("p-sdk-0 vendored tuple pin", () => {
         manifestRaw = `{"contract":{},${VENDORED_SDK_PIN_INPUTS.manifestRaw.slice(1)}`;
       } else {
         const copy = manifestValue();
-        const value = item.op === "copy" ? getPath(original, String(item.from)) : item.value;
+        // The shared vector's "wrong-revision" literal is bootstrap-2, which is
+        // now the accepted revision. Upstream's conformance test makes the same
+        // substitution so the case still exercises a wrong revision.
+        const value = item.op === "copy"
+          ? getPath(original, String(item.from))
+          : item.name === "wrong-revision"
+            ? "bootstrap-9"
+            : item.value;
         setPath(copy, String(item.path), value);
         manifestRaw = canonicalStringify(copy);
       }
@@ -268,7 +273,9 @@ describe("p-sdk-0 vendored tuple pin", () => {
     expect(OPENAPI_PIN.sha256).toBe(OPENAPI_CONTRACT_PIN.openApiFileSha256);
     expect(OPENAPI_PIN.gitBlob).toBe(gitBlobId(new TextEncoder().encode(VENDORED_SDK_PIN_INPUTS.contractOnlyOpenApiRaw)));
     expect(OPENAPI_PIN.domain).toBe(PINNED_PROTOCOL_DOMAIN);
-    expect(OPENAPI_PIN.commandCount).toBe(40);
+    expect(OPENAPI_PIN.commandCount).toBe(84);
+    expect(OPENAPI_PIN.coreCommandCount).toBe(40);
+    expect(OPENAPI_PIN.fsmCommandCount).toBe(44);
     expect(OPENAPI_PIN.liveHttpServer).toBe(false);
     expect(OPENAPI_PIN.productionEndpoint).toBe(false);
     expect([...ENVELOPE_REQUIRED]).toEqual(["operationId", "actor", "action", "body"]);
@@ -290,6 +297,12 @@ describe("p-sdk-0 vendored tuple pin", () => {
     const pin = JSON.parse(VENDORED_SDK_PIN_INPUTS.sdkPinFileRaw) as Record<string, unknown>;
     const pinCases: ReadonlyArray<readonly [string, unknown, string]> = [
       ["commandCount", 0, "sdk-pin command count drift"],
+      ["coreCommandCount", 0, "sdk-pin command split drift"],
+      ["fsmCommandCount", 0, "sdk-pin command split drift"],
+      ["fsmSource", null, "sdk-pin FSM source binding drift"],
+      ["fsmSource.gitBlob", "0".repeat(40), "sdk-pin FSM source binding drift"],
+      ["fsmSource.path", "other", "sdk-pin FSM source binding drift"],
+      ["fsmSource.sha256", "0".repeat(64), "sdk-pin FSM source binding drift"],
       ["domain", "other", "sdk-pin domain drift"],
       ["generatedCatalogue", "other", "sdk-pin path drift"],
       ["generator", "other", "sdk-pin path drift"],

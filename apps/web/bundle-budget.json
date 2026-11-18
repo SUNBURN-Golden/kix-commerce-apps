@@ -60,7 +60,7 @@
     "chunkJsGzip": 30000,
     "landingJsGzip": 400000,
     "totalGrowth": {
-      "base": 790000,
+      "base": 802884,
       "maxRatio": 1
     },
     "render": {
@@ -109,6 +109,26 @@
       },
       "reason": "Recorded c-i18n-coverage-completion-stub bundle-budget & copy scope ruling (2026-10-23 KST, KIX Commerce under 2026-10-15 standing delegation). Shared sentence deduplication retains exact copy and protocol words. Both ko/en catalogues plus merged connectivity, async and form UI require a total gzip ceiling of 790000; initial JS remains 290000 and every route cap remains strict.",
       "evidence": "docs/c-i18n-coverage-completion-stub-apps-bind.md, merge reconciliation evidence; Node 22.20.0 clean build: initial JS 289481, CSS 4965, total 789063, largest route 28279 gzip bytes."
+    },
+    {
+      "date": "2026-11-13",
+      "limits": {
+        "initialJsGzip": 290000,
+        "initialCssGzip": 5000,
+        "chunkJsGzip": 30000,
+        "landingJsGzip": 400000,
+        "totalGrowth": {
+          "base": 802884,
+          "maxRatio": 1
+        },
+        "render": {
+          "discoveryReadyMs": 5000,
+          "discoveryPage50Ms": 5000,
+          "inventorySectionMs": 5000
+        }
+      },
+      "reason": "owner ruling JunTae 2026-11-13, kix-protocol pin move",
+      "evidence": "docs/c-int-pin-bundle-apps-bind.md records the one-time total gzip ceiling change from 790000 to 802884."
     }
   ]
 }

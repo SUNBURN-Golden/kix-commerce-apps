@@ -1,12 +1,20 @@
 {
-  "commandCount": 40,
+  "commandCount": 84,
+  "coreCommandCount": 40,
   "domain": "kix:fixture:lifecycle:0.3",
+  "fsmCommandCount": 44,
+  "fsmSource": {
+    "domain": "kix:fixture:fsm-catalogue:0.3",
+    "gitBlob": "3771a8739b906a478b54c597df37e27d1afc5f21",
+    "path": "docs/contracts/openapi/fsm-command-contract.json",
+    "sha256": "342e97cb37b199622d7bb436ca9164690d969b797058aaa539ff417cab01411c"
+  },
   "generatedCatalogue": "sdk/generated/catalogue.ts",
   "generator": "sdk/generate/generate_client.mjs",
   "openapi": {
-    "gitBlob": "93d6661f9db3a215d45762f7a29a92130f692dab",
+    "gitBlob": "ed23b98fde4ce02607ffda2ba9488ed510645de2",
     "path": "docs/contracts/openapi/kix-protocol.contract-only.openapi.json",
-    "sha256": "fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e"
+    "sha256": "2248ff67aa0f43cb98bdd492f63b36fce64c53def6a403a97a7987a128b2d2dc"
   },
   "source": {
     "domain": "kix:fixture:lifecycle:0.3",

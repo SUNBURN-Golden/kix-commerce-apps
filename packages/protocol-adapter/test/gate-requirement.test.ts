@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { OPENAPI_INTEGRATION_GATE_PIN } from "../src/index.js";
+import { KIX_SDK_0_PIN, OPENAPI_CONTRACT_PIN, OPENAPI_INTEGRATION_GATE_PIN } from "../src/index.js";
 import { gateRequired } from "./support/reviewed-gate.js";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -22,7 +22,10 @@ describe("CI workflow", () => {
     const workflow = readFileSync(path.join(repoRoot, ".github/workflows/ci.yml"), "utf8");
     const pinned = workflow.match(/KIX_PROTOCOL_GATE_SHA: ([0-9a-f]{40})/);
     expect(pinned?.[1]).toBe(OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha);
-    expect(workflow).toContain("repository: BeautifulMind-JT/kix-protocol");
+    expect(pinned?.[1]).toBe(OPENAPI_CONTRACT_PIN.protocolMainSha);
+    expect(pinned?.[1]).toBe(KIX_SDK_0_PIN.producerMergeSha);
+    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolFeatureSha).toBe(KIX_SDK_0_PIN.producerHeadSha);
+    expect(workflow).toContain("repository: SUNBURN-Golden/kix-protocol");
     expect(workflow).toContain("KIX_REQUIRE_GATE: '1'");
     expect(workflow).toContain("KIX_REQUIRE_GATE: '0'");
   });

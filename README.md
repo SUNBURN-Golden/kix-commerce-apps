@@ -94,13 +94,13 @@ The organizer workspace at `/organizer/workspace` edits the caller fields those 
 
 ## Protocol pin
 
-The adapter vendors two OpenAPI files plus the p-sdk-0 BOOTSTRAP tuple (below) from [kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol). The command catalogue is unchanged. The integration-gate file is the loopback transport description from feature `c7238bc24a399a6cabbab87ac23dbfd7e9c252dd`, merged as `52a9b5cbf7777df55d2d2062cb8d99d862b423bb`. Those two commits share one tree. Apps tests start that process from either checkout. The contract-only bytes are unchanged.
+The adapter vendors two OpenAPI files plus the p-sdk-0 BOOTSTRAP tuple (below) from [kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol). The 84-command catalogue includes 40 core and 44 FSM commands. Apps CI starts the loopback integration gate from PR #448 merge `8ba7f6c36373ac0ec49246f51f7471c164ac3a28`. The feature head `648859b1c9cda424f1a4615ac5155edf46fd0524` has the same Git tree. PR #433 introduced these catalogue and gate bytes. The core `protocol_contract.json` bytes are unchanged.
 
-Contract-only catalogue, path `docs/contracts/openapi/kix-protocol.contract-only.openapi.json`, recorded at main `a744b0a036d7e1edb48416871af20cd182f23df4`. Those bytes are the same at the integration-gate merge.
+Contract-only catalogue, path `docs/contracts/openapi/kix-protocol.contract-only.openapi.json`, recorded at main `8ba7f6c36373ac0ec49246f51f7471c164ac3a28`. Those bytes are the same at the integration-gate merge.
 
 | Pin | Value |
 | --- | --- |
-| OpenAPI file sha256 | `fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e` |
+| OpenAPI file sha256 | `2248ff67aa0f43cb98bdd492f63b36fce64c53def6a403a97a7987a128b2d2dc` |
 | `info.version` | `0.3-rc1+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e` |
 | Source `protocol_contract.json` sha256 | `ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e` |
 | Source git blob | `619ae21c82ca3df5661bd3831613f15fa65225ff` |
@@ -110,7 +110,7 @@ Integration-gate transport, path `docs/contracts/openapi/kix-protocol.integratio
 
 | Pin | Value |
 | --- | --- |
-| OpenAPI file sha256 | `2a2af554cb1a8b128f2cf1b1d5b8cf6b1c8fa90adf30865dbc3e64932b3bd13f` |
+| OpenAPI file sha256 | `d05beb48c234b924af086b886ce9bb524dc34407ad2e4a57f1e8af84255820f6` |
 | `info.version` | `0.3-rc1-integration-gate+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e` |
 | Source `protocol_contract.json` sha256 | `ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e` |
 | Status | `integration-gate` |
@@ -120,20 +120,20 @@ Integration-gate transport, path `docs/contracts/openapi/kix-protocol.integratio
 | `x-kix-production-conformance` | false |
 | In-flight cap | 8. `durableAcrossRestart` stays false. The optional file journal defaults off |
 
-Vendored p-sdk-0 tuple, path `packages/protocol-adapter/vendor/kix-sdk-0`, from kix-protocol PR #123 (merge `a74e7c459d3be6754ac3cf24503e43c7bc312358`), consumed by PR #86 (`consume-p-sdk-0`). `KIX_SDK_0_PIN` in `packages/protocol-adapter/src/sdk-pin.ts` asserts these digests and the vendored bytes at load time. BOOTSTRAP grants catalogue-schema binding only; this pin is not a conformance claim.
+Vendored p-sdk-0 tuple, path `packages/protocol-adapter/vendor/kix-sdk-0`. PR #433 (merge `19cdc1c6393e88528d3918e0f4f1f37645a34042`) introduced bootstrap-2. This repository consumes it from PR #448 merge `8ba7f6c36373ac0ec49246f51f7471c164ac3a28`. `KIX_SDK_0_PIN` asserts the digests and the vendored bytes at load time. BOOTSTRAP grants catalogue-schema binding only.
 
 | Pin | Value |
 | --- | --- |
-| Manifest sha256 (`manifest.bootstrap-1.json`) | `1cce4ee5a9aa64ef40825c0e6dedf920050e594cf20ea0aaf087ecbde46f0cca` |
-| Catalogue sha256 (`generated/catalogue.ts`) | `891ddd65f29262603bd0f76746a9308c810a71d4afd717b0f4d2e3f7d46dbaa2` |
-| Profile sha256 (`bootstrap-1.profile.json`) | `4c92cf6d905f83fb3f5cd52e166dbadf057451ae46441fce1f91baaaa4367d34` |
-| Profile | `BOOTSTRAP` / `bootstrap-1` |
+| Manifest sha256 (`manifest.bootstrap-2.json`) | `eec1750532d319ea06d8ae61bafa77316067088a84a9b70d20a1f6966dfba1e0` |
+| Catalogue sha256 (`generated/catalogue.ts`) | `3162d47c51ffad755f80086850bbcbb7ae4a846c4df47ffa57b0e44f9eced0b5` |
+| Profile sha256 (`bootstrap-2.profile.json`) | `c356b923997cefc132e63e73a179d5922dd7cb2124b9e9b399c662cd49803b73` |
+| Profile | `BOOTSTRAP` / `bootstrap-2` |
 | Grants | `catalogue-schema-binding only` |
 | Vector `canonical-encoding` sha256 | `3446c13847bb153df06c1d5d3b7f09cd3b1648ac10bb0cc76d7b65c7014e99c2` |
 | Vector `mixed-input` sha256 | `9e2441ddefc22a2f8c7be230436620908b735b128b9445b7a5a916e4d86a2e19` |
 | Conformance flags | `semanticConformance`, `liveHttpServer`, `productionEndpoint`, `protocolTruth`, `productionConformance` all false |
 
-Apart from those two OpenAPI files and the p-sdk-0 tuple above, nothing else from kix-protocol is vendored. These pins are not a production-conformance claim, and the SDK tuple did not move the five pins. Load time checks the file bytes. The settlement FSM dependency baseline is protocol main `85145eb33799a7c712890ff81708def8a7d61ee5` (feature commit `838370d9ce8e8aeeceeb94f3b4d212204e7ecf19`). The reservation FSM dependency baseline is protocol main `a47828dd4517c5a7397e09eb6b563a64e4265c82` (feature commit `2183d0b5b5010ec2692c43c277e99926ad9250db`). The resale FSM dependency baseline is protocol main `ef942b7713c7468e8851c6b372b64d42b5333ad8` (feature commit `70c6d52d4289e23d0d4141b7f3a6b310eea236f2`). The credit FSM dependency baseline is protocol main `8c1a4db7cfe70b0e772a2ef0f24492967c84f7f1` (feature commit `4608460ba1fe57165e88e74f6e8d8c23e8e53277`). Those lifecycle names are not catalogue commands. How to run the gate is in [docs/http-integration-gate-apps-bind.md](docs/http-integration-gate-apps-bind.md).
+Apart from those two OpenAPI files and the p-sdk-0 tuple above, nothing else from kix-protocol is vendored; the FSM catalogue is bound by its path, sha256 and git blob only. These pins are not a production-conformance claim, and the SDK tuple moved together with the 84-command catalogue. Load time checks the file bytes. The settlement FSM dependency baseline is protocol main `85145eb33799a7c712890ff81708def8a7d61ee5` (feature commit `838370d9ce8e8aeeceeb94f3b4d212204e7ecf19`). The reservation FSM dependency baseline is protocol main `a47828dd4517c5a7397e09eb6b563a64e4265c82` (feature commit `2183d0b5b5010ec2692c43c277e99926ad9250db`). The resale FSM dependency baseline is protocol main `ef942b7713c7468e8851c6b372b64d42b5333ad8` (feature commit `70c6d52d4289e23d0d4141b7f3a6b310eea236f2`). The credit FSM dependency baseline is protocol main `8c1a4db7cfe70b0e772a2ef0f24492967c84f7f1` (feature commit `4608460ba1fe57165e88e74f6e8d8c23e8e53277`). Those lifecycle names are not catalogue commands. How to run the gate is in [docs/http-integration-gate-apps-bind.md](docs/http-integration-gate-apps-bind.md).
 
 ## Settlement depth
 
@@ -266,7 +266,7 @@ Display language: the default is English. The Korean/English catalogue (`apps/we
 
 The desk uses the stub. Setting `VITE_KIX_PROTOCOL_MODE=http` or `integration-http` without `VITE_KIX_PROTOCOL_API_BASE` throws at startup. It does not fall back to the stub. With `VITE_KIX_PROTOCOL_API_BASE=http://127.0.0.1:8765`, desk calls still throw `not-bound`. Catalogue calls go through `invokeLocalCall` on the adapter. This repo does not start the protocol server and does not ship a production base URL.
 
-To point the app at the reviewed gate, start that server from the kix-protocol checkout at merge `52a9b5cbf7777df55d2d2062cb8d99d862b423bb` and then start this app:
+To point the app at the reviewed gate, start that server from the kix-protocol checkout at merge `8ba7f6c36373ac0ec49246f51f7471c164ac3a28` and then start this app:
 
 ```bash
 python3 -m integration_gate --port 8765
@@ -290,7 +290,7 @@ The reviewed gate does not answer CORS, so from a browser at `:5173` the banner 
 `.github/workflows/ci.yml` runs on pushes to `main`, on pull requests, and on demand. Besides the small `gate-token` check, the existing jobs are unchanged:
 
 - `desk` runs `npm ci`, `npm run typecheck`, `npm run build`, and `npm test`. It sets `KIX_REQUIRE_GATE=0`, so the live gate suites are skipped there on purpose.
-- `live-gate` checks out kix-protocol at the pinned merge `52a9b5cbf7777df55d2d2062cb8d99d862b423bb` and runs the adapter suite with `KIX_REQUIRE_GATE=1` against that checkout. kix-protocol is private, so this job needs a `KIX_PROTOCOL_READ_TOKEN` repository secret with read-only contents access to it. A small `gate-token` job checks for the secret first. Without it, `gate-token` posts a warning and `live-gate` shows as skipped, never as a pass.
+- `live-gate` checks out `SUNBURN-Golden/kix-protocol` at the pinned merge `8ba7f6c36373ac0ec49246f51f7471c164ac3a28` and runs the adapter suite with `KIX_REQUIRE_GATE=1` against that checkout. kix-protocol is private, so this job needs a `KIX_PROTOCOL_READ_TOKEN` repository secret with read-only contents access to it. A small `gate-token` job checks for the secret first. Without it, `gate-token` posts a warning and `live-gate` shows as skipped, never as a pass.
 - `browser-e2e` (named "Browser journeys (stub, headless Chrome)") runs `npm ci`, `npm run typecheck:e2e`, and `npm run test:e2e` on the runner's Google Chrome. It is additive: the `desk` job and its checks are unchanged. It has no `needs`, no secret, and no protocol checkout. The run record goes to the job summary and is not uploaded as an artifact.
 - `a11y-observation` (named "Accessibility observation (stub, headless Chrome)") runs the separate `npm run test:a11y` suite. It is additive and has no `needs`, secret or protocol checkout. Its record goes to the job summary. A green run is not user acceptance, not a conformance claim and not a release permission.
 - `bundle-budget` (named "Bundle budget") runs `npm ci`, `npm run build`, `npm run budget` (the size check against `apps/web/bundle-budget.json`), `npm run typecheck:e2e` and `npm run test:budget` on the runner's Google Chrome. It is additive: no existing job changed. It has no `needs`, no secret and no protocol checkout. The size table and the measurement record go to the job summary. The numbers are regression tripwires, not an SLO, not a qualification and not a production performance claim.
@@ -480,6 +480,8 @@ Shared async presentations now distinguish loading, empty, error, UNKNOWN, STALE
 All 16 page forms use shared input-format validation with Korean/English messages, linked inline errors and a focused error summary. Keyboard links lead to invalid fields; correcting and explicitly resubmitting retains the existing one-attempt and UNKNOWN guards. Validation makes no request and computes no protocol outcome. It coexists with the shared async presentations above. Details and limits are in [docs/c-form-validation-ux-stub-apps-bind.md](docs/c-form-validation-ux-stub-apps-bind.md). M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce; `contract_change=NO`.
 
 The [complete ko/en display catalogue](docs/c-i18n-coverage-completion-stub-apps-bind.md) now covers every registry screen and the merged connectivity, validation, async-state and gallery UI. Literal, key/placeholder parity and protocol-word guards run with web tests. Identical sentences are shared across lazy bundles; the 2026-10-23 owner ruling authorises a total gzip ceiling of 790000 while initial JS remains 290000 and route caps stay strict. The local-only evidence and M2 + H1 boundaries remain unchanged.
+
+The 2026-11-13 owner ruling raised the total gzip ceiling from 790000 to 802884 bytes as a one-time exception for the kix-protocol pin move. [Bundle budget history](docs/c-bundle-performance-budget-stub-apps-bind.md).
 
 ## Diagnostics (stub)
 

@@ -138,7 +138,7 @@ export default defineConfig({
           if (/\/protocol-adapter\/src\/contract-fixtures\.ts$/.test(id)) return "kix-fixture-catalogue";
           if (/\/protocol-adapter\/src\/(operational-qualification|operational-qualification-controller|platform-release|cross-surface-journeys)\.ts$/.test(id)) return "kix-review-cases";
           if (/\/protocol-adapter\/src\/(finance-operations|tenant-permissions|delegated-assistant)\.ts$/.test(id)) return "kix-operations-cases";
-          if (/\/protocol-adapter\/src\/(platform-journey|provider-journey|refund-return|installable-mobile|inventory-read|discovery-read|marketplace-performance)\.ts$/.test(id)) return "kix-journey-cases";
+          if (/\/protocol-adapter\/src\/(platform-journey|provider-journey|refund-return(?:-controller)?|installable-mobile|inventory-read|discovery-read|marketplace-performance)\.ts$/.test(id)) return "kix-journey-cases";
 
           // The session stubs share forms, fixtures and bilingual copy. Keep them in one
           // lazy chunk so repeated markup and vocabulary compress together.
@@ -152,8 +152,9 @@ export default defineConfig({
           // These secondary commerce desks share forms and panel markup. Compress them together
           // as one lazy module; the landing, Gift, Admission and Credit keep separate lazy boundaries.
           if (/\/src\/pages\/(Booking|Buyer|Resale|Organizer|ReservationPanel)\.tsx$/.test(id)) return "commerce-desks";
-          // Synthetic controllers repeat validation and fencing vocabulary; share compression only.
-          if (/\/protocol-adapter\/src\/(marketing-journey-controller|delegated-assistant-controller|refund-return-controller|credit-servicing-controller)\.ts$/.test(id)) return "synthetic-controllers";
+          // The box office's refund controller ships with its source above.
+          // The other synthetic controllers share compression in a separate chunk.
+          if (/\/protocol-adapter\/src\/(marketing-journey-controller|delegated-assistant-controller|credit-servicing-controller)\.ts$/.test(id)) return "synthetic-controllers";
 
           // The two bounded read desks share lifecycle fencing and status markup.
           // Compress them together behind their existing lazy route boundaries.

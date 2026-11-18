@@ -12,22 +12,23 @@ import { sha256Hex } from "./sha256.js";
 import { ProtocolError } from "./types.js";
 
 /**
- * Published non-production loopback transport pin from BeautifulMind-JT/kix-protocol.
+ * Published non-production loopback transport pin from SUNBURN-Golden/kix-protocol.
  * The command catalogue stays in the contract-only file. This document describes
  * the integration-gate process only. It is not a production endpoint and not a public host.
  * Local HTTP success is not production approval.
  */
 export const OPENAPI_INTEGRATION_GATE_PIN = {
-  protocolRepo: "BeautifulMind-JT/kix-protocol",
+  protocolRepo: "SUNBURN-Golden/kix-protocol",
   /**
-   * Checkout the apps tests start. The command catalogue is unchanged.
-   * Feature c7238bc and merge 52a9b5c share one tree. The integration-gate
-   * file digest moved. Contract-only and protocol_contract pins did not.
+   * CI starts the gate from PR #448's merge, carrying the 84-command catalogue
+   * (40 core plus 44 FSM). Its feature head has the same tree as the merge.
+   * The test harness requires a clean checkout and verifies tree equality if
+   * invoked on the feature head.
    */
-  protocolMergeSha: "52a9b5cbf7777df55d2d2062cb8d99d862b423bb",
-  protocolFeatureSha: "c7238bc24a399a6cabbab87ac23dbfd7e9c252dd",
+  protocolMergeSha: "8ba7f6c36373ac0ec49246f51f7471c164ac3a28",
+  protocolFeatureSha: "648859b1c9cda424f1a4615ac5155edf46fd0524",
   openApiPath: "docs/contracts/openapi/kix-protocol.integration-gate.openapi.json",
-  openApiFileSha256: "2a2af554cb1a8b128f2cf1b1d5b8cf6b1c8fa90adf30865dbc3e64932b3bd13f",
+  openApiFileSha256: "d05beb48c234b924af086b886ce9bb524dc34407ad2e4a57f1e8af84255820f6",
   infoVersion:
     "0.3-rc1-integration-gate+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
   infoTitle: "KIX integration-gate local-call transport",
@@ -54,7 +55,12 @@ export const OPENAPI_INTEGRATION_GATE_PIN = {
   maxJournalRecords: 4096,
   maxJournalBytes: 8388608,
   readinessJournalDefaultEnabled: false,
-  commandCount: 40,
+  commandCount: 84,
+  coreCommandCount: 40,
+  fsmCommandCount: 44,
+  fsmSourcePath: "docs/contracts/openapi/fsm-command-contract.json",
+  fsmSourceSha256: "342e97cb37b199622d7bb436ca9164690d969b797058aaa539ff417cab01411c",
+  fsmSourceGitBlob: "3771a8739b906a478b54c597df37e27d1afc5f21",
 } as const;
 
 export const INTEGRATION_GATE_HEALTH_PATH = "/health" as const;
@@ -195,6 +201,20 @@ export function assertIntegrationGateDocument(doc: unknown): void {
   }
   if (source.commandCount !== PINNED_ACTIONS.length) {
     throw new ProtocolError("Integration-gate command count mismatch.");
+  }
+  if (
+    source.coreCommandCount !== OPENAPI_INTEGRATION_GATE_PIN.coreCommandCount ||
+    source.fsmCommandCount !== OPENAPI_INTEGRATION_GATE_PIN.fsmCommandCount
+  ) {
+    throw new ProtocolError("Integration-gate command split mismatch.");
+  }
+  const fsmSource = requireRecord(source.fsmSource, "Integration-gate FSM source");
+  if (
+    fsmSource.path !== OPENAPI_INTEGRATION_GATE_PIN.fsmSourcePath ||
+    fsmSource.sha256 !== OPENAPI_INTEGRATION_GATE_PIN.fsmSourceSha256 ||
+    fsmSource.gitBlob !== OPENAPI_INTEGRATION_GATE_PIN.fsmSourceGitBlob
+  ) {
+    throw new ProtocolError("Integration-gate FSM source mismatch.");
   }
   if (source.contractCatalogue !== OPENAPI_INTEGRATION_GATE_PIN.contractOnlyOpenApiPath) {
     throw new ProtocolError("Integration-gate contract catalogue path mismatch.");
@@ -371,6 +391,9 @@ export function requireIntegrationGatePin(): typeof OPENAPI_INTEGRATION_GATE_PIN
     pin.maxInFlight !== 8
   ) {
     throw new ProtocolError("Refusing an integration-gate pin that claims production or a public host.");
+  }
+  if (pin.commandCount !== PINNED_ACTIONS.length || pin.coreCommandCount + pin.fsmCommandCount !== pin.commandCount) {
+    throw new ProtocolError("Integration-gate pin command counts do not match the catalogue.");
   }
   if (pin.contractOnlyOpenApiFileSha256 !== OPENAPI_CONTRACT_PIN.openApiFileSha256) {
     throw new ProtocolError("Integration-gate pin does not match the contract-only catalogue digest.");

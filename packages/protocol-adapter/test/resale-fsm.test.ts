@@ -476,13 +476,13 @@ describe("stub resale case", () => {
   });
 
   it("records the resale dependency baseline without moving the OpenAPI pin", () => {
-    expect(RESALE_DEPTH_BASELINE.protocolRepo).toBe("BeautifulMind-JT/kix-protocol");
+    expect(RESALE_DEPTH_BASELINE.protocolRepo).toBe("SUNBURN-Golden/kix-protocol");
     expect(RESALE_DEPTH_BASELINE.protocolMainSha).toBe("ef942b7713c7468e8851c6b372b64d42b5333ad8");
     expect(RESALE_DEPTH_BASELINE.featureCommit).toBe("70c6d52d4289e23d0d4141b7f3a6b310eea236f2");
     expect(RESALE_DEPTH_BASELINE.fsmPath).toBe("reference/booking_resale_admission/resale_fsm.py");
     expect(RESALE_DEPTH_BASELINE.provenance).toBe("MOCK_GATE_ONLY");
     expect(OPENAPI_CONTRACT_PIN.openApiFileSha256).toBe(
-      "fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e",
+      "2248ff67aa0f43cb98bdd492f63b36fce64c53def6a403a97a7987a128b2d2dc",
     );
     expect(OPENAPI_CONTRACT_PIN.sourceProtocolContractSha256).toBe(
       "ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
@@ -490,7 +490,7 @@ describe("stub resale case", () => {
     expect(OPENAPI_CONTRACT_PIN.contractStatus).toBe("contract-only");
     expect(OPENAPI_CONTRACT_PIN.liveHttpServer).toBe(false);
     expect(OPENAPI_CONTRACT_PIN.productionEndpoint).toBe(false);
-    expect(PINNED_ACTIONS).toHaveLength(40);
+    expect(PINNED_ACTIONS).toHaveLength(84);
     expect(isPinnedAction("list_resale")).toBe(false);
     expect(isPinnedAction("accept_resale")).toBe(false);
     expect(isPinnedAction("create_listing")).toBe(true);

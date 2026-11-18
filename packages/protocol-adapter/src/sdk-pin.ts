@@ -1,6 +1,6 @@
-import manifestRaw from "../vendor/kix-sdk-0/compat/manifests/manifest.bootstrap-1.json?raw";
-import sidecarRaw from "../vendor/kix-sdk-0/compat/manifests/manifest.bootstrap-1.json.sha256?raw";
-import profileRaw from "../vendor/kix-sdk-0/compat/profiles/bootstrap-1.profile.json?raw";
+import manifestRaw from "../vendor/kix-sdk-0/compat/manifests/manifest.bootstrap-2.json?raw";
+import sidecarRaw from "../vendor/kix-sdk-0/compat/manifests/manifest.bootstrap-2.json.sha256?raw";
+import profileRaw from "../vendor/kix-sdk-0/compat/profiles/bootstrap-2.profile.json?raw";
 import verifierRaw from "../vendor/kix-sdk-0/compat/verify_compat.mjs?raw";
 import canonicalVectorsRaw from "../vendor/kix-sdk-0/conformance/vectors/canonical-encoding.vectors.json?raw";
 import mixedVectorsRaw from "../vendor/kix-sdk-0/conformance/vectors/mixed-input.vectors.json?raw";
@@ -39,48 +39,54 @@ import { ProtocolError } from "./types.js";
 
 /**
  * Vendored p-sdk-0 tuple pin from SUNBURN-Golden/kix-protocol.
- * The generated TypeScript 0.x client was merged by PR #123 (merge a74e7c4).
- * Only the original manifest-v1 BOOTSTRAP bootstrap-1 tuple is consumed.
- * A later enlarged catalogue or a SEMANTIC_CONFORMANCE profile is out of scope.
+ * PR #433 introduced the bootstrap-2 SDK at 19cdc1c. The consumed checkout is
+ * PR #448's merge at 8ba7f6c, and the provenance record binds both separately.
+ * The consumed tuple is the manifest-v1 BOOTSTRAP bootstrap-2 profile: 40 core
+ * commands plus 44 FSM commands, 84 total. The FSM source file itself is not
+ * vendored; only its path/digest/git-blob triple is bound here and in
+ * sdk-pin.json. bootstrap-1 stays vendored as history and is no longer consumed.
  * BOOTSTRAP grants catalogue-schema binding only. It is not semantic
  * conformance, not N/N-1, not production qualification, not audit or approval
  * evidence, and not a live HTTP server.
  */
 export const KIX_SDK_0_PIN = {
   producerRepo: "SUNBURN-Golden/kix-protocol",
-  producerMergeSha: "a74e7c459d3be6754ac3cf24503e43c7bc312358",
-  producerHeadSha: "d74dadf87e54ff187ce1fe06bc6c95aa9e92e440",
-  producerMergeTree: "55a05dfbf97141cfff9e6b7072c23d6f0b57f5d5",
-  producerReviewHeadSha: "f761cfdb6817f1489a7f9de0425e636df152f7b2",
-  producerReviewCommentId: 6051281750,
-  producerProvenanceSha256: "ba13a8173c135b40db62f9729235220ce9954e9b2d22d3b062fbe54f066d68ee",
-  producerSourceCommit: "7481b0e16ce9b903abbffa62249bb91cd9e63cfe",
-  producerSourceTree: "8495c7651e456cead3a8812b9e6fb183f818acd2",
+  producerMergeSha: "8ba7f6c36373ac0ec49246f51f7471c164ac3a28",
+  producerHeadSha: "648859b1c9cda424f1a4615ac5155edf46fd0524",
+  producerMergeTree: "d3f5412ef84f64fe83c5d3a3d3ada173921bfbf9",
+  producerProvenanceSha256: "005cf12f1db46133a8753bed1e459e6f829f2732da29a725198e46f1332d2c1a",
+  producerSourceCommit: "c2cde86e21a6e5ba6f24a56548636db6d0a34c6f",
+  producerSourceTree: "394084b15e01bbe4a5612aeb3431f3278c43dd85",
   producerSourcePath: "reference/v0.3-rc1/protocol_contract.json",
   producerSourceSha256: "ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
   producerSourceGitBlob: "619ae21c82ca3df5661bd3831613f15fa65225ff",
   vendorRoot: "packages/protocol-adapter/vendor/kix-sdk-0",
   producerSdkRoot: "sdk",
   manifestSchemaVersion: "kix-compat-manifest/1",
-  manifestPath: "sdk/compat/manifests/manifest.bootstrap-1.json",
-  manifestSha256: "1cce4ee5a9aa64ef40825c0e6dedf920050e594cf20ea0aaf087ecbde46f0cca",
-  sidecarSha256: "fd568b8117a010d1e259323af6f788efe97d497ec8e15406d99d53cddc389d89",
+  manifestPath: "sdk/compat/manifests/manifest.bootstrap-2.json",
+  manifestSha256: "eec1750532d319ea06d8ae61bafa77316067088a84a9b70d20a1f6966dfba1e0",
+  sidecarSha256: "bb4903cb817829f9513b47fc1f60498744ed93355ae8b61511a15a31aa99c8c3",
   profileKind: "BOOTSTRAP",
-  profileRevision: "bootstrap-1",
-  profileSha256: "4c92cf6d905f83fb3f5cd52e166dbadf057451ae46441fce1f91baaaa4367d34",
-  profilePath: "sdk/compat/profiles/bootstrap-1.profile.json",
+  profileRevision: "bootstrap-2",
+  profileSha256: "c356b923997cefc132e63e73a179d5922dd7cb2124b9e9b399c662cd49803b73",
+  profilePath: "sdk/compat/profiles/bootstrap-2.profile.json",
   grants: "catalogue-schema-binding only",
   cataloguePath: "sdk/generated/catalogue.ts",
-  catalogueSha256: "891ddd65f29262603bd0f76746a9308c810a71d4afd717b0f4d2e3f7d46dbaa2",
+  catalogueSha256: "3162d47c51ffad755f80086850bbcbb7ae4a846c4df47ffa57b0e44f9eced0b5",
   generatorPath: "sdk/generate/generate_client.mjs",
-  generatorSha256: "aff0a08a4cc702c6d46f54512ae41e5f300c741e37d4d327b119d5fe69212d5d",
+  generatorSha256: "66f0e2010c6511d322f8dfc7e8932d27d25e154ac0b3d6083f19f97af6124bb7",
   generatorToolchain: "node-24",
-  clientSha256: "c61e3bd985ce45517c2722cb5c12607c758c7a4b6b16fe4af1b8ef331987789b",
+  clientSha256: "0f3650dc84bd34c74bb9a48fe9e6523c0b51665bdbcbd1313e7f94b5a3a4715e",
   jsonschemaSha256: "bfb69963dd275f80f870125fb312a0214dd473bb6df5b67543b0d7f0267f6afd",
   manifestHelperSha256: "18dc1693e58ad98766495faebe4d2e1ca5e23df92b9864b64ef497336ce1f557",
-  sdkPinFileSha256: "bb028f693b8c6fc75b2043bf04eae8a155de306a977ccc0b43b53a9efd3c7719",
-  verifierSha256: "e51ae913601434a6153f68af4c6a95c3eed240fbeecb2ced320d8bb5baefaec8",
-  commandCount: 40,
+  sdkPinFileSha256: "cc68ea950560506a9e8a632ac5b9e634e037d5eaad6b12885d65ea99f9ca160a",
+  verifierSha256: "b1ed26b977666f796a68c5de0a108e5558ca3c98486dc188d385b220a448cf89",
+  commandCount: 84,
+  coreCommandCount: 40,
+  fsmCommandCount: 44,
+  fsmSourcePath: "docs/contracts/openapi/fsm-command-contract.json",
+  fsmSourceSha256: "342e97cb37b199622d7bb436ca9164690d969b797058aaa539ff417cab01411c",
+  fsmSourceGitBlob: "3771a8739b906a478b54c597df37e27d1afc5f21",
   semanticConformance: false,
   liveHttpServer: false,
   productionEndpoint: false,
@@ -358,11 +364,22 @@ export function collectSdkPinErrors(inputs: SdkPinInputs = VENDORED_SDK_PIN_INPU
   if (!sameKeys(keysOf(sourceReferences), ["extension_profile", "fixture_profile"])) {
     errors.push("source_references field set drift");
   } else if (isRecord(sourceReferences)) {
-    if (
-      sourceReferences.extension_profile !== false ||
-      sourceReferences.fixture_profile !== KIX_SDK_0_PIN.producerSourcePath
-    ) {
+    if (sourceReferences.fixture_profile !== KIX_SDK_0_PIN.producerSourcePath) {
       errors.push("source_references drift");
+    }
+    const extension = sourceReferences.extension_profile;
+    if (!sameKeys(keysOf(extension), ["gitBlob", "path", "sha256"])) {
+      errors.push("extension_profile field set drift");
+    } else if (isRecord(extension)) {
+      if (extension.path !== KIX_SDK_0_PIN.fsmSourcePath) {
+        errors.push("extension_profile path drift");
+      }
+      if (
+        extension.sha256 !== KIX_SDK_0_PIN.fsmSourceSha256 ||
+        extension.gitBlob !== KIX_SDK_0_PIN.fsmSourceGitBlob
+      ) {
+        errors.push("extension_profile digest drift");
+      }
     }
   }
 
@@ -524,22 +541,49 @@ function checkProducerProvenance(inputs: SdkPinInputs, errors: string[]): void {
     errors.push("producer provenance canonical form drift");
     return;
   }
-  if (!sameKeys(keysOf(value), ["checks", "merge", "producer", "review", "schema"])) {
+  if (!sameKeys(keysOf(value), ["checks", "merge", "producer", "schema", "sdkIntroduction"])) {
     errors.push("producer provenance field set drift");
   }
-  if (value.schema !== "kix-p-sdk-0-producer-provenance/1") {
+  if (value.schema !== "kix-p-sdk-0-producer-provenance/3") {
     errors.push("producer provenance schema drift");
   }
-  const merge = value.merge;
-  if (!isRecord(merge) ||
-      merge.repository !== KIX_SDK_0_PIN.producerRepo ||
-      merge.pr !== 123 ||
-      merge.headSha !== KIX_SDK_0_PIN.producerHeadSha ||
-      merge.mergeSha !== KIX_SDK_0_PIN.producerMergeSha ||
-      merge.mergeTree !== KIX_SDK_0_PIN.producerMergeTree ||
-      merge.mergedBy !== "BeautifulMind-JT" ||
-      canonicalStringify(merge.parentShas) !== canonicalStringify([merge.baseSha, KIX_SDK_0_PIN.producerHeadSha])) {
-    errors.push("producer merge binding drift");
+  checkMergeProvenance(value, {
+    pr: 448,
+    headSha: KIX_SDK_0_PIN.producerHeadSha,
+    mergeSha: KIX_SDK_0_PIN.producerMergeSha,
+    mergeTree: KIX_SDK_0_PIN.producerMergeTree,
+    mergedAt: "2026-11-12T23:23:08Z",
+  }, [
+    ["CodeQL", 131558666657],
+    ["rights-scale", 131558431475],
+    ["protocol", 131558430672],
+    ["kernel", 131558430409],
+    ["Analyze (javascript-typescript)", 131558418259],
+    ["Analyze (rust)", 131558418236],
+    ["Analyze (python)", 131558417997],
+    ["Analyze (actions)", 131558417778],
+  ], "producer", "success", errors);
+
+  const introduction = value.sdkIntroduction;
+  if (!isRecord(introduction) || !sameKeys(keysOf(introduction), ["checks", "merge"])) {
+    errors.push("SDK introduction provenance field set drift");
+  } else {
+    checkMergeProvenance(introduction, {
+      pr: 433,
+      headSha: "c55f72429e6add41f5326e6eb203685cff537070",
+      mergeSha: "19cdc1c6393e88528d3918e0f4f1f37645a34042",
+      mergeTree: "1a240b2d0b717b37b0ee700b814acc7de5194d6d",
+      mergedAt: "2026-11-10T07:39:21Z",
+    }, [
+      ["CodeQL", 129692154327],
+      ["kernel", 129691939734],
+      ["protocol", 129691935834],
+      ["rights-scale", 129691935413],
+      ["Analyze (rust)", 129691931315],
+      ["Analyze (javascript-typescript)", 129691931194],
+      ["Analyze (actions)", 129691931165],
+      ["Analyze (python)", 129691930750],
+    ], "SDK introduction", undefined, errors);
   }
   const producer = value.producer;
   if (!isRecord(producer) ||
@@ -551,32 +595,35 @@ function checkProducerProvenance(inputs: SdkPinInputs, errors: string[]): void {
       producer.profileRevision !== KIX_SDK_0_PIN.profileRevision) {
     errors.push("producer tuple provenance drift");
   }
-  const review = value.review;
-  if (!isRecord(review) ||
-      review.auditFloor !== "A3" ||
-      review.assessment !== "NO BLOCKING FINDINGS" ||
-      review.builder !== "CURSOR" ||
-      review.reviewer !== "Devin CLI swe-2 read-only" ||
-      review.headSha !== KIX_SDK_0_PIN.producerReviewHeadSha ||
-      review.commentId !== KIX_SDK_0_PIN.producerReviewCommentId) {
-    errors.push("producer independent A3 review drift");
+}
+
+function checkMergeProvenance(
+  record: Record<string, unknown>,
+  expected: { pr: number; headSha: string; mergeSha: string; mergeTree: string; mergedAt: string },
+  requiredChecks: ReadonlyArray<readonly [string, number]>,
+  label: string,
+  conclusion: "success" | undefined,
+  errors: string[],
+): void {
+  const merge = record.merge;
+  if (!isRecord(merge) ||
+      merge.repository !== KIX_SDK_0_PIN.producerRepo ||
+      merge.mergedBy !== "BeautifulMind-JT" ||
+      Object.entries(expected).some(([field, value]) => merge[field] !== value)) {
+    errors.push(`${label} merge binding drift`);
   }
-  if (!Array.isArray(value.checks)) {
-    errors.push("producer completion checks drift");
+  const checks = record.checks;
+  if (!Array.isArray(checks) || checks.length !== requiredChecks.length) {
+    errors.push(`${label} completion checks drift`);
     return;
   }
-  const requiredChecks: ReadonlyArray<readonly [string, number]> = [
-    ["kernel", 113150856550],
-    ["protocol", 113150857272],
-    ["CodeQL", 113150950915],
-  ];
   for (const [name, checkRunId] of requiredChecks) {
-    const check = value.checks.find((entry) => isRecord(entry) && entry.name === name);
+    const check = checks.find((entry) => isRecord(entry) && entry.name === name);
     if (!isRecord(check) ||
         check.checkRunId !== checkRunId ||
-        check.headSha !== KIX_SDK_0_PIN.producerHeadSha ||
-        check.conclusion !== "success") {
-      errors.push(`producer completion check drift: ${name}`);
+        check.headSha !== expected.headSha ||
+        check.conclusion !== conclusion) {
+      errors.push(`${label} completion check drift: ${name}`);
     }
   }
 }
@@ -584,6 +631,20 @@ function checkProducerProvenance(inputs: SdkPinInputs, errors: string[]): void {
 function checkGeneratedCataloguePin(errors: string[]): void {
   if (OPENAPI_PIN.commandCount !== KIX_SDK_0_PIN.commandCount || COMMANDS.length !== KIX_SDK_0_PIN.commandCount) {
     errors.push("generated command count drift");
+  }
+  if (
+    OPENAPI_PIN.coreCommandCount !== KIX_SDK_0_PIN.coreCommandCount ||
+    OPENAPI_PIN.fsmCommandCount !== KIX_SDK_0_PIN.fsmCommandCount ||
+    KIX_SDK_0_PIN.coreCommandCount + KIX_SDK_0_PIN.fsmCommandCount !== KIX_SDK_0_PIN.commandCount
+  ) {
+    errors.push("generated command split drift");
+  }
+  if (
+    OPENAPI_PIN.fsmSourceGitBlob !== KIX_SDK_0_PIN.fsmSourceGitBlob ||
+    OPENAPI_PIN.fsmSourcePath !== KIX_SDK_0_PIN.fsmSourcePath ||
+    OPENAPI_PIN.fsmSourceSha256 !== KIX_SDK_0_PIN.fsmSourceSha256
+  ) {
+    errors.push("generated FSM source pin drift");
   }
   if (OPENAPI_PIN.contractStatus !== OPENAPI_CONTRACT_PIN.contractStatus) {
     errors.push("generated contract status drift");
@@ -641,6 +702,20 @@ function checkSdkPinFile(inputs: SdkPinInputs, errors: string[]): void {
   }
   if (pin.commandCount !== KIX_SDK_0_PIN.commandCount) {
     errors.push("sdk-pin command count drift");
+  }
+  if (
+    pin.coreCommandCount !== KIX_SDK_0_PIN.coreCommandCount ||
+    pin.fsmCommandCount !== KIX_SDK_0_PIN.fsmCommandCount
+  ) {
+    errors.push("sdk-pin command split drift");
+  }
+  if (
+    !isRecord(pin.fsmSource) ||
+    pin.fsmSource.gitBlob !== KIX_SDK_0_PIN.fsmSourceGitBlob ||
+    pin.fsmSource.path !== KIX_SDK_0_PIN.fsmSourcePath ||
+    pin.fsmSource.sha256 !== KIX_SDK_0_PIN.fsmSourceSha256
+  ) {
+    errors.push("sdk-pin FSM source binding drift");
   }
   if (pin.domain !== PINNED_PROTOCOL_DOMAIN) {
     errors.push("sdk-pin domain drift");

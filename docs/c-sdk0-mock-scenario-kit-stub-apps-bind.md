@@ -18,16 +18,21 @@ Builder source HEAD: `288c8ef8b58dec52093cfbc0a9cbca6b65deeab3` on `agent/kixc-c
 
 ## Verified SDK tuple
 
+The pin move in `docs/c-int-pin-bundle-apps-bind.md` refined this tuple to the
+`SUNBURN-Golden/kix-protocol` main `8ba7f6c` bootstrap-2 profile. The table
+below records the currently consumed values; the original delivery's
+bootstrap-1 values remain in the historical run records and git history.
+
 `SDK0_MOCK_PROVENANCE` records a separate binding from verified `KIX_SDK_0_PIN`:
 
 | Field | Value |
 | --- | --- |
-| Producer merge | `a74e7c459d3be6754ac3cf24503e43c7bc312358` |
-| Producer source commit | `7481b0e16ce9b903abbffa62249bb91cd9e63cfe` |
-| Manifest sha256 | `1cce4ee5a9aa64ef40825c0e6dedf920050e594cf20ea0aaf087ecbde46f0cca` |
-| Generated catalogue sha256 | `891ddd65f29262603bd0f76746a9308c810a71d4afd717b0f4d2e3f7d46dbaa2` |
-| Profile kind / revision | `BOOTSTRAP` / `bootstrap-1` |
-| Profile sha256 | `4c92cf6d905f83fb3f5cd52e166dbadf057451ae46441fce1f91baaaa4367d34` |
+| Producer merge | `8ba7f6c36373ac0ec49246f51f7471c164ac3a28` |
+| Producer source commit | `c2cde86e21a6e5ba6f24a56548636db6d0a34c6f` |
+| Manifest sha256 | `eec1750532d319ea06d8ae61bafa77316067088a84a9b70d20a1f6966dfba1e0` |
+| Generated catalogue sha256 | `3162d47c51ffad755f80086850bbcbb7ae4a846c4df47ffa57b0e44f9eced0b5` |
+| Profile kind / revision | `BOOTSTRAP` / `bootstrap-2` |
+| Profile sha256 | `c356b923997cefc132e63e73a179d5922dd7cb2124b9e9b399c662cd49803b73` |
 | Grants | `catalogue-schema-binding only` |
 
 The SDK supplies `CommandName` and `LocalCallEnvelope`, with `body: Record<string, unknown>` and untyped results. The kit uses those types and `buildLocalCallEnvelope`'s existing generated-client schema validator offline. Receipt envelopes pass `assertLocalCallReceipt` and `enforceRemotePayloadGuards`; independent result-key assertions and the actual `BookingJourney` verify local result consumption. These checks do not establish generated result typing or semantic conformance.

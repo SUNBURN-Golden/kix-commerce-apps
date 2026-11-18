@@ -44,16 +44,16 @@ Every row points at this one block. A test checks it against the live pins, the 
 
 | Field | Value |
 | --- | --- |
-| contractOpenApiSha256 | fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e |
-| gateOpenApiSha256 | 2a2af554cb1a8b128f2cf1b1d5b8cf6b1c8fa90adf30865dbc3e64932b3bd13f |
-| protocolMergeSha | 52a9b5cbf7777df55d2d2062cb8d99d862b423bb |
-| ciGateSha | 52a9b5cbf7777df55d2d2062cb8d99d862b423bb |
-| sdkDigest | 891ddd65f29262603bd0f76746a9308c810a71d4afd717b0f4d2e3f7d46dbaa2 |
-| manifestDigest | 1cce4ee5a9aa64ef40825c0e6dedf920050e594cf20ea0aaf087ecbde46f0cca |
+| contractOpenApiSha256 | 2248ff67aa0f43cb98bdd492f63b36fce64c53def6a403a97a7987a128b2d2dc |
+| gateOpenApiSha256 | d05beb48c234b924af086b886ce9bb524dc34407ad2e4a57f1e8af84255820f6 |
+| protocolMergeSha | 8ba7f6c36373ac0ec49246f51f7471c164ac3a28 |
+| ciGateSha | 8ba7f6c36373ac0ec49246f51f7471c164ac3a28 |
+| sdkDigest | 3162d47c51ffad755f80086850bbcbb7ae4a846c4df47ffa57b0e44f9eced0b5 |
+| manifestDigest | eec1750532d319ea06d8ae61bafa77316067088a84a9b70d20a1f6966dfba1e0 |
 | vectorDigest | canonical-encoding:3446c13847bb153df06c1d5d3b7f09cd3b1648ac10bb0cc76d7b65c7014e99c2 mixed-input:9e2441ddefc22a2f8c7be230436620908b735b128b9445b7a5a916e4d86a2e19 |
 | consumedProducerChange | true |
 
-The SDK, manifest, and vector digests come from the vendored p-sdk-0 BOOTSTRAP tuple (kix-protocol PR #123, merge `a74e7c459d3be6754ac3cf24503e43c7bc312358`), consumed by `consume-p-sdk-0` (PR #86). `consumedProducerChange` records that the SDK tuple was consumed; the catalogue, the gate, and the five pins did not move. BOOTSTRAP grants catalogue-schema binding only; this is not semantic conformance.
+The SDK, manifest, and vector digests are from the p-sdk-0 BOOTSTRAP bootstrap-2 tuple introduced by kix-protocol PR #433 (merge `19cdc1c6393e88528d3918e0f4f1f37645a34042`) and consumed here from merge `8ba7f6c36373ac0ec49246f51f7471c164ac3a28`. `consumedProducerChange` records SDK tuple consumption. BOOTSTRAP grants catalogue-schema binding only.
 
 ## Surface matrix
 

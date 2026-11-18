@@ -166,7 +166,7 @@ describe("the repo budget file", () => {
   const budget = JSON.parse(readFileSync(budgetFile, "utf8")) as {
     limits: Limits;
     baseline: { preSplit: { initialJsGzip: number; totalGzip: number }; postSplit: { initialJsGzip: number; totalGzip: number; landingJsGzip: number }; localized: { initialJsGzip: number; totalGzip: number; sourceSha: string } };
-    history: { limits: Limits; reason: string; evidence: string }[];
+    history: { date: string; limits: Limits; reason: string; evidence: string }[];
   };
   const doc = readFileSync(path.join(repo, "docs/c-bundle-performance-budget-stub-apps-bind.md"), "utf8");
 
@@ -180,10 +180,14 @@ describe("the repo budget file", () => {
     expect(budget.limits.initialJsGzip).toBeLessThan(budget.baseline.preSplit.initialJsGzip);
     expect(budget.baseline.postSplit.landingJsGzip).toBeLessThan(budget.baseline.preSplit.initialJsGzip);
     expect(budget.baseline.preSplit.totalGzip).toBe(527526);
-    expect(budget.limits.totalGrowth.base).toBe(790000);
+    expect(budget.limits.totalGrowth.base).toBe(802884);
     expect(budget.limits.initialJsGzip).toBe(290000);
     expect(budget.limits.chunkJsGzip).toBe(30000);
-    expect(budget.history.at(-1)?.reason).toContain("2026-10-23");
+    expect(budget.history.at(-2)?.limits.totalGrowth.base).toBe(790000);
+    expect(budget.history.at(-1)).toMatchObject({
+      date: "2026-11-13",
+      reason: "owner ruling JunTae 2026-11-13, kix-protocol pin move",
+    });
     expect(budget.baseline.localized.sourceSha).toContain("f7cd60c");
     expect(budget.limits.totalGrowth.maxRatio).toBe(1);
   });

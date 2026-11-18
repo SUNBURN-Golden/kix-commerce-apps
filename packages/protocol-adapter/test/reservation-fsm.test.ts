@@ -507,7 +507,7 @@ describe("stub reservation case", () => {
     expect((await adapter.viewReservation(RES)).economicFinalityClaimed).toBe(false);
 
     expect(OPENAPI_CONTRACT_PIN.openApiFileSha256).toBe(
-      "fdeb1a49276249816757354cb9812a1a1463037bd1a8fc03aca33ec036c7088e",
+      "2248ff67aa0f43cb98bdd492f63b36fce64c53def6a403a97a7987a128b2d2dc",
     );
     expect(OPENAPI_CONTRACT_PIN.sourceProtocolContractSha256).toBe(
       "ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
@@ -516,7 +516,7 @@ describe("stub reservation case", () => {
     expect(OPENAPI_CONTRACT_PIN.liveHttpServer).toBe(false);
     expect(OPENAPI_CONTRACT_PIN.productionEndpoint).toBe(false);
     expect(RESERVATION_DEPTH_BASELINE.protocolMainSha).toBe("a47828dd4517c5a7397e09eb6b563a64e4265c82");
-    expect(PINNED_ACTIONS).toHaveLength(40);
+    expect(PINNED_ACTIONS).toHaveLength(84);
     for (const name of FSM_ACTIONS) {
       expect(isPinnedAction(name)).toBe(false);
     }

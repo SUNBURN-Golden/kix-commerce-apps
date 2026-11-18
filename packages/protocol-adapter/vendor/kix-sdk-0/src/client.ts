@@ -79,8 +79,9 @@ export function createLocalCallClient(options: { transport: Transport }): LocalC
         throw new CatalogueRejection("WRONG_TYPE", "body");
       }
       const body = record.body as Record<string, unknown>;
-      validateSchema(body, COMMAND_SCHEMAS[action] as JsonSchema);
-      if (body.domain !== OPENAPI_PIN.domain) {
+      const schema = COMMAND_SCHEMAS[action] as JsonSchema;
+      validateSchema(body, schema);
+      if ((schema.required ?? []).includes("domain") && body.domain !== OPENAPI_PIN.domain) {
         throw new CatalogueRejection("DOMAIN_MISMATCH", "body.domain");
       }
       const envelope: LocalCallEnvelope = {
