@@ -1,0 +1,15 @@
+{"arguments": {"idempotency_key": "ticket-clock", "now_ms": 1000000, "subject_id": "clock"}, "operation": "set_clock", "surface": "booking"}
+{"arguments": {"debtor_role": "explicit-debtor", "idempotency_key": "booking-input", "policy": {"fee_bps": 500, "fee_payee": "platform", "kind": "PRIMARY_FEE_BPS", "residual_payee": "organizer"}, "reservation_id": "reserve-2", "settlement_id": "claim-2", "trade_id": "explicit-booking-trade"}, "operation": "initiate_from_booking", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"reservation_id": "reserve-2"}, "operation": "view", "surface": "booking"}
+{"arguments": {"idempotency_key": "bind-input", "reservation_id": "reserve-2", "settlement_id": "claim-2"}, "operation": "bind_settlement", "surface": "booking"}
+{"arguments": {"idempotency_key": "auth-input", "settlement_id": "claim-2"}, "operation": "authorize", "surface": "settlement"}
+{"arguments": {"idempotency_key": "capture-input", "settlement_id": "claim-2"}, "operation": "capture", "surface": "settlement"}
+{"arguments": {"idempotency_key": "commit_recorded_statement-statement-1", "movement_id": "statement-1", "settlement_id": "claim-2"}, "operation": "commit_recorded_statement", "surface": "settlement"}
+{"arguments": {"idempotency_key": "dist-first", "order": ["platform", "organizer"], "settlement_id": "claim-2"}, "operation": "distribute", "surface": "settlement"}
+{"arguments": {"idempotency_key": "observe_recorded_statement-statement-2", "movement_id": "statement-2", "settlement_id": "claim-2"}, "operation": "observe_recorded_statement", "surface": "settlement"}
+{"arguments": {"idempotency_key": "dist-later", "order": ["platform", "organizer"], "settlement_id": "claim-2"}, "operation": "distribute", "surface": "settlement"}
+{"arguments": {"idempotency_key": "explicit-issue", "issuance_id": "issue-2", "order_id": "order-2"}, "operation": "issue", "surface": "booking"}
+{"arguments": {"debtor_role": "explicit-debtor", "idempotency_key": "booking-input", "policy": {"fee_bps": 500, "fee_payee": "platform", "kind": "PRIMARY_FEE_BPS", "residual_payee": "organizer"}, "reservation_id": "reserve-2", "settlement_id": "claim-2", "trade_id": "explicit-booking-trade"}, "operation": "initiate_from_booking", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"reservation_id": "reserve-2"}, "operation": "view", "surface": "booking"}

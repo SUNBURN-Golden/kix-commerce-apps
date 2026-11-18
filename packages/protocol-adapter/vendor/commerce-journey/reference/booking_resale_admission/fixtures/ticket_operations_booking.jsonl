@@ -1,0 +1,21 @@
+{"arguments": {"reservation_id": "reserve-1"}, "operation": "view", "surface": "booking"}
+{"arguments": {"show_id": "show-1"}, "operation": "view_show", "surface": "booking"}
+{"arguments": {"idempotency_key": "ticket-clock", "now_ms": 1000000, "subject_id": "clock"}, "operation": "set_clock", "surface": "booking"}
+{"arguments": {"buyer_role": "buyer-2", "expires_ms": 1120000, "idempotency_key": "occupied-key", "reservation_id": "occupied", "show_id": "show-1", "slot": 0}, "operation": "hold", "surface": "booking"}
+{"arguments": {"buyer_role": "buyer-2", "expires_ms": 1120000, "idempotency_key": "occupied-key", "reservation_id": "occupied", "show_id": "show-1", "slot": 0}, "operation": "hold", "surface": "booking"}
+{"arguments": {"buyer_role": "buyer-2", "expires_ms": 1120000, "idempotency_key": "occupied-key", "reservation_id": "occupied", "show_id": "show-1", "slot": 1}, "operation": "hold", "surface": "booking"}
+{"arguments": {"buyer_role": "buyer-2", "expires_ms": 1120000, "idempotency_key": "booking-hold", "reservation_id": "reserve-2", "show_id": "show-1", "slot": 1}, "operation": "hold", "surface": "booking"}
+{"arguments": {"amount": 10001, "idempotency_key": "booking-confirm", "order_id": "order-2", "quote_ref": "quote-2", "reservation_id": "reserve-2"}, "operation": "confirm", "surface": "booking"}
+{"arguments": {"idempotency_key": "booking-reconcile", "reservation_id": "reserve-2"}, "operation": "reconcile", "surface": "booking"}
+{"arguments": {"idempotency_key": "booking-cancel", "reservation_id": "reserve-2"}, "operation": "cancel", "surface": "booking"}
+{"arguments": {"amount": 10001, "idempotency_key": "booking-confirm", "order_id": "order-2", "quote_ref": "quote-2", "reservation_id": "reserve-2"}, "operation": "confirm", "surface": "booking"}
+{"arguments": {"reservation_id": "reserve-2"}, "operation": "view", "surface": "booking"}
+{"arguments": {"show_id": "show-1"}, "operation": "view_show", "surface": "booking"}
+{"arguments": {"idempotency_key": "booking-reconcile", "reservation_id": "reserve-2"}, "operation": "reconcile", "surface": "booking"}
+{"arguments": {"idempotency_key": "booking-current", "reservation_id": "reserve-2"}, "operation": "reconcile", "surface": "booking"}
+{"arguments": {"idempotency_key": "booking-reconcile", "reservation_id": "reserve-1"}, "operation": "reconcile", "surface": "booking"}
+{"arguments": {"idempotency_key": "booking-confirm", "reservation_id": "reserve-2"}, "operation": "cancel", "surface": "booking"}
+{"arguments": {"buyer_role": "buyer-2", "expires_ms": 1120000, "idempotency_key": "hold-1", "reservation_id": "reserve-2", "show_id": "show-1", "slot": 1}, "operation": "hold", "surface": "booking"}
+{"arguments": {"idempotency_key": "missing-reconcile", "reservation_id": "missing"}, "operation": "reconcile", "surface": "booking"}
+{"arguments": {"idempotency_key": "missing-reconcile", "reservation_id": "missing"}, "operation": "reconcile", "surface": "booking"}
+{"arguments": {"idempotency_key": "missing-reconcile", "reservation_id": "reserve-1"}, "operation": "reconcile", "surface": "booking"}

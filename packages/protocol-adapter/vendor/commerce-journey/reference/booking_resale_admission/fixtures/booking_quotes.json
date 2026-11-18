@@ -1,0 +1,42 @@
+{
+  "fixture_version": 1,
+  "provenance": "MOCK_GATE_ONLY",
+  "quotes": [
+    {
+      "recording_id": "record-1",
+      "recorded_text": "{\"reservation_id\":\"reserve-1\",\"amount\":10001,\"quote_ref\":\"quote-1\"}"
+    },
+    {
+      "recording_id": "alias",
+      "recorded_text": "{\"reservation_id\":\"reserve-1\",\"amount\":10001,\"quote_ref\":\"quote-1\"}"
+    },
+    {
+      "recording_id": "off-price",
+      "recorded_text": "{\"reservation_id\":\"reserve-1\",\"amount\":10000,\"quote_ref\":\"quote-1\"}"
+    },
+    {
+      "recording_id": "changed",
+      "recorded_text": "{\"reservation_id\":\"reserve-1\",\"amount\":10001,\"quote_ref\":\"quote-changed\"}"
+    },
+    {
+      "recording_id": "mismatch",
+      "recorded_text": "{\"reservation_id\":\"reserve-other\",\"amount\":10001,\"quote_ref\":\"quote-1\"}"
+    },
+    {
+      "recording_id": "expired",
+      "recorded_text": "{\"reservation_id\":\"reserve-2\",\"amount\":10001,\"quote_ref\":\"quote-2\"}"
+    },
+    {
+      "recording_id": "malformed",
+      "recorded_text": "{\"amount\":true}"
+    },
+    {
+      "recording_id": "source-error",
+      "fault": "synthetic_booking_quote_error"
+    },
+    {
+      "recording_id": "source-timeout",
+      "fault": "synthetic_booking_quote_timeout"
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "kix:commerce:2",
+  "orderId": "synthetic-bundle",
+  "orderVersion": 1,
+  "scope": {
+    "issuerId": "fixture-issuer",
+    "eventId": "fixture-show",
+    "performanceId": "evening"
+  },
+  "policyRef": "caller-synthetic-frozen-price",
+  "expiresAt": 1000,
+  "lines": [
+    {
+      "lineId": "L1",
+      "inventoryId": "inv-1",
+      "gross": {
+        "asset": {
+          "namespace": "fiat",
+          "reference": "KRW",
+          "decimals": 0,
+          "maxAtoms": "340282366920938463463374607431768211455"
+        },
+        "atoms": "10000"
+      }
+    },
+    {
+      "lineId": "L2",
+      "inventoryId": "inv-2",
+      "gross": {
+        "asset": {
+          "namespace": "fiat",
+          "reference": "KRW",
+          "decimals": 0,
+          "maxAtoms": "340282366920938463463374607431768211455"
+        },
+        "atoms": "20000"
+      }
+    },
+    {
+      "lineId": "L3",
+      "inventoryId": "inv-3",
+      "gross": {
+        "asset": {
+          "namespace": "fiat",
+          "reference": "KRW",
+          "decimals": 0,
+          "maxAtoms": "340282366920938463463374607431768211455"
+        },
+        "atoms": "30000"
+      }
+    }
+  ],
+  "discounts": [
+    {
+      "ruleId": "coupon",
+      "bearerRef": "organizer",
+      "kind": "FIXED",
+      "value": "6000",
+      "eligibleLineIds": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "capAtoms": null
+    },
+    {
+      "ruleId": "member",
+      "bearerRef": "platform",
+      "kind": "BPS",
+      "value": "1000",
+      "eligibleLineIds": [
+        "L1",
+        "L2",
+        "L3"
+      ],
+      "capAtoms": null
+    }
+  ]
+}

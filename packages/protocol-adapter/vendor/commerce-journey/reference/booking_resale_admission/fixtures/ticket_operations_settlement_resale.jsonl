@@ -1,0 +1,16 @@
+{"arguments": {"idempotency_key": "list-key", "listing_id": "list-1", "offer_id": "offer-1"}, "operation": "list_resale", "surface": "resale"}
+{"arguments": {"idempotency_key": "payment-key", "listing_id": "list-1", "recording_id": "payment-1"}, "operation": "observe_recorded_payment", "surface": "resale"}
+{"arguments": {"listing_id": "list-1"}, "operation": "view", "surface": "resale"}
+{"arguments": {"currency": "KRW", "debtor_role": "fixture-merchant", "gross": 8000, "idempotency_key": "resale-initiate", "policy": {"fee_bps": 0, "fee_payee": "platform", "kind": "PRIMARY_FEE_BPS", "residual_payee": "organizer"}, "settlement_id": "resale-claim", "trade_id": "fixture-resale-trade"}, "operation": "initiate", "surface": "settlement"}
+{"arguments": {"idempotency_key": "bind-key", "listing_id": "list-1", "settlement_id": "resale-claim"}, "operation": "bind_settlement", "surface": "resale"}
+{"arguments": {"idempotency_key": "transfer-key", "listing_id": "list-1", "transfer_id": "transfer-1"}, "operation": "accept_resale", "surface": "resale"}
+{"arguments": {"settlement_id": "resale-claim"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"idempotency_key": "resale-authorize", "settlement_id": "resale-claim"}, "operation": "authorize", "surface": "settlement"}
+{"arguments": {"idempotency_key": "resale-capture", "settlement_id": "resale-claim"}, "operation": "capture", "surface": "settlement"}
+{"arguments": {"adjustment": 0, "adjustment_reason": null, "amount": 8000, "fee": 0, "gross": 8000, "held": 0, "idempotency_key": "resale-commit", "movement_id": "fixture-resale-movement", "settlement_id": "resale-claim", "tax": 0}, "operation": "commit", "surface": "settlement"}
+{"arguments": {"idempotency_key": "transfer-key", "listing_id": "list-1", "transfer_id": "transfer-1"}, "operation": "accept_resale", "surface": "resale"}
+{"arguments": {"idempotency_key": "transfer-fresh", "listing_id": "list-1", "transfer_id": "transfer-1"}, "operation": "accept_resale", "surface": "resale"}
+{"arguments": {"currency": "KRW", "debtor_role": "fixture-merchant", "gross": 8000, "idempotency_key": "resale-initiate", "policy": {"fee_bps": 0, "fee_payee": "platform", "kind": "PRIMARY_FEE_BPS", "residual_payee": "organizer"}, "settlement_id": "resale-claim", "trade_id": "fixture-resale-trade"}, "operation": "initiate", "surface": "settlement"}
+{"arguments": {"settlement_id": "resale-claim"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"listing_id": "list-1"}, "operation": "view", "surface": "resale"}
+{"arguments": {"right_id": "issue-1"}, "operation": "view_right", "surface": "resale"}

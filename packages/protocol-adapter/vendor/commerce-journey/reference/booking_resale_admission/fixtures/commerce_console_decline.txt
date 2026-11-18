@@ -1,0 +1,5 @@
+load_quote
+reference/booking_resale_admission/fixtures/commerce_console_quote.json
+simulate_quote
+no
+quit

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { formatWhen } from "../format";
 import { messages as mergedCopy } from "../i18n/messages/merged-surfaces";
 import { messages as deskCopy } from "../i18n/desk-catalogue";
@@ -28,6 +29,8 @@ import { AdmissionCredentialPanel } from "./AdmissionCredentialPanel";
 import { JourneyPanel } from "./JourneyPanel";
 import { RefundReturnPanel } from "./RefundReturnPanel";
 import { ReservationPanel } from "./ReservationPanel";
+
+const CommerceJourney = lazy(() => import("./CommerceJourneyPanel"));
 
 export function BookingPage({ store = bookingContextStore }: { store?: BookingContextStore }) {
   const { eventId = "" } = useParams();
@@ -173,6 +176,8 @@ function BookingEventPage({ eventId, store }: { eventId: string; store: BookingC
       <p>
         <Link to={`/admission?eventId=${encodeURIComponent(eventId)}`}>{t("desk.booking.admission")}</Link>
       </p>
+      {/* The fixture journey needs a real booking context; it stays off the unknown-event view. */}
+      <Suspense fallback={null}><CommerceJourney eventId={eventId} /></Suspense>
     </section>
   );
 }

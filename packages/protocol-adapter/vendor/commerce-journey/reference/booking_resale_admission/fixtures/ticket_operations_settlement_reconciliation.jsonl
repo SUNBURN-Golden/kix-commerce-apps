@@ -1,0 +1,26 @@
+{"arguments": {"idempotency_key": "historical", "settlement_id": "claim-2"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"idempotency_key": "capture-2", "settlement_id": "claim-2"}, "operation": "capture", "surface": "settlement"}
+{"arguments": {"idempotency_key": "progress-2", "movement_id": "statement-1", "settlement_id": "claim-2"}, "operation": "commit_recorded_statement", "surface": "settlement"}
+{"arguments": {"idempotency_key": "reconcile-progress-2", "settlement_id": "claim-2"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"idempotency_key": "historical", "settlement_id": "claim-2"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"idempotency_key": "progress-6", "order": ["platform", "organizer"], "settlement_id": "claim-2"}, "operation": "distribute", "surface": "settlement"}
+{"arguments": {"idempotency_key": "reconcile-progress-6", "settlement_id": "claim-2"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"idempotency_key": "historical", "settlement_id": "claim-2"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"idempotency_key": "progress-10", "movement_id": "statement-2", "settlement_id": "claim-2"}, "operation": "observe_recorded_statement", "surface": "settlement"}
+{"arguments": {"idempotency_key": "reconcile-progress-10", "settlement_id": "claim-2"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"idempotency_key": "historical", "settlement_id": "claim-2"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"idempotency_key": "progress-14", "order": ["platform", "organizer"], "settlement_id": "claim-2"}, "operation": "distribute", "surface": "settlement"}
+{"arguments": {"idempotency_key": "reconcile-progress-14", "settlement_id": "claim-2"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"idempotency_key": "historical", "settlement_id": "claim-2"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"amount": 4000, "beneficiary_role": "buyer-3", "idempotency_key": "progress-18", "reason": "synthetic-request", "refund_id": "refund-1", "settlement_id": "claim-2"}, "operation": "bind_refund", "surface": "settlement"}
+{"arguments": {"idempotency_key": "reconcile-progress-18", "settlement_id": "claim-2"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"idempotency_key": "historical", "settlement_id": "claim-2"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"idempotency_key": "progress-22", "settlement_id": "claim-2", "source_id": "acceptance-1"}, "operation": "observe_recorded_cancel_acceptance", "surface": "settlement"}
+{"arguments": {"idempotency_key": "reconcile-progress-22", "settlement_id": "claim-2"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"idempotency_key": "historical", "settlement_id": "claim-2"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}

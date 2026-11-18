@@ -1,0 +1,16 @@
+[
+  {
+    "legId": "mismatch",
+    "providerRef": "mock-pg",
+    "routeRef": "original-mismatch",
+    "amount": {
+      "asset": {
+        "namespace": "fiat",
+        "reference": "KRW",
+        "decimals": 0,
+        "maxAtoms": "340282366920938463463374607431768211455"
+      },
+      "atoms": "1"
+    }
+  }
+]

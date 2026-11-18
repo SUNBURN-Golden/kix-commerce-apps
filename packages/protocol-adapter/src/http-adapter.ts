@@ -1,3 +1,5 @@
+import { GateRejectedError } from "./call-outcome.js";
+import type { CommerceJourneyCall, JourneyProof } from "./commerce-journey-command.js";
 import { ADMISSION_TRANSPORT_NOTE, admissionBoundaryPresentation } from "./admission-case.js";
 import { assertJourneyResult } from "./journey-receipts.js";
 import { COMMERCE_COMMAND_BINDINGS, type CommerceMethod } from "./commerce-bindings.js";
@@ -87,27 +89,9 @@ import {
   type CreditStep,
 } from "./types.js";
 
+export { GateRejectedError } from "./call-outcome.js";
+
 type FetchLike = typeof fetch;
-
-/**
- * A validated integration-gate rejection: HTTP 400 or 422 with an object body,
- * `rejected: true`, and a nonblank error code. Other failures stay a plain ProtocolError,
- * so a gate-supplied `error` string cannot be mistaken for a transport code.
- */
-export class GateRejectedError extends ProtocolError {
-  readonly status: number;
-
-  constructor(
-    message: string,
-    code: string | undefined,
-    trace: { requestId: string; correlationId: string },
-    status: number,
-  ) {
-    super(message, code, trace);
-    this.name = "GateRejectedError";
-    this.status = status;
-  }
-}
 
 /**
  * A browser refuses `fetch` called with any receiver other than the global
@@ -525,6 +509,20 @@ export class HttpProtocolAdapter implements CommerceProtocol {
    * before a request. Ambiguous responses do not prove a business rejection.
    */
   async invokeLocalCall(input: LocalCallInput): Promise<unknown> {
+    return this.call(input);
+  }
+
+  async advanceCommerceJourney(input: CommerceJourneyCall): Promise<JourneyProof> {
+    const { commandFor } = await import("./commerce-journey-command.js");
+    const command = commandFor(input);
+    const { scanFsmReceipt, verifyFsmReceipt } = await import("./commerce-journey-receipts.js");
+    return this.call({ operationId: command.operationId, actor: command.actor, action: command.action, body: command.body }, {
+      scan: scanFsmReceipt,
+      proof: (body) => verifyFsmReceipt(body, input.step, command.action, command.body, command.expectation),
+    }) as Promise<JourneyProof>;
+  }
+
+  private async call(input: LocalCallInput, fsm?: { scan: (body: unknown) => void; proof: (body: unknown) => JourneyProof }): Promise<unknown> {
     const envelope = structuredClone(buildLocalCallEnvelope(input));
     const parsed = await this.exchange(this.endpoint(CONTRACT_ONLY_LOCAL_CALL_PATH), {
       method: CONTRACT_ONLY_LOCAL_CALL_METHOD,
@@ -535,7 +533,8 @@ export class HttpProtocolAdapter implements CommerceProtocol {
       body: JSON.stringify(envelope),
     });
     try {
-      enforceRemotePayloadGuards(parsed.body);
+      enforceRemotePayloadGuards(parsed.body, fsm !== undefined);
+      fsm?.scan(parsed.body);
       if (isGateRejection(parsed.status, parsed.body)) {
         const code = parsed.body.error;
         throw new GateRejectedError(
@@ -552,6 +551,7 @@ export class HttpProtocolAdapter implements CommerceProtocol {
         const code = rejectionCode(parsed.body);
         throw new ProtocolError(`Integration gate rejected the local call (${code}).`, code);
       }
+      if (fsm) return fsm.proof(parsed.body);
       assertLocalCallReceipt(parsed.body, {
         action: envelope.action,
         operationId: envelope.operationId,

@@ -1,3 +1,4 @@
+import type { CommerceJourneyPort } from "./commerce-journey-command.js";
 import type { TransportObservation } from "./operational-error.js";
 import type { SurfaceId } from "./surfaces.js";
 import type {
@@ -71,6 +72,7 @@ import type {
  * command body is not the same shape. The stub still serves the desk.
  */
 export interface CommerceProtocol {
+  advanceCommerceJourney: CommerceJourneyPort["advanceCommerceJourney"];
   describe(): AdapterMeta;
   /**
    * Reports the selected environment. HTTP failures stay on integration-http.

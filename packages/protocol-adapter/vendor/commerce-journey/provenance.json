@@ -1,0 +1,641 @@
+{
+  "protocolMergeSha": "8ba7f6c36373ac0ec49246f51f7471c164ac3a28",
+  "files": {
+    "reference/booking_resale_admission/fixtures/admission_console_consume.txt": {
+      "sha256": "b1595fd8fd5684c9baba4d8b6b47c7dd5f54b8815bdd617027d0cfe19768e401",
+      "gitBlob": "573dfd1c6514af8d84f88325656a59d7f92a2987"
+    },
+    "reference/booking_resale_admission/fixtures/admission_console_decline.txt": {
+      "sha256": "a34b383c8e7f339aa33e47e77efadf0290f220f6a843010d2fb6dc865f4e4cd3",
+      "gitBlob": "2eaff8e551d920bf3cfe048cbb2ad4f7aad0553d"
+    },
+    "reference/booking_resale_admission/fixtures/admission_console_recorded.txt": {
+      "sha256": "f0cc270c9188e1ad6ae42777fa02f76376a25e723f880c0d11d387455ff9a723",
+      "gitBlob": "bf084a79d77740002544892aef50d2f228a74850"
+    },
+    "reference/booking_resale_admission/fixtures/admission_reconcile.jsonl": {
+      "sha256": "760bca03a0b0b6bcbc226872fde31493f1f649c1672ea20a027b633d8c125121",
+      "gitBlob": "fe2063c4b7395106028546c549a6d541c9f9bdef"
+    },
+    "reference/booking_resale_admission/fixtures/admission_request_inputs.jsonl": {
+      "sha256": "2182a51223259704b4c9ad8bf83798ee87fc1f2d2e9ccaedb58e634db082ab29",
+      "gitBlob": "c4ba78b0b8f0241a4a0b0bd687d7484b0d17dca1"
+    },
+    "reference/booking_resale_admission/fixtures/admission_request_inputs_session.json": {
+      "sha256": "85cbc718591bbb51d7b97061ce2f924b5e36efb51c4cd2a2eb103a8f59fe95a5",
+      "gitBlob": "29faa65d744fd44af81cc0adb60ecdaebf5e028b"
+    },
+    "reference/booking_resale_admission/fixtures/admission_requests.jsonl": {
+      "sha256": "cf6b18290f661aec8b7f428cb92fb128b3d2f63ec389187752998b9c847bc5b3",
+      "gitBlob": "7d3eb28981e7ffb76e75f6fee42a339609d1d274"
+    },
+    "reference/booking_resale_admission/fixtures/admission_session.json": {
+      "sha256": "104ab327a714517aa02db9bc6edf00d327fac0060610cf110309e46c3e2afc61",
+      "gitBlob": "0f126144977998fd192822d937ce243b854c7271"
+    },
+    "reference/booking_resale_admission/fixtures/booking_boundaries.jsonl": {
+      "sha256": "02737d6dd3841c3b1e05e96c1e12f660d84689f27cb37aa12494bae20a63e3fa",
+      "gitBlob": "072d61111de743d96c8d993a801a54b875720eb7"
+    },
+    "reference/booking_resale_admission/fixtures/booking_calculated_boundaries.jsonl": {
+      "sha256": "d1c73dd3d0bc8aa799382eba695a70a9e9bbcd24ea77c3cff3ae8faa7d73d18c",
+      "gitBlob": "013551dbbfed798a6623acbe1e5aa9766f43ac1f"
+    },
+    "reference/booking_resale_admission/fixtures/booking_calculated_confirm.jsonl": {
+      "sha256": "cd82cd253767fac5e645a46577376e7f20ab250628dc19d6ea9da550e3fcae33",
+      "gitBlob": "d8facf81a025054df3d5afedad918daa0ce2d216"
+    },
+    "reference/booking_resale_admission/fixtures/booking_calculation_inputs_boundaries.jsonl": {
+      "sha256": "4db31fd81b31aabc4dd1f997b0e3aa0f6691388e4e5d587d4814cf40b8b6c3c0",
+      "gitBlob": "96d7477e601133ede0e579eaebc3d62632281c30"
+    },
+    "reference/booking_resale_admission/fixtures/booking_calculation_inputs_confirm.jsonl": {
+      "sha256": "e86b6a069bfafd095a9d6b55519874f493be204cb1c698b4d2061bea9fbe70f6",
+      "gitBlob": "92e334172bcfcf3585ef2af3c7480acbfeee5174"
+    },
+    "reference/booking_resale_admission/fixtures/booking_cancel.jsonl": {
+      "sha256": "e0cebd093fe9d1e0ae335a20aa3f6154031270f152313e6701dc22c0cc50c33f",
+      "gitBlob": "c70367f37cf0f8c5eac9da7fe5c228d859ff141d"
+    },
+    "reference/booking_resale_admission/fixtures/booking_confirm.jsonl": {
+      "sha256": "6d03704331c1b71de24472e91de973c55613dc8390b18dc68231d660206a031a",
+      "gitBlob": "08a367682cba81f5c800dfcd1d261aabc93ec0ad"
+    },
+    "reference/booking_resale_admission/fixtures/booking_console_confirm.txt": {
+      "sha256": "5df5fe72eef1c7edc5467b6d655aa812c9f283b72adc21c0323b054f5ee5cea7",
+      "gitBlob": "3c2ef07df659905992256518434066f168ebc348"
+    },
+    "reference/booking_resale_admission/fixtures/booking_console_quote.json": {
+      "sha256": "9e7234b70c917dd30aaf1478761f29751e1d8394f231bbcd1b467d6027b0b5d7",
+      "gitBlob": "548c0763ecab86335cb6c15eab7e311bd3c69efa"
+    },
+    "reference/booking_resale_admission/fixtures/booking_console_source_calculated.txt": {
+      "sha256": "d79bd42eb8226d634f95cdb44958f08b5b6673f27a7c2f4bb73b646fc77e1972",
+      "gitBlob": "86066bc71a612047c7772e389ee9534d6d8fec3c"
+    },
+    "reference/booking_resale_admission/fixtures/booking_console_source_recorded.txt": {
+      "sha256": "f092184a8a14083a7d6f48b46779f091637fbcb18b8976bcbf471ea1cd4c3409",
+      "gitBlob": "7943dbaa144e0ab62aad0c11d7ba17b38c7ad203"
+    },
+    "reference/booking_resale_admission/fixtures/booking_quote_preview_boundaries.jsonl": {
+      "sha256": "538e1f4683f18a188ba0ace61c6d7ccc60a5b9809254407712f1f46811d62ebd",
+      "gitBlob": "c7cded0d6cfda260a15302e32745ca5b5a69ac8f"
+    },
+    "reference/booking_resale_admission/fixtures/booking_quote_preview_confirm.jsonl": {
+      "sha256": "383af614900a4fa99a3bf78f5e5da8588dc68594550620f5f4d0a2c6021672da",
+      "gitBlob": "345ed824d344d14f26b132b7702923bf3f24684c"
+    },
+    "reference/booking_resale_admission/fixtures/booking_quotes.json": {
+      "sha256": "2e85fe889f5543d9151246be4bed71a4299598ccc96a9838787ea9a3a74b0c20",
+      "gitBlob": "df696ba21b465ee7edf0c4e6dbe8f08d3481cb08"
+    },
+    "reference/booking_resale_admission/fixtures/booking_reconcile.jsonl": {
+      "sha256": "6651d47789e906f884a0a4d4d47689baa4971a5d90d5eb04cdca4bb86bcfac07",
+      "gitBlob": "2b0f88cd83c696f5f56e8d22f9d0a822a3fd1082"
+    },
+    "reference/booking_resale_admission/fixtures/booking_recorded_boundaries.jsonl": {
+      "sha256": "209e9057c2783e0565344b898ffe51ec9f6516740c8f39cae6847e4ae5a504b1",
+      "gitBlob": "cee60f12bfe5601fe813517ed1aebf17eeda6230"
+    },
+    "reference/booking_resale_admission/fixtures/booking_recorded_confirm.jsonl": {
+      "sha256": "112e7f0a594cce41a12594c6ba77ac146454bd0dca3a35b5f0dfe7d8a1028134",
+      "gitBlob": "459576dc477c2d79471cdd07d380b900cfdecd4b"
+    },
+    "reference/booking_resale_admission/fixtures/calculated_booking_quotes.json": {
+      "sha256": "3130ae6b00cce1d2cb379432b68516852c289a8c781d26b2e7e4441c6546573c",
+      "gitBlob": "81b3a1c9183b7a6d5350e7452e6b2afc1f888a3f"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_bad_legs.json": {
+      "sha256": "5b329e1c98d0ccb3e477eababe6e30765a10d507e5f747b7020e48e7060d8b23",
+      "gitBlob": "8846c43139a5fabd6fcafecbbc75ab9e0a3f8fe2"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_boundaries.txt": {
+      "sha256": "cd3077f57c693134aa6f1616f4badd3fd90b269a05951e1ed9b406b2fe39eae0",
+      "gitBlob": "aa9f61a6d6ee0560582b200faf570ceae85a7c86"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_bundle_boundaries.txt": {
+      "sha256": "79156d698a564489667ada2187e5ea9dee5b8509511a5741561865fae409d8e7",
+      "gitBlob": "ebda1f07e41b25add5a917a9592c381f06ff34f1"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_bundle_decline.txt": {
+      "sha256": "0df54c9b095ffc8a57c876e4853cc8b1673d5d98ad3c1f6dbadffc5898e446e2",
+      "gitBlob": "4b2b23f025ba8769ddeb3ca8a30f605bfb1d7914"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_bundle_free.txt": {
+      "sha256": "9fe7aef9f8ae6ec6ca3497516869838a510da8c775e01e6daabc0b32adfe62dd",
+      "gitBlob": "18cda0aac678d965038389aa490d05b3d2b98399"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_bundle_journey.txt": {
+      "sha256": "f9d779173d8b59f6201fd65d074540071945f9912cfc35669f38130b8e99b352",
+      "gitBlob": "439801dded61cfebdb1e0dae8d142d9da825ecb6"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_bundle_precision.txt": {
+      "sha256": "d91273cbf5a20cbbf50f324548d75a79d562c652b4a83aa4893c4f8a3efad959",
+      "gitBlob": "91022399a96e81fa034d1145fdb863cc7dbeb7ab"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_bundle_replacement.txt": {
+      "sha256": "27ab4c5b86833bd9a8bc4118b452998f5d78166c8bc83cb32169d1e8f3fa5274",
+      "gitBlob": "42cea335f8791d8d4991e07f83d1c04c06c32a49"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_decimal_boundaries.txt": {
+      "sha256": "651c0cd733b4a77ddf3c1b01f4a55587b6b30a9f60a18aa502f9b0cba0836972",
+      "gitBlob": "212f718c9581f7c076029982af4bca3137167c5d"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_decimal_decline.txt": {
+      "sha256": "760e8476f3ce1d385a6bd9e5c703b2824268b860d9339d38bf76e1c7b7fc680a",
+      "gitBlob": "9714799f0f7e586a821fab62504c2fee8814989c"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_decimal_free.txt": {
+      "sha256": "a6156762fe65feee359b8a9d227c987c4fbd22f05fdc48fc8e8a95af72ac591d",
+      "gitBlob": "7ff19f242f9273df7cb3f8b0f3a1ff777bf27232"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_decimal_journey.txt": {
+      "sha256": "53a0fe614de646cfd82568d1555a19443a5e3ba931fbb98070171284c077ea51",
+      "gitBlob": "c8239aaa6a958e67762c401bada4e6113cdc8a9d"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_decimal_precision.txt": {
+      "sha256": "f70c74cf54077313c8e47de2e6484d8ed431ecf6a54ddbd9b3fcb27b9168e2bd",
+      "gitBlob": "bd668515726846317c2d39c52f2aa11c05f05e62"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_decimal_replacement.txt": {
+      "sha256": "159c03a9218bfec4d5f79b0032672046b2bad56e27dd34fc17294b9b98fd2877",
+      "gitBlob": "17b320020c6ee2850cadb153e78127c89f5307de"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_decline.txt": {
+      "sha256": "e0797a5b2706d24d7314c96dbeec736b267a5a3b437f557cadfcda8af56fb675",
+      "gitBlob": "3bf0222c444bd4d67342302915d0a68038c544bf"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_edit_boundaries.txt": {
+      "sha256": "ee7544f869077f318a1b63f91d21d4c06e923b13de2892eed0809c91b1cd59e0",
+      "gitBlob": "2f6164121cba04f20afbd9d0345ef569e5d7ce03"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_edit_journey.txt": {
+      "sha256": "0a179183079d3aab99bd4c7f4060a8d51327996d723274d47e91c469596163af",
+      "gitBlob": "396d2a403159ee36af0b181c0e79b90451609da0"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_edit_precision.txt": {
+      "sha256": "480107a46d462aafce4d6858a5645704293df40beeffbd85f854329961852edf",
+      "gitBlob": "7e39abc96a4015fe6b2807cffaa5b71f0e811051"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_edit_replacement.txt": {
+      "sha256": "a4fb745d9df51a01544197e1d544ff94deca494097c092cd6b149fcd221a97cf",
+      "gitBlob": "a5bdc6bb90b1f9ba9d6c2c24ce5bb655d795cb94"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_free.txt": {
+      "sha256": "df5d53391003389b643cf38ab4148e7fbc5b792de7daf7511d2eda3e4c04d7cc",
+      "gitBlob": "999d88e4d93b370fc8680a62ec9d9b521489b4ab"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_free_legs.json": {
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "gitBlob": "fe51488c7066f6687ef680d6bfaa4f7768ef205c"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_free_quote.json": {
+      "sha256": "98524e89ccf25d9714a01397830d1d4232f74067231d5b7db46262f6bd3b20b1",
+      "gitBlob": "a1f5e802d0ff896482c8fe0f320f741ed21f74ab"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_guided_boundaries.txt": {
+      "sha256": "f80563daa1ad4d0a88649bb2634b7baa10ee01ab6d7bab2bd179bdc410ca3be4",
+      "gitBlob": "5503b1f6a4178c60afe1d4874cf944d86c7fedac"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_guided_decline.txt": {
+      "sha256": "73677e85a0fcae583171f73038a38c06593e5e065cc7fd8c1b2dee949b5ad02b",
+      "gitBlob": "8a4f9ec5ab0b1bc7173936e2f39cffa8042ff609"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_guided_free.txt": {
+      "sha256": "4d63c23265f6df4273e955bff16422c40d981d7f3cfaf1eff40199bae1f3c01f",
+      "gitBlob": "bab3b43dd14b0ed640f9b713f22b3d02f18033bb"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_guided_journey.txt": {
+      "sha256": "4da3806939f2f701372c7ee947e91c1257c7b91b745d768f8d520d8e18500afe",
+      "gitBlob": "c1ca8b9121447328d65776bb0ac2afd15fe5e8de"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_guided_precision.txt": {
+      "sha256": "b5552a3bbc4e4e3ffed56ffee545371ab8bde4a9ec43d9748f5ab51442016561",
+      "gitBlob": "b2f3db71527399d69a1fc115d61beaa31c38eab1"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_guided_replacement.txt": {
+      "sha256": "7e8ee5eef12cffe177b1c3632a2c656ee3666e962a860d303f70daa078eb52ff",
+      "gitBlob": "6f223a06ddf890261dbcd0b0bdc27c460aa41486"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_journey.txt": {
+      "sha256": "d3064d287891e7a8b684522f9a253d23d2e8d06fa7ddb4fef3239f2ce5f17ebb",
+      "gitBlob": "8b0b19b6066b7e6a822cc7142ad754f3d4f3d9fe"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_legs.json": {
+      "sha256": "cbd97679f5ad197a9b7fe78bba7ebb69a6aebb934559c36dec75f6d3c9153235",
+      "gitBlob": "ec49a6ce478e1b7550451e287f1a152ca8fd12bc"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_picker_boundaries.txt": {
+      "sha256": "0358fe2e98b2eb55c3133f9bdbc4081d3c5aeb59b496bc9a9bc452c9ba368a12",
+      "gitBlob": "397c9440d603c3c8fca262f12e78b54bc56ac8e1"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_picker_decline.txt": {
+      "sha256": "734bce4a0c58f9dc7c5358e7cc71bbd772fd25ce9dc642668173ebdb893cbf0d",
+      "gitBlob": "cf324312916060ed864e2ffd46cceb617d71b886"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_picker_free.txt": {
+      "sha256": "d78d50c0b5ebf39b0048aadd41a349532853ef05bf01f9f1cea43d8b3adf5cbf",
+      "gitBlob": "980aa87cd4e0803bd553d9921cf2325129a3cbd5"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_picker_journey.txt": {
+      "sha256": "6fad12f1271ca2bf3a61e62a1b9ad177c0f871363180d6af523360372f4569fd",
+      "gitBlob": "32035f894ef4df05d8900b97da374aa3cb88d14e"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_picker_precision.txt": {
+      "sha256": "560a9115167e9b09c9e8651f32c139fab4913e7a18488af9c77f0e3ea58d3b04",
+      "gitBlob": "69dd0f5271975b671a82367e210cea2f2503e9b7"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_picker_replacement.txt": {
+      "sha256": "6f880ac0ca5f66c7eed4effa9c6a9bcd328f7c6d95575a9444788b278a575d7d",
+      "gitBlob": "3da0daa9d14dd543abfc1a92884af64a815f6c4a"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_precision.txt": {
+      "sha256": "2e3c236c411fc9769f705e15fec4bc091679f685769086d952a4f2fae20a2a84",
+      "gitBlob": "3a2adc270370bc9cbf3ea83a5ff3a44b3542ced5"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_precision_legs.json": {
+      "sha256": "87f0cec18d94e7947fb76919adcc685bcdbed87214125eeebbd397804e5da1fe",
+      "gitBlob": "ca029980f89ec14dbdd57de6c51413fa1a4641d6"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_precision_quote.json": {
+      "sha256": "55c54a10022291716fe53d4c2cc178f7670cdcea50d3500333f5c8c072a7eb7e",
+      "gitBlob": "61dd2a1b372be4c8d00156ca1680b765de1427ce"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_quote.json": {
+      "sha256": "f1c0a3097561cf4488f3a80d2cf8cb7a07c9114f656b27207cc2592e1445e8d6",
+      "gitBlob": "7592a1fc0d02776554dbf77292a2889b581727a8"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_replacement.txt": {
+      "sha256": "599acf4119dc127a220746b885a6e631337385cd8a9c7b58c14a62dbd6ab8adc",
+      "gitBlob": "ca0e9d34f5fe059ff9dd7a90d1b25b059689e29e"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_structure_boundaries.txt": {
+      "sha256": "05e3389c7350e7390c7ec89d55e68b9e0c24c9cb82ca50df6559af5c6624562b",
+      "gitBlob": "5745e9d3429b9d9cc3458a1db0046b39fc136bbb"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_structure_decline.txt": {
+      "sha256": "e1b5d9006e9959d4e6a2c8c37770311dd54c03c5bd16f21bc9d403e02ba7a6a3",
+      "gitBlob": "14ab70457fe298c6277f60a95ddcee41fad192db"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_structure_free.txt": {
+      "sha256": "f67f5272103bc33e510513d86980da031d3d2141a8d67b8d27f6dd6521186b58",
+      "gitBlob": "ba8cda3bbfdd7da366c242045b9dc2dd86fd4070"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_structure_journey.txt": {
+      "sha256": "64d2b3b33cb3471504b0a14121e33c596dcd243b063e782beb46773326b33388",
+      "gitBlob": "8781c54c91e04e7e930b0c7df51187393d4a720d"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_structure_precision.txt": {
+      "sha256": "c3e7ee83e59a547549fec306013eb39e0be460f06fef4c2e8d61410aa2b2fec4",
+      "gitBlob": "0afc7ab6f3793bc44109a45a37be8acf79dad204"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_console_structure_replacement.txt": {
+      "sha256": "c73e719fc2efcff140a87c5e8a4a8778c09c822469f8283da233b09018bcd0d9",
+      "gitBlob": "a4a3b7bfe48dc4307e1e26f837d885074e4660c9"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_journey_conformance_v1.json": {
+      "sha256": "f9555d84790b91eafe74c71453a2dbd301fae43566a5f0a3a47e19059151e9cc",
+      "gitBlob": "0c19a06fea2436e16d4247a14d6f847eec0abe2b"
+    },
+    "reference/booking_resale_admission/fixtures/resale_console_cancel.txt": {
+      "sha256": "2bf03f0104cfbdd374c3087d2363470a1544c8588533e5b71ad9de55c8ddf029",
+      "gitBlob": "bcebbb8b9f14208eb41679d9cd411a2217c5840e"
+    },
+    "reference/booking_resale_admission/fixtures/resale_console_recorded.txt": {
+      "sha256": "1957a19cc9a51580b40858697b97a92156ee790d54bbe26edd62a004f0f9f1b1",
+      "gitBlob": "450a59970784267dd9963116c87d11e6b41adf84"
+    },
+    "reference/booking_resale_admission/fixtures/resale_console_transfer.txt": {
+      "sha256": "c0c5e4528fd364734222dc1da30617a9992e55c0f4361c83c07d37ac44448a2f",
+      "gitBlob": "3d25cff7bfe8f860dfb8559f497899718e5ff746"
+    },
+    "reference/booking_resale_admission/fixtures/resale_payment_held.jsonl": {
+      "sha256": "8cfdfa4e6a454ca06c1b8bd202646fbaeb248907d812847c9282f69005420ea9",
+      "gitBlob": "8d638507cf98de0e486c502f08cbe1bb14ef74d2"
+    },
+    "reference/booking_resale_admission/fixtures/resale_payment_listed.jsonl": {
+      "sha256": "62160eec50cb3e6cfbbcd80c9b2985e00a255e6412e1f7f779416e9347f95c79",
+      "gitBlob": "6ca550dfcb2cdd71642819b6a2a0f5a9bf4b58c2"
+    },
+    "reference/booking_resale_admission/fixtures/resale_payment_session.json": {
+      "sha256": "d81de01fd30b4445ff684e27e6b416be70c2733e5036758c840018467632f39e",
+      "gitBlob": "03bfad7adf7119ef08e52e160133ed874c4c58a5"
+    },
+    "reference/booking_resale_admission/fixtures/resale_reconcile.jsonl": {
+      "sha256": "433c6040917cb264877ea46c420319fe5692269a80ec2b26040633a1a5991eba",
+      "gitBlob": "fdb587274e20f1ba6fdc2d04b978d17326c91cd2"
+    },
+    "reference/booking_resale_admission/fixtures/resale_request_inputs.jsonl": {
+      "sha256": "c29939467a6ee3a2e4c451793e65947fa6213850a71785cf73607a8f786f5f4a",
+      "gitBlob": "bc348ab150216637f91e46738ab15f4604e13e43"
+    },
+    "reference/booking_resale_admission/fixtures/resale_request_inputs_session.json": {
+      "sha256": "9d936e89037d1ffd2843510225193e19ae392188ae330a95a4f64b472261f2a8",
+      "gitBlob": "e2ef326c3d6d1a48b33568caf9944040c995bf79"
+    },
+    "reference/booking_resale_admission/fixtures/resale_requests.jsonl": {
+      "sha256": "803f4e67fd902a0a2f167394536c0fe23dbebb4bde02748270a5658af7764250",
+      "gitBlob": "2f7c3b27786ed112c34566f579b30cfdd1b194c1"
+    },
+    "reference/booking_resale_admission/fixtures/resale_session.json": {
+      "sha256": "19ef6778917b1c3da20fdbd5dc03b9c7b7173d45e2ab1c0d2df65175f148000f",
+      "gitBlob": "20ec4733b742566e3a3717d73fcd4e3df5b5e53a"
+    },
+    "reference/booking_resale_admission/fixtures/settlement_console_exceptions.txt": {
+      "sha256": "52dec44cb4179442aa736f532efebaa6deda230e639364396f8bded4aff6c3b5",
+      "gitBlob": "5114571d8d48740cd448a12ac08d11ba9249f7d3"
+    },
+    "reference/booking_resale_admission/fixtures/settlement_console_guided_booking.txt": {
+      "sha256": "86bd776c08734e64659598c6b682e6e4f4d105c9a4aeb91342a8063a1ec0df95",
+      "gitBlob": "36c06b0a417b8f12073d65de2c3e28665363cfd3"
+    },
+    "reference/booking_resale_admission/fixtures/settlement_console_guided_resale.txt": {
+      "sha256": "cea59f18f59b466007011c5b1205d0b031f418419c9b16b01676f7a75e14628c",
+      "gitBlob": "38564660036b6426656cceceb2149a4042986b9a"
+    },
+    "reference/booking_resale_admission/fixtures/settlement_console_journey.txt": {
+      "sha256": "e6517df11c90f9eb69458a4e0e4d817e2af733d58e2dcc29efd90fe7aecc1e38",
+      "gitBlob": "881dec516ae9ba7271f8161bb97638ae617a61b8"
+    },
+    "reference/booking_resale_admission/fixtures/settlement_console_reconcile.txt": {
+      "sha256": "623d51f124bc220e3af2c01c7be560b156060ecbb2ec5082ceba1f8a54bd3800",
+      "gitBlob": "1c12ef3d207bd2a75cb15d0405b23f83481003dd"
+    },
+    "reference/booking_resale_admission/fixtures/settlement_console_start_booking.txt": {
+      "sha256": "5811fbb9f6f2901f71fa461face66c7f78a00b77ac9bdfc7c98c4aeb2373e410",
+      "gitBlob": "c8fa6e00787430c5fac0d49ad1b368424c1da773"
+    },
+    "reference/booking_resale_admission/fixtures/settlement_console_start_resale.txt": {
+      "sha256": "cfaf411a38070a9873ae4c7e62a567ee0acad5de3a24df3fd1f29926506eacb4",
+      "gitBlob": "f1f35896b18b7b5d1ead72b20ed4777d3c6e34ee"
+    },
+    "reference/booking_resale_admission/fixtures/shared_ticket_console_fulfillment.txt": {
+      "sha256": "8acf231972581044b0379c7b406c06506f0291a89c5836d8196e27fdf7339267",
+      "gitBlob": "3c14ed0ba8256bab9af1820dfcfeeee91eb53c3d"
+    },
+    "reference/booking_resale_admission/fixtures/shared_ticket_console_fulfillment_boundaries.txt": {
+      "sha256": "e8b6065dfd72a2168238c1d14ca3c0d3feba86f2e3424b40622f7d8fb140b7a0",
+      "gitBlob": "199d8692778c248e614fc6579bf37c99f725b92d"
+    },
+    "reference/booking_resale_admission/fixtures/shared_ticket_console_fulfillment_consume.txt": {
+      "sha256": "ed2b3db416cb2086c97eedfea52a14c870bc3e01e7eefed0dfbbb85cf8d456ce",
+      "gitBlob": "f25bb9ff2b695da2900c39850e282e993e21b838"
+    },
+    "reference/booking_resale_admission/fixtures/shared_ticket_console_journey.txt": {
+      "sha256": "b670c187dc53a31d8d39898f388c6bb21376d86cacf1cd21d973a6ddb0454a8a",
+      "gitBlob": "e8a1c2ef21a42f4fd03cebf870ca589c6d28299b"
+    },
+    "reference/booking_resale_admission/fixtures/shared_ticket_console_payment_inputs_held.txt": {
+      "sha256": "910b306ad04c9401b88811b03a30b1aa0780ce1dccfef60783cd28b7ea570148",
+      "gitBlob": "7d62adcfef796084fbdd09874b19b9b8fb1ad8ce"
+    },
+    "reference/booking_resale_admission/fixtures/shared_ticket_console_payment_inputs_listed.txt": {
+      "sha256": "0a45d93f7a5c2115b190ad4e152f1c24de65c4609e09ce8b0d58185f1cb24718",
+      "gitBlob": "644e47291899122e819bd3c5d1042d0cf4237acc"
+    },
+    "reference/booking_resale_admission/fixtures/shared_ticket_console_reconcile.txt": {
+      "sha256": "8ac412d0d01547d29b41ab56db89559407d5809083d9529a547f41de0bbd2f29",
+      "gitBlob": "f39526a61c3b48f9945a4936fb547d9545353f06"
+    },
+    "reference/booking_resale_admission/fixtures/shared_ticket_console_recorded.txt": {
+      "sha256": "96afb6dcaf8ac0279276ce6bee6af4d19ebe05bb694cc24cc949634560505472",
+      "gitBlob": "12b930a5f7e2e6392bdafd1694d30d8e0b4d6528"
+    },
+    "reference/booking_resale_admission/fixtures/shared_ticket_console_source_calculated.txt": {
+      "sha256": "bde0544da36068754d8fb694a4ee4f37169448985c5b3ede46dfc213d0443db7",
+      "gitBlob": "52bd3e2aea35edc38ecef6fdf630be530e7ba286"
+    },
+    "reference/booking_resale_admission/fixtures/shared_ticket_console_source_recorded.txt": {
+      "sha256": "47723fdce154c692472bd81a4ff71c3cc6ee9bf2f642732d0e3dcc10239837ea",
+      "gitBlob": "17ece82f9e46bcc58ef3bc960c4ca44bb1f075a2"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_admission.jsonl": {
+      "sha256": "c257fc60afff9e98db947d55febedd71398de69615ae2930217cceb8c2140355",
+      "gitBlob": "29a3283e0cc6fb56387f72d4f9e2494f1ed79bc1"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_admission_inputs.jsonl": {
+      "sha256": "5128a24556520a6a36d1abfa8fc034be0c2e9317fc52395fea382c2837e401fb",
+      "gitBlob": "e4f5a44df7d29bd888d443233cc9039457ab694e"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_admission_inputs_session.json": {
+      "sha256": "7f46cf7782b3eda97055caadb3bfded873c50ca72b02ab659fc300e9fd330189",
+      "gitBlob": "bbba76db87dc5c893c2610fd0c9940c215fb4867"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_booking.jsonl": {
+      "sha256": "3558c7f7c5cca5a04b668db76cb59a27cced1258ea3a1b3b50451461925b9928",
+      "gitBlob": "9eb76837e06fc78a37453ef0badf189fefd6bc5c"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_booking_admission.jsonl": {
+      "sha256": "1e5c5d527a951e888fc4e02136497cf69d959166e56c710b1915cf8064c72467",
+      "gitBlob": "26f6dedbf6b0efc54993e5a081fe89575bf76444"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_booking_quotes.json": {
+      "sha256": "6ec6cf20a92d8bca186649c3e84c1314c6598072fcedafce84cc92387bbf778e",
+      "gitBlob": "788f8915d50a5e20245baf3684469ed54eb43b73"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_calculated_boundaries.jsonl": {
+      "sha256": "85d1739900f2782c0701e14d4d7afa9020b3f17dba3566fc06da891ea769fd9e",
+      "gitBlob": "0844c551c738de912c49473d19cfa75af15ffd06"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_calculated_confirm.jsonl": {
+      "sha256": "19afb0fd612dbfc79477ac65cf11a8ed6f67ae7610e9dfc238bd926a6551665d",
+      "gitBlob": "9b238a97b4df18cd8d71a3594e6b75a0c69c90c8"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_calculation_inputs_boundaries.jsonl": {
+      "sha256": "a4eed21d25e02185d07b1e98ac46c237237a9d118e7f183730eda8134c727071",
+      "gitBlob": "3690e66c62cc9ab398f866ff898ab821f8247dc8"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_calculation_inputs_confirm.jsonl": {
+      "sha256": "7b4180aa321f957bd9f34bce52c206bd3adac57a31a5e1fc3bc70d14c48d7f89",
+      "gitBlob": "5bc36f1a7c75ae17ac79a7d3c8fff40222b1f898"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_cancel.jsonl": {
+      "sha256": "b87d2f8e3024007694aa7c5d123a4b14df6d02d27306efde7140967cf12019b7",
+      "gitBlob": "c7d643bdd901d1096f15dd22e45ca00e6d802a97"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_fulfillment.jsonl": {
+      "sha256": "f9c57f17f4a6addccccb5b250fc49d24ad393ad83f1907c2bebb5172047482d1",
+      "gitBlob": "3b15627dd9c83eeddf30ee403fe2353d39720ce7"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_fulfillment_session.json": {
+      "sha256": "a1a7090de23899a1de6c21c3a8d946e50e07b56e7ffeaf46174dee8195424478",
+      "gitBlob": "ff4fe881d2ddac83e3c0c04794c4e518266309ce"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_issued_handoff.jsonl": {
+      "sha256": "ae58a9bfd3b58d89e8a39a2a365e19d44a0c1d5a58fb72ad73fe657674636b27",
+      "gitBlob": "2e75e686385e546b4b1c578a56d0104088ab5854"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_issued_handoff_boundaries.jsonl": {
+      "sha256": "31cf7f6d06044deccea26ab74f7ce84b23738cba9b715aa953d9d4ab129271fa",
+      "gitBlob": "69ecbb2edb0ba1f6730ba3edbd54a4ab0bbaa8f9"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_payment_held.jsonl": {
+      "sha256": "f1b10b86fd0c9c6a43ab34fede768ace038d8bd2b923dfa7a720fcf9a00573b3",
+      "gitBlob": "ab5b34f8b2abf06e6d1a6db2c6370982862d35ab"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_payment_listed.jsonl": {
+      "sha256": "819b798d8249b7f08fb56c5377347f7c1e567c1795fc6306c666818710116766",
+      "gitBlob": "db3a5ebe6d18b90570a5e15df51ea33c7a586563"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_payment_session.json": {
+      "sha256": "a2d63412b2481d80250e092b1ff5a4ede6a102d3620bf81e4e6f845131f8793e",
+      "gitBlob": "a0ea165e8576f14868450647eee3fcd35a8b6948"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_quote_preview_boundaries.jsonl": {
+      "sha256": "d5082308b23125ff45ec1c6f91c468d2c49d177ae70f2a0c65ead281cd93f5aa",
+      "gitBlob": "6f3ff16097183db5e3b41251794e396cda6bd6b7"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_quote_preview_confirm.jsonl": {
+      "sha256": "3682db34b7c2bc9c01861803997fd530bff679fca886037a63e523dc9de2cafb",
+      "gitBlob": "d4afb222ccbfa5ade0abc36c4162011e6d0e2d88"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_reconcile.jsonl": {
+      "sha256": "6e00141cc83da28350c2b2ab91aaa917b5ecc657ba160dc9c8e4c9d85b027614",
+      "gitBlob": "ca3b961577328effe62fcd5b500a8ab73ab4cef5"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_recorded_boundaries.jsonl": {
+      "sha256": "7ee83211e2b6eea2062f08a231bae984dd0734c80a80a88d1895568b08db70ba",
+      "gitBlob": "c36dd2eb7a2db3ca9efa6ca55e61275f56bf76e3"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_recorded_confirm.jsonl": {
+      "sha256": "d0a6548558882fe54058e9303657a99ce7953b6aad9c8b3d9ce0b294fe8e2691",
+      "gitBlob": "e9e3603f9e79171472d1c21ba55256d507c78f9c"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_refund_full.jsonl": {
+      "sha256": "5a9342874984cb7f626d73dd96004e6a9cc7be5c9851d9b0fb183656824133b1",
+      "gitBlob": "0df36c64b92f2ef7f16841db57b07e7b4156d3b9"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_refund_partial.jsonl": {
+      "sha256": "89c5eaaad2f87bb680285a1410eab367e3a26bbc1e66c54b36174e2d32e93a15",
+      "gitBlob": "9a409197e3c75ef481750b42318bf3f8ac50ae2c"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_refund_replay.jsonl": {
+      "sha256": "b19089648a737c9534b208a29f680696ba2def41d0b2967985da99f672efe377",
+      "gitBlob": "6143cf651a824a3565f67b1cc20234237df2ae1d"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_refund_session.json": {
+      "sha256": "aafa94b91b05e875fb26c24b880380a0bb58eb1ea2e981c874d9397c207b5c54",
+      "gitBlob": "23cbf6e61df077f79c9d014655f2cb0bafa42152"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_request_inputs.jsonl": {
+      "sha256": "ba5e2a3c6f1063fab7e5e8cc33d90da36cd5d39512d50cb152a2e05597568d8f",
+      "gitBlob": "1468e2899ffbe8166f456d3dfe96423eb0575d03"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_request_inputs_session.json": {
+      "sha256": "a0dc6f090b3869a308e8a7b1134e42f7efb1dca5a3ac409b10902fd511671ea6",
+      "gitBlob": "a756e1021b557e88e2266c10ab5705fe24cf1872"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_session.json": {
+      "sha256": "622e597a1497d9ae8ccfa5d3cbcb4905e380300ebaa529cb91848ae23525e61c",
+      "gitBlob": "de0a5d93e4d8e0756059bdd456499b5241c2072e"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_settlement_booking.jsonl": {
+      "sha256": "ebf350ca6523225df98889d538c094763eea685b0a5f58dca79b98135a51ac73",
+      "gitBlob": "ab5e04abd48e1dd7e7c24c127fb83465b71c23e1"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_settlement_exceptions.jsonl": {
+      "sha256": "47f0db3b042db8c308fe5f479a64e39fffe33c095625a58a870f87f90934cb37",
+      "gitBlob": "46e2e909426565bead4f6f5836a9e666a9c2b611"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_settlement_exceptions_session.json": {
+      "sha256": "bd1cbe9431615554688c8bf0fcc90f57145af8a9ac308c7fb1341e6512dd99f1",
+      "gitBlob": "4226fc5b18ef3147eef526061aaf7da7b8847156"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_settlement_fact_inputs_boundaries.jsonl": {
+      "sha256": "c52127ee6d5df123d397145256ad78a3a325ea184093b27a43d7c770beb37061",
+      "gitBlob": "9607e42a48966d5760c8d0ef31e86e172d8b34d2"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_settlement_fact_inputs_journey.jsonl": {
+      "sha256": "f61f4ecced60f77733424d82d9f0bef86ae6f61830b9c6b35a9d3c5b3e5fb99b",
+      "gitBlob": "2faa44a5fe0c4a6e4846d002fd01b7c2853098a2"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_settlement_fact_inputs_session.json": {
+      "sha256": "1f3c259c4742bfd406a9b8b7377a4c3cf3d619d9649eb8ddec4becda4e515bdb",
+      "gitBlob": "aad6b4ab8cfbb16d2be851e3a1d7ebbe04ec8468"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_settlement_inputs_booking.jsonl": {
+      "sha256": "c47e752b2439b78364fb24a4c8daf1454ec4e4ab2ac816a67285cab8e027529e",
+      "gitBlob": "462abdddd793f4005c63ff739947c9fe2c150e17"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_settlement_inputs_boundaries.jsonl": {
+      "sha256": "74a6e698ef7d0332f18bc95653c928f85ceac1ce0956c71873c0c089acd3d313",
+      "gitBlob": "6b8b6c8a205f7803092f7999ec75612726107c80"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_settlement_inputs_resale.jsonl": {
+      "sha256": "d13685081e52ffb7b381d068c554a58e2943add429e63dbc603e3633afafb9b6",
+      "gitBlob": "3532b96d4c9363e927d799896ab076a784e7d6cc"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_settlement_inputs_session.json": {
+      "sha256": "982c312ee2f0eb2a95f527a1b6417da455cfbd95f7c465600cc48a2d370bb5ba",
+      "gitBlob": "5c8bfecd14cb5c69a911be01eaf96365ceeaa748"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_settlement_reconciliation.jsonl": {
+      "sha256": "9af4cd0e072eb7b786ae9d8c6f3b15c1106151dff07d6becd011389f87135253",
+      "gitBlob": "1591220abadf21eb750e9c9a6e4baece721f294f"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_settlement_resale.jsonl": {
+      "sha256": "e661a858d365ae146e042c839560cbb790407d9e155cc0afbe87ebf4b18fbbb5",
+      "gitBlob": "dc2955b7f45c27c3653ffe6e5c58844fe295901f"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_settlement_session.json": {
+      "sha256": "717313f8f8cc6ac81b3427a0962007c156544d798a16d1ca81aca2a1b2163380",
+      "gitBlob": "a422295cd3796247387582192279e2a13c716c88"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_statement_boundaries.jsonl": {
+      "sha256": "d03f98d0e0b3473a8de86c40b4c98d9bab4b2e3b3d912047ddb34bc88e09787f",
+      "gitBlob": "1308fb25239dd5e71e3343282654363e59972a53"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_statement_distribution.jsonl": {
+      "sha256": "50154407c58428d867a12e332b2a48d53a95d7c777831c8f1725479a26119f37",
+      "gitBlob": "9aa61eac15b518d579613084e68c56c98c256724"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_statement_session.json": {
+      "sha256": "532f5caffbb6c825310d44f37a5e5ef7dae5b2ae2c5ba329f6c830a34f383952",
+      "gitBlob": "781edf7c432631a7852470196904c11f1a89d8d8"
+    },
+    "reference/booking_resale_admission/fixtures/ticket_operations_transfer.jsonl": {
+      "sha256": "2a8d71478457fb1f260d591b97cf212d65fde1055c51d5d4f8101c4c9cd1cd9d",
+      "gitBlob": "af4d6f0efcc157445c2e1778f72b40099295ebff"
+    },
+    "reference/read_model/vectors/admission.json": {
+      "sha256": "bd81537377ad4c7fec1ac6948e7f212cbc29176f8c39841620917060fa48aa7e",
+      "gitBlob": "ecaa18342c9436b0d97c9a58c45d9e1f282eeded"
+    },
+    "reference/read_model/vectors/credit.json": {
+      "sha256": "687b88f1659bff54075aa44a95b04ee1f77324da136049e481f47a3fdf2bf802",
+      "gitBlob": "b7f776f9f6b72a4e885b52b05b47ca67d396761d"
+    },
+    "reference/read_model/vectors/manifest.json": {
+      "sha256": "cd774bab433d87b130cf49c8f59feb9b94ad96eca22d41ebf42c8f9dd8309b9b",
+      "gitBlob": "036564b9130bf5fad6abb576ce7b8b408695596e"
+    },
+    "reference/read_model/vectors/resale.json": {
+      "sha256": "6cbd01c2c15a2d4cf094974d5465fb0250e3b7db7a02326087f17128e55df3c2",
+      "gitBlob": "c0abcab07a6c12565cad75b9c818369369549ace"
+    },
+    "reference/read_model/vectors/reservation.json": {
+      "sha256": "d73dca6bf7031a7798d08cadce25967583b1ea02ca0587eb5c2af79dbf221d39",
+      "gitBlob": "debfc375cb867ddb51a995f74d11196f9c70ab95"
+    },
+    "reference/read_model/vectors/settlement.json": {
+      "sha256": "c7d58b0415f3bc3e711cd1e3950e9a1a08c6cc00d5b2349f0617ed459e184d4f",
+      "gitBlob": "7fbd79f4baa1509b0c182dd17f42ca8790f009a4"
+    },
+    "docs/contracts/openapi/fsm-command-contract.json": {
+      "sha256": "342e97cb37b199622d7bb436ca9164690d969b797058aaa539ff417cab01411c",
+      "gitBlob": "3771a8739b906a478b54c597df37e27d1afc5f21"
+    },
+    "sdk/conformance/vectors/canonical-encoding.vectors.json": {
+      "sha256": "3446c13847bb153df06c1d5d3b7f09cd3b1648ac10bb0cc76d7b65c7014e99c2",
+      "gitBlob": "947773687ea9e2226925168129bf0370e20a5a04"
+    },
+    "sdk/conformance/vectors/manifest-verifier-negative.vectors.json": {
+      "sha256": "c5157d96aea3219ec15f443272ded849298b39aff915dc0d96eda51f03deed4f",
+      "gitBlob": "8880a33a6b35d2791741ed862898ce521f7e92eb"
+    },
+    "sdk/conformance/vectors/mixed-input.vectors.json": {
+      "sha256": "9e2441ddefc22a2f8c7be230436620908b735b128b9445b7a5a916e4d86a2e19",
+      "gitBlob": "74bf25478d57a98c5ee102c362c4870fc8d16456"
+    }
+  }
+}

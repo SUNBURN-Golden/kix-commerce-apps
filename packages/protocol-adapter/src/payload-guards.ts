@@ -56,9 +56,9 @@ const MAX_PAYLOAD_DEPTH = 32;
  * model result. It is not a desk FSM view and it is not a production claim.
  * Every nested object is checked, not only the top level and result.
  */
-export function enforceRemotePayloadGuards(value: unknown): void {
+export function enforceRemotePayloadGuards(value: unknown, fsm = false): void {
   rejectTransportProductionClaims(value, 0);
-  scanDeep(value, 0);
+  if (!fsm) scanDeep(value, 0);
 }
 
 /**

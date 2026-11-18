@@ -1,0 +1,438 @@
+{
+  "fixture_version": 1,
+  "provenance": "MOCK_GATE_ONLY",
+  "setup": [
+    {
+      "machine": "reservation",
+      "operation": "set_clock",
+      "subject_id": "clock",
+      "idempotency_key": "ticket-clock",
+      "body": {
+        "now_ms": 1000000
+      }
+    },
+    {
+      "machine": "reservation",
+      "operation": "register_show",
+      "subject_id": "show-1",
+      "idempotency_key": "show",
+      "body": {
+        "organizer_role": "organizer",
+        "capacity": 2,
+        "gate_roles": [
+          "gate-a",
+          "gate-b"
+        ],
+        "primary_price": 10001,
+        "resale_cap": 20000,
+        "resale_allowed": true,
+        "organizer_bps": 1,
+        "platform_bps": 1
+      }
+    },
+    {
+      "machine": "resale",
+      "operation": "set_clock",
+      "subject_id": "clock",
+      "idempotency_key": "resale-clock",
+      "body": {
+        "now_ms": 1000000
+      }
+    },
+    {
+      "machine": "admission",
+      "operation": "set_clock",
+      "subject_id": "clock",
+      "idempotency_key": "admission-clock",
+      "body": {
+        "now_ms": 1000000
+      }
+    },
+    {
+      "machine": "settlement",
+      "operation": "initiate",
+      "subject_id": "claim-1",
+      "idempotency_key": "init-1",
+      "body": {
+        "trade_id": "fixture-trade-1",
+        "gross": 10001,
+        "debtor_role": "fixture-merchant",
+        "currency": "KRW",
+        "policy": {
+          "kind": "PRIMARY_FEE_BPS",
+          "fee_bps": 0,
+          "residual_payee": "organizer",
+          "fee_payee": "platform"
+        }
+      }
+    },
+    {
+      "machine": "settlement",
+      "operation": "authorize",
+      "subject_id": "claim-1",
+      "idempotency_key": "auth-claim-1",
+      "body": {}
+    },
+    {
+      "machine": "settlement",
+      "operation": "capture",
+      "subject_id": "claim-1",
+      "idempotency_key": "capture-1",
+      "body": {}
+    },
+    {
+      "machine": "settlement",
+      "operation": "commit",
+      "subject_id": "claim-1",
+      "idempotency_key": "commit-1",
+      "body": {
+        "movement_id": "fixture-movement-1",
+        "gross": 10001,
+        "amount": 10001,
+        "fee": 0,
+        "tax": 0,
+        "held": 0,
+        "adjustment": 0,
+        "adjustment_reason": null
+      }
+    },
+    {
+      "machine": "reservation",
+      "operation": "hold",
+      "subject_id": "reserve-1",
+      "idempotency_key": "hold-1",
+      "body": {
+        "show_id": "show-1",
+        "slot": 0,
+        "buyer_role": "buyer-1",
+        "expires_ms": 1120000
+      }
+    },
+    {
+      "machine": "reservation",
+      "operation": "confirm",
+      "subject_id": "order-1",
+      "idempotency_key": "confirm-1",
+      "body": {
+        "reservation_id": "reserve-1",
+        "amount": 10001,
+        "quote_ref": "quote-1"
+      }
+    },
+    {
+      "machine": "reservation",
+      "operation": "observe_payment",
+      "subject_id": "order-1",
+      "idempotency_key": "payment-1",
+      "body": {
+        "payment_ref": "abababababababababababababababababababababababababababababababab",
+        "amount": 10001
+      }
+    },
+    {
+      "machine": "reservation",
+      "operation": "bind_settlement",
+      "subject_id": "reserve-1",
+      "idempotency_key": "bind-1",
+      "body": {
+        "settlement_id": "claim-1"
+      }
+    },
+    {
+      "machine": "reservation",
+      "operation": "issue",
+      "subject_id": "issue-1",
+      "idempotency_key": "issue-1",
+      "body": {
+        "order_id": "order-1"
+      }
+    },
+    {
+      "machine": "resale",
+      "operation": "adopt_issued",
+      "subject_id": "issue-1",
+      "idempotency_key": "resale-adopt-1",
+      "body": {
+        "show_id": "show-1",
+        "slot": 0,
+        "buyer_role": "buyer-1",
+        "expires_ms": 1120000,
+        "order_id": "order-1",
+        "amount": 10001,
+        "payment_ref": "abababababababababababababababababababababababababababababababab",
+        "reservation_id": "reserve-1",
+        "quote_ref": "quote-1",
+        "organizer_role": "organizer",
+        "capacity": 2,
+        "gate_roles": [
+          "gate-a",
+          "gate-b"
+        ],
+        "primary_price": 10001,
+        "resale_cap": 20000,
+        "resale_allowed": true,
+        "organizer_bps": 1,
+        "platform_bps": 1
+      }
+    },
+    {
+      "machine": "admission",
+      "operation": "adopt_issued",
+      "subject_id": "issue-1",
+      "idempotency_key": "admission-adopt-1",
+      "body": {
+        "show_id": "show-1",
+        "slot": 0,
+        "buyer_role": "buyer-1",
+        "expires_ms": 1120000,
+        "order_id": "order-1",
+        "amount": 10001,
+        "payment_ref": "abababababababababababababababababababababababababababababababab",
+        "reservation_id": "reserve-1",
+        "quote_ref": "quote-1",
+        "organizer_role": "organizer",
+        "capacity": 2,
+        "gate_roles": [
+          "gate-a",
+          "gate-b"
+        ],
+        "primary_price": 10001,
+        "resale_cap": 20000,
+        "resale_allowed": true,
+        "organizer_bps": 1,
+        "platform_bps": 1
+      }
+    },
+    {
+      "machine": "reservation",
+      "operation": "hold",
+      "subject_id": "reserve-2",
+      "idempotency_key": "second-hold-1",
+      "body": {
+        "show_id": "show-1",
+        "slot": 1,
+        "buyer_role": "buyer-3",
+        "expires_ms": 1120000
+      }
+    },
+    {
+      "machine": "reservation",
+      "operation": "confirm",
+      "subject_id": "order-2",
+      "idempotency_key": "second-confirm-1",
+      "body": {
+        "reservation_id": "reserve-2",
+        "amount": 10001,
+        "quote_ref": "quote-2"
+      }
+    },
+    {
+      "machine": "reservation",
+      "operation": "observe_payment",
+      "subject_id": "order-2",
+      "idempotency_key": "second-payment-1",
+      "body": {
+        "payment_ref": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+        "amount": 10001
+      }
+    },
+    {
+      "machine": "settlement",
+      "operation": "initiate",
+      "subject_id": "claim-2",
+      "idempotency_key": "init-2",
+      "body": {
+        "currency": "KRW",
+        "debtor_role": "fixture-merchant",
+        "gross": 10001,
+        "policy": {
+          "fee_bps": 500,
+          "fee_payee": "platform",
+          "kind": "PRIMARY_FEE_BPS",
+          "residual_payee": "organizer"
+        },
+        "trade_id": "fixture-trade-2"
+      }
+    },
+    {
+      "machine": "settlement",
+      "operation": "authorize",
+      "subject_id": "claim-2",
+      "idempotency_key": "auth-2",
+      "body": {}
+    },
+    {
+      "machine": "reservation",
+      "operation": "bind_settlement",
+      "subject_id": "reserve-2",
+      "idempotency_key": "bind-2",
+      "body": {
+        "settlement_id": "claim-2"
+      }
+    },
+    {
+      "machine": "settlement",
+      "operation": "initiate",
+      "subject_id": "fail-init",
+      "idempotency_key": "fail-init-init",
+      "body": {
+        "trade_id": "fail-init-trade",
+        "gross": 10001,
+        "debtor_role": "fixture-merchant",
+        "currency": "KRW",
+        "policy": {
+          "fee_bps": 500,
+          "fee_payee": "platform",
+          "kind": "PRIMARY_FEE_BPS",
+          "residual_payee": "organizer"
+        }
+      }
+    },
+    {
+      "machine": "settlement",
+      "operation": "initiate",
+      "subject_id": "cancel-init",
+      "idempotency_key": "cancel-init-init",
+      "body": {
+        "trade_id": "cancel-init-trade",
+        "gross": 10001,
+        "debtor_role": "fixture-merchant",
+        "currency": "KRW",
+        "policy": {
+          "fee_bps": 500,
+          "fee_payee": "platform",
+          "kind": "PRIMARY_FEE_BPS",
+          "residual_payee": "organizer"
+        }
+      }
+    },
+    {
+      "machine": "settlement",
+      "operation": "initiate",
+      "subject_id": "fail-auth",
+      "idempotency_key": "fail-auth-init",
+      "body": {
+        "trade_id": "fail-auth-trade",
+        "gross": 10001,
+        "debtor_role": "fixture-merchant",
+        "currency": "KRW",
+        "policy": {
+          "fee_bps": 500,
+          "fee_payee": "platform",
+          "kind": "PRIMARY_FEE_BPS",
+          "residual_payee": "organizer"
+        }
+      }
+    },
+    {
+      "machine": "settlement",
+      "operation": "authorize",
+      "subject_id": "fail-auth",
+      "idempotency_key": "fail-auth-authorize",
+      "body": {}
+    },
+    {
+      "machine": "settlement",
+      "operation": "initiate",
+      "subject_id": "late-capture",
+      "idempotency_key": "late-capture-init",
+      "body": {
+        "trade_id": "late-capture-trade",
+        "gross": 10001,
+        "debtor_role": "fixture-merchant",
+        "currency": "KRW",
+        "policy": {
+          "fee_bps": 500,
+          "fee_payee": "platform",
+          "kind": "PRIMARY_FEE_BPS",
+          "residual_payee": "organizer"
+        }
+      }
+    },
+    {
+      "machine": "settlement",
+      "operation": "authorize",
+      "subject_id": "late-capture",
+      "idempotency_key": "late-capture-authorize",
+      "body": {}
+    },
+    {
+      "machine": "settlement",
+      "operation": "capture",
+      "subject_id": "late-capture",
+      "idempotency_key": "late-capture-capture",
+      "body": {}
+    }
+  ],
+  "offers": [
+    {
+      "offer_id": "offer-1",
+      "recorded_text": "{\"amount\": 8000, \"expires_ms\": 1120000, \"offer_id\": \"offer-1\", \"recipient_role\": \"buyer-2\", \"reservation_id\": \"reserve-1\", \"right_id\": \"issue-1\", \"seller_role\": \"buyer-1\", \"version\": 1}"
+    },
+    {
+      "offer_id": "offer-2",
+      "recorded_text": "{\"amount\": 8000, \"expires_ms\": 1120000, \"offer_id\": \"offer-2\", \"recipient_role\": \"buyer-2\", \"reservation_id\": \"reserve-2\", \"right_id\": \"issue-2\", \"seller_role\": \"buyer-3\", \"version\": 1}"
+    }
+  ],
+  "presentations": [
+    {
+      "operation": "authorize_admission",
+      "presentation_id": "ticket-1",
+      "recorded_text": "{\"holder_role\": \"buyer-1\", \"request\": \"1111111111111111111111111111111111111111111111111111111111111111\", \"right_id\": \"issue-1\", \"version\": 1}"
+    },
+    {
+      "operation": "consume",
+      "presentation_id": "ticket-1",
+      "recorded_text": "{\"request\": \"1111111111111111111111111111111111111111111111111111111111111111\", \"right_id\": \"issue-1\", \"version\": 1}"
+    },
+    {
+      "operation": "authorize_admission",
+      "presentation_id": "recipient-1",
+      "recorded_text": "{\"right_id\": \"issue-1\", \"version\": 2, \"holder_role\": \"buyer-2\", \"request\": \"3333333333333333333333333333333333333333333333333333333333333333\"}"
+    },
+    {
+      "operation": "authorize_admission",
+      "presentation_id": "ticket-2",
+      "recorded_text": "{\"holder_role\": \"buyer-3\", \"request\": \"2222222222222222222222222222222222222222222222222222222222222222\", \"right_id\": \"issue-2\", \"version\": 1}"
+    },
+    {
+      "operation": "consume",
+      "presentation_id": "ticket-2",
+      "recorded_text": "{\"request\": \"2222222222222222222222222222222222222222222222222222222222222222\", \"right_id\": \"issue-2\", \"version\": 1}"
+    }
+  ],
+  "payments": [
+    {
+      "recording_id": "payment-1",
+      "recorded_text": "{\"amount\": 8000, \"buyer_role\": \"buyer-2\", \"listing_id\": \"list-1\", \"payment_ref\": \"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\"}"
+    },
+    {
+      "recording_id": "payment-alias",
+      "recorded_text": "{\"amount\": 8000, \"buyer_role\": \"buyer-2\", \"listing_id\": \"list-1\", \"payment_ref\": \"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\"}"
+    }
+  ],
+  "statements": [
+    {
+      "settlement_id": "claim-2",
+      "movement_id": "statement-1",
+      "recorded_text": "{\"adjustment\": 100, \"adjustment_reason\": \"synthetic-adjustment\", \"amount\": 5500, \"fee\": 200, \"gross\": 6000, \"held\": 100, \"movement_id\": \"statement-1\", \"settlement_id\": \"claim-2\", \"tax\": 100}"
+    },
+    {
+      "settlement_id": "claim-2",
+      "movement_id": "statement-2",
+      "recorded_text": "{\"adjustment\": 0, \"adjustment_reason\": null, \"amount\": 3801, \"fee\": 200, \"gross\": 4001, \"held\": 0, \"movement_id\": \"statement-2\", \"settlement_id\": \"claim-2\", \"tax\": 0}"
+    }
+  ],
+  "cancel_acceptances": [
+    {
+      "settlement_id": "claim-2",
+      "source_id": "acceptance-1",
+      "recorded_text": "{\"amount\": 1000, \"settlement_id\": \"claim-2\", \"source_id\": \"acceptance-1\"}"
+    },
+    {
+      "settlement_id": "claim-2",
+      "source_id": "acceptance-full",
+      "recorded_text": "{\"amount\": 10001, \"settlement_id\": \"claim-2\", \"source_id\": \"acceptance-full\"}"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{"operation":"set_clock","arguments":{"subject_id":"clock","idempotency_key":"desk-clock-1","now_ms":1000000},"surface":"booking"}
+{"operation":"register_show","arguments":{"show_id":"desk-show-1","idempotency_key":"desk-register-1","organizer_role":"desk-organizer-1","capacity":1,"gate_roles":["desk-gate-1"],"primary_price":10001,"resale_cap":20000,"resale_allowed":true,"organizer_bps":1,"platform_bps":1},"surface":"booking"}
+{"operation":"hold","arguments":{"reservation_id":"desk-reserve-1","show_id":"desk-show-1","slot":0,"buyer_role":"desk-buyer-1","expires_ms":1900000,"idempotency_key":"desk-hold-1"},"surface":"booking"}
+{"operation":"confirm_recorded_quote","arguments":{"recording_id":"desk-calc-1","reservation_id":"desk-reserve-1","order_id":"desk-order-1","idempotency_key":"desk-confirm-1"},"surface":"booking"}
+{"operation":"confirm_recorded_quote","arguments":{"recording_id":"desk-calc-alias","reservation_id":"desk-reserve-1","order_id":"desk-order-1","idempotency_key":"desk-confirm-1"},"surface":"booking"}
+{"operation":"view","arguments":{"reservation_id":"desk-reserve-1"},"surface":"booking"}
+{"operation":"view_show","arguments":{"show_id":"desk-show-1"},"surface":"booking"}

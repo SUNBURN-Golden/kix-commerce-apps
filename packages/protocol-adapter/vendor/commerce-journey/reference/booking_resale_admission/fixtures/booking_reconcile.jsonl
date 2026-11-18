@@ -1,0 +1,17 @@
+{"arguments": {"idempotency_key": "clock-1", "now_ms": 1000000, "subject_id": "clock"}, "operation": "set_clock"}
+{"arguments": {"capacity": 1, "gate_roles": ["gate-1"], "idempotency_key": "register-1", "organizer_bps": 1, "organizer_role": "organizer-1", "platform_bps": 1, "primary_price": 10001, "resale_allowed": true, "resale_cap": 20000, "show_id": "show-1"}, "operation": "register_show"}
+{"arguments": {"buyer_role": "buyer-1", "expires_ms": 1900000, "idempotency_key": "hold-1", "reservation_id": "reserve-1", "show_id": "show-1", "slot": 0}, "operation": "hold"}
+{"arguments": {"amount": 10001, "idempotency_key": "confirm-1", "order_id": "order-1", "quote_ref": "quote-1", "reservation_id": "reserve-1"}, "operation": "confirm"}
+{"arguments": {"idempotency_key": "recon-1", "reservation_id": "reserve-1"}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": "cancel-1", "reservation_id": "reserve-1"}, "operation": "cancel"}
+{"arguments": {"idempotency_key": "recon-1", "reservation_id": "reserve-1"}, "operation": "reconcile"}
+{"arguments": {"reservation_id": "reserve-1"}, "operation": "view"}
+{"arguments": {"idempotency_key": "recon-current", "reservation_id": "reserve-1"}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": "cancel-1", "reservation_id": "reserve-1"}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": "recon-1", "reservation_id": "other"}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": "recon-1", "reservation_id": "reserve-1"}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": "missing-key", "reservation_id": "missing"}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": "missing-key", "reservation_id": "missing"}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": "missing-key", "reservation_id": "reserve-1"}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": "invalid-subject", "reservation_id": null}, "operation": "reconcile"}
+{"arguments": {"idempotency_key": null, "reservation_id": "reserve-1"}, "operation": "reconcile"}

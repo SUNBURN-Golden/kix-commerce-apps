@@ -1,0 +1,17 @@
+{"arguments": {"idempotency_key": "order-type", "order": "platform", "settlement_id": "claim-2"}, "operation": "distribute", "surface": "settlement"}
+{"arguments": {"idempotency_key": "recorded-commit", "movement_id": "statement-1", "settlement_id": "claim-2"}, "operation": "commit_recorded_statement", "surface": "settlement"}
+{"arguments": {"idempotency_key": "duplicate-order", "order": ["platform", "platform"], "settlement_id": "claim-2"}, "operation": "distribute", "surface": "settlement"}
+{"arguments": {"idempotency_key": "missing-payee", "order": ["platform"], "settlement_id": "claim-2"}, "operation": "distribute", "surface": "settlement"}
+{"arguments": {"idempotency_key": "unknown-payee", "order": ["platform", "unknown"], "settlement_id": "claim-2"}, "operation": "distribute", "surface": "settlement"}
+{"arguments": {"idempotency_key": "distribution-1", "order": ["platform", "organizer"], "settlement_id": "claim-2"}, "operation": "distribute", "surface": "settlement"}
+{"arguments": {"idempotency_key": "recorded-commit", "movement_id": "statement-1", "settlement_id": "claim-2"}, "operation": "commit_recorded_statement", "surface": "settlement"}
+{"arguments": {"idempotency_key": "recorded-commit", "movement_id": "statement-1", "settlement_id": "claim-2"}, "operation": "observe_recorded_statement", "surface": "settlement"}
+{"arguments": {"idempotency_key": "recorded-commit", "movement_id": "statement-2", "settlement_id": "claim-2"}, "operation": "commit_recorded_statement", "surface": "settlement"}
+{"arguments": {"idempotency_key": "changed-order", "order": ["organizer", "platform"], "settlement_id": "claim-2"}, "operation": "distribute", "surface": "settlement"}
+{"arguments": {"idempotency_key": "recorded-later", "movement_id": "statement-2", "settlement_id": "claim-2"}, "operation": "observe_recorded_statement", "surface": "settlement"}
+{"arguments": {"idempotency_key": "distribution-2", "order": ["platform", "organizer"], "settlement_id": "claim-2"}, "operation": "distribute", "surface": "settlement"}
+{"arguments": {"idempotency_key": "distribution-1", "order": ["platform", "organizer"], "settlement_id": "claim-2"}, "operation": "distribute", "surface": "settlement"}
+{"arguments": {"idempotency_key": "recorded-later", "movement_id": "statement-2", "settlement_id": "claim-2"}, "operation": "observe_recorded_statement", "surface": "settlement"}
+{"arguments": {"amount": 1000, "beneficiary_role": "buyer-3", "idempotency_key": "partial-refund", "reason": "synthetic-request", "refund_id": "refund-2", "settlement_id": "claim-2"}, "operation": "bind_refund", "surface": "settlement"}
+{"arguments": {"idempotency_key": "blocked-distribution", "order": ["platform", "organizer"], "settlement_id": "claim-2"}, "operation": "distribute", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}

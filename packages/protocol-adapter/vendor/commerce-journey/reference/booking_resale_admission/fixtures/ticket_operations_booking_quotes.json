@@ -1,0 +1,54 @@
+{
+  "fixture_version": 1,
+  "provenance": "MOCK_GATE_ONLY",
+  "quotes": [
+    {
+      "recording_id": "desk-record-1",
+      "recorded_text": "{\"reservation_id\":\"desk-reserve-1\",\"amount\":10001,\"quote_ref\":\"desk-quote-1\"}"
+    },
+    {
+      "recording_id": "desk-alias",
+      "recorded_text": "{\"reservation_id\":\"desk-reserve-1\",\"amount\":10001,\"quote_ref\":\"desk-quote-1\"}"
+    },
+    {
+      "recording_id": "desk-off-price",
+      "recorded_text": "{\"reservation_id\":\"desk-reserve-1\",\"amount\":10000,\"quote_ref\":\"desk-quote-1\"}"
+    },
+    {
+      "recording_id": "desk-changed",
+      "recorded_text": "{\"reservation_id\":\"desk-reserve-1\",\"amount\":10001,\"quote_ref\":\"desk-quote-changed\"}"
+    },
+    {
+      "recording_id": "desk-mismatch",
+      "recorded_text": "{\"reservation_id\":\"desk-reserve-other\",\"amount\":10001,\"quote_ref\":\"desk-quote-1\"}"
+    },
+    {
+      "recording_id": "desk-expired",
+      "recorded_text": "{\"reservation_id\":\"desk-reserve-2\",\"amount\":10001,\"quote_ref\":\"desk-quote-2\"}"
+    },
+    {
+      "recording_id": "desk-malformed",
+      "recorded_text": "{\"amount\":true}"
+    },
+    {
+      "recording_id": "desk-source-error",
+      "fault": "synthetic_booking_quote_error"
+    },
+    {
+      "recording_id": "desk-source-timeout",
+      "fault": "synthetic_booking_quote_timeout"
+    },
+    {
+      "recording_id": "desk-bad-json",
+      "recorded_text": "{"
+    },
+    {
+      "recording_id": "desk-duplicate",
+      "recorded_text": "{\"amount\":1,\"amount\":2}"
+    },
+    {
+      "recording_id": "desk-nonfinite",
+      "recorded_text": "{\"amount\":NaN}"
+    }
+  ]
+}

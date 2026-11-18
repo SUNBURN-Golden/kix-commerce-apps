@@ -1,0 +1,13 @@
+{"arguments": {"reservation_id": "reserve-1"}, "operation": "view", "surface": "booking"}
+{"arguments": {"idempotency_key": "booking-before-admission", "reservation_id": "reserve-1"}, "operation": "reconcile", "surface": "booking"}
+{"arguments": {"admission_id": "entry-1", "expires_ms": 1060000, "gate_role": "gate-a", "idempotency_key": "entry-key", "presentation_id": "ticket-1"}, "operation": "authorize_admission", "surface": "admission"}
+{"arguments": {"reservation_id": "reserve-1"}, "operation": "view", "surface": "booking"}
+{"arguments": {"idempotency_key": "booking-before-admission", "reservation_id": "reserve-1"}, "operation": "reconcile", "surface": "booking"}
+{"arguments": {"idempotency_key": "booking-authorized", "reservation_id": "reserve-1"}, "operation": "reconcile", "surface": "booking"}
+{"arguments": {"consume_id": "consume-1", "gate_role": "gate-a", "idempotency_key": "consume-key", "presentation_id": "ticket-1"}, "operation": "consume", "surface": "admission"}
+{"arguments": {"reservation_id": "reserve-1"}, "operation": "view", "surface": "booking"}
+{"arguments": {"show_id": "show-1"}, "operation": "view_show", "surface": "booking"}
+{"arguments": {"idempotency_key": "booking-before-admission", "reservation_id": "reserve-1"}, "operation": "reconcile", "surface": "booking"}
+{"arguments": {"idempotency_key": "booking-consumed", "reservation_id": "reserve-1"}, "operation": "reconcile", "surface": "booking"}
+{"arguments": {"idempotency_key": "entry-key", "reservation_id": "reserve-1"}, "operation": "reconcile", "surface": "booking"}
+{"arguments": {"idempotency_key": "consume-key", "reservation_id": "reserve-1"}, "operation": "reconcile", "surface": "booking"}

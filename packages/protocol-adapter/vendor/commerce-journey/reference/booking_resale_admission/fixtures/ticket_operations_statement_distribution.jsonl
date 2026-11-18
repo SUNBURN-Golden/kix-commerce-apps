@@ -1,0 +1,10 @@
+{"arguments": {"idempotency_key": "recorded-commit", "movement_id": "statement-1", "settlement_id": "claim-2"}, "operation": "commit_recorded_statement", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"idempotency_key": "ticket-clock", "now_ms": 1000000, "subject_id": "clock"}, "operation": "set_clock", "surface": "booking"}
+{"arguments": {"idempotency_key": "second-issue-1", "issuance_id": "issue-2", "order_id": "order-2"}, "operation": "issue", "surface": "booking"}
+{"arguments": {"idempotency_key": "distribution-1", "order": ["platform", "organizer"], "settlement_id": "claim-2"}, "operation": "distribute", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"idempotency_key": "recorded-later", "movement_id": "statement-2", "settlement_id": "claim-2"}, "operation": "observe_recorded_statement", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"idempotency_key": "distribution-2", "order": ["platform", "organizer"], "settlement_id": "claim-2"}, "operation": "distribute", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}

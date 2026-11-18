@@ -1,0 +1,30 @@
+{"arguments": {"idempotency_key": "fail-init-terminal", "reason": "synthetic-decline", "settlement_id": "fail-init"}, "operation": "fail", "surface": "settlement"}
+{"arguments": {"settlement_id": "fail-init"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"idempotency_key": "fail-init-reconcile", "settlement_id": "fail-init"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"idempotency_key": "fail-init-terminal", "reason": "synthetic-decline", "settlement_id": "fail-init"}, "operation": "fail", "surface": "settlement"}
+{"arguments": {"idempotency_key": "fail-init-terminal", "reason": "changed", "settlement_id": "fail-init"}, "operation": "fail", "surface": "settlement"}
+{"arguments": {"idempotency_key": "fail-init-after-terminal", "settlement_id": "fail-init"}, "operation": "authorize", "surface": "settlement"}
+{"arguments": {"idempotency_key": "cancel-init-terminal", "reason": "synthetic-decline", "settlement_id": "cancel-init"}, "operation": "cancel", "surface": "settlement"}
+{"arguments": {"settlement_id": "cancel-init"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"idempotency_key": "cancel-init-reconcile", "settlement_id": "cancel-init"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"idempotency_key": "cancel-init-terminal", "reason": "synthetic-decline", "settlement_id": "cancel-init"}, "operation": "cancel", "surface": "settlement"}
+{"arguments": {"idempotency_key": "cancel-init-terminal", "reason": "changed", "settlement_id": "cancel-init"}, "operation": "cancel", "surface": "settlement"}
+{"arguments": {"idempotency_key": "cancel-init-after-terminal", "settlement_id": "cancel-init"}, "operation": "authorize", "surface": "settlement"}
+{"arguments": {"idempotency_key": "fail-auth-terminal", "reason": "synthetic-decline", "settlement_id": "fail-auth"}, "operation": "fail", "surface": "settlement"}
+{"arguments": {"settlement_id": "fail-auth"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"idempotency_key": "fail-auth-reconcile", "settlement_id": "fail-auth"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"idempotency_key": "fail-auth-terminal", "reason": "synthetic-decline", "settlement_id": "fail-auth"}, "operation": "fail", "surface": "settlement"}
+{"arguments": {"idempotency_key": "fail-auth-terminal", "reason": "changed", "settlement_id": "fail-auth"}, "operation": "fail", "surface": "settlement"}
+{"arguments": {"idempotency_key": "fail-auth-after-terminal", "settlement_id": "fail-auth"}, "operation": "authorize", "surface": "settlement"}
+{"arguments": {"idempotency_key": "claim-2-terminal", "reason": "synthetic-decline", "settlement_id": "claim-2"}, "operation": "cancel", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}
+{"arguments": {"idempotency_key": "claim-2-reconcile", "settlement_id": "claim-2"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"idempotency_key": "claim-2-terminal", "reason": "synthetic-decline", "settlement_id": "claim-2"}, "operation": "cancel", "surface": "settlement"}
+{"arguments": {"idempotency_key": "claim-2-terminal", "reason": "changed", "settlement_id": "claim-2"}, "operation": "cancel", "surface": "settlement"}
+{"arguments": {"idempotency_key": "claim-2-after-terminal", "settlement_id": "claim-2"}, "operation": "authorize", "surface": "settlement"}
+{"arguments": {"idempotency_key": "late-capture-late-fail", "reason": "synthetic-late", "settlement_id": "late-capture"}, "operation": "fail", "surface": "settlement"}
+{"arguments": {"idempotency_key": "late-capture-late-cancel", "reason": "synthetic-late", "settlement_id": "late-capture"}, "operation": "cancel", "surface": "settlement"}
+{"arguments": {"idempotency_key": "claim-1-late-fail", "reason": "synthetic-late", "settlement_id": "claim-1"}, "operation": "fail", "surface": "settlement"}
+{"arguments": {"idempotency_key": "claim-1-late-cancel", "reason": "synthetic-late", "settlement_id": "claim-1"}, "operation": "cancel", "surface": "settlement"}
+{"arguments": {"idempotency_key": "claim-2-reconcile", "settlement_id": "claim-2"}, "operation": "reconcile", "surface": "settlement"}
+{"arguments": {"settlement_id": "claim-2"}, "operation": "view", "surface": "settlement"}

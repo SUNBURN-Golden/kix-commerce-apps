@@ -164,6 +164,7 @@ export const PROTOCOL_READS = ["listPerformances", "getBooking", "listResale", "
 const reads = new Set<string>(PROTOCOL_READS);
 const wrapped = new WeakMap<CommerceProtocol, CommerceProtocol>();
 function family(method: string): string {
+  if (method === "advanceCommerceJourney") return "commerce-journey";
   return /Settlement/.test(method) ? "settlement" : /Reservation/.test(method) ? "reservation"
     : /Admission/.test(method) ? "admission" : /Resale/.test(method) ? "resale" : /Credit/.test(method) ? "credit" : "booking";
 }

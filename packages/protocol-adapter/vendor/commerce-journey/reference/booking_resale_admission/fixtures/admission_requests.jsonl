@@ -1,0 +1,14 @@
+{"arguments": {"right_id": "issue-1"}, "operation": "view"}
+{"arguments": {"admission_id": "entry-1", "expires_ms": 1060000, "gate_role": "gate-a", "idempotency_key": "entry-key-1", "presentation_id": "ticket-1"}, "operation": "authorize_admission"}
+{"arguments": {"right_id": "issue-1"}, "operation": "view"}
+{"arguments": {"holder_role": "buyer-1", "right_id": "issue-1", "version": 1}, "operation": "view_credential"}
+{"arguments": {"consume_id": "consume-1", "gate_role": "gate-a", "idempotency_key": "consume-key-1", "presentation_id": "ticket-1"}, "operation": "consume"}
+{"arguments": {"consume_id": "consume-1", "gate_role": "gate-a", "idempotency_key": "consume-key-1", "presentation_id": "ticket-1"}, "operation": "consume"}
+{"arguments": {"admission_id": "entry-1", "expires_ms": 1060000, "gate_role": "gate-a", "idempotency_key": "entry-key-1", "presentation_id": "ticket-1"}, "operation": "authorize_admission"}
+{"arguments": {"right_id": "issue-1"}, "operation": "view"}
+{"arguments": {"admission_id": "entry-1", "expires_ms": 1060000, "gate_role": "gate-b", "idempotency_key": "entry-key-1", "presentation_id": "ticket-1"}, "operation": "authorize_admission"}
+{"arguments": {"admission_id": "stale-entry-2", "expires_ms": 1060000, "gate_role": "gate-a", "idempotency_key": "stale-key-2", "presentation_id": "stale-ticket-2"}, "operation": "authorize_admission"}
+{"arguments": {"admission_id": "entry-2", "expires_ms": 1060000, "gate_role": "gate-a", "idempotency_key": "entry-key-2", "presentation_id": "ticket-2"}, "operation": "authorize_admission"}
+{"arguments": {"idempotency_key": "expire-clock", "now_ms": 1060000, "subject_id": "clock"}, "operation": "set_clock"}
+{"arguments": {"consume_id": "consume-2", "gate_role": "gate-a", "idempotency_key": "consume-key-2", "presentation_id": "ticket-2"}, "operation": "consume"}
+{"arguments": {"right_id": "issue-2"}, "operation": "view"}
