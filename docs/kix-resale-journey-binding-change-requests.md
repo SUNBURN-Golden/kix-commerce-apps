@@ -1,6 +1,6 @@
 # Resale market change requests
 
-The table below is the supervisor's PR-body section. Both adapter modes return a typed `NOT_BOUND` result for these reads. The controls display the reason in the selected language. The synthetic product catalogue and bid/ask simulator are page-load examples. Their records cannot satisfy these requests.
+Both adapter modes return a typed `NOT_BOUND` result for these reads. The controls display the reason in the selected language. The synthetic product catalogue and bid/ask simulator are page-load examples. The prepared PR description includes this table inline for KIX. [PR body](kix-resale-journey-binding-pr-body.md#not_bound-list)
 
 ## NOT_BOUND list
 

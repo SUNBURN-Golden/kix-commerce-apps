@@ -73,6 +73,7 @@ const displayCopyGroups: [string, string[]][] = [
     "buyer-workspace",
     "pages--Assistant",
     "pages--AssistantPanels",
+    "pages--CommerceJourneyPanel",
     "pages--CrossSurfaceJourneysPanels",
     "pages--Gift",
     "pages--GiftPanel",
@@ -174,6 +175,8 @@ export default defineConfig({
           // The box office, booking and buyer pages all use the journey and refund controls.
           if (/\/src\/(journey-desk|refund-return|pages\/(RefundReturnPanel|JourneyPanel))\.tsx?$/.test(id)) return "refund-and-booking";
 
+          // The journey labels reuse the booking and resale desk dictionaries.
+          if (id.endsWith("/src/i18n/desk-catalogue.ts")) return "display-copy-5";
           const copy = /\/src\/i18n\/messages\/([^/]+)\.ts$/.exec(id)?.[1];
           if (copy) return displayCopyGroups.find(([, files]) => files.includes(copy))?.[0];
         },

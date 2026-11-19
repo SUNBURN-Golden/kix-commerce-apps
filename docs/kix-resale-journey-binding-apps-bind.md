@@ -88,7 +88,9 @@ The builder ran these checks on the uncommitted changes over the Commerce base a
 
 On reviewed commit `1c5c721bb941c726be3d65d35485d517a6a06fed`, both required hosted jobs reported `SUCCESS`. [Typecheck, build, and test (stub)](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44468300274/job/135371313688) · [Adapter tests against the reviewed gate](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44468300274/job/135371357922)
 
-The supervisor owns publication of the round-one fixes and hosted verification at the resulting commit. The local PR-body draft includes all 13 rows of the [NOT_BOUND list](kix-resale-journey-binding-change-requests.md#not_bound-list) inline for KIX.
+Both jobs also reported `SUCCESS` on PR #146 at round-one commit `7d4a638491fa8ceeda10ad5b62f7d660e08e38da`. [Stub job](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44471263878/job/135381039252) · [Reviewed gate job](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44471263878/job/135381098078)
+
+The round-two working tree awaits publication and hosted verification. The prepared PR body includes the 13 protocol change requests inline. [PR body](kix-resale-journey-binding-pr-body.md#not_bound-list)
 
 ### Review round one
 
@@ -106,6 +108,29 @@ The supervisor owns publication of the round-one fixes and hosted verification a
 | `npm run typecheck`, `npm run typecheck:e2e`, `npm run lint`, `npm run build` | Passed. |
 | `npm run budget` and `CI=1 npm run test:budget` | Total gzip was 802,861 of 802,884 bytes. All 9 browser checks passed. Landing scripts totaled 358,585 of 400,000 bytes. |
 | Chrome on the built stub at loopback | Completed purchase through transfer with settlement still at `NO_EVIDENCE`. Reloaded the reported inconsistent record and a valid pending acceptance, verified the four displayed facts and disabled dispatch for each. Zero application or off-loopback requests. |
+
+### Review round two
+
+The shared tests use the same command bodies against the stub and the producer at `8ba7f6c`. Each test changes one field in an otherwise valid command, then checks the refusal and the state that a subsequent independent command observes.
+
+| Boundary | Observed behavior |
+| --- | --- |
+| Primary payment | An observation of 10,000 against the confirmed order for 10,001 returns `PAYMENT_AMOUNT_MISMATCH`. Issuance then returns `ILLEGAL_TRANSITION`. |
+| Adoption | A different order quote returns `ORDER_BINDING_CONFLICT`. Changing the registered resale permission or reversing the gate roles returns `SHOW_BINDING_CONFLICT`. Listing after each refusal returns `UNKNOWN_RIGHT`. |
+| Listing | Zero units returns `INVALID_AMOUNT`. At fixture time 1,000,000, expiry at 1,000,000 or 1,900,001 returns `LISTING_WINDOW`. A hold on the refused ID returns `UNKNOWN_LISTING`. A listing at 20,000 units expiring at 1,900,000 succeeds. |
+| Resale payment | A three-character reference or an uppercase hex reference returns `PAYMENT_REF`. A competing hold returns `BUYER_HOLD_LOCKED`, confirming that the original hold persists. |
+| Acceptance | Changing only `listing.current_version` to 1 in a receipt for right version 2 yields `UNKNOWN` after one acceptance attempt. The prior listed and paid facts survive. Transfer and settlement retain `NO_EVIDENCE`. |
+
+The producer checks the order in `reservation_fsm.py`, matches adoption against the issued reservation and registered show in `resale_fsm.py`, and enforces the amount, offer window and lowercase 32-byte payment reference in `mock_gates.py`. The local gate dispatches the pinned catalogue to those machines. [Pinned FSM host](https://github.com/SUNBURN-Golden/kix-protocol/blob/8ba7f6c36373ac0ec49246f51f7471c164ac3a28/integration_gate/fsm_host.py) · [Pinned fixture rules](https://github.com/SUNBURN-Golden/kix-protocol/blob/8ba7f6c36373ac0ec49246f51f7471c164ac3a28/reference/booking_resale_admission/mock_gates.py)
+
+| Round-two working-tree check | Result |
+| --- | --- |
+| `KIX_REQUIRE_GATE=0 npm test` | 3,127 adapter tests, 1,735 web tests and 6 entry-integrity tests passed. Stub mode skipped 65 gate-dependent tests. The web suite includes the English and Korean B5 labels. |
+| `KIX_REQUIRE_GATE=1 npm test -w @kix/protocol-adapter` with `KIX_PROTOCOL_ROOT` at the reviewed checkout | 85 files and 3,192 tests passed with zero skips, including 35 live resale tests. |
+| `npm run typecheck`, `npm run typecheck:e2e`, `npm run lint`, `npm run build` | Passed using Node 22.23.4. The loopback gate used Python 3.12.15. |
+| `npm run budget` and `CI=1 npm run test:budget` | Grouping the journey labels with their booking and resale desk dictionaries brought the total to 802,426 of 802,884 gzip bytes. All 9 Chrome checks passed. Landing JavaScript measured 359,406 of 400,000 bytes. |
+| Chrome on the built stub | Completed purchase and cancellation, displayed the settlement read refusal, and kept settlement at `NO_EVIDENCE` in both branches. Zero application or off-loopback requests. |
+| Pin and dispatch checks | The vendored FSM catalogue matched producer bytes. The locked bindings matched the SHA-256 in the source table. The CI workflow, vendor pins and budget limits matched `origin/main`. |
 
 ### Design adjustments
 

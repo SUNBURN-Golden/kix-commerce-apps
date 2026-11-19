@@ -118,11 +118,13 @@ interface ShowRecord {
   showId: string;
   eventId: string;
   fixtureResaleCap?: number;
+  fixtureShowBinding?: string;
   canon: string;
   slots: SlotRecord[];
 }
 
 interface CaseRecord {
+  fixtureOrder?: ReservationCaseView["fixtureOrder"];
   reservationId: string;
   phase: ReservationPhase;
   showId: string;
@@ -187,12 +189,11 @@ export class ReservationCaseStore {
     });
   }
 
-  registerShow(input: ReservationShowRegister, fixtureResaleCap?: number): ReservationCommandReceipt {
+  registerShow(input: ReservationShowRegister, fixture?: { resaleCap: string; showBinding: string }): ReservationCommandReceipt {
     if (!Array.isArray(input.slots)) {
       throw reservationError("MOCK_INVARIANT");
     }
-    const body = { eventId: input.eventId, slots: input.slots.join(","),
-      ...(fixtureResaleCap === undefined ? {} : { resaleCap: String(fixtureResaleCap) }) };
+    const body = { eventId: input.eventId, slots: input.slots.join(","), ...fixture };
     return this.call("register_show", input.showId, input.idempotencyKey, body, () => null, (key, request) => {
       // The journal body joins slots with commas, so a slot name must not carry one.
       for (const slot of input.slots) {
@@ -240,8 +241,8 @@ export class ReservationCaseStore {
     );
   }
 
-  confirm(input: ReservationConfirm): ReservationCommandReceipt {
-    const body = { reservationId: input.reservationId };
+  confirm(input: ReservationConfirm, fixture?: { amount: string; quoteRef?: string }): ReservationCommandReceipt {
+    const body = { reservationId: input.reservationId, ...fixture };
     return this.call(
       "confirm",
       input.orderId,
@@ -251,7 +252,7 @@ export class ReservationCaseStore {
       (key, request) => {
         const orderId = ident(input.orderId);
         const reservationId = this.applyConfirm(orderId, body, key);
-        return this.accept(key, request, "confirm", orderId, { reservationId }, reservationId);
+        return this.accept(key, request, "confirm", orderId, body, reservationId);
       },
     );
   }
@@ -271,8 +272,8 @@ export class ReservationCaseStore {
     );
   }
 
-  observePayment(input: ReservationPayment): ReservationCommandReceipt {
-    const body = { paymentRef: input.paymentRef };
+  observePayment(input: ReservationPayment, amount?: number): ReservationCommandReceipt {
+    const body = { paymentRef: input.paymentRef, ...(amount === undefined ? {} : { amount: String(amount) }) };
     return this.call(
       "observe_payment",
       input.orderId,
@@ -282,7 +283,7 @@ export class ReservationCaseStore {
       (key, request) => {
         const orderId = ident(input.orderId);
         const reservationId = this.applyObserve(orderId, body, key);
-        return this.accept(key, request, "observe_payment", orderId, { paymentRef: ident(body.paymentRef ?? "") }, reservationId);
+        return this.accept(key, request, "observe_payment", orderId, body, reservationId);
       },
     );
   }
@@ -425,7 +426,7 @@ export class ReservationCaseStore {
   private applyRegister(showId: string, body: Record<string, string>): void {
     const eventId = ident(body.eventId ?? "");
     const slots = readSlots(body.slots ?? "");
-    const fixture = body.resaleCap === undefined ? {} : { fixtureResaleCap: Number(body.resaleCap) };
+    const fixture = body.resaleCap === undefined ? {} : { fixtureResaleCap: Number(body.resaleCap), fixtureShowBinding: body.showBinding };
     const canon = canonicalJson({ eventId, slots, ...fixture });
     const current = this.shows.get(showId);
     if (current) {
@@ -511,7 +512,7 @@ export class ReservationCaseStore {
 
   private applyConfirm(orderId: string, body: Record<string, string>, key: string): string {
     const reservationId = ident(body.reservationId ?? "");
-    const canon = canonicalJson({ reservationId });
+    const canon = canonicalJson(body);
     const prior = this.orders.get(orderId);
     if (prior) {
       if (prior.canon !== canon) {
@@ -524,6 +525,7 @@ export class ReservationCaseStore {
     if (this.isExpired(record)) {
       throw reservationError("RESERVATION_EXPIRED");
     }
+    if (body.amount !== undefined) record.fixtureOrder = { amount: Number(body.amount), quoteRef: body.quoteRef ?? null };
     record.orderId = orderId;
     record.phase = "CONFIRMED";
     this.orders.set(orderId, { canon, reservationId });
@@ -547,6 +549,9 @@ export class ReservationCaseStore {
     }
     const record = this.requireCase(order.reservationId);
     this.enter(record, "observe_payment");
+    if (record.fixtureOrder && record.fixtureOrder.amount !== Number(body.amount)) {
+      throw reservationError("PAYMENT_AMOUNT_MISMATCH");
+    }
     record.paymentRef = paymentRef;
     record.phase = "PAYMENT_NOTED";
     this.mark(record, key);
@@ -818,6 +823,7 @@ export class ReservationCaseStore {
         issuanceId: record.issuanceId,
         mockSettlementCommitObserved: record.mockSettlementCommitObserved,
         orderId: record.orderId,
+        fixtureOrder: record.fixtureOrder,
         paymentRef: record.paymentRef,
         phase: record.phase,
         reservationId: record.reservationId,
@@ -831,6 +837,7 @@ export class ReservationCaseStore {
       .map((show) => ({
         eventId: show.eventId,
         fixtureResaleCap: show.fixtureResaleCap,
+        fixtureShowBinding: show.fixtureShowBinding,
         showId: show.showId,
         slots: show.slots.map((row) => ({
           reservationId: row.reservationId,
@@ -908,7 +915,8 @@ export class ReservationCaseStore {
       terminal: TERMINAL.has(record.phase),
       showId: record.showId,
       eventId: show.eventId,
-      ...(show.fixtureResaleCap === undefined ? {} : { fixtureResaleCap: show.fixtureResaleCap }),
+      ...(show.fixtureResaleCap === undefined ? {} : { fixtureResaleCap: show.fixtureResaleCap, fixtureShowBinding: show.fixtureShowBinding }),
+      ...(record.fixtureOrder && { fixtureOrder: { ...record.fixtureOrder } }),
       slot: record.slot,
       slotState: row.state,
       slotHeldByCase: row.reservationId === record.reservationId,

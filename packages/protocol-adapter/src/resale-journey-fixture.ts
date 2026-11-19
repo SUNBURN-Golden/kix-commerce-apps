@@ -36,7 +36,7 @@ export const MARKET_FIXTURE = {
   "market-accept": ["resale_accept_resale", { listing_id: listing.listing_id, transfer_id: "transfer-1" }, { ...subject,
     "listing.phase": "TRANSFERRED", "listing.transfer_id": "transfer-1", "listing.version_after": 2, "listing.ownership_transferred": true,
     "listing.holder_role": buyer.buyer_role, "right.holder_role": buyer.buyer_role,
-    "right.version": 2, "evidence.transfer_id": "transfer-1", "evidence.right_id": right.right_id,
+    "right.version": 2, "listing.current_version": 2, "evidence.transfer_id": "transfer-1", "evidence.right_id": right.right_id,
     "evidence.from_role": listing.seller_role, "evidence.to_role": buyer.buyer_role, "evidence.version_after": 2,
     "listing.payment_ref": payment.payment_ref, "evidence.amount": listing.amount, "evidence.payment_ref": payment.payment_ref,
     "evidence.chain_owner_current": false, "evidence.funds_executed": false }],

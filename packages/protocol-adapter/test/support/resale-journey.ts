@@ -22,10 +22,17 @@ export async function through(journey: ResaleJourney, until: MarketStep) {
 
 type Refusal = [after: MarketStep, probe: MarketStep, fields: Record<string, unknown>, error: string];
 const refusals: Refusal[] = [
+  ["market-order", "market-primary-payment", { amount: 10_000 }, "PAYMENT_AMOUNT_MISMATCH"],
   ["market-issue", "market-adopt", { expires_ms: MARKET_FIXTURE["market-reserve"][1].expires_ms + 1 }, "RESERVATION_BINDING_CONFLICT"],
+  ["market-issue", "market-adopt", { quote_ref: "different-quote" }, "ORDER_BINDING_CONFLICT"],
+  ["market-issue", "market-adopt", { resale_allowed: false }, "SHOW_BINDING_CONFLICT"],
+  ["market-issue", "market-adopt", { gate_roles: ["gate-b", "gate-a"] }, "SHOW_BINDING_CONFLICT"],
   ["market-issue", "market-adopt", { resale_cap: MARKET_FIXTURE["market-show"][1].resale_cap + 1 }, "SHOW_BINDING_CONFLICT"],
   ["market-issue", "market-adopt", { payment_ref: "ee".repeat(32) }, "PAYMENT_BINDING_CONFLICT"],
   ["market-adopt", "market-list", { version: 2 }, "STALE_VERSION"],
+  ["market-adopt", "market-list", { amount: 0 }, "INVALID_AMOUNT"],
+  ["market-adopt", "market-list", { expires_ms: 1_000_000 }, "LISTING_WINDOW"],
+  ["market-adopt", "market-list", { expires_ms: 1_900_001 }, "LISTING_WINDOW"],
   ["market-adopt", "market-list", { amount: MARKET_FIXTURE["market-show"][1].resale_cap + 1 }, "RESALE_CAP"],
   ["market-list", "market-accept", {}, "ILLEGAL_TRANSITION"],
   ["market-list", "market-cancel", { seller_role: "buyer-2" }, "NOT_HOLDER"],
@@ -33,6 +40,8 @@ const refusals: Refusal[] = [
   ["market-hold", "market-hold", { hold_id: "second-hold" }, "BUYER_HOLD_LOCKED"],
   ["market-hold", "market-pay", { buyer_role: "buyer-1" }, "BUYER_MISMATCH"],
   ["market-hold", "market-pay", { amount: 7999 }, "RESALE_AMOUNT_MISMATCH"],
+  ["market-hold", "market-pay", { payment_ref: "abc" }, "PAYMENT_REF"],
+  ["market-hold", "market-pay", { payment_ref: "CD".repeat(32) }, "PAYMENT_REF"],
   ["market-pay", "market-pay", {}, "LISTING_PAYMENT_BOUND"],
   ["market-pay", "market-cancel", {}, "COMPENSATION_UNDEFINED"],
 ];
@@ -91,21 +100,35 @@ export function resaleScenarios(open: () => commands.CommerceJourneyPort, transp
       expect(await journey.run(next!)).toMatchObject({ kind: "REJECTED", code });
       expect(journey.state()).toMatchObject({ facts, confirmed: after });
     } finally { override.mockRestore(); }
-    if (probe === "market-list") {
-      const { listing_id, recipient_role } = MARKET_FIXTURE["market-list"][1];
-      await expect(port.advanceCommerceJourney({ step: "market-hold", operationId: "probe-hold", idempotencyKey: "probe-hold-key",
-        links: { listing_id, buyer_role: recipient_role } })).rejects.toMatchObject({ code: "UNKNOWN_LISTING" });
+    // Independent commands probe the FSM after a refusal, without repeating the refused write.
+    const checkState = (step: MarketStep, links: commands.JourneyLinks) =>
+      port.advanceCommerceJourney({ step, links, operationId: "probe-state", idempotencyKey: "probe-state-key" });
+    const listing = MARKET_FIXTURE["market-list"][1];
+    if (probe === "market-primary-payment") {
+      await expect(checkState("market-issue", MARKET_FIXTURE["market-issue"][1])).rejects.toMatchObject({ code: "ILLEGAL_TRANSITION" });
+    } else if (probe === "market-adopt") {
+      await expect(checkState("market-list", listing)).rejects.toMatchObject({ code: "UNKNOWN_RIGHT" });
+    } else if (probe === "market-list") {
+      await expect(checkState("market-hold", MARKET_FIXTURE["market-hold"][1])).rejects.toMatchObject({ code: "UNKNOWN_LISTING" });
+    } else if (after === "market-hold" && probe === "market-pay") {
+      const competingHold = vi.spyOn(commands, "commandFor").mockImplementationOnce(input => {
+        const row = build(input);
+        return { ...row, body: { ...row.body, hold_id: "independent-hold" } };
+      });
+      try {
+        await expect(checkState("market-hold", MARKET_FIXTURE["market-hold"][1])).rejects.toMatchObject({ code: "BUYER_HOLD_LOCKED" });
+      } finally { competingHold.mockRestore(); }
     }
   });
 
-  it("allows a listing exactly at the registered show cap", async () => {
+  it("allows a listing exactly at the registered cap and the last millisecond of the offer window", async () => {
     const journey = fixtureJourney(open());
     await through(journey, "market-adopt");
     const amount = MARKET_FIXTURE["market-show"][1].resale_cap;
     const build = commands.commandFor;
     const atCap = vi.spyOn(commands, "commandFor").mockImplementationOnce(input => {
       const row = build(input);
-      return { ...row, body: { ...row.body, amount }, expectation: { ...MARKET_FIXTURE["market-list"][2], "listing.amount": amount } };
+      return { ...row, body: { ...row.body, amount, expires_ms: 1_900_000 }, expectation: { ...MARKET_FIXTURE["market-list"][2], "listing.amount": amount } };
     });
     try {
       expect(await journey.run("market-list")).toMatchObject({ kind: "CONFIRMED", proof: { "listing.phase": "LISTED", "listing.amount": amount } });

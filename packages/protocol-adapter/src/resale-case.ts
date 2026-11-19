@@ -518,6 +518,7 @@ export class ResaleCaseStore {
     const rightId = ident(body.rightId ?? "");
     const sellerRole = ident(body.sellerRole ?? "");
     const recipientRole = ident(body.recipientRole ?? "");
+    const amount = body.amount === undefined ? undefined : readFixtureAmount(body.amount);
     const expiresAt = readTime(body.expiresAt ?? "");
     const version = readVersion(body.version ?? "");
     const reservationId = readOptional(body.reservationId ?? "");
@@ -575,14 +576,19 @@ export class ResaleCaseStore {
     if (recipientRole === ticket.holderRole) {
       throw resaleError("RECIPIENT_IS_HOLDER");
     }
-    if (fixtureResaleCap !== undefined && Number(body.amount) > fixtureResaleCap) {
+    if (amount !== undefined && fixtureResaleCap !== undefined && amount > fixtureResaleCap) {
       throw resaleError("RESALE_CAP");
     }
-    if (Date.parse(expiresAt) <= this.clockMs) {
+    // At the pin, mock_gates.py accepts now < expires_ms <= now + OFFER_WINDOW_MS.
+    const windowMs = Date.parse(expiresAt) - this.clockMs;
+    if (amount !== undefined && (windowMs <= 0 || windowMs > 900_000)) {
+      throw resaleError("LISTING_WINDOW");
+    }
+    if (windowMs <= 0) {
       throw resaleError("LISTING_NOT_OPEN");
     }
     this.listings.set(listingId, {
-      ...(body.amount === undefined ? {} : { fixtureAmount: Number(body.amount) }),
+      ...(amount === undefined ? {} : { fixtureAmount: amount }),
       listingId,
       canon,
       phase: "LISTED",
@@ -683,6 +689,8 @@ export class ResaleCaseStore {
   }
 
   private applyObserve(listingId: string, body: Record<string, string>, key: string): string {
+    if (body.amount !== undefined && !/^[0-9a-f]{64}$/.test(body.paymentRef)) throw resaleError("PAYMENT_REF");
+    const amount = body.amount === undefined ? undefined : readFixtureAmount(body.amount);
     const paymentRef = ident(body.paymentRef ?? "");
     const buyerRole = readOptional(body.buyerRole ?? "");
     const listing = this.requireListing(listingId);
@@ -696,7 +704,7 @@ export class ResaleCaseStore {
     }
     if (listing.fixtureAmount !== undefined) {
       if (this.clockMs >= Date.parse(listing.expiresAt)) throw resaleError("LISTING_NOT_OPEN");
-      if (Number(body.amount) !== listing.fixtureAmount) throw resaleError("RESALE_AMOUNT_MISMATCH");
+      if (amount !== listing.fixtureAmount) throw resaleError("RESALE_AMOUNT_MISMATCH");
     }
     this.claimPayment(paymentRef);
     listing.paymentRef = paymentRef;
@@ -1442,6 +1450,13 @@ function readObserved(value: string | undefined): boolean {
     return false;
   }
   throw resaleError("MOCK_INVARIANT");
+}
+
+// Bounds for the producer's synthetic fixture units (mock_gates.py, _money).
+function readFixtureAmount(value: string): number {
+  const amount = Number(value);
+  if (!Number.isInteger(amount) || amount <= 0 || amount > 1_000_000_000_000) throw resaleError("INVALID_AMOUNT");
+  return amount;
 }
 
 function readVersion(value: string): number {

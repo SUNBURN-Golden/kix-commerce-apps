@@ -308,6 +308,8 @@ export interface ReservationCaseView {
   showId: string;
   /** Registered show cap for the pinned journey fixture. */
   fixtureResaleCap?: number;
+  fixtureShowBinding?: string;
+  fixtureOrder?: { amount: number; quoteRef: string | null };
   eventId: string;
   slot: string;
   slotState: ReservationSlotState;
