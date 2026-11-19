@@ -335,6 +335,8 @@ describe("pinned fixture on the market", () => {
     await rerender(<ResaleJourneyPanel session={reloaded} />);
     expect(container.textContent).toContain("Unresolved tab history market-accept");
     expect(container.textContent).toContain("Last confirmed step market-pay");
+    expect(element(container, '[data-market-fact="listed"]').textContent).toBe("LISTED");
+    expect(element(container, '[data-market-fact="paid"]').textContent).toBe("PAYMENT_NOTED");
     await act(async () => { connectivity.setBrowserOnline(false); connectivity.setBrowserOnline(true); });
     await click(element(container, "details summary"));
     await reloaded.run("reservation-clock");
@@ -350,5 +352,39 @@ describe("pinned fixture on the market", () => {
     expect(container.textContent).toContain("CANCELLED");
     expect(element(container, '[data-market-fact="listed"]').textContent).toBe("LISTED");
     expect(container.querySelector("[data-market-step]")).toBeNull();
+  });
+
+  it.each([
+    ["reservation-clock", null, "NO_EVIDENCE", "PAYMENT_NOTED"],
+    ["market-list", "market-adopt", "LISTED", "NO_EVIDENCE"],
+    ["market-hold", "market-list", "NO_EVIDENCE", "NO_EVIDENCE"],
+    ["market-accept", "market-pay", "LISTED", "NO_EVIDENCE"],
+    ["market-accept", "market-list", "LISTED", "NO_EVIDENCE"],
+    ["market-cancel", "market-pay", "LISTED", "PAYMENT_NOTED"],
+    ["reservation-clock", "market-cancel", "LISTED", "NO_EVIDENCE"],
+  ])("quarantines an inconsistent tab intent (%s after %s, %s, %s)", async (step, confirmed, listed, paid) => {
+    const port = { advanceCommerceJourney: vi.fn() };
+    const key = "kix-resale-intent:stub";
+    const raw = JSON.stringify({ operationId: `resale:${crypto.randomUUID()}`, step, confirmed, listed, paid });
+    sessionStorage.setItem(key, raw);
+    const session = new MarketJourneySession(port, sessionStorage, "stub");
+    const { container } = await renderDom(<ResaleJourneyPanel session={session} />);
+    expect(element(container, '[role="status"]').textContent).toContain("SESSION_EVIDENCE_LOST");
+    expect(Array.from(container.querySelectorAll("[data-market-fact]"), cell => cell.textContent))
+      .toEqual(Array(4).fill("NO_EVIDENCE"));
+    expect(element<HTMLButtonElement>(container, "[data-market-step]").disabled).toBe(true);
+    await session.run("reservation-clock");
+    expect(port.advanceCommerceJourney).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem(key)).toBe(raw);
+  });
+
+  it.each(["market-list", "market-hold"] as const)("restores the listed fact for a pending cancellation after %s", async confirmed => {
+    const port = { advanceCommerceJourney: vi.fn() };
+    const intent = { operationId: `resale:${crypto.randomUUID()}`, step: "market-cancel", confirmed, listed: "LISTED", paid: "NO_EVIDENCE" };
+    sessionStorage.setItem("kix-resale-intent:stub", JSON.stringify(intent));
+    const session = new MarketJourneySession(port, sessionStorage, "stub");
+    expect(session.history).toEqual(intent);
+    await session.run("market-cancel");
+    expect(port.advanceCommerceJourney).not.toHaveBeenCalled();
   });
 });

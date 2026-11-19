@@ -9,13 +9,17 @@ export interface ResaleJourneyFacts {
   settled: { state: "NO_EVIDENCE" };
 }
 
+export function canCancelBefore(next: MarketStep | undefined) {
+  return next === "market-hold" || next === "market-pay";
+}
+
 export class ResaleJourney extends FixtureJourney<MarketStep, ResaleJourneyFacts> {
   constructor(port: CommerceJourneyPort, mint: MintAttempt<MarketStep>) {
     super(MARKET_STEPS, { listed: { state: "NO_EVIDENCE" }, paid: { state: "NO_EVIDENCE" },
       acceptedTransferred: { state: "NO_EVIDENCE" }, settled: { state: "NO_EVIDENCE" } }, port, mint);
   }
   protected alternative(next: MarketStep | undefined) {
-    return next === "market-hold" || next === "market-pay" ? "market-cancel" : undefined;
+    return canCancelBefore(next) ? "market-cancel" : undefined;
   }
   protected recordFact(step: MarketStep, proof: JourneyProof) {
     if (step === "market-list") this.facts.listed = { state: "LISTED", proof };

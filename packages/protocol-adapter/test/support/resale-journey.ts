@@ -1,6 +1,6 @@
 import { expect, it, vi } from "vitest";
 import * as commands from "../../src/commerce-journey-command.js";
-import { MARKET_STEPS, type MarketStep } from "../../src/resale-journey-fixture.js";
+import { MARKET_FIXTURE, MARKET_STEPS, type MarketStep } from "../../src/resale-journey-fixture.js";
 import { ResaleJourney, SETTLEMENT_EXAMPLE } from "../../src/resale-journey.js";
 import { MARKET_READS, resaleRead } from "../../src/resale-market-reads.js";
 
@@ -22,8 +22,11 @@ export async function through(journey: ResaleJourney, until: MarketStep) {
 
 type Refusal = [after: MarketStep, probe: MarketStep, fields: Record<string, unknown>, error: string];
 const refusals: Refusal[] = [
+  ["market-issue", "market-adopt", { expires_ms: MARKET_FIXTURE["market-reserve"][1].expires_ms + 1 }, "RESERVATION_BINDING_CONFLICT"],
+  ["market-issue", "market-adopt", { resale_cap: MARKET_FIXTURE["market-show"][1].resale_cap + 1 }, "SHOW_BINDING_CONFLICT"],
   ["market-issue", "market-adopt", { payment_ref: "ee".repeat(32) }, "PAYMENT_BINDING_CONFLICT"],
   ["market-adopt", "market-list", { version: 2 }, "STALE_VERSION"],
+  ["market-adopt", "market-list", { amount: MARKET_FIXTURE["market-show"][1].resale_cap + 1 }, "RESALE_CAP"],
   ["market-list", "market-accept", {}, "ILLEGAL_TRANSITION"],
   ["market-list", "market-cancel", { seller_role: "buyer-2" }, "NOT_HOLDER"],
   ["market-list", "market-hold", { buyer_role: "buyer-1" }, "RECIPIENT_MISMATCH"],
@@ -75,7 +78,8 @@ export function resaleScenarios(open: () => commands.CommerceJourneyPort, transp
   // Inject only in the test, immediately after the normal receipt-linked body is built.
   // The stub dispatch and the real gate each have to judge the invalid command.
   it.each(refusals)("after %s refuses %s %j with %s", async (after, probe, fields, code) => {
-    const journey = fixtureJourney(open());
+    const port = open();
+    const journey = fixtureJourney(port);
     await through(journey, after);
     const { facts, next } = journey.state();
     const build = commands.commandFor;
@@ -87,6 +91,25 @@ export function resaleScenarios(open: () => commands.CommerceJourneyPort, transp
       expect(await journey.run(next!)).toMatchObject({ kind: "REJECTED", code });
       expect(journey.state()).toMatchObject({ facts, confirmed: after });
     } finally { override.mockRestore(); }
+    if (probe === "market-list") {
+      const { listing_id, recipient_role } = MARKET_FIXTURE["market-list"][1];
+      await expect(port.advanceCommerceJourney({ step: "market-hold", operationId: "probe-hold", idempotencyKey: "probe-hold-key",
+        links: { listing_id, buyer_role: recipient_role } })).rejects.toMatchObject({ code: "UNKNOWN_LISTING" });
+    }
+  });
+
+  it("allows a listing exactly at the registered show cap", async () => {
+    const journey = fixtureJourney(open());
+    await through(journey, "market-adopt");
+    const amount = MARKET_FIXTURE["market-show"][1].resale_cap;
+    const build = commands.commandFor;
+    const atCap = vi.spyOn(commands, "commandFor").mockImplementationOnce(input => {
+      const row = build(input);
+      return { ...row, body: { ...row.body, amount }, expectation: { ...MARKET_FIXTURE["market-list"][2], "listing.amount": amount } };
+    });
+    try {
+      expect(await journey.run("market-list")).toMatchObject({ kind: "CONFIRMED", proof: { "listing.phase": "LISTED", "listing.amount": amount } });
+    } finally { atCap.mockRestore(); }
   });
 
   it("refuses a hold exactly at the listing deadline", async () => {

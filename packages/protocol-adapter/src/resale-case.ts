@@ -38,7 +38,7 @@ import {
  * on main `ef942b7713c7468e8851c6b372b64d42b5333ad8`
  * (feature `70c6d52d4289e23d0d4141b7f3a6b310eea236f2`).
  *
- * This store does not port MockGates prices, fee splits, caps, or inventory.
+ * Fixture listings use the cap supplied at show registration.
  * It does not add OpenAPI commands. R01–R05 stay 설계중.
  * The journal is process-local. It is not the protocol journal and not a ledger.
  * A bound transfer reads the mock settlement phase. It does not post money.
@@ -97,6 +97,7 @@ const SPECIFIC: Readonly<Record<string, string>> = {
 };
 
 interface ReservationAuthority {
+  fixtureResaleCap?: number;
   phase: string;
   rightId: string | null;
   buyerRole: string;
@@ -551,8 +552,10 @@ export class ResaleCaseStore {
       throw resaleError("RESERVATION_BINDING_CONFLICT");
     }
     const authorityId = reservationId ?? ticket.reservationId;
+    let fixtureResaleCap: number | undefined;
     if (authorityId !== null) {
       const authority = this.requireAuthority(authorityId, rightId);
+      fixtureResaleCap = authority.fixtureResaleCap;
       if (authority.showId !== ticket.showId || authority.eventId !== ticket.eventId) {
         throw resaleError("SHOW_BINDING_CONFLICT");
       }
@@ -571,6 +574,9 @@ export class ResaleCaseStore {
     }
     if (recipientRole === ticket.holderRole) {
       throw resaleError("RECIPIENT_IS_HOLDER");
+    }
+    if (fixtureResaleCap !== undefined && Number(body.amount) > fixtureResaleCap) {
+      throw resaleError("RESALE_CAP");
     }
     if (Date.parse(expiresAt) <= this.clockMs) {
       throw resaleError("LISTING_NOT_OPEN");

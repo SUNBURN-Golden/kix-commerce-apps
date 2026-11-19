@@ -306,6 +306,8 @@ export interface ReservationCaseView {
   phase: ReservationPhase;
   terminal: boolean;
   showId: string;
+  /** Registered show cap for the pinned journey fixture. */
+  fixtureResaleCap?: number;
   eventId: string;
   slot: string;
   slotState: ReservationSlotState;

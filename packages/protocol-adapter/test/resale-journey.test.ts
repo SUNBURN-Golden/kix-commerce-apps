@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { StubProtocolAdapter } from "../src/stub-adapter.js";
+import { ResaleCaseStore } from "../src/resale-case.js";
 import { MARKET_FIXTURE } from "../src/resale-journey-fixture.js";
 import { SETTLEMENT_EXAMPLE } from "../src/resale-journey.js";
 import { fixtureJourney, resaleScenarios, through } from "./support/resale-journey.js";
@@ -48,5 +49,22 @@ describe("resale fixture at the default adapter", () => {
     expect(await journey.run("market-accept")).toBeUndefined();
     expect(journey.state()).toMatchObject({ facts: before, confirmed: "market-pay", fenced: true });
     expect(send).toHaveBeenCalledTimes(12);
+  });
+  it("keeps the last confirmed facts when the listing and right disagree on the new holder", async () => {
+    const journey = fixtureJourney(new StubProtocolAdapter());
+    await through(journey, "market-pay");
+    const before = journey.state().facts;
+    const accept = ResaleCaseStore.prototype.acceptTransfer;
+    const receipt = vi.spyOn(ResaleCaseStore.prototype, "acceptTransfer").mockImplementationOnce(function (this: ResaleCaseStore, input) {
+      const result = accept.call(this, input);
+      result.listing!.holderRole = result.listing!.sellerRole;
+      return result;
+    });
+    try {
+      expect(await journey.run("market-accept")).toMatchObject({ kind: "UNKNOWN" });
+      expect(journey.state()).toMatchObject({ facts: before, confirmed: "market-pay", fenced: true });
+      expect(await journey.run("market-accept")).toBeUndefined();
+      expect(receipt).toHaveBeenCalledTimes(1);
+    } finally { receipt.mockRestore(); }
   });
 });

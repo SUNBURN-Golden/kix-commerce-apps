@@ -1,4 +1,4 @@
-import { ResaleJourney } from "../../../packages/protocol-adapter/src/resale-journey";
+import { canCancelBefore, ResaleJourney } from "../../../packages/protocol-adapter/src/resale-journey";
 import { MARKET_STEPS, type MarketStep } from "../../../packages/protocol-adapter/src/resale-journey-fixture";
 import type { CommerceJourneyPort } from "../../../packages/protocol-adapter/src/commerce-journey-command";
 import { ProtocolError, type SessionStorePort } from "../../../packages/protocol-adapter/src/shell-entry";
@@ -11,16 +11,19 @@ interface Intent {
   listed: "LISTED" | "NO_EVIDENCE";
   paid: "PAYMENT_NOTED" | "NO_EVIDENCE";
 }
-const steps: readonly string[] = [...MARKET_STEPS, "market-cancel"];
 function readIntent(store: SessionStorePort | null, key: string): Intent | "SESSION_EVIDENCE_LOST" | null {
   try {
     if (!store) return "SESSION_EVIDENCE_LOST";
     const raw = store.getItem(key);
     if (raw === null) return null;
     const row = JSON.parse(raw);
-    if (steps.includes(row.step) && (row.confirmed === null || steps.includes(row.confirmed)) &&
-        typeof row.operationId === "string" && /^resale:[a-f0-9-]{36}$/.test(row.operationId) &&
-        ["LISTED", "NO_EVIDENCE"].includes(row.listed) && ["PAYMENT_NOTED", "NO_EVIDENCE"].includes(row.paid)) return row;
+    const confirmedIndex = MARKET_STEPS.indexOf(row.confirmed);
+    const next = MARKET_STEPS[confirmedIndex + 1];
+    if ((row.confirmed === null || confirmedIndex >= 0) && next &&
+        (row.step === next || (row.step === "market-cancel" && canCancelBefore(next))) &&
+        row.listed === (confirmedIndex >= MARKET_STEPS.indexOf("market-list") ? "LISTED" : "NO_EVIDENCE") &&
+        row.paid === (confirmedIndex >= MARKET_STEPS.indexOf("market-pay") ? "PAYMENT_NOTED" : "NO_EVIDENCE") &&
+        typeof row.operationId === "string" && /^resale:[a-f0-9]{8}-([a-f0-9]{4}-){3}[a-f0-9]{12}$/.test(row.operationId)) return row;
   } catch { /* Keep the write fence if tab history cannot be read. */ }
   return "SESSION_EVIDENCE_LOST";
 }

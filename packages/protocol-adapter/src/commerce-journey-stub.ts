@@ -43,7 +43,7 @@ export function runStubCommerceJourney(input: CommerceJourneyCall, cases: Commer
       case "reservation_set_clock": actual = { logical_time_ms: reservation.advanceClock(clock()).logicalTimeMs }; break;
       case "reservation_register_show": {
         reservation.registerShow({ idempotencyKey, showId, eventId: showId,
-          slots: Array.from({ length: num("capacity") }, (_slot, index) => String(index)) });
+          slots: Array.from({ length: num("capacity") }, (_slot, index) => String(index)) }, num("resale_cap"));
         actual = { "show.show_id": reservation.viewShow(showId).showId };
         break;
       }
@@ -80,8 +80,10 @@ export function runStubCommerceJourney(input: CommerceJourneyCall, cases: Commer
       case "resale_set_clock": actual = { logical_time_ms: resale.advanceClock(clock()).logicalTimeMs }; break;
       case "resale_adopt_issued": {
         const issued = reservation.view(reservationId);
+        if (Date.parse(issued.expiresAt) !== num("expires_ms")) refuse("RESERVATION_BINDING_CONFLICT");
         if (issued.orderId !== orderId) refuse("ORDER_BINDING_CONFLICT");
         if (issued.paymentRef !== str("payment_ref")) refuse("PAYMENT_BINDING_CONFLICT");
+        if (issued.fixtureResaleCap !== num("resale_cap")) refuse("SHOW_BINDING_CONFLICT");
         result = resale.adoptIssued({ idempotencyKey, rightId, showId, eventId: showId,
           reservationId, slot: str("slot"), holderRole: str("buyer_role"), paymentRef: str("payment_ref") });
         break;
@@ -161,6 +163,7 @@ function resaleProof({ listing, right, evidence }: ResaleCommandReceipt): Journe
       "ticket.holder_role": right.holderRole, "ticket.reservation_id": right.reservationId,
       "right.right_id": right.rightId, "right.version": right.version, "right.holder_role": right.holderRole }),
     ...(listing && { "listing.phase": listing.phase, "listing.listing_id": listing.listingId,
+      "listing.holder_role": listing.holderRole,
       "listing.right_id": listing.rightId, "listing.amount": listing.fixtureAmount ?? null,
       "listing.seller_role": listing.sellerRole, "listing.recipient_role": listing.recipientRole,
       "listing.transfer_id": listing.transferId, "listing.version_after": listing.versionAfter,

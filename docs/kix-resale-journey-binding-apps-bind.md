@@ -86,7 +86,26 @@ The builder ran these checks on the uncommitted changes over the Commerce base a
 
 ### Delivery evidence
 
-The supervisor owns the commit and GitHub delivery. The hosted checks **Typecheck, build, and test (stub)** and **Adapter tests against the reviewed gate** require `SUCCESS` on that commit. Their check-run IDs and results are pending publication. The [NOT_BOUND list](kix-resale-journey-binding-change-requests.md#not_bound-list) is ready to include in the supervisor's PR body.
+On reviewed commit `1c5c721bb941c726be3d65d35485d517a6a06fed`, both required hosted jobs reported `SUCCESS`. [Typecheck, build, and test (stub)](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44468300274/job/135371313688) · [Adapter tests against the reviewed gate](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44468300274/job/135371357922)
+
+The supervisor owns publication of the round-one fixes and hosted verification at the resulting commit. The local PR-body draft includes all 13 rows of the [NOT_BOUND list](kix-resale-journey-binding-change-requests.md#not_bound-list) inline for KIX.
+
+### Review round one
+
+| Boundary | Regression evidence |
+| --- | --- |
+| Adoption | Changing only the issued reservation expiry by 1 ms gives `RESERVATION_BINDING_CONFLICT`. Changing only the registered resale cap gives `SHOW_BINDING_CONFLICT`. The last confirmed step stays at issuance. |
+| Listing | Both modes accept 20,000 fixture units. At 20,001 they return `RESALE_CAP`, and an independent test hold on that listing ID returns `UNKNOWN_LISTING`. The cap comes from the registered show. |
+| Transfer | A receipt with the buyer in `right.holder_role` and the seller in `listing.holder_role` leaves acceptance `UNKNOWN` after one attempt. Both modes retain the listing and payment evidence. |
+| Reload | The panel checks the attempted step and the stored listing and payment markers against the last confirmed step. Inconsistent records display `SESSION_EVIDENCE_LOST` with all four facts at `NO_EVIDENCE` and dispatch blocked. Valid unresolved cancellations and acceptance preserve the prior facts. |
+
+| Round-one local check | Result |
+| --- | --- |
+| `KIX_REQUIRE_GATE=0 npm test` | 3,117 adapter, 1,735 web and 6 entry-integrity tests passed. Stub mode skipped 55 gate-only tests. |
+| `KIX_REQUIRE_GATE=1 npm test -w @kix/protocol-adapter` with the reviewed checkout | 3,172 tests passed across 85 files with zero skips. |
+| `npm run typecheck`, `npm run typecheck:e2e`, `npm run lint`, `npm run build` | Passed. |
+| `npm run budget` and `CI=1 npm run test:budget` | Total gzip was 802,861 of 802,884 bytes. All 9 browser checks passed. Landing scripts totaled 358,585 of 400,000 bytes. |
+| Chrome on the built stub at loopback | Completed purchase through transfer with settlement still at `NO_EVIDENCE`. Reloaded the reported inconsistent record and a valid pending acceptance, verified the four displayed facts and disabled dispatch for each. Zero application or off-loopback requests. |
 
 ### Design adjustments
 

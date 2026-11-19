@@ -117,6 +117,7 @@ interface SlotRecord {
 interface ShowRecord {
   showId: string;
   eventId: string;
+  fixtureResaleCap?: number;
   canon: string;
   slots: SlotRecord[];
 }
@@ -186,11 +187,12 @@ export class ReservationCaseStore {
     });
   }
 
-  registerShow(input: ReservationShowRegister): ReservationCommandReceipt {
+  registerShow(input: ReservationShowRegister, fixtureResaleCap?: number): ReservationCommandReceipt {
     if (!Array.isArray(input.slots)) {
       throw reservationError("MOCK_INVARIANT");
     }
-    const body = { eventId: input.eventId, slots: input.slots.join(",") };
+    const body = { eventId: input.eventId, slots: input.slots.join(","),
+      ...(fixtureResaleCap === undefined ? {} : { resaleCap: String(fixtureResaleCap) }) };
     return this.call("register_show", input.showId, input.idempotencyKey, body, () => null, (key, request) => {
       // The journal body joins slots with commas, so a slot name must not carry one.
       for (const slot of input.slots) {
@@ -423,7 +425,8 @@ export class ReservationCaseStore {
   private applyRegister(showId: string, body: Record<string, string>): void {
     const eventId = ident(body.eventId ?? "");
     const slots = readSlots(body.slots ?? "");
-    const canon = canonicalJson({ eventId, slots });
+    const fixture = body.resaleCap === undefined ? {} : { fixtureResaleCap: Number(body.resaleCap) };
+    const canon = canonicalJson({ eventId, slots, ...fixture });
     const current = this.shows.get(showId);
     if (current) {
       if (current.canon !== canon) {
@@ -432,6 +435,7 @@ export class ReservationCaseStore {
       throw reservationError("ILLEGAL_TRANSITION");
     }
     this.shows.set(showId, {
+      ...fixture,
       showId,
       eventId,
       canon,
@@ -826,6 +830,7 @@ export class ReservationCaseStore {
     const shows = [...this.shows.values()]
       .map((show) => ({
         eventId: show.eventId,
+        fixtureResaleCap: show.fixtureResaleCap,
         showId: show.showId,
         slots: show.slots.map((row) => ({
           reservationId: row.reservationId,
@@ -903,6 +908,7 @@ export class ReservationCaseStore {
       terminal: TERMINAL.has(record.phase),
       showId: record.showId,
       eventId: show.eventId,
+      ...(show.fixtureResaleCap === undefined ? {} : { fixtureResaleCap: show.fixtureResaleCap }),
       slot: record.slot,
       slotState: row.state,
       slotHeldByCase: row.reservationId === record.reservationId,
