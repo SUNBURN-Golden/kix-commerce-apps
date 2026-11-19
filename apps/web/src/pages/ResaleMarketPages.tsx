@@ -9,8 +9,9 @@ import { useResaleMarket } from "../resale-market";
 import { AsyncState } from "../components/AsyncState";
 import { useMarketReadState } from "../shell/market-read-state";
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { MarketArt, MarketNotice, MarketReadStatus, ProductPanels } from "./ResaleMarketPanels";
+import { Link, useLocation, useParams } from "react-router-dom";
+import { ResaleJourneySection } from "./ResaleJourneyPanel";
+import { MarketReadBoundary, MarketArt, MarketNotice, MarketReadStatus, ProductPanels } from "./ResaleMarketPanels";
 export function ResaleMarketPage() {
   const t = useT(messages);
   const view = useMarketReadState();
@@ -32,6 +33,8 @@ export function ResaleMarketPage() {
       <button type="submit">{t("market.searchButton")}</button>
     </ValidatedForm>
     <MarketReadStatus market={market} input={{ kind: "list", query, page }} list />
+    <MarketReadBoundary queries={["product search", "list_open_listings"]} />
+    <Link to={`/resale/market/demo-001${view.search}`} state={{ marketFixture: true }}>{t("market.journey")}</Link>
     {list?.products.length === 0 ? <AsyncState label={t("market.title")} kind="empty"><p>{t("market.empty")}</p></AsyncState> : null}
     <div role="status" aria-busy={state.readState === "loading"}><ul className="market-grid">{list?.products.map(p => <li key={p.productId}><Link data-market-product-id={p.productId} onClick={e => focus.open(e, p.productId)} className="market-card" to={`/resale/market/${encodeURIComponent(p.productId)}${view.search}`}><MarketArt artwork={p.artworkKey} /><h3>{t(p.nameKey)}</h3><p>{t(p.descriptionKey)}</p><p className="muted"><SafeText value={p.productId} /></p></Link></li>)}</ul></div>
     <div className="actions">{page > 1 ? <button type="button" onClick={() => view.commit(query, page-1)}>{t("market.previous")}</button> : null}{list?.nextPage ? <button type="button" onClick={() => view.commit(query, list.nextPage ?? page)}>{t("market.next")}</button> : null}</div>
@@ -39,6 +42,7 @@ export function ResaleMarketPage() {
 }
 
 export function ResaleProductPage() {
+  const route = useLocation();
   const { productId = "" } = useParams();
   const t = useT(messages);
   const view = useMarketReadState();
@@ -51,6 +55,8 @@ export function ResaleProductPage() {
     <Link data-market-return onClick={focus.returnToList} to={`/resale/market${view.search}`}>{t("market.title")}</Link>
     <MarketReadStatus market={market} input={{ kind: "detail", productId }} />
     {market.state.readState === "empty" ? <AsyncState label={t("market.title")} kind="empty"><p>{t("market.missing")}</p></AsyncState> : null}
+    {market.state.readState === "not-bound" && <MarketReadBoundary queries={["product detail", "variants", "quotes", "offers", "trade history", "price series"]} />}
+    {productId === "demo-001" && <ResaleJourneySection startOpen={route.state?.marketFixture === true} />}
     {d ? <ProductPanels key={d.product.productId} detail={d} market={market} /> : null}
   </section>;
 }

@@ -17,7 +17,7 @@ describe("booking page-load event fence", () => {
     async function open(event: "lanterns" | "orchestra") {
       await nav(page, "Box office");
       await page.getByRole("link", { name: "Book", exact: true }).nth(EVENTS[event].row).click();
-      await page.getByRole("heading", { name: EVENTS[event].title, exact: true }).waitFor();
+      await page.getByRole("heading", { name: EVENTS[event].title, level: 2, exact: true }).waitFor();
     }
     await open("lanterns");
     await page.locator("#booking-quantity").fill("2");

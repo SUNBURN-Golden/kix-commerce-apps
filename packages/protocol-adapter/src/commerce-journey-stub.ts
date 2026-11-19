@@ -4,7 +4,7 @@ import type { AdmissionCaseStore } from "./admission-case.js";
 import type { ReservationCaseStore } from "./reservation-case.js";
 import type { ResaleCaseStore } from "./resale-case.js";
 import type { SettlementCaseStore } from "./settlement-case.js";
-import { ProtocolError } from "./types.js";
+import { ProtocolError, type ResaleCommandReceipt } from "./types.js";
 
 export interface CommerceJourneyCases {
   reservation: ReservationCaseStore;
@@ -37,9 +37,10 @@ export function runStubCommerceJourney(input: CommerceJourneyCall, cases: Commer
   const settlementStep = { idempotencyKey, settlementId };
   const baseAdmission = () => ({ idempotencyKey, rightId, version: num("version"), gateRole: str("gate_role"), request: str("request") });
   let actual: JourneyProof = {};
+  let result: ResaleCommandReceipt | undefined;
   try {
     switch (action) {
-      case "reservation_set_clock": reservation.advanceClock(clock()); break;
+      case "reservation_set_clock": actual = { logical_time_ms: reservation.advanceClock(clock()).logicalTimeMs }; break;
       case "reservation_register_show": {
         reservation.registerShow({ idempotencyKey, showId, eventId: showId,
           slots: Array.from({ length: num("capacity") }, (_slot, index) => String(index)) });
@@ -55,7 +56,7 @@ export function runStubCommerceJourney(input: CommerceJourneyCall, cases: Commer
       case "reservation_confirm": {
         const receipt = reservation.confirm({ ...reservationStep, orderId });
         actual = { "reservation.order_id": receipt.reservation?.orderId ?? null,
-          "reservation.amount": num("amount"), "reservation.quote_ref": str("quote_ref") };
+          "reservation.phase": receipt.reservation?.phase ?? null, "reservation.amount": num("amount"), "reservation.quote_ref": str("quote_ref") };
         break;
       }
       case "reservation_observe_payment": {
@@ -67,6 +68,7 @@ export function runStubCommerceJourney(input: CommerceJourneyCall, cases: Commer
       case "reservation_issue": {
         const receipt = reservation.issue({ idempotencyKey, orderId, issuanceId: str("issuance_id") });
         actual = { "evidence.right_id": receipt.reservation?.rightId ?? null,
+          "evidence.holder_role": receipt.reservation?.buyerRole ?? null, "evidence.version": 1,
           "reservation.phase": receipt.reservation?.phase ?? null };
         break;
       }
@@ -75,23 +77,28 @@ export function runStubCommerceJourney(input: CommerceJourneyCall, cases: Commer
         actual = { "reservation.phase": receipt.reservation?.phase ?? null };
         break;
       }
-      case "resale_set_clock": resale.advanceClock(clock()); break;
-      case "resale_adopt_issued": resale.adoptIssued({ idempotencyKey, rightId, showId, eventId: showId,
-        reservationId, slot: str("slot"), holderRole: str("buyer_role"), paymentRef: str("payment_ref") }); break;
-      case "resale_list_resale": {
-        const receipt = resale.list({ idempotencyKey, listingId, rightId, reservationId, version: num("version"),
-          sellerRole: str("seller_role"), recipientRole: str("recipient_role"), expiresAt: time("expires_ms") });
-        actual = { "listing.listing_id": receipt.listing?.listingId ?? null };
+      case "resale_set_clock": actual = { logical_time_ms: resale.advanceClock(clock()).logicalTimeMs }; break;
+      case "resale_adopt_issued": {
+        const issued = reservation.view(reservationId);
+        if (issued.orderId !== orderId) refuse("ORDER_BINDING_CONFLICT");
+        if (issued.paymentRef !== str("payment_ref")) refuse("PAYMENT_BINDING_CONFLICT");
+        result = resale.adoptIssued({ idempotencyKey, rightId, showId, eventId: showId,
+          reservationId, slot: str("slot"), holderRole: str("buyer_role"), paymentRef: str("payment_ref") });
         break;
       }
-      case "resale_hold_buy": resale.holdBuy({ idempotencyKey, listingId, holdId: str("hold_id"), buyerRole: str("buyer_role") }); break;
-      case "resale_observe_resale_payment": resale.observePayment({ idempotencyKey, listingId, paymentRef: str("payment_ref"), buyerRole: str("buyer_role") }); break;
-      case "resale_bind_settlement": resale.bindSettlement({ idempotencyKey, listingId, settlementId }); break;
-      case "resale_accept_resale": {
-        const receipt = resale.acceptTransfer({ idempotencyKey, listingId, transferId: str("transfer_id") });
-        actual = { "listing.phase": receipt.listing?.phase ?? null, "evidence.version_after": receipt.evidence?.versionAfter ?? null };
+      case "resale_list_resale":
+        result = resale.list({ idempotencyKey, listingId, rightId, reservationId, version: num("version"),
+          sellerRole: str("seller_role"), recipientRole: str("recipient_role"), expiresAt: time("expires_ms") }, num("amount"));
         break;
-      }
+      case "resale_hold_buy":
+        result = resale.holdBuy({ idempotencyKey, listingId, holdId: str("hold_id"), buyerRole: str("buyer_role") });
+        break;
+      case "resale_observe_resale_payment":
+        result = resale.observePayment({ idempotencyKey, listingId, paymentRef: str("payment_ref"), buyerRole: str("buyer_role") }, num("amount"));
+        break;
+      case "resale_cancel_listing": result = resale.cancelListing({ idempotencyKey, listingId, sellerRole: str("seller_role") }); break;
+      case "resale_bind_settlement": result = resale.bindSettlement({ idempotencyKey, listingId, settlementId }); break;
+      case "resale_accept_resale": result = resale.acceptTransfer({ idempotencyKey, listingId, transferId: str("transfer_id") }); break;
       case "admission_set_clock": admission.advanceClock(clock()); break;
       case "admission_adopt_issued": admission.adoptIssued({ idempotencyKey, rightId, reservationId }); break;
       case "admission_authorize_admission": {
@@ -134,6 +141,37 @@ export function runStubCommerceJourney(input: CommerceJourneyCall, cases: Commer
     throw error;
   }
   if (typeof expectation === "string") throw new Error("The fixture unexpectedly accepted a declined transition.");
-  const projected: JourneyProof = { ...expectation, ...actual };
+  if (result) {
+    if (result.applied !== action.slice("resale_".length) || result.duplicate !== false || result.idempotencyKey !== idempotencyKey ||
+        result.fundsExecuted !== false || result.economicFinalityClaimed !== false || result.venueCredentialReissued !== false) {
+      throw new Error("Unexpected stub resale receipt.");
+    }
+    actual = resaleProof(result);
+  }
+  const projected: JourneyProof = input.step.startsWith("market-") ? actual : { ...expectation, ...actual };
+  if (Object.entries(expectation).some(([path, value]) => projected[path] !== value)) {
+    throw new Error("Unexpected stub fixture evidence.");
+  }
   return Object.fromEntries(proofPaths(input.step, expectation).map((path) => [path, projected[path]]));
+}
+
+function resaleProof({ listing, right, evidence }: ResaleCommandReceipt): JourneyProof {
+  return {
+    ...(right && { "ticket.right_id": right.rightId, "ticket.version": right.version, "ticket.eligible": right.eligible,
+      "ticket.holder_role": right.holderRole, "ticket.reservation_id": right.reservationId,
+      "right.right_id": right.rightId, "right.version": right.version, "right.holder_role": right.holderRole }),
+    ...(listing && { "listing.phase": listing.phase, "listing.listing_id": listing.listingId,
+      "listing.right_id": listing.rightId, "listing.amount": listing.fixtureAmount ?? null,
+      "listing.seller_role": listing.sellerRole, "listing.recipient_role": listing.recipientRole,
+      "listing.transfer_id": listing.transferId, "listing.version_after": listing.versionAfter,
+      "listing.attached": listing.attached, "listing.version": listing.version, "listing.terminal": listing.terminal,
+      "listing.ownership_transferred": listing.ownershipTransferred, "listing.hold_id": listing.holdId,
+      "listing.buyer_role": listing.buyerRole, "listing.payment_ref": listing.paymentRef,
+      "listing.settlement_id": listing.settlementId, "listing.settlement_gate": listing.settlementGate,
+      "listing.mock_settlement_commit_observed": listing.mockSettlementCommitObserved }),
+    ...(evidence && listing && { "evidence.transfer_id": listing.transferId, "evidence.right_id": evidence.rightId,
+      "evidence.from_role": evidence.fromRole, "evidence.to_role": evidence.toRole, "evidence.version_after": evidence.versionAfter,
+      "evidence.amount": listing.fixtureAmount ?? null, "evidence.payment_ref": listing.paymentRef, "evidence.chain_owner_current": evidence.chainOwnerCurrent,
+      "evidence.funds_executed": evidence.fundsExecuted }),
+  };
 }

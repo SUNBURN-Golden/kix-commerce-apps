@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { resaleRead } from "../../../packages/protocol-adapter/src/resale-market-reads";
 import { act } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Route, Routes } from "react-router-dom";
@@ -79,7 +80,7 @@ describe("market URL read context", () => {
       sourceRead.mockRejectedValueOnce(new Error("read failed"));
       await act(async () => { await view.router.navigate("/resale/market?page=900"); });
       expect(view.router.state.location.search).toBe("?page=900");
-      sourceRead.mockResolvedValueOnce({ ...MARKET_CLAIMS, kind: "NOT_BOUND" });
+      sourceRead.mockResolvedValueOnce({ ...MARKET_CLAIMS, ...resaleRead("list_open_listings") });
       await act(async () => { await view.router.navigate("/resale/market?page=901"); });
       expect(view.router.state.location.search).toBe("?page=901"); expect(marketController.state().readState).toBe("not-bound");
       await view.unmount();

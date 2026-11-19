@@ -10,6 +10,20 @@ import { openScreen } from "./helpers";
 
 describe("resale market bilingual form and display", () => {
   const suite = useBrowser();
+  it.each(["en", "ko"] as const)("reviews the pinned ticket fixture at 320px (%s)", async lang => {
+    const page = await suite.newPage();
+    try {
+      await openScreen(page, suite.origin, `/resale/market?lang=${lang}`, "narrow");
+      await page.getByRole("link", { name: lang === "en" ? "Resale fixture journey" : "재판매 모의 여정" }).click();
+      await page.locator('[data-market-step="reservation-clock"]').focus();
+      await page.keyboard.press("Enter");
+      await page.locator(".market-journey-review h4:focus").waitFor();
+      expect(await overflowProblems(page, "resale.fixture.review")).toEqual([]);
+      const axe = await runAxe(page, A11Y_BASELINE.tags);
+      expect(ratchet("resale-product", "narrow", axe.violations.map(v => v.ruleId)).unlisted).toEqual([]);
+      await suite.quiet(page, "reviewing a fixture command");
+    } finally { await page.close(); }
+  });
   it.each(["en", "ko"] as const)("keeps return focus visible, continues Tab and announces heading fallback (%s)", async lang => {
     const page = await suite.newPage();
     await page.addInitScript(() => { window.__kixResaleFault = { mode: "reject", dispatches: 0, list: { productIds: ["demo-001", "demo-003"], total: 4 } }; });

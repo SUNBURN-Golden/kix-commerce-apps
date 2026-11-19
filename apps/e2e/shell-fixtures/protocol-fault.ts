@@ -2,6 +2,7 @@
  * Test-only wrapper of the protocol port, swapped in by buildShellFaultApp. While window.__kixShellFault is
  * "app" its describe() throws, which makes the shell itself fail to render. Everything else is the real port.
  */
+import type {} from "../src/resale-fault-types";
 import { protocol as real } from "../../web/src/protocol";
 
 // Several desks read describe() while the module graph loads, and nothing can catch an error there. The wrapper
@@ -31,6 +32,15 @@ export const protocol = new Proxy(real, {
           await new Promise<void>((resolve) => { bookingProbe.releases[method] = resolve; });
         }
         return (Reflect.get(target, key) as (...input: unknown[]) => Promise<unknown>).apply(target, args);
+      };
+    }
+    const resale = window.__kixResaleJourney;
+    if (resale && key === "advanceCommerceJourney") {
+      return async (call: Parameters<typeof real.advanceCommerceJourney>[0]) => {
+        resale.sends++;
+        const receipt = await target.advanceCommerceJourney(call);
+        if (call.step === "market-accept") await new Promise<void>(resolve => { resale.release = resolve; });
+        return receipt;
       };
     }
     if (key === "placeHold") {

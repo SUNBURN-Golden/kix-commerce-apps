@@ -696,6 +696,8 @@ export interface ResaleRightView {
  * No prices and no fee splits. Protocol truth stays in kix-protocol.
  */
 export interface ResaleCaseView {
+  /** Recorded amount on catalogue fixture listings only. */
+  fixtureAmount?: number;
   mode: "mock";
   surface: typeof SURFACES.resaleFsm;
   references: typeof RESALE_REFERENCES;

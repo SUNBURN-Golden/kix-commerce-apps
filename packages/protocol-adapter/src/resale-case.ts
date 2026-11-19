@@ -130,6 +130,7 @@ interface RightRecord {
 }
 
 interface ListingRecord {
+  fixtureAmount?: number;
   listingId: string;
   canon: string;
   phase: ResalePhase;
@@ -234,8 +235,9 @@ export class ResaleCaseStore {
     );
   }
 
-  list(input: ResaleList): ResaleCommandReceipt {
+  list(input: ResaleList, fixtureAmount?: number): ResaleCommandReceipt {
     const body = {
+      ...(fixtureAmount === undefined ? {} : { amount: String(fixtureAmount) }),
       expiresAt: input.expiresAt,
       recipientRole: input.recipientRole,
       reservationId: optionalId(input.reservationId),
@@ -305,8 +307,9 @@ export class ResaleCaseStore {
     );
   }
 
-  observePayment(input: ResalePayment): ResaleCommandReceipt {
-    const body = { buyerRole: optionalId(input.buyerRole), paymentRef: input.paymentRef };
+  observePayment(input: ResalePayment, fixtureAmount?: number): ResaleCommandReceipt {
+    const body = { buyerRole: optionalId(input.buyerRole), paymentRef: input.paymentRef,
+      ...(fixtureAmount === undefined ? {} : { amount: String(fixtureAmount) }) };
     return this.call(
       "observe_resale_payment",
       input.listingId,
@@ -518,6 +521,7 @@ export class ResaleCaseStore {
     const version = readVersion(body.version ?? "");
     const reservationId = readOptional(body.reservationId ?? "");
     const canon = canonicalJson({
+      ...(body.amount === undefined ? {} : { amount: body.amount }),
       expiresAt,
       listingId,
       recipientRole,
@@ -572,6 +576,7 @@ export class ResaleCaseStore {
       throw resaleError("LISTING_NOT_OPEN");
     }
     this.listings.set(listingId, {
+      ...(body.amount === undefined ? {} : { fixtureAmount: Number(body.amount) }),
       listingId,
       canon,
       phase: "LISTED",
@@ -657,6 +662,7 @@ export class ResaleCaseStore {
     if (sellerRole !== listing.sellerRole) {
       throw resaleError("NOT_HOLDER");
     }
+    if (listing.fixtureAmount !== undefined && this.clockMs >= Date.parse(listing.expiresAt)) throw resaleError("LISTING_NOT_OPEN");
     listing.phase = "CANCELLED";
     listing.holdId = null;
     listing.buyerRole = null;
@@ -681,6 +687,10 @@ export class ResaleCaseStore {
       }
     } else if (buyerRole !== null && buyerRole !== listing.recipientRole) {
       throw resaleError("RECIPIENT_MISMATCH");
+    }
+    if (listing.fixtureAmount !== undefined) {
+      if (this.clockMs >= Date.parse(listing.expiresAt)) throw resaleError("LISTING_NOT_OPEN");
+      if (Number(body.amount) !== listing.fixtureAmount) throw resaleError("RESALE_AMOUNT_MISMATCH");
     }
     this.claimPayment(paymentRef);
     listing.paymentRef = paymentRef;
@@ -1121,6 +1131,7 @@ export class ResaleCaseStore {
       listingId: listing.listingId,
       phase: listing.phase,
       terminal: TERMINAL.has(listing.phase),
+      ...(listing.fixtureAmount === undefined ? {} : { fixtureAmount: listing.fixtureAmount }),
       pendingSale: OPEN.has(listing.phase),
       rightId: listing.rightId,
       showId: listing.showId,

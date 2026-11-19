@@ -384,3 +384,63 @@ describe("synthetic resale marketplace", () => {
   });
 
 });
+
+describe("pinned resale market fixture", () => {
+  const suite = useBrowser();
+  it.each(["purchase", "cancel"])("reviews the %s path on the market", async branch => {
+    const page = await newDeskPage(suite.newPage, suite.origin);
+    try {
+      await page.goto(suite.origin + "/resale/market");
+      await page.getByRole("link", { name: "Resale fixture journey" }).click();
+      const panel = page.locator('section[aria-labelledby="market-journey-title"]');
+      for (let i = 0; i < (branch === "purchase" ? 12 : 11); i++) {
+        const next = branch === "cancel" && i === 10 ? panel.locator('[data-market-step="market-cancel"]') : panel.locator("[data-market-step]").first();
+        await next.click();
+        await panel.getByRole("button", { name: "Send command once" }).click();
+      }
+      await panel.getByText(branch === "purchase" ? "CONFIRMED · TRANSFERRED" : "CONFIRMED · CANCELLED").waitFor();
+      expect(await panel.locator('[data-market-fact="listed"]').innerText()).toBe("LISTED");
+      expect(await panel.locator('[data-market-fact="paid"]').innerText()).toBe(branch === "purchase" ? "PAYMENT_NOTED" : "NO_EVIDENCE");
+      expect(await panel.locator('[data-market-fact="settled"]').innerText()).toBe("NO_EVIDENCE");
+      await panel.getByText("Protocol read availability", { exact: true }).last().click();
+      await panel.getByText(/NOT_BOUND · get_settlement/).waitFor();
+      expect(await panel.innerText()).toContain("requester-borne (B5)");
+      await suite.quiet(page, "reviewed resale fixture");
+    } finally { await page.close(); }
+  });
+  it("keeps a departed acceptance uncertain across products, reconnect and reload", async () => {
+    const page = await suite.newPage();
+    try {
+      await page.addInitScript(() => { window.__kixResaleJourney = { sends: 0 }; });
+      await page.goto(suite.faultOrigin + "/resale/market?lang=en");
+      await page.getByRole("link", { name: "Resale fixture journey" }).click();
+      const panel = page.locator('section[aria-labelledby="market-journey-title"]');
+      for (let i = 0; i < 12; i++) {
+        await panel.locator("[data-market-step]").first().click();
+        await panel.locator("[data-market-send]").click();
+      }
+      await page.waitForFunction(() => typeof window.__kixResaleJourney?.release === "function");
+      await page.locator("[data-market-return]").click();
+      await page.locator('[data-market-product-id="demo-002"]').click();
+      await page.evaluate(() => window.__kixResaleJourney!.release!());
+      expect(await panel.count()).toBe(0);
+      await page.locator("[data-market-return]").click();
+      await page.locator('[data-market-product-id="demo-001"]').click();
+      await panel.getByText(/Blocked action market-accept/).waitFor();
+      expect(await panel.locator('[data-market-fact="acceptedTransferred"]').innerText()).toBe("NO_EVIDENCE");
+      expect(await page.evaluate(() => window.__kixResaleJourney!.sends)).toBe(12);
+      await suite.quiet(page, "late receipt fenced on its originating fixture");
+      await page.reload();
+      await panel.getByText(/Unresolved tab history market-accept/).waitFor();
+      expect(await panel.locator('[data-market-fact="paid"]').innerText()).toBe("PAYMENT_NOTED");
+      await suite.session().context.setOffline(true);
+      await page.locator('[data-connectivity-state="offline"]').waitFor();
+      await suite.session().context.setOffline(false);
+      await page.locator('[data-connectivity-state="local"]').waitFor();
+      await panel.getByText("Protocol read availability", { exact: true }).first().click();
+      expect(await panel.locator("[data-market-step]").isDisabled()).toBe(true);
+      expect(await page.evaluate(() => window.__kixResaleJourney!.sends)).toBe(0);
+      await suite.quiet(page, "tab history and reconnection send no replacement");
+    } finally { await page.close(); }
+  });
+});

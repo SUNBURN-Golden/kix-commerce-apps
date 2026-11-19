@@ -60,6 +60,7 @@ export const FSM_COMMANDS = {
   resale_set_clock: ["subject_id",[]],
   resale_adopt_issued: ["right_id",["right","ticket"]],
   resale_list_resale: ["listing_id",["listing","right"]],
+  resale_cancel_listing: ["listing_id",["listing","right"]],
   resale_hold_buy: ["hold_id",["listing","right"]],
   resale_observe_resale_payment: ["listing_id",["listing","right"]],
   settlement_initiate: ["settlement_id",[]],

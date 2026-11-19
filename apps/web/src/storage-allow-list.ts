@@ -7,6 +7,7 @@ export const STORAGE_ALLOW_LIST = [
   "kix-onboarding",
   "kix-reservation-attempt:",
   "kix-resale-attempt:",
+  "kix-resale-intent:",
   "kix-organizer-attempt:",
   "kix-journey-attempt:",
   "kix-gift-attempt:",

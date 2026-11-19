@@ -1,3 +1,5 @@
+import { resaleRead } from "./resale-market-reads";
+
 /** App-internal synthetic interface. Producer mappings are UNDETERMINED. No protocol command. */
 export const MARKET_CLAIMS = { source: "synthetic", unit: "mock-unit", fundsExecuted: false, economicFinalityClaimed: false, productionEndpoint: false, protocolTruth: false, productionConformance: false } as const;
 type Claims = typeof MARKET_CLAIMS;
@@ -11,7 +13,7 @@ export interface ResaleMarketDetail extends Claims { product: ResaleMarketProduc
 export type ResaleMarketIntent = { productId: string; variantId: string; expectedVersion: number } & ({ kind: "bid"; mockUnits: string } | { kind: "ask"; mockUnits: string } | { kind: "instant-buy"; quoteId: string } | { kind: "instant-sell"; quoteId: string });
 export const MARKET_REJECTIONS = ["INVALID_INPUT", "PRODUCT_MISSING", "VARIANT_MISSING", "STALE_VERSION", "QUOTE_UNAVAILABLE", "QUOTE_MISMATCH"] as const;
 export type MarketRejection = typeof MARKET_REJECTIONS[number];
-export type ResaleMarketReadResult = Claims & ({ kind: "ready" | "empty"; request: ResaleMarketRead; payload: { kind: "list"; products: ResaleMarketProduct[]; page: number; pageSize: 2; total: number; nextPage: number | null } | { kind: "detail"; detail: ResaleMarketDetail | null } } | { kind: "NOT_BOUND" });
+export type ResaleMarketReadResult = Claims & ({ kind: "ready" | "empty"; request: ResaleMarketRead; payload: { kind: "list"; products: ResaleMarketProduct[]; page: number; pageSize: 2; total: number; nextPage: number | null } | { kind: "detail"; detail: ResaleMarketDetail | null } } | ReturnType<typeof resaleRead>);
 export type ResaleMarketWriteResult = Claims & ({ kind: "CONFIRMED"; request: ResaleMarketIntent; version: number; record: ResaleMarketOffer | ResaleMarketTrade } | { kind: "REJECTED"; request: ResaleMarketIntent; code: MarketRejection } | { kind: "NOT_BOUND" });
 export interface ResaleMarketPort { read(input: ResaleMarketRead): Promise<ResaleMarketReadResult>; submit(input: ResaleMarketIntent): Promise<ResaleMarketWriteResult> }
 export const canonicalUnits = (s: unknown): s is string => typeof s === "string" && /^(0|[1-9][0-9]{0,29})$/.test(s);
@@ -66,7 +68,10 @@ export function validMarketDetail(v: unknown): v is ResaleMarketDetail {
 }
 export function validMarketRead(v: unknown, input: ResaleMarketRead): v is ResaleMarketReadResult {
   if (!obj(v) || !claims(v)) return false;
-  if (v.kind === "NOT_BOUND") return keys(v,[...claimKeys,"kind"]);
+  if (v.kind === "NOT_BOUND") {
+    const refusal = resaleRead(input.kind === "list" ? "list_open_listings" : "get_listing");
+    return keys(v,[...claimKeys,"kind","query","reason"]) && v.query === refusal.query && v.reason === refusal.reason;
+  }
   if (!keys(v,[...claimKeys,"kind","request","payload"]) || !["ready","empty"].includes(String(v.kind)) || !same(v.request,input) || !obj(v.payload)) return false;
   const p = v.payload;
   if (input.kind === "detail") return p.kind === "detail" && (p.detail === null ? v.kind === "empty" : validMarketDetail(p.detail) && p.detail.product.productId === input.productId && v.kind === "ready");
@@ -145,5 +150,5 @@ export function createMockResaleMarket(): ResaleMarketPort {
 /** The validated environment is supplied by the app's existing selection. No fallback or dispatch. */
 export function resaleMarketPortFor(environment: "stub" | "integration-http"): ResaleMarketPort {
   if (environment === "stub") return createMockResaleMarket();
-  return { async read() { return { ...MARKET_CLAIMS, kind: "NOT_BOUND" }; }, async submit() { return { ...MARKET_CLAIMS, kind: "NOT_BOUND" }; } };
+  return { async read(input) { return { ...MARKET_CLAIMS, ...resaleRead(input.kind === "list" ? "list_open_listings" : "get_listing") }; }, async submit() { return { ...MARKET_CLAIMS, kind: "NOT_BOUND" }; } };
 }
