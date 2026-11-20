@@ -85,7 +85,7 @@ describe("p-sdk-0 vendored tuple pin", () => {
 
   it("records the producer commit, the BOOTSTRAP profile, and the non-claims", () => {
     expect(KIX_SDK_0_PIN.producerRepo).toBe("SUNBURN-Golden/kix-protocol");
-    expect(KIX_SDK_0_PIN.producerMergeSha).toBe("8ba7f6c36373ac0ec49246f51f7471c164ac3a28");
+    expect(KIX_SDK_0_PIN.producerMergeSha).toBe("4472b0fb64d377d97fd2993673a4485459986606");
     expect(KIX_SDK_0_PIN.producerSourceCommit).toBe("c2cde86e21a6e5ba6f24a56548636db6d0a34c6f");
     expect(KIX_SDK_0_PIN.producerSourceTree).toBe("394084b15e01bbe4a5612aeb3431f3278c43dd85");
     expect(KIX_SDK_0_PIN.manifestSchemaVersion).toBe("kix-compat-manifest/1");

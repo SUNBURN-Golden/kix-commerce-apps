@@ -61,7 +61,7 @@ jobs:
     timeout-minutes: 15
     env:
       # Must equal OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha. A test checks this.
-      KIX_PROTOCOL_GATE_SHA: 8ba7f6c36373ac0ec49246f51f7471c164ac3a28
+      KIX_PROTOCOL_GATE_SHA: 4472b0fb64d377d97fd2993673a4485459986606
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:

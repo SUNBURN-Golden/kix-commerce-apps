@@ -46,14 +46,14 @@ Every row points at this one block. A test checks it against the live pins, the 
 | --- | --- |
 | contractOpenApiSha256 | 2248ff67aa0f43cb98bdd492f63b36fce64c53def6a403a97a7987a128b2d2dc |
 | gateOpenApiSha256 | d05beb48c234b924af086b886ce9bb524dc34407ad2e4a57f1e8af84255820f6 |
-| protocolMergeSha | 8ba7f6c36373ac0ec49246f51f7471c164ac3a28 |
-| ciGateSha | 8ba7f6c36373ac0ec49246f51f7471c164ac3a28 |
+| protocolMergeSha | 4472b0fb64d377d97fd2993673a4485459986606 |
+| ciGateSha | 4472b0fb64d377d97fd2993673a4485459986606 |
 | sdkDigest | 3162d47c51ffad755f80086850bbcbb7ae4a846c4df47ffa57b0e44f9eced0b5 |
 | manifestDigest | eec1750532d319ea06d8ae61bafa77316067088a84a9b70d20a1f6966dfba1e0 |
 | vectorDigest | canonical-encoding:3446c13847bb153df06c1d5d3b7f09cd3b1648ac10bb0cc76d7b65c7014e99c2 mixed-input:9e2441ddefc22a2f8c7be230436620908b735b128b9445b7a5a916e4d86a2e19 |
 | consumedProducerChange | true |
 
-The SDK, manifest, and vector digests are from the p-sdk-0 BOOTSTRAP bootstrap-2 tuple introduced by kix-protocol PR #433 (merge `19cdc1c6393e88528d3918e0f4f1f37645a34042`) and consumed here from merge `8ba7f6c36373ac0ec49246f51f7471c164ac3a28`. `consumedProducerChange` records SDK tuple consumption. BOOTSTRAP grants catalogue-schema binding only.
+The SDK, manifest, and vector digests are from the p-sdk-0 BOOTSTRAP bootstrap-2 tuple introduced by kix-protocol PR #433 (merge `19cdc1c6393e88528d3918e0f4f1f37645a34042`) and consumed here from merge `4472b0fb64d377d97fd2993673a4485459986606`. `consumedProducerChange` records SDK tuple consumption. BOOTSTRAP grants catalogue-schema binding only.
 
 ## Surface matrix
 
@@ -166,9 +166,9 @@ One row per workspace surface. Mode is `stub (default)` plus the outcome in `int
 | `CommerceJourney` | `/booking/:eventId` | `/booking/:eventId` | `commerce-journey.e2e.test.ts` | `commerce-journey-live.test.ts` | unavailable | `get_booking` `NOT_BOUND` |
 | `ResaleJourney` | `/resale/market/demo-001` | `/resale/market` | `resale-market.e2e.test.ts` | `resale-journey-live.test.ts` | unavailable | `market reads` `NOT_BOUND` |
 
-Fixture ledger `packages/protocol-adapter/vendor/commerce-journey/provenance.json` records 159 files at producer `8ba7f6c36373ac0ec49246f51f7471c164ac3a28` with SHA-256 and Git blob IDs.
+Fixture ledger `packages/protocol-adapter/vendor/commerce-journey/provenance.json` records 181 files at producer `4472b0fb64d377d97fd2993673a4485459986606` with SHA-256 and Git blob IDs.
 
-The ledger's `{ protocolMergeSha, files }` includes the FSM command contract, `commerce_journey_conformance_v1.json`, `resale_session.json`, and read-model and SDK vectors. The ledger's `sdk/` entries resolve under `vendor/kix-sdk-0`. The p-sdk-0 BOOTSTRAP tuple and its producer provenance remain independent of the fixture inventory. Stub browser and Node loopback tests provide fixture evidence under the original acceptance and release facets. [Fixture ledger](../packages/protocol-adapter/vendor/commerce-journey/provenance.json) · [Commerce binding](c-int-commerce-journey-apps-bind.md) · [Resale binding](kix-resale-journey-binding-apps-bind.md)
+The ledger's `{ protocolMergeSha, files }` includes the FSM command contract, `commerce_journey_conformance_v1.json`, `resale_session.json`, and read-model and SDK vectors. The ledger's `sdk/` entries resolve under `vendor/kix-sdk-0`. The p-sdk-0 BOOTSTRAP tuple and its producer provenance remain independent of the fixture inventory. The separate semantic manifest `commerce-fixture-8ba7f6c-1` grants the listed Node loopback writes in 62 context/step pairs across 28 FSM actions. Stub browser and Node loopback tests retain the original acceptance and release facets. [Fixture qualification](kix-pin-4472b0f-fixture-conformance-apps-bind.md) [Fixture ledger](../packages/protocol-adapter/vendor/commerce-journey/provenance.json) · [Commerce binding](c-int-commerce-journey-apps-bind.md) · [Resale binding](kix-resale-journey-binding-apps-bind.md)
 
 ## Journey matrix
 
@@ -317,7 +317,7 @@ One row per node in `.aiops/program.json` and one per node in `docs/aiops/PENDIN
 
 Each line has its own count. Nothing is summed, nothing is subtracted, and there is no percentage.
 
-- D01 live-gate skipped under KIX_REQUIRE_GATE=0: 10 adapter test files import support/reviewed-gate
+- D01 live-gate skipped under KIX_REQUIRE_GATE=0: 11 adapter test files import support/reviewed-gate
 - D02 NOT_BOUND desk methods: 68 of 68
 - D03 NOT_BOUND surfaces (binding is not published-bound): 40 of 45
 - D04 NOT_BOUND fixtures: 68 of 265
@@ -351,6 +351,7 @@ These files import `support/reviewed-gate`. Under `KIX_REQUIRE_GATE=0` their gat
 - `http-integration-gate.test.ts`
 - `organizer-console-gate.test.ts`
 - `prod-readiness.test.ts`
+- `verify-fixture-compat.test.ts`
 
 ### External prerequisites behind D17
 

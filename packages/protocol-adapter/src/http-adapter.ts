@@ -1,3 +1,4 @@
+import { fixtureWritesOnNode } from "#kix-fixture-node";
 import { COMMAND_SCHEMAS, type CommandName } from "#kix-sdk-0/catalogue";
 import { GateRejectedError } from "./call-outcome.js";
 import type { CommerceJourneyCall, JourneyProof } from "./commerce-journey-command.js";
@@ -514,8 +515,9 @@ export class HttpProtocolAdapter implements CommerceProtocol {
   }
 
   async advanceCommerceJourney(input: CommerceJourneyCall): Promise<JourneyProof> {
-    const { commandFor } = await import("./commerce-journey-command.js");
-    const command = commandFor(input);
+    if (!fixtureWritesOnNode) throw new ProtocolError("Fixture HTTP writes require Node loopback.", "NOT_BOUND");
+    const { qualifiedFixtureCommand } = await import("./commerce-fixture-qualification.js");
+    const command = qualifiedFixtureCommand(input);
     const { scanFsmReceipt, verifyFsmReceipt } = await import("./commerce-journey-receipts.js");
     return this.call({ operationId: command.operationId, actor: command.actor, action: command.action, body: command.body }, {
       scan: scanFsmReceipt,

@@ -20,13 +20,13 @@ import { ProtocolError } from "./types.js";
 export const OPENAPI_INTEGRATION_GATE_PIN = {
   protocolRepo: "SUNBURN-Golden/kix-protocol",
   /**
-   * CI starts the gate from PR #448's merge, carrying the 84-command catalogue
+   * CI starts the gate from PR #483's merge, carrying the 84-command catalogue
    * (40 core plus 44 FSM). Its feature head has the same tree as the merge.
    * The test harness requires a clean checkout and verifies tree equality if
    * invoked on the feature head.
    */
-  protocolMergeSha: "8ba7f6c36373ac0ec49246f51f7471c164ac3a28",
-  protocolFeatureSha: "648859b1c9cda424f1a4615ac5155edf46fd0524",
+  protocolMergeSha: "4472b0fb64d377d97fd2993673a4485459986606",
+  protocolFeatureSha: "f678040e9de475aaa42602b85c2adcb120cf83ef",
   openApiPath: "docs/contracts/openapi/kix-protocol.integration-gate.openapi.json",
   openApiFileSha256: "d05beb48c234b924af086b886ce9bb524dc34407ad2e4a57f1e8af84255820f6",
   infoVersion:

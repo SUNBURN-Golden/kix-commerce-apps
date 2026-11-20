@@ -21,7 +21,7 @@ No catalogue, gate, or SDK change is consumed. SDK, manifest, and vector digests
 | Catalogue version | `2` |
 | Contract-only OpenAPI sha256 | `2248ff67aa0f43cb98bdd492f63b36fce64c53def6a403a97a7987a128b2d2dc` |
 | Integration-gate OpenAPI sha256 | `d05beb48c234b924af086b886ce9bb524dc34407ad2e4a57f1e8af84255820f6` |
-| `protocolMergeSha` / CI `KIX_PROTOCOL_GATE_SHA` | `8ba7f6c36373ac0ec49246f51f7471c164ac3a28` |
+| `protocolMergeSha` / CI `KIX_PROTOCOL_GATE_SHA` | `4472b0fb64d377d97fd2993673a4485459986606` |
 | Domain | `kix:fixture:lifecycle:0.3` |
 | `PINNED_ACTIONS` | the 84 names copied in `FIXTURE_PINNED_ACTIONS_LITERAL_V2`; the historical v1 tuple keeps the 40-name literal |
 | SDK digest | `3162d47c51ffad755f80086850bbcbb7ae4a846c4df47ffa57b0e44f9eced0b5` |

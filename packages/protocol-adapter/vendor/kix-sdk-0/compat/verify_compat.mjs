@@ -143,6 +143,12 @@ function main() {
     }
   }
 
+  const profilePath = resolve(ROOT, "sdk/compat/profiles", `${manifest.profile_revision}.profile.json`);
+  const profileBytes = readExact(profilePath, errors, "profile");
+  if (profileBytes && sha256Hex(profileBytes) !== manifest.profile_sha256) {
+    errors.push("profile bytes drift");
+  }
+
   const contractKeys = keysOf(manifest.contract);
   if (!sameKeys(contractKeys, ["contract_only", "integration_gate"])) {
     errors.push("contract field set drift");
@@ -230,11 +236,6 @@ function main() {
     errors.push("vectors drift");
   }
 
-  const profilePath = resolve(ROOT, "sdk/compat/profiles", `${manifest.profile_revision}.profile.json`);
-  const profileBytes = readExact(profilePath, errors, "profile");
-  if (profileBytes && sha256Hex(profileBytes) !== manifest.profile_sha256) {
-    errors.push("profile bytes drift");
-  }
   let profile;
   if (profileBytes) {
     try {

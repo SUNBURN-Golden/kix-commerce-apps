@@ -274,13 +274,16 @@ describe("local evidence matrix: contract tuple and locks", () => {
     }
     const { protocolMergeSha, files } = fixtureLedger();
     expect(protocolMergeSha).toBe(sharedTuple().protocolMergeSha);
-    expect(Object.keys(files)).toHaveLength(159);
+    expect(Object.keys(files)).toHaveLength(181);
     expect(Object.keys(files)).toEqual(expect.arrayContaining([
       "docs/contracts/openapi/fsm-command-contract.json",
       "reference/booking_resale_admission/fixtures/commerce_journey_conformance_v1.json",
       "reference/booking_resale_admission/fixtures/resale_session.json",
       "reference/read_model/vectors/manifest.json",
       "sdk/conformance/vectors/canonical-encoding.vectors.json",
+      "docs/status/COMMERCE_FIXTURE_TUPLE_CONFORMANCE_V1.json",
+      "sdk/compat/manifests/manifest.commerce-fixture-8ba7f6c-1.json",
+      "sdk/conformance/vectors/commerce-fixture-tuple.vectors.json",
     ]));
   });
 
