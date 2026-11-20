@@ -306,6 +306,11 @@ export interface ReservationCaseView {
   phase: ReservationPhase;
   terminal: boolean;
   showId: string;
+  /** Registered show cap for the pinned journey fixture. */
+  fixtureResaleCap?: number;
+  fixtureResaleAllowed?: boolean;
+  fixtureShowBinding?: string;
+  fixtureOrder?: { amount: number; quoteRef: string | null };
   eventId: string;
   slot: string;
   slotState: ReservationSlotState;
@@ -696,6 +701,8 @@ export interface ResaleRightView {
  * No prices and no fee splits. Protocol truth stays in kix-protocol.
  */
 export interface ResaleCaseView {
+  /** Recorded amount on catalogue fixture listings only. */
+  fixtureAmount?: number;
   mode: "mock";
   surface: typeof SURFACES.resaleFsm;
   references: typeof RESALE_REFERENCES;

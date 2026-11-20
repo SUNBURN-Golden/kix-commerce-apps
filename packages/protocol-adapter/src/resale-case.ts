@@ -1,4 +1,5 @@
-import { isRecord } from "./record.js";
+import { canonicalJson } from "./record.js";
+import { FIXTURE_PAYMENT_REF, inFixtureOfferWindow, validFixtureAmount } from "./commerce-fixture-fields.js";
 import { SURFACES } from "./surfaces.js";
 import {
   ProtocolError,
@@ -25,6 +26,7 @@ import {
   type ResaleSettlementGate,
   type ResaleStep,
   type ResaleTransferEvidence,
+  type ReservationCaseView,
 } from "./types.js";
 
 /**
@@ -38,7 +40,7 @@ import {
  * on main `ef942b7713c7468e8851c6b372b64d42b5333ad8`
  * (feature `70c6d52d4289e23d0d4141b7f3a6b310eea236f2`).
  *
- * This store does not port MockGates prices, fee splits, caps, or inventory.
+ * Fixture listings use the cap supplied at show registration.
  * It does not add OpenAPI commands. R01–R05 stay 설계중.
  * The journal is process-local. It is not the protocol journal and not a ledger.
  * A bound transfer reads the mock settlement phase. It does not post money.
@@ -96,7 +98,8 @@ const SPECIFIC: Readonly<Record<string, string>> = {
   "hold_buy:BUY_HELD": "BUYER_HOLD_LOCKED",
 };
 
-interface ReservationAuthority {
+interface ReservationAuthority extends Partial<Pick<ReservationCaseView,
+  "fixtureOrder" | "fixtureShowBinding" | "fixtureResaleCap" | "fixtureResaleAllowed" | "expiresAt" | "orderId" | "paymentRef">> {
   phase: string;
   rightId: string | null;
   buyerRole: string;
@@ -130,6 +133,7 @@ interface RightRecord {
 }
 
 interface ListingRecord {
+  fixtureAmount?: number;
   listingId: string;
   canon: string;
   phase: ResalePhase;
@@ -211,8 +215,9 @@ export class ResaleCaseStore {
     });
   }
 
-  adoptIssued(input: ResaleAdopt): ResaleCommandReceipt {
+  adoptIssued(input: ResaleAdopt, fixture?: { showBinding: string; expiresAt: string; orderId: string; amount: string; quoteRef?: string }): ResaleCommandReceipt {
     const body = {
+      ...fixture,
       eventId: input.eventId,
       holderRole: input.holderRole,
       paymentRef: input.paymentRef,
@@ -234,8 +239,9 @@ export class ResaleCaseStore {
     );
   }
 
-  list(input: ResaleList): ResaleCommandReceipt {
+  list(input: ResaleList, fixtureAmount?: number): ResaleCommandReceipt {
     const body = {
+      ...(fixtureAmount === undefined ? {} : { amount: String(fixtureAmount) }),
       expiresAt: input.expiresAt,
       recipientRole: input.recipientRole,
       reservationId: optionalId(input.reservationId),
@@ -305,8 +311,9 @@ export class ResaleCaseStore {
     );
   }
 
-  observePayment(input: ResalePayment): ResaleCommandReceipt {
-    const body = { buyerRole: optionalId(input.buyerRole), paymentRef: input.paymentRef };
+  observePayment(input: ResalePayment, fixtureAmount?: number): ResaleCommandReceipt {
+    const body = { buyerRole: optionalId(input.buyerRole), paymentRef: input.paymentRef,
+      ...(fixtureAmount === undefined ? {} : { amount: String(fixtureAmount) }) };
     return this.call(
       "observe_resale_payment",
       input.listingId,
@@ -474,7 +481,7 @@ export class ResaleCaseStore {
     const holderRole = ident(body.holderRole ?? "");
     const reservationId = readOptional(body.reservationId ?? "");
     const paymentRef = ident(body.paymentRef ?? "");
-    const canon = canonicalJson({ eventId, holderRole, paymentRef, reservationId, rightId, showId, slot });
+    const canon = canonicalJson({ ...body, reservationId, rightId });
     const current = this.rights.get(rightId);
     if (current) {
       if (current.canon !== canon) {
@@ -483,12 +490,22 @@ export class ResaleCaseStore {
       throw resaleError("ILLEGAL_TRANSITION");
     }
     if (reservationId !== null) {
-      const authority = this.requireAuthority(reservationId, rightId);
+      const fixture = body.showBinding !== undefined;
+      const authority = this.requireAuthority(reservationId, rightId, fixture);
+      if (fixture && authority.buyerRole !== holderRole) throw resaleError("NOT_HOLDER");
       if (authority.showId !== showId || authority.eventId !== eventId) {
         throw resaleError("SHOW_BINDING_CONFLICT");
       }
       if (authority.slot !== slot || authority.buyerRole !== holderRole) {
         throw resaleError("RESERVATION_BINDING_CONFLICT");
+      }
+      if (fixture) {
+        if (authority.expiresAt !== body.expiresAt) throw resaleError("RESERVATION_BINDING_CONFLICT");
+        if (authority.orderId !== body.orderId) throw resaleError("ORDER_BINDING_CONFLICT");
+        if (authority.fixtureOrder?.amount !== Number(body.amount)) throw resaleError("PRIMARY_PRICE_MISMATCH");
+        if (authority.fixtureOrder.quoteRef !== (body.quoteRef ?? null)) throw resaleError("ORDER_BINDING_CONFLICT");
+        if (authority.paymentRef !== paymentRef) throw resaleError("PAYMENT_BINDING_CONFLICT");
+        if (authority.fixtureShowBinding !== body.showBinding) throw resaleError("SHOW_BINDING_CONFLICT");
       }
     }
     this.claimPayment(paymentRef);
@@ -514,10 +531,12 @@ export class ResaleCaseStore {
     const rightId = ident(body.rightId ?? "");
     const sellerRole = ident(body.sellerRole ?? "");
     const recipientRole = ident(body.recipientRole ?? "");
+    const amount = body.amount === undefined ? undefined : readFixtureAmount(body.amount);
     const expiresAt = readTime(body.expiresAt ?? "");
     const version = readVersion(body.version ?? "");
     const reservationId = readOptional(body.reservationId ?? "");
     const canon = canonicalJson({
+      ...(body.amount === undefined ? {} : { amount: body.amount }),
       expiresAt,
       listingId,
       recipientRole,
@@ -536,19 +555,16 @@ export class ResaleCaseStore {
       }
       throw resaleError("ILLEGAL_TRANSITION");
     }
-    if (reservationId !== null) {
-      this.requireAuthority(reservationId, rightId);
-    }
     const ticket = this.rights.get(rightId);
+    const authorityId = reservationId ?? ticket?.reservationId;
+    const authority = authorityId == null ? undefined : this.requireAuthority(authorityId, rightId, amount !== undefined);
     if (!ticket) {
       throw resaleError("UNKNOWN_RIGHT");
     }
     if (ticket.reservationId !== null && reservationId !== null && reservationId !== ticket.reservationId) {
       throw resaleError("RESERVATION_BINDING_CONFLICT");
     }
-    const authorityId = reservationId ?? ticket.reservationId;
-    if (authorityId !== null) {
-      const authority = this.requireAuthority(authorityId, rightId);
+    if (authority) {
       if (authority.showId !== ticket.showId || authority.eventId !== ticket.eventId) {
         throw resaleError("SHOW_BINDING_CONFLICT");
       }
@@ -565,13 +581,23 @@ export class ResaleCaseStore {
     if (version !== ticket.version) {
       throw resaleError("STALE_VERSION");
     }
+    if (authority?.fixtureResaleAllowed === false) throw resaleError("RESALE_POLICY_REJECTED");
     if (recipientRole === ticket.holderRole) {
       throw resaleError("RECIPIENT_IS_HOLDER");
     }
-    if (Date.parse(expiresAt) <= this.clockMs) {
+    if (amount !== undefined && authority?.fixtureResaleCap !== undefined && amount > authority.fixtureResaleCap) {
+      throw resaleError("RESALE_CAP");
+    }
+    // At the pin, mock_gates.py accepts now < expires_ms <= now + OFFER_WINDOW_MS.
+    const windowMs = Date.parse(expiresAt) - this.clockMs;
+    if (amount !== undefined && !inFixtureOfferWindow(windowMs)) {
+      throw resaleError("LISTING_WINDOW");
+    }
+    if (windowMs <= 0) {
       throw resaleError("LISTING_NOT_OPEN");
     }
     this.listings.set(listingId, {
+      ...(amount === undefined ? {} : { fixtureAmount: amount }),
       listingId,
       canon,
       phase: "LISTED",
@@ -657,6 +683,7 @@ export class ResaleCaseStore {
     if (sellerRole !== listing.sellerRole) {
       throw resaleError("NOT_HOLDER");
     }
+    if (listing.fixtureAmount !== undefined && this.clockMs >= Date.parse(listing.expiresAt)) throw resaleError("LISTING_NOT_OPEN");
     listing.phase = "CANCELLED";
     listing.holdId = null;
     listing.buyerRole = null;
@@ -671,6 +698,8 @@ export class ResaleCaseStore {
   }
 
   private applyObserve(listingId: string, body: Record<string, string>, key: string): string {
+    if (body.amount !== undefined && !FIXTURE_PAYMENT_REF.test(body.paymentRef)) throw resaleError("PAYMENT_REF");
+    const amount = body.amount === undefined ? undefined : readFixtureAmount(body.amount);
     const paymentRef = ident(body.paymentRef ?? "");
     const buyerRole = readOptional(body.buyerRole ?? "");
     const listing = this.requireListing(listingId);
@@ -681,6 +710,10 @@ export class ResaleCaseStore {
       }
     } else if (buyerRole !== null && buyerRole !== listing.recipientRole) {
       throw resaleError("RECIPIENT_MISMATCH");
+    }
+    if (listing.fixtureAmount !== undefined) {
+      if (this.clockMs >= Date.parse(listing.expiresAt)) throw resaleError("LISTING_NOT_OPEN");
+      if (amount !== listing.fixtureAmount) throw resaleError("RESALE_AMOUNT_MISMATCH");
     }
     this.claimPayment(paymentRef);
     listing.paymentRef = paymentRef;
@@ -803,8 +836,8 @@ export class ResaleCaseStore {
     return true;
   }
 
-  private requireAuthority(reservationId: string, rightId: string): ReservationAuthority {
-    const view = this.readReservation(reservationId);
+  private requireAuthority(reservationId: string, rightId: string, preserveSourceError = false): ReservationAuthority {
+    const view = preserveSourceError ? this.reservationAuthority(reservationId) : this.readReservation(reservationId);
     if (view.phase === "CANCELLED") {
       throw resaleError("TICKET_CANCELLED");
     }
@@ -1009,48 +1042,15 @@ export class ResaleCaseStore {
   }
 
   private canonical(): string {
+    // Compare every journaled field, including the adoption binding and listing amount.
     const rights = [...this.rights.values()]
-      .map((right) => ({
-        activeListingId: right.activeListingId,
-        eventId: right.eventId,
-        holderRole: right.holderRole,
-        idempotencyKey: right.lastKey,
-        paymentRef: right.paymentRef,
-        reservationId: right.reservationId,
-        rightId: right.rightId,
-        showId: right.showId,
-        slot: right.slot,
-        version: right.version,
-      }))
+      .map(({ lastRejectCode: _reject, ...right }) => right)
       .sort((left, right) => left.rightId.localeCompare(right.rightId));
     const listings = [...this.listings.values()]
-      .map((listing) => ({
-        buyerRole: listing.buyerRole,
-        eventId: listing.eventId,
-        expiresAt: listing.expiresAt,
-        holdId: listing.holdId,
-        idempotencyKey: listing.lastKey,
-        listingId: listing.listingId,
-        mockSettlementCommitObserved: listing.mockSettlementCommitObserved,
-        paymentRef: listing.paymentRef,
-        phase: listing.phase,
-        recipientRole: listing.recipientRole,
-        rightId: listing.rightId,
-        sellerRole: listing.sellerRole,
-        settlementId: listing.settlementId,
-        showId: listing.showId,
-        transferId: listing.transferId,
-        version: listing.version,
-        versionAfter: listing.versionAfter,
-      }))
+      .map(({ echoKey: _echo, lastRejectCode: _reject, reconcileMatched: _matched, ...listing }) => listing)
       .sort((left, right) => left.listingId.localeCompare(right.listingId));
     return canonicalJson({
-      journal: this.journal.map((entry) => ({
-        body: entry.body,
-        idempotencyKey: entry.idempotencyKey,
-        op: entry.op,
-        subjectId: entry.subjectId,
-      })),
+      journal: this.journal.map(({ observed: _observed, ...command }) => command),
       listings,
       logicalTimeMs: this.clockMs,
       rights,
@@ -1121,6 +1121,7 @@ export class ResaleCaseStore {
       listingId: listing.listingId,
       phase: listing.phase,
       terminal: TERMINAL.has(listing.phase),
+      ...(listing.fixtureAmount === undefined ? {} : { fixtureAmount: listing.fixtureAmount }),
       pendingSale: OPEN.has(listing.phase),
       rightId: listing.rightId,
       showId: listing.showId,
@@ -1427,6 +1428,13 @@ function readObserved(value: string | undefined): boolean {
   throw resaleError("MOCK_INVARIANT");
 }
 
+// Bounds for the producer's synthetic fixture units (mock_gates.py, _money).
+function readFixtureAmount(value: string): number {
+  const amount = Number(value);
+  if (!validFixtureAmount(amount)) throw resaleError("INVALID_AMOUNT");
+  return amount;
+}
+
 function readVersion(value: string): number {
   if (!/^[1-9][0-9]{0,2}$/.test(value)) {
     throw resaleError("INVALID_ID");
@@ -1483,22 +1491,4 @@ function resaleError(code: string): ProtocolError {
 
 function isJournalOp(value: string): value is JournalOp {
   return (JOURNAL_OPS as readonly string[]).includes(value);
-}
-
-function canonicalJson(value: unknown): string {
-  return JSON.stringify(canonicalize(value));
-}
-
-function canonicalize(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((item) => canonicalize(item));
-  }
-  if (isRecord(value)) {
-    const sorted: Record<string, unknown> = {};
-    for (const key of Object.keys(value).sort()) {
-      sorted[key] = canonicalize(value[key]);
-    }
-    return sorted;
-  }
-  return value;
 }

@@ -73,6 +73,7 @@ const displayCopyGroups: [string, string[]][] = [
     "buyer-workspace",
     "pages--Assistant",
     "pages--AssistantPanels",
+    "pages--CommerceJourneyPanel",
     "pages--CrossSurfaceJourneysPanels",
     "pages--Gift",
     "pages--GiftPanel",
@@ -140,6 +141,9 @@ export default defineConfig({
           if (/\/protocol-adapter\/src\/(finance-operations|tenant-permissions|delegated-assistant|merchant-operations)\.ts$/.test(id)) return "kix-operations-cases";
           if (/\/protocol-adapter\/src\/(platform-journey|provider-journey|refund-return(?:-controller)?|installable-mobile|inventory-read|discovery-read|marketplace-performance)\.ts$/.test(id)) return "kix-journey-cases";
 
+          // Both fixture journeys share the command templates, receipt guards and mock dispatch.
+          if (/\/protocol-adapter\/src\/(commerce-journey(?:-(command|fixture|receipts|stub))?|resale-journey(?:-fixture)?)\.ts$/.test(id)) return "commerce-fixture-journeys";
+
           // The session stubs share forms, fixtures and bilingual copy. Keep them in one
           // lazy chunk so repeated markup and vocabulary compress together.
           if (/\/src\/(pages\/marketing\/(Hub|M01Membership|M02Presale|M03Coupons|M04Rewards|M05Consent|MarketingChrome)|marketing\/(desk|fixtures|session|useMarketingSnapshot))\.tsx?$/.test(id)
@@ -151,7 +155,7 @@ export default defineConfig({
 
           // These secondary commerce desks share forms and panel markup. Compress them together
           // as one lazy module; the landing, Gift, Admission and Credit keep separate lazy boundaries.
-          if (/\/src\/pages\/(Booking|Buyer|Resale|Organizer|ReservationPanel)\.tsx$/.test(id)) return "commerce-desks";
+          if (/\/src\/pages\/(Booking|Buyer|Resale(Panel)?|Organizer(?:Workspace|Panel)?|ReservationPanel)\.tsx$/.test(id)) return "commerce-desks";
           // The box office's refund controller ships with its source above.
           // The other synthetic controllers share compression in a separate chunk.
           if (/\/protocol-adapter\/src\/(marketing-journey-controller|delegated-assistant-controller|credit-servicing-controller)\.ts$/.test(id)) return "synthetic-controllers";
@@ -167,8 +171,12 @@ export default defineConfig({
           if (/\/src\/pages\/(Platform|ProviderJourney|InstallableMobile)(Panels)?\.tsx$/.test(id)) return "Platform";
           if (/\/src\/pages\/(Assistant|MarketingJourney)(Panels)?\.tsx$/.test(id)) return "Assistant";
           if (/\/src\/pages\/(PlatformRelease|OperationalQualification)(Panels)?\.tsx$/.test(id)) return "PlatformRelease";
-          if (/\/src\/(organizer|consent|gift)-desk\.ts$/.test(id)) return "catalogue-desks";
+          if (/\/src\/((organizer|consent|gift)-desk|organizer-workspace)\.ts$/.test(id)) return "catalogue-desks";
+          // The box office, booking and buyer pages all use the journey and refund controls.
+          if (/\/src\/(journey-desk|refund-return|pages\/(RefundReturnPanel|JourneyPanel))\.tsx?$/.test(id)) return "refund-and-booking";
 
+          // The journey labels reuse the booking and resale desk dictionaries.
+          if (id.endsWith("/src/i18n/desk-catalogue.ts")) return "display-copy-5";
           const copy = /\/src\/i18n\/messages\/([^/]+)\.ts$/.exec(id)?.[1];
           if (copy) return displayCopyGroups.find(([, files]) => files.includes(copy))?.[0];
         },

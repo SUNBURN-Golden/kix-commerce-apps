@@ -264,3 +264,127 @@ describe("product-attributed resale outcomes", () => {
   });
 
 });
+
+import { MarketJourneySession } from "../src/resale-journey-session";
+import { ResaleJourneyPanel } from "../src/pages/ResaleJourneyPanel";
+import { StubProtocolAdapter } from "../../../packages/protocol-adapter/src/stub-adapter";
+import { MARKET_STEPS } from "../../../packages/protocol-adapter/src/resale-journey-fixture";
+import { MarketReadStatus } from "../src/pages/ResaleMarketPanels";
+
+describe("pinned fixture on the market", () => {
+  it.each(["en", "ko"] as const)("lists, observes payment and accepts without settling, in %s", async lang => {
+    const adapter = new StubProtocolAdapter(), send = vi.spyOn(adapter, "advanceCommerceJourney");
+    const session = new MarketJourneySession(adapter, sessionStorage, "stub");
+    const { container } = await renderDom(<LocaleContext.Provider value={stateFor(lang, () => {})}>
+      <ResaleJourneyPanel session={session} /></LocaleContext.Provider>);
+    expect(container.textContent).toContain(lang === "en" ? "requester-borne (B5)" : "요청자 부담 (B5)");
+    expect(container.textContent).toContain("settle-1 · COMMITTED");
+    for (const query of Array.from(container.querySelectorAll("details summary"))) await click(query as HTMLElement);
+    expect(send).not.toHaveBeenCalled();
+    for (const [index, step] of MARKET_STEPS.entries()) {
+      await click(element(container, `[data-market-step="${step}"]`));
+      expect(send).toHaveBeenCalledTimes(index);
+      await click(element(container, `[data-market-send="${step}"]`));
+      expect(send).toHaveBeenCalledTimes(index + 1);
+      await act(async () => { await vi.waitFor(() => expect(session.journey.state().confirmed).toBe(step)); });
+    }
+    expect(element(container, '[data-market-fact="acceptedTransferred"]').textContent).toBe("TRANSFERRED");
+    expect(element(container, '[data-market-fact="settled"]').textContent).toBe("NO_EVIDENCE");
+    expect(container.textContent).toContain("list-1 · UNBOUND");
+  });
+
+  it("keeps the HTTP fixture reachable and reports the pinned read refusal without dispatch", async () => {
+    const http = new ResaleMarketController(resaleMarketPortFor("integration-http"));
+    const port = { advanceCommerceJourney: vi.fn() };
+    await http.read(read);
+    const session = new MarketJourneySession(port, sessionStorage, "integration-http");
+    const { container } = await renderDom(<>
+      <MarketReadStatus market={{ state: http.state(), controller: http, actions: { submit: i => http.submit(i) } }} input={read} />
+      <ResaleJourneyPanel session={session} />
+    </>);
+    expect(container.textContent).toContain("get_listing · No read endpoint");
+    expect(container.textContent).toContain("Unavailable under the loopback browser policy");
+    expect(element<HTMLButtonElement>(container, "[data-market-step]").disabled).toBe(true);
+    expect(port.advanceCommerceJourney).not.toHaveBeenCalled();
+  });
+
+  it("isolates pending acceptance on departure, re-entry, reconnect and reload", async () => {
+    const adapter = new StubProtocolAdapter();
+    const send = vi.spyOn(adapter, "advanceCommerceJourney");
+    const session = new MarketJourneySession(adapter, sessionStorage, "stub");
+    for (const step of MARKET_STEPS.slice(0, -1)) await session.run(step);
+    const { container, rerender } = await renderDom(<ResaleJourneyPanel session={session} />);
+    let release!: () => void;
+    send.mockImplementationOnce(async input => {
+      const receipt = await StubProtocolAdapter.prototype.advanceCommerceJourney.call(adapter, input);
+      await new Promise<void>(resolve => { release = resolve; });
+      return receipt;
+    });
+    await click(element(container, '[data-market-step="market-accept"]'));
+    await click(element(container, "[data-market-send]"));
+    await act(async () => observeNavigation("/resale/market/demo-002"));
+    await rerender(<MemoryRouter initialEntries={["/resale/market/demo-002"]}><Routes>
+      <Route path="/resale/market/:productId" element={<ResaleProductPage />} /></Routes></MemoryRouter>);
+    await act(async () => release());
+    expect(container.querySelector("#market-journey-title")).toBeNull();
+    await rerender(<ResaleJourneyPanel session={session} />);
+    expect(container.textContent).toContain("UNKNOWN");
+    expect(container.textContent).toContain("Blocked action market-accept");
+    expect(container.textContent).toContain("Last confirmed step market-pay");
+    const reloaded = new MarketJourneySession(adapter, sessionStorage, "stub");
+    await rerender(<ResaleJourneyPanel session={reloaded} />);
+    expect(container.textContent).toContain("Unresolved tab history market-accept");
+    expect(container.textContent).toContain("Last confirmed step market-pay");
+    expect(element(container, '[data-market-fact="listed"]').textContent).toBe("LISTED");
+    expect(element(container, '[data-market-fact="paid"]').textContent).toBe("PAYMENT_NOTED");
+    await act(async () => { connectivity.setBrowserOnline(false); connectivity.setBrowserOnline(true); });
+    await click(element(container, "details summary"));
+    await reloaded.run("reservation-clock");
+    expect(send).toHaveBeenCalledTimes(12);
+  });
+
+  it("cancels the held listing through review and retains the separate listing fact", async () => {
+    const session = new MarketJourneySession(new StubProtocolAdapter(), sessionStorage, "stub");
+    for (const step of MARKET_STEPS.slice(0, -2)) await session.run(step);
+    const { container } = await renderDom(<ResaleJourneyPanel session={session} />);
+    await click(element(container, '[data-market-step="market-cancel"]'));
+    await click(element(container, "[data-market-send]"));
+    expect(container.textContent).toContain("CANCELLED");
+    expect(element(container, '[data-market-fact="listed"]').textContent).toBe("LISTED");
+    expect(container.querySelector("[data-market-step]")).toBeNull();
+  });
+
+  it.each([
+    ["reservation-clock", null, "NO_EVIDENCE", "PAYMENT_NOTED"],
+    ["market-list", "market-adopt", "LISTED", "NO_EVIDENCE"],
+    ["market-hold", "market-list", "NO_EVIDENCE", "NO_EVIDENCE"],
+    ["market-accept", "market-pay", "LISTED", "NO_EVIDENCE"],
+    ["market-accept", "market-list", "LISTED", "NO_EVIDENCE"],
+    ["market-cancel", "market-pay", "LISTED", "PAYMENT_NOTED"],
+    ["reservation-clock", "market-cancel", "LISTED", "NO_EVIDENCE"],
+  ])("quarantines an inconsistent tab intent (%s after %s, %s, %s)", async (step, confirmed, listed, paid) => {
+    const port = { advanceCommerceJourney: vi.fn() };
+    const key = "kix-resale-intent:stub";
+    const raw = JSON.stringify({ operationId: `resale:${crypto.randomUUID()}`, step, confirmed, listed, paid });
+    sessionStorage.setItem(key, raw);
+    const session = new MarketJourneySession(port, sessionStorage, "stub");
+    const { container } = await renderDom(<ResaleJourneyPanel session={session} />);
+    expect(element(container, '[role="status"]').textContent).toContain("SESSION_EVIDENCE_LOST");
+    expect(Array.from(container.querySelectorAll("[data-market-fact]"), cell => cell.textContent))
+      .toEqual(Array(4).fill("NO_EVIDENCE"));
+    expect(element<HTMLButtonElement>(container, "[data-market-step]").disabled).toBe(true);
+    await session.run("reservation-clock");
+    expect(port.advanceCommerceJourney).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem(key)).toBe(raw);
+  });
+
+  it.each(["market-list", "market-hold"] as const)("restores the listed fact for a pending cancellation after %s", async confirmed => {
+    const port = { advanceCommerceJourney: vi.fn() };
+    const intent = { operationId: `resale:${crypto.randomUUID()}`, step: "market-cancel", confirmed, listed: "LISTED", paid: "NO_EVIDENCE" };
+    sessionStorage.setItem("kix-resale-intent:stub", JSON.stringify(intent));
+    const session = new MarketJourneySession(port, sessionStorage, "stub");
+    expect(session.history).toEqual(intent);
+    await session.run("market-cancel");
+    expect(port.advanceCommerceJourney).not.toHaveBeenCalled();
+  });
+});

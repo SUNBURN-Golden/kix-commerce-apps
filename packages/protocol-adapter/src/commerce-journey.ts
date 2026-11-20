@@ -1,5 +1,5 @@
 import { classifyThrown } from "./call-outcome.js";
-import { collectLinks, type CommerceJourneyCall, type CommerceJourneyPort, type CommerceJourneyStep, type JourneyLinks, type JourneyProof } from "./commerce-journey-command.js";
+import { collectLinks, type CommerceJourneyCall, type CommerceJourneyPort, type CommerceJourneyStep, type FixtureStep, type JourneyLinks, type JourneyProof } from "./commerce-journey-command.js";
 
 const RESALE = [
   "reserve-A", "order-A", "payment-A", "issue-A", "resale-clock", "adopt-A", "list-A", "hold-A",
@@ -21,7 +21,7 @@ const DECLINE: Partial<Record<CommerceJourneyStep, CommerceJourneyStep>> = {
   "settle-cancel-initiate": "issue-cancelled",
 };
 
-type Fact<State extends string> = { state: "NO_EVIDENCE" } | { state: State; proof: JourneyProof };
+export type Fact<State extends string> = { state: "NO_EVIDENCE" } | { state: State; proof: JourneyProof };
 export interface CommerceJourneyFacts {
   paymentObservation: Fact<"OBSERVED">;
   ticketIssuance: Fact<"ISSUED">;
@@ -41,34 +41,24 @@ type Failure = DispatchedCall & {
 };
 export type CommerceJourneyOutcome = Failure | (DispatchedCall & { kind: "CONFIRMED"; proof: JourneyProof });
 
-type MintAttempt = (step: CommerceJourneyStep) => Omit<DispatchedCall, "step">;
+export type MintAttempt<S extends FixtureStep> = (step: S) => Omit<DispatchedCall, "step">;
 
-/** One controller owns one fixture branch for the page load, including on route re-entry. */
-export class CommerceJourney {
-  private readonly plan: readonly CommerceJourneyStep[];
-  private readonly tried = new Set<CommerceJourneyStep>();
+export abstract class FixtureJourney<Step extends FixtureStep, Facts extends object> {
+  private readonly tried = new Set<Step>();
   private cursor = 0;
   private links: JourneyLinks = {};
-  private readonly facts: CommerceJourneyFacts = {
-    paymentObservation: { state: "NO_EVIDENCE" },
-    ticketIssuance: { state: "NO_EVIDENCE" },
-    admission: { state: "NO_EVIDENCE" },
-    resale: { state: "NO_EVIDENCE" },
-    reservationCancellation: { state: "NO_EVIDENCE" },
-    refundBinding: { state: "NO_EVIDENCE" },
-    refundAcceptance: { state: "NO_EVIDENCE" },
-  };
-  private pending: CommerceJourneyStep | null = null;
+  private pending: Step | null = null;
   private last: CommerceJourneyOutcome | null = null;
-  private confirmed: CommerceJourneyStep | null = null;
+  private confirmed: Step | null = null;
 
-  constructor(branch: CommerceJourneyBranch, private readonly port: CommerceJourneyPort, private readonly mint: MintAttempt) {
-    this.plan = ["reservation-clock", "register-show", ...JOURNEY_BRANCHES[branch]];
-  }
+  constructor(private readonly plan: readonly Step[], protected readonly facts: Facts, private readonly port: CommerceJourneyPort,
+    private readonly mint: MintAttempt<Step>) {}
+  protected abstract alternative(next: Step | undefined, confirmed: Step | null): Step | undefined;
+  protected abstract recordFact(step: Step, proof: JourneyProof): void;
 
   state() {
     const next = this.plan[this.cursor];
-    const decline = next ? DECLINE[next] : this.confirmed === "consume-B" ? "double-consume" : undefined;
+    const decline = this.alternative(next, this.confirmed);
     const fenced = this.last?.kind === "UNKNOWN" || this.last?.kind === "NOT_SENT" ||
       (next !== undefined && this.tried.has(next));
     return {
@@ -77,7 +67,7 @@ export class CommerceJourney {
     };
   }
 
-  async run(step: CommerceJourneyStep): Promise<CommerceJourneyOutcome | undefined> {
+  async run(step: Step): Promise<CommerceJourneyOutcome | undefined> {
     const { next, decline, fenced } = this.state();
     if (fenced || this.pending || (step !== next && step !== decline)) return;
     const attempt = { step, ...this.mint(step) };
@@ -86,7 +76,7 @@ export class CommerceJourney {
     try {
       const proof = await this.port.advanceCommerceJourney({ ...attempt, links: this.links });
       this.confirmed = step;
-      this.cursor += 1;
+      this.cursor = step === next ? this.cursor + 1 : this.plan.length;
       this.links = { ...this.links, ...collectLinks(step, proof) };
       this.recordFact(step, proof);
       this.last = { ...attempt, kind: "CONFIRMED", proof };
@@ -98,8 +88,26 @@ export class CommerceJourney {
     }
     return this.last;
   }
+}
 
-  private recordFact(step: CommerceJourneyStep, proof: JourneyProof) {
+const initialFacts = (): CommerceJourneyFacts => ({
+  paymentObservation: { state: "NO_EVIDENCE" },
+  ticketIssuance: { state: "NO_EVIDENCE" },
+  admission: { state: "NO_EVIDENCE" },
+  resale: { state: "NO_EVIDENCE" },
+  reservationCancellation: { state: "NO_EVIDENCE" },
+  refundBinding: { state: "NO_EVIDENCE" },
+  refundAcceptance: { state: "NO_EVIDENCE" },
+});
+
+export class CommerceJourney extends FixtureJourney<CommerceJourneyStep, CommerceJourneyFacts> {
+  constructor(branch: CommerceJourneyBranch, port: CommerceJourneyPort, mint: MintAttempt<CommerceJourneyStep>) {
+    super(["reservation-clock", "register-show", ...JOURNEY_BRANCHES[branch]], initialFacts(), port, mint);
+  }
+  protected alternative(next: CommerceJourneyStep | undefined, confirmed: CommerceJourneyStep | null) {
+    return next ? DECLINE[next] : confirmed === "consume-B" ? "double-consume" : undefined;
+  }
+  protected recordFact(step: CommerceJourneyStep, proof: JourneyProof) {
     switch (step) {
       case "payment-A": case "payment-B": this.facts.paymentObservation = { state: "OBSERVED", proof }; break;
       case "issue-A": case "issue-B": this.facts.ticketIssuance = { state: "ISSUED", proof }; break;

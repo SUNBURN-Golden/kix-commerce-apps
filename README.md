@@ -28,7 +28,7 @@ The [launch-gap index](docs/launch-gap-index.md) records every route’s mock/st
 | Booking | `/booking/:eventId` | B01–B05 (Wave 4, 설계중) and charter label `wave4.booking.B01-B05.fsm` | `placeHold`, `releaseHold`, `confirmBooking`, plus stub reservation commands (`registerReservationShow` through `viewReservation`) |
 | Admission | `/admission` | P03 admission gate (설계중), referencing Wave 2 `zk_gate`, and charter label `wave4.admission.P03.fsm` | `checkAdmission`, plus `authorizeReservationAdmission` and `consumeReservation` |
 | Resale | `/resale` | R01–R05 (Wave 4) and charter label `wave4.resale.R01-R05.fsm` | `openResale`, `listResale`, `acceptResale`, plus stub resale commands (`adoptResaleIssued` through `viewResaleCase`) |
-| Resale market | `/resale/market`, `/resale/market/:productId` | synthetic collectible fixtures; no ORIGINAL_32 promotion | app-internal mock `read` / `submit`; integration-http NOT_BOUND, no funds |
+| Resale market | `/resale/market`, `/resale/market/:productId` | synthetic collectible fixtures and a pinned ticket resale example | Reviewed fixture commands adopt, list, hold, observe mock payment, accept transfer or cancel. Settlement is display-only. Live reads return `NOT_BOUND`. The bid/ask simulator remains page-local. [Binding and evidence](docs/kix-resale-journey-binding-apps-bind.md) |
 | Credit | `/credit` | F04 (Wave 5, mock FSM, 설계중) and charter label `wave5.credit.F04.fsm` | stub credit commands (`offerCredit` through `viewCredit`) |
 | Gift | `/gift` | P02 transfer | `offer_gift`, `accept_gift`, `cancel_gift` |
 | Organizer | `/organizer` | event lifecycle | `create_event`, `close_sales`, `open_admission`, `complete_event`, `cancel_event`, `issue_invitation` |
@@ -487,4 +487,4 @@ The 2026-11-13 owner ruling raised the total gzip ceiling from 790000 to 802884 
 
 Help links to the lazy `/diagnostics` view: deterministic app version and pin digest, display/connection/journal state, and the last ten page-load outcomes in completion order. Its redacted copy sends nothing and is not evidence, approval or production readiness. [Binding and local checks](docs/c-plan-d-build-identity-diagnostics-stub-apps-bind.md).
 
-The synthetic resale marketplace keeps the existing ticket-rights desk at `/resale` and adds search, product detail, review and simulated bids/asks/instant trades. [Scope and local evidence](docs/c-plan-c-resale-market-ui-stub-apps-bind.md). Producer mapping remains UNDETERMINED.
+The resale marketplace offers synthetic search, product detail, bids, asks and instant trades. The ticket fixture on `/resale/market/demo-001` adds reviewed listing, purchase and cancellation commands with separate settlement evidence. The ticket-rights desk remains at `/resale`. [Market layout and simulations](docs/c-plan-c-resale-market-ui-stub-apps-bind.md) · [Resale journey binding](docs/kix-resale-journey-binding-apps-bind.md)

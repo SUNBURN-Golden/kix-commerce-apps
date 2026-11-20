@@ -1,4 +1,5 @@
 /** Test-build substitution only. No fault hook enters the production bundle. */
+import { resaleRead } from "../../../packages/protocol-adapter/src/resale-market-reads";
 import type {} from "../src/resale-fault-types";
 import { marketHistoryFixture } from "../../web/test/support/resale-market-history-fixture";
 import { createMockResaleMarket, MARKET_CLAIMS, resaleMarketPortFor as original, type ResaleMarketPort } from "../../../packages/protocol-adapter/src/../src/resale-market";
@@ -12,7 +13,7 @@ export function resaleMarketPortFor(environment: "stub" | "integration-http"): R
     if (input.kind === "list") {
       if (fault?.list?.mode === "held") await new Promise<void>(resolve => { fault.releaseRead = resolve; });
       if (fault?.list?.mode === "error") throw new Error("fixture list error");
-      if (fault?.list?.mode === "not-bound") return { ...MARKET_CLAIMS, kind: "NOT_BOUND" };
+      if (fault?.list?.mode === "not-bound") return { ...MARKET_CLAIMS, ...resaleRead("list_open_listings") };
     }
     const result = await source.read(input);
     if (fault?.missingProduct && result.kind !== "NOT_BOUND" && result.payload.kind === "detail") {

@@ -1,5 +1,5 @@
 import { FSM_BASE_KEYS, FSM_COMMANDS, FSM_FALSE_FLAGS, FSM_NESTED_KEYS } from "./commerce-journey-fixture.js";
-import { proofPaths, valueAt, type CommerceJourneyStep, type JourneyProof, type JourneyValue } from "./commerce-journey-command.js";
+import { proofPaths, valueAt, type FixtureStep, type JourneyProof, type JourneyValue } from "./commerce-journey-command.js";
 import { isRecord } from "./record.js";
 import { ProtocolError } from "./types.js";
 
@@ -52,7 +52,7 @@ function stringOrScalar(value: unknown): value is JourneyValue {
 
 /** A duplicate proves no new fact for a first-attempt operation. */
 export function verifyFsmReceipt(
-  value: unknown, step: CommerceJourneyStep, action: Command, body: Record<string, unknown>,
+  value: unknown, step: FixtureStep, action: Command, body: Record<string, unknown>,
   expectation: JourneyProof | string,
 ): JourneyProof {
   if (!isRecord(value) || value.duplicate !== false || typeof expectation === "string") invalid();

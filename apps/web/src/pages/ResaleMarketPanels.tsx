@@ -4,6 +4,7 @@ import { StatusMark } from "../a11y/marks";
 import { SafeText } from "../safe-text";
 import { useEffect, useRef, useState } from "react";
 import { messages } from "../i18n/messages/resale-market";
+import { deskText } from "../i18n/desk-translate";
 import { useT } from "../i18n/desk-context";
 import { useLocale } from "../i18n/locale-context";
 import { formatUnits, formatWhen } from "../format";
@@ -14,6 +15,14 @@ import { AsyncState } from "../components/AsyncState";
 import type { ResaleMarketRead, ResaleMarketIntent } from "../../../../packages/protocol-adapter/src/resale-market";
 import type { ResaleMarketController } from "../../../../packages/protocol-adapter/src/resale-market-controller";
 import type { useResaleMarket } from "../resale-market";
+import { resaleRead, type MarketQuery } from "../../../../packages/protocol-adapter/src/resale-market-reads";
+export function MarketReadBoundary({ queries }: { queries: readonly MarketQuery[] }) {
+  const t = useT(messages);
+  return <details><summary>{t("market.liveRead")}</summary>{queries.map(query => {
+    const refusal = resaleRead(query);
+    return <p key={query}>{refusal.kind} · {refusal.query} · {deskText(t, refusal.reason)}</p>;
+  })}</details>;
+}
 type MarketDetail = NonNullable<ReturnType<ResaleMarketController["detail"]>>;
 export function MarketNotice() { const t = useT(messages); return <p className="market-notice">{t("market.notice")}</p>; }
 /** Shared read feedback keeps list/detail failure semantics and retry controls aligned. */
@@ -22,7 +31,7 @@ export function MarketReadStatus({ market, input, list = false }: { market: Retu
   const kind = market.state.readState;
   if (kind === "loading" && (list || !market.controller.detail())) return <AsyncState label={t("market.title")} announcement={list ? "parent" : undefined} kind="loading" />;
   if (kind === "error" || (!list && kind === "stale")) return <AsyncState label={t("market.title")} kind={kind} read={{ label: t("market.read"), onRead: () => { void market.controller.read(input); } }} />;
-  if (kind === "not-bound") return <AsyncState label={t("market.title")} kind="not-bound"><p>{t("market.result.NOT_BOUND")}</p></AsyncState>;
+  if (kind === "not-bound") return <AsyncState label={t("market.title")} kind="not-bound"><p>{t("market.result.NOT_BOUND")} {market.state.snapshot?.kind === "NOT_BOUND" && <>{market.state.snapshot.query} · {deskText(t, market.state.snapshot.reason)}</>}</p></AsyncState>;
   return null;
 }
 /** Original code-native artwork, decorative beside the product's textual name. */
@@ -107,8 +116,9 @@ export function ProductPanels({ detail: d, market }: { detail: MarketDetail; mar
       {market.state.fenced ? <AsyncState label={t("market.title")} announcement="parent" kind="unknown" /> : null}
       <button type="button" disabled={market.state.outcome === "IN_FLIGHT"} onClick={() => { setReview(null); setAnnounceSnapshots(true); void market.controller.read({ kind: "detail", productId: d.product.productId }); }}>{t("market.read")}</button>
     </div></div>
-    <PriceChart series={d.series} />
-    <section className="panel"><h3>{t("market.history")}</h3><MarketNotice /><div className="table-scroll"><table><caption>{t("market.history")}</caption><thead><tr><th scope="col">{t("market.date")}</th><th scope="col">{t("market.units")}</th><th scope="col">{t("market.state")}</th></tr></thead><tbody id="market-trades-rows">{trades.rows.map(x => <tr key={x.tradeId} data-trade-id={x.tradeId}><td>{formatWhen(x.occurredAt,clock)}</td><td>{formatUnits(x.mockUnits,t("amount.mockUnits"),clock)}</td><td>{t("market.simulated")}</td></tr>)}</tbody></table></div>{!trades.totalCount ? <p>{t("market.noRows")}</p> : null}<ResaleMarketPagination section="trades" variant={variant} projection={trades} snapshot={d.trades} announceSnapshots={announceSnapshots} onPage={setTradesPage} /></section>
-    <section className="panel"><h3>{t("market.offers")}</h3><MarketNotice /><ul id="market-offers-rows">{offers.rows.map(x => <li key={x.offerId} data-offer-id={x.offerId}>{t(`market.${x.side}`)} · {formatUnits(x.mockUnits,t("amount.mockUnits"),clock)} · {t("market.open")}</li>)}</ul>{!offers.totalCount ? <p>{t("market.noRows")}</p> : null}<ResaleMarketPagination section="offers" variant={variant} projection={offers} snapshot={d.offers} announceSnapshots={announceSnapshots} onPage={setOffersPage} /></section>
+    <MarketReadBoundary queries={["get_listing", "product detail", "variants", "quotes"]} />
+    <PriceChart series={d.series} /><MarketReadBoundary queries={["price series"]} />
+    <section className="panel"><h3>{t("market.history")}</h3><MarketReadBoundary queries={["trade history"]} /><MarketNotice /><div className="table-scroll"><table><caption>{t("market.history")}</caption><thead><tr><th scope="col">{t("market.date")}</th><th scope="col">{t("market.units")}</th><th scope="col">{t("market.state")}</th></tr></thead><tbody id="market-trades-rows">{trades.rows.map(x => <tr key={x.tradeId} data-trade-id={x.tradeId}><td>{formatWhen(x.occurredAt,clock)}</td><td>{formatUnits(x.mockUnits,t("amount.mockUnits"),clock)}</td><td>{t("market.simulated")}</td></tr>)}</tbody></table></div>{!trades.totalCount ? <p>{t("market.noRows")}</p> : null}<ResaleMarketPagination section="trades" variant={variant} projection={trades} snapshot={d.trades} announceSnapshots={announceSnapshots} onPage={setTradesPage} /></section>
+    <section className="panel"><h3>{t("market.offers")}</h3><MarketReadBoundary queries={["offers"]} /><MarketNotice /><ul id="market-offers-rows">{offers.rows.map(x => <li key={x.offerId} data-offer-id={x.offerId}>{t(`market.${x.side}`)} · {formatUnits(x.mockUnits,t("amount.mockUnits"),clock)} · {t("market.open")}</li>)}</ul>{!offers.totalCount ? <p>{t("market.noRows")}</p> : null}<ResaleMarketPagination section="offers" variant={variant} projection={offers} snapshot={d.offers} announceSnapshots={announceSnapshots} onPage={setOffersPage} /></section>
   </>;
 }

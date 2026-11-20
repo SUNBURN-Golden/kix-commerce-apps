@@ -1,4 +1,5 @@
-import { isRecord } from "./record.js";
+import { canonicalJson } from "./record.js";
+import { FIXTURE_PAYMENT_REF, inFixtureOfferWindow, validFixtureAmount } from "./commerce-fixture-fields.js";
 import { SURFACES } from "./surfaces.js";
 import {
   ProtocolError,
@@ -117,11 +118,18 @@ interface SlotRecord {
 interface ShowRecord {
   showId: string;
   eventId: string;
+  fixture?: {
+    fixtureResaleCap: number;
+    fixtureResaleAllowed: boolean;
+    fixtureShowBinding: string;
+  };
+  primaryPrice?: number;
   canon: string;
   slots: SlotRecord[];
 }
 
 interface CaseRecord {
+  fixtureOrder?: ReservationCaseView["fixtureOrder"];
   reservationId: string;
   phase: ReservationPhase;
   showId: string;
@@ -186,11 +194,11 @@ export class ReservationCaseStore {
     });
   }
 
-  registerShow(input: ReservationShowRegister): ReservationCommandReceipt {
+  registerShow(input: ReservationShowRegister, fixture?: { resaleCap: string; resaleAllowed: string; primaryPrice: string; showBinding: string }): ReservationCommandReceipt {
     if (!Array.isArray(input.slots)) {
       throw reservationError("MOCK_INVARIANT");
     }
-    const body = { eventId: input.eventId, slots: input.slots.join(",") };
+    const body = { eventId: input.eventId, slots: input.slots.join(","), ...fixture };
     return this.call("register_show", input.showId, input.idempotencyKey, body, () => null, (key, request) => {
       // The journal body joins slots with commas, so a slot name must not carry one.
       for (const slot of input.slots) {
@@ -238,8 +246,8 @@ export class ReservationCaseStore {
     );
   }
 
-  confirm(input: ReservationConfirm): ReservationCommandReceipt {
-    const body = { reservationId: input.reservationId };
+  confirm(input: ReservationConfirm, fixture?: { amount: string; quoteRef?: string }): ReservationCommandReceipt {
+    const body = { reservationId: input.reservationId, ...fixture };
     return this.call(
       "confirm",
       input.orderId,
@@ -249,7 +257,7 @@ export class ReservationCaseStore {
       (key, request) => {
         const orderId = ident(input.orderId);
         const reservationId = this.applyConfirm(orderId, body, key);
-        return this.accept(key, request, "confirm", orderId, { reservationId }, reservationId);
+        return this.accept(key, request, "confirm", orderId, body, reservationId);
       },
     );
   }
@@ -269,8 +277,8 @@ export class ReservationCaseStore {
     );
   }
 
-  observePayment(input: ReservationPayment): ReservationCommandReceipt {
-    const body = { paymentRef: input.paymentRef };
+  observePayment(input: ReservationPayment, amount?: number): ReservationCommandReceipt {
+    const body = { paymentRef: input.paymentRef, ...(amount === undefined ? {} : { amount: String(amount) }) };
     return this.call(
       "observe_payment",
       input.orderId,
@@ -280,7 +288,7 @@ export class ReservationCaseStore {
       (key, request) => {
         const orderId = ident(input.orderId);
         const reservationId = this.applyObserve(orderId, body, key);
-        return this.accept(key, request, "observe_payment", orderId, { paymentRef: ident(body.paymentRef ?? "") }, reservationId);
+        return this.accept(key, request, "observe_payment", orderId, body, reservationId);
       },
     );
   }
@@ -423,7 +431,11 @@ export class ReservationCaseStore {
   private applyRegister(showId: string, body: Record<string, string>): void {
     const eventId = ident(body.eventId ?? "");
     const slots = readSlots(body.slots ?? "");
-    const canon = canonicalJson({ eventId, slots });
+    const fixture = body.resaleCap === undefined ? undefined : {
+      fixtureResaleCap: Number(body.resaleCap), fixtureResaleAllowed: body.resaleAllowed === "true", fixtureShowBinding: body.showBinding,
+    };
+    const primaryPrice = body.primaryPrice === undefined ? undefined : Number(body.primaryPrice);
+    const canon = canonicalJson({ eventId, slots, fixture, primaryPrice });
     const current = this.shows.get(showId);
     if (current) {
       if (current.canon !== canon) {
@@ -432,6 +444,8 @@ export class ReservationCaseStore {
       throw reservationError("ILLEGAL_TRANSITION");
     }
     this.shows.set(showId, {
+      fixture,
+      primaryPrice,
       showId,
       eventId,
       canon,
@@ -469,6 +483,8 @@ export class ReservationCaseStore {
     if (!row) {
       throw reservationError("UNKNOWN_SLOT");
     }
+    const windowMs = Date.parse(expiresAt) - this.clockMs;
+    if (show.fixture && !inFixtureOfferWindow(windowMs)) throw reservationError("RESERVATION_WINDOW");
     if (row.state !== "FREE") {
       throw reservationError("SLOT_OCCUPIED");
     }
@@ -507,7 +523,9 @@ export class ReservationCaseStore {
 
   private applyConfirm(orderId: string, body: Record<string, string>, key: string): string {
     const reservationId = ident(body.reservationId ?? "");
-    const canon = canonicalJson({ reservationId });
+    const amount = body.amount === undefined ? undefined : Number(body.amount);
+    if (amount !== undefined && !validFixtureAmount(amount)) throw reservationError("INVALID_AMOUNT");
+    const canon = canonicalJson(body);
     const prior = this.orders.get(orderId);
     if (prior) {
       if (prior.canon !== canon) {
@@ -519,6 +537,10 @@ export class ReservationCaseStore {
     this.enter(record, "confirm");
     if (this.isExpired(record)) {
       throw reservationError("RESERVATION_EXPIRED");
+    }
+    if (amount !== undefined) {
+      if (amount !== this.shows.get(record.showId)?.primaryPrice) throw reservationError("PRIMARY_PRICE_MISMATCH");
+      record.fixtureOrder = { amount, quoteRef: body.quoteRef ?? null };
     }
     record.orderId = orderId;
     record.phase = "CONFIRMED";
@@ -536,6 +558,8 @@ export class ReservationCaseStore {
   }
 
   private applyObserve(orderId: string, body: Record<string, string>, key: string): string {
+    if (body.amount !== undefined && !FIXTURE_PAYMENT_REF.test(body.paymentRef)) throw reservationError("PAYMENT_REF");
+    if (body.amount !== undefined && !validFixtureAmount(Number(body.amount))) throw reservationError("INVALID_AMOUNT");
     const paymentRef = ident(body.paymentRef ?? "");
     const order = this.orders.get(orderId);
     if (!order) {
@@ -543,6 +567,10 @@ export class ReservationCaseStore {
     }
     const record = this.requireCase(order.reservationId);
     this.enter(record, "observe_payment");
+    if (record.fixtureOrder && this.isExpired(record)) throw reservationError("RESERVATION_EXPIRED");
+    if (record.fixtureOrder && record.fixtureOrder.amount !== Number(body.amount)) {
+      throw reservationError("PAYMENT_AMOUNT_MISMATCH");
+    }
     record.paymentRef = paymentRef;
     record.phase = "PAYMENT_NOTED";
     this.mark(record, key);
@@ -586,6 +614,7 @@ export class ReservationCaseStore {
     const record = this.requireCase(order.reservationId);
     this.enter(record, "issue");
     const observed = observedOverride === null ? this.observeSettlement(record) : observedOverride;
+    if (record.fixtureOrder && this.isExpired(record)) throw reservationError("RESERVATION_EXPIRED");
     record.issuanceId = issuanceId;
     record.rightId = issuanceId;
     record.mockSettlementCommitObserved = observed;
@@ -804,48 +833,12 @@ export class ReservationCaseStore {
   }
 
   private canonical(): string {
+    // A read or rejected attempt can update these diagnostics without adding a journal entry.
     const cases = [...this.cases.values()]
-      .map((record) => ({
-        admissionId: record.admissionId,
-        buyerRole: record.buyerRole,
-        consumeId: record.consumeId,
-        expiresAt: record.expiresAt,
-        idempotencyKey: record.lastKey,
-        issuanceId: record.issuanceId,
-        mockSettlementCommitObserved: record.mockSettlementCommitObserved,
-        orderId: record.orderId,
-        paymentRef: record.paymentRef,
-        phase: record.phase,
-        reservationId: record.reservationId,
-        rightId: record.rightId,
-        settlementId: record.settlementId,
-        showId: record.showId,
-        slot: record.slot,
-      }))
+      .map(({ echoKey: _echo, lastRejectCode: _reject, reconcileMatched: _matched, ...record }) => record)
       .sort((left, right) => left.reservationId.localeCompare(right.reservationId));
-    const shows = [...this.shows.values()]
-      .map((show) => ({
-        eventId: show.eventId,
-        showId: show.showId,
-        slots: show.slots.map((row) => ({
-          reservationId: row.reservationId,
-          rightId: row.rightId,
-          slot: row.slot,
-          state: row.state,
-        })),
-      }))
-      .sort((left, right) => left.showId.localeCompare(right.showId));
-    return canonicalJson({
-      cases,
-      journal: this.journal.map((entry) => ({
-        body: entry.body,
-        idempotencyKey: entry.idempotencyKey,
-        op: entry.op,
-        subjectId: entry.subjectId,
-      })),
-      logicalTimeMs: this.clockMs,
-      shows,
-    });
+    const shows = [...this.shows.values()].sort((left, right) => left.showId.localeCompare(right.showId));
+    return canonicalJson({ cases, journal: this.journal, logicalTimeMs: this.clockMs, shows });
   }
 
   private noteReject(reservationId: string | null, code: string): void {
@@ -903,6 +896,8 @@ export class ReservationCaseStore {
       terminal: TERMINAL.has(record.phase),
       showId: record.showId,
       eventId: show.eventId,
+      ...show.fixture,
+      ...(record.fixtureOrder && { fixtureOrder: { ...record.fixtureOrder } }),
       slot: record.slot,
       slotState: row.state,
       slotHeldByCase: row.reservationId === record.reservationId,
@@ -1077,22 +1072,4 @@ function reservationError(code: string): ProtocolError {
 
 function isJournalOp(value: string): value is JournalOp {
   return (JOURNAL_OPS as readonly string[]).includes(value);
-}
-
-function canonicalJson(value: unknown): string {
-  return JSON.stringify(canonicalize(value));
-}
-
-function canonicalize(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((item) => canonicalize(item));
-  }
-  if (isRecord(value)) {
-    const sorted: Record<string, unknown> = {};
-    for (const key of Object.keys(value).sort()) {
-      sorted[key] = canonicalize(value[key]);
-    }
-    return sorted;
-  }
-  return value;
 }

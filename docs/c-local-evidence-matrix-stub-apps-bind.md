@@ -306,7 +306,7 @@ One row per node in `.aiops/program.json` and one per node in `docs/aiops/PENDIN
 
 Each line has its own count. Nothing is summed, nothing is subtracted, and there is no percentage.
 
-- D01 live-gate skipped under KIX_REQUIRE_GATE=0: 9 adapter test files import support/reviewed-gate
+- D01 live-gate skipped under KIX_REQUIRE_GATE=0: 10 adapter test files import support/reviewed-gate
 - D02 NOT_BOUND desk methods: 68 of 68
 - D03 NOT_BOUND surfaces (binding is not published-bound): 40 of 45
 - D04 NOT_BOUND fixtures: 68 of 265
@@ -331,6 +331,7 @@ Each line has its own count. Nothing is summed, nothing is subtracted, and there
 These files import `support/reviewed-gate`. Under `KIX_REQUIRE_GATE=0` their gate suites are skipped, and the CI `live-gate` job shows as skipped, not passed, when the read token is absent. A skipped suite is not a pass.
 
 - `commerce-journey-live.test.ts`
+- `resale-journey-live.test.ts`
 - `booking-journey-gate.test.ts`
 - `booking-journey-live.test.ts`
 - `consent-bind-gate.test.ts`

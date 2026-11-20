@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { resaleRead } from "../../../packages/protocol-adapter/src/resale-market-reads";
 import { act, StrictMode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Link, Route, Routes } from "react-router-dom";
@@ -127,7 +128,7 @@ describe("committed marketplace restoration", () => {
     const source = createMockResaleMarket();
     const restore = portOverride(async input => {
       if (mode === "error") throw new Error("read failed");
-      if (mode === "not-bound") return { ...MARKET_CLAIMS, kind: "NOT_BOUND" };
+      if (mode === "not-bound") return { ...MARKET_CLAIMS, ...resaleRead("list_open_listings") };
       const result = await source.read(input);
       if (result.kind !== "NOT_BOUND" && result.payload.kind === "list") {
         result.payload.products = mode === "missing" ? [{ ...result.payload.products[0]!, productId: "replacement" }] : [];
