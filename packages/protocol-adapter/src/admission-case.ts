@@ -715,6 +715,10 @@ export class AdmissionCaseStore {
     });
   }
 
+  acceptedRequest(rightId: string): string | null {
+    return this.requireCredential(rightId).request;
+  }
+
   private toView(credential: CredentialRecord): AdmissionCredentialView {
     const expired =
       credential.phase === "AUTHORIZED" &&

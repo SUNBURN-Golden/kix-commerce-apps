@@ -5,7 +5,7 @@ const en = {
   paymentObservation: "Payment observation", ticketIssuance: "Ticket issuance", admission: "Admission",
   resale: "Resale", reservationCancellation: "Reservation cancellation", refundBinding: "Mock refund binding", refundAcceptance: "Mock refund acceptance", refund: "Cancel and refund",
   confirmed: "Last confirmed step", pending: "Sending", blocked: "Blocked next step",
-  openElsewhere: "This page load already has a fixture journey on another booking.",
+  openElsewhere: "A fixture journey is already open on another booking.",
   read: "Read current booking", readReason: "The pinned gate has no booking read endpoint.",
 };
 const ko = {
@@ -13,7 +13,7 @@ const ko = {
   paymentObservation: "결제 관측", ticketIssuance: "티켓 발급", admission: "입장",
   resale: "재판매", reservationCancellation: "예약 취소", refundBinding: "모의 환불 연결", refundAcceptance: "모의 환불 수락", refund: "취소 및 환불",
   confirmed: "마지막 확인 단계", pending: "전송 중", blocked: "차단된 다음 단계",
-  openElsewhere: "이 페이지 로드에서 다른 예매의 거래 여정이 이미 열려 있습니다.",
+  openElsewhere: "다른 예매에서 모의 거래 여정이 이미 열려 있습니다.",
   read: "현재 예매 조회", readReason: "고정 게이트에 예매 조회 엔드포인트가 없습니다.",
 };
 

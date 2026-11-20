@@ -1,3 +1,4 @@
+import { memoryStore } from "./support/session-store";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -46,6 +47,7 @@ describe("journey panel", () => {
     const eventId = "evt_panel_receipts";
     const shape = createStubJourneyInvoker();
     const desk = createJourneyDesk({
+      store: memoryStore(),
       protocol: {
         describe: () => ({ environment: "stub" }),
         observeTransport: async () => {
@@ -86,6 +88,7 @@ describe("journey panel", () => {
   it("shows an unconfirmed request apart from the last confirmed receipt", async () => {
     const shape = createStubJourneyInvoker();
     const desk = createJourneyDesk({
+      store: memoryStore(),
       protocol: {
         describe: () => ({ environment: "stub" }),
         observeTransport: async () => {
@@ -122,6 +125,7 @@ describe("journey panel", () => {
 
   it("shows a gate rejection and blocks the later sends", async () => {
     const desk = createJourneyDesk({
+      store: memoryStore(),
       protocol: {
         describe: () => ({ environment: "stub" }),
         observeTransport: async () => {

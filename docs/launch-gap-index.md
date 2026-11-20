@@ -80,12 +80,12 @@ Each entry separates current surface binding, local HTTP behavior, missing capab
 
 | Field | Recorded boundary |
 | --- | --- |
-| Surface | `booking-journey`, `reservation-case`, `refund-return-desk` |
-| Current boundary | `published-bound` BookingJourney over the local-call invoker; separate `stub-only` B01–B05 reservation FSM and in-process refund/return source. No payment or issuance finality. |
-| Integration HTTP | `BookingJourney` sends only `create_event` → `prepare_trade` → `accept_trade` with published bodies. `placeHold({ eventId, quantity })` differs from `reserve_listing` (domain, expiresAt, listingHash, listingId, tradeId), remains not-bound, and keeps `consideredAction: reserve_listing`. `confirmBooking(holdId)` differs from `capture` and sends none. Mock reservation commands are not catalogue commands; `refund_ticket`, `void_unissued`, `adjust_pg_cancel` and `observe_return` are recorded, never sent. |
+| Surface | `booking-journey`, `CommerceJourney` FSM panel, `reservation-case`, `refund-return-desk` |
+| Current boundary | `published-bound` BookingJourney over the local-call invoker; separate `stub-only` B01–B05 reservation FSM and in-process refund/return source. The `CommerceJourney` panel provides stub-browser evidence for pinned resale, admission and refund branches. Both booking journey paths retain unresolved intent across reload. |
+| Integration HTTP | `BookingJourney` sends only `create_event` → `prepare_trade` → `accept_trade` with published bodies. `placeHold({ eventId, quantity })` differs from `reserve_listing` (domain, expiresAt, listingHash, listingId, tradeId), remains not-bound, and keeps `consideredAction: reserve_listing`. `confirmBooking(holdId)` differs from `capture` and sends none. The FSM panel uses the dedicated receipt verifier against the Node loopback gate. Browser HTTP is unavailable and the booking read is `NOT_BOUND`. Legacy mock reservation desk methods stay separate. `refund_ticket`, `void_unissued`, `adjust_pg_cancel` and `observe_return` are recorded, never sent. |
 | External dependency | `kix-protocol:openapi-catalogue-promotion` and `kix-protocol:contract-compatibility-profile` → `bind-reservation-fsm`; `bind-wave4-pointers` and `primary-price-fee-ui` (including `kix-protocol:move-primary-price-fee`) remain pending; `refund-surface`, `api-state-distinction`, `c-journey-identity` and `c-async-session-fence` consumers remain unpromoted; authoritative refund/return evidence and policy are absent. Browser local calls additionally need `kix-protocol:gate-browser-access` → `browser-gate-path`; no proxy bypass. |
 | Owning decision | M2 + H1 is RECORDED; `commit_trade`, `open_admission` and `admit` stay uncomposed by this journey. Producer contract authority: kix-protocol; consumer promotion remains pending in the cited evidence. User retains money, keys, equipment, production and release decisions; unresolved policy values and any unassigned policy owner are `UNDETERMINED`. Price, fee and refund policies remain `UNDETERMINED`. |
-| Evidence | [wave-6a-journey-adapter-apps-bind.md](wave-6a-journey-adapter-apps-bind.md); [reservation-depth-apps-bind.md](reservation-depth-apps-bind.md); [c-refund-return-states-stub-apps-bind.md](c-refund-return-states-stub-apps-bind.md); [source](../packages/protocol-adapter/src/commerce-bindings.ts) |
+| Evidence | [commerce fixture](c-int-commerce-journey-apps-bind.md); [wave-6a-journey-adapter-apps-bind.md](wave-6a-journey-adapter-apps-bind.md); [reservation-depth-apps-bind.md](reservation-depth-apps-bind.md); [c-refund-return-states-stub-apps-bind.md](c-refund-return-states-stub-apps-bind.md); [source](../packages/protocol-adapter/src/commerce-bindings.ts) |
 
 ## `/admission`
 
@@ -108,6 +108,28 @@ Each entry separates current surface binding, local HTTP behavior, missing capab
 | External dependency | `kix-protocol:openapi-catalogue-promotion` and `kix-protocol:contract-compatibility-profile` → `bind-resale-fsm`; real resale producer contract and marketplace operation remain outside the stub (see platform dependencies). |
 | Owning decision | Producer contract authority: kix-protocol; consumer promotion remains pending in the cited evidence. User retains money, keys, equipment, production and release decisions; unresolved policy values and any unassigned policy owner are `UNDETERMINED`. Pricing, fees and refund policy are `UNDETERMINED`. |
 | Evidence | [resale-depth-apps-bind.md](resale-depth-apps-bind.md) |
+
+## `/resale/market`
+
+| Field | Recorded boundary |
+| --- | --- |
+| Surface | `resale-market`, ticket fixture entry |
+| Current boundary | Bounded synthetic marketplace search and entry to `ResaleJourney` on the demo ticket. |
+| Integration HTTP | Live list, search and offer reads report `NOT_BOUND`. The fixture link remains available. |
+| External dependency | Published market read transport and product-to-listing association. |
+| Owning decision | KIX Protocol owns read bindings. Product mapping and matching policy are `UNDETERMINED`. |
+| Evidence | [Market UI](c-plan-c-resale-market-ui-stub-apps-bind.md) · [Resale fixture binding](kix-resale-journey-binding-apps-bind.md) |
+
+## `/resale/market/:productId`
+
+| Field | Recorded boundary |
+| --- | --- |
+| Surface | `resale-product`, `ResaleJourney` on `/resale/market/demo-001` |
+| Current boundary | Stub-browser ticket fixture for listing, purchase, transfer and cancellation, with settlement `UNBOUND`. Synthetic products retain page-local bid/ask and instant trade simulations. |
+| Integration HTTP | Node loopback verifies the dedicated FSM receipt path. Browser HTTP fixture actions are unavailable, and live reads are `NOT_BOUND`. |
+| External dependency | Live product detail, quotations, listing and right reads, and authoritative recovery. |
+| Owning decision | KIX Protocol owns transport and read bindings. Product pricing, fees, matching and compensation remain `UNDETERMINED`. |
+| Evidence | [Fixture and delivery evidence](kix-resale-journey-binding-apps-bind.md) · [Read gaps](kix-resale-journey-binding-change-requests.md) |
 
 ## `/gift`
 
@@ -469,17 +491,8 @@ Each entry separates current surface binding, local HTTP behavior, missing capab
 
 Producer contracts remain kix-protocol authority; consuming a merged contract and promoting a consumer requires separately authorized work and verified evidence. Nothing here implements an unmerged dependency. If future consumption moves a catalogue/gate, both OpenAPI pins, PINNED_ACTIONS, CI KIX_PROTOCOL_GATE_SHA and protocolMergeSha must move together. This node moves none.
 
-## Synthetic resale marketplace — 2026-11-02
-
-| Route | Surface | Source / writes | Gap / decision owner |
-| --- | --- | --- | --- |
-| `/resale/market` | `resale-market` | bounded synthetic search; no write | exact `plan-local-resale-offer-source` mapping UNDETERMINED; producer authority |
-| `/resale/market/:productId` | `resale-product` | page-load mock bid/ask and instant transitions; simulated, no funds | producer mapping, currency, fees, matching, expiry, cancellation, ownership and persistence UNDETERMINED; producer and product owner |
-
-The existing `/resale` ticket-rights FSM stays separate. Integration HTTP returns NOT_BOUND before dispatch. No protocol pin or command is consumed. Qualification is UNQUALIFIED, user acceptance PENDING and release NOT_AUTHORIZED. [Binding and actual verification](c-plan-c-resale-market-ui-stub-apps-bind.md).
-
 ## Verification and limitations
 
 The [bind/evidence record](c-plan-c-docs-launch-gap-index-stub-apps-bind.md) contains the runnable offline route/link checker, acceptance mapping and actual local command results. The checker validates README route coverage, canonical route completeness/uniqueness, shared workspace surface coverage and relative links/fragments in the three changed documents; it performs no network request. Existing guide, route, local-evidence and adapter checks are complementary and do not automatically validate this index.
 
-All results are local stub evidence. Live-gate tests skipped under KIX_REQUIRE_GATE=0 remain skipped; no fresh upstream, hosted browser, accessibility, visual, coverage, user acceptance or release result is claimed. Unavailable capabilities are documented, not selected or integrated. No blocking decision is required to describe these gaps.
+The fixture rows link stub-browser and reviewed Node loopback evidence. Live-gate tests are skipped under `KIX_REQUIRE_GATE=0`. Deployment, browser HTTP qualification, user acceptance and release are outside the recorded fixture evidence. Unavailable capabilities are documented, not selected or integrated. No blocking decision is required to describe these gaps.

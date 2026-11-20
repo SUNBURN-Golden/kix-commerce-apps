@@ -10,11 +10,14 @@ import type { JourneyInvokerSource, JourneySource } from "@kix/protocol-adapter"
 import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 import { journeySource } from "./journey-source";
 import { protocol } from "./connectivity/desk-protocol";
+import type { SessionStorePort } from "../../../packages/protocol-adapter/src/shell-entry";
+import { pageSessionStore } from "./session-store";
+import { EVIDENCE_LOST, persistBookingIntent, readBookingIntent, type ConfirmedAttempt } from "./booking-journey-intent";
 
 /**
  * M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
  * Page-load journey for create_event, prepare_trade, and accept_trade.
- * A reload clears it. The synthetic policy is not rendered.
+ * The tab retains unresolved intent and confirmation history across reloads.
  */
 export const SYNTHETIC_SHOW_POLICY = {
   primaryPrice: 100000,
@@ -122,6 +125,7 @@ export interface JourneyDeskProtocol {
 export interface JourneyDeskDeps {
   protocol: JourneyDeskProtocol;
   source: JourneyInvokerSource | null;
+  store?: SessionStorePort | null;
 }
 
 type StepPhase = "pending" | "in-flight" | "confirmed" | "rejected" | "unconfirmed" | "not-sent";
@@ -145,6 +149,7 @@ interface JourneyRecord {
   localHalt: boolean;
   journey: BookingJourney | null;
   steps: StepRecord[];
+  lastConfirmed: ConfirmedAttempt<JourneyStep> | null;
 }
 
 export function journeyPathStatus(
@@ -231,16 +236,35 @@ export class JourneyDesk {
     if (eventId.length === 0 || this.records.has(eventId)) {
       return;
     }
-    const attempt = readDeskAttempt("journey", eventId) + 1;
-    writeDeskAttempt("journey", eventId, attempt);
+    const stored = readBookingIntent(this.store(), this.environment, eventId);
+    const attempt = stored === null ? readDeskAttempt("journey", eventId) + 1 : 0;
+    if (attempt) writeDeskAttempt("journey", eventId, attempt);
     const record: JourneyRecord = {
       eventId,
       attempt,
       pending: false,
-      localHalt: false,
-      journey: this.deps.source ? new BookingJourney(connectivityInvoker(this.deps.source.invoker)) : null,
+      localHalt: stored !== null,
+      lastConfirmed: null,
+      journey: stored === null && this.deps.source ? new BookingJourney(connectivityInvoker(this.deps.source.invoker)) : null,
       steps: blankSteps(),
     };
+    if (stored === EVIDENCE_LOST) {
+      markEvidenceLost(record.steps[0]);
+    } else if (stored?.branch === null) {
+      record.lastConfirmed = stored.lastConfirmed;
+      for (const row of record.steps) {
+        if (row.step === stored.lastConfirmed?.step) {
+          row.phase = "confirmed";
+          row.operationId = stored.lastConfirmed.operationId;
+        } else if (row.step === stored.step) {
+          row.phase = "unconfirmed";
+          row.operationId = stored.operationId;
+          row.actor = actorFor(row.step);
+          row.code = "UNKNOWN";
+          row.note = sourceCopy.en["s253"];
+        }
+      }
+    }
     this.records.set(eventId, record);
     this.publish();
   }
@@ -263,18 +287,38 @@ export class JourneyDesk {
       return;
     }
     const operationId = journeyOperationId(eventId, record.attempt, step);
+    let clearIntent: () => void;
+    try {
+      clearIntent = persistBookingIntent(this.store(), {
+        mode: this.environment, eventId, branch: null, step, operationId, lastConfirmed: record.lastConfirmed,
+      });
+    } catch {
+      markEvidenceLost(current);
+      record.localHalt = true;
+      this.publish();
+      return;
+    }
     current.phase = "in-flight";
     current.operationId = operationId;
     current.actor = actorFor(step);
     current.note = sourceCopy.en["snx"];
     record.pending = true;
     this.publish();
+    let known = false;
     try {
       const outcome = await this.dispatch(record, step, operationId);
-      this.applyOutcome(record, step, outcome);
+      known = outcome.kind === "RECEIPT" || outcome.kind === "REJECTED";
+      this.applyOutcome(record, current, operationId, outcome);
     } catch (error) {
+      known ||= record.journey?.state().halted?.kind === "NOT_SENT" || record.journey === null;
       this.applyThrown(record, step, error);
     } finally {
+      if (known) {
+        try { clearIntent(); } catch {
+          record.localHalt = true;
+          current.code = EVIDENCE_LOST;
+        }
+      }
       record.pending = false;
       const stepRecord = record.steps.find((item) => item.step === step);
       if (stepRecord && stepRecord.phase === "in-flight") {
@@ -290,6 +334,10 @@ export class JourneyDesk {
     return selectJourneyView(this.snapshot, eventId, (step) => {
       void this.send(eventId, step);
     });
+  }
+
+  private store(): SessionStorePort | null {
+    return this.deps.store === undefined ? pageSessionStore() : this.deps.store;
   }
 
   private async readProbe(): Promise<void> {
@@ -330,13 +378,11 @@ export class JourneyDesk {
     return record.journey.acceptTrade({ operationId });
   }
 
-  private applyOutcome(record: JourneyRecord, step: JourneyStep, outcome: JourneyStepOutcome): void {
-    const current = record.steps.find((item) => item.step === step);
-    if (!current) {
-      return;
-    }
+  private applyOutcome(record: JourneyRecord, current: StepRecord, operationId: string, outcome: JourneyStepOutcome): void {
+    const { step } = current;
     if (outcome.kind === "RECEIPT") {
       current.phase = "confirmed";
+      record.lastConfirmed = { step, operationId };
       current.actor = actorFor(step);
       current.code = null;
       current.requestId = null;
@@ -427,6 +473,12 @@ export class JourneyDesk {
       journeys,
     };
   }
+}
+
+function markEvidenceLost(row: StepRecord): void {
+  row.phase = "not-sent";
+  row.code = EVIDENCE_LOST;
+  row.note = sourceCopy.en["s12l"];
 }
 
 function halted(record: JourneyRecord): boolean {

@@ -1,3 +1,4 @@
+import { memoryStore } from "./support/session-store";
 import { readFileSync } from "node:fs";
 import { Suspense } from "react";
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
@@ -35,6 +36,7 @@ async function inject(driver: string) {
   if (driver === "journey-unknown") {
     const shape = createStubJourneyInvoker();
     const desk = journey.createJourneyDesk({
+      store: memoryStore(),
       protocol: { describe: () => ({ environment: "stub" }), observeTransport: async () => localStubObservation() },
       source: { source: "stub-shape", invoker: { async invokeLocalCall(input) {
         if (input.action === "prepare_trade") throw new ProtocolError("Synthetic lost answer", "REQUEST_TIMEOUT", { requestId: "req-synthetic-lost" });

@@ -72,6 +72,7 @@ interface CaseRecord {
   phase: SettlementPhase;
   failureReason: string | null;
   cancelReason: string | null;
+  fixtureMovementId?: string;
   /** Last journaled command key. Included in the process-local replay projection. */
   lastKey: string;
   /** Latest accepted key, including reconcile. Omitted from replay comparison. */
@@ -134,8 +135,8 @@ export class SettlementCaseStore {
     return this.transition("capture", input, {});
   }
 
-  commit(input: SettlementStep): SettlementCommandReceipt {
-    return this.transition("commit", input, {});
+  commit(input: SettlementStep, fixtureMovementId?: string): SettlementCommandReceipt {
+    return this.transition("commit", input, fixtureMovementId === undefined ? {} : { fixtureMovementId });
   }
 
   fail(input: SettlementReason): SettlementCommandReceipt {
@@ -222,6 +223,7 @@ export class SettlementCaseStore {
         record.cancelReason = reason;
       }
     }
+    if (op === "commit" && body.fixtureMovementId !== undefined) record.fixtureMovementId = body.fixtureMovementId;
     record.phase = NEXT_PHASE[op];
     record.lastKey = key;
     record.echoKey = key;
@@ -327,6 +329,7 @@ export class SettlementCaseStore {
         cancelReason: record.cancelReason,
         eventId: record.eventId,
         failureReason: record.failureReason,
+        ...(record.fixtureMovementId !== undefined && { fixtureMovementId: record.fixtureMovementId }),
         idempotencyKey: record.lastKey,
         phase: record.phase,
         settlementId: record.settlementId,
@@ -382,6 +385,7 @@ export class SettlementCaseStore {
       idempotencyKey: record.echoKey,
       failureReason: record.failureReason,
       cancelReason: record.cancelReason,
+      ...(record.fixtureMovementId !== undefined && { fixtureMovementId: record.fixtureMovementId }),
       lastRejectCode: record.lastRejectCode,
       reconcileMatched: record.reconcileMatched,
       fundsExecuted: false,
@@ -396,6 +400,7 @@ function normalizeBody(op: TransitionOp, rawBody: Record<string, string>): Recor
   if (op === "fail" || op === "cancel") {
     return { reason: ident(rawBody.reason ?? "") };
   }
+  if (op === "commit" && rawBody.fixtureMovementId !== undefined) return { fixtureMovementId: ident(rawBody.fixtureMovementId) };
   return {};
 }
 

@@ -1,7 +1,7 @@
 import { c1, c146, c145, c144, c143, c0, c142 } from "./shared-copy";
 export const messages = {
   en: {
-    "s6x": "A reload clears this page-load journey and uses a new attempt id.",
+    "s6x": "Unresolved booking writes stay blocked after reload.",
     "s12": "Actor",
     "sbp": "Catalogue journey",
     "sd4": "Code {code}.",
@@ -39,7 +39,7 @@ export const messages = {
     "e.30": "wave6a.journey · stub-shape receipts",
   },
   ko: {
-    "s6x": "새로고침은 이 로드의 여정을 비우고 새 시도 식별자를 사용합니다.",
+    "s6x": "미확인 예매 쓰기는 새로고침 후에도 차단됩니다.",
     "s12": "행위자",
     "sbp": "명령 목록 여정",
     "sd4": "코드 {code}.",

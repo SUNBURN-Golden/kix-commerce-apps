@@ -16,9 +16,9 @@ In a browser, integration HTTP shows the path as unavailable. The reviewed gate 
 
 `create_event` sends a synthetic fixture policy, the same object as `SHOW_POLICY` in the journey test support. The screen does not display a price or a fee. A different value, or a displayed price, would be a product policy decision.
 
-Operation ids are `jrn:<eventId>:<attempt>:<step>`. The attempt comes from the desk attempt counter and increases once per new page-load journey, so a reload does not reuse an id in the same tab. The UI does not mint a replacement id after a fence. An id the helper refuses (length or whitespace) is not sent.
+Operation ids are `jrn:<eventId>:<attempt>:<step>`. The attempt comes from the desk attempt counter and increases once per fresh journey in the tab. The UI does not mint a replacement id after a fence. An id the helper refuses (length or whitespace) is not sent.
 
-State is page-load only. A reload clears the fence and starts a new journey. On a real gate the same `eventId` can then answer `EVENT_EXISTS`. That is not a confirmation of the cleared request, and it is not a business rejection of it.
+Before dispatch, the Core booking desk writes the intent in tab session storage scoped by mode, pin and event. A reload shows the same operation as `UNKNOWN` with its last confirmed step and operation ID as history. Every write stays blocked and no new attempt is minted. Receipts and current facts live in memory. Invalid or inaccessible history yields `SESSION_EVIDENCE_LOST`. Retention is `UNDETERMINED`. No TTL expires the fence. The real-gate response-loss test probes `EVENT_EXISTS` independently to verify the original effect. The web desk and browser tests assert zero further sends on reload.
 
 ## States
 

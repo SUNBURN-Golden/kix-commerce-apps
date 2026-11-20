@@ -27,6 +27,8 @@ import {
   docSections,
   denominatorLines,
   externalTargets,
+  FIXTURE_EVIDENCE,
+  fixtureLedger,
   JOURNEY_TESTS,
   journeyRows,
   liveGateFiles,
@@ -263,6 +265,23 @@ describe("local evidence matrix: contract tuple and locks", () => {
     expect(tuple.vectorDigest).toContain(" mixed-input:");
     expect(tuple.consumedProducerChange).toBe(true);
     expect(tuple).toMatchObject(KIX_SDK_0_CONSUMPTION_DIGESTS);
+  });
+
+  it("inventories the fixture journeys and the separate pinned producer ledger", () => {
+    for (const { browser, gate } of Object.values(FIXTURE_EVIDENCE)) {
+      expect(pointerExists(`apps/e2e/tests/journeys/${browser}`)).toBe(true);
+      expect(pointerExists(`packages/protocol-adapter/test/${gate}`)).toBe(true);
+    }
+    const { protocolMergeSha, files } = fixtureLedger();
+    expect(protocolMergeSha).toBe(sharedTuple().protocolMergeSha);
+    expect(Object.keys(files)).toHaveLength(159);
+    expect(Object.keys(files)).toEqual(expect.arrayContaining([
+      "docs/contracts/openapi/fsm-command-contract.json",
+      "reference/booking_resale_admission/fixtures/commerce_journey_conformance_v1.json",
+      "reference/booking_resale_admission/fixtures/resale_session.json",
+      "reference/read_model/vectors/manifest.json",
+      "sdk/conformance/vectors/canonical-encoding.vectors.json",
+    ]));
   });
 
   it("leaves commerce-bindings.ts byte-identical and placeHold not-bound with reserve_listing", () => {

@@ -1,5 +1,7 @@
+import { COMMAND_SCHEMAS } from "#kix-sdk-0/catalogue";
+import { classifyThrown } from "../src/call-outcome.js";
 import { type ChildProcess } from "node:child_process";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   CONTRACT_ONLY_LOCAL_CALL_PATH,
   CREDIT_BOUNDARY,
@@ -8,6 +10,7 @@ import {
   ProtocolError,
   INTEGRATION_GATE_HEALTH_PATH,
   INTEGRATION_GATE_READY_PATH,
+  PINNED_ACTIONS,
   PINNED_PROTOCOL_DOMAIN,
   StubProtocolAdapter,
   admissionDeskState,
@@ -41,6 +44,28 @@ const SHOW_POLICY = {
 
 
 describe("http mode fail-closed without a server", () => {
+  it("requires the FSM receipt path for validated FSM actions before any fetch", async () => {
+    const schemaCount = Object.values(COMMAND_SCHEMAS);
+    expect(schemaCount).toHaveLength(84);
+    expect(PINNED_ACTIONS).toHaveLength(84);
+    expect(schemaCount.filter(schema => schema.required?.includes("domain"))).toHaveLength(40);
+    expect(schemaCount.filter(schema => !schema.required?.includes("domain"))).toHaveLength(44);
+    const send = vi.fn<typeof fetch>();
+    const adapter = new HttpProtocolAdapter("http://127.0.0.1:8765", send);
+    for (const [action, fields] of [
+      ["reservation_set_clock", { subject_id: "clock", now_ms: 1000000 }],
+      ["reservation_release", { reservation_id: "reserve-A" }],
+      ["credit_draw", { advance_id: "advance-A", draw_id: "draw-A" }],
+    ] as const) {
+      const result = adapter.invokeLocalCall({
+        action, operationId: "operation", actor: "test", body: { ...fields, idempotency_key: "attempt-key" },
+      });
+      await expect(result).rejects.toMatchObject({ code: "FSM_VERIFIER_REQUIRED", requestId: undefined, correlationId: undefined });
+      expect(await result.catch(classifyThrown)).toEqual({ disposition: "not-sent", code: "FSM_VERIFIER_REQUIRED" });
+    }
+    expect(send).not.toHaveBeenCalled();
+  });
+
   it("rejects a closed port, a wrong transport header, and a production claim", async () => {
     const dead = new HttpProtocolAdapter("http://127.0.0.1:1");
     await expect(

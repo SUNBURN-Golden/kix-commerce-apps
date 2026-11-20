@@ -90,7 +90,7 @@ On reviewed commit `1c5c721bb941c726be3d65d35485d517a6a06fed`, both required hos
 
 Both jobs also reported `SUCCESS` on PR #146 at round-one commit `7d4a638491fa8ceeda10ad5b62f7d660e08e38da`. [Stub job](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44471263878/job/135381039252) · [Reviewed gate job](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44471263878/job/135381098078)
 
-Both required jobs completed with `SUCCESS` on round-two commit `80a0eceb3c81c2f530ca1c2f56468b9d92c97684`. The round-three changes are local. [Stub job](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44477697041/job/135402130564) · [Reviewed gate job](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44477697041/job/135402182104)
+Both required jobs completed with `SUCCESS` on round-two commit `80a0eceb3c81c2f530ca1c2f56468b9d92c97684`. That run predates the final PR head. [Stub job](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44477697041/job/135402130564) · [Reviewed gate job](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44477697041/job/135402182104)
 
 ### Review round one
 
@@ -147,7 +147,7 @@ The same scenarios run against the default stub and a fresh loopback instance of
 | List | With `resale_allowed: false` on both registration and adoption, the listing returns `RESALE_POLICY_REJECTED`. A buyer hold then returns `UNKNOWN_LISTING`. |
 | Accept | Altering only `right.listing_id` to `list-1` in a successful receipt leaves acceptance `UNKNOWN` after one attempt. Listed and paid evidence survives. Transfer and settlement stay at `NO_EVIDENCE`. |
 
-The prepared replacement for PR #146 includes the inline change requests and repository links. The hosted body inspected at `80a0ece` still contains builder-local links and omits the inline section. [PR body](kix-resale-journey-binding-pr-body.md#not_bound-list)
+The prepared replacement for PR #146 includes the inline change requests and repository links. The earlier hosted body inspected at `80a0ece` omitted the inline section. [PR body](kix-resale-journey-binding-pr-body.md#not_bound-list)
 
 Round-three working tree (uncommitted, on top of `80a0ece`). Local box: Node v24.22.1, Python 3.13.5; the pinned gate checkout stayed clean at `8ba7f6c`. The shared refusal suite now runs the registration, reservation-window, order-price, primary-payment-reference, expiry, issuance-order and resale-policy boundaries in both modes, and both receipt paths check `right.listing_id` after transfer. The stub checks follow the pinned order: `_roles` in `reservation_fsm.py`, `_window`/`_money`/`_hex32` in `mock_gates.py`, `_normalize_adopt` before `_match_authority` and `_require_authority` before the payment binding in `resale_fsm.py`, and the policy check between `STALE_VERSION` and `RECIPIENT_IS_HOLDER` in `mock_gates.py:list_resale`.
 
@@ -171,3 +171,10 @@ Round-three files: `packages/protocol-adapter/src/commerce-fixture-fields.ts` (n
 The producer checkout and both vendored OpenAPI files identify #448 as the pinned merge. #433 introduced the FSM catalogue. The market uses the router's existing history state to open the fixture because the read-state normalization removes fragments. The fixture remains an explicit choice on the synthetic product page. Grouping shared fixture code and related lazy desk modules kept the bundle inside the existing size limits. The local evidence matrix now names the additional live suite and counts ten gate-dependent files.
 
 Initial checks caught a translation-key collision, strict TypeScript errors, untranslated display literals and an outdated gate-suite inventory. The first browser pass exposed the discarded fixture-link fragment. A static size pass also hid a 464,622-byte box-office load. Reading the browser's script requests identified a booking module that pulled secondary catalogue desks onto the landing route. Grouping it with the booking/refund controls brought both bundle measurements within budget. Earlier full browser runs timed out on finance, gallery and keyboard tests. The reruns used the repository's time limits. A separate booking browser check matched both the page title and the confirmed ticket title on return. Its selector now identifies the level-two page title explicitly.
+
+
+## Final PR delivery
+
+PR #146 merged as `9a55fe4e257376f9db3f877a11b65e3ecc43c661`. A GitHub API read-back verified that all 13 inline `NOT_BOUND` rows match the change-request document and prepared body. Commerce apps CI recorded all 12 jobs successful on final PR head `cefa2b384dd6cd13f58bef67644ac37fa11e97b8`, including **Typecheck, build, and test (stub)** and **Adapter tests against the reviewed gate**. This resolves the earlier publication blocker. [PR #146](https://github.com/SUNBURN-Golden/kix-commerce-apps/pull/146) · [Final-head CI](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44647977361)
+
+M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.

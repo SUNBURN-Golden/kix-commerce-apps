@@ -42,7 +42,8 @@ function lossyDesk(calls: LocalCallInput[], lose: (action: string) => boolean): 
 
 describe("fault injection on the journey desk (FI-W01 to FI-W03)", () => {
   it("FI-W01: after a lost answer no row can send and none reads confirmed", async () => {
-    installStorage({ getItem: () => null, setItem: () => undefined });
+    const stored = new Map<string, string>();
+    installStorage({ getItem: key => stored.get(key) ?? null, setItem: (key, value) => void stored.set(key, value) });
     const calls: LocalCallInput[] = [];
     const desk = lossyDesk(calls, (action) => action === "create_event");
     await desk.probe();
@@ -59,7 +60,7 @@ describe("fault injection on the journey desk (FI-W01 to FI-W03)", () => {
     expect(new Set(calls.map((call) => call.operationId)).size).toBe(calls.length);
   });
 
-  it("FI-W02 (LIMIT): a second desk, standing in for a reload, starts a new attempt and is not fenced", async () => {
+  it("FI-W02: a second desk restores the same attempt and fences every write", async () => {
     const stored = new Map<string, string>();
     installStorage({ getItem: (key) => stored.get(key) ?? null, setItem: (key, value) => void stored.set(key, value) });
     const calls: LocalCallInput[] = [];
@@ -67,10 +68,10 @@ describe("fault injection on the journey desk (FI-W01 to FI-W03)", () => {
     await first.send("evt_fi_w02", "create_event");
     const second = lossyDesk(calls, () => false);
     await second.send("evt_fi_w02", "create_event");
-    // The fence is page-load only. This is recorded as a limit, not extended here.
-    expect(calls).toHaveLength(2);
-    expect(calls[0]?.operationId).not.toBe(calls[1]?.operationId);
-    expect(first.view("evt_fi_w02").rows.every((row) => row.canSend === false)).toBe(true);
+    await second.send("evt_fi_w02", "prepare_trade");
+    expect(calls).toHaveLength(1);
+    expect(second.view("evt_fi_w02").rows[0]).toMatchObject({ status: "unconfirmed", operationId: calls[0]?.operationId });
+    expect(second.view("evt_fi_w02").rows.every((row) => row.canSend === false)).toBe(true);
   });
 
   it("FI-W03: corrupt attempt counters are ignored and never lower the attempt", () => {

@@ -860,6 +860,12 @@ export const WORKSPACE_SURFACES = [
   },
 ] as const satisfies readonly WorkspaceSurface[];
 
+/** Published fixture journeys use the FSM receipt port alongside the desk inventory. */
+export const FIXTURE_JOURNEYS = [
+  { composer: "CommerceJourney", route: "/booking/:eventId", entry: "/booking/:eventId", port: "advanceCommerceJourney" },
+  { composer: "ResaleJourney", route: "/resale/market/demo-001", entry: "/resale/market", port: "advanceCommerceJourney" },
+] as const;
+
 export interface BuyerFlowStage {
   readonly id: (typeof BUYER_FLOW_STAGE_IDS)[number];
   readonly surfaces: readonly string[];

@@ -8,7 +8,7 @@ import { ProtocolError } from "../../../packages/protocol-adapter/src/types";
 import { click, element, renderDom } from "./support/render-dom";
 
 const { send } = vi.hoisted(() => ({ send: vi.fn() }));
-vi.mock("../src/connectivity/desk-protocol", () => ({ protocol: { advanceCommerceJourney: send } }));
+vi.mock("../src/connectivity/desk-protocol", () => ({ protocol: { describe: () => ({ environment: "stub" }), advanceCommerceJourney: send } }));
 
 it("shows independent facts, a no-send read reason and the uncertain write on re-entry", async () => {
   let finish: (reason: unknown) => void = () => {};
@@ -16,7 +16,13 @@ it("shows independent facts, a no-send read reason and the uncertain write on re
   const panel = (eventId: string) => (
     <LocaleContext.Provider value={stateFor("ko", () => {})}><CommerceJourneyPanel eventId={eventId} /></LocaleContext.Provider>
   );
+  sessionStorage.setItem("kix-journey-intent:fsm:stub", "{");
   const { container, rerender } = await renderDom(panel("evt_a"));
+  expect(container.textContent).toContain("SESSION_EVIDENCE_LOST");
+  expect(container.querySelector("[data-commerce-branch]")).toBeNull();
+  expect(send).not.toHaveBeenCalled();
+  sessionStorage.removeItem("kix-journey-intent:fsm:stub");
+  await rerender(panel("evt_a"));
   const press = (selector: string) => click(element<HTMLButtonElement>(container, selector));
   expect(container.textContent).toContain("프로토콜 거래 여정");
   await press("[data-commerce-branch=admission]");

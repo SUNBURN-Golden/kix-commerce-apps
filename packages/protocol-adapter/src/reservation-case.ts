@@ -156,6 +156,8 @@ interface OrderRecord {
 }
 
 interface IssuanceRecord {
+  version: 1;
+  generation: 1;
   canon: string;
   reservationId: string;
 }
@@ -622,7 +624,7 @@ export class ReservationCaseStore {
     const row = this.ownedSlot(record);
     row.state = "ISSUED";
     row.rightId = issuanceId;
-    this.issuances.set(issuanceId, { canon, reservationId: record.reservationId });
+    this.issuances.set(issuanceId, { canon, reservationId: record.reservationId, version: 1, generation: 1 });
     this.mark(record, key);
     return { reservationId: record.reservationId, orderId, observed };
   }
@@ -926,6 +928,14 @@ export class ReservationCaseStore {
       reconcileMatched: record.reconcileMatched,
       note: RESERVATION_CASE_NOTE,
     };
+  }
+
+  fixtureIssuance(issuanceId: string) {
+    const issuance = this.issuances.get(issuanceId);
+    if (!issuance) throw reservationError("UNKNOWN_ISSUANCE");
+    const view = this.view(issuance.reservationId);
+    return { issuanceId: view.issuanceId, rightId: view.rightId, holderRole: view.buyerRole,
+      version: issuance.version, generation: issuance.generation, chainIssued: view.chainIssued };
   }
 
   private toShowView(showId: string): ReservationShowView {
