@@ -170,7 +170,7 @@ export class StubProtocolAdapter implements CommerceProtocol {
   async advanceCommerceJourney(input: CommerceJourneyCall): Promise<JourneyProof> {
     const { runStubCommerceJourney } = await import("./commerce-journey-stub.js");
     // Its fixed logical clock and identities belong to this fixture journey.
-    const cases = this.journeyCases ??= { ...createCaseStores(), refunds: new Set(), attemptedKeys: new Set() };
+    const cases = this.journeyCases ??= { ...createCaseStores(), settlementMarkers: new Map(), attemptedKeys: new Set() };
     return runStubCommerceJourney(input, cases);
   }
 

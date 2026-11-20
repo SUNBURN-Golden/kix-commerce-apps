@@ -25,7 +25,7 @@ import { CONTRACT_FIXTURES, fixturesForScreen } from "../../../../packages/proto
 import { JOURNEYS as E2E_JOURNEYS, MATRIX as E2E_MATRIX } from "../../../e2e/src/journey-matrix";
 import { SCREENS as A11Y_SCREENS } from "../../../e2e/src/a11y-matrix";
 import { FEATURE_ROWS, HANDOFF_PINS, PENDING_PRODUCERS } from "../../src/handoff/packet";
-import { WORKSPACE_SURFACES } from "../../src/workspace/registry";
+import { FIXTURE_JOURNEYS, WORKSPACE_SURFACES } from "../../src/workspace/registry";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, "../../../..");
@@ -507,13 +507,35 @@ export function renderNode(row: NodeRow): string {
   return `| ${row.rowId} | ${row.catalogue} | ${f.nodeState} | ${row.centralDone} | ${f.qualificationState} | ${f.acceptanceState} | ${f.releaseState} | ${row.waitingOn} |`;
 }
 
+export const FIXTURE_EVIDENCE = {
+  CommerceJourney: { browser: "commerce-journey.e2e.test.ts", gate: "commerce-journey-live.test.ts", reads: "get_booking" },
+  ResaleJourney: { browser: "resale-market.e2e.test.ts", gate: "resale-journey-live.test.ts", reads: "market reads" },
+} as const;
+
+export const FIXTURE_LEDGER = "packages/protocol-adapter/vendor/commerce-journey/provenance.json";
+
+export function fixtureLedger() {
+  return JSON.parse(readFileSync(path.join(REPO_ROOT, FIXTURE_LEDGER), "utf8")) as {
+    protocolMergeSha: string;
+    files: Record<string, { sha256: string; gitBlob: string }>;
+  };
+}
+
 export function docSections(table: readonly CrossSurfaceRow[]): Record<string, string> {
   const head = (cols: string[]) => `| ${cols.join(" | ")} |\n| ${cols.map(() => "---").join(" | ")} |`;
   const surfaces = surfaceRows();
   const journeys = journeyRows(table);
   const nodes = nodeRows();
   const tuple = sharedTuple();
+  const ledger = fixtureLedger();
   return {
+    FIXTURE_JOURNEYS: [head(["Composer", "Route", "Entry", "Stub browser", "Node loopback", "Browser HTTP", "Reads"]),
+      ...FIXTURE_JOURNEYS.map(({ composer, route, entry }) => {
+        const evidence = FIXTURE_EVIDENCE[composer];
+        return `| \`${composer}\` | \`${route}\` | \`${entry}\` | \`${evidence.browser}\` | \`${evidence.gate}\` | unavailable | \`${evidence.reads}\` \`NOT_BOUND\` |`;
+      }),
+      `Fixture ledger \`${FIXTURE_LEDGER}\` records ${Object.keys(ledger.files).length} files at producer \`${ledger.protocolMergeSha}\` with SHA-256 and Git blob IDs.`,
+    ].join("\n"),
     SURFACE_COVERAGE: [head(["Row", "Route", "Binding", "Mode", "Success", "Reject", "UNKNOWN", "NOT_BOUND fixtures"]), ...surfaces.map(renderSurfaceCoverage)].join("\n"),
     SURFACE_FACETS: [head(["Row", "Node evidence", "Browser evidence", "Skipped / unbound reason", "node_state", "qualification_state", "acceptance_state", "release_state"]), ...surfaces.map(renderEvidenceFacets)].join("\n"),
     JOURNEY_COVERAGE: [head(["Row", "Route", "Binding", "Mode", "Success", "Reject", "UNKNOWN", "NOT_BOUND cells"]), ...journeys.map(renderSurfaceCoverage)].join("\n"),

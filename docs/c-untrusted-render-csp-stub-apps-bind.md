@@ -45,7 +45,9 @@ The runtime audit found no web-app `localStorage`, IndexedDB, or cookie writes. 
 | `kix-reservation-attempt:` | reservation attempt counter | non-negative integer text |
 | `kix-resale-attempt:` | resale attempt counter | non-negative integer text |
 | `kix-organizer-attempt:` | organizer attempt counter | non-negative integer text |
+| `kix-resale-intent:` | mode-scoped unresolved resale fixture | tab JSON with step, operation and prior markers |
 | `kix-journey-attempt:` | journey attempt counter | non-negative integer text |
+| `kix-journey-intent:` | unresolved Core booking by event and mode, or FSM booking by mode | version, pin digest, mode, event, branch, step, operation ID and last confirmed step/operation ID |
 | `kix-gift-attempt:` | gift attempt counter | non-negative integer text |
 | `kix-credit-attempt:` | credit attempt counter | non-negative integer text |
 | `kix-consent-attempt:` | consent attempt counter | non-negative integer text |

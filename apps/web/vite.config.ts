@@ -172,8 +172,11 @@ export default defineConfig({
           if (/\/src\/pages\/(Assistant|MarketingJourney)(Panels)?\.tsx$/.test(id)) return "Assistant";
           if (/\/src\/pages\/(PlatformRelease|OperationalQualification)(Panels)?\.tsx$/.test(id)) return "PlatformRelease";
           if (/\/src\/((organizer|consent|gift)-desk|organizer-workspace)\.ts$/.test(id)) return "catalogue-desks";
-          // The box office, booking and buyer pages all use the journey and refund controls.
-          if (/\/src\/(journey-desk|refund-return|pages\/(RefundReturnPanel|JourneyPanel))\.tsx?$/.test(id)) return "refund-and-booking";
+          // The box office, booking and buyer pages all use the Core journey and refund controls.
+          if (/\/src\/(journey-desk|booking-journey-intent|refund-return|pages\/(RefundReturnPanel|JourneyPanel))\.tsx?$/.test(id)) return "refund-and-booking";
+
+          // Merchant and finance reviewers share the workroom and adjudicated-export patterns.
+          if (/\/src\/pages\/(Merchant|Finance)(Panels)?\.tsx$/.test(id)) return "review-workrooms";
 
           // The journey labels reuse the booking and resale desk dictionaries.
           if (id.endsWith("/src/i18n/desk-catalogue.ts")) return "display-copy-5";

@@ -4,6 +4,12 @@ import type { ResaleMarketIntent, ResaleMarketWriteResult } from "../../../packa
 declare global { interface Window { __kixResaleFault?: { mode: "normal" | "reject" | "lost" | "held" | "wrong-side"; dispatches: number; requests?: ResaleMarketIntent[]; results?: ResaleMarketWriteResult[]; reads?: number; list?: { mode?: "held" | "error" | "not-bound"; productIds?: string[]; total?: number }; missingProduct?: boolean; releaseRead?: () => void; history?: { count: number; wideCount: number; generation?: number; reverse?: boolean }; release?: () => void } } }
 declare global {
   interface Window {
+    __kixBookingJourney?: {
+      lose?: string;
+      hold?: string;
+      applied?: string;
+      sends: string[];
+    };
     __kixResaleJourney?: { sends: number; release?: () => void };
   }
 }

@@ -159,6 +159,17 @@ One row per workspace surface. Mode is `stub (default)` plus the outcome in `int
 | receipt-explorer | web receipt-explorer.test.tsx; adapter none | a11y receipts; e2e receipts | binding stub-only; status synthetic | REPO_PRESENT | UNQUALIFIED | PENDING | NOT_AUTHORIZED |
 | accessibility-baseline | web a11y-baseline.test.tsx; adapter none | none (no page) | binding no-published-command; no page; status unsupported | REPO_PRESENT | UNQUALIFIED | NOT_REQUIRED | NOT_AUTHORIZED |
 
+## Published fixture journeys
+
+| Composer | Route | Entry | Stub browser | Node loopback | Browser HTTP | Reads |
+| --- | --- | --- | --- | --- | --- | --- |
+| `CommerceJourney` | `/booking/:eventId` | `/booking/:eventId` | `commerce-journey.e2e.test.ts` | `commerce-journey-live.test.ts` | unavailable | `get_booking` `NOT_BOUND` |
+| `ResaleJourney` | `/resale/market/demo-001` | `/resale/market` | `resale-market.e2e.test.ts` | `resale-journey-live.test.ts` | unavailable | `market reads` `NOT_BOUND` |
+
+Fixture ledger `packages/protocol-adapter/vendor/commerce-journey/provenance.json` records 159 files at producer `8ba7f6c36373ac0ec49246f51f7471c164ac3a28` with SHA-256 and Git blob IDs.
+
+The ledger's `{ protocolMergeSha, files }` includes the FSM command contract, `commerce_journey_conformance_v1.json`, `resale_session.json`, and read-model and SDK vectors. The ledger's `sdk/` entries resolve under `vendor/kix-sdk-0`. The p-sdk-0 BOOTSTRAP tuple and its producer provenance remain independent of the fixture inventory. Stub browser and Node loopback tests provide fixture evidence under the original acceptance and release facets. [Fixture ledger](../packages/protocol-adapter/vendor/commerce-journey/provenance.json) · [Commerce binding](c-int-commerce-journey-apps-bind.md) · [Resale binding](kix-resale-journey-binding-apps-bind.md)
+
 ## Journey matrix
 
 One row per cross-surface journey. Success, Reject, and UNKNOWN point at the synthetic Journeys table row for the `normal`, `explicit-reject`, and `response-lost` branches. A `reused` or `no-source-branch` row is stated as such. A table row is a recorded stub row, not a run on a real source.

@@ -1,3 +1,4 @@
+import { memoryStore } from "./support/session-store";
 import { describe, expect, it } from "vitest";
 import {
   GateRejectedError,
@@ -6,6 +7,7 @@ import {
   integrationHttpObservation,
   localStubObservation,
   type LocalCallInput,
+  type SessionStorePort,
   type TransportObservation,
 } from "@kix/protocol-adapter";
 import {
@@ -226,6 +228,68 @@ describe("journey desk", () => {
     expect(desk.view("").opened).toEqual([]);
   });
 
+  it("rehydrates the original UNKNOWN and last confirmed attempt without allocating a new attempt", async () => {
+    const event = "reload:booking";
+    const key = "kix-journey-intent:core:stub:reload%3Abooking";
+    const store = memoryStore();
+    const first = stubDesk(async (input, shape) => {
+      expect(JSON.parse(store.getItem(key)!)).toMatchObject({ operationId: input.operationId, step: input.action });
+      const receipt = await shape.invokeLocalCall(input);
+      if (input.action === "prepare_trade") throw new Error("result lost after apply");
+      return receipt;
+    }, store);
+    await first.desk.send(event, "create_event");
+    expect(store.getItem(key)).toBeNull();
+    await first.desk.send(event, "prepare_trade");
+    const original = store.getItem(key);
+
+    const reloaded = stubDesk((input, shape) => shape.invokeLocalCall(input), store);
+    await reloaded.desk.probe();
+    for (const step of ["create_event", "prepare_trade", "accept_trade"] as const) await reloaded.desk.send(event, step);
+    expect(reloaded.calls).toHaveLength(0);
+    expect(reloaded.desk.view(event).rows).toMatchObject([
+      { status: "confirmed", operationId: first.calls[0].operationId, receipt: null },
+      { status: "unconfirmed", operationId: first.calls[1].operationId, receipt: null, code: "UNKNOWN" },
+      { status: "blocked", canSend: false },
+    ]);
+    expect(store.getItem(key)).toBe(original);
+
+    await reloaded.desk.send("another-booking", "create_event");
+    expect(reloaded.calls).toHaveLength(1);
+    const http = httpDesk(integrationHttpObservation({
+      state: "up", code: null, requestId: null, correlationId: null, localFileJournal: null, detail: "reachable",
+    }), async () => { throw new Error("different mode reached"); }, store);
+    await http.probe();
+    http.retain(event);
+    expect(http.view(event).rows[0]?.canSend).toBe(true);
+  });
+
+  it.each(["corrupt", "wrong pin", "wrong event", "invalid history", "invalid operation", "unavailable", "silent write failure"] as const)(
+    "reports SESSION_EVIDENCE_LOST and sends nothing with %s storage", async (problem) => {
+      const event = "invalid-storage";
+      const key = `kix-journey-intent:core:stub:${event}`;
+      const store = memoryStore();
+      const { desk } = stubDesk(async () => { throw new Error("result lost"); }, store);
+      await desk.send(event, "create_event");
+      const pending = JSON.parse(store.getItem(key)!);
+      const records = {
+        corrupt: "{",
+        "wrong pin": JSON.stringify({ ...pending, pinDigest: "incompatible" }),
+        "wrong event": JSON.stringify({ ...pending, eventId: "foreign" }),
+        "invalid history": JSON.stringify({ ...pending, lastConfirmed: { step: pending.step, operationId: pending.operationId } }),
+        "invalid operation": JSON.stringify({ ...pending, operationId: "forged" }),
+      };
+      if (problem === "silent write failure") {
+        store.removeItem(key);
+        store.setItem = () => {};
+      } else if (problem !== "unavailable") store.setItem(key, records[problem]);
+      const reloaded = stubDesk((input, shape) => shape.invokeLocalCall(input), problem === "unavailable" ? null : store);
+      await reloaded.desk.send(event, "create_event");
+      expect(reloaded.calls).toHaveLength(0);
+      expect(reloaded.desk.view(event).rows[0]).toMatchObject({ code: "SESSION_EVIDENCE_LOST", canSend: false });
+    },
+  );
+
   it("maps path status without selecting the stub for a failed probe", () => {
     const unavailable = integrationHttpObservation({
       state: "unavailable",
@@ -248,10 +312,12 @@ describe("journey desk", () => {
 
 function stubDesk(
   handle: (input: LocalCallInput, shape: ReturnType<typeof createStubJourneyInvoker>) => Promise<unknown>,
+  store: SessionStorePort | null = memoryStore(),
 ): { desk: JourneyDesk; calls: LocalCallInput[] } {
   const calls: LocalCallInput[] = [];
   const shape = createStubJourneyInvoker();
   const desk = createJourneyDesk({
+    store,
     protocol: {
       describe: () => ({ environment: "stub" }),
       observeTransport: async () => localStubObservation(),
@@ -272,8 +338,10 @@ function stubDesk(
 function httpDesk(
   observation: TransportObservation,
   invoke: () => Promise<unknown>,
+  store: SessionStorePort | null = memoryStore(),
 ): JourneyDesk {
   return createJourneyDesk({
+    store,
     protocol: {
       describe: () => ({ environment: "integration-http" }),
       observeTransport: async () => observation,

@@ -10,6 +10,7 @@ export const STORAGE_ALLOW_LIST = [
   "kix-resale-intent:",
   "kix-organizer-attempt:",
   "kix-journey-attempt:",
+  "kix-journey-intent:",
   "kix-gift-attempt:",
   "kix-credit-attempt:",
   "kix-consent-attempt:",

@@ -1,3 +1,4 @@
+import { COMMAND_SCHEMAS, type CommandName } from "#kix-sdk-0/catalogue";
 import { GateRejectedError } from "./call-outcome.js";
 import type { CommerceJourneyCall, JourneyProof } from "./commerce-journey-command.js";
 import { ADMISSION_TRANSPORT_NOTE, admissionBoundaryPresentation } from "./admission-case.js";
@@ -505,8 +506,8 @@ export class HttpProtocolAdapter implements CommerceProtocol {
 
   /**
    * Sends one local-call envelope to the published integration-gate path.
-   * action must be one of the pinned commands. Unknown actions fail closed
-   * before a request. Ambiguous responses do not prove a business rejection.
+   * Only pinned Core commands can use this path. FSM writes require the
+   * fixture receipt verifier. Ambiguous responses do not prove a business rejection.
    */
   async invokeLocalCall(input: LocalCallInput): Promise<unknown> {
     return this.call(input);
@@ -524,6 +525,10 @@ export class HttpProtocolAdapter implements CommerceProtocol {
 
   private async call(input: LocalCallInput, fsm?: { scan: (body: unknown) => void; proof: (body: unknown) => JourneyProof }): Promise<unknown> {
     const envelope = structuredClone(buildLocalCallEnvelope(input));
+    const core = COMMAND_SCHEMAS[envelope.action as CommandName].required?.includes("domain");
+    if (!fsm && !core) {
+      throw new ProtocolError("FSM commands require the commerce journey receipt verifier.", "FSM_VERIFIER_REQUIRED");
+    }
     const parsed = await this.exchange(this.endpoint(CONTRACT_ONLY_LOCAL_CALL_PATH), {
       method: CONTRACT_ONLY_LOCAL_CALL_METHOD,
       headers: {

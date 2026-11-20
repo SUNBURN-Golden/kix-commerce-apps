@@ -35,7 +35,7 @@ describe("pinned commerce fixture", () => {
   it.each(["admission", "resale", "refund"] as const)("runs the %s branch through the selected stub", async (branch) => {
     const adapter = new StubProtocolAdapter();
     await adapter.advanceReservationClock({ nowAt: "2026-11-18T00:00:00.000Z", idempotencyKey: "legacy-clock" });
-    await exercise(branch, adapter);
+    await exercise(branch, adapter, "stub");
     await expect(adapter.viewReservation("reserve-B")).rejects.toMatchObject({ code: "UNKNOWN_RESERVATION" });
   });
   it("returns NOT_BOUND without transport and fences a lost receipt", async () => {
@@ -50,4 +50,20 @@ describe("pinned commerce fixture", () => {
     expect(await journey.run("register-show")).toBeUndefined();
     expect(port.advanceCommerceJourney).toHaveBeenCalledTimes(1);
   });
+});
+
+
+it("fences an unexpectedly confirmed optional refusal in the journey even when the port returns proof", async () => {
+  const stub = new StubProtocolAdapter();
+  const port = { advanceCommerceJourney: vi.fn(async (call: Parameters<typeof stub.advanceCommerceJourney>[0]) =>
+    call.step === "hold-over-capacity" ? { "reservation.phase": "HELD" } : stub.advanceCommerceJourney(call)) };
+  const journey = journeyFor("resale", port);
+  await journey.run("reservation-clock");
+  await journey.run("register-show");
+  const { facts } = journey.state();
+  expect(await journey.run("hold-over-capacity")).toMatchObject({ kind: "UNKNOWN", code: "INVALID_FSM_RECEIPT" });
+  expect(journey.state()).toMatchObject({ confirmed: "register-show", facts, fenced: true });
+  expect(await journey.run("reserve-A")).toBeUndefined();
+  expect(await journey.run("hold-over-capacity")).toBeUndefined();
+  expect(port.advanceCommerceJourney).toHaveBeenCalledTimes(3);
 });

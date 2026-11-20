@@ -64,7 +64,7 @@ The three desk UNKNOWN cells of the browser journeys record (box office, admissi
 | Row | Case | Status | Note |
 | --- | --- | --- | --- |
 | FI-W01 | every desk row after UNKNOWN | PASS | `canSend` false on all three rows, none reads confirmed, a duplicate click sends nothing |
-| FI-W02 | second desk after a reload | LIMIT | The fence is page-load only. A fresh load takes the next attempt and can send a new `create_event` with a new operationId. Persisting that fence needs a retention value, which is UNDETERMINED |
+| FI-W02 | second desk after a reload | Covered by audit-11-fix | Core booking restores the original `UNKNOWN` attempt and sends zero further calls. Chrome exercises Core response loss and FSM reload while the applied result is held. |
 | FI-W03 | corrupt attempt counters | PASS | `abc`, `-1`, `1.5`, empty, `NaN` are ignored and never lower the attempt |
 
 ### Browser runner (production stub bundle, headless Chrome), 7 rows
@@ -102,7 +102,7 @@ The same run had one accessibility failure, `discovery:conflict` with `form.focu
 
 - This is not a service qualification. Every fault is synthetic: a fake fetch, an in-process source, or a script that throws inside a headless Chrome page. There is no real outage, real server, real PG data, or real device.
 - A passing row is not an HTTP-mode result. The Node rows run the real `HttpProtocolAdapter` against a fake fetch, not against a gate.
-- The fence on `/booking`, `/gift`, and `/organizer` lasts for the page load. A reload starts a new attempt (FI-W02). The journal on `/session` is the only persisted fence, and its retention is UNDETERMINED.
+- The Core and FSM booking journals follow the tab-storage precedent of `/session` and `kix-resale-intent:`. Retention is `UNDETERMINED`. No TTL expires a fence. Gift and organizer fences last for the page load.
 - After a store is cleared and the page reloaded, the journal cannot tell the tab from a new one.
 - TIMEOUT and LATE_DELIVERY use a 60 ms client timeout, not the shipped one. No latency or SLO figure is claimed.
 - The concurrent-gift row uses a labelled fixture source that decides. It does not show that any real source decides the same way.

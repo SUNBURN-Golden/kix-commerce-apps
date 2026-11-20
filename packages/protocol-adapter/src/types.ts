@@ -120,6 +120,7 @@ export interface SettlementCaseView {
   idempotencyKey: string;
   failureReason: string | null;
   cancelReason: string | null;
+  fixtureMovementId?: string;
   /** Last rejected command code in this process. Not journaled. */
   lastRejectCode: string | null;
   /**

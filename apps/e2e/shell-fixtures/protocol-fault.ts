@@ -4,6 +4,26 @@
  */
 import type {} from "../src/resale-fault-types";
 import { protocol as real } from "../../web/src/protocol";
+import { journeyInvokerFor } from "../../../packages/protocol-adapter/src/journey-invoker";
+
+async function bookingResult<T>(step: string, dispatch: () => Promise<T>): Promise<T> {
+  const probe = window.__kixBookingJourney;
+  probe?.sends.push(step);
+  const receipt = await dispatch();
+  if (probe) probe.applied = step;
+  if (probe?.lose === step) throw new Error("Test dropped the booking response after apply.");
+  if (probe?.hold === step) await new Promise<void>(() => {});
+  return receipt;
+}
+
+const source = journeyInvokerFor(real);
+export const journeySource = source && {
+  source: source.source,
+  invoker: {
+    invokeLocalCall: (input: Parameters<typeof source.invoker.invokeLocalCall>[0]) =>
+      bookingResult(input.action, () => source.invoker.invokeLocalCall(input)),
+  },
+};
 
 // Several desks read describe() while the module graph loads, and nothing can catch an error there. The wrapper
 // arms itself in a microtask, after the graph is evaluated and before React renders, so the throw lands in the
@@ -33,6 +53,10 @@ export const protocol = new Proxy(real, {
         }
         return (Reflect.get(target, key) as (...input: unknown[]) => Promise<unknown>).apply(target, args);
       };
+    }
+    if (window.__kixBookingJourney && key === "advanceCommerceJourney") {
+      return (call: Parameters<typeof real.advanceCommerceJourney>[0]) =>
+        bookingResult(call.step, () => target.advanceCommerceJourney(call));
     }
     const resale = window.__kixResaleJourney;
     if (resale && key === "advanceCommerceJourney") {

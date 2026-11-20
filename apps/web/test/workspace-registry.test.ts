@@ -20,6 +20,7 @@ import {
 import {
   BUYER_FLOW_STAGE_IDS,
   BUYER_FLOW_STAGES,
+  FIXTURE_JOURNEYS,
   NEVER_SENT_ACTIONS,
   OUTCOME_TRACKS,
   PLACE_HOLD_RECORD,
@@ -113,6 +114,15 @@ describe("workspace registry", () => {
     expect(PLACE_HOLD_RECORD.consideredAction).toBe("reserve_listing");
     expect(PLACE_HOLD_RECORD.reason).toBe(COMMERCE_COMMAND_BINDINGS.placeHold.reason);
     expect(PLACE_HOLD_RECORD.mappedOntoPrepareTrade).toBe(false);
+  });
+
+  it("inventories both fixture composers alongside the Core sender and stub-market rows", () => {
+    expect(FIXTURE_JOURNEYS).toEqual([
+      { composer: "CommerceJourney", route: "/booking/:eventId", entry: "/booking/:eventId", port: "advanceCommerceJourney" },
+      { composer: "ResaleJourney", route: "/resale/market/demo-001", entry: "/resale/market", port: "advanceCommerceJourney" },
+    ]);
+    expect(WORKSPACE_SURFACES.find(row => row.id === "booking-journey")?.sender).toBe("BookingJourney");
+    expect(WORKSPACE_SURFACES.find(row => row.id === "resale-product")).toMatchObject({ sender: null, actions: [] });
   });
 
   it("pins sender actions and keeps never-sent actions off every sender", () => {

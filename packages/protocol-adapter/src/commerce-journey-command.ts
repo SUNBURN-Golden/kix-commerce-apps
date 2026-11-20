@@ -9,15 +9,15 @@ export type CommerceJourneyRead = (typeof JOURNEY_READS)[number];
 export type JourneyValue = string | number | boolean | null;
 export type JourneyProof = Readonly<Record<string, JourneyValue>>;
 export type JourneyLinks = Readonly<Record<string, JourneyValue>>;
-export interface CommerceJourneyCall {
-  step: FixtureStep;
+export interface CommerceJourneyCall<Step extends FixtureStep = FixtureStep> {
+  step: Step;
   operationId: string;
   idempotencyKey: string;
   links: JourneyLinks;
 }
 
-export interface CommerceJourneyPort {
-  advanceCommerceJourney(input: CommerceJourneyCall): Promise<JourneyProof>;
+export interface CommerceJourneyPort<Step extends FixtureStep = FixtureStep> {
+  advanceCommerceJourney(input: CommerceJourneyCall<Step>): Promise<JourneyProof>;
 }
 
 export type CommerceJourneyNotBound = { kind: "NOT_BOUND"; query: CommerceJourneyRead; reason: string };
@@ -81,6 +81,12 @@ const PROOF_LINKS: Partial<Record<FixtureStep, Record<string, string>>> = {
 
 const fixtures = { ...JOURNEY_FIXTURE, ...MARKET_FIXTURE };
 
+export function declaredRefusal(step: FixtureStep): string | undefined {
+  if (step === "cancel-after-payment") return "COMPENSATION_UNDEFINED";
+  const expectation = fixtures[step][2];
+  return typeof expectation === "string" ? expectation : undefined;
+}
+
 export function commandFor(input: CommerceJourneyCall): {
   operationId: string; actor: string; action: (typeof fixtures)[keyof typeof fixtures][0];
   body: Record<string, unknown>; expectation: JourneyProof | string;
@@ -103,7 +109,7 @@ export function commandFor(input: CommerceJourneyCall): {
   }
   return {
     operationId, actor: "commerce-journey-fixture", action, body,
-    expectation: step === "cancel-after-payment" ? "COMPENSATION_UNDEFINED" : expectation,
+    expectation: declaredRefusal(step) ?? expectation,
   };
 }
 

@@ -173,7 +173,7 @@ describeGate("booking journey live gate parity", () => {
     expect(seen.map((call) => call.action)).toEqual(["create_event", "prepare_trade"]);
   }, 20000);
 
-  it("keeps a refreshed journey incomplete after a discarded create_event", async () => {
+  it("keeps a probe journey incomplete after a discarded create_event", async () => {
     const eventId = freshId("show");
     const operationId = freshId("op-create");
     let sends = 0;
@@ -219,34 +219,36 @@ describeGate("booking journey live gate parity", () => {
     expect(stayed.kind).toBe("FENCED");
     expect(sends).toBe(1);
 
-    let refreshSends = 0;
-    const refreshed = new BookingJourney(
+    let probeSends = 0;
+    const probe = new BookingJourney(
       new HttpProtocolAdapter(baseUrl, async (input, init) => {
-        refreshSends += 1;
+        probeSends += 1;
         return fetch(input, init);
       }),
     );
-    expect(refreshed.state().completedThrough).toBe("none");
-    const outOfOrder = await refreshed.prepareTrade({
+    expect(probe.state().completedThrough).toBe("none");
+    const outOfOrder = await probe.prepareTrade({
       operationId: freshId("op-prepare"),
       tradeId: freshId("trade"),
       buyer: JOURNEY_BUYER,
     });
     expect(outOfOrder).toMatchObject({ kind: "FENCED", blockedBy: { reason: "out-of-order" } });
-    expect(refreshSends).toBe(0);
+    expect(probeSends).toBe(0);
 
-    const retryId = freshId("op-create");
-    const rejected = await refreshed.createEvent({
-      operationId: retryId,
+    // Independent test-only state probe. The fresh helper has no app journal.
+    // EVENT_EXISTS proves the original effect landed before the receipt was lost.
+    const probeId = freshId("op-create-probe");
+    const rejected = await probe.createEvent({
+      operationId: probeId,
       eventId,
       organizer: "organizer",
       policy: SHOW_POLICY,
       seats: ["A1"],
     });
     expect(rejected).toMatchObject({ kind: "REJECTED", code: "EVENT_EXISTS" });
-    expect(retryId).not.toBe(operationId);
-    expect(refreshed.state()).toMatchObject({ completedThrough: "none", halted: { kind: "REJECTED" } });
-    expect(refreshSends).toBe(1);
+    expect(probeId).not.toBe(operationId);
+    expect(probe.state()).toMatchObject({ completedThrough: "none", halted: { kind: "REJECTED" } });
+    expect(probeSends).toBe(1);
   }, 20000);
 
   it("rejects accept_trade once the dedicated gate clock reaches expiry", async () => {
