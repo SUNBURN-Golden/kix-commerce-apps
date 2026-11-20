@@ -52,7 +52,7 @@ describe("contract-only OpenAPI pin", () => {
 
   it("records the merged protocol tip and contract-only flags", () => {
     expect(OPENAPI_CONTRACT_PIN.protocolRepo).toBe("SUNBURN-Golden/kix-protocol");
-    expect(OPENAPI_CONTRACT_PIN.protocolMainSha).toBe("8ba7f6c36373ac0ec49246f51f7471c164ac3a28");
+    expect(OPENAPI_CONTRACT_PIN.protocolMainSha).toBe("4472b0fb64d377d97fd2993673a4485459986606");
     expect(OPENAPI_CONTRACT_PIN.openApiPath).toBe("docs/contracts/openapi/kix-protocol.contract-only.openapi.json");
     expect(OPENAPI_CONTRACT_PIN.infoVersion).toBe(
       "0.3-rc1+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
@@ -173,8 +173,8 @@ describe("integration-gate OpenAPI pin", () => {
 
   it("records the merged protocol tip and non-production flags", () => {
     expect(OPENAPI_INTEGRATION_GATE_PIN.protocolRepo).toBe("SUNBURN-Golden/kix-protocol");
-    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha).toBe("8ba7f6c36373ac0ec49246f51f7471c164ac3a28");
-    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolFeatureSha).toBe("648859b1c9cda424f1a4615ac5155edf46fd0524");
+    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha).toBe("4472b0fb64d377d97fd2993673a4485459986606");
+    expect(OPENAPI_INTEGRATION_GATE_PIN.protocolFeatureSha).toBe("f678040e9de475aaa42602b85c2adcb120cf83ef");
     expect(OPENAPI_INTEGRATION_GATE_PIN.openApiPath).toBe(
       "docs/contracts/openapi/kix-protocol.integration-gate.openapi.json",
     );

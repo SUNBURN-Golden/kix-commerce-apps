@@ -10,10 +10,10 @@ export type JourneyValue = string | number | boolean | null;
 export type JourneyProof = Readonly<Record<string, JourneyValue>>;
 export type JourneyLinks = Readonly<Record<string, JourneyValue>>;
 export interface CommerceJourneyCall<Step extends FixtureStep = FixtureStep> {
-  step: Step;
-  operationId: string;
-  idempotencyKey: string;
-  links: JourneyLinks;
+  readonly step: Step;
+  readonly operationId: string;
+  readonly idempotencyKey: string;
+  readonly links: JourneyLinks;
 }
 
 export interface CommerceJourneyPort<Step extends FixtureStep = FixtureStep> {
@@ -80,6 +80,11 @@ const PROOF_LINKS: Partial<Record<FixtureStep, Record<string, string>>> = {
 };
 
 const fixtures = { ...JOURNEY_FIXTURE, ...MARKET_FIXTURE };
+export const FIXTURE_ACTOR = "commerce-journey-fixture";
+
+export function fixtureTemplate(step: FixtureStep) {
+  return fixtures[step === "cancel-after-payment" ? "cancel-C" : step];
+}
 
 export function declaredRefusal(step: FixtureStep): string | undefined {
   if (step === "cancel-after-payment") return "COMPENSATION_UNDEFINED";
@@ -96,8 +101,7 @@ export function commandFor(input: CommerceJourneyCall): {
       operationId === idempotencyKey) {
     throw new ProtocolError("The fixture requires two distinct attempt identifiers.", "INVALID_ID");
   }
-  const row = fixtures[step === "cancel-after-payment" ? "cancel-C" : step];
-  const [action, template, expectation] = row;
+  const [action, template, expectation] = fixtureTemplate(step);
   const body: Record<string, unknown> = { ...template, idempotency_key: idempotencyKey };
   for (const field of RECEIPT_LINKS[step] ?? []) {
     const expected = step === "cancel-after-payment" ? links.reservation_id : body[field];
@@ -108,7 +112,7 @@ export function commandFor(input: CommerceJourneyCall): {
     body[field] = links[field];
   }
   return {
-    operationId, actor: "commerce-journey-fixture", action, body,
+    operationId, actor: FIXTURE_ACTOR, action, body,
     expectation: declaredRefusal(step) ?? expectation,
   };
 }

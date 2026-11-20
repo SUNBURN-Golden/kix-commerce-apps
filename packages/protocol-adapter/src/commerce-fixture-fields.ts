@@ -1,4 +1,4 @@
-// Synthetic reservation and resale fields at the 8ba7f6c mock_gates.py pin.
+// Synthetic reservation and resale fields at the 4472b0f mock_gates.py pin.
 export const FIXTURE_PAYMENT_REF = /^[0-9a-f]{64}$/;
 
 export function inFixtureOfferWindow(remainingMs: number): boolean {

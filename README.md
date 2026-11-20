@@ -95,11 +95,11 @@ The organizer workspace at `/organizer/workspace` edits the caller fields those 
 
 ## Protocol pin
 
-The adapter vendors two OpenAPI files, the commerce fixture ledger and a separate p-sdk-0 BOOTSTRAP tuple from [kix-protocol](https://github.com/BeautifulMind-JT/kix-protocol). The 84-command catalogue includes 40 core and 44 FSM commands. Apps CI starts the loopback integration gate from PR #448 merge `8ba7f6c36373ac0ec49246f51f7471c164ac3a28`. The feature head `648859b1c9cda424f1a4615ac5155edf46fd0524` has the same Git tree. PR #433 introduced these catalogue and gate bytes. The core `protocol_contract.json` bytes are unchanged.
+The adapter vendors two OpenAPI files, the commerce fixture ledger and a separate p-sdk-0 BOOTSTRAP tuple from [kix-protocol](https://github.com/SUNBURN-Golden/kix-protocol). The 84-command catalogue includes 40 core and 44 FSM commands. Apps CI starts the loopback integration gate from PR #483 merge `4472b0fb64d377d97fd2993673a4485459986606`. The feature head `f678040e9de475aaa42602b85c2adcb120cf83ef` has the same Git tree. PR #433 introduced these catalogue and gate bytes. The core `protocol_contract.json` bytes are unchanged.
 
-The fixture ledger records `protocolMergeSha` and 159 entries in `files`, each with `sha256` and `gitBlob`. It covers the FSM catalogue, `commerce_journey_conformance_v1.json`, `resale_session.json`, read-model vectors and SDK vectors. The ledger's `sdk/` entries resolve under `vendor/kix-sdk-0`. `invokeLocalCall` accepts the 40 schemas requiring `domain`. The 44 FSM schemas require the dedicated receipt path for dispatch. A generic FSM call fails locally as `FSM_VERIFIER_REQUIRED` before any fetch. [Fixture ledger](packages/protocol-adapter/vendor/commerce-journey/provenance.json)
+The fixture ledger records `protocolMergeSha` and 181 entries in `files`, each with `sha256` and `gitBlob`. It covers the FSM catalogue, `commerce_journey_conformance_v1.json`, `resale_session.json`, read-model vectors, SDK files and the fixture conformance evidence. The ledger's `sdk/` entries resolve under `vendor/kix-sdk-0`. `invokeLocalCall` accepts the 40 schemas requiring `domain`. The dedicated receipt path can dispatch 28 FSM actions in the exact fixture contexts and steps granted by `commerce-fixture-8ba7f6c-1`. Other fixture HTTP writes are held as `NOT_BOUND` before fetch. A generic FSM call fails locally as `FSM_VERIFIER_REQUIRED` before any fetch. [Fixture ledger](packages/protocol-adapter/vendor/commerce-journey/provenance.json)
 
-Contract-only catalogue, path `docs/contracts/openapi/kix-protocol.contract-only.openapi.json`, recorded at main `8ba7f6c36373ac0ec49246f51f7471c164ac3a28`. Those bytes are the same at the integration-gate merge.
+Contract-only catalogue, path `docs/contracts/openapi/kix-protocol.contract-only.openapi.json`, recorded at main `4472b0fb64d377d97fd2993673a4485459986606`. Those bytes are the same at the integration-gate merge.
 
 | Pin | Value |
 | --- | --- |
@@ -123,7 +123,7 @@ Integration-gate transport, path `docs/contracts/openapi/kix-protocol.integratio
 | `x-kix-production-conformance` | false |
 | In-flight cap | 8. `durableAcrossRestart` stays false. The optional file journal defaults off |
 
-Vendored p-sdk-0 tuple, path `packages/protocol-adapter/vendor/kix-sdk-0`. PR #433 (merge `19cdc1c6393e88528d3918e0f4f1f37645a34042`) introduced bootstrap-2. This repository consumes it from PR #448 merge `8ba7f6c36373ac0ec49246f51f7471c164ac3a28`. `KIX_SDK_0_PIN` asserts the digests and the vendored bytes at load time. BOOTSTRAP grants catalogue-schema binding only.
+Vendored p-sdk-0 tuple, path `packages/protocol-adapter/vendor/kix-sdk-0`. PR #433 (merge `19cdc1c6393e88528d3918e0f4f1f37645a34042`) introduced bootstrap-2. This repository consumes it from PR #483 merge `4472b0fb64d377d97fd2993673a4485459986606`. `KIX_SDK_0_PIN` asserts the digests and the vendored bytes at load time. BOOTSTRAP grants catalogue-schema binding only.
 
 | Pin | Value |
 | --- | --- |
@@ -136,7 +136,9 @@ Vendored p-sdk-0 tuple, path `packages/protocol-adapter/vendor/kix-sdk-0`. PR #4
 | Vector `mixed-input` sha256 | `9e2441ddefc22a2f8c7be230436620908b735b128b9445b7a5a916e4d86a2e19` |
 | Conformance flags | `semanticConformance`, `liveHttpServer`, `productionEndpoint`, `protocolTruth`, `productionConformance` all false |
 
-Apart from those two OpenAPI files and the p-sdk-0 tuple above, nothing else from kix-protocol is vendored; the FSM catalogue is bound by its path, sha256 and git blob only. These pins are not a production-conformance claim, and the SDK tuple moved together with the 84-command catalogue. Load time checks the file bytes. The settlement FSM dependency baseline is protocol main `85145eb33799a7c712890ff81708def8a7d61ee5` (feature commit `838370d9ce8e8aeeceeb94f3b4d212204e7ecf19`). The reservation FSM dependency baseline is protocol main `a47828dd4517c5a7397e09eb6b563a64e4265c82` (feature commit `2183d0b5b5010ec2692c43c277e99926ad9250db`). The resale FSM dependency baseline is protocol main `ef942b7713c7468e8851c6b372b64d42b5333ad8` (feature commit `70c6d52d4289e23d0d4141b7f3a6b310eea236f2`). The credit FSM dependency baseline is protocol main `8c1a4db7cfe70b0e772a2ef0f24492967c84f7f1` (feature commit `4608460ba1fe57165e88e74f6e8d8c23e8e53277`). Those lifecycle names are not catalogue commands. How to run the gate is in [docs/http-integration-gate-apps-bind.md](docs/http-integration-gate-apps-bind.md).
+The semantic manifest `commerce-fixture-8ba7f6c-1` grants fixture writes only on Node loopback. The vendored qualification table and request-to-receipt vectors record the historical evidence. Browser HTTP fixture writes and market, settlement and operation-recovery reads remain held. [Fixture qualification and pin evidence](docs/kix-pin-4472b0f-fixture-conformance-apps-bind.md)
+
+The adapter checks the vendored SDK and OpenAPI file bytes at load time. The fixture ledger binds the vendored FSM catalogue and supporting evidence by path, SHA-256 and Git blob. Both OpenAPI pins record the source contract digest and Git blob. The settlement FSM dependency baseline is protocol main `85145eb33799a7c712890ff81708def8a7d61ee5` (feature commit `838370d9ce8e8aeeceeb94f3b4d212204e7ecf19`). The reservation FSM dependency baseline is protocol main `a47828dd4517c5a7397e09eb6b563a64e4265c82` (feature commit `2183d0b5b5010ec2692c43c277e99926ad9250db`). The resale FSM dependency baseline is protocol main `ef942b7713c7468e8851c6b372b64d42b5333ad8` (feature commit `70c6d52d4289e23d0d4141b7f3a6b310eea236f2`). The credit FSM dependency baseline is protocol main `8c1a4db7cfe70b0e772a2ef0f24492967c84f7f1` (feature commit `4608460ba1fe57165e88e74f6e8d8c23e8e53277`). Those lifecycle names are not catalogue commands. How to run the gate is in [docs/http-integration-gate-apps-bind.md](docs/http-integration-gate-apps-bind.md).
 
 ## Settlement depth
 
@@ -269,7 +271,7 @@ Display language: the default is English. The Korean/English catalogue (`apps/we
 
 The desk uses the stub. Setting `VITE_KIX_PROTOCOL_MODE=http` or `integration-http` without `VITE_KIX_PROTOCOL_API_BASE` throws at startup. It does not fall back to the stub. With `VITE_KIX_PROTOCOL_API_BASE=http://127.0.0.1:8765`, desk calls still throw `not-bound`. Core catalogue calls use `invokeLocalCall`. Reviewed FSM fixture calls use `advanceCommerceJourney`. This repo does not start the protocol server and does not ship a production base URL.
 
-To point the app at the reviewed gate, start that server from the kix-protocol checkout at merge `8ba7f6c36373ac0ec49246f51f7471c164ac3a28` and then start this app:
+To point the app at the reviewed gate, start that server from the kix-protocol checkout at merge `4472b0fb64d377d97fd2993673a4485459986606` and then start this app:
 
 ```bash
 python3 -m integration_gate --port 8765
@@ -293,7 +295,7 @@ The reviewed gate does not answer CORS, so from a browser at `:5173` the banner 
 `.github/workflows/ci.yml` runs on pushes to `main`, on pull requests, and on demand. Besides the small `gate-token` check, the existing jobs are unchanged:
 
 - `desk` runs `npm ci`, `npm run typecheck`, `npm run build`, and `npm test`. It sets `KIX_REQUIRE_GATE=0`, so the live gate suites are skipped there on purpose.
-- `live-gate` checks out `SUNBURN-Golden/kix-protocol` at the pinned merge `8ba7f6c36373ac0ec49246f51f7471c164ac3a28` and runs the adapter suite with `KIX_REQUIRE_GATE=1` against that checkout. kix-protocol is private, so this job needs a `KIX_PROTOCOL_READ_TOKEN` repository secret with read-only contents access to it. A small `gate-token` job checks for the secret first. Without it, `gate-token` posts a warning and `live-gate` shows as skipped, never as a pass.
+- `live-gate` checks out `SUNBURN-Golden/kix-protocol` at the pinned merge `4472b0fb64d377d97fd2993673a4485459986606` and runs the adapter suite with `KIX_REQUIRE_GATE=1` against that checkout. kix-protocol is private, so this job needs a `KIX_PROTOCOL_READ_TOKEN` repository secret with read-only contents access to it. A small `gate-token` job checks for the secret first. Without it, `gate-token` posts a warning and `live-gate` shows as skipped, never as a pass.
 - `browser-e2e` (named "Browser journeys (stub, headless Chrome)") runs `npm ci`, `npm run typecheck:e2e`, and `npm run test:e2e` on the runner's Google Chrome. It is additive: the `desk` job and its checks are unchanged. It has no `needs`, no secret, and no protocol checkout. The run record goes to the job summary and is not uploaded as an artifact.
 - `a11y-observation` (named "Accessibility observation (stub, headless Chrome)") runs the separate `npm run test:a11y` suite. It is additive and has no `needs`, secret or protocol checkout. Its record goes to the job summary. A green run is not user acceptance, not a conformance claim and not a release permission.
 - `bundle-budget` (named "Bundle budget") runs `npm ci`, `npm run build`, `npm run budget` (the size check against `apps/web/bundle-budget.json`), `npm run typecheck:e2e` and `npm run test:budget` on the runner's Google Chrome. It is additive: no existing job changed. It has no `needs`, no secret and no protocol checkout. The size table and the measurement record go to the job summary. The numbers are regression tripwires, not an SLO, not a qualification and not a production performance claim.

@@ -1,5 +1,5 @@
 {
-  "protocolMergeSha": "8ba7f6c36373ac0ec49246f51f7471c164ac3a28",
+  "protocolMergeSha": "4472b0fb64d377d97fd2993673a4485459986606",
   "files": {
     "reference/booking_resale_admission/fixtures/admission_console_consume.txt": {
       "sha256": "b1595fd8fd5684c9baba4d8b6b47c7dd5f54b8815bdd617027d0cfe19768e401",
@@ -636,6 +636,94 @@
     "sdk/conformance/vectors/mixed-input.vectors.json": {
       "sha256": "9e2441ddefc22a2f8c7be230436620908b735b128b9445b7a5a916e4d86a2e19",
       "gitBlob": "74bf25478d57a98c5ee102c362c4870fc8d16456"
+    },
+    "sdk/compat/manifests/manifest.bootstrap-1.json": {
+      "sha256": "1cce4ee5a9aa64ef40825c0e6dedf920050e594cf20ea0aaf087ecbde46f0cca",
+      "gitBlob": "0e79ef22830f7057f247622b682c7c8647e29db6"
+    },
+    "sdk/compat/manifests/manifest.bootstrap-1.json.sha256": {
+      "sha256": "fd568b8117a010d1e259323af6f788efe97d497ec8e15406d99d53cddc389d89",
+      "gitBlob": "616253ae8116f7d842deb68742c148e97fc21346"
+    },
+    "sdk/compat/manifests/manifest.bootstrap-2.json": {
+      "sha256": "eec1750532d319ea06d8ae61bafa77316067088a84a9b70d20a1f6966dfba1e0",
+      "gitBlob": "06199b46de4c7d0c9dadd55f39d469936acb601a"
+    },
+    "sdk/compat/manifests/manifest.bootstrap-2.json.sha256": {
+      "sha256": "bb4903cb817829f9513b47fc1f60498744ed93355ae8b61511a15a31aa99c8c3",
+      "gitBlob": "b865a19fd02774a804ff2e47ec8f3e6d68ff2d13"
+    },
+    "sdk/compat/manifests/manifest.commerce-fixture-8ba7f6c-1.json": {
+      "sha256": "76ea72c6249ec0f90cb426dfbb8efda8308610f79c4f0ac6ff0a2445cab59a4f",
+      "gitBlob": "0ad2b0a7eaf72a23475ff2f44e90020205b03117"
+    },
+    "sdk/compat/manifests/manifest.commerce-fixture-8ba7f6c-1.json.sha256": {
+      "sha256": "977e754047c454912defcc84b3343b2812320c7a49a1bd00ce60486fb3906f91",
+      "gitBlob": "f55ee288d4d8aaca8cef8443df60817a6c4c90bd"
+    },
+    "sdk/compat/profiles/bootstrap-1.profile.json": {
+      "sha256": "4c92cf6d905f83fb3f5cd52e166dbadf057451ae46441fce1f91baaaa4367d34",
+      "gitBlob": "70842b7fdc2192b9ea0014d309dc470ea8cef99f"
+    },
+    "sdk/compat/profiles/bootstrap-2.profile.json": {
+      "sha256": "c356b923997cefc132e63e73a179d5922dd7cb2124b9e9b399c662cd49803b73",
+      "gitBlob": "7f41854b88e4901c1ccb4baf17470e046bdf14a5"
+    },
+    "sdk/compat/profiles/commerce-fixture-8ba7f6c-1.profile.json": {
+      "sha256": "240bc0b2f200ca3256b8fdb6a3eab0c2fa1f4e1b6e51cc9a4e663e155750ef0d",
+      "gitBlob": "3a95caa5c7906881a800bebf9a4d862865fdae86"
+    },
+    "sdk/compat/verify_compat.mjs": {
+      "sha256": "8628518c41b4110f0adf9a5d841240ae06dc6c1fa5d5c4974f00d96a718c5de6",
+      "gitBlob": "4d744a7e622f2678054b9f709a138252635309c6"
+    },
+    "sdk/conformance/vectors/commerce-fixture-tuple.vectors.json": {
+      "sha256": "c9fbeee6a04da371dd054a325c9435a401b9694a1619ac9939de38f257495e22",
+      "gitBlob": "0095e53801921e87c5417dd86920a625c2fede78"
+    },
+    "sdk/generate/generate_client.mjs": {
+      "sha256": "66f0e2010c6511d322f8dfc7e8932d27d25e154ac0b3d6083f19f97af6124bb7",
+      "gitBlob": "8b91493e3a47a4fe4438d6e8a5951ad88b9d83a3"
+    },
+    "sdk/generate/generate_manifest.mjs": {
+      "sha256": "c087b30ee22f05f6aa905fca3fcaa6cee924d780ebfc9b7eb394d8be03288769",
+      "gitBlob": "2470c57d8ad18a6298d164fea821eebdc8d7ac55"
+    },
+    "sdk/generated/catalogue.ts": {
+      "sha256": "3162d47c51ffad755f80086850bbcbb7ae4a846c4df47ffa57b0e44f9eced0b5",
+      "gitBlob": "e0800806c603bc5f182103602281aa4b312046dd"
+    },
+    "sdk/sdk-pin.json": {
+      "sha256": "cc68ea950560506a9e8a632ac5b9e634e037d5eaad6b12885d65ea99f9ca160a",
+      "gitBlob": "6d97cdf6f9287f766450e497b0051c9bf09e119b"
+    },
+    "sdk/src/client.ts": {
+      "sha256": "0f3650dc84bd34c74bb9a48fe9e6523c0b51665bdbcbd1313e7f94b5a3a4715e",
+      "gitBlob": "43dbbc63130b73a3b07c1976c0f0615d768f1efd"
+    },
+    "sdk/src/jsonschema.ts": {
+      "sha256": "bfb69963dd275f80f870125fb312a0214dd473bb6df5b67543b0d7f0267f6afd",
+      "gitBlob": "623152b0c35abee9cb485f59c3278b92fba56bfb"
+    },
+    "sdk/src/manifest.ts": {
+      "sha256": "18dc1693e58ad98766495faebe4d2e1ca5e23df92b9864b64ef497336ce1f557",
+      "gitBlob": "c72efdc008d68d1bfaf733b0f0fdc037435ac1d7"
+    },
+    "docs/status/COMMERCE_FIXTURE_TUPLE_CONFORMANCE_V1.json": {
+      "sha256": "daf936e65421d8f35fec42afff622eeb2dfcc246f474ffd36059aa2f7b128678",
+      "gitBlob": "913244cd849bafcc6b0fd093da7deb7b62f5839e"
+    },
+    "docs/status/COMMERCE_FIXTURE_TUPLE_CONFORMANCE_V1.md": {
+      "sha256": "1443f3b38e1f91202afc79ef5ca96244b3714b889c12bf4fa8e6c1687f337769",
+      "gitBlob": "66e47bd832f9cb98b0b4fb47714ab29f0cd4e576"
+    },
+    "toolchains.json": {
+      "sha256": "f4a37d32d50340db6caf8a1f914b1cceb344d410d6c7a5a6299552bd9764e3b5",
+      "gitBlob": "a8c06bcf91eb385875100a5fecf6a6c46664e4c0"
+    },
+    "reference/booking_resale_admission/fixtures/commerce_journey_receipts_v1.json": {
+      "sha256": "6819d46a7b86e1a16bae83be90666560bb45aa66d3d6f0d5e050e03e7a952998",
+      "gitBlob": "e9f34b8f35ed7f6a0867f1d2036bda521ee15eab"
     }
   }
 }

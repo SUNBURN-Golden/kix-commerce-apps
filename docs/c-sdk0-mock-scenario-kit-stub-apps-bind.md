@@ -18,16 +18,15 @@ Builder source HEAD: `288c8ef8b58dec52093cfbc0a9cbca6b65deeab3` on `agent/kixc-c
 
 ## Verified SDK tuple
 
-The pin move in `docs/c-int-pin-bundle-apps-bind.md` refined this tuple to the
-`SUNBURN-Golden/kix-protocol` main `8ba7f6c` bootstrap-2 profile. The table
-below records the currently consumed values; the original delivery's
-bootstrap-1 values remain in the historical run records and git history.
+The current pin consumes the `SUNBURN-Golden/kix-protocol` bootstrap-2
+profile from main `4472b0f`. The table records the active values. The
+original bootstrap-1 run records are historical. [Current pin evidence](kix-pin-4472b0f-fixture-conformance-apps-bind.md)
 
 `SDK0_MOCK_PROVENANCE` records a separate binding from verified `KIX_SDK_0_PIN`:
 
 | Field | Value |
 | --- | --- |
-| Producer merge | `8ba7f6c36373ac0ec49246f51f7471c164ac3a28` |
+| Producer merge | `4472b0fb64d377d97fd2993673a4485459986606` |
 | Producer source commit | `c2cde86e21a6e5ba6f24a56548636db6d0a34c6f` |
 | Manifest sha256 | `eec1750532d319ea06d8ae61bafa77316067088a84a9b70d20a1f6966dfba1e0` |
 | Generated catalogue sha256 | `3162d47c51ffad755f80086850bbcbb7ae4a846c4df47ffa57b0e44f9eced0b5` |

@@ -95,10 +95,10 @@ export interface DiscoveryReadTuple {
 export const DISCOVERY_READ_TUPLE_LITERALS: DiscoveryReadTuple = {
   contractOpenApiSha256: "2248ff67aa0f43cb98bdd492f63b36fce64c53def6a403a97a7987a128b2d2dc",
   contractInfoVersion: "0.3-rc1+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
-  contractMainSha: "8ba7f6c36373ac0ec49246f51f7471c164ac3a28",
+  contractMainSha: "4472b0fb64d377d97fd2993673a4485459986606",
   gateOpenApiSha256: "d05beb48c234b924af086b886ce9bb524dc34407ad2e4a57f1e8af84255820f6",
-  protocolMergeSha: "8ba7f6c36373ac0ec49246f51f7471c164ac3a28",
-  protocolFeatureSha: "648859b1c9cda424f1a4615ac5155edf46fd0524",
+  protocolMergeSha: "4472b0fb64d377d97fd2993673a4485459986606",
+  protocolFeatureSha: "f678040e9de475aaa42602b85c2adcb120cf83ef",
   sourceProtocolContractSha256: "ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",
   domain: "kix:fixture:lifecycle:0.3",
   pinnedActions: PINNED_ACTIONS,

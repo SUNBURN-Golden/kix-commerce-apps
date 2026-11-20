@@ -13,7 +13,7 @@ import { ProtocolError } from "./types.js";
  */
 export const OPENAPI_CONTRACT_PIN = {
   protocolRepo: "SUNBURN-Golden/kix-protocol",
-  protocolMainSha: "8ba7f6c36373ac0ec49246f51f7471c164ac3a28",
+  protocolMainSha: "4472b0fb64d377d97fd2993673a4485459986606",
   openApiPath: "docs/contracts/openapi/kix-protocol.contract-only.openapi.json",
   openApiFileSha256: "2248ff67aa0f43cb98bdd492f63b36fce64c53def6a403a97a7987a128b2d2dc",
   infoVersion: "0.3-rc1+sha256:ed827de1a8bfe7c48612473965793dcaab65137e575f862761fd160f77ae4c1e",

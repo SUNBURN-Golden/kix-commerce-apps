@@ -40,21 +40,21 @@ import { ProtocolError } from "./types.js";
 /**
  * Vendored p-sdk-0 tuple pin from SUNBURN-Golden/kix-protocol.
  * PR #433 introduced the bootstrap-2 SDK at 19cdc1c. The consumed checkout is
- * PR #448's merge at 8ba7f6c, and the provenance record binds both separately.
+ * PR #483's merge at 4472b0f, and the provenance record binds both separately.
  * The consumed tuple is the manifest-v1 BOOTSTRAP bootstrap-2 profile: 40 core
- * commands plus 44 FSM commands, 84 total. The FSM source file itself is not
- * vendored; only its path/digest/git-blob triple is bound here and in
- * sdk-pin.json. bootstrap-1 stays vendored as history and is no longer consumed.
+ * commands plus 44 FSM commands, 84 total. The SDK binds the FSM source by its
+ * path, digest and Git blob. The fixture ledger vendors the source separately.
+ * bootstrap-1 stays vendored as history and is no longer consumed.
  * BOOTSTRAP grants catalogue-schema binding only. It is not semantic
  * conformance, not N/N-1, not production qualification, not audit or approval
  * evidence, and not a live HTTP server.
  */
 export const KIX_SDK_0_PIN = {
   producerRepo: "SUNBURN-Golden/kix-protocol",
-  producerMergeSha: "8ba7f6c36373ac0ec49246f51f7471c164ac3a28",
-  producerHeadSha: "648859b1c9cda424f1a4615ac5155edf46fd0524",
-  producerMergeTree: "d3f5412ef84f64fe83c5d3a3d3ada173921bfbf9",
-  producerProvenanceSha256: "005cf12f1db46133a8753bed1e459e6f829f2732da29a725198e46f1332d2c1a",
+  producerMergeSha: "4472b0fb64d377d97fd2993673a4485459986606",
+  producerHeadSha: "f678040e9de475aaa42602b85c2adcb120cf83ef",
+  producerMergeTree: "b2a13db82366784df1c01b8c80d12a094832db93",
+  producerProvenanceSha256: "1dd0ff098fcc1002f185fe3d22776bf956516147ce6309b0e4d58fe44d454fe5",
   producerSourceCommit: "c2cde86e21a6e5ba6f24a56548636db6d0a34c6f",
   producerSourceTree: "394084b15e01bbe4a5612aeb3431f3278c43dd85",
   producerSourcePath: "reference/v0.3-rc1/protocol_contract.json",
@@ -80,7 +80,7 @@ export const KIX_SDK_0_PIN = {
   jsonschemaSha256: "bfb69963dd275f80f870125fb312a0214dd473bb6df5b67543b0d7f0267f6afd",
   manifestHelperSha256: "18dc1693e58ad98766495faebe4d2e1ca5e23df92b9864b64ef497336ce1f557",
   sdkPinFileSha256: "cc68ea950560506a9e8a632ac5b9e634e037d5eaad6b12885d65ea99f9ca160a",
-  verifierSha256: "b1ed26b977666f796a68c5de0a108e5558ca3c98486dc188d385b220a448cf89",
+  verifierSha256: "8628518c41b4110f0adf9a5d841240ae06dc6c1fa5d5c4974f00d96a718c5de6",
   commandCount: 84,
   coreCommandCount: 40,
   fsmCommandCount: 44,
@@ -548,20 +548,20 @@ function checkProducerProvenance(inputs: SdkPinInputs, errors: string[]): void {
     errors.push("producer provenance schema drift");
   }
   checkMergeProvenance(value, {
-    pr: 448,
+    pr: 483,
     headSha: KIX_SDK_0_PIN.producerHeadSha,
     mergeSha: KIX_SDK_0_PIN.producerMergeSha,
     mergeTree: KIX_SDK_0_PIN.producerMergeTree,
-    mergedAt: "2026-11-12T23:23:08Z",
+    mergedAt: "2026-11-20T04:25:13Z",
   }, [
-    ["CodeQL", 131558666657],
-    ["rights-scale", 131558431475],
-    ["protocol", 131558430672],
-    ["kernel", 131558430409],
-    ["Analyze (javascript-typescript)", 131558418259],
-    ["Analyze (rust)", 131558418236],
-    ["Analyze (python)", 131558417997],
-    ["Analyze (actions)", 131558417778],
+    ["CodeQL", 136055688101],
+    ["protocol", 136055468935],
+    ["rights-scale", 136055468693],
+    ["kernel", 136055467814],
+    ["Analyze (actions)", 136055463794],
+    ["Analyze (javascript-typescript)", 136055463781],
+    ["Analyze (rust)", 136055463777],
+    ["Analyze (python)", 136055463411],
   ], "producer", "success", errors);
 
   const introduction = value.sdkIntroduction;

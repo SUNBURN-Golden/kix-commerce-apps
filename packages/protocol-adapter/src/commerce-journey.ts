@@ -1,5 +1,7 @@
+import { fixtureWritesOnNode } from "#kix-fixture-node";
 import { classifyThrown } from "./call-outcome.js";
 import { collectLinks, declaredRefusal, type CommerceJourneyCall, type CommerceJourneyPort, type CommerceJourneyStep, type FixtureStep, type JourneyLinks, type JourneyProof } from "./commerce-journey-command.js";
+import { MARKET_STEPS, type MarketStep } from "./resale-journey-fixture.js";
 
 const RESALE = [
   "reserve-A", "order-A", "payment-A", "issue-A", "resale-clock", "adopt-A", "list-A", "hold-A",
@@ -37,6 +39,38 @@ export function commerceStepAfter(branch: CommerceJourneyBranch, confirmed: Comm
   return { next, decline: alternative(next, confirmed) };
 }
 
+export const FIXTURE_CONTEXTS = ["booking-resale", "booking-admission", "booking-refund", "resale-market"] as const;
+export type FixtureContext = (typeof FIXTURE_CONTEXTS)[number];
+type FixtureGrant = readonly [context: FixtureContext, confirmed: FixtureStep | null];
+// Only FixtureJourney can issue a grant for the exact call object.
+const grants = fixtureWritesOnNode ? new WeakMap<CommerceJourneyCall, FixtureGrant>() : undefined;
+
+export function takeFixtureGrant(call: CommerceJourneyCall): FixtureGrant | undefined {
+  const grant = grants?.get(call);
+  grants?.delete(call);
+  return grant;
+}
+
+export function canCancelBefore(next: MarketStep | undefined) {
+  return next === "market-hold" || next === "market-pay";
+}
+
+/** Enumerate the transitions possible after a confirmed receipt in each fixture. */
+export function fixtureTransitions(context: FixtureContext) {
+  const branch = context === "resale-market" ? null : context.slice("booking-".length) as CommerceJourneyBranch;
+  const plan = branch ? planFor(branch) : MARKET_STEPS;
+  return [null, ...plan].flatMap((confirmed, index) => {
+    const next = plan[index];
+    const decline = branch
+      ? alternative(next as CommerceJourneyStep | undefined, confirmed as CommerceJourneyStep | null)
+      : canCancelBefore(next as MarketStep | undefined) ? "market-cancel" : undefined;
+    const steps: FixtureStep[] = [];
+    if (next) steps.push(next);
+    if (decline) steps.push(decline);
+    return steps.map(step => [confirmed, step] as const);
+  });
+}
+
 export type Fact<State extends string> = { state: "NO_EVIDENCE" } | { state: State; proof: JourneyProof };
 export interface CommerceJourneyFacts {
   paymentObservation: Fact<"OBSERVED">;
@@ -59,27 +93,30 @@ export type CommerceJourneyOutcome = Failure | (DispatchedCall & { kind: "CONFIR
 
 export type MintAttempt<S extends FixtureStep> = (step: S) => Omit<DispatchedCall, "step">;
 
-export abstract class FixtureJourney<Step extends FixtureStep, Facts extends object> {
+abstract class FixtureJourney<Step extends FixtureStep, Facts extends object> {
   private readonly tried = new Set<Step>();
   private cursor = 0;
   private links: JourneyLinks = {};
   private pending: Step | null = null;
   private last: CommerceJourneyOutcome | null = null;
-  private confirmed: Step | null = null;
+  #confirmed: Step | null = null;
+  readonly #context: FixtureContext | undefined;
 
   constructor(private readonly plan: readonly Step[], protected readonly facts: Facts, private readonly port: CommerceJourneyPort<Step>,
-    private readonly mint: MintAttempt<Step>) {}
+    private readonly mint: MintAttempt<Step>, context: FixtureContext) {
+    if (fixtureWritesOnNode) this.#context = context;
+  }
   protected abstract alternative(next: Step | undefined, confirmed: Step | null): Step | undefined;
   protected abstract recordFact(step: Step, proof: JourneyProof): void;
 
   state() {
     const next = this.plan[this.cursor];
-    const decline = this.alternative(next, this.confirmed);
+    const decline = this.alternative(next, this.#confirmed);
     const fenced = this.last !== null && this.last.kind !== "CONFIRMED" &&
       (this.last.kind !== "REJECTED" || this.last.step === next ||
         this.last.code !== declaredRefusal(this.last.step));
     return {
-      facts: { ...this.facts }, pending: this.pending, last: this.last, confirmed: this.confirmed, fenced, next,
+      facts: { ...this.facts }, pending: this.pending, last: this.last, confirmed: this.#confirmed, fenced, next,
       decline: decline && !this.tried.has(decline) ? decline : undefined,
     };
   }
@@ -87,16 +124,23 @@ export abstract class FixtureJourney<Step extends FixtureStep, Facts extends obj
   async run(step: Step): Promise<CommerceJourneyOutcome | undefined> {
     const { next, decline, fenced } = this.state();
     if (fenced || this.pending || (step !== next && step !== decline)) return;
-    const attempt = { step, ...this.mint(step) };
+    const { operationId, idempotencyKey } = this.mint(step);
+    const attempt = { step, operationId, idempotencyKey };
+    const call = { ...attempt, links: this.links };
     this.pending = step;
     this.tried.add(step);
+    if (fixtureWritesOnNode && this.#context) {
+      Object.freeze(call.links);
+      Object.freeze(call);
+      grants?.set(call, [this.#context, this.#confirmed]);
+    }
     try {
-      const proof = await this.port.advanceCommerceJourney({ ...attempt, links: this.links });
+      const proof = await this.port.advanceCommerceJourney(call);
       if (declaredRefusal(step)) {
         this.last = { ...attempt, kind: "UNKNOWN", code: "INVALID_FSM_RECEIPT" };
         return this.last;
       }
-      this.confirmed = step;
+      this.#confirmed = step;
       this.cursor = step === next ? this.cursor + 1 : this.plan.length;
       this.links = { ...this.links, ...collectLinks(step, proof) };
       this.recordFact(step, proof);
@@ -105,6 +149,7 @@ export abstract class FixtureJourney<Step extends FixtureStep, Facts extends obj
       const { disposition, ...detail } = classifyThrown(error);
       this.last = { ...attempt, ...detail, kind: disposition === "rejected" ? "REJECTED" : disposition === "not-sent" ? "NOT_SENT" : "UNKNOWN" };
     } finally {
+      if (fixtureWritesOnNode) grants?.delete(call);
       this.pending = null;
     }
     return this.last;
@@ -123,7 +168,7 @@ const initialFacts = (): CommerceJourneyFacts => ({
 
 export class CommerceJourney extends FixtureJourney<CommerceJourneyStep, CommerceJourneyFacts> {
   constructor(branch: CommerceJourneyBranch, port: CommerceJourneyPort<CommerceJourneyStep>, mint: MintAttempt<CommerceJourneyStep>) {
-    super(planFor(branch), initialFacts(), port, mint);
+    super(planFor(branch), initialFacts(), port, mint, `booking-${branch}`);
   }
   protected alternative(next: CommerceJourneyStep | undefined, confirmed: CommerceJourneyStep | null) {
     return alternative(next, confirmed);
@@ -139,5 +184,27 @@ export class CommerceJourney extends FixtureJourney<CommerceJourneyStep, Commerc
       case "bind-refund": this.facts.refundBinding = { state: "BOUND", proof }; break;
       case "observe-mock-acceptance": this.facts.refundAcceptance = { state: "MOCK_ACCEPTANCE_OBSERVED", proof }; break;
     }
+  }
+}
+
+export interface ResaleJourneyFacts {
+  listed: Fact<"LISTED">;
+  paid: Fact<"PAYMENT_NOTED">;
+  acceptedTransferred: Fact<"TRANSFERRED">;
+  settled: { state: "NO_EVIDENCE" };
+}
+
+export class ResaleJourney extends FixtureJourney<MarketStep, ResaleJourneyFacts> {
+  constructor(port: CommerceJourneyPort, mint: MintAttempt<MarketStep>) {
+    super(MARKET_STEPS, { listed: { state: "NO_EVIDENCE" }, paid: { state: "NO_EVIDENCE" },
+      acceptedTransferred: { state: "NO_EVIDENCE" }, settled: { state: "NO_EVIDENCE" } }, port, mint, "resale-market");
+  }
+  protected alternative(next: MarketStep | undefined) {
+    return canCancelBefore(next) ? "market-cancel" : undefined;
+  }
+  protected recordFact(step: MarketStep, proof: JourneyProof) {
+    if (step === "market-list") this.facts.listed = { state: "LISTED", proof };
+    if (step === "market-pay") this.facts.paid = { state: "PAYMENT_NOTED", proof };
+    if (step === "market-accept") this.facts.acceptedTransferred = { state: "TRANSFERRED", proof };
   }
 }

@@ -79,7 +79,7 @@ export function resaleScenarios(open: () => commands.CommerceJourneyPort, transp
     expect(transportCount?.()).toBe(before);
   });
 
-  it.each(["market-list", "market-hold"] as const)("cancels from %s and refuses mutation on the terminal listing", async step => {
+  it.each(["market-list", "market-hold"] as const)("cancels from %s and blocks mutation on the terminal listing", async step => {
     const port = open();
     const spy = vi.spyOn(port, "advanceCommerceJourney");
     const journey = fixtureJourney(port);
@@ -88,27 +88,38 @@ export function resaleScenarios(open: () => commands.CommerceJourneyPort, transp
     expect(await journey.run("market-cancel")).toMatchObject({ kind: "CONFIRMED", proof: { "listing.phase": "CANCELLED" } });
     expect(journey.state()).toMatchObject({ facts: before, next: undefined });
     const [last] = spy.mock.calls.at(-1)!;
+    const sent = transportCount?.();
     await expect(port.advanceCommerceJourney({ ...last, step: "market-pay", operationId: "terminal", idempotencyKey: "key-terminal" }))
-      .rejects.toMatchObject({ code: "TERMINAL_IMMUTABLE" });
+      .rejects.toMatchObject({ code: transportCount ? "NOT_BOUND" : "TERMINAL_IMMUTABLE" });
+    expect(transportCount?.()).toBe(sent);
     expect(journey.state().facts).toEqual(before);
   });
 
-  // Inject only in the test, immediately after the normal receipt-linked body is built.
-  // The stub dispatch and the real gate each have to judge the invalid command.
-  it.each(refusals)("after %s refuses %s %j with %s", async (after, probe, fields, code) => {
+  // The stub still exercises the local business refusal. The semantic HTTP
+  // boundary holds the altered envelope before it can reach the producer.
+  it.each(refusals)("after %s blocks %s %j (stub code %s)", async (after, probe, fields, code) => {
     const port = open();
     const journey = fixtureJourney(port);
     await through(journey, after);
     const { facts, next } = journey.state();
+    const sent = transportCount?.();
     const build = commands.commandFor;
     const override = vi.spyOn(commands, "commandFor").mockImplementationOnce(input => {
-      const row = build({ ...input, step: probe });
+      const links = transportCount
+        ? Object.fromEntries((commands.RECEIPT_LINKS[probe] ?? []).map(field => [field, Reflect.get(commands.fixtureTemplate(probe)[1], field)]))
+        : input.links;
+      const row = build({ ...input, step: probe, links });
       return { ...row, body: { ...row.body, ...fields } };
     });
     try {
-      expect(await journey.run(next!)).toMatchObject({ kind: "REJECTED", code });
+      expect(await journey.run(next!)).toMatchObject(transportCount
+        ? { kind: "NOT_SENT", code: "NOT_BOUND" } : { kind: "REJECTED", code });
       expect(journey.state()).toMatchObject({ facts, confirmed: after });
     } finally { override.mockRestore(); }
+    if (transportCount) {
+      expect(transportCount()).toBe(sent);
+      return;
+    }
     // Independent commands probe the FSM after a refusal, without repeating the refused write.
     const checkState = (step: MarketStep, links: commands.JourneyLinks) =>
       port.advanceCommerceJourney({ step, links, operationId: "probe-state", idempotencyKey: "probe-state-key" });
@@ -140,9 +151,18 @@ export function resaleScenarios(open: () => commands.CommerceJourneyPort, transp
     }
   });
 
-  it("refuses listing when registration and adoption both disallow resale", async () => {
+  it("holds altered registration over HTTP and refuses the resulting listing in the stub", async () => {
     const port = open(), journey = fixtureJourney(port);
     const policy = { resale_allowed: false };
+    if (transportCount) {
+      await through(journey, "reservation-clock");
+      const sent = transportCount();
+      await withFields(policy, {}, async () => {
+        expect(await journey.run("market-show")).toMatchObject({ kind: "NOT_SENT", code: "NOT_BOUND" });
+      });
+      expect(transportCount()).toBe(sent);
+      return;
+    }
     for (const step of MARKET_STEPS) {
       const advance = async () => { expect(await journey.run(step)).toMatchObject({ kind: "CONFIRMED" }); };
       if (step === "market-show" || step === "market-adopt") await withFields(policy, {}, advance);
@@ -156,13 +176,22 @@ export function resaleScenarios(open: () => commands.CommerceJourneyPort, transp
       operationId: "check-listing", idempotencyKey: "check-listing-key" })).rejects.toMatchObject({ code: "UNKNOWN_LISTING" });
   });
 
-  it.each(["market-order", "market-primary-payment"] as const)("rejects the next command at reservation expiry after %s", async after => {
+  it.each(["market-order", "market-primary-payment"] as const)("blocks an expiry probe after %s", async after => {
     const port = open(), journey = fixtureJourney(port);
     await through(journey, after);
     const { facts, next } = journey.state();
     const deadline = MARKET_FIXTURE["market-reserve"][1].expires_ms;
+    const setClock = () => port.advanceCommerceJourney({
+      step: "reservation-clock", links: {}, operationId: "expiry", idempotencyKey: "expiry-key",
+    });
+    if (transportCount) {
+      const sent = transportCount();
+      await expect(setClock()).rejects.toMatchObject({ code: "NOT_BOUND" });
+      expect(transportCount()).toBe(sent);
+      return;
+    }
     await withFields({ now_ms: deadline }, { logical_time_ms: deadline }, async () => {
-      await port.advanceCommerceJourney({ step: "reservation-clock", links: {}, operationId: "expiry", idempotencyKey: "expiry-key" });
+      await setClock();
     });
     expect(await journey.run(next!)).toMatchObject({ kind: "REJECTED", code: "RESERVATION_EXPIRED" });
     expect(journey.state()).toMatchObject({ confirmed: after, facts });
@@ -177,27 +206,42 @@ export function resaleScenarios(open: () => commands.CommerceJourneyPort, transp
   it("checks issuance before matching the adoption's payment binding", async () => {
     const port = open(), journey = fixtureJourney(port);
     await through(journey, "market-order");
-    await expect(probeAdoption(port)).rejects.toMatchObject({ code: "TICKET_NOT_ISSUED" });
+    const sent = transportCount?.();
+    await expect(probeAdoption(port)).rejects.toMatchObject({ code: transportCount ? "NOT_BOUND" : "TICKET_NOT_ISSUED" });
+    expect(transportCount?.()).toBe(sent);
     for (const step of ["market-primary-payment", "market-issue", "market-adopt"] as const) {
       expect(await journey.run(step)).toMatchObject({ kind: "CONFIRMED" });
     }
   });
 
-  it("allows a listing exactly at the registered cap and the last millisecond of the offer window", async () => {
+  it("holds an altered listing over HTTP and checks the inclusive amount and window boundaries in the stub", async () => {
     const journey = fixtureJourney(open());
     await through(journey, "market-adopt");
     const amount = MARKET_FIXTURE["market-show"][1].resale_cap;
+    const sent = transportCount?.();
     await withFields({ amount, expires_ms: 1_900_000 }, { "listing.amount": amount }, async () => {
-      expect(await journey.run("market-list")).toMatchObject({ kind: "CONFIRMED", proof: { "listing.phase": "LISTED", "listing.amount": amount } });
+      expect(await journey.run("market-list")).toMatchObject(transportCount
+        ? { kind: "NOT_SENT", code: "NOT_BOUND" }
+        : { kind: "CONFIRMED", proof: { "listing.phase": "LISTED", "listing.amount": amount } });
     });
+    expect(transportCount?.()).toBe(sent);
   });
 
-  it("refuses a hold exactly at the listing deadline", async () => {
+  it("holds a direct resale clock over HTTP and refuses the hold at the listing deadline in the stub", async () => {
     const port = open(), journey = fixtureJourney(port);
     await through(journey, "market-list");
     const before = journey.state().facts;
+    const setClock = () => port.advanceCommerceJourney({
+      step: "resale-clock", links: {}, operationId: "expiry", idempotencyKey: "expiry-key",
+    });
+    if (transportCount) {
+      const sent = transportCount();
+      await expect(setClock()).rejects.toMatchObject({ code: "NOT_BOUND" });
+      expect(transportCount()).toBe(sent);
+      return;
+    }
     await withFields({ now_ms: 1120000 }, { logical_time_ms: 1120000 }, async () => {
-      await port.advanceCommerceJourney({ step: "resale-clock", links: {}, operationId: "expiry", idempotencyKey: "expiry-key" });
+      await setClock();
     });
     expect(await journey.run("market-hold")).toMatchObject({ kind: "REJECTED", code: "LISTING_NOT_OPEN" });
     expect(journey.state().facts).toEqual(before);

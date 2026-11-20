@@ -7,6 +7,10 @@
     ".": "./src/index.ts"
   },
   "imports": {
+    "#kix-fixture-node": {
+      "browser": "./src/commerce-fixture-runtime.browser.ts",
+      "default": "./src/commerce-fixture-runtime.node.ts"
+    },
     "#kix-sdk-0/catalogue": {
       "types": "./vendor/kix-sdk-0/types/catalogue.d.ts",
       "default": "./vendor/kix-sdk-0/generated/catalogue.ts"
