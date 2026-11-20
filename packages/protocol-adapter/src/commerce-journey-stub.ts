@@ -1,5 +1,6 @@
 import { GateRejectedError } from "./call-outcome.js";
-import { commandFor, proofPaths, type CommerceJourneyCall, type JourneyProof } from "./commerce-journey-command.js";
+import { FIXTURE_PAYMENT_REF } from "./commerce-fixture-fields.js";
+import { commandFor, proofPaths, type CommerceJourneyCall, type JourneyProof, type JourneyValue } from "./commerce-journey-command.js";
 import type { AdmissionCaseStore } from "./admission-case.js";
 import type { ReservationCaseStore } from "./reservation-case.js";
 import type { ResaleCaseStore } from "./resale-case.js";
@@ -33,7 +34,15 @@ export function runStubCommerceJourney(input: CommerceJourneyCall, cases: Commer
   const time = (field: string) => new Date(num(field)).toISOString();
   const clock = () => ({ idempotencyKey, nowAt: time("now_ms") });
   // Compare exactly the registered show fields, including the ordered gate roles.
-  const showBinding = () => JSON.stringify(Object.keys(MARKET_FIXTURE["market-show"][1]).map(field => body[field]));
+  const showBinding = () => {
+    const roles = body.gate_roles;
+    if (!Array.isArray(roles)) refuse("GATES_TYPE");
+    if (!roles.length) refuse("GATES_EMPTY");
+    if (roles.length > 16) refuse("GATES_LIMIT");
+    if (roles.some(role => typeof role !== "string" || !role || role.trim() !== role || role.length > 100)) refuse("INVALID_ID");
+    if (new Set(roles).size !== roles.length) refuse("GATES_DUPLICATE");
+    return JSON.stringify(Object.keys(MARKET_FIXTURE["market-show"][1]).map(field => body[field]));
+  };
   const showId = str("show_id"), reservationId = str("reservation_id"), orderId = str("order_id");
   const rightId = str("right_id"), listingId = str("listing_id"), settlementId = str("settlement_id");
   const reservationStep = { idempotencyKey, reservationId };
@@ -47,7 +56,7 @@ export function runStubCommerceJourney(input: CommerceJourneyCall, cases: Commer
       case "reservation_register_show": {
         reservation.registerShow({ idempotencyKey, showId, eventId: showId,
           slots: Array.from({ length: num("capacity") }, (_slot, index) => String(index)) },
-          { resaleCap: str("resale_cap"), showBinding: showBinding() });
+          { resaleCap: str("resale_cap"), resaleAllowed: str("resale_allowed"), primaryPrice: str("primary_price"), showBinding: showBinding() });
         actual = { "show.show_id": reservation.viewShow(showId).showId };
         break;
       }
@@ -86,14 +95,13 @@ export function runStubCommerceJourney(input: CommerceJourneyCall, cases: Commer
       }
       case "resale_set_clock": actual = { logical_time_ms: resale.advanceClock(clock()).logicalTimeMs }; break;
       case "resale_adopt_issued": {
-        const issued = reservation.view(reservationId);
-        if (Date.parse(issued.expiresAt) !== num("expires_ms")) refuse("RESERVATION_BINDING_CONFLICT");
-        if (issued.orderId !== orderId || issued.fixtureOrder?.quoteRef !== body.quote_ref) refuse("ORDER_BINDING_CONFLICT");
-        if (issued.fixtureOrder?.amount !== body.amount || body.primary_price !== body.amount) refuse("PRIMARY_PRICE_MISMATCH");
-        if (issued.paymentRef !== str("payment_ref")) refuse("PAYMENT_BINDING_CONFLICT");
-        if (issued.fixtureShowBinding !== showBinding()) refuse("SHOW_BINDING_CONFLICT");
+        if (!FIXTURE_PAYMENT_REF.test(str("payment_ref"))) refuse("PAYMENT_REF");
+        const binding = showBinding();
+        if (body.primary_price !== body.amount) refuse("PRIMARY_PRICE_MISMATCH");
         result = resale.adoptIssued({ idempotencyKey, rightId, showId, eventId: showId,
-          reservationId, slot: str("slot"), holderRole: str("buyer_role"), paymentRef: str("payment_ref") });
+          reservationId, slot: str("slot"), holderRole: str("buyer_role"), paymentRef: str("payment_ref") },
+          { showBinding: binding, expiresAt: time("expires_ms"), orderId, amount: str("amount"),
+            ...(body.quote_ref == null ? {} : { quoteRef: str("quote_ref") }) });
         break;
       }
       case "resale_list_resale":
@@ -165,24 +173,31 @@ export function runStubCommerceJourney(input: CommerceJourneyCall, cases: Commer
   return Object.fromEntries(proofPaths(input.step, expectation).map((path) => [path, projected[path]]));
 }
 
+/** Project only the named desk fields whose pinned wire names differ by casing. */
+function receiptFields<K extends string>(section: string, source: Record<K, JourneyValue>, keys: K[]): JourneyProof {
+  return Object.fromEntries(keys.map(key => {
+    const field = key.replace(/[A-Z]/g, letter => "_" + letter.toLowerCase());
+    return [section + "." + field, source[key]];
+  }));
+}
+
 function resaleProof({ listing, right, evidence }: ResaleCommandReceipt): JourneyProof {
   return {
-    ...(right && { "ticket.right_id": right.rightId, "ticket.version": right.version, "ticket.eligible": right.eligible,
-      "ticket.holder_role": right.holderRole, "ticket.reservation_id": right.reservationId,
-      "right.right_id": right.rightId, "right.version": right.version, "right.holder_role": right.holderRole }),
-    ...(listing && { "listing.phase": listing.phase, "listing.listing_id": listing.listingId,
-      "listing.holder_role": listing.holderRole, "listing.current_version": listing.currentVersion,
-      "listing.right_id": listing.rightId, "listing.amount": listing.fixtureAmount ?? null,
-      "listing.seller_role": listing.sellerRole, "listing.recipient_role": listing.recipientRole,
-      "listing.transfer_id": listing.transferId, "listing.version_after": listing.versionAfter,
-      "listing.attached": listing.attached, "listing.version": listing.version, "listing.terminal": listing.terminal,
-      "listing.ownership_transferred": listing.ownershipTransferred, "listing.hold_id": listing.holdId,
-      "listing.buyer_role": listing.buyerRole, "listing.payment_ref": listing.paymentRef,
-      "listing.settlement_id": listing.settlementId, "listing.settlement_gate": listing.settlementGate,
-      "listing.mock_settlement_commit_observed": listing.mockSettlementCommitObserved }),
-    ...(evidence && listing && { "evidence.transfer_id": listing.transferId, "evidence.right_id": evidence.rightId,
-      "evidence.from_role": evidence.fromRole, "evidence.to_role": evidence.toRole, "evidence.version_after": evidence.versionAfter,
-      "evidence.amount": listing.fixtureAmount ?? null, "evidence.payment_ref": listing.paymentRef, "evidence.chain_owner_current": evidence.chainOwnerCurrent,
-      "evidence.funds_executed": evidence.fundsExecuted }),
+    ...(right && {
+      ...receiptFields("ticket", right, ["rightId", "version", "eligible", "holderRole", "reservationId"]),
+      ...receiptFields("right", right, ["rightId", "version", "holderRole"]),
+      "right.listing_id": right.activeListingId,
+    }),
+    ...(listing && {
+      ...receiptFields("listing", listing, ["phase", "listingId", "holderRole", "currentVersion", "rightId", "sellerRole",
+        "recipientRole", "transferId", "versionAfter", "attached", "version", "terminal", "ownershipTransferred", "holdId",
+        "buyerRole", "paymentRef", "settlementId", "settlementGate", "mockSettlementCommitObserved"]),
+      "listing.amount": listing.fixtureAmount ?? null,
+    }),
+    ...(evidence && listing && {
+      ...receiptFields("evidence", evidence, ["rightId", "fromRole", "toRole", "versionAfter", "chainOwnerCurrent", "fundsExecuted"]),
+      ...receiptFields("evidence", listing, ["transferId", "paymentRef"]),
+      "evidence.amount": listing.fixtureAmount ?? null,
+    }),
   };
 }

@@ -1,4 +1,5 @@
-import { isRecord } from "./record.js";
+import { canonicalJson } from "./record.js";
+import { FIXTURE_PAYMENT_REF, inFixtureOfferWindow, validFixtureAmount } from "./commerce-fixture-fields.js";
 import { SURFACES } from "./surfaces.js";
 import {
   ProtocolError,
@@ -25,6 +26,7 @@ import {
   type ResaleSettlementGate,
   type ResaleStep,
   type ResaleTransferEvidence,
+  type ReservationCaseView,
 } from "./types.js";
 
 /**
@@ -96,8 +98,8 @@ const SPECIFIC: Readonly<Record<string, string>> = {
   "hold_buy:BUY_HELD": "BUYER_HOLD_LOCKED",
 };
 
-interface ReservationAuthority {
-  fixtureResaleCap?: number;
+interface ReservationAuthority extends Partial<Pick<ReservationCaseView,
+  "fixtureOrder" | "fixtureShowBinding" | "fixtureResaleCap" | "fixtureResaleAllowed" | "expiresAt" | "orderId" | "paymentRef">> {
   phase: string;
   rightId: string | null;
   buyerRole: string;
@@ -213,8 +215,9 @@ export class ResaleCaseStore {
     });
   }
 
-  adoptIssued(input: ResaleAdopt): ResaleCommandReceipt {
+  adoptIssued(input: ResaleAdopt, fixture?: { showBinding: string; expiresAt: string; orderId: string; amount: string; quoteRef?: string }): ResaleCommandReceipt {
     const body = {
+      ...fixture,
       eventId: input.eventId,
       holderRole: input.holderRole,
       paymentRef: input.paymentRef,
@@ -478,7 +481,7 @@ export class ResaleCaseStore {
     const holderRole = ident(body.holderRole ?? "");
     const reservationId = readOptional(body.reservationId ?? "");
     const paymentRef = ident(body.paymentRef ?? "");
-    const canon = canonicalJson({ eventId, holderRole, paymentRef, reservationId, rightId, showId, slot });
+    const canon = canonicalJson({ ...body, reservationId, rightId });
     const current = this.rights.get(rightId);
     if (current) {
       if (current.canon !== canon) {
@@ -487,12 +490,22 @@ export class ResaleCaseStore {
       throw resaleError("ILLEGAL_TRANSITION");
     }
     if (reservationId !== null) {
-      const authority = this.requireAuthority(reservationId, rightId);
+      const fixture = body.showBinding !== undefined;
+      const authority = this.requireAuthority(reservationId, rightId, fixture);
+      if (fixture && authority.buyerRole !== holderRole) throw resaleError("NOT_HOLDER");
       if (authority.showId !== showId || authority.eventId !== eventId) {
         throw resaleError("SHOW_BINDING_CONFLICT");
       }
       if (authority.slot !== slot || authority.buyerRole !== holderRole) {
         throw resaleError("RESERVATION_BINDING_CONFLICT");
+      }
+      if (fixture) {
+        if (authority.expiresAt !== body.expiresAt) throw resaleError("RESERVATION_BINDING_CONFLICT");
+        if (authority.orderId !== body.orderId) throw resaleError("ORDER_BINDING_CONFLICT");
+        if (authority.fixtureOrder?.amount !== Number(body.amount)) throw resaleError("PRIMARY_PRICE_MISMATCH");
+        if (authority.fixtureOrder.quoteRef !== (body.quoteRef ?? null)) throw resaleError("ORDER_BINDING_CONFLICT");
+        if (authority.paymentRef !== paymentRef) throw resaleError("PAYMENT_BINDING_CONFLICT");
+        if (authority.fixtureShowBinding !== body.showBinding) throw resaleError("SHOW_BINDING_CONFLICT");
       }
     }
     this.claimPayment(paymentRef);
@@ -542,21 +555,16 @@ export class ResaleCaseStore {
       }
       throw resaleError("ILLEGAL_TRANSITION");
     }
-    if (reservationId !== null) {
-      this.requireAuthority(reservationId, rightId);
-    }
     const ticket = this.rights.get(rightId);
+    const authorityId = reservationId ?? ticket?.reservationId;
+    const authority = authorityId == null ? undefined : this.requireAuthority(authorityId, rightId, amount !== undefined);
     if (!ticket) {
       throw resaleError("UNKNOWN_RIGHT");
     }
     if (ticket.reservationId !== null && reservationId !== null && reservationId !== ticket.reservationId) {
       throw resaleError("RESERVATION_BINDING_CONFLICT");
     }
-    const authorityId = reservationId ?? ticket.reservationId;
-    let fixtureResaleCap: number | undefined;
-    if (authorityId !== null) {
-      const authority = this.requireAuthority(authorityId, rightId);
-      fixtureResaleCap = authority.fixtureResaleCap;
+    if (authority) {
       if (authority.showId !== ticket.showId || authority.eventId !== ticket.eventId) {
         throw resaleError("SHOW_BINDING_CONFLICT");
       }
@@ -573,15 +581,16 @@ export class ResaleCaseStore {
     if (version !== ticket.version) {
       throw resaleError("STALE_VERSION");
     }
+    if (authority?.fixtureResaleAllowed === false) throw resaleError("RESALE_POLICY_REJECTED");
     if (recipientRole === ticket.holderRole) {
       throw resaleError("RECIPIENT_IS_HOLDER");
     }
-    if (amount !== undefined && fixtureResaleCap !== undefined && amount > fixtureResaleCap) {
+    if (amount !== undefined && authority?.fixtureResaleCap !== undefined && amount > authority.fixtureResaleCap) {
       throw resaleError("RESALE_CAP");
     }
     // At the pin, mock_gates.py accepts now < expires_ms <= now + OFFER_WINDOW_MS.
     const windowMs = Date.parse(expiresAt) - this.clockMs;
-    if (amount !== undefined && (windowMs <= 0 || windowMs > 900_000)) {
+    if (amount !== undefined && !inFixtureOfferWindow(windowMs)) {
       throw resaleError("LISTING_WINDOW");
     }
     if (windowMs <= 0) {
@@ -689,7 +698,7 @@ export class ResaleCaseStore {
   }
 
   private applyObserve(listingId: string, body: Record<string, string>, key: string): string {
-    if (body.amount !== undefined && !/^[0-9a-f]{64}$/.test(body.paymentRef)) throw resaleError("PAYMENT_REF");
+    if (body.amount !== undefined && !FIXTURE_PAYMENT_REF.test(body.paymentRef)) throw resaleError("PAYMENT_REF");
     const amount = body.amount === undefined ? undefined : readFixtureAmount(body.amount);
     const paymentRef = ident(body.paymentRef ?? "");
     const buyerRole = readOptional(body.buyerRole ?? "");
@@ -827,8 +836,8 @@ export class ResaleCaseStore {
     return true;
   }
 
-  private requireAuthority(reservationId: string, rightId: string): ReservationAuthority {
-    const view = this.readReservation(reservationId);
+  private requireAuthority(reservationId: string, rightId: string, preserveSourceError = false): ReservationAuthority {
+    const view = preserveSourceError ? this.reservationAuthority(reservationId) : this.readReservation(reservationId);
     if (view.phase === "CANCELLED") {
       throw resaleError("TICKET_CANCELLED");
     }
@@ -1033,48 +1042,15 @@ export class ResaleCaseStore {
   }
 
   private canonical(): string {
+    // Compare every journaled field, including the adoption binding and listing amount.
     const rights = [...this.rights.values()]
-      .map((right) => ({
-        activeListingId: right.activeListingId,
-        eventId: right.eventId,
-        holderRole: right.holderRole,
-        idempotencyKey: right.lastKey,
-        paymentRef: right.paymentRef,
-        reservationId: right.reservationId,
-        rightId: right.rightId,
-        showId: right.showId,
-        slot: right.slot,
-        version: right.version,
-      }))
+      .map(({ lastRejectCode: _reject, ...right }) => right)
       .sort((left, right) => left.rightId.localeCompare(right.rightId));
     const listings = [...this.listings.values()]
-      .map((listing) => ({
-        buyerRole: listing.buyerRole,
-        eventId: listing.eventId,
-        expiresAt: listing.expiresAt,
-        holdId: listing.holdId,
-        idempotencyKey: listing.lastKey,
-        listingId: listing.listingId,
-        mockSettlementCommitObserved: listing.mockSettlementCommitObserved,
-        paymentRef: listing.paymentRef,
-        phase: listing.phase,
-        recipientRole: listing.recipientRole,
-        rightId: listing.rightId,
-        sellerRole: listing.sellerRole,
-        settlementId: listing.settlementId,
-        showId: listing.showId,
-        transferId: listing.transferId,
-        version: listing.version,
-        versionAfter: listing.versionAfter,
-      }))
+      .map(({ echoKey: _echo, lastRejectCode: _reject, reconcileMatched: _matched, ...listing }) => listing)
       .sort((left, right) => left.listingId.localeCompare(right.listingId));
     return canonicalJson({
-      journal: this.journal.map((entry) => ({
-        body: entry.body,
-        idempotencyKey: entry.idempotencyKey,
-        op: entry.op,
-        subjectId: entry.subjectId,
-      })),
+      journal: this.journal.map(({ observed: _observed, ...command }) => command),
       listings,
       logicalTimeMs: this.clockMs,
       rights,
@@ -1455,7 +1431,7 @@ function readObserved(value: string | undefined): boolean {
 // Bounds for the producer's synthetic fixture units (mock_gates.py, _money).
 function readFixtureAmount(value: string): number {
   const amount = Number(value);
-  if (!Number.isInteger(amount) || amount <= 0 || amount > 1_000_000_000_000) throw resaleError("INVALID_AMOUNT");
+  if (!validFixtureAmount(amount)) throw resaleError("INVALID_AMOUNT");
   return amount;
 }
 
@@ -1515,22 +1491,4 @@ function resaleError(code: string): ProtocolError {
 
 function isJournalOp(value: string): value is JournalOp {
   return (JOURNAL_OPS as readonly string[]).includes(value);
-}
-
-function canonicalJson(value: unknown): string {
-  return JSON.stringify(canonicalize(value));
-}
-
-function canonicalize(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((item) => canonicalize(item));
-  }
-  if (isRecord(value)) {
-    const sorted: Record<string, unknown> = {};
-    for (const key of Object.keys(value).sort()) {
-      sorted[key] = canonicalize(value[key]);
-    }
-    return sorted;
-  }
-  return value;
 }

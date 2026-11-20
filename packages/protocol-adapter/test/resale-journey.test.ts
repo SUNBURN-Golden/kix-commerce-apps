@@ -50,7 +50,7 @@ describe("resale fixture at the default adapter", () => {
     expect(journey.state()).toMatchObject({ facts: before, confirmed: "market-pay", fenced: true });
     expect(send).toHaveBeenCalledTimes(12);
   });
-  it.each(["holder", "version"])("keeps the last confirmed facts when the listing and right disagree on the %s", async field => {
+  it.each(["holder", "version", "listing ID"])("keeps the paid fact when the transfer receipt contradicts the %s", async field => {
     const journey = fixtureJourney(new StubProtocolAdapter());
     await through(journey, "market-pay");
     const before = journey.state().facts;
@@ -58,7 +58,8 @@ describe("resale fixture at the default adapter", () => {
     const receipt = vi.spyOn(ResaleCaseStore.prototype, "acceptTransfer").mockImplementationOnce(function (this: ResaleCaseStore, input) {
       const result = accept.call(this, input);
       if (field === "holder") result.listing!.holderRole = result.listing!.sellerRole;
-      else result.listing!.currentVersion = 1;
+      else if (field === "version") result.listing!.currentVersion = 1;
+      else result.right!.activeListingId = result.listing!.listingId;
       return result;
     });
     try {

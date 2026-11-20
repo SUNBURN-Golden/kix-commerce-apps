@@ -25,7 +25,7 @@ describe.skipIf(!REVIEWED_GATE_RUNS)("resale market against the reviewed loopbac
     expect(section).toContain(`bearer policy \`${PARTIAL_REFUND_EXAMPLE.refund_bearer_policy}\`; distribution not blocked (B5)`);
     expect(send).not.toHaveBeenCalled();
   });
-  it.each(["lost", "timeout", "duplicate", "malformed", "holder", "version", "trace"] as const)("fences a %s acceptance after one actual send", async fault => {
+  it.each(["lost", "timeout", "duplicate", "malformed", "holder", "version", "attached", "trace"] as const)("fences a %s acceptance after one actual send", async fault => {
     let corrupt = false;
     const journey = fixtureJourney(new HttpProtocolAdapter(base, async (url, init) => {
       const response = await send(url, init);
@@ -38,6 +38,7 @@ describe.skipIf(!REVIEWED_GATE_RUNS)("resale market against the reviewed loopbac
       if (fault === "malformed") body.evidence.payment_ref = "unrelated";
       if (fault === "holder") body.listing.holder_role = body.listing.seller_role;
       if (fault === "version") body.listing.current_version = 1;
+      if (fault === "attached") body.right.listing_id = body.listing.listing_id;
       if (fault === "trace") headers.set("X-Request-Id", "another");
       return Object.defineProperty(new Response(JSON.stringify(body), { headers }), "url", { value: response.url });
     }, { timeoutMs: 250 }));
@@ -46,7 +47,7 @@ describe.skipIf(!REVIEWED_GATE_RUNS)("resale market against the reviewed loopbac
     corrupt = true;
     expect(await journey.run("market-accept")).toMatchObject({ kind: "UNKNOWN", code: { lost: "GATE_UNAVAILABLE", timeout: "REQUEST_TIMEOUT",
       duplicate: "INVALID_FSM_RECEIPT", malformed: "INVALID_FSM_RECEIPT", holder: "INVALID_FSM_RECEIPT",
-      version: "INVALID_FSM_RECEIPT", trace: "STALE_RESPONSE" }[fault] });
+      version: "INVALID_FSM_RECEIPT", attached: "INVALID_FSM_RECEIPT", trace: "STALE_RESPONSE" }[fault] });
     expect(journey.state()).toMatchObject({ facts: before, confirmed: "market-pay", fenced: true });
     expect(await journey.run("market-accept")).toBeUndefined();
     expect(send.mock.calls.map(([url, init]) => {

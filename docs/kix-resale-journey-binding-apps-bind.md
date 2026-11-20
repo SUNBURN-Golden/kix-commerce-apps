@@ -35,7 +35,7 @@ The first eight setup entries in `resale_session.json` supply the two clocks, sh
 | 9. `resale_list_resale` | listing_id, right_id, version, seller_role, recipient_role, amount, expires_ms, reservation_id | LISTED, list-1, buyer-2, 8000 fixture units. Hold or cancel. |
 | 10. `resale_hold_buy` | hold_id, listing_id, buyer_role | BUY_HELD with buy-hold on list-1. Observe resale payment or cancel. |
 | 11. `resale_observe_resale_payment` | listing_id, payment_ref, amount, buyer_role | PAYMENT_NOTED for the confirmed amount, buyer and resale payment reference. Accept transfer. |
-| 12. `resale_accept_resale` | transfer_id, listing_id | TRANSFERRED, transfer-1, buyer-2, version 2. Null settlement ID, UNBOUND settlement gate and false mock commit observation. |
+| 12. `resale_accept_resale` | transfer_id, listing_id | TRANSFERRED, transfer-1, buyer-2, version 2. The right has a null listing ID. The listing has a null settlement ID, UNBOUND settlement gate and false mock commit observation. |
 | Alternative `resale_cancel_listing` | listing_id, seller_role | CANCELLED and detached before payment observation. Retain the listed fact and close the path. |
 
 The shared tests compare the ordered dispatch sequence including setup. They exercise the actual refusal paths in the stub store and producer FSM, including adoption payment mismatch, stale listing version, acceptance before payment, wrong seller, wrong recipient, competing hold, held buyer mismatch, wrong payment amount, repeat payment, late cancellation, terminal mutation and expiry at exactly the deadline. The previous confirmed facts survive each refusal.
@@ -90,7 +90,7 @@ On reviewed commit `1c5c721bb941c726be3d65d35485d517a6a06fed`, both required hos
 
 Both jobs also reported `SUCCESS` on PR #146 at round-one commit `7d4a638491fa8ceeda10ad5b62f7d660e08e38da`. [Stub job](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44471263878/job/135381039252) · [Reviewed gate job](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44471263878/job/135381098078)
 
-The round-two working tree awaits publication and hosted verification. The prepared PR body includes the 13 protocol change requests inline. [PR body](kix-resale-journey-binding-pr-body.md#not_bound-list)
+Both required jobs completed with `SUCCESS` on round-two commit `80a0eceb3c81c2f530ca1c2f56468b9d92c97684`. The round-three changes are local. [Stub job](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44477697041/job/135402130564) · [Reviewed gate job](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44477697041/job/135402182104)
 
 ### Review round one
 
@@ -131,6 +131,40 @@ The producer checks the order in `reservation_fsm.py`, matches adoption against 
 | `npm run budget` and `CI=1 npm run test:budget` | Grouping the journey labels with their booking and resale desk dictionaries brought the total to 802,426 of 802,884 gzip bytes. All 9 Chrome checks passed. Landing JavaScript measured 359,406 of 400,000 bytes. |
 | Chrome on the built stub | Completed purchase and cancellation, displayed the settlement read refusal, and kept settlement at `NO_EVIDENCE` in both branches. Zero application or off-loopback requests. |
 | Pin and dispatch checks | The vendored FSM catalogue matched producer bytes. The locked bindings matched the SHA-256 in the source table. The CI workflow, vendor pins and budget limits matched `origin/main`. |
+
+### Review round three
+
+The same scenarios run against the default stub and a fresh loopback instance of the pinned gate. Each refusal test probes the resulting state with a separate command.
+
+| Operation | Evidence |
+| --- | --- |
+| Register | Duplicate gate roles return `GATES_DUPLICATE`. A reservation on that show then returns `UNKNOWN_SHOW`. |
+| Reserve | At fixture time 1,000,000, expiry at 1,000,000 or 1,900,001 returns `RESERVATION_WINDOW`. A different reservation can take the same seat with expiry at 1,900,000. |
+| Confirm order | An amount of 10,000 against the registered 10,001 returns `PRIMARY_PRICE_MISMATCH`. The refused order ID returns `UNKNOWN_ORDER`. A new order at the registered price succeeds on the original hold. |
+| Observe primary payment | A short or uppercase reference returns `PAYMENT_REF`. Issuance then returns `ILLEGAL_TRANSITION`. |
+| Observe payment or issue at expiry | At the exact reservation deadline both commands return `RESERVATION_EXPIRED`. The unpaid order still refuses issuance. The paid but unissued reservation still refuses adoption. |
+| Adopt | Adoption immediately after order confirmation returns `TICKET_NOT_ISSUED`. Subsequent payment and issuance allow the first successful adoption. |
+| List | With `resale_allowed: false` on both registration and adoption, the listing returns `RESALE_POLICY_REJECTED`. A buyer hold then returns `UNKNOWN_LISTING`. |
+| Accept | Altering only `right.listing_id` to `list-1` in a successful receipt leaves acceptance `UNKNOWN` after one attempt. Listed and paid evidence survives. Transfer and settlement stay at `NO_EVIDENCE`. |
+
+The prepared replacement for PR #146 includes the inline change requests and repository links. The hosted body inspected at `80a0ece` still contains builder-local links and omits the inline section. [PR body](kix-resale-journey-binding-pr-body.md#not_bound-list)
+
+Round-three working tree (uncommitted, on top of `80a0ece`). Local box: Node v24.22.1, Python 3.13.5; the pinned gate checkout stayed clean at `8ba7f6c`. The shared refusal suite now runs the registration, reservation-window, order-price, primary-payment-reference, expiry, issuance-order and resale-policy boundaries in both modes, and both receipt paths check `right.listing_id` after transfer. The stub checks follow the pinned order: `_roles` in `reservation_fsm.py`, `_window`/`_money`/`_hex32` in `mock_gates.py`, `_normalize_adopt` before `_match_authority` and `_require_authority` before the payment binding in `resale_fsm.py`, and the policy check between `STALE_VERSION` and `RECIPIENT_IS_HOLDER` in `mock_gates.py:list_resale`.
+
+| Round-three working-tree check | Result |
+| --- | --- |
+| `KIX_REQUIRE_GATE=0 npm test` | 3,141 adapter tests, 1,735 web tests and 6 entry-integrity tests passed. Stub mode skipped 79 gate-only tests. |
+| `KIX_REQUIRE_GATE=1 npm test -w @kix/protocol-adapter` with `KIX_PROTOCOL_ROOT` at the reviewed checkout | 85 files and 3,220 tests passed with zero skips, including 49 live resale tests. |
+| `npm run typecheck`, `npm run typecheck:e2e`, `npm run build`, `npm run lint`, `npm run cycle-check`, `npm run deps:check`, `npm run audit:warn` | Passed. Production-only npm audit reported zero findings. |
+| `npm run budget` and `KIX_E2E_NO_SANDBOX=1 npm run test:budget` | Total gzip 802,870 of 802,884 bytes; initial JS 161,092, initial CSS 4,997, largest chunk 29,926. All 9 Chrome checks passed. |
+| `npm run test:e2e` | 54 files, 272 browser tests passed. |
+| `npm run test:a11y` | 24 files, 451 tests passed. Two runs on this loaded box failed only on different long browser tests (120 s test timeouts observed on permissions-narrow and marketing-m05 text-spacing); a diagnostic rerun with `--testTimeout=300000` passed 451/451 with no repo change. The hosted a11y job reported SUCCESS at `80a0ece` with the default timeout. |
+| `npm run test:visual` | Local Chrome 156.0.8078.47 differs on exactly the two forced-colors shots recorded in the 156→157 maintenance (handoff.desktop.en 6,787 px; booking.phone.ko 2,545 px — the same counts as the [pin-bundle bind doc](c-int-pin-bundle-apps-bind.md)). Chrome for Testing 157.0.8103.50 in compare mode: 123/123 tests, 108 MATCH, summed diffPixels 0, profile `linux-d29b2e9b`, ledger nonLoopback/nonGet/appNetworkCalls all 0. No baseline, tolerance or harness change; the committed set already targets the CI runner's Chrome. |
+| `KIX_REQUIRE_GATE=0 npm run coverage:check` | All coverage floors met. |
+| Locked-file and whitespace checks | `commerce-bindings.ts`, `.github/workflows/ci.yml`, both OpenAPI pin modules, `coverage-floors.json` and `apps/web/bundle-budget.json` are byte-identical to `origin/main`. `git diff --check` clean. |
+| Hosted round-two verification | All 12 jobs of run [44477697041](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44477697041) reported SUCCESS at `80a0ece`, including both required jobs (gh API read-back). |
+
+Round-three files: `packages/protocol-adapter/src/commerce-fixture-fields.ts` (new shared fixture bounds), `record.ts` (shared canonical JSON), `resale-case.ts`, `reservation-case.ts`, `commerce-journey-stub.ts`, `resale-journey-fixture.ts`, `types.ts`; the shared resale test support and both resale suites; this bind doc and the prepared PR body.
 
 ### Design adjustments
 

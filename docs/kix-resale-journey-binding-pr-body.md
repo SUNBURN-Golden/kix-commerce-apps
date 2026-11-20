@@ -4,6 +4,8 @@ No task issue exists for this node (the loop does not create issues).
 
 Task: KIXC-KIX-RESALE-JOURNEY-BINDING
 
+The resale fixture now requires a detached right to confirm transfer. Registration, hold, order, primary payment, issuance, adoption and listing return the pinned gate errors for the reviewed invalid transitions. Settlement remains a separate display fact. [Round-three evidence](https://github.com/SUNBURN-Golden/kix-commerce-apps/blob/agent/kixc-kix-resale-journey-binding/docs/kix-resale-journey-binding-apps-bind.md#review-round-three)
+
 ## NOT_BOUND list
 
 | Screen need | Pinned query, if present | Missing interface or decision | User-visible reason | Decision owner |
@@ -77,3 +79,19 @@ Both required hosted jobs reported `SUCCESS` on round-one commit `7d4a638491fa8c
 The fixture stub retains the confirmed order amount and quote, and checks adoption against the registered show. Invalid listing prices, deadlines and resale payment references are rejected before mutation. Acceptance requires the listing and right to agree on version 2. A contradiction leaves acceptance `UNKNOWN` after one attempt and preserves the listed and paid facts.
 
 The shared suite checks the gate error and the state left after each refusal. On the local round-two tree, all 3,192 adapter tests passed against the reviewed loopback gate at `8ba7f6c`, with zero skips. Local Chrome completed purchase and cancellation with settlement at `NO_EVIDENCE`. [Binding and verification](https://github.com/SUNBURN-Golden/kix-commerce-apps/blob/agent/kixc-kix-resale-journey-binding/docs/kix-resale-journey-binding-apps-bind.md)
+
+Both required jobs completed with `SUCCESS` on round-two commit `80a0eceb3c81c2f530ca1c2f56468b9d92c97684`. [Stub job](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44477697041/job/135402130564) · [Reviewed gate job](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44477697041/job/135402182104)
+
+## Review round three
+
+Both receipt paths now require the transferred right to carry a null listing ID; a contradiction leaves acceptance `UNKNOWN` after one attempt with the listed and paid facts intact. The stub returns the pinned gate errors for duplicate gate roles at registration, the reservation offer window, order price mismatch before order creation, primary payment reference format, reservation expiry at observation and issuance, adoption before issuance (`TICKET_NOT_ISSUED` ahead of the payment binding), and `RESALE_POLICY_REJECTED` when registration and adoption both disallow resale. Each refusal is probed with a separate command in stub and live-gate modes.
+
+| Round-three working-tree check | Result |
+| --- | --- |
+| `KIX_REQUIRE_GATE=0 npm test` | 3,141 adapter, 1,735 web and 6 entry-integrity tests passed; 79 gate-only tests skipped by design. |
+| `KIX_REQUIRE_GATE=1 npm test -w @kix/protocol-adapter` at the reviewed checkout | 3,220 tests passed across 85 files, zero skips, including 49 live resale tests. |
+| Typecheck, e2e typecheck, build, lint, cycle, dependency, audit and coverage checks | All passed. Total gzip 802,870 / 802,884 bytes; all 9 browser budget checks passed. |
+| Browser journeys and accessibility | 272 journey tests and 451 accessibility tests passed on local Chrome. The a11y suite needed a longer local test timeout on this loaded box (no repo change); the hosted a11y job passed at `80a0ece` with the default timeout. |
+| Visual baselines | Local Chrome 156 shows only the documented 156→157 forced-colors drift; Chrome for Testing 157.0.8103.50 compares 108 MATCH with 0 diff pixels. No baseline, tolerance or harness change. |
+
+All 12 hosted jobs reported `SUCCESS` on round-two commit `80a0ece` ([run 44477697041](https://github.com/SUNBURN-Golden/kix-commerce-apps/actions/runs/44477697041)). The round-three tree is local and uncommitted; hosted verification follows publication. This replacement body carries the inline `NOT_BOUND list`; the body hosted at `80a0ece` still links builder-local paths and omits the inline section. Publishing the replacement is a supervisor/PR-owner action — this builder round is prohibited from posting. [Round-three evidence](https://github.com/SUNBURN-Golden/kix-commerce-apps/blob/agent/kixc-kix-resale-journey-binding/docs/kix-resale-journey-binding-apps-bind.md#review-round-three)
