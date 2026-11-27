@@ -237,6 +237,20 @@ function parseEnvelope(raw: string, budget: SessionJournalBudget): Parsed {
   return { kind: "ok", env };
 }
 
+function extendsHistory(trusted: Envelope, candidate: Envelope): boolean {
+  if (candidate.loads < trusted.loads || candidate.nextSeq < trusted.nextSeq ||
+      candidate.records.length < trusted.records.length) return false;
+  return candidate.records.every((record, index) => {
+    const previous = trusted.records[index];
+    if (previous === undefined) return record.seq >= trusted.nextSeq && record.loadNo >= trusted.loads;
+    if (record.seq !== previous.seq || record.intentRef !== previous.intentRef || record.scope !== previous.scope ||
+        record.contextTag !== previous.contextTag || record.loadNo !== previous.loadNo) return false;
+    // Only in-flight intents may change their outcome. UNKNOWN and all other
+    // terminal results keep their original codes and cannot be resolved here.
+    return record.outcome === previous.outcome ? record.code === previous.code : previous.outcome === "IN_FLIGHT";
+  });
+}
+
 function quarantinedCause(text: string, requireVersion = false): EvidenceLostCause {
   try {
     const value: unknown = JSON.parse(text);
@@ -263,8 +277,6 @@ export class SessionJournal {
   private env: Envelope | null = null;
   private current: JournalStatus = { kind: "ready" };
   private lastWritten: string | null = null;
-  /** The in-memory state is ahead of the store: the last write failed. */
-  private dirty = false;
   private recoveredAtOpen = 0;
 
   constructor(
@@ -348,23 +360,23 @@ export class SessionJournal {
       return this;
     }
     env.loads = nextLoad;
-    if (this.persist(env) !== null) {
-      // The store still holds the older blob. Its in-flight records recover the same way on the next load.
-      this.dirty = true;
-    }
+    // If persistence fails, the older in-flight rows recover again on reload.
+    this.persist(env);
     return this;
   }
 
   /** Moves the damaged blob aside, or records that the blob is gone. If that write fails, the original stays where it is and the hold lasts this page load only. */
-  private quarantine(raw: string | null, cause: EvidenceLostCause): void {
+  private quarantine(raw: string | null, cause: EvidenceLostCause, keepHistory = false): void {
     this.current = { kind: "evidence-lost", cause };
-    this.env = null;
+    if (!keepHistory) this.env = null;
     const store = this.store;
     if (store === null) {
       return;
     }
     try {
-      store.setItem(SESSION_JOURNAL_QUARANTINE_KEY, JSON.stringify({ v: SESSION_JOURNAL_VERSION, cause, raw: (raw ?? "").slice(0, this.budget.maxBytes) }));
+      const marker = JSON.stringify({ v: SESSION_JOURNAL_VERSION, cause, raw: (raw ?? "").slice(0, this.budget.maxBytes) });
+      store.setItem(SESSION_JOURNAL_QUARANTINE_KEY, marker);
+      if (store.getItem(SESSION_JOURNAL_QUARANTINE_KEY) !== marker) return;
     } catch {
       return;
     }
@@ -403,7 +415,6 @@ export class SessionJournal {
       store.setItem(SESSION_JOURNAL_KEY, text);
       if (store.getItem(SESSION_JOURNAL_KEY) === text) {
         this.lastWritten = text;
-        this.dirty = false;
         return null;
       }
     } catch {
@@ -428,6 +439,11 @@ export class SessionJournal {
     }
     let raw: string | null;
     try {
+      const marker = this.store.getItem(SESSION_JOURNAL_QUARANTINE_KEY);
+      if (marker !== null) {
+        this.current = { kind: "evidence-lost", cause: quarantinedCause(marker) };
+        return this.status();
+      }
       raw = this.store.getItem(SESSION_JOURNAL_KEY);
     } catch {
       this.current = { kind: "unavailable", cause: "NO_STORE" };
@@ -446,9 +462,9 @@ export class SessionJournal {
       this.quarantine(raw, parsed.cause);
       return this.status();
     }
-    // Valid older storage must not replace UNKNOWN evidence after a refused write.
-    // Keep lastWritten as the restore target while the in-memory state is ahead.
-    if (!this.dirty) {
+    if (this.env && !extendsHistory(this.env, parsed.env)) {
+      if (this.persist(this.env) !== null) this.quarantine(raw, "LOST_DURING_SESSION", true);
+    } else {
       this.env = parsed.env;
       this.lastWritten = raw;
     }
@@ -576,11 +592,7 @@ export class SessionJournal {
     }
     target.outcome = "UNKNOWN";
     target.code = code;
-    const stored = this.persist(this.env) === null;
-    if (!stored) {
-      this.dirty = true;
-    }
-    return stored;
+    return this.persist(this.env) === null;
   }
 
   /** A tab resume: every intent still in flight becomes UNKNOWN. Returns how many. */
@@ -589,9 +601,7 @@ export class SessionJournal {
       return 0;
     }
     const count = this.markInFlight(this.env, code);
-    if (count > 0 && this.persist(this.env) !== null) {
-      this.dirty = true;
-    }
+    if (count > 0) this.persist(this.env);
     return count;
   }
 }

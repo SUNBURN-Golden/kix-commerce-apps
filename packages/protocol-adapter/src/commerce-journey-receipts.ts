@@ -127,6 +127,7 @@ function verifyRelationships(value: Record<string, unknown>, action: Command, ma
       const attached = !transferred && action !== "resale_cancel_listing";
       agree(listing.attached, attached);
       agree(right.listing_id, attached ? listing.listing_id : null);
+      if (action === "resale_cancel_listing") agree(listing.hold_id, listing.buyer_role, null);
       if (transferred) {
         const evidence = section(value.evidence);
         agree(body.transfer_id, listing.transfer_id, evidence.transfer_id);

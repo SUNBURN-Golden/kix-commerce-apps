@@ -845,6 +845,7 @@ function stubJourney(
 
 function stubGift() {
   return createGiftDesk({
+    store: memoryStore(),
     protocol: stubProtocol(),
     source: {
       source: "stub-shape",
@@ -861,6 +862,7 @@ function stubConsent(
 ) {
   const shape = createStubConsentInvoker();
   return createConsentDesk({
+    store: memoryStore(),
     protocol: stubProtocol(),
     source: {
       source: "stub-shape",
@@ -877,6 +879,7 @@ function stubOrganizer(
 ) {
   const shape = createStubOrganizerInvoker();
   return createOrganizerDesk({
+    store: memoryStore(),
     protocol: stubProtocol(),
     source: {
       source: "stub-shape",

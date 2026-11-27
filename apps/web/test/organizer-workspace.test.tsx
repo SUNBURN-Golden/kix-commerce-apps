@@ -1,3 +1,4 @@
+import { memoryStore } from "./support/session-store";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -428,6 +429,7 @@ function stubDesk(
   const calls: LocalCallInput[] = [];
   const shape = createStubOrganizerInvoker();
   const desk = createOrganizerDesk({
+    store: memoryStore(),
     protocol: {
       describe: () => ({ environment: "stub" }),
       observeTransport: async () => localStubObservation(),

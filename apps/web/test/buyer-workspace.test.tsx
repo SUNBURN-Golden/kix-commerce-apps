@@ -285,6 +285,7 @@ function stubJourney(
 function stubGift() {
   const shape = createStubGiftInvoker();
   return createGiftDesk({
+    store: memoryStore(),
     protocol: stubProtocol(),
     source: {
       source: "stub-shape",

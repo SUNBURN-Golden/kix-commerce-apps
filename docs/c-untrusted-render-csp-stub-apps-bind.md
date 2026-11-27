@@ -42,19 +42,27 @@ The runtime audit found no web-app `localStorage`, IndexedDB, or cookie writes. 
 | `kix-session-journal-quarantine` | corrupt/lost journal evidence | bounded versioned JSON quarantine record |
 | `kix-locale` | display-language preference | the literal `en` or `ko` |
 | `kix-onboarding` | first-run guide dismissal preference | the literal `dismissed` |
-| `kix-reservation-attempt:` | reservation attempt counter | non-negative integer text |
-| `kix-resale-attempt:` | resale attempt counter | non-negative integer text |
-| `kix-organizer-attempt:` | organizer attempt counter | non-negative integer text |
-| `kix-resale-intent:` | mode-scoped unresolved resale fixture | tab JSON with step, operation and prior markers |
-| `kix-journey-attempt:` | journey attempt counter | non-negative integer text |
-| `kix-journey-intent:` | unresolved Core booking by event and mode, or FSM booking by mode | version, pin digest, mode, event, branch, step, operation ID and last confirmed step/operation ID |
-| `kix-gift-attempt:` | gift attempt counter | non-negative integer text |
-| `kix-credit-attempt:` | credit attempt counter | non-negative integer text |
-| `kix-consent-attempt:` | consent attempt counter | non-negative integer text |
-| `kix-admission-attempt:` | admission attempt counter | non-negative integer text |
-| `kix-settlement-attempt:` | settlement attempt counter | non-negative integer text |
+| `kix-reservation-attempt:` | reservation attempt counter | non-negative safe-integer text |
+| `kix-resale-attempt:` | resale attempt counter | non-negative safe-integer text |
+| `kix-organizer-attempt:` | organizer attempt counter | non-negative safe-integer text |
+| `kix-resale-intent:<mode>` | unresolved resale fixture | v1, pin digest, mode, operation ID, step, confirmed step, listed and paid markers |
+| `kix-journey-attempt:` | journey attempt counter | non-negative safe-integer text |
+| `kix-journey-intent:core:<mode>:<encodedEventId>` | booking Core writes and the shared organizer/booking creation fence | v1, pin digest, mode, event, null branch, step, operation ID and last confirmed step/operation ID |
+| `kix-journey-intent:fsm:<mode>` | unresolved FSM booking | v1, pin digest, mode, event, branch, step, operation ID and last confirmed step/operation ID |
+| `kix-organizer-intent:<mode>:<encodedEventId>` | unresolved organizer lifecycle or invitation | v1, pin digest, mode, desk, scope, step, operation ID, last confirmed step/operation ID and invitation scope digest |
+| `kix-gift-intent:<mode>:<encodedGiftId>` | unresolved gift offer or resolution | same Core desk intent fields with a null scope digest |
+| `kix-consent-intent:<mode>:<encodedEventId>` | unresolved consent write | same Core desk intent fields with a consent scope digest |
+| `kix-gift-attempt:` | gift attempt counter | non-negative safe-integer text |
+| `kix-credit-attempt:` | credit attempt counter | non-negative safe-integer text |
+| `kix-consent-attempt:` | consent attempt counter | non-negative safe-integer text |
+| `kix-admission-attempt:` | admission attempt counter | non-negative safe-integer text |
+| `kix-settlement-attempt:` | settlement attempt counter | non-negative safe-integer text |
 
 Exact keys and non-empty suffixes on attempt prefixes are required. Journal access is wrapped and attempt writes validate before touching storage. Tests enumerate a storage object and fail unknown keys. Stored-value tests directly reuse `findSensitive` from `apps/e2e/src/redact.ts`, covering email, bearer/token strings, JWTs, and long digit runs; a secret-like fixture must be detected.
+
+Core booking recognizes v1 `jrn:` and `org:` creation IDs. Organizer checks the shared creation slot before lifecycle and invitation writes. Scope names are short identifiers with Unicode letters, marks and numbers, plus period, underscore, colon and hyphen. Invitation IDs outside the generated fixture format are digested in the operation ID. Invitation and consent digest inputs include the submitted inventory or consent scope. Drafts, recipients and consent fields stay in page memory. Gift resolutions retain the confirmed offer identity. Consent authorization retains a matching confirmed set identity when available. A consent replacement uses a fresh attempt. Organizer lifecycle order is validated by Core.
+
+An intent is read back exactly before dispatch. A known outcome clears only the dispatch's own bytes and checks removal. A reload treats a valid pending row as `UNKNOWN` history. Journey attempt counters store the last allocated value. Legacy desk counters store the current value and persist `COUNTER_EXHAUSTED` when the final value is consumed. A journal rejects older valid envelopes while the tab knows newer history. It restores verified bytes or records a verified quarantine marker. If storage refuses both writes, the open tab keeps the fence and counters in memory and a reload may lose that evidence.
 
 ## Acceptance evidence
 

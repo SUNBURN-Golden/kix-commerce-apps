@@ -1,6 +1,5 @@
 export const messages = {
   en: {
-    "merge.sdkNote": "The p-sdk-0 BOOTSTRAP tuple is vendored and pin-checked. The SDK tuple was consumed; the catalogue, the gate, and the five pins did not move. BOOTSTRAP grants catalogue-schema binding only. No live connection and no semantic conformance.",
 
     "sa": "a case closure is not an extinguished debt",
     "s1z": "A failed live call is not replaced with a stub success.",
@@ -53,7 +52,6 @@ export const messages = {
     "st6": "Mock settlement case. Shares are not computed. This is not funds.",
     "stv": "no actor on this desk holds the authority to change economic state",
     "sun": "no client-side sum is the financial truth",
-    "syd": "No SDK is consumed. SDK, manifest, and vector digests stay null.",
     "sw9": "(none)",
     "s13c": "npm install",
     "s13d": "npm run dev",
@@ -138,7 +136,6 @@ export const messages = {
     "p.t184": "{v1}{v2} Retry is off. Stub fallback is off.",
   },
   ko: {
-    "merge.sdkNote": "p-sdk-0 BOOTSTRAP 튜플을 저장하고 pin을 검사했습니다. SDK 튜플을 소비했으며 목록·게이트·다섯 pin은 바뀌지 않았습니다. BOOTSTRAP은 catalogue-schema binding만 부여합니다. 실제 연결이나 의미 적합성을 뜻하지 않습니다.",
 
     "sa": "사례 종료는 채무 소멸이 아닙니다",
     "s1z": "실제 호출의 오류를 stub의 정상 결과로 대체하지 않습니다.",
@@ -191,7 +188,6 @@ export const messages = {
     "st6": "모의 정산 사례. 지분을 계산하지 않으며 자금이 아닙니다.",
     "stv": "이 데스크의 행위자는 경제 상태 변경 권한이 없습니다",
     "sun": "클라이언트 합계는 재무 기준이 아닙니다",
-    "syd": "SDK를 소비하지 않습니다. SDK·manifest·vector 다이제스트는 null입니다.",
     "sw9": "(없음)",
     "s13c": "npm install",
     "s13d": "npm run dev",

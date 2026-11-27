@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { readDeskAttempt, writeDeskAttempt } from "../src/desk-attempts";
+import { allocateDeskAttempt, claimCurrentDeskAttempt, COUNTER_EXHAUSTED, readDeskAttempt, writeDeskAttempt } from "../src/desk-attempts";
 
 const original = Object.getOwnPropertyDescriptor(globalThis, "sessionStorage");
 
@@ -53,4 +53,30 @@ describe("desk attempt counter", () => {
     expect(readDeskAttempt("resale", "evt_prior")).toBe(5);
     expect(readDeskAttempt("resale", "  ")).toBe(0);
   });
+});
+
+it("allocates the last safe ID and holds exhausted storage and rollback", () => {
+  const key = "kix-journey-attempt:safe-limit";
+  const stored = new Map([[key, String(Number.MAX_SAFE_INTEGER - 1)]]);
+  installStorage({ getItem: id => stored.get(id) ?? null, setItem: (id, value) => { stored.set(id, value); } });
+  expect(allocateDeskAttempt("journey", "safe-limit")).toBe(Number.MAX_SAFE_INTEGER);
+  expect(stored.get(key)).toBe(String(Number.MAX_SAFE_INTEGER));
+  expect(allocateDeskAttempt("journey", "safe-limit")).toBeNull();
+  stored.set(key, "0");
+  expect(allocateDeskAttempt("journey", "safe-limit")).toBeNull();
+  stored.set("kix-journey-attempt:unsafe-limit", "9007199254740992");
+  expect(allocateDeskAttempt("journey", "unsafe-limit")).toBeNull();
+  stored.delete("kix-journey-attempt:unsafe-limit");
+  expect(allocateDeskAttempt("journey", "unsafe-limit")).toBeNull();
+});
+
+it("consumes the final current attempt before a legacy desk sends", () => {
+  const key = "kix-settlement-attempt:legacy-limit";
+  const stored = new Map([[key, String(Number.MAX_SAFE_INTEGER)]]);
+  installStorage({ getItem: id => stored.get(id) ?? null, setItem: (id, value) => { stored.set(id, value); } });
+  const claim = () => claimCurrentDeskAttempt("legacy-limit", id => readDeskAttempt("settlement", id),
+    (id, count) => writeDeskAttempt("settlement", id, count));
+  expect(claim()).toBe(Number.MAX_SAFE_INTEGER);
+  expect(stored.get(key)).toBe(COUNTER_EXHAUSTED);
+  expect(claim()).toBeNull();
 });

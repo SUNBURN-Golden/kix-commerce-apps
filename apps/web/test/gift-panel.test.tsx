@@ -1,3 +1,4 @@
+import { memoryStore } from "./support/session-store";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -57,6 +58,7 @@ describe("gift panel", () => {
   it("shows an accepted gift and blocks cancel", async () => {
     const giftId = "gift_panel_accept";
     const desk = createGiftDesk({
+      store: memoryStore(),
       protocol: {
         describe: () => ({ environment: "stub" }),
         observeTransport: async () => {
@@ -87,6 +89,7 @@ describe("gift panel", () => {
 
   it("shows an unconfirmed offer apart from the last confirmed receipt and blocks cancel", async () => {
     const desk = createGiftDesk({
+      store: memoryStore(),
       protocol: {
         describe: () => ({ environment: "stub" }),
         observeTransport: async () => {
@@ -118,6 +121,7 @@ describe("gift panel", () => {
 
   it("shows a gate rejection and blocks the later sends", async () => {
     const desk = createGiftDesk({
+      store: memoryStore(),
       protocol: {
         describe: () => ({ environment: "stub" }),
         observeTransport: async () => {

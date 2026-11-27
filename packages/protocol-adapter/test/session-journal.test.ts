@@ -464,20 +464,90 @@ describe("journal counter integrity", () => {
     store.faultOnce = true;
     expect(journal.markUnknown("intent-1", "JOURNAL_SETTLE_FAILED")).toBe(false);
     expect(store.data.get(SESSION_JOURNAL_KEY)).toBe(lastWritten);
-    const sets = store.sets;
     expect(journal.verify()).toEqual({ kind: "ready" });
     expect(journal.records()[0]?.outcome).toBe("UNKNOWN");
     store.data.set(SESSION_JOURNAL_KEY, older);
     expect(journal.verify()).toEqual({ kind: "ready" });
-    expect(journal.records()[0]?.outcome).toBe("UNKNOWN");
-    expect(store.sets).toBe(sets);
-    // A later failed write still restores lastWritten, not the older valid blob.
+    const restored = store.data.get(SESSION_JOURNAL_KEY)!;
+    expect(restored).not.toBe(older);
+    const reopened = openSessionJournal(store);
+    expect(reopened.scopeBlock("subject-1")).toMatchObject({ reason: "unresolved", record: { outcome: "UNKNOWN", code: "JOURNAL_SETTLE_FAILED" } });
+    expect(reopened.nextSeq()).toBe(2);
+    expect(begin(reopened, 1)).toEqual({ ok: false, reason: "DUPLICATE_INTENT" });
+    // A later failed write restores the verified forward extension.
+    const extended = store.data.get(SESSION_JOURNAL_KEY);
     store.partialThenThrow = 10;
     store.faultOnce = true;
     expect(begin(journal, 2)).toEqual({ ok: false, reason: "WRITE_REFUSED" });
-    expect(store.data.get(SESSION_JOURNAL_KEY)).toBe(lastWritten);
+    expect(store.data.get(SESSION_JOURNAL_KEY)).toBe(extended);
     store.data.set(SESSION_JOURNAL_KEY, blob({ nextSeq: M + 1 }));
     expect(journal.verify()).toEqual(corrupt);
     expect(openSessionJournal(store).status()).toEqual(corrupt);
   });
+});
+
+it("restores clean history and the load/sequence counters when storage is rolled back", () => {
+  const store = new FakeSessionStore();
+  openSessionJournal(store);
+  const older = store.getItem(SESSION_JOURNAL_KEY)!;
+  const journal = openSessionJournal(store);
+  expect(begin(journal, 1).ok).toBe(true);
+  expect(journal.settle("intent-1", "UNKNOWN", "TAB_RESUMED").ok).toBe(true);
+  const latest = store.getItem(SESSION_JOURNAL_KEY);
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  expect(journal.verify()).toEqual({ kind: "ready" });
+  expect([journal.load(), journal.nextSeq()]).toEqual([2, 2]);
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(latest);
+  const reopened = openSessionJournal(store);
+  expect(reopened.scopeBlock("subject-1")).toMatchObject({ reason: "unresolved" });
+  expect(begin(reopened, 1)).toEqual({ ok: false, reason: "DUPLICATE_INTENT" });
+});
+
+it("rejects equal-counter outcome rollback and adopts a legitimate forward extension", () => {
+  const store = new FakeSessionStore();
+  const journal = openSessionJournal(store);
+  expect(begin(journal, 1).ok).toBe(true);
+  const running = store.getItem(SESSION_JOURNAL_KEY)!;
+  expect(journal.settle("intent-1", "CONFIRMED", null).ok).toBe(true);
+  const confirmed = store.getItem(SESSION_JOURNAL_KEY);
+  store.data.set(SESSION_JOURNAL_KEY, running);
+  expect(journal.verify()).toEqual({ kind: "ready" });
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(confirmed);
+  const other = openSessionJournal(store);
+  expect(begin(other, 2).ok).toBe(true);
+  expect(other.settle("intent-2", "UNKNOWN", null).ok).toBe(true);
+  expect(journal.verify()).toEqual({ kind: "ready" });
+  expect([journal.load(), journal.nextSeq()]).toEqual([2, 3]);
+  expect(journal.scopeBlock("subject-2")).toMatchObject({ reason: "unresolved" });
+});
+
+it("quarantines a rollback when restoration fails and keeps trusted in-memory history", () => {
+  const store = new FakeSessionStore();
+  const journal = openSessionJournal(store);
+  const older = store.getItem(SESSION_JOURNAL_KEY)!;
+  expect(begin(journal, 1).ok).toBe(true);
+  expect(journal.markUnknown("intent-1", "TAB_RESUMED")).toBe(true);
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  const set = store.setItem.bind(store);
+  store.setItem = (key, value) => {
+    if (key !== SESSION_JOURNAL_KEY) set(key, value);
+  };
+  expect(journal.verify()).toEqual({ kind: "evidence-lost", cause: "LOST_DURING_SESSION" });
+  expect(journal.records()).toMatchObject([{ intentRef: "intent-1", outcome: "UNKNOWN" }]);
+  expect(journal.nextSeq()).toBe(2);
+  expect(openSessionJournal(store).scopeBlock("subject-1")).toMatchObject({ reason: "evidence-lost" });
+});
+
+it.each(["scope", "outcome"] as const)("rejects a valid rewrite of a trusted UNKNOWN's %s", field => {
+  const store = new FakeSessionStore();
+  const journal = openSessionJournal(store);
+  expect(begin(journal, 1).ok).toBe(true);
+  expect(journal.markUnknown("intent-1", "TAB_RESUMED")).toBe(true);
+  const trusted = store.getItem(SESSION_JOURNAL_KEY)!;
+  const env = JSON.parse(trusted);
+  env.records[0][field] = field === "scope" ? "rewritten" : "CONFIRMED";
+  store.data.set(SESSION_JOURNAL_KEY, blob({ loads: env.loads, nextSeq: env.nextSeq }, env.records));
+  expect(journal.verify()).toEqual({ kind: "ready" });
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(trusted);
+  expect(journal.scopeBlock("subject-1")).toMatchObject({ reason: "unresolved" });
 });

@@ -9,11 +9,11 @@ const fact = (panel: Locator, name: string, state: string) =>
 
 describe("pinned commerce fixture in the stub browser", () => {
   const suite = useBrowser();
-  it("shows a refusal, separate evidence and NOT_BOUND with no application network calls", async () => {
+  it.each(["en", "ko"] as const)("shows confirmation, refusal and NOT_BOUND in %s", async locale => {
     const page = await suite.newPage();
-    await page.goto(suite.origin + "/booking/evt_lanterns?lang=en");
-    const panel = page.getByRole("region", { name: "Protocol commerce journey" });
-    await page.getByRole("button", { name: "Advance mock clock", exact: true }).click();
+    await page.goto(suite.origin + `/booking/evt_lanterns?lang=${locale}`);
+    const panel = page.getByRole("region", { name: locale === "en" ? "Protocol commerce journey" : "프로토콜 거래 여정" });
+    await page.getByRole("button", { name: locale === "en" ? "Advance mock clock" : "모의 시계 진행", exact: true }).click();
     await panel.locator("[data-commerce-branch=admission]").click();
     for (const id of ["reservation-clock", "register-show", "reserve-B", "order-B", "payment-B"]) await step(panel, id);
     await fact(panel, "paymentObservation", "OBSERVED");
@@ -30,11 +30,29 @@ describe("pinned commerce fixture in the stub browser", () => {
     await fact(panel, "admission", "CONSUMED_ONCE");
     await step(panel, "double-consume");
     await panel.getByText("ALREADY_CONSUMED", { exact: true }).waitFor();
-    await panel.getByRole("button", { name: "Read current booking" }).click();
+    await panel.getByRole("button", { name: locale === "en" ? "Read current booking" : "현재 예매 조회" }).click();
     await panel.getByText("NOT_BOUND", { exact: true }).waitFor();
-    expect(await panel.getByText("The pinned gate has no booking read endpoint.", { exact: false }).isVisible()).toBe(true);
-    await suite.pass(page, "booking.pinned-commerce-journey");
+    expect(await panel.getByText(locale === "en" ? "The pinned gate has no booking read endpoint." :
+      "고정 게이트에 예매 조회 엔드포인트가 없습니다.", { exact: false }).isVisible()).toBe(true);
+    await suite.pass(page, locale === "en" ? "booking.pinned-commerce-journey" : "booking.pinned-commerce-journey.ko");
     await page.close();
+  });
+
+  it.each(["en", "ko"] as const)("explains both fixture transports and their refusal in handoff (%s)", async locale => {
+    const page = await suite.newPage();
+    try {
+      await page.goto(suite.origin + `/handoff?lang=${locale}`);
+      const panel = page.locator("[data-handoff=packet]");
+      await panel.getByText("CommerceJourney", { exact: true }).waitFor();
+      expect(await panel.innerText()).toContain("ResaleJourney");
+      expect(await panel.innerText()).toContain("SEMANTIC_CONFORMANCE commerce-fixture-8ba7f6c-1");
+      expect(await panel.innerText()).toContain("FIXTURE_ONLY");
+      expect(await panel.innerText()).toContain("NOT_BOUND");
+      expect(await panel.innerText()).toContain(locale === "en" ? "browser HTTP writes unavailable" : "브라우저 HTTP 쓰기 불가");
+      expect(await panel.innerText()).toContain("BOOTSTRAP bootstrap-1");
+      expect(await panel.innerText()).toContain("BOOTSTRAP bootstrap-2");
+      await suite.pass(page, `handoff.fixture-limits.${locale}`);
+    } finally { await page.close(); }
   });
 
   it("keeps cancellation, mock refund binding and mock acceptance separate", async () => {

@@ -127,6 +127,7 @@ export interface HttpProtocolAdapterOptions {
 export class HttpProtocolAdapter implements CommerceProtocol {
   private readonly baseUrl: string;
   private readonly timeoutMs: number;
+  readonly #fixtureEvidence = new WeakMap<CommerceJourneyCall, JourneyProof>();
 
   constructor(
     baseUrl: string,
@@ -517,11 +518,15 @@ export class HttpProtocolAdapter implements CommerceProtocol {
   async advanceCommerceJourney(input: CommerceJourneyCall): Promise<JourneyProof> {
     if (!fixtureWritesOnNode) throw new ProtocolError("Fixture HTTP writes require Node loopback.", "NOT_BOUND");
     const { qualifiedFixtureCommand } = await import("./commerce-fixture-qualification.js");
-    const command = qualifiedFixtureCommand(input);
+    const command = qualifiedFixtureCommand(input, this.#fixtureEvidence);
     const { scanFsmReceipt, verifyFsmReceipt } = await import("./commerce-journey-receipts.js");
     return this.call({ operationId: command.operationId, actor: command.actor, action: command.action, body: command.body }, {
       scan: scanFsmReceipt,
-      proof: (body) => verifyFsmReceipt(body, input.step, command.action, command.body, command.expectation),
+      proof: (body) => {
+        const proof = Object.freeze(verifyFsmReceipt(body, input.step, command.action, command.body, command.expectation));
+        this.#fixtureEvidence.set(input, proof);
+        return proof;
+      },
     }) as Promise<JourneyProof>;
   }
 

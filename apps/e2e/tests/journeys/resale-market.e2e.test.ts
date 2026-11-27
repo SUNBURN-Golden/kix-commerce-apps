@@ -387,25 +387,26 @@ describe("synthetic resale marketplace", () => {
 
 describe("pinned resale market fixture", () => {
   const suite = useBrowser();
-  it.each(["purchase", "cancel"])("reviews the %s path on the market", async branch => {
+  it.each([["purchase", "en"], ["cancel", "en"], ["purchase", "ko"], ["cancel", "ko"]] as const)(
+    "reviews the %s path on the market in %s", async (branch, locale) => {
     const page = await newDeskPage(suite.newPage, suite.origin);
     try {
-      await page.goto(suite.origin + "/resale/market");
-      await page.getByRole("link", { name: "Resale fixture journey" }).click();
+      await page.goto(suite.origin + `/resale/market?lang=${locale}`);
+      await page.getByRole("link", { name: locale === "en" ? "Resale fixture journey" : "재판매 모의 여정" }).click();
       const panel = page.locator('section[aria-labelledby="market-journey-title"]');
       for (let i = 0; i < (branch === "purchase" ? 12 : 11); i++) {
         const next = branch === "cancel" && i === 10 ? panel.locator('[data-market-step="market-cancel"]') : panel.locator("[data-market-step]").first();
         await next.click();
-        await panel.getByRole("button", { name: "Send command once" }).click();
+        await panel.locator("[data-market-send]").click();
       }
       await panel.getByText(branch === "purchase" ? "CONFIRMED · TRANSFERRED" : "CONFIRMED · CANCELLED").waitFor();
       expect(await panel.locator('[data-market-fact="listed"]').innerText()).toBe("LISTED");
       expect(await panel.locator('[data-market-fact="paid"]').innerText()).toBe(branch === "purchase" ? "PAYMENT_NOTED" : "NO_EVIDENCE");
       expect(await panel.locator('[data-market-fact="settled"]').innerText()).toBe("NO_EVIDENCE");
-      await panel.getByText("Protocol read availability", { exact: true }).last().click();
+      await panel.getByText(locale === "en" ? "Protocol read availability" : "프로토콜 조회 가능 여부", { exact: true }).last().click();
       await panel.getByText(/NOT_BOUND · get_settlement/).waitFor();
-      expect(await panel.innerText()).toContain("requester-borne (B5)");
-      await suite.quiet(page, "reviewed resale fixture");
+      expect(await panel.innerText()).toContain(locale === "en" ? "requester-borne (B5)" : "요청자 부담 (B5)");
+      await suite.pass(page, `resale.fixture.${branch}.${locale}`);
     } finally { await page.close(); }
   });
   it("keeps a departed acceptance uncertain across products, reconnect and reload", async () => {

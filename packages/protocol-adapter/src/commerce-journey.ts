@@ -41,7 +41,8 @@ export function commerceStepAfter(branch: CommerceJourneyBranch, confirmed: Comm
 
 export const FIXTURE_CONTEXTS = ["booking-resale", "booking-admission", "booking-refund", "resale-market"] as const;
 export type FixtureContext = (typeof FIXTURE_CONTEXTS)[number];
-type FixtureGrant = readonly [context: FixtureContext, confirmed: FixtureStep | null];
+type Predecessor = Readonly<{ call: CommerceJourneyCall; proof: JourneyProof }>;
+type FixtureGrant = readonly [context: FixtureContext, predecessor: Predecessor | null];
 // Only FixtureJourney can issue a grant for the exact call object.
 const grants = fixtureWritesOnNode ? new WeakMap<CommerceJourneyCall, FixtureGrant>() : undefined;
 
@@ -100,6 +101,7 @@ abstract class FixtureJourney<Step extends FixtureStep, Facts extends object> {
   private pending: Step | null = null;
   private last: CommerceJourneyOutcome | null = null;
   #confirmed: Step | null = null;
+  #predecessor: Predecessor | null = null;
   readonly #context: FixtureContext | undefined;
 
   constructor(private readonly plan: readonly Step[], protected readonly facts: Facts, private readonly port: CommerceJourneyPort<Step>,
@@ -116,7 +118,7 @@ abstract class FixtureJourney<Step extends FixtureStep, Facts extends object> {
       (this.last.kind !== "REJECTED" || this.last.step === next ||
         this.last.code !== declaredRefusal(this.last.step));
     return {
-      facts: { ...this.facts }, pending: this.pending, last: this.last, confirmed: this.#confirmed, fenced, next,
+      facts: structuredClone(this.facts), pending: this.pending, last: structuredClone(this.last), confirmed: this.#confirmed, fenced, next,
       decline: decline && !this.tried.has(decline) ? decline : undefined,
     };
   }
@@ -126,20 +128,22 @@ abstract class FixtureJourney<Step extends FixtureStep, Facts extends object> {
     if (fenced || this.pending || (step !== next && step !== decline)) return;
     const { operationId, idempotencyKey } = this.mint(step);
     const attempt = { step, operationId, idempotencyKey };
-    const call = { ...attempt, links: this.links };
+    const call = { ...attempt, links: { ...this.links } };
     this.pending = step;
     this.tried.add(step);
     if (fixtureWritesOnNode && this.#context) {
       Object.freeze(call.links);
       Object.freeze(call);
-      grants?.set(call, [this.#context, this.#confirmed]);
+      grants?.set(call, [this.#context, this.#predecessor]);
     }
     try {
-      const proof = await this.port.advanceCommerceJourney(call);
+      const returnedProof = await this.port.advanceCommerceJourney(call);
       if (declaredRefusal(step)) {
         this.last = { ...attempt, kind: "UNKNOWN", code: "INVALID_FSM_RECEIPT" };
-        return this.last;
+        return structuredClone(this.last);
       }
+      const proof = { ...returnedProof };
+      if (fixtureWritesOnNode) this.#predecessor = Object.freeze({ call, proof: returnedProof });
       this.#confirmed = step;
       this.cursor = step === next ? this.cursor + 1 : this.plan.length;
       this.links = { ...this.links, ...collectLinks(step, proof) };
@@ -152,7 +156,7 @@ abstract class FixtureJourney<Step extends FixtureStep, Facts extends object> {
       if (fixtureWritesOnNode) grants?.delete(call);
       this.pending = null;
     }
-    return this.last;
+    return structuredClone(this.last);
   }
 }
 

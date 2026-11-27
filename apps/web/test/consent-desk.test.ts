@@ -1,3 +1,4 @@
+import { memoryStore } from "./support/session-store";
 import { describe, expect, it } from "vitest";
 import {
   CONSENT_AUTHORIZE_ACTOR,
@@ -311,10 +312,12 @@ describe("consent desk", () => {
 
 function stubDesk(
   handle: (input: LocalCallInput, shape: ReturnType<typeof createStubConsentInvoker>) => Promise<unknown>,
+  store = memoryStore(),
 ): { desk: ConsentDesk; calls: LocalCallInput[] } {
   const calls: LocalCallInput[] = [];
   const shape = createStubConsentInvoker();
   const desk = createConsentDesk({
+    store,
     protocol: {
       describe: () => ({ environment: "stub" }),
       observeTransport: async () => localStubObservation(),
@@ -334,6 +337,7 @@ function stubDesk(
 
 function httpDesk(observation: TransportObservation, invoke: () => Promise<unknown>): ConsentDesk {
   return createConsentDesk({
+    store: memoryStore(),
     protocol: {
       describe: () => ({ environment: "integration-http" }),
       observeTransport: async () => observation,
@@ -348,3 +352,46 @@ function httpDesk(observation: TransportObservation, invoke: () => Promise<unkno
     },
   });
 }
+
+it("retains scope-bound consent history and holds a mounted desk and a reload", async () => {
+  const eventId = "consent-intent-shared";
+  const key = `kix-consent-intent:stub:${eventId}`;
+  const store = memoryStore();
+  const first = stubDesk(async (input, shape) => {
+    if (input.action === "authorize_marketing") throw new ProtocolError("lost", "REQUEST_TIMEOUT", { requestId: "req-loss", correlationId: "corr-loss" });
+    return shape.invokeLocalCall(input);
+  }, store);
+  const second = stubDesk(async (input, shape) => shape.invokeLocalCall(input), store);
+  second.desk.retain(eventId);
+  await first.desk.send(eventId, "set_consent", DRAFT);
+  await first.desk.send(eventId, "authorize_marketing", DRAFT);
+  const raw = store.getItem(key)!;
+  expect(JSON.parse(raw)).toMatchObject({
+    v: 1, desk: "consent", scope: eventId, step: "authorize_marketing", operationId: first.calls[1].operationId,
+    scopeDigest: expect.stringMatching(/^[a-f0-9]{64}$/),
+    lastConfirmed: { step: "set_consent", operationId: first.calls[0].operationId },
+  });
+  for (const value of [DRAFT.subject, DRAFT.business, DRAFT.channel, DRAFT.purpose, "expectedConsentVersion", "allowed"]) {
+    expect(raw).not.toContain(value);
+  }
+  await second.desk.send(eventId, "set_consent", DRAFT);
+  expect(second.calls).toHaveLength(0);
+  const reopened = stubDesk(async (input, shape) => shape.invokeLocalCall(input), store);
+  await reopened.desk.send(eventId, "authorize_marketing", DRAFT);
+  expect(reopened.desk.view(eventId).rows).toMatchObject([{ status: "confirmed" }, { status: "unconfirmed" }]);
+  expect(reopened.desk.view(eventId).lastConfirmed).toContain(first.calls[0].operationId);
+  expect(reopened.calls).toHaveLength(0);
+  await reopened.desk.send("consent-intent-independent", "set_consent", DRAFT);
+  expect(reopened.calls).toHaveLength(1);
+  expect(store.getItem(key)).toBe(raw);
+});
+
+it("refuses dispatch when the consent write-ahead read-back is truncated", async () => {
+  const store = memoryStore();
+  const set = store.setItem;
+  store.setItem = (key, raw) => set(key, raw.slice(0, -1));
+  const { desk, calls } = stubDesk(async (input, shape) => shape.invokeLocalCall(input), store);
+  await desk.send("consent-write-refused", "set_consent", DRAFT);
+  expect(desk.view("consent-write-refused").rows[0]).toMatchObject({ status: "not-sent", code: "SESSION_EVIDENCE_LOST" });
+  expect(calls).toHaveLength(0);
+});

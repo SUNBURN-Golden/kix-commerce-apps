@@ -7,7 +7,11 @@ import { GiftTransfer, GIFT_COMPOSED, type GiftStep, type GiftStepOutcome } from
 import { ProtocolError } from "../../../packages/protocol-adapter/src/types";
 import { type TransportObservation } from "../../../packages/protocol-adapter/src/operational-error";
 import type { GiftInvokerSource, GiftSource } from "@kix/protocol-adapter";
-import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
+import { allocateDeskAttempt, COUNTER_EXHAUSTED } from "./desk-attempts";
+import { EVIDENCE_LOST, isCoreIntentScope, type OwnedIntent, type Mode } from "./booking-journey-intent";
+import { persistCoreDeskIntent, readCoreDeskIntent, restoreDeskIntent } from "./core-desk-intent";
+import { pageSessionStore } from "./session-store";
+import type { SessionStorePort } from "../../../packages/protocol-adapter/src/shell-entry";
 import { giftSource } from "./gift-source";
 import { protocol } from "./connectivity/desk-protocol";
 
@@ -104,6 +108,7 @@ export interface GiftDeskProtocol {
 }
 
 export interface GiftDeskDeps {
+  store?: SessionStorePort | null;
   protocol: GiftDeskProtocol;
   source: GiftInvokerSource | null;
 }
@@ -124,7 +129,7 @@ interface StepRecord {
 
 interface GiftRecord {
   giftId: string;
-  attempt: number;
+  attempt: number | null;
   pending: boolean;
   localHalt: boolean;
   transfer: GiftTransfer | null;
@@ -230,17 +235,23 @@ export class GiftDesk {
     if (giftId.length === 0 || this.records.has(giftId)) {
       return;
     }
-    const attempt = readDeskAttempt("gift", giftId) + 1;
-    writeDeskAttempt("gift", giftId, attempt);
+    const history = isCoreIntentScope(giftId) ? this.readIntent(giftId) : EVIDENCE_LOST;
+    const attempt = history === null ? allocateDeskAttempt("gift", giftId) : null;
     const record: GiftRecord = {
       giftId,
       attempt,
       pending: false,
-      localHalt: false,
+      localHalt: attempt === null,
       transfer: this.deps.source ? new GiftTransfer(connectivityInvoker(this.deps.source.invoker)) : null,
       steps: blankSteps(),
       recipient: GIFT_DEFAULT_RECIPIENT,
     };
+    if (history !== null) restoreDeskIntent(record.steps, history);
+    else if (attempt === null) {
+      restoreDeskIntent(record.steps, EVIDENCE_LOST);
+      record.steps[0].code = COUNTER_EXHAUSTED;
+      record.steps[0].note = COUNTER_EXHAUSTED;
+    }
     this.records.set(giftId, record);
     this.publish();
   }
@@ -252,7 +263,7 @@ export class GiftDesk {
     }
     this.retain(giftId);
     const record = this.records.get(giftId);
-    if (!record || record.pending || record.localHalt || record.transfer?.state().halted) {
+    if (!record || record.attempt === null || record.pending || record.localHalt || record.transfer?.state().halted) {
       return;
     }
     if (!writesOpen(this.path)) {
@@ -262,22 +273,51 @@ export class GiftDesk {
     if (!current || current.phase !== "pending" || !stepSendable(record, step)) {
       return;
     }
+    const history = this.readIntent(giftId);
+    if (history !== null) {
+      record.localHalt = true;
+      restoreDeskIntent(record.steps, history, step);
+      this.publish();
+      return;
+    }
     if (step === "offer_gift") {
       record.recipient = draft.recipient;
     }
     const operationId = giftOperationId(giftId, record.attempt, step);
+    const offer = record.steps[0];
+    let owned: OwnedIntent;
+    try {
+      owned = persistCoreDeskIntent(this.store(), "gift", this.environment, giftId, {
+        step, operationId, scopeDigest: null,
+        lastConfirmed: offer.phase === "confirmed" && offer.operationId ? { step: offer.step, operationId: offer.operationId } : null,
+      });
+    } catch {
+      record.localHalt = true;
+      restoreDeskIntent(record.steps, EVIDENCE_LOST, step);
+      this.publish();
+      return;
+    }
     current.phase = "in-flight";
     current.operationId = operationId;
     current.actor = actorFor(step, record);
     current.note = sourceCopy.en["snx"];
     record.pending = true;
-    this.publish();
     try {
-      const outcome = await this.dispatch(record, step, operationId, draft);
+      const answer = this.dispatch(record, step, operationId, draft);
+      this.publish();
+      const outcome = await answer;
       this.applyOutcome(record, step, outcome);
     } catch (error) {
       this.applyThrown(record, step, error);
     } finally {
+      try {
+        if (record.transfer?.state().halted?.kind === "UNKNOWN") owned.verify();
+        else owned();
+      } catch {
+        record.localHalt = true;
+        current.code = EVIDENCE_LOST;
+        current.note = EVIDENCE_LOST;
+      }
       record.pending = false;
       const stepRecord = record.steps.find((item) => item.step === step);
       if (stepRecord && stepRecord.phase === "in-flight") {
@@ -293,6 +333,16 @@ export class GiftDesk {
     return selectGiftView(this.snapshot, giftId, (step) => {
       void this.send(giftId, step, draft);
     });
+  }
+
+  private store(): SessionStorePort | null {
+    return this.deps.store === undefined ? pageSessionStore() : this.deps.store;
+  }
+
+  private readIntent(giftId: string) {
+    const store = this.store();
+    const mode: Mode = this.environment;
+    return readCoreDeskIntent(store, "gift", mode, giftId);
   }
 
   private async readProbe(): Promise<void> {

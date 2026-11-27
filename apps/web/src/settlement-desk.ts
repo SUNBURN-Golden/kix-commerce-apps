@@ -1,14 +1,15 @@
 import { assertConnected, connectivityProtocol } from "./connectivity/write-guard";
 import type { CommerceProtocol } from "@kix/protocol-adapter";
-import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
+import { ProtocolError } from "../../../packages/protocol-adapter/src/types";
+import { claimCurrentDeskAttempt, COUNTER_EXHAUSTED, nextDeskAttempt, readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 import type { SettlementDeskCommand } from "./pages/SettlementPanel";
 
 const FAIL_REASON = "FIXTURE_DECLINE";
 const CANCEL_REASON = "FIXTURE_WITHDRAW";
 
 export interface AttemptStore {
-  read(settlementId: string): number;
-  write(settlementId: string, attempt: number): void;
+  read(settlementId: string): number | null;
+  write(settlementId: string, attempt: number | null): void;
 }
 
 export function settlementIdFor(eventId: string): string {
@@ -34,7 +35,8 @@ export async function runSettlementCommand(
   assertConnected();
   protocol = connectivityProtocol(protocol);
   const settlementId = settlementIdFor(eventId);
-  const attempt = attempts.read(settlementId);
+  const attempt = claimCurrentDeskAttempt(settlementId, id => attempts.read(id), (id, value) => attempts.write(id, value));
+  if (attempt === null) throw new ProtocolError(COUNTER_EXHAUSTED, COUNTER_EXHAUSTED);
   const idempotencyKey = settlementCommandKey(command, settlementId, attempt);
   try {
     switch (command) {
@@ -61,11 +63,11 @@ export async function runSettlementCommand(
         break;
     }
   } catch (reason) {
-    attempts.write(settlementId, attempt + 1);
+    attempts.write(settlementId, nextDeskAttempt(attempts.read(settlementId)));
     throw reason;
   }
   if (command === "reconcile") {
-    attempts.write(settlementId, attempt + 1);
+    attempts.write(settlementId, nextDeskAttempt(attempts.read(settlementId)));
   }
 }
 

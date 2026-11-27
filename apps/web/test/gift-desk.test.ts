@@ -1,3 +1,4 @@
+import { memoryStore } from "./support/session-store";
 import { describe, expect, it } from "vitest";
 import {
   GateRejectedError,
@@ -211,10 +212,12 @@ describe("gift desk", () => {
 
 function stubDesk(
   handle: (input: LocalCallInput, shape: ReturnType<typeof createStubGiftInvoker>) => Promise<unknown>,
+  store = memoryStore(),
 ): { desk: GiftDesk; calls: LocalCallInput[] } {
   const calls: LocalCallInput[] = [];
   const shape = createStubGiftInvoker();
   const desk = createGiftDesk({
+    store,
     protocol: {
       describe: () => ({ environment: "stub" }),
       observeTransport: async () => localStubObservation(),
@@ -234,6 +237,7 @@ function stubDesk(
 
 function httpDesk(observation: TransportObservation, invoke: () => Promise<unknown>): GiftDesk {
   return createGiftDesk({
+    store: memoryStore(),
     protocol: {
       describe: () => ({ environment: "integration-http" }),
       observeTransport: async () => observation,
@@ -248,3 +252,32 @@ function httpDesk(observation: TransportObservation, invoke: () => Promise<unkno
     },
   });
 }
+
+it("retains a pending gift resolution and its predecessor across desks without storing the draft", async () => {
+  const store = memoryStore();
+  const giftId = "gift-intent-shared";
+  const first = stubDesk(async (input, shape) => {
+    if (input.action === "accept_gift") throw new ProtocolError("lost", "REQUEST_TIMEOUT", { requestId: "req-loss", correlationId: "corr-loss" });
+    return shape.invokeLocalCall(input);
+  }, store);
+  const second = stubDesk(async (input, shape) => shape.invokeLocalCall(input), store);
+  second.desk.retain(giftId);
+  await first.desk.send(giftId, "offer_gift", DRAFT);
+  await first.desk.send(giftId, "accept_gift", DRAFT);
+  const key = `kix-gift-intent:stub:${giftId}`;
+  const raw = store.getItem(key)!;
+  expect(JSON.parse(raw)).toMatchObject({
+    v: 1, desk: "gift", mode: "stub", scope: giftId, step: "accept_gift", operationId: first.calls[1].operationId,
+    lastConfirmed: { step: "offer_gift", operationId: first.calls[0].operationId },
+  });
+  for (const value of [DRAFT.ticketId, DRAFT.recipient, "expiresAt"]) expect(raw).not.toContain(value);
+  await second.desk.send(giftId, "offer_gift", DRAFT);
+  expect(second.calls).toHaveLength(0);
+  const reopened = stubDesk(async (input, shape) => shape.invokeLocalCall(input), store);
+  await reopened.desk.send(giftId, "cancel_gift", DRAFT);
+  expect(reopened.desk.view(giftId).rows.slice(0, 2)).toMatchObject([{ status: "confirmed" }, { status: "unconfirmed" }]);
+  expect(reopened.calls).toHaveLength(0);
+  await reopened.desk.send("gift-independent", "offer_gift", DRAFT);
+  expect(reopened.calls).toHaveLength(1);
+  expect(store.getItem(key)).toBe(raw);
+});

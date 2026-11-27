@@ -59,6 +59,7 @@ async function inject(driver: string) {
   }
   if (driver === "consent-unknown") {
     const desk = consent.createConsentDesk({
+      store: memoryStore(),
       protocol: { describe: () => ({ environment: "stub" }), observeTransport: async () => localStubObservation() },
       source: { source: "stub-shape", invoker: { async invokeLocalCall() { throw new ProtocolError("Synthetic lost answer", "REQUEST_TIMEOUT", { requestId: "req-synthetic-lost" }); } } },
     });

@@ -6,6 +6,7 @@ import { MARKET_FIXTURE } from "../src/resale-journey-fixture.js";
 import { SETTLEMENT_EXAMPLE } from "../src/resale-journey.js";
 import { fixtureJourney, resaleScenarios, through } from "./support/resale-journey.js";
 
+import { vectorFields } from "./support/fixture-http.js";
 const read = (file: string) => readFileSync(new URL("../vendor/commerce-journey/" + file, import.meta.url), "utf8");
 describe("resale fixture at the default adapter", () => {
   resaleScenarios(() => new StubProtocolAdapter());
@@ -68,5 +69,13 @@ describe("resale fixture at the default adapter", () => {
       expect(await journey.run("market-accept")).toBeUndefined();
       expect(receipt).toHaveBeenCalledTimes(1);
     } finally { receipt.mockRestore(); }
+  });
+});
+
+it.each(["LISTED", "BUY_HELD"])("requires every cancellation field in the %s producer vector", phase => {
+  const [action, , proof] = MARKET_FIXTURE["market-cancel"];
+  // The stub and HTTP adapter check applied and duplicate before projecting the proof.
+  expect(vectorFields(`resale-market/market-cancel-${phase}`)).toEqual({
+    ...proof, applied: action.slice("resale_".length), duplicate: false,
   });
 });

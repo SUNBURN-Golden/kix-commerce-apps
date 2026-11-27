@@ -46,3 +46,21 @@ it("shows independent facts, a no-send read reason and the uncertain write on re
   expect(container.querySelector("[data-commerce-step=reservation-clock]")).toHaveProperty("disabled", true);
   expect(send).toHaveBeenCalledTimes(1);
 });
+
+it("publishes counter exhaustion after the final safe fixture send", async () => {
+  vi.resetModules();
+  const { default: FreshPanel } = await import("../src/pages/CommerceJourneyPanel");
+  send.mockReset();
+  send.mockResolvedValueOnce({ logical_time_ms: 1000000 });
+  sessionStorage.setItem("kix-journey-attempt:fsm:evt_counter", String(Number.MAX_SAFE_INTEGER - 1));
+  const { container } = await renderDom(<FreshPanel eventId="evt_counter" />);
+  await click(element(container, "[data-commerce-branch=admission]"));
+  await click(element(container, "[data-commerce-step=reservation-clock]"));
+  expect(send).toHaveBeenCalledTimes(1);
+  expect(send.mock.calls[0][0].operationId).toBe(`jrn:fsm:evt_counter:${Number.MAX_SAFE_INTEGER}:reservation-clock`);
+  await click(element(container, "[data-commerce-step=register-show]"));
+  expect(container.textContent).toContain("COUNTER_EXHAUSTED");
+  expect(element<HTMLButtonElement>(container, "[data-commerce-step=register-show]").disabled).toBe(true);
+  expect(sessionStorage.getItem("kix-journey-intent:fsm:stub")).toBeNull();
+  expect(send).toHaveBeenCalledTimes(1);
+});

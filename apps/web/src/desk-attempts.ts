@@ -1,52 +1,66 @@
-/**
- * Attempt counters for desk idempotency keys. A desk moves to a new attempt
- * after a rejection or a reconcile, so the next click is a new command and
- * not a replay. The stub case outlives a route change, so the counter lives
- * in sessionStorage for the tab and in memory for this page load.
- * Storage that is missing, blocked, or full never throws here, and a read
- * never goes back below the highest attempt this page load has used.
- */
 import { assertAllowedStorageKey } from "./storage-allow-list";
 
-const memory = new Map<string, number>();
-
-export function readDeskAttempt(desk: string, id: string): number {
-  const trimmed = id.trim();
-  if (trimmed.length === 0) {
-    return 0;
-  }
-  const key = attemptKey(desk, trimmed);
-  return Math.max(readStored(key) ?? 0, memory.get(key) ?? 0);
-}
-
-export function writeDeskAttempt(desk: string, id: string, attempt: number): void {
-  const trimmed = id.trim();
-  if (trimmed.length === 0) {
-    return;
-  }
-  const key = attemptKey(desk, trimmed);
-  assertAllowedStorageKey(key);
-  memory.set(key, Math.max(attempt, memory.get(key) ?? 0));
-  try {
-    sessionStorage.setItem(key, String(attempt));
-  } catch {
-    // Memory keeps the attempt for this page load.
-  }
-}
+export const COUNTER_EXHAUSTED = "COUNTER_EXHAUSTED";
+const memory = new Map<string, number | null>();
 
 function attemptKey(desk: string, id: string): string {
-  return `kix-${desk}-attempt:${id}`;
+  return `kix-${desk}-attempt:${id.trim()}`;
 }
 
 function readStored(key: string): number | null {
   try {
     const raw = sessionStorage.getItem(key);
-    if (raw === null) {
-      return null;
-    }
+    if (raw === null) return 0;
     const parsed = Number(raw);
-    return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
+    return /^\d+$/.test(raw) && Number.isSafeInteger(parsed) ? parsed : null;
   } catch {
-    return null;
+    return 0;
   }
+}
+
+export function readDeskAttempt(desk: string, id: string): number | null {
+  if (!id.trim()) return 0;
+  const key = attemptKey(desk, id);
+  const stored = readStored(key);
+  const previous = memory.get(key) ?? 0;
+  const current = stored === null || memory.get(key) === null ? null : Math.max(stored, previous);
+  memory.set(key, current);
+  return current;
+}
+
+export function writeDeskAttempt(desk: string, id: string, attempt: number | null): void {
+  if (!id.trim()) return;
+  const key = attemptKey(desk, id);
+  assertAllowedStorageKey(key);
+  const current = readDeskAttempt(desk, id);
+  const next = attempt === null || !Number.isSafeInteger(attempt) || attempt < 0 || current === null
+    ? null : Math.max(current, attempt);
+  memory.set(key, next);
+  try {
+    sessionStorage.setItem(key, next === null ? COUNTER_EXHAUSTED : String(next));
+  } catch {
+    // Memory keeps the high-water mark when storage is blocked or full.
+  }
+}
+
+export function nextDeskAttempt(current: number | null): number | null {
+  return current !== null && Number.isSafeInteger(current) && current >= 0 && current < Number.MAX_SAFE_INTEGER
+    ? current + 1 : null;
+}
+
+/** Journey counters store the last allocated ID. */
+export function allocateDeskAttempt(desk: string, id: string): number | null {
+  const next = nextDeskAttempt(readDeskAttempt(desk, id));
+  if (next !== null) writeDeskAttempt(desk, id, next);
+  return next;
+}
+
+/** Legacy desks store the current attempt. Consume the final value before dispatch. */
+export function claimCurrentDeskAttempt(
+  id: string, read: (id: string) => number | null, write: (id: string, value: number | null) => void,
+): number | null {
+  const current = read(id);
+  if (current === null || !Number.isSafeInteger(current) || current < 0) return null;
+  if (current === Number.MAX_SAFE_INTEGER) write(id, null);
+  return current;
 }

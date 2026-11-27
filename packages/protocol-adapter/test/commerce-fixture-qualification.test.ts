@@ -10,6 +10,7 @@ import { HttpProtocolAdapter } from "../src/http-adapter.js";
 import type { MarketStep } from "../src/resale-journey-fixture.js";
 import { StubProtocolAdapter } from "../src/stub-adapter.js";
 import { journeyFor } from "./support/commerce-journey.js";
+import { fixtureHttpResponse, fixtureReceipt, receiptGate } from "./support/fixture-http.js";
 import { fixtureJourney, through } from "./support/resale-journey.js";
 
 type Tuple = {
@@ -56,6 +57,7 @@ const targets = table.tuples.flatMap(tuple => tuple.contexts.flatMap(({ context,
 const digest = (value: unknown) => createHash("sha256").update(canonicalStringify(value)).digest("hex");
 
 it("authorizes exactly the published 28 actions, 62 context/step pairs and 63 prior-state transitions", () => {
+  expect(receiptGate).toBe("4472b0fb64d377d97fd2993673a4485459986606");
   expect(table.record_schema_version).toBe("kix-commerce-fixture-tuple-conformance/1");
   expect(table.producer.source_commit).toBe("8ba7f6c36373ac0ec49246f51f7471c164ac3a28");
   expect(new Set(table.tuples.map(row => row.action)).size).toBe(28);
@@ -98,24 +100,27 @@ function fixture(context: FixtureContext, port: CommerceJourneyPort) {
 const BASE = "http://127.0.0.1:8765";
 const recorder = () => vi.fn<typeof fetch>().mockRejectedValue(new Error("record the send"));
 
-it.each(targets)("sends only the reviewed envelope for $context/$step after $confirmed", async ({ context, confirmed, step, vector }) => {
-  const fetch = recorder();
-  const http = new HttpProtocolAdapter(BASE, fetch);
-  const stub = new StubProtocolAdapter();
-  let useHttp = false;
-  const journey = fixture(context, {
-    advanceCommerceJourney: call => (useHttp ? http : stub).advanceCommerceJourney(call),
-  });
+async function verifyThrough(
+  journey: ReturnType<typeof fixture>, fetch: ReturnType<typeof recorder>, context: FixtureContext, confirmed: FixtureStep | null,
+) {
   while (journey.state().confirmed !== confirmed) {
     const next = journey.state().next;
     if (next === undefined) throw new Error(`Unreachable predecessor ${confirmed}`);
+    fetch.mockImplementationOnce(async (url, init) => fixtureHttpResponse(String(url), init, fixtureReceipt(`${context}/${next}`)));
     expect(await journey.run(next), next).toMatchObject({ kind: "CONFIRMED" });
   }
-  useHttp = true;
+}
+
+it.each(targets)("sends only the reviewed envelope for $context/$step after $confirmed", async ({ context, confirmed, step, vector }) => {
+  const fetch = recorder();
+  const http = new HttpProtocolAdapter(BASE, fetch);
+  const journey = fixture(context, http);
+  await verifyThrough(journey, fetch, context, confirmed);
+  const before = fetch.mock.calls.length;
   const outcome = await journey.run(step);
   expect(outcome).toMatchObject({ kind: "UNKNOWN" });
-  expect(fetch).toHaveBeenCalledTimes(1);
-  const [url, init] = fetch.mock.calls[0];
+  expect(fetch).toHaveBeenCalledTimes(before + 1);
+  const [url, init] = fetch.mock.calls[before];
   expect(url).toBe(BASE + "/x-kix-contract-only/local-call");
   expect(init).toMatchObject({ method: "POST", redirect: "manual" });
   expect(new Headers(init?.headers).has("Idempotency-Key")).toBe(false);
@@ -126,7 +131,7 @@ it.each(targets)("sends only the reviewed envelope for $context/$step after $con
   });
   expect(envelope.operationId).not.toBe(envelope.body.idempotency_key);
   expect(await journey.run(step)).toBeUndefined();
-  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(fetch).toHaveBeenCalledTimes(before + 1);
 });
 
 it("holds an unlisted action and an offline replay at the HTTP boundary with zero sends", async () => {
@@ -148,21 +153,16 @@ it("holds an unlisted action and an offline replay at the HTTP boundary with zer
 it("holds a refund cancellation substituted into the admission context before any send", async () => {
   const fetch = recorder();
   const http = new HttpProtocolAdapter(BASE, fetch);
-  const stub = new StubProtocolAdapter();
-  const journey = journeyFor("admission", {
-    advanceCommerceJourney: call => (call.step === "cancel-after-payment" ? http : stub).advanceCommerceJourney(call),
-  });
-  while (journey.state().confirmed !== "payment-B") {
-    const next = journey.state().next!;
-    expect(await journey.run(next)).toMatchObject({ kind: "CONFIRMED" });
-  }
+  const journey = fixture("booking-admission", http);
+  await verifyThrough(journey, fetch, "booking-admission", "payment-B");
+  const before = fetch.mock.calls.length;
   const build = commands.commandFor;
   const override = vi.spyOn(commands, "commandFor").mockImplementationOnce(call =>
     build({ ...call, step: "cancel-C", links: { reservation_id: "reserve-C" } }));
   try {
     expect(await journey.run("cancel-after-payment")).toMatchObject({ kind: "NOT_SENT", code: "NOT_BOUND" });
     expect(journey.state()).toMatchObject({ confirmed: "payment-B", fenced: true });
-    expect(fetch).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledTimes(before);
   } finally {
     override.mockRestore();
   }
@@ -200,3 +200,34 @@ it("consumes the exact journey call once and holds a copy, a repeat and a direct
   expect(await journey.run("reservation-clock")).toBeUndefined();
   expect(fetch).toHaveBeenCalledTimes(1);
 });
+
+it.each(["stub", "other-adapter", "copied-proof", "different-call"] as const)(
+  "refuses a %s predecessor before any additional HTTP send", async source => {
+    const fetch = recorder();
+    const http = new HttpProtocolAdapter(BASE, fetch);
+    const other = new HttpProtocolAdapter(BASE, fetch);
+    const stub = new StubProtocolAdapter();
+    const reply = async (url: Parameters<typeof globalThis.fetch>[0], init?: RequestInit) =>
+      fixtureHttpResponse(String(url), init, fixtureReceipt("booking-refund/reservation-clock"));
+    const journey = fixture("booking-refund", { async advanceCommerceJourney(call) {
+      if (call.step !== "reservation-clock") return http.advanceCommerceJourney(call);
+      if (source === "stub") return stub.advanceCommerceJourney(call);
+      if (source === "different-call") {
+        let substituted: commands.JourneyProof | undefined;
+        const distinct = fixture("booking-refund", {
+          async advanceCommerceJourney(otherCall) { return substituted = await http.advanceCommerceJourney(otherCall); },
+        });
+        fetch.mockImplementationOnce(reply);
+        expect(await distinct.run("reservation-clock")).toMatchObject({ kind: "CONFIRMED" });
+        return substituted!;
+      }
+      fetch.mockImplementationOnce(reply);
+      const proof = await (source === "other-adapter" ? other : http).advanceCommerceJourney(call);
+      return source === "copied-proof" ? { ...proof } : proof;
+    } });
+    expect(await journey.run("reservation-clock")).toMatchObject({ kind: "CONFIRMED" });
+    const before = fetch.mock.calls.length;
+    expect(await journey.run("register-show")).toMatchObject({ kind: "NOT_SENT", code: "NOT_BOUND" });
+    expect(fetch).toHaveBeenCalledTimes(before);
+  },
+);

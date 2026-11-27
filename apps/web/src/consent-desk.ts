@@ -16,7 +16,11 @@ import {
   type TransportObservation,
 } from "@kix/protocol-adapter";
 import type { ConsentInvokerSource, ConsentSource } from "@kix/protocol-adapter";
-import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
+import { allocateDeskAttempt, COUNTER_EXHAUSTED } from "./desk-attempts";
+import { EVIDENCE_LOST, isCoreIntentScope, type OwnedIntent, type Mode } from "./booking-journey-intent";
+import { intentScopeDigest, persistCoreDeskIntent, readCoreDeskIntent, restoreDeskIntent, lastConfirmedAttempt } from "./core-desk-intent";
+import { pageSessionStore } from "./session-store";
+import type { SessionStorePort } from "../../../packages/protocol-adapter/src/shell-entry";
 import { consentSource } from "./consent-source";
 import { protocol } from "./connectivity/desk-protocol";
 
@@ -149,6 +153,7 @@ export interface ConsentDeskProtocol {
 }
 
 export interface ConsentDeskDeps {
+  store?: SessionStorePort | null;
   protocol: ConsentDeskProtocol;
   source: ConsentInvokerSource | null;
 }
@@ -169,12 +174,13 @@ interface StepRecord {
 
 interface ConsentRecord {
   eventId: string;
-  attempt: number;
+  attempt: number | null;
   pending: boolean;
   localHalt: boolean;
   bind: ConsentBind | null;
   steps: StepRecord[];
   history: Map<string, ConsentRow>;
+  recoveredConfirmation?: ReturnType<typeof restoreDeskIntent>;
   evidence: Map<string, ConsentAttemptEvidence>;
 }
 
@@ -278,18 +284,24 @@ export class ConsentDesk {
     if (eventId.length === 0 || this.records.has(eventId)) {
       return;
     }
-    const attempt = readDeskAttempt("consent", eventId) + 1;
-    writeDeskAttempt("consent", eventId, attempt);
+    const history = isCoreIntentScope(eventId) ? this.readIntent(eventId) : EVIDENCE_LOST;
+    const attempt = history === null ? allocateDeskAttempt("consent", eventId) : null;
     const record: ConsentRecord = {
       eventId,
       attempt,
       pending: false,
-      localHalt: false,
+      localHalt: attempt === null,
       bind: this.deps.source ? new ConsentBind(connectivityInvoker(this.deps.source.invoker)) : null,
       steps: blankSteps(),
       history: new Map(),
       evidence: new Map(),
     };
+    if (history !== null) record.recoveredConfirmation = restoreDeskIntent(record.steps, history);
+    else if (attempt === null) {
+      restoreDeskIntent(record.steps, EVIDENCE_LOST);
+      record.steps[0].code = COUNTER_EXHAUSTED;
+      record.steps[0].note = COUNTER_EXHAUSTED;
+    }
     this.records.set(eventId, record);
     this.publish();
   }
@@ -311,12 +323,46 @@ export class ConsentDesk {
     if (!previous || !stepSendable(record, step)) {
       return;
     }
-    if (step === "set_consent" && previous.phase === "confirmed") {
-      record.attempt += 1;
-      writeDeskAttempt("consent", eventId, record.attempt);
+    const history = this.readIntent(eventId);
+    if (history !== null) {
+      record.localHalt = true;
+      record.recoveredConfirmation = restoreDeskIntent(record.steps, history, step);
+      this.publish();
+      return;
     }
+    if (step === "set_consent" && previous.phase === "confirmed") {
+      record.attempt = allocateDeskAttempt("consent", eventId);
+      if (record.attempt === null) {
+        record.localHalt = true;
+        previous.code = COUNTER_EXHAUSTED;
+        previous.note = COUNTER_EXHAUSTED;
+        this.publish();
+        return;
+      }
+    }
+    if (record.attempt === null) return;
     const submitted = { ...draft };
     const operationId = consentOperationId(eventId, record.attempt, step);
+    const scope: ConsentEvidenceScope = {
+      domain: PINNED_PROTOCOL_DOMAIN, eventId, subject: submitted.subject,
+      business: submitted.business, channel: submitted.channel, purpose: submitted.purpose,
+    };
+    const consent = [...record.evidence.values()].reverse().find((item) => item.step === "set_consent"
+      && item.status === "confirmed" && sameConsentScope(item.scope, scope));
+    let owned: OwnedIntent;
+    try {
+      owned = persistCoreDeskIntent(this.store(), "consent", this.environment, eventId, {
+        step, operationId, scopeDigest: intentScopeDigest(scope),
+        lastConfirmed: step === "authorize_marketing"
+          ? consent && { step: consent.step, operationId: consent.operationId } || null
+          : lastConfirmedAttempt([...record.history.values()]),
+      });
+    } catch {
+      record.localHalt = true;
+      restoreDeskIntent(record.steps, EVIDENCE_LOST, step);
+      this.publish();
+      return;
+    }
     // A new operation owns no evidence from the command it replaces.
     const current: StepRecord = {
       step,
@@ -330,12 +376,6 @@ export class ConsentDesk {
       note: sourceCopy.en["snx"],
     };
     record.steps[record.steps.indexOf(previous)] = current;
-    const scope: ConsentEvidenceScope = {
-      domain: PINNED_PROTOCOL_DOMAIN, eventId, subject: submitted.subject,
-      business: submitted.business, channel: submitted.channel, purpose: submitted.purpose,
-    };
-    const consent = [...record.evidence.values()].reverse().find((item) => item.step === "set_consent"
-      && item.status === "confirmed" && sameConsentScope(item.scope, scope));
     const evidence: ConsentAttemptEvidence = {
       operationId, step, scope, expectedConsentVersion: callerInteger(submitted.expectedConsentVersion),
       status: "in-flight", code: null, result: null,
@@ -343,13 +383,22 @@ export class ConsentDesk {
     };
     record.evidence.set(operationId, evidence);
     record.pending = true;
-    this.publish();
     try {
-      const outcome = await this.dispatch(record, step, operationId, submitted);
+      const answer = this.dispatch(record, step, operationId, submitted);
+      this.publish();
+      const outcome = await answer;
       this.applyOutcome(record, step, outcome);
     } catch (error) {
       this.applyThrown(record, step, error);
     } finally {
+      try {
+        if (current.phase === "unconfirmed") owned.verify();
+        else owned();
+      } catch {
+        record.localHalt = true;
+        current.code = EVIDENCE_LOST;
+        current.note = EVIDENCE_LOST;
+      }
       record.pending = false;
       const stepRecord = record.steps.find((item) => item.step === step);
       if (stepRecord && stepRecord.phase === "in-flight") {
@@ -378,6 +427,16 @@ export class ConsentDesk {
     return selectConsentView(this.snapshot, eventId, (step) => {
       void this.send(eventId, step, draft);
     });
+  }
+
+  private store(): SessionStorePort | null {
+    return this.deps.store === undefined ? pageSessionStore() : this.deps.store;
+  }
+
+  private readIntent(eventId: string) {
+    const store = this.store();
+    const mode: Mode = this.environment;
+    return readCoreDeskIntent(store, "consent", mode, eventId);
   }
 
   private async readProbe(): Promise<void> {
@@ -533,7 +592,7 @@ export class ConsentDesk {
         history,
         halted: halted(record),
         evidence: structuredClone([...record.evidence.values()]),
-        lastConfirmed: summaryLine(sourceCopy.en["sq7"], lastRow(history, "confirmed")),
+        lastConfirmed: summaryLine(sourceCopy.en["sq7"], record.recoveredConfirmation ?? lastRow(history, "confirmed")),
         unconfirmed: summaryLine(sourceCopy.en["s251"], rows.find((row) => row.status === "unconfirmed")),
       };
     });
@@ -690,7 +749,7 @@ function deriveRows(record: ConsentRecord, path: ConsentPathStatus): ConsentRow[
   });
 }
 
-function summaryLine(label: string, row: ConsentRow | undefined): string {
+function summaryLine(label: string, row: { step: string; operationId: string | null } | undefined): string {
   if (!row?.operationId) {
     return sourceMessage(sourceCopy.en["p.t464"], { v1: label });
   }

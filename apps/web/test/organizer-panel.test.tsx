@@ -1,3 +1,4 @@
+import { memoryStore } from "./support/session-store";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -63,6 +64,7 @@ describe("organizer panel", () => {
   it("shows a confirmed create and the not-composed list", async () => {
     const eventId = "show_panel_ok";
     const desk = createOrganizerDesk({
+      store: memoryStore(),
       protocol: {
         describe: () => ({ environment: "stub" }),
         observeTransport: async () => {
@@ -93,6 +95,7 @@ describe("organizer panel", () => {
 
   it("shows an unconfirmed create apart from the last confirmed receipt", async () => {
     const desk = createOrganizerDesk({
+      store: memoryStore(),
       protocol: {
         describe: () => ({ environment: "stub" }),
         observeTransport: async () => {
@@ -123,6 +126,7 @@ describe("organizer panel", () => {
 
   it("shows a gate rejection and blocks the later sends", async () => {
     const desk = createOrganizerDesk({
+      store: memoryStore(),
       protocol: {
         describe: () => ({ environment: "stub" }),
         observeTransport: async () => {
@@ -147,6 +151,7 @@ describe("organizer panel", () => {
 
   it("shows a not-sent bad integer", async () => {
     const desk = createOrganizerDesk({
+      store: memoryStore(),
       protocol: {
         describe: () => ({ environment: "stub" }),
         observeTransport: async () => {
