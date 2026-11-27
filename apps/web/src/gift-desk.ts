@@ -246,12 +246,7 @@ export class GiftDesk {
       steps: blankSteps(),
       recipient: GIFT_DEFAULT_RECIPIENT,
     };
-    if (history !== null) restoreDeskIntent(record.steps, history);
-    else if (attempt === null) {
-      restoreDeskIntent(record.steps, EVIDENCE_LOST);
-      record.steps[0].code = COUNTER_EXHAUSTED;
-      record.steps[0].note = COUNTER_EXHAUSTED;
-    }
+    if (attempt === null) restoreDeskIntent(record.steps, history ?? COUNTER_EXHAUSTED);
     this.records.set(giftId, record);
     this.publish();
   }

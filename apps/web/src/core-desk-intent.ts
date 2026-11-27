@@ -1,7 +1,9 @@
 import { CONSENT_COMPOSED, GIFT_COMPOSED, ORGANIZER_COMPOSED } from "../../../packages/protocol-adapter/src/composer-runtime";
 import { sha256Hex } from "../../../packages/protocol-adapter/src/sha256";
 import type { SessionStorePort } from "../../../packages/protocol-adapter/src/shell-entry";
-import { attemptNumber, EVIDENCE_LOST, isCoreIntentScope, persistOwnedIntent, pinDigest, type Mode } from "./booking-journey-intent";
+import { attemptNumber, EVIDENCE_LOST, isCoreIntentScope, persistOwnedIntent, pinDigest, readBookingIntent, type Mode } from "./booking-journey-intent";
+import type { COUNTER_EXHAUSTED } from "./desk-attempts";
+import type { PageSessionStore } from "./session-store";
 
 const steps = {
   organizer: ORGANIZER_COMPOSED,
@@ -14,8 +16,9 @@ type DeskIntent = Attempt & { lastConfirmed: Attempt | null; scopeDigest: string
 const prefixes = { organizer: "org", gift: "gft", consent: "cns" };
 const digestPattern = /^[a-f0-9]{64}$/;
 
-function keyFor(desk: Desk, mode: Mode, scope: string) {
-  return `kix-${desk}-intent:${mode}:${encodeURIComponent(scope)}`;
+function keyFor(desk: Desk, mode: Mode, scope: string, intent?: DeskIntent) {
+  const target = intent?.step === "issue_invitation" ? `${intent.scopeDigest}:` : "";
+  return `kix-${desk}-intent:${mode}:${target}${encodeURIComponent(scope)}`;
 }
 
 export function intentScopeDigest(fields: object): string {
@@ -51,10 +54,10 @@ function validIntent(desk: Desk, scope: string, row: DeskIntent): boolean {
   return row.step !== "create_event" && (prev === null || prior === count);
 }
 
-export function readCoreDeskIntent(store: SessionStorePort | null, desk: Desk, mode: Mode, scope: string) {
+export function readCoreDeskIntent(store: SessionStorePort | null, desk: Desk, mode: Mode, scope: string, storageKey?: string) {
   try {
     if (!store) return EVIDENCE_LOST;
-    const raw = store.getItem(keyFor(desk, mode, scope));
+    const raw = store.getItem(storageKey ?? keyFor(desk, mode, scope));
     if (raw === null) return null;
     const row = JSON.parse(raw);
     if (Object.keys(row).length === 9 && row.v === 1 && row.pinDigest === pinDigest && row.desk === desk &&
@@ -65,9 +68,39 @@ export function readCoreDeskIntent(store: SessionStorePort | null, desk: Desk, m
   return EVIDENCE_LOST;
 }
 
+export function readOrganizerIntent(store: PageSessionStore | null, mode: Mode, eventId: string, inventoryId?: string) {
+  if (!store) return EVIDENCE_LOST;
+  const core = readBookingIntent(store, mode, eventId);
+  if (core === EVIDENCE_LOST || core?.step === "create_event") return core;
+  try {
+    const prefix = keyFor("organizer", mode, "");
+    const inventoryDigest = inventoryId === undefined ? undefined : intentScopeDigest([inventoryId]);
+    const eventKey = encodeURIComponent(eventId);
+    for (const key of store.keys()) {
+      if (!key.startsWith(prefix)) continue;
+      const [ref, label, extra] = key.slice(prefix.length).split(":");
+      const ownEvent = (label ?? ref) === eventKey;
+      if (!ownEvent && (label === undefined ? inventoryId === undefined : ref !== inventoryDigest)) continue;
+      if (extra !== undefined) return EVIDENCE_LOST;
+      const scope = decodeURIComponent(label ?? ref);
+      const history = readCoreDeskIntent(store, "organizer", mode, scope, key);
+      if (!history || history === EVIDENCE_LOST) return EVIDENCE_LOST;
+      if (ownEvent && label === undefined) return history;
+      // Earlier tabs keyed invitations by event and hashed the event together with the inventory.
+      if (history.step === "issue_invitation" && history.scopeDigest === (label === undefined ? intentScopeDigest([scope, inventoryId]) : ref)) {
+        return ownEvent ? history : { ...history, lastConfirmed: null };
+      }
+      if (label !== undefined) return EVIDENCE_LOST;
+    }
+    return null;
+  } catch {
+    return EVIDENCE_LOST;
+  }
+}
+
 export function persistCoreDeskIntent(store: SessionStorePort | null, desk: Desk, mode: Mode, scope: string, intent: DeskIntent) {
   if (!validIntent(desk, scope, intent)) throw new Error(EVIDENCE_LOST);
-  return persistOwnedIntent(store, keyFor(desk, mode, scope), { v: 1, pinDigest, mode, desk, scope, ...intent });
+  return persistOwnedIntent(store, keyFor(desk, mode, scope, intent), { v: 1, pinDigest, mode, desk, scope, ...intent });
 }
 
 type HistoryRow = {
@@ -77,24 +110,27 @@ type HistoryRow = {
 
 // The rows display history only. The desk's live composer receives no receipt.
 export function restoreDeskIntent(
-  rows: HistoryRow[], history: { step: string; operationId: string; lastConfirmed: Attempt | null } | typeof EVIDENCE_LOST,
+  rows: HistoryRow[],
+  history: { step: string; operationId: string; lastConfirmed: Attempt | null } | typeof EVIDENCE_LOST | typeof COUNTER_EXHAUSTED,
   step = rows[0].step,
 ): Attempt | undefined {
-  if (history !== EVIDENCE_LOST && history.lastConfirmed) {
-    const confirmed = rows.find(row => row.step === history.lastConfirmed?.step);
+  const pending = typeof history !== "string";
+  const prior = pending ? history.lastConfirmed : null;
+  if (prior) {
+    const confirmed = rows.find(row => row.step === prior.step);
     if (confirmed && confirmed.phase === "pending") {
       confirmed.phase = "confirmed";
-      confirmed.operationId = history.lastConfirmed.operationId;
+      confirmed.operationId = prior.operationId;
       confirmed.actor = confirmed.requestId = confirmed.correlationId = confirmed.receipt = null;
     }
   }
-  const row = rows.find(row => row.step === (history === EVIDENCE_LOST ? step : history.step)) ?? rows[0];
-  row.phase = history === EVIDENCE_LOST ? "not-sent" : "unconfirmed";
-  row.code = history === EVIDENCE_LOST ? EVIDENCE_LOST : "UNKNOWN";
-  row.operationId = history === EVIDENCE_LOST ? null : history.operationId;
+  const row = rows.find(row => row.step === (pending ? history.step : step)) ?? rows[0];
+  row.phase = pending ? "unconfirmed" : "not-sent";
+  row.code = pending ? "UNKNOWN" : history;
+  row.operationId = pending ? history.operationId : null;
   row.note = row.code;
   row.actor = row.requestId = row.correlationId = row.receipt = null;
-  return history === EVIDENCE_LOST ? undefined : history.lastConfirmed ?? undefined;
+  return prior ?? undefined;
 }
 
 export function lastConfirmedAttempt(rows: { step: string; operationId: string | null; status: string }[]): Attempt | null {

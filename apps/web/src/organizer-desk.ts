@@ -16,10 +16,9 @@ import {
 } from "@kix/protocol-adapter";
 import type { OrganizerInvokerSource, OrganizerSource } from "@kix/protocol-adapter";
 import { allocateDeskAttempt, COUNTER_EXHAUSTED } from "./desk-attempts";
-import { EVIDENCE_LOST, isCoreIntentScope, type OwnedIntent, persistBookingIntent, readBookingIntent, type Mode } from "./booking-journey-intent";
-import { intentScopeDigest, invitationRef, persistCoreDeskIntent, readCoreDeskIntent, restoreDeskIntent, lastConfirmedAttempt } from "./core-desk-intent";
-import { pageSessionStore } from "./session-store";
-import type { SessionStorePort } from "../../../packages/protocol-adapter/src/shell-entry";
+import { EVIDENCE_LOST, isCoreIntentScope, type OwnedIntent, persistBookingIntent } from "./booking-journey-intent";
+import { intentScopeDigest, invitationRef, persistCoreDeskIntent, readOrganizerIntent, restoreDeskIntent, lastConfirmedAttempt } from "./core-desk-intent";
+import { pageSessionStore, type PageSessionStore } from "./session-store";
 import { SYNTHETIC_SHOW_POLICY } from "./journey-desk";
 import { organizerSource } from "./organizer-source";
 import { protocol } from "./connectivity/desk-protocol";
@@ -138,7 +137,7 @@ export interface OrganizerDeskProtocol {
 }
 
 export interface OrganizerDeskDeps {
-  store?: SessionStorePort | null;
+  store?: PageSessionStore | null;
   protocol: OrganizerDeskProtocol;
   source: OrganizerInvokerSource | null;
 }
@@ -284,7 +283,7 @@ export class OrganizerDesk {
     if (eventId.length === 0 || this.records.has(eventId)) {
       return;
     }
-    const history = this.readIntent(eventId) ?? (isCoreIntentScope(eventId) ? null : EVIDENCE_LOST);
+    const history = readOrganizerIntent(this.store(), this.environment, eventId) ?? (isCoreIntentScope(eventId) ? null : EVIDENCE_LOST);
     const attempt = history === null ? allocateDeskAttempt("organizer", eventId) : null;
     const record: OrganizerRecord = {
       eventId,
@@ -296,12 +295,7 @@ export class OrganizerDesk {
       history: new Map(),
       issued: [],
     };
-    if (history !== null) record.recoveredConfirmation = restoreDeskIntent(record.steps, history);
-    else if (attempt === null) {
-      restoreDeskIntent(record.steps, EVIDENCE_LOST);
-      record.steps[0].code = COUNTER_EXHAUSTED;
-      record.steps[0].note = COUNTER_EXHAUSTED;
-    }
+    if (attempt === null) record.recoveredConfirmation = restoreDeskIntent(record.steps, history ?? COUNTER_EXHAUSTED);
     this.records.set(eventId, record);
     this.publish();
   }
@@ -335,14 +329,14 @@ export class OrganizerDesk {
       return fencedResult("already-sent", sourceCopy.en["s2z"]);
     }
     if (record.attempt === null) return fencedResult(COUNTER_EXHAUSTED, COUNTER_EXHAUSTED);
-    const history = this.readIntent(eventId);
+    const submitted = { ...draft };
+    const history = readOrganizerIntent(this.store(), this.environment, eventId, step === "issue_invitation" ? submitted.inventoryId : undefined);
     if (history !== null) {
       record.localHalt = true;
       record.recoveredConfirmation = restoreDeskIntent(record.steps, history, step);
       this.publish();
       return fencedResult(history === EVIDENCE_LOST ? EVIDENCE_LOST : "UNKNOWN", sourceCopy.en["saa"]);
     }
-    const submitted = { ...draft };
     const operationId = organizerOperationId(eventId, record.attempt, step, submitted.inventoryId);
     const lastConfirmed = lastConfirmedAttempt([...record.history.values()]);
     let owned: OwnedIntent;
@@ -351,7 +345,7 @@ export class OrganizerDesk {
         ? persistBookingIntent(this.store(), { mode: this.environment, branch: null, eventId, step, operationId, lastConfirmed: null })
         : persistCoreDeskIntent(this.store(), "organizer", this.environment, eventId, {
           step, operationId, lastConfirmed,
-          scopeDigest: step === "issue_invitation" ? intentScopeDigest([eventId, submitted.inventoryId]) : null,
+          scopeDigest: step === "issue_invitation" ? intentScopeDigest([submitted.inventoryId]) : null,
         });
     } catch {
       record.localHalt = true;
@@ -415,16 +409,8 @@ export class OrganizerDesk {
     });
   }
 
-  private store(): SessionStorePort | null {
+  private store(): PageSessionStore | null {
     return this.deps.store === undefined ? pageSessionStore() : this.deps.store;
-  }
-
-  private readIntent(eventId: string) {
-    const store = this.store();
-    const mode: Mode = this.environment;
-    const core = readBookingIntent(store, mode, eventId);
-    if (core === EVIDENCE_LOST || core?.step === "create_event") return core;
-    return readCoreDeskIntent(store, "organizer", mode, eventId);
   }
 
   private async readProbe(): Promise<void> {
@@ -632,10 +618,8 @@ export function organizerOperationId(
   step: OrganizerStep,
   inventoryId: string,
 ): string {
-  if (step === "issue_invitation") {
-    return `org:${eventId}:${attempt}:${step}:${invitationRef(inventoryId)}`;
-  }
-  return `org:${eventId}:${attempt}:${step}`;
+  const suffix = step === "issue_invitation" ? `:${invitationRef(inventoryId)}` : "";
+  return `org:${eventId}:${attempt}:${step}${suffix}`;
 }
 
 function blankSteps(): StepRecord[] {

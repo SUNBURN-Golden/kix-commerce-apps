@@ -253,18 +253,20 @@ function httpDesk(observation: TransportObservation, invoke: () => Promise<unkno
   });
 }
 
-it("retains a pending gift resolution and its predecessor across desks without storing the draft", async () => {
+it.each(["gift+demo", "gift % 다음, 🎟️"])("retains a pending resolution for %s and its predecessor across desks", async (giftId) => {
   const store = memoryStore();
-  const giftId = "gift-intent-shared";
   const first = stubDesk(async (input, shape) => {
     if (input.action === "accept_gift") throw new ProtocolError("lost", "REQUEST_TIMEOUT", { requestId: "req-loss", correlationId: "corr-loss" });
     return shape.invokeLocalCall(input);
   }, store);
   const second = stubDesk(async (input, shape) => shape.invokeLocalCall(input), store);
+  first.desk.retain(giftId);
   second.desk.retain(giftId);
   await first.desk.send(giftId, "offer_gift", DRAFT);
   await first.desk.send(giftId, "accept_gift", DRAFT);
-  const key = `kix-gift-intent:stub:${giftId}`;
+  expect(first.calls[0]?.body).toMatchObject({ giftId });
+  expect(first.calls[0]?.operationId).toBe(`gft:${giftId}:1:offer_gift`);
+  const key = `kix-gift-intent:stub:${encodeURIComponent(giftId)}`;
   const raw = store.getItem(key)!;
   expect(JSON.parse(raw)).toMatchObject({
     v: 1, desk: "gift", mode: "stub", scope: giftId, step: "accept_gift", operationId: first.calls[1].operationId,

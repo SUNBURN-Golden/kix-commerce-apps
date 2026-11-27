@@ -23,7 +23,8 @@ export const EVIDENCE_LOST = "SESSION_EVIDENCE_LOST";
 export const pinDigest = __KIX_BUILD_IDENTITY__.pinDigest;
 
 export function isCoreIntentScope(scope: string): boolean {
-  return /^[\p{L}\p{M}\p{N}._:-]{1,100}$/u.test(scope);
+  // Keep the caller's exact ID in the encoded key. Lone surrogates cannot be URI-encoded.
+  return /^(?!\s*$)[^\uD800-\uDFFF]{1,100}$/u.test(scope);
 }
 
 export function fsmAttemptScope(eventId: string): string {
@@ -40,7 +41,7 @@ function keyFor(mode: Mode, coreEventId?: string): string {
 export function attemptNumber(prefix: string, attempt: { step: string; operationId: string }, suffix = ""): number {
   const { operationId, step } = attempt;
   if (typeof operationId !== "string" || typeof step !== "string" ||
-      operationId.length > 100 || operationId.includes(",") ||
+      Array.from(operationId).length > 100 ||
       !operationId.startsWith(prefix) || !operationId.endsWith(`:${step}${suffix}`)) return 0;
   const digits = operationId.slice(prefix.length, -(step.length + 1 + suffix.length));
   const count = Number(digits);

@@ -296,12 +296,7 @@ export class ConsentDesk {
       history: new Map(),
       evidence: new Map(),
     };
-    if (history !== null) record.recoveredConfirmation = restoreDeskIntent(record.steps, history);
-    else if (attempt === null) {
-      restoreDeskIntent(record.steps, EVIDENCE_LOST);
-      record.steps[0].code = COUNTER_EXHAUSTED;
-      record.steps[0].note = COUNTER_EXHAUSTED;
-    }
+    if (attempt === null) record.recoveredConfirmation = restoreDeskIntent(record.steps, history ?? COUNTER_EXHAUSTED);
     this.records.set(eventId, record);
     this.publish();
   }
