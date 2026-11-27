@@ -580,14 +580,16 @@ it.each(["UNKNOWN", "IN_FLIGHT"] as const)("keeps a divergent journal's %s suffi
     const raw = blob({ loads: 1, nextSeq: 2 }, [...first.records()]);
     store.data.set(SESSION_JOURNAL_QUARANTINE_KEY, JSON.stringify({ v: 1, cause: lost.cause, raw }));
   }
-  expect(second.verify()).toEqual(lost);
-  expect([second.load(), second.nextSeq()]).toEqual([2, 3]);
   store.throwOnSet = true;
   const refused = openSessionJournal(store);
   expect(refused.status()).toEqual(lost);
   expect(refused.records()).toEqual(first.records());
   expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(newer);
   store.throwOnSet = false;
+
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  expect(second.verify()).toEqual(lost);
+  expect([second.load(), second.nextSeq()]).toEqual([2, 3]);
 
   const reopened = openSessionJournal(store);
   expect(reopened.status()).toEqual(lost);
@@ -597,7 +599,7 @@ it.each(["UNKNOWN", "IN_FLIGHT"] as const)("keeps a divergent journal's %s suffi
   ]);
   expect([reopened.load(), reopened.nextSeq()]).toEqual([2, 3]);
   expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
-  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(newer);
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(older);
 
   if (outcome === "IN_FLIGHT") {
     const [firstRecord, abandoned] = second.records();

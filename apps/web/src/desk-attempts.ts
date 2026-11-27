@@ -7,34 +7,36 @@ function attemptKey(desk: string, id: string): string {
   return `kix-${desk}-attempt:${id.trim()}`;
 }
 
-function readStored(key: string): number | null {
+function readAttempt(key: string): number | null | undefined {
   try {
     const raw = sessionStorage.getItem(key);
-    if (raw === null) return 0;
-    const parsed = Number(raw);
-    return /^\d+$/.test(raw) && Number.isSafeInteger(parsed) ? parsed : null;
+    const stored = Number(raw);
+    const previous = memory.get(key);
+    const current = previous === null || (raw !== null && !/^\d+$/.test(raw)) || !Number.isSafeInteger(stored)
+      ? null : Math.max(stored, previous ?? 0);
+    memory.set(key, current);
+    return current;
   } catch {
-    return 0;
+    return undefined;
   }
 }
 
 export function readDeskAttempt(desk: string, id: string): number | null {
-  if (!id.trim()) return 0;
-  const key = attemptKey(desk, id);
-  const stored = readStored(key);
-  const previous = memory.get(key) ?? 0;
-  const current = stored === null || memory.get(key) === null ? null : Math.max(stored, previous);
-  memory.set(key, current);
-  return current;
+  return id.trim() ? readAttempt(attemptKey(desk, id)) ?? null : 0;
 }
 
 export function writeDeskAttempt(desk: string, id: string, attempt: number | null): boolean {
   if (!id.trim()) return false;
   const key = attemptKey(desk, id);
-  assertAllowedStorageKey(key);
-  const current = readDeskAttempt(desk, id);
+  const current = readAttempt(key);
+  if (current === undefined) return false;
   const next = attempt === null || !Number.isSafeInteger(attempt) || attempt < 0 || current === null
     ? null : Math.max(current, attempt);
+  return saveAttempt(key, next);
+}
+
+function saveAttempt(key: string, next: number | null): boolean {
+  assertAllowedStorageKey(key);
   memory.set(key, next);
   const value = next === null ? COUNTER_EXHAUSTED : String(next);
   try {
@@ -53,9 +55,11 @@ export function nextDeskAttempt(current: number | null): number | null {
 
 /** Journey counters store the last allocated ID. */
 export function allocateDeskAttempt(desk: string, id: string): number | null {
-  const next = nextDeskAttempt(readDeskAttempt(desk, id));
+  if (!id.trim()) return null;
+  const key = attemptKey(desk, id);
+  const next = nextDeskAttempt(readAttempt(key) ?? null);
   if (next === null) return null;
-  const saved = writeDeskAttempt(desk, id, next);
+  const saved = saveAttempt(key, next);
   if (next === Number.MAX_SAFE_INTEGER && !saved) return null;
   return next;
 }

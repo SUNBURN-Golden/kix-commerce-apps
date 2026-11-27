@@ -36,17 +36,18 @@ describe("desk attempt counter", () => {
     expect(readDeskAttempt("settlement", "stl_quota")).toBe(2);
   });
 
-  it("does not throw when storage is blocked", () => {
+  it("refuses an unreadable counter and leaves storage alone", () => {
+    const setItem = vi.fn();
     installStorage({
       getItem: () => {
         throw new DOMException("blocked", "SecurityError");
       },
-      setItem: () => {
-        throw new DOMException("blocked", "SecurityError");
-      },
+      setItem,
     });
-    expect(() => writeDeskAttempt("reservation", "evt_blocked", 3)).not.toThrow();
-    expect(readDeskAttempt("reservation", "evt_blocked")).toBe(3);
+    expect(writeDeskAttempt("reservation", "evt_blocked", 3)).toBe(false);
+    expect(readDeskAttempt("reservation", "evt_blocked")).toBeNull();
+    expect(allocateDeskAttempt("reservation", "evt_blocked")).toBeNull();
+    expect(setItem).not.toHaveBeenCalled();
   });
 
   it("reads a counter another page load left in storage", () => {
@@ -54,6 +55,35 @@ describe("desk attempt counter", () => {
     expect(readDeskAttempt("resale", "evt_prior")).toBe(5);
     expect(readDeskAttempt("resale", "  ")).toBe(0);
   });
+});
+
+it("refuses settlement on reload when the stored exhaustion marker is unreadable", async () => {
+  const protocol = new StubProtocolAdapter();
+  const [{ eventId }] = await protocol.listPerformances();
+  const key = `kix-settlement-attempt:stl_${eventId}`;
+  const stored = new Map([[key, String(Number.MAX_SAFE_INTEGER)]]);
+  let unreadable = false;
+  installStorage({
+    getItem: id => {
+      if (id === key && unreadable) throw new DOMException("blocked", "SecurityError");
+      return stored.get(id) ?? null;
+    },
+    setItem: (id, value) => { stored.set(id, value); },
+  });
+  const send = vi.spyOn(protocol, "initiateSettlement");
+  const { runSettlementCommand } = await import("../src/settlement-desk");
+  await runSettlementCommand(protocol, "initiate", eventId);
+  expect(send).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+    idempotencyKey: `desk-initiate:stl_${eventId}:${Number.MAX_SAFE_INTEGER}`,
+  }));
+  expect(stored.get(key)).toBe(COUNTER_EXHAUSTED);
+
+  unreadable = true;
+  vi.resetModules();
+  const reloaded = await import("../src/settlement-desk");
+  await expect(reloaded.runSettlementCommand(protocol, "initiate", eventId)).rejects.toMatchObject({ code: COUNTER_EXHAUSTED });
+  expect(send).toHaveBeenCalledTimes(1);
+  expect(stored.get(key)).toBe(COUNTER_EXHAUSTED);
 });
 
 it("allocates the last safe ID and holds exhausted storage and rollback", () => {

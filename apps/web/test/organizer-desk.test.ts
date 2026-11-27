@@ -1,8 +1,8 @@
-import { memoryStore } from "./support/session-store";
+import { memoryStore, installAttemptStorage } from "./support/session-store";
 import { pinDigest } from "../src/booking-journey-intent";
 import { intentScopeDigest } from "../src/core-desk-intent";
 import { writeDeskAttempt } from "../src/desk-attempts";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   GateRejectedError,
   ProtocolError,
@@ -21,7 +21,7 @@ import {
   type OrganizerDraft,
 } from "../src/organizer-desk";
 
-afterEach(() => vi.unstubAllGlobals());
+installAttemptStorage();
 
 const DRAFT: OrganizerDraft = {
   seats: "A1, A2",

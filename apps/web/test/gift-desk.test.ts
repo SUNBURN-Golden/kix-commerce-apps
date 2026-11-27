@@ -1,4 +1,4 @@
-import { memoryStore } from "./support/session-store";
+import { memoryStore, installAttemptStorage } from "./support/session-store";
 import { describe, expect, it } from "vitest";
 import {
   GateRejectedError,
@@ -17,6 +17,8 @@ import {
   type GiftDesk,
   type GiftDraft,
 } from "../src/gift-desk";
+
+installAttemptStorage();
 
 const DRAFT: GiftDraft = {
   ticketId: "ticket-9",

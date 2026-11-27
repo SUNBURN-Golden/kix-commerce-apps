@@ -21,6 +21,7 @@ type FsmOrder = (branch: CommerceJourneyBranch, confirmed: CommerceJourneyStep |
   { next?: CommerceJourneyStep; decline?: CommerceJourneyStep } | null;
 export const EVIDENCE_LOST = "SESSION_EVIDENCE_LOST";
 export const pinDigest = __KIX_BUILD_IDENTITY__.pinDigest;
+const ownedIntents = new WeakMap<SessionStorePort, Map<string, string>>();
 
 export function isCoreIntentScope(scope: string): boolean {
   // Keep the caller's exact ID in the encoded key. Lone surrogates cannot be URI-encoded.
@@ -54,7 +55,7 @@ export function readBookingIntent(store: SessionStorePort | null, mode: Mode, sc
   const coreEventId = typeof scope === "string" ? scope : undefined;
   try {
     if (!store) return EVIDENCE_LOST;
-    const raw = store.getItem(keyFor(mode, coreEventId));
+    const raw = readOwnedIntent(store, keyFor(mode, coreEventId));
     if (raw === null) return null;
     const row: BookingIntent = JSON.parse(raw);
     if (row.v !== 1 || row.mode !== mode || row.pinDigest !== pinDigest ||
@@ -88,27 +89,35 @@ export function persistBookingIntent(
     throw new ProtocolError(EVIDENCE_LOST, EVIDENCE_LOST);
   }
   return persistOwnedIntent(store, keyFor(intent.mode, intent.branch === null ? intent.eventId : undefined),
-    { v: 1, pinDigest, ...intent });
+    { v: 1, pinDigest, ...intent }, intent.branch === null);
 }
 
-export function persistOwnedIntent(store: SessionStorePort | null, key: string, record: object) {
+function readOwnedIntent(store: SessionStorePort, key: string, owned = ownedIntents.get(store)?.get(key)): string | null {
+  const current = store.getItem(key);
+  if (owned === undefined || current === owned) return current;
+  // Another desk can detect a deleted intent while its response is still pending.
+  if (current === null) store.setItem(key, EVIDENCE_LOST);
+  throw new Error(EVIDENCE_LOST);
+}
+
+export function persistOwnedIntent(store: SessionStorePort | null, key: string, record: object, sharedCore = false) {
   try {
     assertAllowedStorageKey(key);
-    if (!store || store.getItem(key) !== null) throw new Error();
+    if (!store || readOwnedIntent(store, key) !== null) throw new Error();
     const raw = JSON.stringify(record);
     store.setItem(key, raw);
     if (store.getItem(key) !== raw) throw new Error();
-    const verify = () => {
-      const current = store.getItem(key);
-      if (current === raw) return;
-      // Keep a deleted intent fenced on reload without replacing another record.
-      if (current === null) store.setItem(key, EVIDENCE_LOST);
-      throw new Error(EVIDENCE_LOST);
-    };
+    const intents = sharedCore ? ownedIntents.get(store) ?? new Map<string, string>() : undefined;
+    if (intents) {
+      intents.set(key, raw);
+      ownedIntents.set(store, intents);
+    }
+    const verify = () => { readOwnedIntent(store, key, raw); };
     return Object.assign(() => {
       verify();
       store.removeItem(key);
       if (store.getItem(key) !== null) throw new Error(EVIDENCE_LOST);
+      intents?.delete(key);
     }, { verify });
   } catch {
     throw new ProtocolError(EVIDENCE_LOST, EVIDENCE_LOST);

@@ -1,7 +1,8 @@
-import { memoryStore } from "./support/session-store";
+import { memoryStore, installAttemptStorage } from "./support/session-store";
 import { createOrganizerDesk } from "../src/organizer-desk";
 import { writeDeskAttempt } from "../src/desk-attempts";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { pageSessionStore } from "../src/session-store";
+import { describe, expect, it, vi } from "vitest";
 import {
   GateRejectedError,
   ProtocolError,
@@ -20,7 +21,7 @@ import {
 } from "../src/journey-desk";
 import { EXPECTED_STEP_REPORT, SHOW_POLICY } from "../../../packages/protocol-adapter/test/support/journey-fixture";
 
-afterEach(() => vi.unstubAllGlobals());
+installAttemptStorage();
 
 describe("journey desk", () => {
   it("keeps the synthetic policy equal to the merged fixture and does not treat it as a displayed price", () => {
@@ -268,35 +269,62 @@ describe("journey desk", () => {
     expect(http.view(event).rows[0]?.canSend).toBe(true);
   });
 
-  it("fences booking and organizer after a dispatched creation intent is deleted and the response is lost", async () => {
-    const eventId = "deleted-booking-intent";
+  it.each(["booking", "organizer"] as const)("fences both desks while %s's deleted creation intent is in flight", async owner => {
+    const eventId = `deleted-${owner}-intent`;
     const key = `kix-journey-intent:core:stub:${eventId}`;
     const store = memoryStore();
-    const first = stubDesk(async (input, shape) => {
+    vi.stubGlobal("sessionStorage", store);
+    let applied!: () => void;
+    let loseResponse!: () => void;
+    const effect = new Promise<void>(resolve => { applied = resolve; });
+    const pending = new Promise<void>(resolve => { loseResponse = resolve; });
+    const lose = async (input: LocalCallInput, shape: ReturnType<typeof createStubJourneyInvoker>) => {
       await shape.invokeLocalCall(input);
       store.removeItem(key);
+      applied();
+      await pending;
       throw new Error("result lost after apply");
-    }, store);
+    };
+    const unexpected = async () => { throw new Error("unexpected second create"); };
+    const booking = stubDesk(owner === "booking" ? lose : unexpected, pageSessionStore());
 
-    await first.desk.send(eventId, "create_event");
-    expect(first.calls).toHaveLength(1);
-    expect(first.desk.view(eventId).rows[0]).toMatchObject({ status: "unconfirmed", code: "SESSION_EVIDENCE_LOST" });
-    expect(store.getItem(key)).toBe("SESSION_EVIDENCE_LOST");
-
-    const reopened = stubDesk((input, shape) => shape.invokeLocalCall(input), store);
+    const organizerCalls: LocalCallInput[] = [];
+    const organizerShape = createStubJourneyInvoker();
     const organize = createOrganizerDesk({
-      store,
       protocol: { describe: () => ({ environment: "stub" }), observeTransport: async () => localStubObservation() },
       source: { source: "stub-shape", invoker: { invokeLocalCall: async (input) => {
-        reopened.calls.push(input);
-        throw new Error("unexpected organizer dispatch");
+        organizerCalls.push(input);
+        return owner === "organizer" ? lose(input, organizerShape) : unexpected();
       } } },
     });
+    booking.desk.retain(eventId);
+    organize.retain(eventId);
+    const draft = { seats: "A1", invitationQuota: "1", expectedInventoryVersion: "0", inventoryId: "inv-0", recipient: "fixture" };
+    const desks = { booking: booking.desk, organizer: organize };
+    const send = {
+      booking: () => booking.desk.send(eventId, "create_event"),
+      organizer: () => organize.sendItem(eventId, "create_event", draft),
+    };
+    const other = owner === "booking" ? "organizer" : "booking";
+    const firstSend = send[owner]();
+    await effect;
+    try {
+      expect(store.getItem(key)).toBeNull();
+      expect(desks[owner].view(eventId).rows[0]?.status).toBe("in-flight");
+      await send[other]();
+      expect(booking.calls).toHaveLength(owner === "booking" ? 1 : 0);
+      expect(organizerCalls).toHaveLength(owner === "organizer" ? 1 : 0);
+      expect(desks[other].view(eventId).rows[0]).toMatchObject({ code: "SESSION_EVIDENCE_LOST", canSend: false });
+      expect(store.getItem(key)).toBe("SESSION_EVIDENCE_LOST");
+    } finally {
+      loseResponse();
+      await firstSend;
+    }
+    expect(desks[owner].view(eventId).rows[0]).toMatchObject({ status: "unconfirmed", code: "SESSION_EVIDENCE_LOST" });
+
+    const reopened = stubDesk(unexpected, store);
     await reopened.desk.send(eventId, "create_event");
     expect(reopened.desk.view(eventId).rows[0]).toMatchObject({ code: "SESSION_EVIDENCE_LOST", canSend: false });
-    expect(await organize.sendItem(eventId, "create_event", {
-      seats: "A1", invitationQuota: "1", expectedInventoryVersion: "0", inventoryId: "inv-0", recipient: "fixture",
-    })).toMatchObject({ status: "FENCED", code: "SESSION_EVIDENCE_LOST" });
     expect(reopened.calls).toHaveLength(0);
   });
 

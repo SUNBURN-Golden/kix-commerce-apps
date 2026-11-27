@@ -365,7 +365,7 @@ export class SessionJournal {
     }
     const parsed = raw === null ? null : parseEnvelope(raw, this.budget);
     if (quarantined !== null) {
-      this.openQuarantined(store, quarantined, parsed);
+      this.observeQuarantine(store, quarantined, parsed?.kind === "ok" ? parsed.env : null, true);
       return this;
     }
     if (parsed === null) {
@@ -396,24 +396,33 @@ export class SessionJournal {
     return this;
   }
 
-  private openQuarantined(store: SessionStorePort, marker: string, primary: Parsed | null): void {
+  private observeQuarantine(store: SessionStorePort, marker: string, candidate: Envelope | null, opening: boolean): void {
     const { cause, snapshot } = readQuarantine(marker);
     this.current = { kind: "evidence-lost", cause };
-    if (snapshot === undefined) return;
-    const trusted = parseEnvelope(snapshot, this.budget);
-    if (trusted.kind !== "ok") return;
-
-    const env = primary?.kind === "ok" ? quarantinedHistory(trusted.env, primary.env) : trusted.env;
-    const forward = env !== trusted.env ? serialize(env) : snapshot;
-    const recovered = this.markInFlight(env, "RECOVERED_AFTER_RELOAD");
     const save = (text: string) => byteLength(text) <= this.budget.maxBytes &&
       writeVerified(store, SESSION_JOURNAL_QUARANTINE_KEY, marker, text);
+    const parsed = snapshot === undefined ? null : parseEnvelope(snapshot, this.budget);
+    if (parsed?.kind !== "ok") {
+      if (!opening && candidate && cause === "LOST_DURING_SESSION") save(serialize(candidate));
+      return;
+    }
+    const trusted = parsed.env;
+    const env = candidate === null ? trusted : quarantinedHistory(trusted, candidate);
+    const text = env === trusted ? snapshot : serialize(env);
+    const forward = text === snapshot ? undefined : text;
+    // A live journal can carry additional history even after the primary rolls back.
+    if (!opening) {
+      if (forward !== undefined && save(forward)) this.env = env;
+      return;
+    }
+
+    const recovered = this.markInFlight(env, "RECOVERED_AFTER_RELOAD");
     const savedRecovery = recovered > 0 && save(serialize(env));
     // Publish a forward view only once its history is saved. If recovery could not be
     // saved, an in-flight snapshot can still carry the extension to the next open.
-    if (forward !== snapshot && !savedRecovery && !save(forward)) {
-      this.env = trusted.env;
-      this.recoveredAtOpen = this.markInFlight(trusted.env, "RECOVERED_AFTER_RELOAD");
+    if (forward !== undefined && !savedRecovery && !save(forward)) {
+      this.env = trusted;
+      this.recoveredAtOpen = this.markInFlight(trusted, "RECOVERED_AFTER_RELOAD");
       return;
     }
     this.env = env;
@@ -487,7 +496,7 @@ export class SessionJournal {
     try {
       const marker = this.store.getItem(SESSION_JOURNAL_QUARANTINE_KEY);
       if (marker !== null) {
-        this.current = { kind: "evidence-lost", cause: readQuarantine(marker).cause };
+        this.observeQuarantine(this.store, marker, this.env, false);
         return this.status();
       }
       raw = this.store.getItem(SESSION_JOURNAL_KEY);

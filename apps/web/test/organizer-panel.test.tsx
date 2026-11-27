@@ -1,4 +1,4 @@
-import { memoryStore } from "./support/session-store";
+import { memoryStore, installAttemptStorage } from "./support/session-store";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,6 +20,8 @@ import {
   type OrganizerRow,
 } from "../src/organizer-desk";
 import { OrganizerPanel } from "../src/pages/OrganizerPanel";
+
+installAttemptStorage();
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = path.resolve(webRoot, "../..");

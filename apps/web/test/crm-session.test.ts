@@ -1,8 +1,10 @@
-import { memoryStore } from "./support/session-store";
+import { memoryStore, installAttemptStorage } from "./support/session-store";
 import { describe, expect, it } from "vitest";
 import { createStubConsentInvoker, localStubObservation, ProtocolError, GateRejectedError, type LocalCallInput } from "@kix/protocol-adapter";
 import { createConsentDesk, type ConsentDraft } from "../src/consent-desk";
 import { crmChannelPreferences, crmPurposeLedger, previewCrmAudience, type CrmSegmentFilter } from "../src/crm-session";
+
+installAttemptStorage();
 
 const draft: ConsentDraft = { subject: "subject-fixture", business: "business-fixture", channel: "fixture-channel",
   purpose: "fixture-purpose", expectedConsentVersion: "1", allowed: "true" };

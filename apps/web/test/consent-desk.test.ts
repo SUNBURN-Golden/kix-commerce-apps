@@ -1,4 +1,4 @@
-import { memoryStore } from "./support/session-store";
+import { memoryStore, installAttemptStorage } from "./support/session-store";
 import { describe, expect, it } from "vitest";
 import {
   CONSENT_AUTHORIZE_ACTOR,
@@ -11,6 +11,8 @@ import {
   type TransportObservation,
 } from "@kix/protocol-adapter";
 import { consentPathStatus, createConsentDesk, type ConsentDesk, type ConsentDraft } from "../src/consent-desk";
+
+installAttemptStorage();
 
 const DRAFT: ConsentDraft = {
   subject: "subject-a",

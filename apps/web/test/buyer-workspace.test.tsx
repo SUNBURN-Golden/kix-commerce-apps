@@ -1,4 +1,4 @@
-import { memoryStore } from "./support/session-store";
+import { memoryStore, installAttemptStorage } from "./support/session-store";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,6 +22,8 @@ import {
 import { emptyDraft, createGiftDesk, type GiftDeskSnapshot } from "../src/gift-desk";
 import { createJourneyDesk, type JourneyDeskSnapshot } from "../src/journey-desk";
 import { BuyerScreen } from "../src/pages/Buyer";
+
+installAttemptStorage();
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
