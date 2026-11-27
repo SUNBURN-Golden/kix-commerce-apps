@@ -365,23 +365,24 @@ export class SessionJournal {
     return this;
   }
 
-  /** Moves the damaged blob aside, or records that the blob is gone. If that write fails, the original stays where it is and the hold lasts this page load only. */
-  private quarantine(raw: string | null, cause: EvidenceLostCause, keepHistory = false): void {
+  /** Fences a damaged, missing, or divergent journal. Valid histories are kept in place for inspection. */
+  private quarantine(raw: string | null, cause: EvidenceLostCause, preserveHistory = false): void {
     this.current = { kind: "evidence-lost", cause };
-    if (!keepHistory) this.env = null;
+    if (!preserveHistory) this.env = null;
     const store = this.store;
     if (store === null) {
       return;
     }
     try {
-      const marker = JSON.stringify({ v: SESSION_JOURNAL_VERSION, cause, raw: (raw ?? "").slice(0, this.budget.maxBytes) });
+      const quarantined = preserveHistory ? "" : (raw ?? "").slice(0, this.budget.maxBytes);
+      const marker = JSON.stringify({ v: SESSION_JOURNAL_VERSION, cause, raw: quarantined });
       store.setItem(SESSION_JOURNAL_QUARANTINE_KEY, marker);
-      if (store.getItem(SESSION_JOURNAL_QUARANTINE_KEY) !== marker) return;
+      if (store.getItem(SESSION_JOURNAL_QUARANTINE_KEY) !== marker || preserveHistory) return;
     } catch {
       return;
     }
     try {
-      store.removeItem(SESSION_JOURNAL_KEY);
+      if (store.getItem(SESSION_JOURNAL_KEY) === raw) store.removeItem(SESSION_JOURNAL_KEY);
     } catch {
       // The quarantine entry already marks the session as lost.
     }
@@ -402,7 +403,7 @@ export class SessionJournal {
   // -- store ---------------------------------------------------------------
 
   /** Writes the envelope and reads it back. Returns a refusal, or null when the store holds exactly this text. */
-  private persist(env: Envelope): "JOURNAL_FULL" | "WRITE_REFUSED" | null {
+  private persist(env: Envelope, expected = this.lastWritten): "JOURNAL_FULL" | "WRITE_REFUSED" | null {
     const store = this.store;
     if (store === null) {
       return "WRITE_REFUSED";
@@ -412,6 +413,7 @@ export class SessionJournal {
       return "JOURNAL_FULL";
     }
     try {
+      if (store.getItem(SESSION_JOURNAL_KEY) !== expected) return "WRITE_REFUSED";
       store.setItem(SESSION_JOURNAL_KEY, text);
       if (store.getItem(SESSION_JOURNAL_KEY) === text) {
         this.lastWritten = text;
@@ -421,10 +423,13 @@ export class SessionJournal {
       // Fall through to the restore below.
     }
     try {
-      if (this.lastWritten === null) {
+      // Restore only our own failed write or a truncated prefix of it.
+      const observed = store.getItem(SESSION_JOURNAL_KEY);
+      if (observed === expected || observed === null || !text.startsWith(observed)) return "WRITE_REFUSED";
+      if (expected === null) {
         store.removeItem(SESSION_JOURNAL_KEY);
       } else {
-        store.setItem(SESSION_JOURNAL_KEY, this.lastWritten);
+        store.setItem(SESSION_JOURNAL_KEY, expected);
       }
     } catch {
       // The store is not usable. The next verify decides what that means.
@@ -463,7 +468,10 @@ export class SessionJournal {
       return this.status();
     }
     if (this.env && !extendsHistory(this.env, parsed.env)) {
-      if (this.persist(this.env) !== null) this.quarantine(raw, "LOST_DURING_SESSION", true);
+      // A true rollback can be restored. A divergent history may hold additional unresolved writes.
+      if (!extendsHistory(parsed.env, this.env) || this.persist(this.env, raw) !== null) {
+        this.quarantine(raw, "LOST_DURING_SESSION", true);
+      }
     } else {
       this.env = parsed.env;
       this.lastWritten = raw;

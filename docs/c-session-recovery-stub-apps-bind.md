@@ -38,7 +38,7 @@ There is no `clear`, `remove`, `evict`, `expire`, `resend`, or `resolve` call on
 
 `SessionRecoveryController.run(target)`:
 
-1. Verify the store against what this journal last wrote. A cleared store is `LOST_DURING_SESSION`; a damaged one is quarantined.
+1. Verify stored history. Adopt forward history and restore a verified rollback. Missing or divergent history fences the session with `LOST_DURING_SESSION`. Damaged storage is quarantined.
 2. Gate. Evidence lost or no store holds every scope. An `UNKNOWN` or `IN_FLIGHT` record on the target's scope, from this page load or an earlier one, fences it. Then the underlying desk's own fence applies. Another scope is not affected.
 3. Write the `IN_FLIGHT` record ahead of the send and read it back. A quota error, a blocked store, a write that throws part way, and a write that silently cuts the text short all refuse the intent, put the earlier blob back, and send nothing.
 4. Send once.
@@ -58,7 +58,7 @@ After a reload, an unresolved intent comes back as UNKNOWN and is never sent aga
 | --- | --- |
 | `CORRUPT` | Not JSON, wrong shape, extra key, bad record, digest mismatch, or over the byte budget |
 | `UNSUPPORTED_VERSION` | Valid JSON with a `v` other than 1, or none |
-| `LOST_DURING_SESSION` | The journal this page wrote is gone from the store during the session. The loss is recorded in the quarantine entry (cause only, empty `raw`), so it survives the next load |
+| `LOST_DURING_SESSION` | The journal disappeared, verification found divergent history, or rollback restoration failed. The quarantine entry holds the session across reloads. Divergent history stays in the journal key, with any newer unresolved records and counters intact |
 
 The damaged blob is copied to the quarantine key and the original is removed. If the quarantine write fails, the original stays where it is and the session is still lost. The quarantine entry survives the next load, so a reload is not a way out. A loss is recorded only once the page notices it (a run, a resume, or the tab becoming visible runs the check); a clear followed by an immediate reload with no check looks like a new tab. If the quarantine write itself fails, the hold lasts this page load only. While evidence is lost every write is held, `nextSeq` is not reset, and no new reference is issued.
 

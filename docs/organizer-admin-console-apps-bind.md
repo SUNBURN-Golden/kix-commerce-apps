@@ -88,7 +88,7 @@ Each non-invitation step is sent at most once (`already-sent`). `issue_invitatio
 
 ## Desk
 
-The `/organizer` page keeps one `OrganizerConsole` per event id for that page load. Operation ids are `org:<eventId>:<attempt>:<step>`. `issue_invitation` suffixes the inventory id. An id longer than 100 characters fails before the call and the row is not sent. The operator label is `operator`. The organizer id on the desk is `desk-organizer`. Seats are a comma-separated caller string. A blank invitation quota is omitted. A non-canonical integer is not sent. Stub-shape receipts are literals. They are not gate receipts. In the browser, integration HTTP shows unavailable because the reviewed gate answers no CORS preflight. The desk does not fall back to the stub and does not proxy the gate. The browser success path is the stub-shape invoker. The live success path is the Node gate test. The observed browser run is below.
+The `/organizer` page keeps one `OrganizerConsole` per event id for that page load. Operation ids are `org:<eventId>:<attempt>:<step>`. An invitation appends an inventory reference and uses `orgi:<event digest prefix>:<attempt>:issue_invitation:<inventory reference>` when the original form would exceed 100 characters. Other overlong operation ids fail before dispatch. The operator label is `operator`. The organizer id on the desk is `desk-organizer`. Seats are a comma-separated caller string. A blank invitation quota is omitted. A non-canonical integer is not sent. Stub-shape receipts are literals. They are not gate receipts. In the browser, integration HTTP shows unavailable because the reviewed gate answers no CORS preflight. The desk does not fall back to the stub and does not proxy the gate. The browser success path is the stub-shape invoker. The live success path is the Node gate test. The observed browser run is below.
 
 ## Browser run
 
@@ -112,6 +112,6 @@ No production deploy, no public host, no real payment, no KYC, no credit disburs
 
 Every completed invitation is retained under its operation ID in page-load history. Current rows control commands; a distinct inventory invitation starts with empty receipt and trace fields. The desk snapshots submitted draft primitives before awaiting the invoker, so actor and issued-inventory bookkeeping use submitted values. Inventory deduplication and all existing write fences remain. `lastConfirmed` uses completion order, including when a later invitation is pending, UNKNOWN, rejected or not sent. History and current snapshot receipt fields are independent copies. Reset clears history; no storage, TTL or eviction policy is introduced.
 
-The identity remains `org:<eventId>:<attempt>:issue_invitation:<inventoryId>`. No new operation ID enables a retry after a fenced outcome.
+The inventory reference uses the generated fixture ID or a digest prefix for caller-entered IDs. An unresolved invitation fences the inventory across event labels and reloads.
 
 Regression coverage and actual local verification: [audit-8 evidence](audit-8-fix-evidence.md).

@@ -26,15 +26,26 @@ export function intentScopeDigest(fields: object): string {
 }
 
 /** Keep generated fixture inventory IDs and mask arbitrary caller-entered IDs. */
-export function invitationRef(inventoryId: string): string {
+function invitationRef(inventoryId: string): string {
   return /^inv-\d{1,8}$/.test(inventoryId) ? inventoryId : intentScopeDigest([inventoryId]).slice(0, 24);
+}
+
+function compactInvitationPrefix(scope: string): string {
+  return `orgi:${intentScopeDigest([scope]).slice(0, 32)}:`;
+}
+
+export function invitationOperationId(scope: string, attempt: number, inventoryId: string): string {
+  const tail = `${attempt}:issue_invitation:${invitationRef(inventoryId)}`;
+  const operationId = `org:${scope}:${tail}`;
+  return Array.from(operationId).length <= 100 ? operationId : `${compactInvitationPrefix(scope)}${tail}`;
 }
 
 function countFor(desk: Desk, scope: string, attempt: Attempt): number {
   if (!(steps[desk] as readonly string[]).includes(attempt.step) || typeof attempt.operationId !== "string") return 0;
   const suffix = attempt.step === "issue_invitation" ? attempt.operationId.slice(attempt.operationId.lastIndexOf(":")) : "";
   if (suffix && !/^:(?:inv-\d{1,8}|[a-f0-9]{24})$/.test(suffix)) return 0;
-  return attemptNumber(`${prefixes[desk]}:${scope}:`, attempt, suffix);
+  return attemptNumber(`${prefixes[desk]}:${scope}:`, attempt, suffix) ||
+    (suffix ? attemptNumber(compactInvitationPrefix(scope), attempt, suffix) : 0);
 }
 
 function validIntent(desk: Desk, scope: string, row: DeskIntent): boolean {

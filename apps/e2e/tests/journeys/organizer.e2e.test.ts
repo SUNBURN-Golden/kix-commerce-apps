@@ -46,13 +46,13 @@ describe("organizer journey (stub, headless Chrome)", () => {
     await page.close();
   });
 
-  it("holds the original invitation after reload under another event label when intent removal failed", async () => {
+  it("holds a long-label invitation after reload under another event label when intent removal failed", async () => {
     const page = await openOrganizer();
     const panel = page.locator("aside.organizer-panel");
     const invitation = stepRow(panel, "issue_invitation");
     async function fillInvitation(eventId: string) {
       await page.locator("#organizer-event").fill(eventId);
-      await page.locator("#organizer-inventory").fill("inv-7");
+      await page.locator("#organizer-inventory").fill("stock");
       await page.locator("#organizer-version").fill("0");
       await page.locator("#organizer-recipient").fill("guest-fixture");
     }
@@ -63,9 +63,11 @@ describe("organizer journey (stub, headless Chrome)", () => {
         if (!key.startsWith("kix-organizer-intent:")) removeItem.call(this, key);
       };
     });
-    await fillInvitation("original-label");
+    await fillInvitation("x".repeat(60));
     await press(invitation, "Send issue_invitation");
     await expectStepStatus(invitation, "confirmed");
+    const operationId = await invitation.getByText(/^orgi:/).innerText();
+    expect(operationId.length).toBeLessThanOrEqual(100);
     await expectText(page, "SESSION_EVIDENCE_LOST");
     await suite.quiet(page, "original invitation");
     await page.reload();
@@ -73,7 +75,7 @@ describe("organizer journey (stub, headless Chrome)", () => {
     await fillInvitation("alias-label");
     await press(invitation, "Send issue_invitation");
     await expectStepStatus(invitation, "unconfirmed");
-    await expectText(page, "org:original-label:1:issue_invitation:inv-7");
+    await expectText(page, operationId);
     expect(await invitation.getByRole("button", { name: "Send issue_invitation" }).isDisabled()).toBe(true);
     await suite.pass(page, "organizer.invitation-inventory-fence");
     await page.close();

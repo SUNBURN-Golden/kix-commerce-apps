@@ -17,7 +17,7 @@ import {
 import type { OrganizerInvokerSource, OrganizerSource } from "@kix/protocol-adapter";
 import { allocateDeskAttempt, COUNTER_EXHAUSTED } from "./desk-attempts";
 import { EVIDENCE_LOST, isCoreIntentScope, type OwnedIntent, persistBookingIntent } from "./booking-journey-intent";
-import { intentScopeDigest, invitationRef, persistCoreDeskIntent, readOrganizerIntent, restoreDeskIntent, lastConfirmedAttempt } from "./core-desk-intent";
+import { intentScopeDigest, invitationOperationId, persistCoreDeskIntent, readOrganizerIntent, restoreDeskIntent, lastConfirmedAttempt } from "./core-desk-intent";
 import { pageSessionStore, type PageSessionStore } from "./session-store";
 import { SYNTHETIC_SHOW_POLICY } from "./journey-desk";
 import { organizerSource } from "./organizer-source";
@@ -618,8 +618,7 @@ export function organizerOperationId(
   step: OrganizerStep,
   inventoryId: string,
 ): string {
-  const suffix = step === "issue_invitation" ? `:${invitationRef(inventoryId)}` : "";
-  return `org:${eventId}:${attempt}:${step}${suffix}`;
+  return step === "issue_invitation" ? invitationOperationId(eventId, attempt, inventoryId) : `org:${eventId}:${attempt}:${step}`;
 }
 
 function blankSteps(): StepRecord[] {

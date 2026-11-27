@@ -442,6 +442,31 @@ it("blocks the same inventory under new event labels in flight, after response l
   expect(reopened.calls).toHaveLength(1);
 });
 
+it.each([
+  { eventId: "x".repeat(60), attempt: 1 },
+  { eventId: "🎟".repeat(100), attempt: Number.MAX_SAFE_INTEGER },
+])("sends a bounded invitation ID and restores its inventory fence at attempt $attempt", async ({ eventId, attempt }) => {
+  const store = memoryStore();
+  if (attempt > 1) writeDeskAttempt("organizer", eventId, attempt - 1);
+  const draft = { ...DRAFT, inventoryId: "stock" };
+  const first = stubDesk(async (input, shape) => {
+    await shape.invokeLocalCall(input);
+    throw new ProtocolError("lost response", "REQUEST_TIMEOUT", { requestId: "req-lost", correlationId: "corr-lost" });
+  }, store);
+
+  expect(await first.desk.sendItem(eventId, "issue_invitation", draft)).toMatchObject({ status: "UNKNOWN", code: "REQUEST_TIMEOUT" });
+  expect(first.calls).toHaveLength(1);
+  const { operationId } = first.calls[0];
+  expect(Array.from(operationId).length).toBeLessThanOrEqual(100);
+  expect(operationId).toContain(`:${attempt}:issue_invitation:`);
+  expect(operationId).not.toContain(draft.inventoryId);
+
+  const reopened = stubDesk(async (input, shape) => shape.invokeLocalCall(input), store);
+  expect(await reopened.desk.sendItem("short-alias", "issue_invitation", draft)).toMatchObject({ status: "FENCED", code: "UNKNOWN" });
+  expect(reopened.desk.view("short-alias", draft).rows[5]).toMatchObject({ status: "unconfirmed", operationId });
+  expect(reopened.calls).toHaveLength(0);
+});
+
 it("checks event-keyed invitation history from an earlier build across labels", async () => {
   const store = memoryStore();
   const scope = "legacy-invite";
