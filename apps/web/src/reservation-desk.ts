@@ -194,6 +194,6 @@ function readAttempt(eventId: string): number | null {
   return readDeskAttempt("reservation", eventId);
 }
 
-function writeAttempt(eventId: string, attempt: number | null): void {
-  writeDeskAttempt("reservation", eventId, attempt);
+function writeAttempt(eventId: string, attempt: number | null): boolean {
+  return writeDeskAttempt("reservation", eventId, attempt);
 }

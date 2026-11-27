@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { StubProtocolAdapter } from "@kix/protocol-adapter";
 import { allocateDeskAttempt, claimCurrentDeskAttempt, COUNTER_EXHAUSTED, readDeskAttempt, writeDeskAttempt } from "../src/desk-attempts";
 
 const original = Object.getOwnPropertyDescriptor(globalThis, "sessionStorage");
@@ -70,6 +71,12 @@ it("allocates the last safe ID and holds exhausted storage and rollback", () => 
   expect(allocateDeskAttempt("journey", "unsafe-limit")).toBeNull();
 });
 
+it("refuses the final journey ID when storage ignores the new counter", () => {
+  installStorage({ getItem: () => String(Number.MAX_SAFE_INTEGER - 1), setItem: () => undefined });
+  expect(allocateDeskAttempt("journey", "unwritten-limit")).toBeNull();
+  expect(allocateDeskAttempt("journey", "unwritten-limit")).toBeNull();
+});
+
 it("consumes the final current attempt before a legacy desk sends", () => {
   const key = "kix-settlement-attempt:legacy-limit";
   const stored = new Map([[key, String(Number.MAX_SAFE_INTEGER)]]);
@@ -79,4 +86,26 @@ it("consumes the final current attempt before a legacy desk sends", () => {
   expect(claim()).toBe(Number.MAX_SAFE_INTEGER);
   expect(stored.get(key)).toBe(COUNTER_EXHAUSTED);
   expect(claim()).toBeNull();
+});
+
+it.each(["throws", "ignores"] as const)("refuses a final settlement command across reload when storage %s the marker write", async fault => {
+  const eventId = `legacy-limit-${fault}`;
+  const key = `kix-settlement-attempt:stl_${eventId}`;
+  const finalAttempt = String(Number.MAX_SAFE_INTEGER);
+  installStorage({
+    getItem: id => id === key ? finalAttempt : null,
+    setItem: () => {
+      if (fault === "throws") throw new DOMException("quota", "QuotaExceededError");
+    },
+  });
+  const protocol = new StubProtocolAdapter();
+  const send = vi.spyOn(protocol, "initiateSettlement");
+
+  for (let load = 0; load < 2; load += 1) {
+    vi.resetModules();
+    const { runSettlementCommand } = await import("../src/settlement-desk");
+    await expect(runSettlementCommand(protocol, "initiate", eventId)).rejects.toMatchObject({ code: COUNTER_EXHAUSTED });
+    expect(sessionStorage.getItem(key)).toBe(finalAttempt);
+    expect(send).toHaveBeenCalledTimes(0);
+  }
 });

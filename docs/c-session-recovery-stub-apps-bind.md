@@ -50,6 +50,8 @@ Before step 3 the byte check reserves room for every open record to settle as `U
 
 Opening the journal counts one page load. Every record still `IN_FLIGHT` becomes `UNKNOWN` with `RECOVERED_AFTER_RELOAD`, and the change is written. A `pageshow` with `persisted` does the same with `TAB_RESUMED`. A later answer for such a record is kept in memory as evidence and changes nothing. Intent numbers continue across loads from `nextSeq`, so no number is issued twice.
 
+A quarantined reopen keeps the existing load and sequence counters. It shows compatible newer history after saving it to the quarantine key and recovers any `IN_FLIGHT` rows as `UNKNOWN`. If storage accepts the newer history but refuses the larger recovery snapshot, the desk shows `UNKNOWN` and recovers the saved rows again on the next open. If storage refuses the newer history, the desk shows the last saved quarantine history.
+
 After a reload, an unresolved intent comes back as UNKNOWN and is never sent again. The page has no resend, resolve, clear, or compensate control. Neither a read nor a late answer lifts the fence, and no new write or compensation goes out for that subject. A `CONFIRMED` record from an earlier load is shown as history: it is not a current fact and it lifts no fence.
 
 ## Lost evidence

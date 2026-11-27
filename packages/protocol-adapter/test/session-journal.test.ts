@@ -543,16 +543,24 @@ it("quarantines a rollback when restoration fails and reopens with trusted histo
   ]);
   const reopened = openSessionJournal(store);
   expect(reopened.status()).toEqual(lost);
-  expect(reopened.records()).toEqual(journal.records());
+  expect(reopened.records()).toEqual([
+    journal.records()[0],
+    { ...journal.records()[1], outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" },
+  ]);
+  expect(reopened.recoveredCount()).toBe(1);
   expect([reopened.load(), reopened.nextSeq()]).toEqual([2, 3]);
   expect(reopened.scopeBlock("subject-1")).toMatchObject({ reason: "evidence-lost" });
   expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+  const again = openSessionJournal(store);
+  expect(again.records()).toEqual(reopened.records());
+  expect(again.recoveredCount()).toBe(0);
 });
 
-it("fences divergent histories without replacing a newer journal or dropping its unresolved writes", () => {
+it.each(["UNKNOWN", "IN_FLIGHT"] as const)("keeps a divergent journal's %s suffix across a second rollback under quota", outcome => {
   const store = new FakeSessionStore();
   const first = openSessionJournal(store);
   expect(begin(first, 1).ok).toBe(true);
+  const older = store.getItem(SESSION_JOURNAL_KEY)!;
   store.throwOnSet = true;
   expect(first.markUnknown("intent-1", "JOURNAL_SETTLE_FAILED")).toBe(false);
   store.throwOnSet = false;
@@ -560,22 +568,52 @@ it("fences divergent histories without replacing a newer journal or dropping its
   const second = openSessionJournal(store);
   expect(second.records()[0]).toMatchObject({ outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" });
   expect(begin(second, 2).ok).toBe(true);
-  expect(second.settle("intent-2", "UNKNOWN", "RESPONSE_LOST").ok).toBe(true);
+  if (outcome === "UNKNOWN") expect(second.settle("intent-2", "UNKNOWN", "RESPONSE_LOST").ok).toBe(true);
   const newer = store.getItem(SESSION_JOURNAL_KEY)!;
   store.quota = newer.length;
 
   const lost = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
   expect(first.verify()).toEqual(lost);
   expect(first.records()).toMatchObject([{ intentRef: "intent-1", outcome: "UNKNOWN", code: "JOURNAL_SETTLE_FAILED" }]);
+  // Also reopen a marker written in the earlier wrapped format.
+  if (outcome === "UNKNOWN") {
+    const raw = blob({ loads: 1, nextSeq: 2 }, [...first.records()]);
+    store.data.set(SESSION_JOURNAL_QUARANTINE_KEY, JSON.stringify({ v: 1, cause: lost.cause, raw }));
+  }
   expect(second.verify()).toEqual(lost);
   expect([second.load(), second.nextSeq()]).toEqual([2, 3]);
-  expect(second.records()[1]).toMatchObject({ intentRef: "intent-2", outcome: "UNKNOWN", code: "RESPONSE_LOST" });
+  store.throwOnSet = true;
+  const refused = openSessionJournal(store);
+  expect(refused.status()).toEqual(lost);
+  expect(refused.records()).toEqual(first.records());
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(newer);
+  store.throwOnSet = false;
+
   const reopened = openSessionJournal(store);
   expect(reopened.status()).toEqual(lost);
-  expect(reopened.records()).toEqual([first.records()[0], second.records()[1]]);
+  expect(reopened.records()).toEqual([
+    first.records()[0],
+    { ...second.records()[1], outcome: "UNKNOWN", code: outcome === "UNKNOWN" ? "RESPONSE_LOST" : "RECOVERED_AFTER_RELOAD" },
+  ]);
   expect([reopened.load(), reopened.nextSeq()]).toEqual([2, 3]);
   expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
   expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(newer);
+
+  if (outcome === "IN_FLIGHT") {
+    const [firstRecord, abandoned] = second.records();
+    const late = blob({ loads: 2, nextSeq: 3 }, [firstRecord, { ...abandoned, outcome: "CONFIRMED", code: null }]);
+    store.data.set(SESSION_JOURNAL_KEY, late);
+    expect(openSessionJournal(store).records()).toEqual(reopened.records());
+    expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(late);
+  }
+
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  const again = openSessionJournal(store);
+  expect(again.status()).toEqual(lost);
+  expect(again.records()).toEqual(reopened.records());
+  expect([again.load(), again.nextSeq()]).toEqual([2, 3]);
+  expect(begin(again, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(older);
 });
 
 it("preserves a competing write seen during rollback restoration", () => {
@@ -604,7 +642,10 @@ it("preserves a competing write seen during rollback restoration", () => {
   expect(begin(other, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
   const reopened = openSessionJournal(store);
   expect(reopened.status()).toEqual({ kind: "evidence-lost", cause: "LOST_DURING_SESSION" });
-  expect(reopened.records()).toEqual(other.records());
+  expect(reopened.records()).toEqual([
+    other.records()[0],
+    { ...other.records()[1], outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" },
+  ]);
   expect([reopened.load(), reopened.nextSeq()]).toEqual([2, 3]);
 });
 

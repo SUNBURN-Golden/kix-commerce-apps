@@ -1,7 +1,7 @@
 import { memoryStore } from "./support/session-store";
 import { createOrganizerDesk } from "../src/organizer-desk";
 import { writeDeskAttempt } from "../src/desk-attempts";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   GateRejectedError,
   ProtocolError,
@@ -19,6 +19,8 @@ import {
   type JourneyDesk,
 } from "../src/journey-desk";
 import { EXPECTED_STEP_REPORT, SHOW_POLICY } from "../../../packages/protocol-adapter/test/support/journey-fixture";
+
+afterEach(() => vi.unstubAllGlobals());
 
 describe("journey desk", () => {
   it("keeps the synthetic policy equal to the merged fixture and does not treat it as a displayed price", () => {
@@ -511,6 +513,7 @@ it.each(["booking", "organizer"] as const)("shares the creation fence when %s ac
 it("refuses a new journey after the final safe attempt", async () => {
   const eventId = "core-final-attempt";
   const store = memoryStore();
+  vi.stubGlobal("sessionStorage", store);
   writeDeskAttempt("journey", eventId, Number.MAX_SAFE_INTEGER - 1);
   const { desk, calls } = stubDesk(async (input, shape) => shape.invokeLocalCall(input), store);
   await desk.send(eventId, "create_event");

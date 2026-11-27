@@ -2,7 +2,7 @@ import { memoryStore } from "./support/session-store";
 import { pinDigest } from "../src/booking-journey-intent";
 import { intentScopeDigest } from "../src/core-desk-intent";
 import { writeDeskAttempt } from "../src/desk-attempts";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   GateRejectedError,
   ProtocolError,
@@ -20,6 +20,8 @@ import {
   type OrganizerDesk,
   type OrganizerDraft,
 } from "../src/organizer-desk";
+
+afterEach(() => vi.unstubAllGlobals());
 
 const DRAFT: OrganizerDraft = {
   seats: "A1, A2",
@@ -479,6 +481,7 @@ it.each([
   { eventId: "🎟".repeat(100), attempt: Number.MAX_SAFE_INTEGER },
 ])("sends a bounded invitation ID and restores its inventory fence at attempt $attempt", async ({ eventId, attempt }) => {
   const store = memoryStore();
+  vi.stubGlobal("sessionStorage", store);
   if (attempt > 1) writeDeskAttempt("organizer", eventId, attempt - 1);
   const draft = { ...DRAFT, inventoryId: "stock" };
   const first = stubDesk(async (input, shape) => {

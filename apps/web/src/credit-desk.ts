@@ -189,6 +189,6 @@ function readAttempt(eventId: string): number | null {
   return readDeskAttempt("credit", eventId);
 }
 
-function writeAttempt(eventId: string, attempt: number | null): void {
-  writeDeskAttempt("credit", eventId, attempt);
+function writeAttempt(eventId: string, attempt: number | null): boolean {
+  return writeDeskAttempt("credit", eventId, attempt);
 }

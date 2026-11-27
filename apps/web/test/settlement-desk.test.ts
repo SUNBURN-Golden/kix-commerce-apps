@@ -9,6 +9,7 @@ function memoryAttempts(): AttemptStore & { values: Map<string, number | null> }
     read: (settlementId) => values.has(settlementId) ? values.get(settlementId)! : 0,
     write: (settlementId, attempt) => {
       values.set(settlementId, attempt);
+      return true;
     },
   };
 }

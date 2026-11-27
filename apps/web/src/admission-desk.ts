@@ -133,6 +133,6 @@ function readAttempt(eventId: string): number | null {
   return readDeskAttempt("admission", eventId);
 }
 
-function writeAttempt(eventId: string, attempt: number | null): void {
-  writeDeskAttempt("admission", eventId, attempt);
+function writeAttempt(eventId: string, attempt: number | null): boolean {
+  return writeDeskAttempt("admission", eventId, attempt);
 }

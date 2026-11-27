@@ -39,6 +39,7 @@ const displayCopyGroups: [string, string[]][] = [
     "notification-inbox",
     "pages--MarketplacePerformance",
     "pages--MarketplacePerformancePanels",
+    "session-recovery",
     "tenant-permissions",
   ]],
   ["display-copy-4", [
@@ -115,7 +116,6 @@ const displayCopyGroups: [string, string[]][] = [
     "refund-return",
     "resale-desk",
     "reservation-desk",
-    "session-recovery",
     "storage-allow-list",
   ]],
 ];

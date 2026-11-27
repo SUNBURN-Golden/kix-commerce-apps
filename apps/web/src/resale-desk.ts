@@ -213,6 +213,6 @@ function readAttempt(eventId: string): number | null {
   return readDeskAttempt("resale", eventId);
 }
 
-function writeAttempt(eventId: string, attempt: number | null): void {
-  writeDeskAttempt("resale", eventId, attempt);
+function writeAttempt(eventId: string, attempt: number | null): boolean {
+  return writeDeskAttempt("resale", eventId, attempt);
 }

@@ -1,5 +1,10 @@
 export const messages = {
   en: {
+    "merge.consumedProducer": "{id} · Commerce PR #{pr} ({commerce}) · protocol {sha} · BOOTSTRAP {profile} ({profileDigest}), catalogue {catalogue}, manifest {manifest}, catalogue-schema-binding only.",
+    "merge.activeBootstrap": "Current BOOTSTRAP {revision} · catalogue {catalogue} · manifest {manifest}.",
+    "merge.fixtureJourneys": "Fixture journeys",
+    "merge.fixtureTransport": "Stub browser writes · qualified Node loopback writes · browser HTTP writes unavailable · reads {reads}.",
+    "merge.fixtureGrant": "{kind} {revision} · {authentication} · evidence {source} · active gate {gate}.",
     "s1": ". A base URL in stub mode does not open HTTP.",
     "s14": ". Adapter",
     "s3s": "and gate",
@@ -79,6 +84,11 @@ export const messages = {
     "e.29": " or ",
   },
   ko: {
+    "merge.consumedProducer": "{id} · Commerce PR #{pr} ({commerce}) · 프로토콜 {sha} · BOOTSTRAP {profile} ({profileDigest}), 목록 {catalogue}, manifest {manifest}를 소비했습니다. 부여 범위: SDK 목록 스키마 바인딩만.",
+    "merge.activeBootstrap": "현재 BOOTSTRAP {revision} · 목록 {catalogue} · manifest {manifest}.",
+    "merge.fixtureJourneys": "픽스처 여정",
+    "merge.fixtureTransport": "브라우저 스텁 쓰기 · 자격을 충족한 Node 루프백 쓰기 · 브라우저 HTTP 쓰기 불가 · 읽기 {reads}.",
+    "merge.fixtureGrant": "{kind} {revision} · {authentication} · 근거 {source} · 활성 게이트 {gate}.",
     "s1": ". stub 모드의 기본 URL은 HTTP를 열지 않습니다.",
     "s14": ". 어댑터",
     "s3s": "및 게이트",

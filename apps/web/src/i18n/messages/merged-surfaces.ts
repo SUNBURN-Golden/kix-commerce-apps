@@ -17,11 +17,6 @@ export const messages = {
     "merge.sessionRecord": "Session record",
     "merge.considered": "consideredAction",
     "merge.none": "none",
-    "merge.consumedProducer": "{id} · Commerce PR #{pr} ({commerce}) · protocol {sha} · BOOTSTRAP {profile} ({profileDigest}), catalogue {catalogue}, manifest {manifest}, catalogue-schema-binding only.",
-    "merge.activeBootstrap": "Current BOOTSTRAP {revision} · catalogue {catalogue} · manifest {manifest}.",
-    "merge.fixtureJourneys": "Fixture journeys",
-    "merge.fixtureTransport": "Stub browser writes · qualified Node loopback writes · browser HTTP writes unavailable · reads {reads}.",
-    "merge.fixtureGrant": "{kind} {revision} · {authentication} · evidence {source} · active gate {gate}.",
     "merge.openDetail": "Open detail (Enter or Space on the selected row)"
   },
   ko: {
@@ -42,11 +37,6 @@ export const messages = {
     "merge.sessionRecord": "세션 기록",
     "merge.considered": "consideredAction",
     "merge.none": "none",
-    "merge.consumedProducer": "{id} · Commerce PR #{pr} ({commerce}) · 프로토콜 {sha} · BOOTSTRAP {profile} ({profileDigest}), 목록 {catalogue}, manifest {manifest}를 소비했습니다. 부여 범위: SDK 목록 스키마 바인딩만.",
-    "merge.activeBootstrap": "현재 BOOTSTRAP {revision} · 목록 {catalogue} · manifest {manifest}.",
-    "merge.fixtureJourneys": "픽스처 여정",
-    "merge.fixtureTransport": "브라우저 스텁 쓰기 · 자격을 충족한 Node 루프백 쓰기 · 브라우저 HTTP 쓰기 불가 · 읽기 {reads}.",
-    "merge.fixtureGrant": "{kind} {revision} · {authentication} · 근거 {source} · 활성 게이트 {gate}.",
     "merge.openDetail": "상세 열기 (선택한 행에서 Enter 또는 Space)"
   }
 } as const;

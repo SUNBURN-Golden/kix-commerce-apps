@@ -9,7 +9,7 @@ const CANCEL_REASON = "FIXTURE_WITHDRAW";
 
 export interface AttemptStore {
   read(settlementId: string): number | null;
-  write(settlementId: string, attempt: number | null): void;
+  write(settlementId: string, attempt: number | null): boolean;
 }
 
 export function settlementIdFor(eventId: string): string {
