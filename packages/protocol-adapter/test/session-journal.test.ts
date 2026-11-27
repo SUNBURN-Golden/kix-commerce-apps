@@ -521,21 +521,32 @@ it("rejects equal-counter outcome rollback and adopts a legitimate forward exten
   expect(journal.scopeBlock("subject-2")).toMatchObject({ reason: "unresolved" });
 });
 
-it("quarantines a rollback when restoration fails and keeps trusted in-memory history", () => {
+it("quarantines a rollback when restoration fails and reopens with trusted history and counters", () => {
   const store = new FakeSessionStore();
-  const journal = openSessionJournal(store);
+  openSessionJournal(store);
   const older = store.getItem(SESSION_JOURNAL_KEY)!;
+  const journal = openSessionJournal(store);
   expect(begin(journal, 1).ok).toBe(true);
   expect(journal.markUnknown("intent-1", "TAB_RESUMED")).toBe(true);
+  expect(begin(journal, 2).ok).toBe(true);
   store.data.set(SESSION_JOURNAL_KEY, older);
   const set = store.setItem.bind(store);
   store.setItem = (key, value) => {
     if (key !== SESSION_JOURNAL_KEY) set(key, value);
   };
-  expect(journal.verify()).toEqual({ kind: "evidence-lost", cause: "LOST_DURING_SESSION" });
-  expect(journal.records()).toMatchObject([{ intentRef: "intent-1", outcome: "UNKNOWN" }]);
-  expect(journal.nextSeq()).toBe(2);
-  expect(openSessionJournal(store).scopeBlock("subject-1")).toMatchObject({ reason: "evidence-lost" });
+  const lost = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
+  expect(journal.verify()).toEqual(lost);
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(older);
+  expect(journal.records()).toMatchObject([
+    { intentRef: "intent-1", outcome: "UNKNOWN", code: "TAB_RESUMED" },
+    { intentRef: "intent-2", outcome: "IN_FLIGHT" },
+  ]);
+  const reopened = openSessionJournal(store);
+  expect(reopened.status()).toEqual(lost);
+  expect(reopened.records()).toEqual(journal.records());
+  expect([reopened.load(), reopened.nextSeq()]).toEqual([2, 3]);
+  expect(reopened.scopeBlock("subject-1")).toMatchObject({ reason: "evidence-lost" });
+  expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
 });
 
 it("fences divergent histories without replacing a newer journal or dropping its unresolved writes", () => {
@@ -587,6 +598,10 @@ it("preserves a competing write seen during rollback restoration", () => {
   expect(journal.verify()).toEqual({ kind: "evidence-lost", cause: "LOST_DURING_SESSION" });
   expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(newer);
   expect(begin(other, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+  const reopened = openSessionJournal(store);
+  expect(reopened.status()).toEqual({ kind: "evidence-lost", cause: "LOST_DURING_SESSION" });
+  expect(reopened.records()).toEqual(other.records());
+  expect([reopened.load(), reopened.nextSeq()]).toEqual([2, 3]);
 });
 
 it.each(["scope", "outcome"] as const)("fences a divergent rewrite of a trusted UNKNOWN's %s", field => {

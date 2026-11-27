@@ -99,7 +99,11 @@ export function persistOwnedIntent(store: SessionStorePort | null, key: string, 
     store.setItem(key, raw);
     if (store.getItem(key) !== raw) throw new Error();
     const verify = () => {
-      if (store.getItem(key) !== raw) throw new Error(EVIDENCE_LOST);
+      const current = store.getItem(key);
+      if (current === raw) return;
+      // Keep a deleted intent fenced on reload without replacing another record.
+      if (current === null) store.setItem(key, EVIDENCE_LOST);
+      throw new Error(EVIDENCE_LOST);
     };
     return Object.assign(() => {
       verify();

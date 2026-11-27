@@ -58,7 +58,8 @@ function validIntent(desk: Desk, scope: string, row: DeskIntent): boolean {
   if (needsDigest ? typeof row.scopeDigest !== "string" || !digestPattern.test(row.scopeDigest) : row.scopeDigest !== null) return false;
   if (desk === "gift") return row.step === "offer_gift" ? prev === null : prev?.step === "offer_gift" && prior === count;
   if (desk === "consent") {
-    return row.step === "set_consent" ? prior < count : (prev === null || prev.step === "set_consent") && (prior === 0 || prior === count);
+    // Authorization can use matching consent from an earlier attempt on this event.
+    return row.step === "set_consent" ? prior < count : (prev === null || prev.step === "set_consent") && prior <= count;
   }
   // Organizer lifecycle order belongs to Core. The desk may also issue
   // invitations independently, or issue several for different inventory IDs.

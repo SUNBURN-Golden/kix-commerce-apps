@@ -266,6 +266,38 @@ describe("journey desk", () => {
     expect(http.view(event).rows[0]?.canSend).toBe(true);
   });
 
+  it("fences booking and organizer after a dispatched creation intent is deleted and the response is lost", async () => {
+    const eventId = "deleted-booking-intent";
+    const key = `kix-journey-intent:core:stub:${eventId}`;
+    const store = memoryStore();
+    const first = stubDesk(async (input, shape) => {
+      await shape.invokeLocalCall(input);
+      store.removeItem(key);
+      throw new Error("result lost after apply");
+    }, store);
+
+    await first.desk.send(eventId, "create_event");
+    expect(first.calls).toHaveLength(1);
+    expect(first.desk.view(eventId).rows[0]).toMatchObject({ status: "unconfirmed", code: "SESSION_EVIDENCE_LOST" });
+    expect(store.getItem(key)).toBe("SESSION_EVIDENCE_LOST");
+
+    const reopened = stubDesk((input, shape) => shape.invokeLocalCall(input), store);
+    const organize = createOrganizerDesk({
+      store,
+      protocol: { describe: () => ({ environment: "stub" }), observeTransport: async () => localStubObservation() },
+      source: { source: "stub-shape", invoker: { invokeLocalCall: async (input) => {
+        reopened.calls.push(input);
+        throw new Error("unexpected organizer dispatch");
+      } } },
+    });
+    await reopened.desk.send(eventId, "create_event");
+    expect(reopened.desk.view(eventId).rows[0]).toMatchObject({ code: "SESSION_EVIDENCE_LOST", canSend: false });
+    expect(await organize.sendItem(eventId, "create_event", {
+      seats: "A1", invitationQuota: "1", expectedInventoryVersion: "0", inventoryId: "inv-0", recipient: "fixture",
+    })).toMatchObject({ status: "FENCED", code: "SESSION_EVIDENCE_LOST" });
+    expect(reopened.calls).toHaveLength(0);
+  });
+
   it.each(["corrupt", "wrong pin", "wrong event", "invalid history", "invalid operation", "unavailable", "silent write failure"] as const)(
     "reports SESSION_EVIDENCE_LOST and sends nothing with %s storage", async (problem) => {
       const event = "invalid-storage";

@@ -114,6 +114,7 @@ const CODE = /^[A-Z0-9_]{1,32}$/;
 const TAG = /^[0-9a-f]{16}$/;
 const ENVELOPE_KEYS = ["v", "loads", "nextSeq", "records", "digest"];
 const RECORD_KEYS = ["seq", "intentRef", "scope", "contextTag", "outcome", "code", "loadNo"];
+const RECORD_IDENTITY_KEYS = ["seq", "intentRef", "scope", "contextTag", "loadNo"] as const;
 const MAX_CODE = "X".repeat(32);
 
 function byteLength(text: string): number {
@@ -133,17 +134,11 @@ function copyRecord(record: SessionRecord): SessionRecord {
 }
 
 function digestOf(env: Envelope): string {
-  return sha256Hex(JSON.stringify([env.v, env.loads, env.nextSeq, env.records.map(copyRecord)]));
+  return sha256Hex(JSON.stringify([env.v, env.loads, env.nextSeq, env.records]));
 }
 
 function serialize(env: Envelope): string {
-  return JSON.stringify({
-    v: env.v,
-    loads: env.loads,
-    nextSeq: env.nextSeq,
-    records: env.records.map(copyRecord),
-    digest: digestOf(env),
-  });
+  return JSON.stringify({ ...env, digest: digestOf(env) });
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -168,10 +163,10 @@ function parseRecord(value: unknown, loads: number, nextSeq: number): SessionRec
     return null;
   }
   const { seq, intentRef, scope, contextTag, outcome, code, loadNo } = value;
-  if (!isPositiveSafeInteger(seq) || seq >= nextSeq) {
+  if (!isPositiveSafeInteger(seq) || seq >= nextSeq || !isPositiveSafeInteger(loadNo) || loadNo > loads) {
     return null;
   }
-  if (typeof intentRef !== "string" || !TOKEN.test(intentRef) || typeof scope !== "string" || !TOKEN.test(scope)) {
+  if ([intentRef, scope].some((token) => typeof token !== "string" || !TOKEN.test(token))) {
     return null;
   }
   if (typeof contextTag !== "string" || !TAG.test(contextTag)) {
@@ -183,10 +178,7 @@ function parseRecord(value: unknown, loads: number, nextSeq: number): SessionRec
   if (code !== null && (typeof code !== "string" || !CODE.test(code))) {
     return null;
   }
-  if (!isPositiveSafeInteger(loadNo) || loadNo > loads) {
-    return null;
-  }
-  return { seq: seq as number, intentRef, scope, contextTag, outcome: outcome as SessionOutcome, code, loadNo: loadNo as number };
+  return copyRecord(value as unknown as SessionRecord);
 }
 
 type Parsed = { kind: "ok"; env: Envelope } | { kind: "bad"; cause: "CORRUPT" | "UNSUPPORTED_VERSION" };
@@ -243,24 +235,23 @@ function extendsHistory(trusted: Envelope, candidate: Envelope): boolean {
   return candidate.records.every((record, index) => {
     const previous = trusted.records[index];
     if (previous === undefined) return record.seq >= trusted.nextSeq && record.loadNo >= trusted.loads;
-    if (record.seq !== previous.seq || record.intentRef !== previous.intentRef || record.scope !== previous.scope ||
-        record.contextTag !== previous.contextTag || record.loadNo !== previous.loadNo) return false;
+    if (RECORD_IDENTITY_KEYS.some((key) => record[key] !== previous[key])) return false;
     // Only in-flight intents may change their outcome. UNKNOWN and all other
     // terminal results keep their original codes and cannot be resolved here.
     return record.outcome === previous.outcome ? record.code === previous.code : previous.outcome === "IN_FLIGHT";
   });
 }
 
-function quarantinedCause(text: string, requireVersion = false): EvidenceLostCause {
+function readQuarantine(text: string): { cause: EvidenceLostCause; snapshot?: string } {
   try {
-    const value: unknown = JSON.parse(text);
-    if (isPlainObject(value) && (!requireVersion || value.v === SESSION_JOURNAL_VERSION) && (value.cause === "CORRUPT" || value.cause === "UNSUPPORTED_VERSION" || value.cause === "LOST_DURING_SESSION")) {
-      return value.cause;
+    const { v, cause, raw }: Record<string, unknown> = JSON.parse(text);
+    if (v === SESSION_JOURNAL_VERSION && (cause === "CORRUPT" || cause === "UNSUPPORTED_VERSION" || cause === "LOST_DURING_SESSION")) {
+      return { cause, snapshot: cause === "LOST_DURING_SESSION" && typeof raw === "string" ? raw : undefined };
     }
   } catch {
     // A damaged quarantine entry still means evidence was lost.
   }
-  return "CORRUPT";
+  return { cause: "CORRUPT" };
 }
 
 export interface OpenSessionJournalOptions {
@@ -285,7 +276,7 @@ export class SessionJournal {
   ) {}
 
   status(): JournalStatus {
-    return this.current.kind === "ready" ? { kind: "ready" } : { ...this.current };
+    return { ...this.current };
   }
 
   /** The stored load counter, retained even when no new load can be acquired. Zero without an envelope. */
@@ -332,11 +323,17 @@ export class SessionJournal {
       this.current = { kind: "unavailable", cause: "NO_STORE" };
       return this;
     }
+    const parsed = raw === null ? null : parseEnvelope(raw, this.budget);
     if (quarantined !== null) {
-      this.current = { kind: "evidence-lost", cause: quarantinedCause(quarantined) };
+      const { cause, snapshot } = readQuarantine(quarantined);
+      this.current = { kind: "evidence-lost", cause };
+      const trusted = snapshot ? parseEnvelope(snapshot, this.budget) : null;
+      if (trusted?.kind === "ok") {
+        this.env = parsed?.kind === "ok" && extendsHistory(trusted.env, parsed.env) ? parsed.env : trusted.env;
+      }
       return this;
     }
-    if (raw === null) {
+    if (parsed === null) {
       const fresh: Envelope = { v: SESSION_JOURNAL_VERSION, loads: 1, nextSeq: 1, records: [] };
       if (this.persist(fresh) !== null) {
         this.current = { kind: "unavailable", cause: "WRITE_REFUSED" };
@@ -345,7 +342,6 @@ export class SessionJournal {
       this.env = fresh;
       return this;
     }
-    const parsed = parseEnvelope(raw, this.budget);
     if (parsed.kind === "bad") {
       this.quarantine(raw, parsed.cause);
       return this;
@@ -366,21 +362,27 @@ export class SessionJournal {
   }
 
   /** Fences a damaged, missing, or divergent journal. Valid histories are kept in place for inspection. */
-  private quarantine(raw: string | null, cause: EvidenceLostCause, preserveHistory = false): void {
+  private quarantine(raw: string | null, cause: EvidenceLostCause, trusted?: Envelope): void {
     this.current = { kind: "evidence-lost", cause };
-    if (!preserveHistory) this.env = null;
+    if (!trusted) this.env = null;
     const store = this.store;
     if (store === null) {
       return;
     }
-    try {
-      const quarantined = preserveHistory ? "" : (raw ?? "").slice(0, this.budget.maxBytes);
-      const marker = JSON.stringify({ v: SESSION_JOURNAL_VERSION, cause, raw: quarantined });
-      store.setItem(SESSION_JOURNAL_QUARANTINE_KEY, marker);
-      if (store.getItem(SESSION_JOURNAL_QUARANTINE_KEY) !== marker || preserveHistory) return;
-    } catch {
-      return;
-    }
+    const writeMarker = (snapshot: string): boolean => {
+      try {
+        if (store.getItem(SESSION_JOURNAL_QUARANTINE_KEY) !== null) return false;
+        const marker = JSON.stringify({ v: SESSION_JOURNAL_VERSION, cause, raw: snapshot });
+        store.setItem(SESSION_JOURNAL_QUARANTINE_KEY, marker);
+        return store.getItem(SESSION_JOURNAL_QUARANTINE_KEY) === marker;
+      } catch {
+        return false;
+      }
+    };
+    // Preserve the trusted envelope even when the primary key refuses restoration.
+    const saved = writeMarker(trusted ? serialize(trusted) : (raw ?? "").slice(0, this.budget.maxBytes));
+    if (trusted && !saved) writeMarker("");
+    if (trusted || !saved) return;
     try {
       if (store.getItem(SESSION_JOURNAL_KEY) === raw) store.removeItem(SESSION_JOURNAL_KEY);
     } catch {
@@ -425,11 +427,9 @@ export class SessionJournal {
     try {
       // Restore only our own failed write or a truncated prefix of it.
       const observed = store.getItem(SESSION_JOURNAL_KEY);
-      if (observed === expected || observed === null || !text.startsWith(observed)) return "WRITE_REFUSED";
-      if (expected === null) {
-        store.removeItem(SESSION_JOURNAL_KEY);
-      } else {
-        store.setItem(SESSION_JOURNAL_KEY, expected);
+      if (observed !== expected && observed !== null && text.startsWith(observed)) {
+        if (expected === null) store.removeItem(SESSION_JOURNAL_KEY);
+        else store.setItem(SESSION_JOURNAL_KEY, expected);
       }
     } catch {
       // The store is not usable. The next verify decides what that means.
@@ -446,7 +446,7 @@ export class SessionJournal {
     try {
       const marker = this.store.getItem(SESSION_JOURNAL_QUARANTINE_KEY);
       if (marker !== null) {
-        this.current = { kind: "evidence-lost", cause: quarantinedCause(marker) };
+        this.current = { kind: "evidence-lost", cause: readQuarantine(marker).cause };
         return this.status();
       }
       raw = this.store.getItem(SESSION_JOURNAL_KEY);
@@ -470,7 +470,7 @@ export class SessionJournal {
     if (this.env && !extendsHistory(this.env, parsed.env)) {
       // A true rollback can be restored. A divergent history may hold additional unresolved writes.
       if (!extendsHistory(parsed.env, this.env) || this.persist(this.env, raw) !== null) {
-        this.quarantine(raw, "LOST_DURING_SESSION", true);
+        this.quarantine(raw, "LOST_DURING_SESSION", this.env);
       }
     } else {
       this.env = parsed.env;
@@ -574,15 +574,16 @@ export class SessionJournal {
     if (found.outcome !== "IN_FLIGHT") {
       return { ok: false, reason: "NOT_IN_FLIGHT" };
     }
+    const record = { ...found, outcome, code };
     const next: Envelope = {
       ...env,
-      records: env.records.map((item) => (item.intentRef === intentRef ? { ...item, outcome, code } : copyRecord(item))),
+      records: env.records.map((item) => item === found ? record : item),
     };
     if (this.persist(next) !== null) {
       return { ok: false, reason: "WRITE_REFUSED" };
     }
     this.env = next;
-    return { ok: true, record: copyRecord(next.records.find((item) => item.intentRef === intentRef) as SessionRecord) };
+    return { ok: true, record: copyRecord(record) };
   }
 
   /**
@@ -632,7 +633,7 @@ export function peekSessionJournal(store: Pick<SessionStorePort, "getItem"> | nu
   try {
     const marker = store.getItem(SESSION_JOURNAL_QUARANTINE_KEY);
     if (marker !== null) {
-      return { kind: "evidence-lost", cause: quarantinedCause(marker, true) };
+      return { kind: "evidence-lost", cause: readQuarantine(marker).cause };
     }
     const raw = store.getItem(SESSION_JOURNAL_KEY);
     if (raw === null) return { kind: "empty" };

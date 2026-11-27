@@ -353,6 +353,43 @@ function httpDesk(observation: TransportObservation, invoke: () => Promise<unkno
   });
 }
 
+it.each(["confirmed", "lost"] as const)("uses matching consent from an earlier subject attempt when authorization is %s", async outcome => {
+  const eventId = `consent-older-${outcome}`;
+  const key = `kix-consent-intent:stub:${eventId}`;
+  const store = memoryStore();
+  const { desk, calls } = stubDesk(async (input, shape) => {
+    const receipt = await shape.invokeLocalCall(input);
+    if (input.action === "authorize_marketing" && outcome === "lost") {
+      throw new ProtocolError("lost", "REQUEST_TIMEOUT", { requestId: "req-loss", correlationId: "corr-loss" });
+    }
+    return receipt;
+  }, store);
+  await desk.send(eventId, "set_consent", DRAFT);
+  await desk.send(eventId, "set_consent", { ...DRAFT, subject: "subject-b" });
+  await desk.send(eventId, "authorize_marketing", { ...DRAFT, expectedConsentVersion: "1" });
+
+  const consentId = `cns:${eventId}:1:set_consent`;
+  const authorizationId = `cns:${eventId}:2:authorize_marketing`;
+  expect(calls.map((call) => call.operationId)).toEqual([
+    consentId, `cns:${eventId}:2:set_consent`, authorizationId,
+  ]);
+  expect(desk.getSnapshot().events[0]?.evidence[2]).toMatchObject({
+    operationId: authorizationId, consentOperationId: consentId, scope: { subject: DRAFT.subject },
+    status: outcome === "confirmed" ? "confirmed" : "unconfirmed",
+  });
+  if (outcome === "confirmed") {
+    expect(store.getItem(key)).toBeNull();
+  } else {
+    const reopened = stubDesk((input, shape) => shape.invokeLocalCall(input), store);
+    await reopened.desk.send(eventId, "set_consent", DRAFT);
+    expect(reopened.calls).toHaveLength(0);
+    expect(reopened.desk.view(eventId).rows).toMatchObject([
+      { status: "confirmed", operationId: consentId, receipt: null },
+      { status: "unconfirmed", operationId: authorizationId, code: "UNKNOWN" },
+    ]);
+  }
+});
+
 it("retains scope-bound consent history and holds a mounted desk and a reload", async () => {
   const eventId = "consent-intent-shared";
   const key = `kix-consent-intent:stub:${eventId}`;

@@ -392,13 +392,17 @@ describe("pinned fixture on the market", () => {
 });
 
 describe("market fixture write-ahead ownership", () => {
-  it.each(["truncated", "replaced", "remove-refused"] as const)("fences a %s intent in the mounted panel and on reload", async fault => {
+  it.each(["truncated", "replaced", "remove-refused", "deleted-with-response-loss"] as const)("fences a %s intent in the mounted panel and on reload", async fault => {
     const key = "kix-resale-intent:stub";
     const store = memoryStore();
     const adapter = new StubProtocolAdapter();
     const send = vi.spyOn(adapter, "advanceCommerceJourney").mockImplementationOnce(async input => {
       const result = await StubProtocolAdapter.prototype.advanceCommerceJourney.call(adapter, input);
       if (fault === "replaced") store.setItem(key, JSON.stringify({ replaced: true }));
+      if (fault === "deleted-with-response-loss") {
+        store.removeItem(key);
+        throw new Error("result lost after apply");
+      }
       return result;
     });
     if (fault === "truncated") {
@@ -416,6 +420,7 @@ describe("market fixture write-ahead ownership", () => {
     const owned = store.getItem(key);
     expect(owned).not.toBeNull();
     if (fault === "replaced") expect(owned).toBe('{"replaced":true}');
+    if (fault === "deleted-with-response-loss") expect(owned).toBe("SESSION_EVIDENCE_LOST");
     await session.run(session.journey.state().next!);
     const reopened = new MarketJourneySession(adapter, store, "stub");
     await rerender(<ResaleJourneyPanel session={reopened} />);
