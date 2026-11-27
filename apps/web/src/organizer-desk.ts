@@ -1,4 +1,5 @@
 import { pageOutcomes } from "./diagnostics/outcomes";
+import { notifyStoreListeners } from "./notify-store-listeners";
 import { messages as sourceCopy } from "./i18n/messages/organizer-desk";
 import { sourceMessage } from "./i18n/source-message";
 import { connectivityInvoker, connectedHandler } from "./connectivity/write-guard";
@@ -543,9 +544,7 @@ export class OrganizerDesk {
       this.snapshot.events.map((item) => ({ refId: item.eventId, rows: item.rows })),
       next.events.map((item) => ({ refId: item.eventId, rows: item.rows })));
     this.snapshot = next;
-    for (const listener of this.listeners) {
-      listener();
-    }
+    notifyStoreListeners(this.listeners);
   }
 
   private buildSnapshot(): OrganizerDeskSnapshot {

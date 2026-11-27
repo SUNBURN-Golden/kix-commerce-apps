@@ -1,4 +1,5 @@
 import { sweepExport } from "../receipt-redaction";
+import { notifyStoreListeners } from "../notify-store-listeners";
 
 export const DIAGNOSTICS_OUTCOME_LIMIT = 10;
 type Context = "journey" | "gift" | "consent" | "organizer";
@@ -73,7 +74,7 @@ export function createOutcomeRecord() {
       if (!added.length && next.every((item, index) => JSON.stringify(item.row) === JSON.stringify(held[index]?.row))) return;
       held = next;
       snapshot = { outcomes: held.map((item) => item.row), omittedOutcomeCount: snapshot.omittedOutcomeCount + Math.max(0, all.length - DIAGNOSTICS_OUTCOME_LIMIT) };
-      listeners.forEach((listener) => listener());
+      notifyStoreListeners(listeners);
     },
   };
 }

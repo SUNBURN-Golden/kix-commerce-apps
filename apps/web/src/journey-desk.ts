@@ -1,4 +1,5 @@
 import { pageOutcomes } from "./diagnostics/outcomes";
+import { notifyStoreListeners } from "./notify-store-listeners";
 import { messages as sourceCopy } from "./i18n/messages/journey-desk";
 import { sourceMessage } from "./i18n/source-message";
 import { connectivityInvoker, connectedHandler } from "./connectivity/write-guard";
@@ -462,9 +463,7 @@ export class JourneyDesk {
       this.snapshot.journeys.map((item) => ({ refId: item.eventId, rows: item.rows })),
       next.journeys.map((item) => ({ refId: item.eventId, rows: item.rows })));
     this.snapshot = next;
-    for (const listener of this.listeners) {
-      listener();
-    }
+    notifyStoreListeners(this.listeners);
   }
 
   private buildSnapshot(): JourneyDeskSnapshot {

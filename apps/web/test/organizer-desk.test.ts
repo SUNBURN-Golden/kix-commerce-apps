@@ -30,6 +30,38 @@ const DRAFT: OrganizerDraft = {
 };
 
 describe("organizer desk", () => {
+  it("keeps the shared create intent fenced when an in-flight subscriber throws", async () => {
+    const eventId = "organizer-throwing-subscriber";
+    const store = memoryStore();
+    let release = () => {};
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    const { desk, calls } = stubDesk(async () => {
+      await gate;
+      throw new ProtocolError("lost response", "REQUEST_TIMEOUT", {
+        requestId: "req-subscriber", correlationId: "corr-subscriber",
+      });
+    }, store);
+    desk.retain(eventId);
+    desk.subscribe(() => {
+      if (desk.view(eventId).rows[0]?.status === "in-flight") throw new Error("subscriber failed");
+    });
+    const statuses: (string | undefined)[] = [];
+    desk.subscribe(() => statuses.push(desk.view(eventId).rows[0]?.status));
+
+    const sending = desk.sendItem(eventId, "create_event", DRAFT);
+    const reopened = stubDesk((input, shape) => shape.invokeLocalCall(input), store);
+    const blocked = await reopened.desk.sendItem(eventId, "create_event", DRAFT);
+    release();
+    expect(await sending).toMatchObject({ status: "UNKNOWN", code: "REQUEST_TIMEOUT" });
+    expect(blocked).toMatchObject({ status: "FENCED" });
+    expect(reopened.calls).toHaveLength(0);
+    expect(calls).toHaveLength(1);
+    expect(statuses).toEqual(["in-flight", "unconfirmed"]);
+    const recovered = stubDesk((input, shape) => shape.invokeLocalCall(input), store);
+    await recovered.desk.sendItem(eventId, "create_event", DRAFT);
+    expect(recovered.calls).toHaveLength(0);
+  });
+
   it("uses the submitted invitation draft after the caller mutates it", async () => {
     let release = () => {};
     const gate = new Promise<void>((resolve) => { release = resolve; });

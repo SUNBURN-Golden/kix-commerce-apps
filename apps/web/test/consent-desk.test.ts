@@ -22,6 +22,38 @@ const DRAFT: ConsentDraft = {
 };
 
 describe("consent desk", () => {
+  it("keeps the consent intent fenced when an in-flight subscriber throws", async () => {
+    const eventId = "consent-throwing-subscriber";
+    const store = memoryStore();
+    let release = () => {};
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    const { desk, calls } = stubDesk(async () => {
+      await gate;
+      throw new ProtocolError("lost response", "REQUEST_TIMEOUT", {
+        requestId: "req-subscriber", correlationId: "corr-subscriber",
+      });
+    }, store);
+    desk.retain(eventId);
+    desk.subscribe(() => {
+      if (desk.view(eventId).rows[0]?.status === "in-flight") throw new Error("subscriber failed");
+    });
+    const statuses: (string | undefined)[] = [];
+    desk.subscribe(() => statuses.push(desk.view(eventId).rows[0]?.status));
+
+    const sending = desk.send(eventId, "set_consent", DRAFT);
+    const reopened = stubDesk((input, shape) => shape.invokeLocalCall(input), store);
+    await reopened.desk.send(eventId, "set_consent", DRAFT);
+    release();
+    await sending;
+    expect(desk.view(eventId).rows[0]).toMatchObject({ status: "unconfirmed", code: "REQUEST_TIMEOUT" });
+    expect(reopened.calls).toHaveLength(0);
+    expect(calls).toHaveLength(1);
+    expect(statuses).toEqual(["in-flight", "unconfirmed"]);
+    const recovered = stubDesk((input, shape) => shape.invokeLocalCall(input), store);
+    await recovered.desk.send(eventId, "set_consent", DRAFT);
+    expect(recovered.calls).toHaveLength(0);
+  });
+
   it("owns submitted scopes and typed outcomes, independent of drafts and snapshot mutations", async () => {
     let release = () => {};
     const gate = new Promise<void>((resolve) => { release = resolve; });

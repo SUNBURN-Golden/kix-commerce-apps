@@ -570,7 +570,11 @@ it("fences divergent histories without replacing a newer journal or dropping its
   expect(second.verify()).toEqual(lost);
   expect([second.load(), second.nextSeq()]).toEqual([2, 3]);
   expect(second.records()[1]).toMatchObject({ intentRef: "intent-2", outcome: "UNKNOWN", code: "RESPONSE_LOST" });
-  expect(begin(openSessionJournal(store), 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+  const reopened = openSessionJournal(store);
+  expect(reopened.status()).toEqual(lost);
+  expect(reopened.records()).toEqual([first.records()[0], second.records()[1]]);
+  expect([reopened.load(), reopened.nextSeq()]).toEqual([2, 3]);
+  expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
   expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(newer);
 });
 
@@ -618,4 +622,5 @@ it.each(["scope", "outcome"] as const)("fences a divergent rewrite of a trusted 
   expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(rewritten);
   expect(journal.records()).toMatchObject([{ scope: "subject-1", outcome: "UNKNOWN" }]);
   expect(journal.scopeBlock("subject-1")).toMatchObject({ reason: "evidence-lost" });
+  expect(openSessionJournal(store).records()).toEqual(journal.records());
 });

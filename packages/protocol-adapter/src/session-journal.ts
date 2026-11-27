@@ -242,6 +242,19 @@ function extendsHistory(trusted: Envelope, candidate: Envelope): boolean {
   });
 }
 
+/** A quarantined view keeps trusted UNKNOWN codes and can show a compatible primary suffix. */
+function quarantinedHistory(trusted: Envelope, primary: Envelope): Envelope {
+  const records = primary.records.map((record, index) => {
+    const previous = trusted.records[index];
+    // A failed settle can leave two diagnostics for the same unresolved write.
+    return record.outcome === "UNKNOWN" && previous?.outcome === "UNKNOWN" && record.code !== previous.code
+      ? { ...record, code: previous.code }
+      : record;
+  });
+  const candidate = { ...primary, records };
+  return extendsHistory(trusted, candidate) ? candidate : trusted;
+}
+
 function readQuarantine(text: string): { cause: EvidenceLostCause; snapshot?: string } {
   try {
     const { v, cause, raw }: Record<string, unknown> = JSON.parse(text);
@@ -329,7 +342,7 @@ export class SessionJournal {
       this.current = { kind: "evidence-lost", cause };
       const trusted = snapshot ? parseEnvelope(snapshot, this.budget) : null;
       if (trusted?.kind === "ok") {
-        this.env = parsed?.kind === "ok" && extendsHistory(trusted.env, parsed.env) ? parsed.env : trusted.env;
+        this.env = parsed?.kind === "ok" ? quarantinedHistory(trusted.env, parsed.env) : trusted.env;
       }
       return this;
     }
