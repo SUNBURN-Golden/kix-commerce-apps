@@ -229,29 +229,39 @@ function parseEnvelope(raw: string, budget: SessionJournalBudget): Parsed {
   return { kind: "ok", env };
 }
 
+function sameIntent(left: SessionRecord, right: SessionRecord): boolean {
+  return RECORD_IDENTITY_KEYS.every((key) => left[key] === right[key]);
+}
+
 function extendsHistory(trusted: Envelope, candidate: Envelope): boolean {
   if (candidate.loads < trusted.loads || candidate.nextSeq < trusted.nextSeq ||
       candidate.records.length < trusted.records.length) return false;
   return candidate.records.every((record, index) => {
     const previous = trusted.records[index];
     if (previous === undefined) return record.seq >= trusted.nextSeq && record.loadNo >= trusted.loads;
-    if (RECORD_IDENTITY_KEYS.some((key) => record[key] !== previous[key])) return false;
+    if (!sameIntent(record, previous)) return false;
     // Only in-flight intents may change their outcome. UNKNOWN and all other
     // terminal results keep their original codes and cannot be resolved here.
     return record.outcome === previous.outcome ? record.code === previous.code : previous.outcome === "IN_FLIGHT";
   });
 }
 
-/** A quarantined view keeps trusted outcomes and can show a compatible primary suffix. */
+/** Keep compatible appended intents for inspection while the session is fenced. */
 function quarantinedHistory(trusted: Envelope, primary: Envelope): Envelope {
-  const records = primary.records.map((record, index) => {
+  if (primary.records.length < trusted.records.length) return trusted;
+  const compatible = primary.records.every((record, index) => {
     const previous = trusted.records[index];
-    // A rollback can change the outcome seen by another journal without changing the intent.
-    // Keep our outcome while extendsHistory checks identities and the appended records.
-    return previous ? { ...record, outcome: previous.outcome, code: previous.code } : record;
+    return previous === undefined ? record.seq >= trusted.nextSeq : sameIntent(record, previous);
   });
-  const candidate = { ...primary, records };
-  return extendsHistory(trusted, candidate) ? candidate : trusted;
+  if (!compatible) return trusted;
+  // A journal opened from a rollback can append at a lower load. Keep the original
+  // load on each intent, the trusted outcomes, and the highest observed counters.
+  return {
+    ...trusted,
+    loads: Math.max(trusted.loads, primary.loads),
+    nextSeq: Math.max(trusted.nextSeq, primary.nextSeq),
+    records: [...trusted.records, ...primary.records.slice(trusted.records.length)].map(copyRecord),
+  };
 }
 
 function readQuarantine(text: string): { cause: EvidenceLostCause; snapshot?: string } {

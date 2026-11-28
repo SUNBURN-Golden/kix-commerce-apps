@@ -619,6 +619,42 @@ it("keeps a pending intent appended after another journal recovered a rolled-bac
   expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
 });
 
+it("checkpoints an unresolved intent appended at an older load while retaining the load high-water mark", () => {
+  const store = new FakeSessionStore();
+  const first = openSessionJournal(store);
+  expect(begin(first, 1).ok).toBe(true);
+  const older = store.getItem(SESSION_JOURNAL_KEY)!;
+  openSessionJournal(store);
+  openSessionJournal(store);
+  expect(first.verify()).toEqual({ kind: "ready" });
+  expect([first.load(), first.nextSeq()]).toEqual([3, 2]);
+  const trusted = first.records()[0];
+
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  const second = openSessionJournal(store);
+  const pending = begin(second, 2);
+  expect(pending).toMatchObject({ ok: true, record: { seq: 2, outcome: "IN_FLIGHT", loadNo: 2 } });
+  expect([second.load(), second.nextSeq()]).toEqual([2, 3]);
+  const branch = store.getItem(SESSION_JOURNAL_KEY);
+
+  const lost = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
+  expect(first.verify()).toEqual(lost);
+  expect(first.records()).toEqual([trusted, second.records()[1]]);
+  expect([first.load(), first.nextSeq()]).toEqual([3, 3]);
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(branch);
+
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  const reopened = openSessionJournal(store);
+  expect(reopened.status()).toEqual(lost);
+  expect(reopened.records()).toEqual([
+    trusted,
+    { ...second.records()[1], outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" },
+  ]);
+  expect([reopened.load(), reopened.nextSeq()]).toEqual([3, 3]);
+  expect(reopened.scopeBlock("subject-2")).toMatchObject({ reason: "evidence-lost" });
+  expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+});
+
 it.each(["UNKNOWN", "IN_FLIGHT"] as const)("keeps a divergent journal's %s suffix across a second rollback under quota", outcome => {
   const store = new FakeSessionStore();
   const first = openSessionJournal(store);
