@@ -503,6 +503,43 @@ it("restores clean history and the load/sequence counters when storage is rolled
   expect(begin(reopened, 1)).toEqual({ ok: false, reason: "DUPLICATE_INTENT" });
 });
 
+it.each(["before write", "during readback"])("checkpoints the earlier intent when begin detects rollback %s", timing => {
+  const store = new FakeSessionStore();
+  openSessionJournal(store);
+  const older = store.getItem(SESSION_JOURNAL_KEY)!;
+  const journal = openSessionJournal(store);
+  expect(begin(journal, 1).ok).toBe(true);
+
+  const get = store.getItem.bind(store);
+  let rollBack = true;
+  store.getItem = key => {
+    const value = get(key);
+    if (key === SESSION_JOURNAL_KEY && rollBack && timing === "before write") {
+      rollBack = false;
+      // The gate sees the trusted value, but the pre-write comparison sees the rollback.
+      store.data.set(key, older);
+    }
+    return value;
+  };
+  const set = store.setItem.bind(store);
+  store.setItem = (key, value) => {
+    if (key === SESSION_JOURNAL_KEY && rollBack && timing === "during readback") {
+      rollBack = false;
+      set(key, older);
+    } else {
+      set(key, value);
+    }
+  };
+
+  expect(begin(journal, 2)).toEqual({ ok: false, reason: "WRITE_REFUSED" });
+  const reopened = openSessionJournal(store);
+  expect(reopened.status()).toEqual({ kind: "evidence-lost", cause: "LOST_DURING_SESSION" });
+  expect(reopened.records()).toMatchObject([{ intentRef: "intent-1", outcome: "UNKNOWN" }]);
+  expect([reopened.load(), reopened.nextSeq()]).toEqual([2, 2]);
+  expect(reopened.scopeBlock("subject-1")).toMatchObject({ reason: "evidence-lost" });
+  expect(begin(reopened, 2)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+});
+
 it("rejects equal-counter outcome rollback and adopts a legitimate forward extension", () => {
   const store = new FakeSessionStore();
   const journal = openSessionJournal(store);
@@ -770,7 +807,13 @@ it.each(["UNKNOWN", "IN_FLIGHT"] as const)("keeps a divergent journal's %s suffi
   expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(older);
 });
 
-it.each(["during readback", "after verification"])("preserves a competing write when storage rolls back again %s", timing => {
+it.each([
+  { timing: "during readback", marker: "empty" },
+  { timing: "after verification", marker: "empty" },
+  { timing: "during readback", marker: "installed" },
+  { timing: "after verification", marker: "replaced" },
+  { timing: "during readback", marker: "removed again" },
+])("preserves a competing write when storage rolls back again $timing with quarantine $marker", ({ timing, marker }) => {
   const store = new FakeSessionStore();
   const journal = openSessionJournal(store);
   const older = store.getItem(SESSION_JOURNAL_KEY)!;
@@ -780,13 +823,20 @@ it.each(["during readback", "after verification"])("preserves a competing write 
   expect(begin(other, 2).ok).toBe(true);
   const newer = store.getItem(SESSION_JOURNAL_KEY)!;
   const pending = other.records();
+  const markerRecord = { ...journalRecord, scope: "marker-scope", intentRef: "marker-intent", loadNo: 3 };
+  const markerSnapshot = blob({ loads: 3, nextSeq: 4 }, [markerRecord]);
   store.data.set(SESSION_JOURNAL_KEY, older);
   const set = store.setItem.bind(store);
   let replace = true;
+  let replaceMarker = marker === "replaced" || marker === "removed again";
   store.setItem = (key, value) => {
     if (key === SESSION_JOURNAL_KEY && replace) {
       replace = false;
       set(key, newer);
+      if (marker === "installed") set(SESSION_JOURNAL_QUARANTINE_KEY, markerSnapshot);
+    } else if (key === SESSION_JOURNAL_QUARANTINE_KEY && replaceMarker) {
+      replaceMarker = false;
+      set(key, markerSnapshot);
     } else {
       set(key, value);
     }
@@ -797,23 +847,28 @@ it.each(["during readback", "after verification"])("preserves a competing write 
     if (key === SESSION_JOURNAL_KEY && value === newer && timing === "during readback") {
       store.data.set(key, older);
     }
+    if (key === SESSION_JOURNAL_QUARANTINE_KEY && marker === "removed again" && value === markerSnapshot) {
+      store.data.delete(key);
+    }
     return value;
   };
 
   const lost = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
   expect(journal.verify()).toEqual(lost);
   expect(get(SESSION_JOURNAL_KEY)).toBe(timing === "during readback" ? older : newer);
-  expect(journal.records()).toEqual(pending);
-  expect([journal.load(), journal.nextSeq()]).toEqual([2, 3]);
+  const checkpoint = marker === "empty" ? pending : [markerRecord, ...pending];
+  const counters = marker === "empty" ? [2, 3] : [3, 4];
+  expect(journal.records()).toEqual(checkpoint);
+  expect([journal.load(), journal.nextSeq()]).toEqual(counters);
 
   store.data.set(SESSION_JOURNAL_KEY, older);
   const reopened = openSessionJournal(store);
   expect(reopened.status()).toEqual(lost);
   expect(reopened.records()).toEqual([
-    pending[0],
+    ...checkpoint.slice(0, -1),
     { ...pending[1], outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" },
   ]);
-  expect([reopened.load(), reopened.nextSeq()]).toEqual([2, 3]);
+  expect([reopened.load(), reopened.nextSeq()]).toEqual(counters);
   expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
 });
 

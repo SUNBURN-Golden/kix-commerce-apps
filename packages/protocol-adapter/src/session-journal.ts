@@ -285,23 +285,37 @@ function writeVerified(
   key: string,
   expected: string | null,
   text: string,
-  observeConflict?: (raw: string) => void,
+  observeConflict?: (raw: string | null) => void,
 ): boolean {
-  const read = () => {
+  let before: string | null;
+  try {
+    before = store.getItem(key);
+  } catch {
+    return false;
+  }
+  if (before !== expected) {
+    observeConflict?.(before);
+    return false;
+  }
+
+  let sawConflict = false;
+  const readBack = () => {
     const observed = store.getItem(key);
-    if (observed !== null && observed !== expected && observed !== text) observeConflict?.(observed);
+    if ((sawConflict || observed !== expected) && (observed === null || !text.startsWith(observed))) {
+      sawConflict = true;
+      observeConflict?.(observed);
+    }
     return observed;
   };
   try {
-    if (read() !== expected) return false;
     store.setItem(key, text);
-    if (read() === text) return true;
+    if (readBack() === text) return true;
   } catch {
     // Check for a partial write before restoring.
   }
   try {
-    const observed = read();
-    if (observed !== expected && observed !== null && text.startsWith(observed)) {
+    const observed = readBack();
+    if (!sawConflict && observed !== expected && observed !== null && text.startsWith(observed)) {
       if (expected === null) store.removeItem(key);
       else store.setItem(key, expected);
     }
@@ -443,29 +457,58 @@ export class SessionJournal {
     }
   }
 
-  /** Fences a damaged, missing, or divergent journal. Valid histories are kept in place for inspection. */
-  private quarantine(raw: string | null, cause: EvidenceLostCause, histories?: { trusted: Envelope; candidate: Envelope }): void {
+  /** Fences a damaged or missing journal. */
+  private quarantine(raw: string | null, cause: EvidenceLostCause): void {
     this.current = { kind: "evidence-lost", cause };
-    if (!histories) this.env = null;
+    this.env = null;
     const store = this.store;
     if (store === null) {
       return;
     }
-    const writeMarker = (marker: string) => writeVerified(store, SESSION_JOURNAL_QUARANTINE_KEY, null, marker);
-    // Preserve the trusted envelope even when the primary key refuses restoration.
-    const lossMarker = (snapshot: string) => JSON.stringify({ v: SESSION_JOURNAL_VERSION, cause, raw: snapshot });
-    if (histories) {
-      // Checkpoint both histories before another rollback can hide either branch.
-      const combined = quarantinedHistory(histories.trusted, histories.candidate);
-      if (writeMarker(serialize(combined))) this.env = combined;
-      else if (combined === histories.trusted || !writeMarker(serialize(histories.trusted))) writeMarker(lossMarker(""));
-      return;
-    }
-    if (!writeMarker(lossMarker((raw ?? "").slice(0, this.budget.maxBytes)))) return;
+    const marker = JSON.stringify({ v: SESSION_JOURNAL_VERSION, cause, raw: (raw ?? "").slice(0, this.budget.maxBytes) });
+    if (!writeVerified(store, SESSION_JOURNAL_QUARANTINE_KEY, null, marker)) return;
     try {
       if (store.getItem(SESSION_JOURNAL_KEY) === raw) store.removeItem(SESSION_JOURNAL_KEY);
     } catch {
       // The quarantine entry already marks the session as lost.
+    }
+  }
+
+  /** Checkpoint all observed branches before another rollback can hide them. */
+  private quarantineHistory(trusted: Envelope, history: Envelope): void {
+    const cause = "LOST_DURING_SESSION";
+    this.current = { kind: "evidence-lost", cause };
+    const store = this.store;
+    if (store === null) return;
+
+    let combined = history;
+    let expected: string | null = null;
+    let markerChanged = false;
+    const save = (text: string) => {
+      markerChanged = false;
+      return writeVerified(store, SESSION_JOURNAL_QUARANTINE_KEY, expected, text, marker => {
+        if (marker === expected) return;
+        markerChanged = true;
+        expected = marker;
+        if (marker === null) return;
+        const { snapshot } = readQuarantine(marker);
+        const parsed = snapshot === undefined ? null : parseEnvelope(snapshot);
+        if (parsed?.kind === "ok") combined = quarantinedHistory(parsed.env, combined);
+      });
+    };
+    // The marker can be installed before the comparison or during readback.
+    // Compare against the observed marker before replacing it with merged evidence.
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      if (save(serialize(combined))) {
+        this.env = combined;
+        return;
+      }
+      if (markerChanged) continue;
+      if (expected !== null) return;
+      // Under quota, preserve at least the trusted history or the session fence.
+      if (combined !== trusted && save(serialize(trusted))) return;
+      if (!markerChanged && save(JSON.stringify({ v: SESSION_JOURNAL_VERSION, cause, raw: "" }))) return;
+      if (!markerChanged) return;
     }
   }
 
@@ -487,7 +530,7 @@ export class SessionJournal {
   private persist(
     env: Envelope,
     expected = this.lastWritten,
-    observeConflict?: (raw: string) => void,
+    observeConflict?: (raw: string | null) => void,
   ): "JOURNAL_FULL" | "WRITE_REFUSED" | null {
     const store = this.store;
     if (store === null) {
@@ -497,7 +540,21 @@ export class SessionJournal {
     if (byteLength(text) > this.budget.maxBytes) {
       return "JOURNAL_FULL";
     }
-    if (!writeVerified(store, SESSION_JOURNAL_KEY, expected, text, observeConflict)) return "WRITE_REFUSED";
+    const trusted = this.env;
+    let history = trusted;
+    let divergent = false;
+    const observe = observeConflict ?? (raw => {
+      if (history === null) return;
+      const parsed = raw === null ? null : parseEnvelope(raw, this.budget);
+      if (parsed?.kind === "bad") return;
+      divergent ||= parsed === null || !extendsHistory(history, parsed.env);
+      if (parsed !== null) history = divergent ? quarantinedHistory(history, parsed.env) : parsed.env;
+    });
+    if (!writeVerified(store, SESSION_JOURNAL_KEY, expected, text, observe)) {
+      // A failed comparison can be the only observation of a rollback before reload.
+      if (divergent && trusted && history) this.quarantineHistory(trusted, quarantinedHistory(trusted, history));
+      return "WRITE_REFUSED";
+    }
     this.lastWritten = text;
     return null;
   }
@@ -537,10 +594,11 @@ export class SessionJournal {
       let candidate = parsed.env;
       // Capture competing history during restoration before another rollback can hide it.
       if (extendsHistory(candidate, trusted) && this.persist(trusted, raw, observed => {
+        if (observed === null) return;
         const competing = parseEnvelope(observed, this.budget);
         if (competing.kind === "ok") candidate = quarantinedHistory(candidate, competing.env);
       }) === null) return this.status();
-      this.quarantine(raw, "LOST_DURING_SESSION", { trusted, candidate });
+      this.quarantineHistory(trusted, quarantinedHistory(trusted, candidate));
     } else {
       this.env = parsed.env;
       this.lastWritten = raw;
