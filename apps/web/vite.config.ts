@@ -126,8 +126,8 @@ export default defineConfig({
   // Preserve the existing size limits for localized copy and the shared app shell.
   build: {
     minify: "terser",
-    // Revisit expressions exposed by the first pass without changing compression safety defaults.
-    terserOptions: { compress: { passes: 2 } },
+    // Revisit expressions exposed by earlier passes without changing compression safety defaults.
+    terserOptions: { compress: { passes: 3 } },
     rollupOptions: {
       output: {
         // Related desk copy shares vocabulary. Compress these lazy catalogues together

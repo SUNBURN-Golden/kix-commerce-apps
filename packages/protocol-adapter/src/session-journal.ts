@@ -280,16 +280,27 @@ function readQuarantine(text: string): { cause: EvidenceLostCause; snapshot?: st
 }
 
 /** Refuses a changed key and restores only a failed write or a truncated prefix of it. */
-function writeVerified(store: SessionStorePort, key: string, expected: string | null, text: string): boolean {
+function writeVerified(
+  store: SessionStorePort,
+  key: string,
+  expected: string | null,
+  text: string,
+  observeConflict?: (raw: string) => void,
+): boolean {
+  const read = () => {
+    const observed = store.getItem(key);
+    if (observed !== null && observed !== expected && observed !== text) observeConflict?.(observed);
+    return observed;
+  };
   try {
-    if (store.getItem(key) !== expected) return false;
+    if (read() !== expected) return false;
     store.setItem(key, text);
-    if (store.getItem(key) === text) return true;
+    if (read() === text) return true;
   } catch {
     // Check for a partial write before restoring.
   }
   try {
-    const observed = store.getItem(key);
+    const observed = read();
     if (observed !== expected && observed !== null && text.startsWith(observed)) {
       if (expected === null) store.removeItem(key);
       else store.setItem(key, expected);
@@ -473,7 +484,11 @@ export class SessionJournal {
   // -- store ---------------------------------------------------------------
 
   /** Writes the envelope and reads it back. Returns a refusal, or null when the store holds exactly this text. */
-  private persist(env: Envelope, expected = this.lastWritten): "JOURNAL_FULL" | "WRITE_REFUSED" | null {
+  private persist(
+    env: Envelope,
+    expected = this.lastWritten,
+    observeConflict?: (raw: string) => void,
+  ): "JOURNAL_FULL" | "WRITE_REFUSED" | null {
     const store = this.store;
     if (store === null) {
       return "WRITE_REFUSED";
@@ -482,7 +497,7 @@ export class SessionJournal {
     if (byteLength(text) > this.budget.maxBytes) {
       return "JOURNAL_FULL";
     }
-    if (!writeVerified(store, SESSION_JOURNAL_KEY, expected, text)) return "WRITE_REFUSED";
+    if (!writeVerified(store, SESSION_JOURNAL_KEY, expected, text, observeConflict)) return "WRITE_REFUSED";
     this.lastWritten = text;
     return null;
   }
@@ -518,10 +533,14 @@ export class SessionJournal {
       return this.status();
     }
     if (this.env && !extendsHistory(this.env, parsed.env)) {
-      // A true rollback can be restored. A divergent history may hold additional unresolved writes.
-      if (!extendsHistory(parsed.env, this.env) || this.persist(this.env, raw) !== null) {
-        this.quarantine(raw, "LOST_DURING_SESSION", { trusted: this.env, candidate: parsed.env });
-      }
+      const trusted = this.env;
+      let candidate = parsed.env;
+      // Capture competing history during restoration before another rollback can hide it.
+      if (extendsHistory(candidate, trusted) && this.persist(trusted, raw, observed => {
+        const competing = parseEnvelope(observed, this.budget);
+        if (competing.kind === "ok") candidate = quarantinedHistory(candidate, competing.env);
+      }) === null) return this.status();
+      this.quarantine(raw, "LOST_DURING_SESSION", { trusted, candidate });
     } else {
       this.env = parsed.env;
       this.lastWritten = raw;

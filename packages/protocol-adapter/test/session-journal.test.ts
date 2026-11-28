@@ -770,7 +770,7 @@ it.each(["UNKNOWN", "IN_FLIGHT"] as const)("keeps a divergent journal's %s suffi
   expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(older);
 });
 
-it("preserves a competing write seen during rollback restoration", () => {
+it.each(["during readback", "after verification"])("preserves a competing write when storage rolls back again %s", timing => {
   const store = new FakeSessionStore();
   const journal = openSessionJournal(store);
   const older = store.getItem(SESSION_JOURNAL_KEY)!;
@@ -779,6 +779,7 @@ it("preserves a competing write seen during rollback restoration", () => {
   const other = openSessionJournal(store);
   expect(begin(other, 2).ok).toBe(true);
   const newer = store.getItem(SESSION_JOURNAL_KEY)!;
+  const pending = other.records();
   store.data.set(SESSION_JOURNAL_KEY, older);
   const set = store.setItem.bind(store);
   let replace = true;
@@ -790,17 +791,30 @@ it("preserves a competing write seen during rollback restoration", () => {
       set(key, value);
     }
   };
+  const get = store.getItem.bind(store);
+  store.getItem = key => {
+    const value = get(key);
+    if (key === SESSION_JOURNAL_KEY && value === newer && timing === "during readback") {
+      store.data.set(key, older);
+    }
+    return value;
+  };
 
-  expect(journal.verify()).toEqual({ kind: "evidence-lost", cause: "LOST_DURING_SESSION" });
-  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(newer);
-  expect(begin(other, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+  const lost = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
+  expect(journal.verify()).toEqual(lost);
+  expect(get(SESSION_JOURNAL_KEY)).toBe(timing === "during readback" ? older : newer);
+  expect(journal.records()).toEqual(pending);
+  expect([journal.load(), journal.nextSeq()]).toEqual([2, 3]);
+
+  store.data.set(SESSION_JOURNAL_KEY, older);
   const reopened = openSessionJournal(store);
-  expect(reopened.status()).toEqual({ kind: "evidence-lost", cause: "LOST_DURING_SESSION" });
+  expect(reopened.status()).toEqual(lost);
   expect(reopened.records()).toEqual([
-    other.records()[0],
-    { ...other.records()[1], outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" },
+    pending[0],
+    { ...pending[1], outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" },
   ]);
   expect([reopened.load(), reopened.nextSeq()]).toEqual([2, 3]);
+  expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
 });
 
 it.each(["scope", "outcome"] as const)("fences a divergent rewrite of a trusted UNKNOWN's %s", field => {
