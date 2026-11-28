@@ -297,6 +297,7 @@ function writeVerified(
     observeConflict?.(before);
     return false;
   }
+  if (text === expected) return true;
 
   let sawConflict = false;
   const readBack = () => {
@@ -430,31 +431,9 @@ export class SessionJournal {
   private observeQuarantine(store: SessionStorePort, marker: string, candidate: Envelope | null, opening: boolean): void {
     const { cause, snapshot } = readQuarantine(marker);
     this.current = { kind: "evidence-lost", cause };
-    const save = (text: string) => writeVerified(store, SESSION_JOURNAL_QUARANTINE_KEY, marker, text);
+    if (cause !== "LOST_DURING_SESSION") return;
     const parsed = snapshot === undefined ? null : parseEnvelope(snapshot);
-    if (parsed?.kind !== "ok") {
-      if (!opening && candidate && cause === "LOST_DURING_SESSION") save(serialize(candidate));
-      return;
-    }
-    const trusted = parsed.env;
-    const env = candidate === null ? trusted : quarantinedHistory(trusted, candidate);
-    const forward = env === trusted ? undefined : serialize(env);
-    if (opening) {
-      this.recoveredAtOpen = this.markInFlight(env, "RECOVERED_AFTER_RELOAD");
-      if (this.recoveredAtOpen > 0 && save(serialize(env))) {
-        this.env = env;
-        return;
-      }
-    }
-    if (forward === undefined || save(forward)) {
-      this.env = env;
-      return;
-    }
-    // If storage refused the extension, recover only the last checkpoint on open.
-    if (opening) {
-      this.env = trusted;
-      this.recoveredAtOpen = this.markInFlight(trusted, "RECOVERED_AFTER_RELOAD");
-    }
+    this.checkpointQuarantine(store, marker, parsed?.kind === "ok" ? parsed.env : null, candidate, opening);
   }
 
   /** Fences a damaged or missing journal. */
@@ -474,15 +453,21 @@ export class SessionJournal {
     }
   }
 
-  /** Checkpoint all observed branches before another rollback can hide them. */
-  private quarantineHistory(trusted: Envelope, history: Envelope): void {
-    const cause = "LOST_DURING_SESSION";
-    this.current = { kind: "evidence-lost", cause };
-    const store = this.store;
-    if (store === null) return;
+  private quarantineHistory(history: Envelope): void {
+    this.current = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
+    if (this.store !== null) this.checkpointQuarantine(this.store, null, null, history, false);
+  }
 
-    let combined = history;
-    let expected: string | null = null;
+  /** Checkpoint all observed branches before another rollback can hide them. */
+  private checkpointQuarantine(
+    store: SessionStorePort,
+    expected: string | null,
+    checkpoint: Envelope | null,
+    candidate: Envelope | null,
+    opening: boolean,
+  ): void {
+    const cause = "LOST_DURING_SESSION";
+    let markerHistory = checkpoint;
     let markerChanged = false;
     const save = (text: string) => {
       markerChanged = false;
@@ -490,25 +475,44 @@ export class SessionJournal {
         if (marker === expected) return;
         markerChanged = true;
         expected = marker;
-        if (marker === null) return;
-        const { snapshot } = readQuarantine(marker);
+        const snapshot = marker === null ? undefined : readQuarantine(marker).snapshot;
         const parsed = snapshot === undefined ? null : parseEnvelope(snapshot);
-        if (parsed?.kind === "ok") combined = quarantinedHistory(parsed.env, combined);
+        checkpoint = parsed?.kind === "ok" ? parsed.env : null;
+        if (checkpoint !== null) {
+          markerHistory = markerHistory === null ? checkpoint : quarantinedHistory(markerHistory, checkpoint);
+        }
       });
     };
-    // The marker can be installed before the comparison or during readback.
-    // Compare against the observed marker before replacing it with merged evidence.
+    // A marker can change before comparison or during readback. Use the latest
+    // observed bytes for the next comparison and keep history from every marker.
     for (let attempt = 0; attempt < 3; attempt += 1) {
-      if (save(serialize(combined))) {
-        this.env = combined;
+      markerChanged = false;
+      const combined = markerHistory !== null && candidate !== null
+        ? quarantinedHistory(markerHistory, candidate)
+        : markerHistory ?? candidate;
+      if (combined === null) return;
+
+      const recovered = opening ? { ...combined, records: combined.records.map(copyRecord) } : combined;
+      const count = opening ? this.markInFlight(recovered, "RECOVERED_AFTER_RELOAD") : 0;
+      const savedRecovery = count > 0 && save(serialize(recovered));
+      if (markerChanged) continue;
+      if (savedRecovery || save(combined === checkpoint && expected !== null ? expected : serialize(combined))) {
+        this.env = recovered;
+        if (opening) this.recoveredAtOpen = count;
         return;
       }
       if (markerChanged) continue;
-      if (expected !== null) return;
-      // Under quota, preserve at least the trusted history or the session fence.
-      if (combined !== trusted && save(serialize(trusted))) return;
+      if (expected !== null) break;
+      // Under quota, preserve at least the in-memory history or the session fence.
+      if (this.env !== null && combined !== this.env && save(serialize(this.env))) return;
       if (!markerChanged && save(JSON.stringify({ v: SESSION_JOURNAL_VERSION, cause, raw: "" }))) return;
-      if (!markerChanged) return;
+      if (!markerChanged) break;
+    }
+    // When the store refuses the extension, show the last saved checkpoint on open.
+    const last = checkpoint ?? markerHistory;
+    if (opening && last !== null) {
+      this.env = last;
+      this.recoveredAtOpen = this.markInFlight(last, "RECOVERED_AFTER_RELOAD");
     }
   }
 
@@ -552,11 +556,24 @@ export class SessionJournal {
     });
     if (!writeVerified(store, SESSION_JOURNAL_KEY, expected, text, observe)) {
       // A failed comparison can be the only observation of a rollback before reload.
-      if (divergent && trusted && history) this.quarantineHistory(trusted, quarantinedHistory(trusted, history));
+      if (divergent && trusted && history) this.quarantineHistory(quarantinedHistory(trusted, history));
       return "WRITE_REFUSED";
     }
     this.lastWritten = text;
     return null;
+  }
+
+  private checkQuarantine(store: SessionStorePort): "EVIDENCE_LOST" | "UNAVAILABLE" | null {
+    let marker: string | null;
+    try {
+      marker = store.getItem(SESSION_JOURNAL_QUARANTINE_KEY);
+    } catch {
+      this.current = { kind: "unavailable", cause: "NO_STORE" };
+      return "UNAVAILABLE";
+    }
+    if (marker === null) return null;
+    this.observeQuarantine(store, marker, this.env, false);
+    return "EVIDENCE_LOST";
   }
 
   /** Compares the store with what this journal last wrote. A cleared or damaged store locks the session. */
@@ -564,13 +581,9 @@ export class SessionJournal {
     if (this.current.kind !== "ready" || this.store === null) {
       return this.status();
     }
+    if (this.checkQuarantine(this.store) !== null) return this.status();
     let raw: string | null;
     try {
-      const marker = this.store.getItem(SESSION_JOURNAL_QUARANTINE_KEY);
-      if (marker !== null) {
-        this.observeQuarantine(this.store, marker, this.env, false);
-        return this.status();
-      }
       raw = this.store.getItem(SESSION_JOURNAL_KEY);
     } catch {
       this.current = { kind: "unavailable", cause: "NO_STORE" };
@@ -598,7 +611,7 @@ export class SessionJournal {
         const competing = parseEnvelope(observed, this.budget);
         if (competing.kind === "ok") candidate = quarantinedHistory(candidate, competing.env);
       }) === null) return this.status();
-      this.quarantineHistory(trusted, quarantinedHistory(trusted, candidate));
+      this.quarantineHistory(quarantinedHistory(trusted, candidate));
     } else {
       this.env = parsed.env;
       this.lastWritten = raw;
@@ -641,7 +654,8 @@ export class SessionJournal {
   /** Records an intent before it is sent. A refusal means the caller must not send. */
   begin(input: BeginInput): BeginResult {
     const held = this.gateStatus();
-    if (held !== null || this.env === null) {
+    const store = this.store;
+    if (held !== null || this.env === null || store === null) {
       return { ok: false, reason: held ?? "UNAVAILABLE" };
     }
     if (!TOKEN.test(input.intentRef) || !TOKEN.test(input.scope) || !TAG.test(input.contextTag)) {
@@ -681,6 +695,9 @@ export class SessionJournal {
       return { ok: false, reason: failed };
     }
     this.env = next;
+    // A competing journal can quarantine the session without changing the primary key.
+    const quarantined = this.checkQuarantine(store);
+    if (quarantined !== null) return { ok: false, reason: quarantined };
     return { ok: true, record: copyRecord(record) };
   }
 

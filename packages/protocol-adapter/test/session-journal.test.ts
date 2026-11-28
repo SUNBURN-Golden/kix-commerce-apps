@@ -872,6 +872,56 @@ it.each([
   expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
 });
 
+it.each(["before checkpoint write", "during checkpoint readback"])("keeps both quarantine markers and newer primary history on reopen when the marker changes %s", timing => {
+  const store = new FakeSessionStore();
+  const older = blob({ nextSeq: 2 }, [journalRecord]);
+  const pending = { ...journalRecord, seq: 2, intentRef: "intent-2", scope: "subject-2", loadNo: 2, outcome: "IN_FLIGHT", code: null };
+  const newer = blob({ loads: 2, nextSeq: 3 }, [journalRecord, pending]);
+  const fork = { ...journalRecord, scope: "fork-scope", loadNo: 3 };
+  const replacement = blob({ loads: 3, nextSeq: 2 }, [fork]);
+  store.data.set(SESSION_JOURNAL_KEY, newer);
+  store.data.set(SESSION_JOURNAL_QUARANTINE_KEY, older);
+
+  const get = store.getItem.bind(store);
+  const set = store.setItem.bind(store);
+  let changed = false;
+  store.getItem = key => {
+    const value = get(key);
+    if (!changed && timing === "before checkpoint write" && key === SESSION_JOURNAL_KEY) {
+      changed = true;
+      set(SESSION_JOURNAL_QUARANTINE_KEY, replacement);
+    }
+    return value;
+  };
+  store.setItem = (key, value) => {
+    if (!changed && timing === "during checkpoint readback" && key === SESSION_JOURNAL_QUARANTINE_KEY) {
+      changed = true;
+      set(key, replacement);
+    } else {
+      set(key, value);
+    }
+  };
+
+  const lost = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
+  const first = openSessionJournal(store);
+  expect(changed).toBe(true);
+  expect(first.status()).toEqual(lost);
+  expect(first.records()).toEqual([
+    journalRecord, fork, { ...pending, outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" },
+  ]);
+  expect(first.recoveredCount()).toBe(1);
+  expect([first.load(), first.nextSeq()]).toEqual([3, 3]);
+  expect(get(SESSION_JOURNAL_KEY)).toBe(newer);
+
+  set(SESSION_JOURNAL_KEY, older);
+  const again = openSessionJournal(store);
+  expect(again.status()).toEqual(lost);
+  expect(again.records()).toEqual(first.records());
+  expect(again.recoveredCount()).toBe(0);
+  expect([again.load(), again.nextSeq()]).toEqual([3, 3]);
+  expect(begin(again, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+});
+
 it.each(["scope", "outcome"] as const)("fences a divergent rewrite of a trusted UNKNOWN's %s", field => {
   const store = new FakeSessionStore();
   const journal = openSessionJournal(store);
