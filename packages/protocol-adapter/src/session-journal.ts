@@ -242,13 +242,13 @@ function extendsHistory(trusted: Envelope, candidate: Envelope): boolean {
   });
 }
 
-/** A quarantined view keeps trusted UNKNOWN codes and can show a compatible primary suffix. */
+/** A quarantined view keeps trusted outcomes and can show a compatible primary suffix. */
 function quarantinedHistory(trusted: Envelope, primary: Envelope): Envelope {
   const records = primary.records.map((record, index) => {
     const previous = trusted.records[index];
-    // Keep the unresolved outcome on matching records even if another journal recorded an answer.
-    const preserve = previous?.outcome === "IN_FLIGHT" || previous?.outcome === "UNKNOWN";
-    return preserve ? { ...record, outcome: previous.outcome, code: previous.code } : record;
+    // A rollback can change the outcome seen by another journal without changing the intent.
+    // Keep our outcome while extendsHistory checks identities and the appended records.
+    return previous ? { ...record, outcome: previous.outcome, code: previous.code } : record;
   });
   const candidate = { ...primary, records };
   return extendsHistory(trusted, candidate) ? candidate : trusted;
