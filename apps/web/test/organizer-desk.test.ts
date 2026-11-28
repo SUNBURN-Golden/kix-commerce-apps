@@ -476,6 +476,37 @@ it("blocks the same inventory under new event labels in flight, after response l
   expect(reopened.calls).toHaveLength(1);
 });
 
+it("holds the inventory across labels when its pending intent is deleted", async () => {
+  const store = memoryStore();
+  const eventId = "deleted-invitation";
+  const key = `kix-organizer-intent:stub:${intentScopeDigest([DRAFT.inventoryId])}:${eventId}`;
+  let release!: () => void;
+  const pending = new Promise<void>(resolve => { release = resolve; });
+  const first = stubDesk(async (input, shape) => { await pending; return shape.invokeLocalCall(input); }, store);
+  const second = stubDesk(async (input, shape) => shape.invokeLocalCall(input), store);
+  const answer = first.desk.sendItem(eventId, "issue_invitation", DRAFT);
+  expect(first.calls).toHaveLength(1);
+  expect(store.getItem(key)).not.toBeNull();
+  store.removeItem(key);
+
+  try {
+    expect(await second.desk.sendItem("deleted-alias", "issue_invitation", { ...DRAFT, recipient: "guest-b" }))
+      .toMatchObject({ status: "FENCED", code: "SESSION_EVIDENCE_LOST" });
+    expect(second.calls).toHaveLength(0);
+  } finally {
+    release();
+    await answer;
+  }
+  expect(await answer).toMatchObject({ status: "RECEIPT", code: "SESSION_EVIDENCE_LOST" });
+  expect(store.getItem(key)).toBe("SESSION_EVIDENCE_LOST");
+  const reopened = stubDesk(async (input, shape) => shape.invokeLocalCall(input), { ...store });
+  expect(await reopened.desk.sendItem("deleted-reload", "issue_invitation", DRAFT))
+    .toMatchObject({ status: "FENCED", code: "SESSION_EVIDENCE_LOST" });
+  expect(reopened.calls).toHaveLength(0);
+  expect(await reopened.desk.sendItem("deleted-independent", "issue_invitation", { ...DRAFT, inventoryId: "inv-1" }))
+    .toMatchObject({ status: "RECEIPT" });
+});
+
 it.each([
   { eventId: "x".repeat(60), attempt: 1 },
   { eventId: "🎟".repeat(100), attempt: Number.MAX_SAFE_INTEGER },

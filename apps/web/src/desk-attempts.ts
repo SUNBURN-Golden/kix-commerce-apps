@@ -53,15 +53,12 @@ export function nextDeskAttempt(current: number | null): number | null {
     ? current + 1 : null;
 }
 
-/** Journey counters store the last allocated ID. */
+/** Journey counters store the last allocated ID. Verify every allocation before it can be used. */
 export function allocateDeskAttempt(desk: string, id: string): number | null {
   if (!id.trim()) return null;
   const key = attemptKey(desk, id);
   const next = nextDeskAttempt(readAttempt(key) ?? null);
-  if (next === null) return null;
-  const saved = saveAttempt(key, next);
-  if (next === Number.MAX_SAFE_INTEGER && !saved) return null;
-  return next;
+  return next !== null && saveAttempt(key, next) ? next : null;
 }
 
 /** Legacy desks store the current attempt. Consume the final value before dispatch. */

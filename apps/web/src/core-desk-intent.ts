@@ -1,7 +1,7 @@
 import { CONSENT_COMPOSED, GIFT_COMPOSED, ORGANIZER_COMPOSED } from "../../../packages/protocol-adapter/src/composer-runtime";
 import { sha256Hex } from "../../../packages/protocol-adapter/src/sha256";
 import type { SessionStorePort } from "../../../packages/protocol-adapter/src/shell-entry";
-import { attemptNumber, EVIDENCE_LOST, isCoreIntentScope, persistOwnedIntent, pinDigest, readBookingIntent, type Mode } from "./booking-journey-intent";
+import { attemptNumber, EVIDENCE_LOST, isCoreIntentScope, ownedIntentKeys, persistOwnedIntent, pinDigest, readBookingIntent, readOwnedIntent, type Mode } from "./booking-journey-intent";
 import type { COUNTER_EXHAUSTED } from "./desk-attempts";
 import type { PageSessionStore } from "./session-store";
 
@@ -69,7 +69,7 @@ function validIntent(desk: Desk, scope: string, row: DeskIntent): boolean {
 export function readCoreDeskIntent(store: SessionStorePort | null, desk: Desk, mode: Mode, scope: string, storageKey?: string) {
   try {
     if (!store) return EVIDENCE_LOST;
-    const raw = store.getItem(storageKey ?? keyFor(desk, mode, scope));
+    const raw = readOwnedIntent(store, storageKey ?? keyFor(desk, mode, scope));
     if (raw === null) return null;
     const row = JSON.parse(raw);
     if (Object.keys(row).length === 9 && row.v === 1 && row.pinDigest === pinDigest && row.desk === desk &&
@@ -88,7 +88,8 @@ export function readOrganizerIntent(store: PageSessionStore | null, mode: Mode, 
     const prefix = keyFor("organizer", mode, "");
     const inventoryDigest = inventoryId === undefined ? undefined : intentScopeDigest([inventoryId]);
     const eventKey = encodeURIComponent(eventId);
-    for (const key of store.keys()) {
+    // A pending invitation can still own this inventory after its storage row disappears.
+    for (const key of new Set([...store.keys(), ...ownedIntentKeys(store)])) {
       if (!key.startsWith(prefix)) continue;
       const [ref, label, extra] = key.slice(prefix.length).split(":");
       const ownEvent = (label ?? ref) === eventKey;
@@ -112,7 +113,7 @@ export function readOrganizerIntent(store: PageSessionStore | null, mode: Mode, 
 
 export function persistCoreDeskIntent(store: SessionStorePort | null, desk: Desk, mode: Mode, scope: string, intent: DeskIntent) {
   if (!validIntent(desk, scope, intent)) throw new Error(EVIDENCE_LOST);
-  return persistOwnedIntent(store, keyFor(desk, mode, scope, intent), { v: 1, pinDigest, mode, desk, scope, ...intent });
+  return persistOwnedIntent(store, keyFor(desk, mode, scope, intent), { v: 1, pinDigest, mode, desk, scope, ...intent }, true);
 }
 
 type HistoryRow = {

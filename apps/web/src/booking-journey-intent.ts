@@ -92,7 +92,11 @@ export function persistBookingIntent(
     { v: 1, pinDigest, ...intent }, intent.branch === null);
 }
 
-function readOwnedIntent(store: SessionStorePort, key: string, owned = ownedIntents.get(store)?.get(key)): string | null {
+export function ownedIntentKeys(store: SessionStorePort): Iterable<string> {
+  return ownedIntents.get(store)?.keys() ?? [];
+}
+
+export function readOwnedIntent(store: SessionStorePort, key: string, owned = ownedIntents.get(store)?.get(key)): string | null {
   const current = store.getItem(key);
   if (owned === undefined || current === owned) return current;
   // Another desk can detect a deleted intent while its response is still pending.
@@ -100,14 +104,14 @@ function readOwnedIntent(store: SessionStorePort, key: string, owned = ownedInte
   throw new Error(EVIDENCE_LOST);
 }
 
-export function persistOwnedIntent(store: SessionStorePort | null, key: string, record: object, sharedCore = false) {
+export function persistOwnedIntent(store: SessionStorePort | null, key: string, record: object, trackOwnership = false) {
   try {
     assertAllowedStorageKey(key);
     if (!store || readOwnedIntent(store, key) !== null) throw new Error();
     const raw = JSON.stringify(record);
     store.setItem(key, raw);
     if (store.getItem(key) !== raw) throw new Error();
-    const intents = sharedCore ? ownedIntents.get(store) ?? new Map<string, string>() : undefined;
+    const intents = trackOwnership ? ownedIntents.get(store) ?? new Map<string, string>() : undefined;
     if (intents) {
       intents.set(key, raw);
       ownedIntents.set(store, intents);

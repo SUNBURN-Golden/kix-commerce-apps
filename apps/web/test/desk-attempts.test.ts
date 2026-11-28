@@ -101,10 +101,14 @@ it("allocates the last safe ID and holds exhausted storage and rollback", () => 
   expect(allocateDeskAttempt("journey", "unsafe-limit")).toBeNull();
 });
 
-it("refuses the final journey ID when storage ignores the new counter", () => {
-  installStorage({ getItem: () => String(Number.MAX_SAFE_INTEGER - 1), setItem: () => undefined });
-  expect(allocateDeskAttempt("journey", "unwritten-limit")).toBeNull();
-  expect(allocateDeskAttempt("journey", "unwritten-limit")).toBeNull();
+it.each([1, Number.MAX_SAFE_INTEGER - 1])("refuses an unverified journey allocation from %i across reload", async current => {
+  const id = `unwritten-${current}`;
+  installStorage({ getItem: () => String(current), setItem: () => undefined });
+  expect(allocateDeskAttempt("journey", id)).toBeNull();
+  expect(allocateDeskAttempt("journey", id)).toBeNull();
+  vi.resetModules();
+  const reloaded = await import("../src/desk-attempts");
+  expect(reloaded.allocateDeskAttempt("journey", id)).toBeNull();
 });
 
 it("consumes the final current attempt before a legacy desk sends", () => {

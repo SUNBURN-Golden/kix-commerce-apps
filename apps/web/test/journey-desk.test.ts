@@ -553,3 +553,22 @@ it("refuses a new journey after the final safe attempt", async () => {
   expect(store.getItem(`kix-journey-intent:core:stub:${eventId}`)).toBeNull();
   expect(calls).toHaveLength(1);
 });
+
+it("does not send a booking write when storage accepts the intent but ignores the counter", async () => {
+  const eventId = "core-unwritten-attempt";
+  const counterKey = `kix-journey-attempt:${eventId}`;
+  const intentKey = `kix-journey-intent:core:stub:${eventId}`;
+  const store = memoryStore();
+  store.setItem(counterKey, "1");
+  const setItem = store.setItem;
+  store.setItem = (key, value) => {
+    if (key !== counterKey) setItem(key, value);
+  };
+  vi.stubGlobal("sessionStorage", store);
+  const { desk, calls } = stubDesk((input, shape) => shape.invokeLocalCall(input), store);
+  await desk.send(eventId, "create_event");
+  expect(desk.view(eventId).rows[0]).toMatchObject({ status: "not-sent", code: "COUNTER_EXHAUSTED", operationId: null });
+  expect(store.getItem(counterKey)).toBe("1");
+  expect(store.getItem(intentKey)).toBeNull();
+  expect(calls).toHaveLength(0);
+});

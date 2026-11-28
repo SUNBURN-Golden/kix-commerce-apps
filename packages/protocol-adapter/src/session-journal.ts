@@ -246,9 +246,8 @@ function extendsHistory(trusted: Envelope, candidate: Envelope): boolean {
 function quarantinedHistory(trusted: Envelope, primary: Envelope): Envelope {
   const records = primary.records.map((record, index) => {
     const previous = trusted.records[index];
-    // An abandoned send stays unresolved. A failed settle can leave two diagnostics for it.
-    const preserve = previous?.outcome === "IN_FLIGHT" ||
-      (record.outcome === "UNKNOWN" && previous?.outcome === "UNKNOWN");
+    // Keep the unresolved outcome on matching records even if another journal recorded an answer.
+    const preserve = previous?.outcome === "IN_FLIGHT" || previous?.outcome === "UNKNOWN";
     return preserve ? { ...record, outcome: previous.outcome, code: previous.code } : record;
   });
   const candidate = { ...primary, records };
@@ -430,27 +429,25 @@ export class SessionJournal {
   }
 
   /** Fences a damaged, missing, or divergent journal. Valid histories are kept in place for inspection. */
-  private quarantine(raw: string | null, cause: EvidenceLostCause, trusted?: Envelope): void {
+  private quarantine(raw: string | null, cause: EvidenceLostCause, histories?: { trusted: Envelope; candidate: Envelope }): void {
     this.current = { kind: "evidence-lost", cause };
-    if (!trusted) this.env = null;
+    if (!histories) this.env = null;
     const store = this.store;
     if (store === null) {
       return;
     }
-    const writeMarker = (marker: string): boolean => {
-      try {
-        if (store.getItem(SESSION_JOURNAL_QUARANTINE_KEY) !== null) return false;
-        store.setItem(SESSION_JOURNAL_QUARANTINE_KEY, marker);
-        return store.getItem(SESSION_JOURNAL_QUARANTINE_KEY) === marker;
-      } catch {
-        return false;
-      }
-    };
+    const writeMarker = (marker: string) => writeVerified(store, SESSION_JOURNAL_QUARANTINE_KEY, null, marker);
     // Preserve the trusted envelope even when the primary key refuses restoration.
     const lossMarker = (snapshot: string) => JSON.stringify({ v: SESSION_JOURNAL_VERSION, cause, raw: snapshot });
-    const saved = writeMarker(trusted ? serialize(trusted) : lossMarker((raw ?? "").slice(0, this.budget.maxBytes)));
-    if (trusted && !saved) writeMarker(lossMarker(""));
-    if (trusted || !saved) return;
+    const marker = histories ? serialize(histories.trusted) : lossMarker((raw ?? "").slice(0, this.budget.maxBytes));
+    const saved = writeMarker(marker);
+    if (histories) {
+      // Checkpoint any compatible extension before another rollback can hide it.
+      if (saved) this.observeQuarantine(store, marker, histories.candidate, false);
+      else writeMarker(lossMarker(""));
+      return;
+    }
+    if (!saved) return;
     try {
       if (store.getItem(SESSION_JOURNAL_KEY) === raw) store.removeItem(SESSION_JOURNAL_KEY);
     } catch {
@@ -520,7 +517,7 @@ export class SessionJournal {
     if (this.env && !extendsHistory(this.env, parsed.env)) {
       // A true rollback can be restored. A divergent history may hold additional unresolved writes.
       if (!extendsHistory(parsed.env, this.env) || this.persist(this.env, raw) !== null) {
-        this.quarantine(raw, "LOST_DURING_SESSION", this.env);
+        this.quarantine(raw, "LOST_DURING_SESSION", { trusted: this.env, candidate: parsed.env });
       }
     } else {
       this.env = parsed.env;
