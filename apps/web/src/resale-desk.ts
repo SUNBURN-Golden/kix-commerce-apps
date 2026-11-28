@@ -5,7 +5,7 @@ import { ProtocolError, type ResaleCaseView, type ResaleRightView } from "@kix/p
 import { protocol } from "./connectivity/desk-protocol";
 import type { ResaleDeskCommand } from "./pages/ResalePanel";
 import { DESK_EXPIRES_AT, reservationIds } from "./reservation-desk";
-import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
+import { claimCurrentDeskAttempt, COUNTER_EXHAUSTED, nextDeskAttempt, readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 
 const SALE_EXPIRES_AT = "2099-06-01T00:00:00.000Z";
 const SELLER = "desk-buyer";
@@ -80,13 +80,18 @@ export function useResaleDesk(eventId: string) {
     if (!trimmed || box.f) {
       return;
     }
+    const attempt = claimCurrentDeskAttempt(trimmed, readAttempt, writeAttempt);
+    if (attempt === null) {
+      setError(COUNTER_EXHAUSTED);
+      return;
+    }
     const requestGeneration = box.g;
     const current = () => box.g === requestGeneration;
     box.f = true;
     const ids = resaleIds(trimmed);
-    const attempt = readAttempt(trimmed);
+
     const idempotencyKey = `desk-${command}:${ids.listingId}:${attempt}`;
-    const advanceAttempt = () => writeAttempt(trimmed, readAttempt(trimmed) + 1);
+    const advanceAttempt = () => writeAttempt(trimmed, nextDeskAttempt(readAttempt(trimmed)));
     setPending(true);
     setError(null);
     try {
@@ -204,10 +209,10 @@ function message(reason: unknown): string {
   return reason instanceof Error ? reason.message : sourceCopy.en["st2"];
 }
 
-function readAttempt(eventId: string): number {
+function readAttempt(eventId: string): number | null {
   return readDeskAttempt("resale", eventId);
 }
 
-function writeAttempt(eventId: string, attempt: number): void {
-  writeDeskAttempt("resale", eventId, attempt);
+function writeAttempt(eventId: string, attempt: number | null): boolean {
+  return writeDeskAttempt("resale", eventId, attempt);
 }

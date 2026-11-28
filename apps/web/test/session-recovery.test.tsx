@@ -219,7 +219,7 @@ describe("session recovery screen", () => {
     recovery.verify();
     const html = markup(live({ recovery, identity }));
     expect(html).toContain("LOST_DURING_SESSION");
-    expect(html).toContain("cannot be told from a new tab");
+    expect(html).toContain("The stored journal is missing or its history conflicts with this session.");
   });
 
   it("shows an unusable store and a full journal", async () => {

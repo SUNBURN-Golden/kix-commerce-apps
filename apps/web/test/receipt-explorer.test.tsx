@@ -1,4 +1,4 @@
-import { memoryStore } from "./support/session-store";
+import { memoryStore, installAttemptStorage } from "./support/session-store";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -38,6 +38,8 @@ import {
 } from "../src/receipt-explorer";
 import { buildReceiptTimelinePage, receiptSelectionKey } from "../src/receipt-pagination";
 import type { WorkspaceRole } from "../src/workspace/registry";
+
+installAttemptStorage();
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -845,6 +847,7 @@ function stubJourney(
 
 function stubGift() {
   return createGiftDesk({
+    store: memoryStore(),
     protocol: stubProtocol(),
     source: {
       source: "stub-shape",
@@ -861,6 +864,7 @@ function stubConsent(
 ) {
   const shape = createStubConsentInvoker();
   return createConsentDesk({
+    store: memoryStore(),
     protocol: stubProtocol(),
     source: {
       source: "stub-shape",
@@ -877,6 +881,7 @@ function stubOrganizer(
 ) {
   const shape = createStubOrganizerInvoker();
   return createOrganizerDesk({
+    store: memoryStore(),
     protocol: stubProtocol(),
     source: {
       source: "stub-shape",

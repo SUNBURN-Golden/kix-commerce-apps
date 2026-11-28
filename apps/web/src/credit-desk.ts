@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ProtocolError, type CreditCaseView } from "@kix/protocol-adapter";
 import { protocol } from "./connectivity/desk-protocol";
 import type { CreditDeskCommand } from "./pages/CreditPanel";
-import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
+import { claimCurrentDeskAttempt, COUNTER_EXHAUSTED, nextDeskAttempt, readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 
 const OPEN_FACE = 100_000;
 const OFFER_AMOUNT = 80_000;
@@ -65,13 +65,18 @@ export function useCreditDesk(eventId: string) {
     if (!trimmed || box.f) {
       return;
     }
+    const attempt = claimCurrentDeskAttempt(trimmed, readAttempt, writeAttempt);
+    if (attempt === null) {
+      setError(COUNTER_EXHAUSTED);
+      return;
+    }
     const requestGeneration = box.g;
     const current = () => box.g === requestGeneration;
     box.f = true;
     const ids = creditIds(trimmed);
-    const attempt = readAttempt(trimmed);
+
     const idempotencyKey = `desk-${command}:${ids.advanceId}:${attempt}`;
-    const advanceAttempt = () => writeAttempt(trimmed, readAttempt(trimmed) + 1);
+    const advanceAttempt = () => writeAttempt(trimmed, nextDeskAttempt(readAttempt(trimmed)));
     setPending(true);
     setError(null);
     try {
@@ -180,10 +185,10 @@ function message(reason: unknown): string {
   return reason instanceof Error ? reason.message : sourceCopy.en["ssx"];
 }
 
-function readAttempt(eventId: string): number {
+function readAttempt(eventId: string): number | null {
   return readDeskAttempt("credit", eventId);
 }
 
-function writeAttempt(eventId: string, attempt: number): void {
-  writeDeskAttempt("credit", eventId, attempt);
+function writeAttempt(eventId: string, attempt: number | null): boolean {
+  return writeDeskAttempt("credit", eventId, attempt);
 }

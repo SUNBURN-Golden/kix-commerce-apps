@@ -1,5 +1,6 @@
-import { afterEach, describe, expect, it } from "vitest";
-import { readDeskAttempt, writeDeskAttempt } from "../src/desk-attempts";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { StubProtocolAdapter } from "@kix/protocol-adapter";
+import { allocateDeskAttempt, claimCurrentDeskAttempt, COUNTER_EXHAUSTED, readDeskAttempt, writeDeskAttempt } from "../src/desk-attempts";
 
 const original = Object.getOwnPropertyDescriptor(globalThis, "sessionStorage");
 
@@ -35,17 +36,18 @@ describe("desk attempt counter", () => {
     expect(readDeskAttempt("settlement", "stl_quota")).toBe(2);
   });
 
-  it("does not throw when storage is blocked", () => {
+  it("refuses an unreadable counter and leaves storage alone", () => {
+    const setItem = vi.fn();
     installStorage({
       getItem: () => {
         throw new DOMException("blocked", "SecurityError");
       },
-      setItem: () => {
-        throw new DOMException("blocked", "SecurityError");
-      },
+      setItem,
     });
-    expect(() => writeDeskAttempt("reservation", "evt_blocked", 3)).not.toThrow();
-    expect(readDeskAttempt("reservation", "evt_blocked")).toBe(3);
+    expect(writeDeskAttempt("reservation", "evt_blocked", 3)).toBe(false);
+    expect(readDeskAttempt("reservation", "evt_blocked")).toBeNull();
+    expect(allocateDeskAttempt("reservation", "evt_blocked")).toBeNull();
+    expect(setItem).not.toHaveBeenCalled();
   });
 
   it("reads a counter another page load left in storage", () => {
@@ -53,4 +55,91 @@ describe("desk attempt counter", () => {
     expect(readDeskAttempt("resale", "evt_prior")).toBe(5);
     expect(readDeskAttempt("resale", "  ")).toBe(0);
   });
+});
+
+it("refuses settlement on reload when the stored exhaustion marker is unreadable", async () => {
+  const protocol = new StubProtocolAdapter();
+  const [{ eventId }] = await protocol.listPerformances();
+  const key = `kix-settlement-attempt:stl_${eventId}`;
+  const stored = new Map([[key, String(Number.MAX_SAFE_INTEGER)]]);
+  let unreadable = false;
+  installStorage({
+    getItem: id => {
+      if (id === key && unreadable) throw new DOMException("blocked", "SecurityError");
+      return stored.get(id) ?? null;
+    },
+    setItem: (id, value) => { stored.set(id, value); },
+  });
+  const send = vi.spyOn(protocol, "initiateSettlement");
+  const { runSettlementCommand } = await import("../src/settlement-desk");
+  await runSettlementCommand(protocol, "initiate", eventId);
+  expect(send).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+    idempotencyKey: `desk-initiate:stl_${eventId}:${Number.MAX_SAFE_INTEGER}`,
+  }));
+  expect(stored.get(key)).toBe(COUNTER_EXHAUSTED);
+
+  unreadable = true;
+  vi.resetModules();
+  const reloaded = await import("../src/settlement-desk");
+  await expect(reloaded.runSettlementCommand(protocol, "initiate", eventId)).rejects.toMatchObject({ code: COUNTER_EXHAUSTED });
+  expect(send).toHaveBeenCalledTimes(1);
+  expect(stored.get(key)).toBe(COUNTER_EXHAUSTED);
+});
+
+it("allocates the last safe ID and holds exhausted storage and rollback", () => {
+  const key = "kix-journey-attempt:safe-limit";
+  const stored = new Map([[key, String(Number.MAX_SAFE_INTEGER - 1)]]);
+  installStorage({ getItem: id => stored.get(id) ?? null, setItem: (id, value) => { stored.set(id, value); } });
+  expect(allocateDeskAttempt("journey", "safe-limit")).toBe(Number.MAX_SAFE_INTEGER);
+  expect(stored.get(key)).toBe(String(Number.MAX_SAFE_INTEGER));
+  expect(allocateDeskAttempt("journey", "safe-limit")).toBeNull();
+  stored.set(key, "0");
+  expect(allocateDeskAttempt("journey", "safe-limit")).toBeNull();
+  stored.set("kix-journey-attempt:unsafe-limit", "9007199254740992");
+  expect(allocateDeskAttempt("journey", "unsafe-limit")).toBeNull();
+  stored.delete("kix-journey-attempt:unsafe-limit");
+  expect(allocateDeskAttempt("journey", "unsafe-limit")).toBeNull();
+});
+
+it.each([1, Number.MAX_SAFE_INTEGER - 1])("refuses an unverified journey allocation from %i across reload", async current => {
+  const id = `unwritten-${current}`;
+  installStorage({ getItem: () => String(current), setItem: () => undefined });
+  expect(allocateDeskAttempt("journey", id)).toBeNull();
+  expect(allocateDeskAttempt("journey", id)).toBeNull();
+  vi.resetModules();
+  const reloaded = await import("../src/desk-attempts");
+  expect(reloaded.allocateDeskAttempt("journey", id)).toBeNull();
+});
+
+it("consumes the final current attempt before a legacy desk sends", () => {
+  const key = "kix-settlement-attempt:legacy-limit";
+  const stored = new Map([[key, String(Number.MAX_SAFE_INTEGER)]]);
+  installStorage({ getItem: id => stored.get(id) ?? null, setItem: (id, value) => { stored.set(id, value); } });
+  const claim = () => claimCurrentDeskAttempt("legacy-limit", id => readDeskAttempt("settlement", id),
+    (id, count) => writeDeskAttempt("settlement", id, count));
+  expect(claim()).toBe(Number.MAX_SAFE_INTEGER);
+  expect(stored.get(key)).toBe(COUNTER_EXHAUSTED);
+  expect(claim()).toBeNull();
+});
+
+it.each(["throws", "ignores"] as const)("refuses a final settlement command across reload when storage %s the marker write", async fault => {
+  const eventId = `legacy-limit-${fault}`;
+  const key = `kix-settlement-attempt:stl_${eventId}`;
+  const finalAttempt = String(Number.MAX_SAFE_INTEGER);
+  installStorage({
+    getItem: id => id === key ? finalAttempt : null,
+    setItem: () => {
+      if (fault === "throws") throw new DOMException("quota", "QuotaExceededError");
+    },
+  });
+  const protocol = new StubProtocolAdapter();
+  const send = vi.spyOn(protocol, "initiateSettlement");
+
+  for (let load = 0; load < 2; load += 1) {
+    vi.resetModules();
+    const { runSettlementCommand } = await import("../src/settlement-desk");
+    await expect(runSettlementCommand(protocol, "initiate", eventId)).rejects.toMatchObject({ code: COUNTER_EXHAUSTED });
+    expect(sessionStorage.getItem(key)).toBe(finalAttempt);
+    expect(send).toHaveBeenCalledTimes(0);
+  }
 });

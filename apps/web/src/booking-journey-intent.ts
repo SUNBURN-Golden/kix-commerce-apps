@@ -4,7 +4,8 @@ import type { CommerceJourneyBranch } from "../../../packages/protocol-adapter/s
 import type { CommerceJourneyStep } from "../../../packages/protocol-adapter/src/commerce-journey-command";
 import { assertAllowedStorageKey } from "./storage-allow-list";
 
-type Mode = "stub" | "integration-http";
+export type OwnedIntent = ReturnType<typeof persistOwnedIntent>;
+export type Mode = "stub" | "integration-http";
 type Step = JourneyStep | CommerceJourneyStep;
 export type ConfirmedAttempt<S extends Step> = { step: S; operationId: string };
 type Scope<B> = { mode: Mode; eventId: string; branch: B };
@@ -19,7 +20,13 @@ type BookingIntent = CoreIntent | FsmIntent;
 type FsmOrder = (branch: CommerceJourneyBranch, confirmed: CommerceJourneyStep | null) =>
   { next?: CommerceJourneyStep; decline?: CommerceJourneyStep } | null;
 export const EVIDENCE_LOST = "SESSION_EVIDENCE_LOST";
-const pinDigest = __KIX_BUILD_IDENTITY__.pinDigest;
+export const pinDigest = __KIX_BUILD_IDENTITY__.pinDigest;
+const ownedIntents = new WeakMap<SessionStorePort, Map<string, string>>();
+
+export function isCoreIntentScope(scope: string): boolean {
+  // Keep the caller's exact ID in the encoded key. Lone surrogates cannot be URI-encoded.
+  return /^(?!\s*$)[^\uD800-\uDFFF]{1,100}$/u.test(scope);
+}
 
 export function fsmAttemptScope(eventId: string): string {
   return `fsm:${eventId.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 40)}`;
@@ -32,12 +39,12 @@ function keyFor(mode: Mode, coreEventId?: string): string {
   return key;
 }
 
-function attemptNumber(prefix: string, attempt: ConfirmedAttempt<Step>): number {
+export function attemptNumber(prefix: string, attempt: { step: string; operationId: string }, suffix = ""): number {
   const { operationId, step } = attempt;
   if (typeof operationId !== "string" || typeof step !== "string" ||
-      operationId.length > 100 || operationId.includes(",") ||
-      !operationId.startsWith(prefix) || !operationId.endsWith(`:${step}`)) return 0;
-  const digits = operationId.slice(prefix.length, -step.length - 1);
+      Array.from(operationId).length > 100 ||
+      !operationId.startsWith(prefix) || !operationId.endsWith(`:${step}${suffix}`)) return 0;
+  const digits = operationId.slice(prefix.length, -(step.length + 1 + suffix.length));
   const count = Number(digits);
   return /^[1-9]\d*$/.test(digits) && Number.isSafeInteger(count) ? count : 0;
 }
@@ -48,14 +55,15 @@ export function readBookingIntent(store: SessionStorePort | null, mode: Mode, sc
   const coreEventId = typeof scope === "string" ? scope : undefined;
   try {
     if (!store) return EVIDENCE_LOST;
-    const raw = store.getItem(keyFor(mode, coreEventId));
+    const raw = readOwnedIntent(store, keyFor(mode, coreEventId));
     if (raw === null) return null;
     const row: BookingIntent = JSON.parse(raw);
     if (row.v !== 1 || row.mode !== mode || row.pinDigest !== pinDigest ||
         typeof row.eventId !== "string" || !row.eventId || Object.keys(row).length !== 8 ||
         (row.lastConfirmed !== null && Object.keys(row.lastConfirmed).length !== 2)) return EVIDENCE_LOST;
     const prefix = `jrn:${row.branch === null ? row.eventId : fsmAttemptScope(row.eventId)}:`;
-    const count = attemptNumber(prefix, row);
+    const count = attemptNumber(prefix, row) || (row.branch === null && row.step === "create_event" && row.lastConfirmed === null
+      ? attemptNumber(`org:${row.eventId}:`, row) : 0);
     const previous = row.lastConfirmed === null ? 0 : attemptNumber(prefix, row.lastConfirmed);
     if (!count || (row.lastConfirmed !== null && !previous)) return EVIDENCE_LOST;
     if (row.branch === null) {
@@ -75,18 +83,46 @@ export function readBookingIntent(store: SessionStorePort | null, mode: Mode, sc
 
 export function persistBookingIntent(
   store: SessionStorePort | null, intent: Omit<BookingIntent, "v" | "pinDigest">,
-): () => void {
+) {
+  if (intent.branch === null && (!isCoreIntentScope(intent.eventId) ||
+      !attemptNumber(`${intent.operationId.startsWith("org:") && intent.step === "create_event" ? "org" : "jrn"}:${intent.eventId}:`, intent))) {
+    throw new ProtocolError(EVIDENCE_LOST, EVIDENCE_LOST);
+  }
+  return persistOwnedIntent(store, keyFor(intent.mode, intent.branch === null ? intent.eventId : undefined),
+    { v: 1, pinDigest, ...intent }, intent.branch === null);
+}
+
+export function ownedIntentKeys(store: SessionStorePort): Iterable<string> {
+  return ownedIntents.get(store)?.keys() ?? [];
+}
+
+export function readOwnedIntent(store: SessionStorePort, key: string, owned = ownedIntents.get(store)?.get(key)): string | null {
+  const current = store.getItem(key);
+  if (owned === undefined || current === owned) return current;
+  // Another desk can detect a deleted intent while its response is still pending.
+  if (current === null) store.setItem(key, EVIDENCE_LOST);
+  throw new Error(EVIDENCE_LOST);
+}
+
+export function persistOwnedIntent(store: SessionStorePort | null, key: string, record: object, trackOwnership = false) {
   try {
-    const key = keyFor(intent.mode, intent.branch === null ? intent.eventId : undefined);
-    if (!store || store.getItem(key) !== null) throw new Error();
-    const raw = JSON.stringify({ v: 1, pinDigest, ...intent });
+    assertAllowedStorageKey(key);
+    if (!store || readOwnedIntent(store, key) !== null) throw new Error();
+    const raw = JSON.stringify(record);
     store.setItem(key, raw);
     if (store.getItem(key) !== raw) throw new Error();
-    return () => {
-      if (store.getItem(key) !== raw) throw new Error(EVIDENCE_LOST);
+    const intents = trackOwnership ? ownedIntents.get(store) ?? new Map<string, string>() : undefined;
+    if (intents) {
+      intents.set(key, raw);
+      ownedIntents.set(store, intents);
+    }
+    const verify = () => { readOwnedIntent(store, key, raw); };
+    return Object.assign(() => {
+      verify();
       store.removeItem(key);
       if (store.getItem(key) !== null) throw new Error(EVIDENCE_LOST);
-    };
+      intents?.delete(key);
+    }, { verify });
   } catch {
     throw new ProtocolError(EVIDENCE_LOST, EVIDENCE_LOST);
   }

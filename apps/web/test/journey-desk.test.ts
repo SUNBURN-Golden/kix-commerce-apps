@@ -1,5 +1,8 @@
-import { memoryStore } from "./support/session-store";
-import { describe, expect, it } from "vitest";
+import { memoryStore, installAttemptStorage } from "./support/session-store";
+import { createOrganizerDesk } from "../src/organizer-desk";
+import { writeDeskAttempt } from "../src/desk-attempts";
+import { pageSessionStore } from "../src/session-store";
+import { describe, expect, it, vi } from "vitest";
 import {
   GateRejectedError,
   ProtocolError,
@@ -17,6 +20,8 @@ import {
   type JourneyDesk,
 } from "../src/journey-desk";
 import { EXPECTED_STEP_REPORT, SHOW_POLICY } from "../../../packages/protocol-adapter/test/support/journey-fixture";
+
+installAttemptStorage();
 
 describe("journey desk", () => {
   it("keeps the synthetic policy equal to the merged fixture and does not treat it as a displayed price", () => {
@@ -264,6 +269,65 @@ describe("journey desk", () => {
     expect(http.view(event).rows[0]?.canSend).toBe(true);
   });
 
+  it.each(["booking", "organizer"] as const)("fences both desks while %s's deleted creation intent is in flight", async owner => {
+    const eventId = `deleted-${owner}-intent`;
+    const key = `kix-journey-intent:core:stub:${eventId}`;
+    const store = memoryStore();
+    vi.stubGlobal("sessionStorage", store);
+    let applied!: () => void;
+    let loseResponse!: () => void;
+    const effect = new Promise<void>(resolve => { applied = resolve; });
+    const pending = new Promise<void>(resolve => { loseResponse = resolve; });
+    const lose = async (input: LocalCallInput, shape: ReturnType<typeof createStubJourneyInvoker>) => {
+      await shape.invokeLocalCall(input);
+      store.removeItem(key);
+      applied();
+      await pending;
+      throw new Error("result lost after apply");
+    };
+    const unexpected = async () => { throw new Error("unexpected second create"); };
+    const booking = stubDesk(owner === "booking" ? lose : unexpected, pageSessionStore());
+
+    const organizerCalls: LocalCallInput[] = [];
+    const organizerShape = createStubJourneyInvoker();
+    const organize = createOrganizerDesk({
+      protocol: { describe: () => ({ environment: "stub" }), observeTransport: async () => localStubObservation() },
+      source: { source: "stub-shape", invoker: { invokeLocalCall: async (input) => {
+        organizerCalls.push(input);
+        return owner === "organizer" ? lose(input, organizerShape) : unexpected();
+      } } },
+    });
+    booking.desk.retain(eventId);
+    organize.retain(eventId);
+    const draft = { seats: "A1", invitationQuota: "1", expectedInventoryVersion: "0", inventoryId: "inv-0", recipient: "fixture" };
+    const desks = { booking: booking.desk, organizer: organize };
+    const send = {
+      booking: () => booking.desk.send(eventId, "create_event"),
+      organizer: () => organize.sendItem(eventId, "create_event", draft),
+    };
+    const other = owner === "booking" ? "organizer" : "booking";
+    const firstSend = send[owner]();
+    await effect;
+    try {
+      expect(store.getItem(key)).toBeNull();
+      expect(desks[owner].view(eventId).rows[0]?.status).toBe("in-flight");
+      await send[other]();
+      expect(booking.calls).toHaveLength(owner === "booking" ? 1 : 0);
+      expect(organizerCalls).toHaveLength(owner === "organizer" ? 1 : 0);
+      expect(desks[other].view(eventId).rows[0]).toMatchObject({ code: "SESSION_EVIDENCE_LOST", canSend: false });
+      expect(store.getItem(key)).toBe("SESSION_EVIDENCE_LOST");
+    } finally {
+      loseResponse();
+      await firstSend;
+    }
+    expect(desks[owner].view(eventId).rows[0]).toMatchObject({ status: "unconfirmed", code: "SESSION_EVIDENCE_LOST" });
+
+    const reopened = stubDesk(unexpected, store);
+    await reopened.desk.send(eventId, "create_event");
+    expect(reopened.desk.view(eventId).rows[0]).toMatchObject({ code: "SESSION_EVIDENCE_LOST", canSend: false });
+    expect(reopened.calls).toHaveLength(0);
+  });
+
   it.each(["corrupt", "wrong pin", "wrong event", "invalid history", "invalid operation", "unavailable", "silent write failure"] as const)(
     "reports SESSION_EVIDENCE_LOST and sends nothing with %s storage", async (problem) => {
       const event = "invalid-storage";
@@ -435,3 +499,76 @@ for (const [at, step] of ["create_event", "prepare_trade", "accept_trade"].entri
     });
   }
 }
+
+it.each(["booking", "organizer"] as const)("shares the creation fence when %s activates first", async first => {
+  const store = memoryStore();
+  const eventId = `shared-${first}`;
+  const booking = stubDesk(async () => { throw new ProtocolError("lost", "REQUEST_TIMEOUT", { requestId: "req-loss", correlationId: "corr-loss" }); }, store);
+  const seen: LocalCallInput[] = [];
+  const organizer = () => createOrganizerDesk({
+    store,
+    protocol: { describe: () => ({ environment: "stub" }), observeTransport: async () => localStubObservation() },
+    source: { source: "stub-shape", invoker: { async invokeLocalCall(input) {
+      seen.push(input);
+      throw new ProtocolError("lost", "REQUEST_TIMEOUT", { requestId: "req-loss", correlationId: "corr-loss" });
+    } } },
+  });
+  const org = organizer();
+  const draft = { seats: "A1", invitationQuota: "1", expectedInventoryVersion: "0", inventoryId: "inv-0", recipient: "fixture" };
+  booking.desk.retain(eventId);
+  org.retain(eventId);
+  const activate = {
+    booking: () => booking.desk.send(eventId, "create_event"),
+    organizer: () => org.sendItem(eventId, "create_event", draft),
+  };
+  await Promise.all([activate[first](), activate[first === "booking" ? "organizer" : "booking"]()]);
+  expect(booking.calls.length + seen.length).toBe(1);
+  const owner = (booking.calls[0] ?? seen[0]).operationId;
+  expect(JSON.parse(store.getItem(`kix-journey-intent:core:stub:${eventId}`)!))
+    .toMatchObject({ v: 1, step: "create_event", operationId: owner, lastConfirmed: null });
+  const reopened = stubDesk(async () => { throw new Error("unexpected send"); }, store);
+  await reopened.desk.send(eventId, "create_event");
+  expect(reopened.desk.view(eventId).rows[0]).toMatchObject({ status: "unconfirmed", operationId: owner });
+  const reloadedOrg = organizer();
+  await reloadedOrg.sendItem(eventId, "close_sales", draft);
+  expect(reloadedOrg.view(eventId).rows[0]).toMatchObject({ status: "unconfirmed", operationId: owner });
+  expect(reopened.calls).toHaveLength(0);
+  expect(booking.calls.length + seen.length).toBe(1);
+  await reloadedOrg.sendItem(`unrelated-${first}`, "create_event", draft);
+  expect(booking.calls.length + seen.length).toBe(2);
+});
+
+it("refuses a new journey after the final safe attempt", async () => {
+  const eventId = "core-final-attempt";
+  const store = memoryStore();
+  vi.stubGlobal("sessionStorage", store);
+  writeDeskAttempt("journey", eventId, Number.MAX_SAFE_INTEGER - 1);
+  const { desk, calls } = stubDesk(async (input, shape) => shape.invokeLocalCall(input), store);
+  await desk.send(eventId, "create_event");
+  expect(calls[0].operationId).toBe(`jrn:${eventId}:${Number.MAX_SAFE_INTEGER}:create_event`);
+  expect(desk.view(eventId).rows[0]?.status).toBe("confirmed");
+  desk.reset();
+  await desk.send(eventId, "create_event");
+  expect(desk.view(eventId).rows[0]).toMatchObject({ status: "not-sent", code: "COUNTER_EXHAUSTED", operationId: null });
+  expect(store.getItem(`kix-journey-intent:core:stub:${eventId}`)).toBeNull();
+  expect(calls).toHaveLength(1);
+});
+
+it("does not send a booking write when storage accepts the intent but ignores the counter", async () => {
+  const eventId = "core-unwritten-attempt";
+  const counterKey = `kix-journey-attempt:${eventId}`;
+  const intentKey = `kix-journey-intent:core:stub:${eventId}`;
+  const store = memoryStore();
+  store.setItem(counterKey, "1");
+  const setItem = store.setItem;
+  store.setItem = (key, value) => {
+    if (key !== counterKey) setItem(key, value);
+  };
+  vi.stubGlobal("sessionStorage", store);
+  const { desk, calls } = stubDesk((input, shape) => shape.invokeLocalCall(input), store);
+  await desk.send(eventId, "create_event");
+  expect(desk.view(eventId).rows[0]).toMatchObject({ status: "not-sent", code: "COUNTER_EXHAUSTED", operationId: null });
+  expect(store.getItem(counterKey)).toBe("1");
+  expect(store.getItem(intentKey)).toBeNull();
+  expect(calls).toHaveLength(0);
+});

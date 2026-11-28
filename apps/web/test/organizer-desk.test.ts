@@ -1,4 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { memoryStore, installAttemptStorage } from "./support/session-store";
+import { pinDigest } from "../src/booking-journey-intent";
+import { intentScopeDigest } from "../src/core-desk-intent";
+import { writeDeskAttempt } from "../src/desk-attempts";
+import { describe, expect, it, vi } from "vitest";
 import {
   GateRejectedError,
   ProtocolError,
@@ -17,6 +21,8 @@ import {
   type OrganizerDraft,
 } from "../src/organizer-desk";
 
+installAttemptStorage();
+
 const DRAFT: OrganizerDraft = {
   seats: "A1, A2",
   invitationQuota: "1",
@@ -26,6 +32,38 @@ const DRAFT: OrganizerDraft = {
 };
 
 describe("organizer desk", () => {
+  it("keeps the shared create intent fenced when an in-flight subscriber throws", async () => {
+    const eventId = "organizer-throwing-subscriber";
+    const store = memoryStore();
+    let release = () => {};
+    const gate = new Promise<void>(resolve => { release = resolve; });
+    const { desk, calls } = stubDesk(async () => {
+      await gate;
+      throw new ProtocolError("lost response", "REQUEST_TIMEOUT", {
+        requestId: "req-subscriber", correlationId: "corr-subscriber",
+      });
+    }, store);
+    desk.retain(eventId);
+    desk.subscribe(() => {
+      if (desk.view(eventId).rows[0]?.status === "in-flight") throw new Error("subscriber failed");
+    });
+    const statuses: (string | undefined)[] = [];
+    desk.subscribe(() => statuses.push(desk.view(eventId).rows[0]?.status));
+
+    const sending = desk.sendItem(eventId, "create_event", DRAFT);
+    const reopened = stubDesk((input, shape) => shape.invokeLocalCall(input), store);
+    const blocked = await reopened.desk.sendItem(eventId, "create_event", DRAFT);
+    release();
+    expect(await sending).toMatchObject({ status: "UNKNOWN", code: "REQUEST_TIMEOUT" });
+    expect(blocked).toMatchObject({ status: "FENCED" });
+    expect(reopened.calls).toHaveLength(0);
+    expect(calls).toHaveLength(1);
+    expect(statuses).toEqual(["in-flight", "unconfirmed"]);
+    const recovered = stubDesk((input, shape) => shape.invokeLocalCall(input), store);
+    await recovered.desk.sendItem(eventId, "create_event", DRAFT);
+    expect(recovered.calls).toHaveLength(0);
+  });
+
   it("uses the submitted invitation draft after the caller mutates it", async () => {
     let release = () => {};
     const gate = new Promise<void>((resolve) => { release = resolve; });
@@ -337,10 +375,12 @@ describe("organizer desk", () => {
 
 function stubDesk(
   handle: (input: LocalCallInput, shape: ReturnType<typeof createStubOrganizerInvoker>) => Promise<unknown>,
+  store = memoryStore(),
 ): { desk: OrganizerDesk; calls: LocalCallInput[] } {
   const calls: LocalCallInput[] = [];
   const shape = createStubOrganizerInvoker();
   const desk = createOrganizerDesk({
+    store,
     protocol: {
       describe: () => ({ environment: "stub" }),
       observeTransport: async () => localStubObservation(),
@@ -360,6 +400,7 @@ function stubDesk(
 
 function httpDesk(observation: TransportObservation, invoke: () => Promise<unknown>): OrganizerDesk {
   return createOrganizerDesk({
+    store: memoryStore(),
     protocol: {
       describe: () => ({ environment: "integration-http" }),
       observeTransport: async () => observation,
@@ -374,3 +415,144 @@ function httpDesk(observation: TransportObservation, invoke: () => Promise<unkno
     },
   });
 }
+
+it("locks an invitation across desks and leaves a replacement row intact after a late answer", async () => {
+  const eventId = "retained-invite";
+  const store = memoryStore();
+  let release!: () => void;
+  const pending = new Promise<void>(resolve => { release = resolve; });
+  const first = stubDesk(async (input, shape) => { await pending; return shape.invokeLocalCall(input); }, store);
+  const second = stubDesk(async (input, shape) => shape.invokeLocalCall(input), store);
+  second.desk.retain(eventId);
+  const submitted = { ...DRAFT, inventoryId: "caller-entered-inventory", recipient: "caller-entered-recipient" };
+  const digest = intentScopeDigest([submitted.inventoryId]);
+  const key = `kix-organizer-intent:stub:${digest}:${eventId}`;
+  const answer = first.desk.sendItem(eventId, "issue_invitation", submitted);
+  const raw = store.getItem(key)!;
+  expect(JSON.parse(raw)).toMatchObject({
+    v: 1, desk: "organizer", scope: eventId, step: "issue_invitation", operationId: first.calls[0].operationId,
+    scopeDigest: digest,
+  });
+  expect(raw).not.toContain(submitted.inventoryId);
+  expect(raw).not.toContain(submitted.recipient);
+  expect(first.calls[0].body).toMatchObject({ inventoryId: submitted.inventoryId });
+  expect((await second.desk.sendItem(eventId, "close_sales", DRAFT)).status).toBe("FENCED");
+  expect(second.calls).toHaveLength(0);
+  store.setItem(key, '{"replaced":true}');
+  release();
+  expect(await answer).toMatchObject({ status: "RECEIPT", code: "SESSION_EVIDENCE_LOST" });
+  expect(store.getItem(key)).toBe('{"replaced":true}');
+  expect((await first.desk.sendItem(eventId, "close_sales", DRAFT)).code).toBe("SESSION_EVIDENCE_LOST");
+  const reopened = stubDesk(async (input, shape) => shape.invokeLocalCall(input), store);
+  expect((await reopened.desk.sendItem(eventId, "close_sales", DRAFT)).code).toBe("SESSION_EVIDENCE_LOST");
+  expect(first.calls).toHaveLength(1);
+  expect(reopened.calls).toHaveLength(0);
+});
+
+it("blocks the same inventory under new event labels in flight, after response loss, and on reload", async () => {
+  const store = memoryStore();
+  const eventId = "invite-original";
+  let release!: () => void;
+  const pending = new Promise<void>(resolve => { release = resolve; });
+  const first = stubDesk(async (input, shape) => {
+    await shape.invokeLocalCall(input);
+    await pending;
+    throw new ProtocolError("lost response", "REQUEST_TIMEOUT", { requestId: "req-lost", correlationId: "corr-lost" });
+  }, store);
+  const sending = first.desk.sendItem(eventId, "issue_invitation", DRAFT);
+  const alias = { ...DRAFT, recipient: "guest-b", expectedInventoryVersion: "1", organizer: "second-organizer" };
+  expect(first.calls[0]?.body).not.toHaveProperty("eventId");
+  expect(await first.desk.sendItem("invite-in-flight", "issue_invitation", alias)).toMatchObject({ status: "FENCED", code: "UNKNOWN" });
+  release();
+  expect(await sending).toMatchObject({ status: "UNKNOWN", code: "REQUEST_TIMEOUT" });
+  expect(await first.desk.sendItem("invite-after-loss", "issue_invitation", alias)).toMatchObject({ status: "FENCED", code: "UNKNOWN" });
+  expect(first.calls).toHaveLength(1);
+  const reopened = stubDesk(async (input, shape) => shape.invokeLocalCall(input), store);
+  expect(await reopened.desk.sendItem("invite-after-reload", "issue_invitation", alias)).toMatchObject({ status: "FENCED", code: "UNKNOWN" });
+  expect(reopened.desk.view("invite-after-reload", alias).rows[5]).toMatchObject({ status: "unconfirmed", operationId: first.calls[0].operationId });
+  expect((await reopened.desk.sendItem(eventId, "close_sales", DRAFT)).status).toBe("FENCED");
+  expect(reopened.calls).toHaveLength(0);
+  expect(await reopened.desk.sendItem("invite-independent", "issue_invitation", { ...DRAFT, inventoryId: "inv-1" })).toMatchObject({ status: "RECEIPT" });
+  expect(reopened.calls).toHaveLength(1);
+});
+
+it("holds the inventory across labels when its pending intent is deleted", async () => {
+  const store = memoryStore();
+  const eventId = "deleted-invitation";
+  const key = `kix-organizer-intent:stub:${intentScopeDigest([DRAFT.inventoryId])}:${eventId}`;
+  let release!: () => void;
+  const pending = new Promise<void>(resolve => { release = resolve; });
+  const first = stubDesk(async (input, shape) => { await pending; return shape.invokeLocalCall(input); }, store);
+  const second = stubDesk(async (input, shape) => shape.invokeLocalCall(input), store);
+  const answer = first.desk.sendItem(eventId, "issue_invitation", DRAFT);
+  expect(first.calls).toHaveLength(1);
+  expect(store.getItem(key)).not.toBeNull();
+  store.removeItem(key);
+
+  try {
+    expect(await second.desk.sendItem("deleted-alias", "issue_invitation", { ...DRAFT, recipient: "guest-b" }))
+      .toMatchObject({ status: "FENCED", code: "SESSION_EVIDENCE_LOST" });
+    expect(second.calls).toHaveLength(0);
+  } finally {
+    release();
+    await answer;
+  }
+  expect(await answer).toMatchObject({ status: "RECEIPT", code: "SESSION_EVIDENCE_LOST" });
+  expect(store.getItem(key)).toBe("SESSION_EVIDENCE_LOST");
+  const reopened = stubDesk(async (input, shape) => shape.invokeLocalCall(input), { ...store });
+  expect(await reopened.desk.sendItem("deleted-reload", "issue_invitation", DRAFT))
+    .toMatchObject({ status: "FENCED", code: "SESSION_EVIDENCE_LOST" });
+  expect(reopened.calls).toHaveLength(0);
+  expect(await reopened.desk.sendItem("deleted-independent", "issue_invitation", { ...DRAFT, inventoryId: "inv-1" }))
+    .toMatchObject({ status: "RECEIPT" });
+});
+
+it.each([
+  { eventId: "x".repeat(60), attempt: 1 },
+  { eventId: "🎟".repeat(100), attempt: Number.MAX_SAFE_INTEGER },
+])("sends a bounded invitation ID and restores its inventory fence at attempt $attempt", async ({ eventId, attempt }) => {
+  const store = memoryStore();
+  vi.stubGlobal("sessionStorage", store);
+  if (attempt > 1) writeDeskAttempt("organizer", eventId, attempt - 1);
+  const draft = { ...DRAFT, inventoryId: "stock" };
+  const first = stubDesk(async (input, shape) => {
+    await shape.invokeLocalCall(input);
+    throw new ProtocolError("lost response", "REQUEST_TIMEOUT", { requestId: "req-lost", correlationId: "corr-lost" });
+  }, store);
+
+  expect(await first.desk.sendItem(eventId, "issue_invitation", draft)).toMatchObject({ status: "UNKNOWN", code: "REQUEST_TIMEOUT" });
+  expect(first.calls).toHaveLength(1);
+  const { operationId } = first.calls[0];
+  expect(Array.from(operationId).length).toBeLessThanOrEqual(100);
+  expect(operationId).toContain(`:${attempt}:issue_invitation:`);
+  expect(operationId).not.toContain(draft.inventoryId);
+
+  const reopened = stubDesk(async (input, shape) => shape.invokeLocalCall(input), store);
+  expect(await reopened.desk.sendItem("short-alias", "issue_invitation", draft)).toMatchObject({ status: "FENCED", code: "UNKNOWN" });
+  expect(reopened.desk.view("short-alias", draft).rows[5]).toMatchObject({ status: "unconfirmed", operationId });
+  expect(reopened.calls).toHaveLength(0);
+});
+
+it("checks event-keyed invitation history from an earlier build across labels", async () => {
+  const store = memoryStore();
+  const scope = "legacy-invite";
+  const key = `kix-organizer-intent:stub:${scope}`;
+  const raw = JSON.stringify({
+    v: 1, pinDigest, mode: "stub", desk: "organizer", scope, step: "issue_invitation",
+    operationId: `org:${scope}:1:issue_invitation:${DRAFT.inventoryId}`,
+    scopeDigest: intentScopeDigest([scope, DRAFT.inventoryId]), lastConfirmed: null,
+  });
+  store.setItem(key, raw);
+  const { desk, calls } = stubDesk(async (input, shape) => shape.invokeLocalCall(input), store);
+  expect(await desk.sendItem("legacy-invite-alias", "issue_invitation", DRAFT)).toMatchObject({ status: "FENCED", code: "UNKNOWN" });
+  expect(calls).toHaveLength(0);
+  expect(store.getItem(key)).toBe(raw);
+});
+
+it("publishes counter exhaustion through the organizer workspace sender", async () => {
+  const eventId = "org-exhausted";
+  writeDeskAttempt("organizer", eventId, Number.MAX_SAFE_INTEGER);
+  const { desk, calls } = stubDesk(async (input, shape) => shape.invokeLocalCall(input));
+  expect(await desk.sendItem(eventId, "create_event", DRAFT)).toMatchObject({ status: "FENCED", code: "COUNTER_EXHAUSTED", operationId: null });
+  expect(calls).toHaveLength(0);
+});

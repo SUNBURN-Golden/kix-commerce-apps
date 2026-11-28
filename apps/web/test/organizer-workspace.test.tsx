@@ -1,3 +1,4 @@
+import { memoryStore, installAttemptStorage } from "./support/session-store";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -32,6 +33,8 @@ import {
   type OrganizerPathStatus,
 } from "../src/organizer-desk";
 import { OrganizerWorkspaceScreen } from "../src/pages/OrganizerWorkspace";
+
+installAttemptStorage();
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -428,6 +431,7 @@ function stubDesk(
   const calls: LocalCallInput[] = [];
   const shape = createStubOrganizerInvoker();
   const desk = createOrganizerDesk({
+    store: memoryStore(),
     protocol: {
       describe: () => ({ environment: "stub" }),
       observeTransport: async () => localStubObservation(),

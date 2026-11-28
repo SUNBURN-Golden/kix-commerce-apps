@@ -74,10 +74,10 @@ describe("fault injection on the journey desk (FI-W01 to FI-W03)", () => {
     expect(second.view("evt_fi_w02").rows.every((row) => row.canSend === false)).toBe(true);
   });
 
-  it("FI-W03: corrupt attempt counters are ignored and never lower the attempt", () => {
-    for (const raw of ["abc", "-1", "1.5", "", "NaN", "1e3x"]) {
+  it("FI-W03: corrupt and unsafe attempt counters never restart", () => {
+    for (const raw of ["abc", "-1", "1.5", "", "NaN", "1e3x", "9007199254740992"]) {
       installStorage({ getItem: () => raw, setItem: () => undefined });
-      expect(readDeskAttempt("journey", `evt_corrupt_${raw}`)).toBe(0);
+      expect(readDeskAttempt("journey", `evt_corrupt_${raw}`)).toBeNull();
     }
     installStorage({ getItem: () => "4", setItem: () => undefined });
     expect(readDeskAttempt("journey", "evt_valid")).toBe(4);

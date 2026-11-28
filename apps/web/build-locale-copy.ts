@@ -3,10 +3,16 @@ import type { Plugin } from "vite";
 
 const HELPER = "\0kix-locale-rows";
 export const LOCALE_ROWS_HELPER = `export function localeRows(rows) {
-  return {
-    en: Object.fromEntries(rows.map(([key, en]) => [key, en])),
-    ko: Object.fromEntries(rows.map(([key, en, ko = en]) => [key, ko]))
-  };
+  const en = {};
+  const ko = {};
+  for (let index = 0; index < rows.length; index += 3) {
+    const key = rows[index];
+    const english = rows[index + 1];
+    const korean = rows[index + 2];
+    en[key] = english;
+    ko[key] = korean === undefined ? english : korean;
+  }
+  return { en, ko };
 }`;
 
 /** Build-only template; preserve both dictionaries, with one copy of each key. */
@@ -41,7 +47,11 @@ export function compactLocaleCopy(source: string, file: string): string | null {
   const en = dictionaries.get("en");
   const ko = dictionaries.get("ko");
   if (!en || !ko || JSON.stringify([...en.keys()]) !== JSON.stringify([...ko.keys()])) return null;
-  const rows = [...en].map(([key, english]) => `[${JSON.stringify(key)},${english}${english === ko.get(key) ? "" : `,${ko.get(key)}`}]`);
+  // Flat key/en/ko triples share keys without emitting an array per message.
+  const rows = [...en].map(([key, english]) => {
+    const korean = ko.get(key);
+    return `${JSON.stringify(key)},${english},${korean === english ? "" : korean}`;
+  });
   return `import { localeRows as __kixLocaleRows } from ${JSON.stringify(HELPER)};\n`
     + source.slice(0, initializer.getStart(ast)) + `__kixLocaleRows([${rows.join(",")}])` + source.slice(initializer.end);
 }

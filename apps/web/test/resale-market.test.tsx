@@ -265,6 +265,8 @@ describe("product-attributed resale outcomes", () => {
 
 });
 
+import { pinDigest } from "../src/booking-journey-intent";
+import { memoryStore } from "./support/session-store";
 import { MarketJourneySession } from "../src/resale-journey-session";
 import { ResaleJourneyPanel } from "../src/pages/ResaleJourneyPanel";
 import { StubProtocolAdapter } from "../../../packages/protocol-adapter/src/stub-adapter";
@@ -365,7 +367,7 @@ describe("pinned fixture on the market", () => {
   ])("quarantines an inconsistent tab intent (%s after %s, %s, %s)", async (step, confirmed, listed, paid) => {
     const port = { advanceCommerceJourney: vi.fn() };
     const key = "kix-resale-intent:stub";
-    const raw = JSON.stringify({ operationId: `resale:${crypto.randomUUID()}`, step, confirmed, listed, paid });
+    const raw = JSON.stringify({ v: 1, pinDigest, mode: "stub", operationId: `resale:${crypto.randomUUID()}`, step, confirmed, listed, paid });
     sessionStorage.setItem(key, raw);
     const session = new MarketJourneySession(port, sessionStorage, "stub");
     const { container } = await renderDom(<ResaleJourneyPanel session={session} />);
@@ -380,11 +382,64 @@ describe("pinned fixture on the market", () => {
 
   it.each(["market-list", "market-hold"] as const)("restores the listed fact for a pending cancellation after %s", async confirmed => {
     const port = { advanceCommerceJourney: vi.fn() };
-    const intent = { operationId: `resale:${crypto.randomUUID()}`, step: "market-cancel", confirmed, listed: "LISTED", paid: "NO_EVIDENCE" };
+    const intent = { v: 1, pinDigest, mode: "stub", operationId: `resale:${crypto.randomUUID()}`, step: "market-cancel", confirmed, listed: "LISTED", paid: "NO_EVIDENCE" };
     sessionStorage.setItem("kix-resale-intent:stub", JSON.stringify(intent));
     const session = new MarketJourneySession(port, sessionStorage, "stub");
     expect(session.history).toEqual(intent);
     await session.run("market-cancel");
+    expect(port.advanceCommerceJourney).not.toHaveBeenCalled();
+  });
+});
+
+describe("market fixture write-ahead ownership", () => {
+  it.each(["truncated", "replaced", "remove-refused", "deleted-with-response-loss"] as const)("fences a %s intent in the mounted panel and on reload", async fault => {
+    const key = "kix-resale-intent:stub";
+    const store = memoryStore();
+    const adapter = new StubProtocolAdapter();
+    const send = vi.spyOn(adapter, "advanceCommerceJourney").mockImplementationOnce(async input => {
+      const result = await StubProtocolAdapter.prototype.advanceCommerceJourney.call(adapter, input);
+      if (fault === "replaced") store.setItem(key, JSON.stringify({ replaced: true }));
+      if (fault === "deleted-with-response-loss") {
+        store.removeItem(key);
+        throw new Error("result lost after apply");
+      }
+      return result;
+    });
+    if (fault === "truncated") {
+      const set = store.setItem;
+      store.setItem = (id, value) => set(id, value.slice(0, -1));
+    } else if (fault === "remove-refused") {
+      store.removeItem = () => {};
+    }
+    const session = new MarketJourneySession(adapter, store, "stub");
+    const { container, rerender } = await renderDom(<ResaleJourneyPanel session={session} />);
+    await click(element(container, "[data-market-step]"));
+    await click(element(container, "[data-market-send]"));
+    expect(container.textContent).toContain("SESSION_EVIDENCE_LOST");
+    expect(element<HTMLButtonElement>(container, "[data-market-step]").disabled).toBe(true);
+    const owned = store.getItem(key);
+    expect(owned).not.toBeNull();
+    if (fault === "replaced") expect(owned).toBe('{"replaced":true}');
+    if (fault === "deleted-with-response-loss") expect(owned).toBe("SESSION_EVIDENCE_LOST");
+    await session.run(session.journey.state().next!);
+    const reopened = new MarketJourneySession(adapter, store, "stub");
+    await rerender(<ResaleJourneyPanel session={reopened} />);
+    expect(element<HTMLButtonElement>(container, "[data-market-step]").disabled).toBe(true);
+    await reopened.run("reservation-clock");
+    expect(send).toHaveBeenCalledTimes(fault === "truncated" ? 0 : 1);
+    expect(store.getItem(key)).toBe(owned);
+  });
+
+  it.each([{}, { v: 1, pinDigest: "wrong", mode: "stub" }])("fences incompatible history %j", async version => {
+    const store = memoryStore();
+    store.setItem("kix-resale-intent:stub", JSON.stringify({ ...version,
+      operationId: `resale:${crypto.randomUUID()}`, step: "reservation-clock", confirmed: null,
+      listed: "NO_EVIDENCE", paid: "NO_EVIDENCE",
+    }));
+    const port = { advanceCommerceJourney: vi.fn() };
+    const session = new MarketJourneySession(port, store, "stub");
+    expect(session.history).toBe("SESSION_EVIDENCE_LOST");
+    await session.run("reservation-clock");
     expect(port.advanceCommerceJourney).not.toHaveBeenCalled();
   });
 });

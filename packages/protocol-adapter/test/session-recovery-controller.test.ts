@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   JOURNEY_IDENTITY_DESK_ACTOR,
   JourneyIdentityController,
+  SESSION_JOURNAL_KEY,
+  SESSION_JOURNAL_QUARANTINE_KEY,
   SessionRecoveryController,
   createNotBoundJourneyIdentity,
   createStubJourneyIdentity,
@@ -60,6 +62,45 @@ describe("session recovery controller", () => {
     expect(controller.state().counters).toMatchObject({ sent: 1, fenced: 0, notSent: 0 });
   });
 
+  it.each(["after begin reads the marker", "during primary readback"])("fences with zero sends when quarantine is installed %s", async timing => {
+    const store = new FakeSessionStore();
+    const spy: Spy = { submits: 0 };
+    const { controller, stub } = await load(store, spy, "clean");
+    const marker = journalBlob({ loads: 2, nextSeq: 2 }, [{ ...journalRecord, scope: "other-scope", loadNo: 2 }]);
+    const get = store.getItem.bind(store);
+    let markerReads = 0;
+    let installed = false;
+    store.getItem = key => {
+      const value = get(key);
+      // run() verifies once before begin() performs its own verification.
+      if (key === SESSION_JOURNAL_QUARANTINE_KEY) markerReads += 1;
+      const afterBeginMarkerRead = timing === "after begin reads the marker" && key === SESSION_JOURNAL_QUARANTINE_KEY && markerReads === 2;
+      const duringReadback = timing === "during primary readback" && key === SESSION_JOURNAL_KEY && value?.includes("intent-1");
+      if (!installed && (afterBeginMarkerRead || duringReadback)) {
+        installed = true;
+        store.data.set(SESSION_JOURNAL_QUARANTINE_KEY, marker);
+      }
+      return value;
+    };
+
+    const fenced = { kind: "FENCED", fence: { reason: "evidence-lost", cause: "LOST_DURING_SESSION" } };
+    expect(await controller.run(FIRST)).toEqual(fenced);
+    expect(installed).toBe(true);
+    expect(await controller.run(SECOND)).toEqual(fenced);
+    expect(controller.state().counters).toMatchObject({ sent: 0, fenced: 2, notSent: 0 });
+    expect(spy.submits).toBe(0);
+    expect(stub.effects().attaches).toBe(0);
+
+    store.data.set(SESSION_JOURNAL_KEY, journalBlob());
+    const reopened = openSessionJournal(store);
+    expect(reopened.status()).toEqual({ kind: "evidence-lost", cause: "LOST_DURING_SESSION" });
+    expect(reopened.records()).toMatchObject([
+      { scope: "other-scope", outcome: "UNKNOWN" },
+      { scope: "sub-0001", outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" },
+    ]);
+    expect([reopened.load(), reopened.nextSeq()]).toEqual([2, 2]);
+  });
+
   it("recovers a lost answer as UNKNOWN after a reload and sends nothing", async () => {
     const store = new FakeSessionStore();
     const spy: Spy = { submits: 0 };
@@ -93,6 +134,31 @@ describe("session recovery controller", () => {
     expect(spy.submits).toBe(1);
     first.stub.deliverHeld();
     await pending;
+  });
+
+  it("keeps a late answer on its own scope when a fork reused the intent reference", async () => {
+    const store = new FakeSessionStore();
+    const spy: Spy = { submits: 0 };
+    openSessionJournal(store);
+    const older = store.getItem(SESSION_JOURNAL_KEY)!;
+    const first = await load(store, spy);
+    const lost = await first.controller.run(FIRST);
+    expect(lost).toMatchObject({ kind: "UNKNOWN", record: { intentRef: "intent-1" } });
+
+    store.data.set(SESSION_JOURNAL_KEY, older);
+    const second = await load(store, spy, "held-response");
+    const pending = second.controller.run(SECOND);
+    const begun = second.journal.records()[0]!;
+    expect(begun).toMatchObject({ intentRef: "intent-1", outcome: "IN_FLIGHT" });
+    expect(first.journal.verify().kind).toBe("evidence-lost");
+    second.stub.deliverHeld();
+    expect(await pending).toMatchObject({
+      kind: "UNKNOWN",
+      record: { ...begun, outcome: "UNKNOWN", code: "JOURNAL_SETTLE_FAILED" },
+      observed: "confirmed",
+    });
+    expect(await second.controller.run(SECOND)).toMatchObject({ kind: "FENCED", fence: { reason: "evidence-lost" } });
+    expect(spy.submits).toBe(2);
   });
 
   it("holds the scope and sends nothing new or compensating after an UNKNOWN, but lets another scope through", async () => {

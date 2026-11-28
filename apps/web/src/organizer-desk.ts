@@ -1,4 +1,5 @@
 import { pageOutcomes } from "./diagnostics/outcomes";
+import { notifyStoreListeners } from "./notify-store-listeners";
 import { messages as sourceCopy } from "./i18n/messages/organizer-desk";
 import { sourceMessage } from "./i18n/source-message";
 import { connectivityInvoker, connectedHandler } from "./connectivity/write-guard";
@@ -15,7 +16,10 @@ import {
   type TransportObservation,
 } from "@kix/protocol-adapter";
 import type { OrganizerInvokerSource, OrganizerSource } from "@kix/protocol-adapter";
-import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
+import { allocateDeskAttempt, COUNTER_EXHAUSTED } from "./desk-attempts";
+import { EVIDENCE_LOST, isCoreIntentScope, type OwnedIntent, persistBookingIntent } from "./booking-journey-intent";
+import { intentScopeDigest, invitationOperationId, persistCoreDeskIntent, readOrganizerIntent, restoreDeskIntent, lastConfirmedAttempt } from "./core-desk-intent";
+import { pageSessionStore, type PageSessionStore } from "./session-store";
 import { SYNTHETIC_SHOW_POLICY } from "./journey-desk";
 import { organizerSource } from "./organizer-source";
 import { protocol } from "./connectivity/desk-protocol";
@@ -117,7 +121,7 @@ export interface OrganizerDeskSnapshot {
   template: OrganizerRow[];
   events: Array<{
     eventId: string;
-    attempt: number;
+    attempt: number | null;
     pending: boolean;
     halted: boolean;
     issuedInventoryIds: string[];
@@ -134,6 +138,7 @@ export interface OrganizerDeskProtocol {
 }
 
 export interface OrganizerDeskDeps {
+  store?: PageSessionStore | null;
   protocol: OrganizerDeskProtocol;
   source: OrganizerInvokerSource | null;
 }
@@ -154,12 +159,13 @@ interface StepRecord {
 
 interface OrganizerRecord {
   eventId: string;
-  attempt: number;
+  attempt: number | null;
   pending: boolean;
   localHalt: boolean;
   console: OrganizerConsole | null;
   steps: StepRecord[];
   history: Map<string, OrganizerRow>;
+  recoveredConfirmation?: ReturnType<typeof restoreDeskIntent>;
   issued: string[];
 }
 
@@ -278,18 +284,19 @@ export class OrganizerDesk {
     if (eventId.length === 0 || this.records.has(eventId)) {
       return;
     }
-    const attempt = readDeskAttempt("organizer", eventId) + 1;
-    writeDeskAttempt("organizer", eventId, attempt);
+    const history = readOrganizerIntent(this.store(), this.environment, eventId) ?? (isCoreIntentScope(eventId) ? null : EVIDENCE_LOST);
+    const attempt = history === null ? allocateDeskAttempt("organizer", eventId) : null;
     const record: OrganizerRecord = {
       eventId,
       attempt,
       pending: false,
-      localHalt: false,
+      localHalt: attempt === null,
       console: this.deps.source ? new OrganizerConsole(connectivityInvoker(this.deps.source.invoker)) : null,
       steps: blankSteps(),
       history: new Map(),
       issued: [],
     };
+    if (attempt === null) record.recoveredConfirmation = restoreDeskIntent(record.steps, history ?? COUNTER_EXHAUSTED);
     this.records.set(eventId, record);
     this.publish();
   }
@@ -312,7 +319,8 @@ export class OrganizerDesk {
       return fencedResult("in-flight", sourceCopy.en["snx"]);
     }
     if (record.localHalt || record.console?.state().halted) {
-      return fencedResult("halted", sourceCopy.en["saa"]);
+      const code = record.steps.find(row => row.code === COUNTER_EXHAUSTED || row.code === EVIDENCE_LOST)?.code;
+      return fencedResult(code ?? "halted", code ?? sourceCopy.en["saa"]);
     }
     if (!writesOpen(this.path)) {
       return fencedResult("path-not-open", sourceCopy.en["s17d"]);
@@ -321,8 +329,31 @@ export class OrganizerDesk {
     if (!previous || !stepSendable(record, step, draft)) {
       return fencedResult("already-sent", sourceCopy.en["s2z"]);
     }
+    if (record.attempt === null) return fencedResult(COUNTER_EXHAUSTED, COUNTER_EXHAUSTED);
     const submitted = { ...draft };
+    const history = readOrganizerIntent(this.store(), this.environment, eventId, step === "issue_invitation" ? submitted.inventoryId : undefined);
+    if (history !== null) {
+      record.localHalt = true;
+      record.recoveredConfirmation = restoreDeskIntent(record.steps, history, step);
+      this.publish();
+      return fencedResult(history === EVIDENCE_LOST ? EVIDENCE_LOST : "UNKNOWN", sourceCopy.en["saa"]);
+    }
     const operationId = organizerOperationId(eventId, record.attempt, step, submitted.inventoryId);
+    const lastConfirmed = lastConfirmedAttempt([...record.history.values()]);
+    let owned: OwnedIntent;
+    try {
+      owned = step === "create_event"
+        ? persistBookingIntent(this.store(), { mode: this.environment, branch: null, eventId, step, operationId, lastConfirmed: null })
+        : persistCoreDeskIntent(this.store(), "organizer", this.environment, eventId, {
+          step, operationId, lastConfirmed,
+          scopeDigest: step === "issue_invitation" ? intentScopeDigest([submitted.inventoryId]) : null,
+        });
+    } catch {
+      record.localHalt = true;
+      restoreDeskIntent(record.steps, EVIDENCE_LOST, step);
+      this.publish();
+      return fencedResult(EVIDENCE_LOST, EVIDENCE_LOST);
+    }
     // A new operation owns no evidence from the command it replaces.
     const current: StepRecord = {
       step,
@@ -337,35 +368,50 @@ export class OrganizerDesk {
     };
     record.steps[record.steps.indexOf(previous)] = current;
     record.pending = true;
-    this.publish();
+    let result: OrganizerSendItemResult;
     try {
-      const outcome = await this.dispatch(record, step, operationId, submitted);
+      const answer = this.dispatch(record, step, operationId, submitted);
+      this.publish();
+      const outcome = await answer;
       this.applyOutcome(record, step, outcome, submitted);
-      return outcomeResult(outcome, operationId, current.note);
+      result = outcomeResult(outcome, operationId, current.note);
     } catch (error) {
       this.applyThrown(record, step, error);
-      return thrownResult(record, step, operationId);
-    } finally {
-      record.pending = false;
-      const stepRecord = record.steps.find((item) => item.step === step);
-      if (stepRecord && stepRecord.phase === "in-flight") {
-        stepRecord.phase = "not-sent";
-        stepRecord.note = sourceCopy.en["s12l"];
-        record.localHalt = true;
-      }
-      const completed = deriveRows(record, this.path).find((row) => row.step === step);
-      if (completed?.operationId && ["confirmed", "rejected", "unconfirmed", "not-sent"].includes(completed.status)
-        && !record.history.has(completed.operationId)) {
-        record.history.set(completed.operationId, { ...completed, canSend: false });
-      }
-      this.publish();
+      result = thrownResult(record, step, operationId);
     }
+    try {
+      if (result.status === "UNKNOWN") owned.verify();
+      else owned();
+    } catch {
+      record.localHalt = true;
+      current.code = EVIDENCE_LOST;
+      current.note = EVIDENCE_LOST;
+      result = { ...result, code: EVIDENCE_LOST, note: EVIDENCE_LOST };
+    }
+    record.pending = false;
+    const stepRecord = record.steps.find((item) => item.step === step);
+    if (stepRecord && stepRecord.phase === "in-flight") {
+      stepRecord.phase = "not-sent";
+      stepRecord.note = sourceCopy.en["s12l"];
+      record.localHalt = true;
+    }
+    const completed = deriveRows(record, this.path).find((row) => row.step === step);
+    if (completed?.operationId && ["confirmed", "rejected", "unconfirmed", "not-sent"].includes(completed.status)
+      && !record.history.has(completed.operationId)) {
+      record.history.set(completed.operationId, { ...completed, canSend: false });
+    }
+    this.publish();
+    return result;
   }
 
   view(eventId: string, draft: OrganizerDraft = emptyDraft()): OrganizerPanelModel {
     return selectOrganizerView(this.snapshot, eventId, draft, (step) => {
       void this.send(eventId, step, draft);
     });
+  }
+
+  private store(): PageSessionStore | null {
+    return this.deps.store === undefined ? pageSessionStore() : this.deps.store;
   }
 
   private async readProbe(): Promise<void> {
@@ -498,9 +544,7 @@ export class OrganizerDesk {
       this.snapshot.events.map((item) => ({ refId: item.eventId, rows: item.rows })),
       next.events.map((item) => ({ refId: item.eventId, rows: item.rows })));
     this.snapshot = next;
-    for (const listener of this.listeners) {
-      listener();
-    }
+    notifyStoreListeners(this.listeners);
   }
 
   private buildSnapshot(): OrganizerDeskSnapshot {
@@ -515,7 +559,7 @@ export class OrganizerDesk {
         issuedInventoryIds: [...record.issued],
         rows,
         history,
-        lastConfirmed: summaryLine(sourceCopy.en["sq7"], lastRow(history, "confirmed")),
+        lastConfirmed: summaryLine(sourceCopy.en["sq7"], record.recoveredConfirmation ?? lastRow(history, "confirmed")),
         unconfirmed: summaryLine(sourceCopy.en["s251"], rows.find((row) => row.status === "unconfirmed")),
       };
     });
@@ -573,10 +617,7 @@ export function organizerOperationId(
   step: OrganizerStep,
   inventoryId: string,
 ): string {
-  if (step === "issue_invitation") {
-    return `org:${eventId}:${attempt}:${step}:${inventoryId}`;
-  }
-  return `org:${eventId}:${attempt}:${step}`;
+  return step === "issue_invitation" ? invitationOperationId(eventId, attempt, inventoryId) : `org:${eventId}:${attempt}:${step}`;
 }
 
 function blankSteps(): StepRecord[] {
@@ -808,7 +849,7 @@ function noteFor(status: OrganizerRowStatus): string {
   return "";
 }
 
-function summaryLine(label: string, row: OrganizerRow | undefined): string {
+function summaryLine(label: string, row: { step: string; operationId: string | null } | undefined): string {
   if (!row || !row.operationId) {
     return sourceMessage(sourceCopy.en["p.t464"], { v1: label });
   }

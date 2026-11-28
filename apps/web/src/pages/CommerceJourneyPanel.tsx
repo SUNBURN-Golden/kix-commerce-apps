@@ -3,20 +3,20 @@ import { CommerceJourney, commerceStepAfter, type CommerceJourneyBranch } from "
 import { commerceJourneyRead, type CommerceJourneyNotBound, type CommerceJourneyStep } from "../../../../packages/protocol-adapter/src/commerce-journey-command";
 import { ConnectivityWriteButton } from "../components/ConnectivityWriteButton";
 import { protocol } from "../connectivity/desk-protocol";
-import { readDeskAttempt, writeDeskAttempt } from "../desk-attempts";
+import { allocateDeskAttempt, COUNTER_EXHAUSTED } from "../desk-attempts";
 import { useLocale } from "../i18n/locale-context";
 import { messages as desk } from "../i18n/desk-catalogue";
 import { messages as copy } from "../i18n/messages/pages--CommerceJourneyPanel";
 import { SafeText } from "../safe-text";
 import { pageSessionStore } from "../session-store";
-import { EVIDENCE_LOST, fsmAttemptScope, persistBookingIntent, readBookingIntent, type ConfirmedAttempt } from "../booking-journey-intent";
+import { EVIDENCE_LOST, fsmAttemptScope, persistBookingIntent, readBookingIntent, type ConfirmedAttempt, type OwnedIntent } from "../booking-journey-intent";
 
 interface OpenJourney {
   eventId: string;
   journey: CommerceJourney;
   lastConfirmed: ConfirmedAttempt<CommerceJourneyStep> | null;
-  clearIntent?: () => void;
-  evidenceLost?: boolean;
+  intent?: OwnedIntent;
+  refusal?: typeof EVIDENCE_LOST | typeof COUNTER_EXHAUSTED;
 }
 
 let active: OpenJourney | undefined;
@@ -44,14 +44,17 @@ function open(eventId: string, branch: CommerceJourneyBranch) {
   const session: OpenJourney = { eventId, lastConfirmed: null,
     journey: new CommerceJourney(branch, {
       advanceCommerceJourney: (call) => {
-        session.clearIntent = persistBookingIntent(store, {
+        session.intent = persistBookingIntent(store, {
           mode, eventId, branch, step: call.step, operationId: call.operationId, lastConfirmed: session.lastConfirmed,
         });
         return protocol.advanceCommerceJourney(call);
       },
     }, (step) => {
-      const attempt = readDeskAttempt("journey", id) + 1;
-      writeDeskAttempt("journey", id, attempt);
+      const attempt = allocateDeskAttempt("journey", id);
+      if (attempt === null) {
+        session.refusal = COUNTER_EXHAUSTED;
+        throw new Error(COUNTER_EXHAUSTED);
+      }
       const operationId = `jrn:${id}:${attempt}:${step}`;
       return { operationId, idempotencyKey: `key:${operationId}` };
     }),
@@ -61,13 +64,20 @@ function open(eventId: string, branch: CommerceJourneyBranch) {
 }
 
 async function send(session: OpenJourney, step: CommerceJourneyStep) {
-  if (session.evidenceLost) return;
+  if (session.refusal) return;
   const answer = session.journey.run(step);
   publish();
-  const outcome = await answer;
-  if (outcome && outcome.kind !== "UNKNOWN") {
-    try { session.clearIntent?.(); } catch { session.evidenceLost = true; }
-    session.clearIntent = undefined;
+  const outcome = await answer.catch(() => {
+    session.refusal ??= EVIDENCE_LOST;
+    return undefined;
+  });
+  if (outcome) {
+    try {
+      if (outcome.kind === "UNKNOWN") session.intent?.verify();
+      else session.intent?.();
+    } catch { session.refusal = EVIDENCE_LOST; }
+    session.intent = undefined;
+    if (outcome.kind === "NOT_SENT" && outcome.code === EVIDENCE_LOST) session.refusal = EVIDENCE_LOST;
     if (outcome.kind === "CONFIRMED") session.lastConfirmed = { step, operationId: outcome.operationId };
   }
   publish();
@@ -95,7 +105,7 @@ export default function CommerceJourneyPanel({ eventId }: { eventId: string }) {
         </dl>
         <p>{t.confirmed} <code>{state.confirmed ?? "—"}</code></p>
         <p role="status">
-          {session.evidenceLost ? EVIDENCE_LOST : state.pending ? <>{t.pending} <code>{state.pending}</code></> : state.last && state.last.kind !== "CONFIRMED" ? <>
+          {session.refusal ? session.refusal : state.pending ? <>{t.pending} <code>{state.pending}</code></> : state.last && state.last.kind !== "CONFIRMED" ? <>
             <strong>{state.last.kind}</strong> · <code>{state.last.code}</code> · <SafeText value={state.last.operationId} />
             {state.last.requestId && <> · <SafeText value={state.last.requestId} /></>}
             {state.fenced && state.next ? <> · {t.blocked} <code>{state.next}</code></> : null}
@@ -103,7 +113,7 @@ export default function CommerceJourneyPanel({ eventId }: { eventId: string }) {
         </p>
         <div className="row-actions">
           {[state.next, state.decline].map((step) => step && <ConnectivityWriteButton
-            key={step} type="button" data-commerce-step={step} disabled={session.evidenceLost || state.fenced || state.pending !== null} requiresFresh={false}
+            key={step} type="button" data-commerce-step={step} disabled={Boolean(session.refusal) || state.fenced || state.pending !== null} requiresFresh={false}
             onClick={() => void send(session, step)}>{t.steps[step === "settle-resale-capture" || step === "settle-refund-capture" ? "mock-claim" : step]}</ConnectivityWriteButton>)}
         </div>
       </> : history ? <>

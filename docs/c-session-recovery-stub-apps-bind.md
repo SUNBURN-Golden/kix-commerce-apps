@@ -29,7 +29,7 @@ On `integration-http` the attach is `not-bound` (the contract-only catalogue has
 | Envelope | `{ v, loads, nextSeq, records, digest }`. The digest is a SHA-256 over the rest. It detects damage and is not authentication |
 | Record | `{ seq, intentRef, scope, contextTag, outcome, code, loadNo }`. `outcome` is `IN_FLIGHT`, `CONFIRMED`, `REJECTED`, or `UNKNOWN` |
 | Personal data | None. `intentRef`, `scope`, and `code` are short ASCII tokens, and `contextTag` is a 16-hex hash prefix of the context key, so an actor label never reaches storage. Anything else is refused before it is stored |
-| Budget | 32 records and 12288 bytes. These are implementation choices, not a product policy value |
+| Write-ahead budget | 32 records and 12288 bytes. These are implementation choices, not a product policy value |
 | Clock | None. Order is the sequence number and the load number. There is no timestamp |
 
 There is no `clear`, `remove`, `evict`, `expire`, `resend`, or `resolve` call on the journal or the controller. A test checks that.
@@ -38,9 +38,9 @@ There is no `clear`, `remove`, `evict`, `expire`, `resend`, or `resolve` call on
 
 `SessionRecoveryController.run(target)`:
 
-1. Verify the store against what this journal last wrote. A cleared store is `LOST_DURING_SESSION`; a damaged one is quarantined.
+1. Verify stored history. Adopt forward history and restore a verified rollback. Missing or divergent history fences the session with `LOST_DURING_SESSION`. Damaged storage is quarantined.
 2. Gate. Evidence lost or no store holds every scope. An `UNKNOWN` or `IN_FLIGHT` record on the target's scope, from this page load or an earlier one, fences it. Then the underlying desk's own fence applies. Another scope is not affected.
-3. Write the `IN_FLIGHT` record ahead of the send and read it back. A quota error, a blocked store, a write that throws part way, and a write that silently cuts the text short all refuse the intent, put the earlier blob back, and send nothing.
+3. Write the `IN_FLIGHT` record ahead of the send and read it back. A quota error, a blocked store, a write that throws part way, and a write that silently cuts the text short all refuse the intent, put the earlier blob back, and send nothing. Check quarantine again after readback. A marker installed during the write fences the session before any send.
 4. Send once.
 5. Settle the record. If the answer cannot be recorded, the scope is locked `UNKNOWN` with `JOURNAL_SETTLE_FAILED`, and the answer is kept in memory as an observation only. The lock also holds after a reload.
 
@@ -50,6 +50,8 @@ Before step 3 the byte check reserves room for every open record to settle as `U
 
 Opening the journal counts one page load. Every record still `IN_FLIGHT` becomes `UNKNOWN` with `RECOVERED_AFTER_RELOAD`, and the change is written. A `pageshow` with `persisted` does the same with `TAB_RESUMED`. A later answer for such a record is kept in memory as evidence and changes nothing. Intent numbers continue across loads from `nextSeq`, so no number is issued twice.
 
+A quarantined journal retains the highest load and next sequence it has observed. Its inspection snapshot can keep both sides of a fork, including different intents with the same sequence or reference. Shared intents keep the previously recorded outcome. If a marker is replaced during checkpointing, the journal merges the observed markers with the history it read from the primary key and compares against the latest marker before saving. The snapshot can exceed the write-ahead budget and is subject to tab storage capacity. Every write stays fenced. On reopen, `IN_FLIGHT` rows recover as `UNKNOWN`. If storage accepts the newer history but refuses the larger recovery snapshot, the desk recovers the saved rows again on the next open. If storage refuses the newer history, the desk shows the last saved quarantine history on reopen.
+
 After a reload, an unresolved intent comes back as UNKNOWN and is never sent again. The page has no resend, resolve, clear, or compensate control. Neither a read nor a late answer lifts the fence, and no new write or compensation goes out for that subject. A `CONFIRMED` record from an earlier load is shown as history: it is not a current fact and it lifts no fence.
 
 ## Lost evidence
@@ -58,7 +60,7 @@ After a reload, an unresolved intent comes back as UNKNOWN and is never sent aga
 | --- | --- |
 | `CORRUPT` | Not JSON, wrong shape, extra key, bad record, digest mismatch, or over the byte budget |
 | `UNSUPPORTED_VERSION` | Valid JSON with a `v` other than 1, or none |
-| `LOST_DURING_SESSION` | The journal this page wrote is gone from the store during the session. The loss is recorded in the quarantine entry (cause only, empty `raw`), so it survives the next load |
+| `LOST_DURING_SESSION` | The journal disappeared, verification found divergent history, or rollback restoration failed. The quarantine entry holds the session across reloads. Both valid histories can be checkpointed to the quarantine entry while the journal key stays in place |
 
 The damaged blob is copied to the quarantine key and the original is removed. If the quarantine write fails, the original stays where it is and the session is still lost. The quarantine entry survives the next load, so a reload is not a way out. A loss is recorded only once the page notices it (a run, a resume, or the tab becoming visible runs the check); a clear followed by an immediate reload with no check looks like a new tab. If the quarantine write itself fails, the hold lasts this page load only. While evidence is lost every write is held, `nextSeq` is not reset, and no new reference is issued.
 

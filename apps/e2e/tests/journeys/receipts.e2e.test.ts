@@ -52,10 +52,12 @@ describe("receipts journey (stub, headless Chrome)", () => {
     await entries.first().press("ArrowDown");
     expect(await entries.nth(1).evaluate((el) => el === document.activeElement)).toBe(true);
     expect(await page.locator("#receipt-detail").innerText()).toContain("cns:evt_repeat_consent:1:authorize_marketing");
-    await entries.nth(4).click();
-    expect(await page.locator("#receipt-detail").innerText()).toContain("org:evt_repeat_org:1:issue_invitation:inv-first");
-    await entries.nth(5).click();
-    expect(await page.locator("#receipt-detail").innerText()).toContain("org:evt_repeat_org:1:issue_invitation:inv-second");
+    for (const index of [4, 5]) {
+      const operationId = exported.entries[index].operationId;
+      expect(operationId).toMatch(/^org:evt_repeat_org:1:issue_invitation:[a-f0-9]{24}$/);
+      await entries.nth(index).click();
+      expect(await page.locator("#receipt-detail").innerText()).toContain(operationId);
+    }
     await suite.pass(page, "receipts.repeat-history");
     await page.close();
   });

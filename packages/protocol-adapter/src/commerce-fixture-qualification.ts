@@ -1,7 +1,7 @@
 import manifestRaw from "../vendor/kix-sdk-0/compat/manifests/manifest.commerce-fixture-8ba7f6c-1.json?raw";
 import { COMMAND_SCHEMAS } from "#kix-sdk-0/catalogue";
 import { canonicalStringify } from "#kix-sdk-0/jsonschema";
-import { commandFor, FIXTURE_ACTOR, fixtureTemplate, type CommerceJourneyCall } from "./commerce-journey-command.js";
+import { commandFor, FIXTURE_ACTOR, fixtureTemplate, type CommerceJourneyCall, type JourneyProof } from "./commerce-journey-command.js";
 import { FSM_COMMANDS } from "./commerce-journey-fixture.js";
 import { FIXTURE_CONTEXTS, fixtureTransitions, takeFixtureGrant, type FixtureContext } from "./commerce-journey.js";
 import { OPENAPI_INTEGRATION_GATE_PIN } from "./integration-gate-pin.js";
@@ -57,10 +57,12 @@ function notBound(): never {
   throw new ProtocolError("The fixture write is outside the pinned semantic conformance evidence.", "NOT_BOUND");
 }
 
-export function qualifiedFixtureCommand(input: CommerceJourneyCall) {
+export function qualifiedFixtureCommand(input: CommerceJourneyCall, evidence: WeakMap<CommerceJourneyCall, JourneyProof>) {
   const grant = takeFixtureGrant(input);
   if (!grant) notBound();
-  const [context, confirmed] = grant;
+  const [context, predecessor] = grant;
+  if (predecessor && evidence.get(predecessor.call) !== predecessor.proof) notBound();
+  const confirmed = predecessor?.call.step;
   qualifiedWrites ??= verifiedFixtureWrites();
   const row = qualifiedWrites[`${context}|${confirmed ?? ""}|${input.step}`];
   if (!row) notBound();

@@ -5,7 +5,7 @@ import { type AdmissionPresentation } from "@kix/protocol-adapter";
 import { protocol } from "./connectivity/desk-protocol";
 import type { AdmissionDeskCommand } from "./pages/AdmissionCredentialPanel";
 import { reservationIds } from "./reservation-desk";
-import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
+import { claimCurrentDeskAttempt, COUNTER_EXHAUSTED, nextDeskAttempt, readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
 
 export const ADMISSION_CLOCK_AT = "2099-01-01T00:00:00.000Z";
 export const ADMISSION_EXPIRES_AT = "2099-06-01T00:00:00.000Z";
@@ -17,11 +17,6 @@ export function useAdmissionDesk(eventId: string, gateId: string) {
   const [presentation, setPresentation] = useState<AdmissionPresentation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [attempt, setAttempt] = useState(() => readAttempt(eventId));
-
-  useEffect(() => {
-    setAttempt(readAttempt(eventId));
-  }, [eventId]);
 
   const refresh = useCallback(async () => {
     const trimmed = eventId.trim();
@@ -56,6 +51,11 @@ export function useAdmissionDesk(eventId: string, gateId: string) {
     if (!connectedHandler()) return;
     const trimmed = eventId.trim();
     if (!trimmed || pending) {
+      return;
+    }
+    const attempt = claimCurrentDeskAttempt(trimmed, readAttempt, writeAttempt);
+    if (attempt === null) {
+      setError(COUNTER_EXHAUSTED);
       return;
     }
     const ids = reservationIds(trimmed);
@@ -106,19 +106,11 @@ export function useAdmissionDesk(eventId: string, gateId: string) {
       }
       if (command === "reconcile") {
         // A second reconcile checks the case again instead of replaying this receipt.
-        setAttempt((value) => {
-          const next = value + 1;
-          writeAttempt(trimmed, next);
-          return next;
-        });
+        writeAttempt(trimmed, nextDeskAttempt(readAttempt(trimmed)));
       }
       await refresh();
     } catch (reason) {
-      setAttempt((value) => {
-        const next = value + 1;
-        writeAttempt(trimmed, next);
-        return next;
-      });
+      writeAttempt(trimmed, nextDeskAttempt(readAttempt(trimmed)));
       setError(message(reason));
       try {
         await refresh();
@@ -137,10 +129,10 @@ function message(reason: unknown): string {
   return reason instanceof Error ? reason.message : sourceCopy.en["s1n"];
 }
 
-function readAttempt(eventId: string): number {
+function readAttempt(eventId: string): number | null {
   return readDeskAttempt("admission", eventId);
 }
 
-function writeAttempt(eventId: string, attempt: number): void {
-  writeDeskAttempt("admission", eventId, attempt);
+function writeAttempt(eventId: string, attempt: number | null): boolean {
+  return writeDeskAttempt("admission", eventId, attempt);
 }

@@ -54,6 +54,7 @@ export const HANDOFF_PINS = {
   gateOpenApiSha256: OPENAPI_INTEGRATION_GATE_PIN.openApiFileSha256,
   protocolMergeSha: OPENAPI_INTEGRATION_GATE_PIN.protocolMergeSha,
   ...KIX_SDK_0_CONSUMPTION_DIGESTS,
+  profileRevision: KIX_SDK_0_PIN.profileRevision,
   consumedProducerChange: true,
 } as const;
 
@@ -284,17 +285,12 @@ export interface PendingProducer {
   readonly note: string;
 }
 
-/**
- * A producer change this repo consumed. The p-sdk-0 BOOTSTRAP tuple is vendored
- * under packages/protocol-adapter/vendor/kix-sdk-0 and pin-checked at load time
- * (consume-p-sdk-0, PR #86). Consuming it moved no catalogue, gate, or OpenAPI
- * pin. BOOTSTRAP grants catalogue-schema binding only; it is not semantic
- * conformance, not a live HTTP server, and not production qualification.
- */
+/** Historical BOOTSTRAP consumption recorded in Commerce PR #86. */
 export interface ConsumedProducer {
   readonly id: "consume-p-sdk-0";
   readonly catalogue: "program";
   readonly pr: 86;
+  readonly commerceMergeSha: string;
   readonly producerRepo: string;
   readonly producerMergeSha: string;
   readonly manifestSha256: string;
@@ -310,7 +306,6 @@ export interface ConsumedProducer {
   readonly productionEndpoint: false;
   readonly protocolTruth: false;
   readonly productionConformance: false;
-  readonly note: string;
 }
 
 export const CONSUMED_PRODUCERS = [
@@ -318,14 +313,16 @@ export const CONSUMED_PRODUCERS = [
     id: "consume-p-sdk-0",
     catalogue: "program",
     pr: 86,
-    producerRepo: KIX_SDK_0_PIN.producerRepo,
-    producerMergeSha: KIX_SDK_0_PIN.producerMergeSha,
-    manifestSha256: KIX_SDK_0_PIN.manifestSha256,
-    catalogueSha256: KIX_SDK_0_PIN.catalogueSha256,
-    profileSha256: KIX_SDK_0_PIN.profileSha256,
-    profileKind: KIX_SDK_0_PIN.profileKind,
-    profileRevision: KIX_SDK_0_PIN.profileRevision,
-    grants: KIX_SDK_0_PIN.grants,
+    // Commerce PR #86 recorded this tuple at e13bb735.
+    commerceMergeSha: "e13bb7350582b010771153227acb160ad958c68a",
+    producerRepo: "SUNBURN-Golden/kix-protocol",
+    producerMergeSha: "a74e7c459d3be6754ac3cf24503e43c7bc312358",
+    manifestSha256: "1cce4ee5a9aa64ef40825c0e6dedf920050e594cf20ea0aaf087ecbde46f0cca",
+    catalogueSha256: "891ddd65f29262603bd0f76746a9308c810a71d4afd717b0f4d2e3f7d46dbaa2",
+    profileSha256: "4c92cf6d905f83fb3f5cd52e166dbadf057451ae46441fce1f91baaaa4367d34",
+    profileKind: "BOOTSTRAP",
+    profileRevision: "bootstrap-1",
+    grants: "catalogue-schema-binding only",
     connected: false,
     implementedHere: true,
     semanticConformance: false,
@@ -333,9 +330,27 @@ export const CONSUMED_PRODUCERS = [
     productionEndpoint: false,
     protocolTruth: false,
     productionConformance: false,
-    note: sourceCopy.en["merge.sdkNote"],
   },
 ] as const satisfies readonly ConsumedProducer[];
+
+export const FIXTURE_HANDOFF = {
+  profileKind: "SEMANTIC_CONFORMANCE",
+  profileRevision: "commerce-fixture-8ba7f6c-1",
+  sourceAuthentication: "FIXTURE_ONLY",
+  sourceCommit: "8ba7f6c36373ac0ec49246f51f7471c164ac3a28",
+  gateMergeSha: HANDOFF_PINS.protocolMergeSha,
+  browserStub: true,
+  nodeLoopback: true,
+  browserHttp: false,
+  reads: "NOT_BOUND",
+  productionEndpoint: false,
+  protocolTruth: false,
+  productionConformance: false,
+  journeys: [
+    { name: "CommerceJourney", route: "/booking/:eventId" },
+    { name: "ResaleJourney", route: "/resale/market/demo-001" },
+  ],
+} as const;
 
 export const PENDING_PRODUCERS = [
   {

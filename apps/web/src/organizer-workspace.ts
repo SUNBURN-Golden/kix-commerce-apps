@@ -1,3 +1,5 @@
+import { COUNTER_EXHAUSTED } from "./desk-attempts";
+import { EVIDENCE_LOST } from "./booking-journey-intent";
 import { messages as sourceCopy } from "./i18n/messages/organizer-workspace";
 import { sourceMessage } from "./i18n/source-message";
 import { connectedHandler } from "./connectivity/write-guard";
@@ -291,7 +293,7 @@ export class OrganizerBatchRun {
       items.push(
         itemResult(planned, sent.status, sent.code, sent.operationId, sent.requestId, sent.correlationId, sent.note),
       );
-      if (sent.status !== "RECEIPT") {
+      if (sent.status !== "RECEIPT" || sent.code === EVIDENCE_LOST) {
         stopped = true;
       }
     }
@@ -490,9 +492,9 @@ function previewOne(
   snapshot: OrganizerDeskSnapshot,
 ): OrganizerPreviewItem {
   const event = snapshot.events.find((item) => item.eventId === row.eventId);
-  const attempt = event?.attempt ?? 0;
+  const attempt = event ? event.attempt : 0;
   const operationIdHint =
-    row.eventId.length === 0 ? null : organizerOperationId(row.eventId, attempt, row.step, row.draft.inventoryId);
+    row.eventId.length === 0 || attempt === null ? null : organizerOperationId(row.eventId, attempt, row.step, row.draft.inventoryId);
   const duplicate = duplicateReason(row, earlier);
   const blocked = blockReason(row, snapshot, duplicate);
   let action: OrganizerStep | null = null;
@@ -556,7 +558,7 @@ function blockReason(row: OrganizerChangeRow, snapshot: OrganizerDeskSnapshot, d
     return sourceCopy.en["snw"];
   }
   if (event?.halted) {
-    return sourceCopy.en["se4"];
+    return event.rows.find(item => item.code === COUNTER_EXHAUSTED || item.code === EVIDENCE_LOST)?.code ?? sourceCopy.en["se4"];
   }
   if (row.step === "issue_invitation") {
     if (row.draft.inventoryId.length > 0 && event?.issuedInventoryIds.includes(row.draft.inventoryId)) {

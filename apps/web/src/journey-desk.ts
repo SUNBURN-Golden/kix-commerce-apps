@@ -1,4 +1,5 @@
 import { pageOutcomes } from "./diagnostics/outcomes";
+import { notifyStoreListeners } from "./notify-store-listeners";
 import { messages as sourceCopy } from "./i18n/messages/journey-desk";
 import { sourceMessage } from "./i18n/source-message";
 import { connectivityInvoker, connectedHandler } from "./connectivity/write-guard";
@@ -7,12 +8,13 @@ import { BookingJourney, JOURNEY_COMPOSED, type JourneyStep, type JourneyStepOut
 import { ProtocolError } from "../../../packages/protocol-adapter/src/types";
 import { type TransportObservation } from "../../../packages/protocol-adapter/src/operational-error";
 import type { JourneyInvokerSource, JourneySource } from "@kix/protocol-adapter";
-import { readDeskAttempt, writeDeskAttempt } from "./desk-attempts";
+import { restoreDeskIntent } from "./core-desk-intent";
+import { allocateDeskAttempt, COUNTER_EXHAUSTED } from "./desk-attempts";
 import { journeySource } from "./journey-source";
 import { protocol } from "./connectivity/desk-protocol";
 import type { SessionStorePort } from "../../../packages/protocol-adapter/src/shell-entry";
 import { pageSessionStore } from "./session-store";
-import { EVIDENCE_LOST, persistBookingIntent, readBookingIntent, type ConfirmedAttempt } from "./booking-journey-intent";
+import { EVIDENCE_LOST, isCoreIntentScope, type OwnedIntent, persistBookingIntent, readBookingIntent, type ConfirmedAttempt } from "./booking-journey-intent";
 
 /**
  * M2 + H1 — 준태님 ruling 2026-10-08 18:26 KST, relayed by KIX Commerce.
@@ -144,7 +146,7 @@ interface StepRecord {
 
 interface JourneyRecord {
   eventId: string;
-  attempt: number;
+  attempt: number | null;
   pending: boolean;
   localHalt: boolean;
   journey: BookingJourney | null;
@@ -236,14 +238,13 @@ export class JourneyDesk {
     if (eventId.length === 0 || this.records.has(eventId)) {
       return;
     }
-    const stored = readBookingIntent(this.store(), this.environment, eventId);
-    const attempt = stored === null ? readDeskAttempt("journey", eventId) + 1 : 0;
-    if (attempt) writeDeskAttempt("journey", eventId, attempt);
+    const stored = readBookingIntent(this.store(), this.environment, eventId) ?? (isCoreIntentScope(eventId) ? null : EVIDENCE_LOST);
+    const attempt = stored === null ? allocateDeskAttempt("journey", eventId) : null;
     const record: JourneyRecord = {
       eventId,
       attempt,
       pending: false,
-      localHalt: stored !== null,
+      localHalt: stored !== null || attempt === null,
       lastConfirmed: null,
       journey: stored === null && this.deps.source ? new BookingJourney(connectivityInvoker(this.deps.source.invoker)) : null,
       steps: blankSteps(),
@@ -259,11 +260,14 @@ export class JourneyDesk {
         } else if (row.step === stored.step) {
           row.phase = "unconfirmed";
           row.operationId = stored.operationId;
-          row.actor = actorFor(row.step);
+          row.actor = stored.operationId.startsWith("org:") ? null : actorFor(row.step);
           row.code = "UNKNOWN";
           row.note = sourceCopy.en["s253"];
         }
       }
+    } else if (attempt === null) {
+      markEvidenceLost(record.steps[0]);
+      record.steps[0].code = COUNTER_EXHAUSTED;
     }
     this.records.set(eventId, record);
     this.publish();
@@ -276,7 +280,7 @@ export class JourneyDesk {
     }
     this.retain(eventId);
     const record = this.records.get(eventId);
-    if (!record || record.pending || record.localHalt || record.journey?.state().halted) {
+    if (!record || record.attempt === null || record.pending || record.localHalt || record.journey?.state().halted) {
       return;
     }
     if (!writesOpen(this.path)) {
@@ -286,10 +290,17 @@ export class JourneyDesk {
     if (!current || current.phase !== "pending" || nextPending(record) !== step) {
       return;
     }
+    const history = readBookingIntent(this.store(), this.environment, eventId);
+    if (history !== null) {
+      record.localHalt = true;
+      restoreDeskIntent(record.steps, history, step);
+      this.publish();
+      return;
+    }
     const operationId = journeyOperationId(eventId, record.attempt, step);
-    let clearIntent: () => void;
+    let owned: OwnedIntent;
     try {
-      clearIntent = persistBookingIntent(this.store(), {
+      owned = persistBookingIntent(this.store(), {
         mode: this.environment, eventId, branch: null, step, operationId, lastConfirmed: record.lastConfirmed,
       });
     } catch {
@@ -303,21 +314,23 @@ export class JourneyDesk {
     current.actor = actorFor(step);
     current.note = sourceCopy.en["snx"];
     record.pending = true;
-    this.publish();
     let known = false;
     try {
-      const outcome = await this.dispatch(record, step, operationId);
+      const answer = this.dispatch(record, step, operationId);
+      this.publish();
+      const outcome = await answer;
       known = outcome.kind === "RECEIPT" || outcome.kind === "REJECTED";
       this.applyOutcome(record, current, operationId, outcome);
     } catch (error) {
       known ||= record.journey?.state().halted?.kind === "NOT_SENT" || record.journey === null;
       this.applyThrown(record, step, error);
     } finally {
-      if (known) {
-        try { clearIntent(); } catch {
-          record.localHalt = true;
-          current.code = EVIDENCE_LOST;
-        }
+      try {
+        if (known) owned();
+        else owned.verify();
+      } catch {
+        record.localHalt = true;
+        current.code = EVIDENCE_LOST;
       }
       record.pending = false;
       const stepRecord = record.steps.find((item) => item.step === step);
@@ -450,9 +463,7 @@ export class JourneyDesk {
       this.snapshot.journeys.map((item) => ({ refId: item.eventId, rows: item.rows })),
       next.journeys.map((item) => ({ refId: item.eventId, rows: item.rows })));
     this.snapshot = next;
-    for (const listener of this.listeners) {
-      listener();
-    }
+    notifyStoreListeners(this.listeners);
   }
 
   private buildSnapshot(): JourneyDeskSnapshot {

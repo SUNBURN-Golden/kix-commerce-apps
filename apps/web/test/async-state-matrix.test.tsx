@@ -1,4 +1,4 @@
-import { memoryStore } from "./support/session-store";
+import { memoryStore, installAttemptStorage } from "./support/session-store";
 import { readFileSync } from "node:fs";
 import { Suspense } from "react";
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
@@ -17,6 +17,8 @@ import * as journey from "../src/journey-desk";
 import * as refund from "../src/refund-return";
 import * as consent from "../src/consent-desk";
 import { referenceProblems } from "./support/async-state-references";
+
+installAttemptStorage();
 
 const executed = new Set<string>();
 const wrap = (node: Parameters<typeof renderToStaticMarkup>[0]) => renderToStaticMarkup(<MemoryRouter>{node}</MemoryRouter>);
@@ -59,6 +61,7 @@ async function inject(driver: string) {
   }
   if (driver === "consent-unknown") {
     const desk = consent.createConsentDesk({
+      store: memoryStore(),
       protocol: { describe: () => ({ environment: "stub" }), observeTransport: async () => localStubObservation() },
       source: { source: "stub-shape", invoker: { async invokeLocalCall() { throw new ProtocolError("Synthetic lost answer", "REQUEST_TIMEOUT", { requestId: "req-synthetic-lost" }); } } },
     });

@@ -2070,6 +2070,7 @@ export {
   SESSION_SETTLE_FAILED_CODE,
   SessionJournal,
   openSessionJournal,
+  sessionIntentKey,
   type BeginInput,
   type BeginResult,
   type EvidenceLostCause,

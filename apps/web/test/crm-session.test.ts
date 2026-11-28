@@ -1,7 +1,10 @@
+import { memoryStore, installAttemptStorage } from "./support/session-store";
 import { describe, expect, it } from "vitest";
 import { createStubConsentInvoker, localStubObservation, ProtocolError, GateRejectedError, type LocalCallInput } from "@kix/protocol-adapter";
 import { createConsentDesk, type ConsentDraft } from "../src/consent-desk";
 import { crmChannelPreferences, crmPurposeLedger, previewCrmAudience, type CrmSegmentFilter } from "../src/crm-session";
+
+installAttemptStorage();
 
 const draft: ConsentDraft = { subject: "subject-fixture", business: "business-fixture", channel: "fixture-channel",
   purpose: "fixture-purpose", expectedConsentVersion: "1", allowed: "true" };
@@ -9,7 +12,7 @@ const filter: CrmSegmentFilter = { eventId: "crm-show", business: draft.business
 function setup(handle?: (input: LocalCallInput, receipt: Record<string, unknown>) => Promise<unknown>) {
   const shape = createStubConsentInvoker();
   const calls: LocalCallInput[] = [];
-  const desk = createConsentDesk({ protocol: { describe: () => ({ environment: "stub" }), observeTransport: async () => localStubObservation() },
+  const desk = createConsentDesk({ store: memoryStore(), protocol: { describe: () => ({ environment: "stub" }), observeTransport: async () => localStubObservation() },
     source: { source: "stub-shape", invoker: { async invokeLocalCall(input) {
       calls.push(structuredClone(input));
       const receipt = await shape.invokeLocalCall(input) as Record<string, unknown>;

@@ -1,6 +1,5 @@
 export const messages = {
-  "en": {
-    "merge.featureRows": "Feature rows",
+  en: {
     "merge.booking": "Booking",
     "merge.journeys": "Journeys",
     "merge.journey": "Journey",
@@ -18,11 +17,9 @@ export const messages = {
     "merge.sessionRecord": "Session record",
     "merge.considered": "consideredAction",
     "merge.none": "none",
-    "merge.consumedProducer": "Consumed producer {id} (PR #{pr}, merge {sha}): SDK catalogue {catalogue}, manifest {manifest}, profile {profile}. The SDK tuple was consumed; the catalogue, the gate, and the five pins did not move. BOOTSTRAP grants {grants} only; not semantic conformance.",
     "merge.openDetail": "Open detail (Enter or Space on the selected row)"
   },
-  "ko": {
-    "merge.featureRows": "기능 행",
+  ko: {
     "merge.booking": "예약",
     "merge.journeys": "여정",
     "merge.journey": "여정",
@@ -40,7 +37,6 @@ export const messages = {
     "merge.sessionRecord": "세션 기록",
     "merge.considered": "consideredAction",
     "merge.none": "none",
-    "merge.consumedProducer": "소비한 producer {id} (PR #{pr}, 병합 {sha}): SDK 목록 {catalogue}, manifest {manifest}, 프로필 {profile}. SDK 튜플을 소비했으며 목록·게이트·다섯 pin은 바뀌지 않았습니다. BOOTSTRAP은 {grants}만 부여하며 의미 적합성을 뜻하지 않습니다.",
     "merge.openDetail": "상세 열기 (선택한 행에서 Enter 또는 Space)"
   }
 } as const;

@@ -1,4 +1,4 @@
-import { memoryStore } from "./support/session-store";
+import { memoryStore, installAttemptStorage } from "./support/session-store";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,6 +9,8 @@ import { JOURNEY_NOT_COMPOSED, JOURNEY_RULING, GateRejectedError, ProtocolError,
 import { App } from "../src/App";
 import { createJourneyDesk, type JourneyPanelModel, type JourneyRow } from "../src/journey-desk";
 import { JourneyPanel } from "../src/pages/JourneyPanel";
+
+installAttemptStorage();
 
 const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = path.resolve(webRoot, "../..");

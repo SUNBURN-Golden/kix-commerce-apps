@@ -464,20 +464,480 @@ describe("journal counter integrity", () => {
     store.faultOnce = true;
     expect(journal.markUnknown("intent-1", "JOURNAL_SETTLE_FAILED")).toBe(false);
     expect(store.data.get(SESSION_JOURNAL_KEY)).toBe(lastWritten);
-    const sets = store.sets;
     expect(journal.verify()).toEqual({ kind: "ready" });
     expect(journal.records()[0]?.outcome).toBe("UNKNOWN");
     store.data.set(SESSION_JOURNAL_KEY, older);
     expect(journal.verify()).toEqual({ kind: "ready" });
-    expect(journal.records()[0]?.outcome).toBe("UNKNOWN");
-    expect(store.sets).toBe(sets);
-    // A later failed write still restores lastWritten, not the older valid blob.
+    const restored = store.data.get(SESSION_JOURNAL_KEY)!;
+    expect(restored).not.toBe(older);
+    const reopened = openSessionJournal(store);
+    expect(reopened.scopeBlock("subject-1")).toMatchObject({ reason: "unresolved", record: { outcome: "UNKNOWN", code: "JOURNAL_SETTLE_FAILED" } });
+    expect(reopened.nextSeq()).toBe(2);
+    expect(begin(reopened, 1)).toEqual({ ok: false, reason: "DUPLICATE_INTENT" });
+    // A later failed write restores the verified forward extension.
+    const extended = store.data.get(SESSION_JOURNAL_KEY);
     store.partialThenThrow = 10;
     store.faultOnce = true;
     expect(begin(journal, 2)).toEqual({ ok: false, reason: "WRITE_REFUSED" });
-    expect(store.data.get(SESSION_JOURNAL_KEY)).toBe(lastWritten);
+    expect(store.data.get(SESSION_JOURNAL_KEY)).toBe(extended);
     store.data.set(SESSION_JOURNAL_KEY, blob({ nextSeq: M + 1 }));
     expect(journal.verify()).toEqual(corrupt);
     expect(openSessionJournal(store).status()).toEqual(corrupt);
   });
+});
+
+it("restores clean history and the load/sequence counters when storage is rolled back", () => {
+  const store = new FakeSessionStore();
+  openSessionJournal(store);
+  const older = store.getItem(SESSION_JOURNAL_KEY)!;
+  const journal = openSessionJournal(store);
+  expect(begin(journal, 1).ok).toBe(true);
+  expect(journal.settle("intent-1", "UNKNOWN", "TAB_RESUMED").ok).toBe(true);
+  const latest = store.getItem(SESSION_JOURNAL_KEY);
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  expect(journal.verify()).toEqual({ kind: "ready" });
+  expect([journal.load(), journal.nextSeq()]).toEqual([2, 2]);
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(latest);
+  const reopened = openSessionJournal(store);
+  expect(reopened.scopeBlock("subject-1")).toMatchObject({ reason: "unresolved" });
+  expect(begin(reopened, 1)).toEqual({ ok: false, reason: "DUPLICATE_INTENT" });
+});
+
+it.each(["before write", "during readback"])("checkpoints the earlier intent when begin detects rollback %s", timing => {
+  const store = new FakeSessionStore();
+  openSessionJournal(store);
+  const older = store.getItem(SESSION_JOURNAL_KEY)!;
+  const journal = openSessionJournal(store);
+  expect(begin(journal, 1).ok).toBe(true);
+
+  const get = store.getItem.bind(store);
+  let rollBack = true;
+  store.getItem = key => {
+    const value = get(key);
+    if (key === SESSION_JOURNAL_KEY && rollBack && timing === "before write") {
+      rollBack = false;
+      // The gate sees the trusted value, but the pre-write comparison sees the rollback.
+      store.data.set(key, older);
+    }
+    return value;
+  };
+  const set = store.setItem.bind(store);
+  store.setItem = (key, value) => {
+    if (key === SESSION_JOURNAL_KEY && rollBack && timing === "during readback") {
+      rollBack = false;
+      set(key, older);
+    } else {
+      set(key, value);
+    }
+  };
+
+  expect(begin(journal, 2)).toEqual({ ok: false, reason: "WRITE_REFUSED" });
+  const reopened = openSessionJournal(store);
+  expect(reopened.status()).toEqual({ kind: "evidence-lost", cause: "LOST_DURING_SESSION" });
+  expect(reopened.records()).toMatchObject([{ intentRef: "intent-1", outcome: "UNKNOWN" }]);
+  expect([reopened.load(), reopened.nextSeq()]).toEqual([2, 2]);
+  expect(reopened.scopeBlock("subject-1")).toMatchObject({ reason: "evidence-lost" });
+  expect(begin(reopened, 2)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+});
+
+it("rejects equal-counter outcome rollback and adopts a legitimate forward extension", () => {
+  const store = new FakeSessionStore();
+  const journal = openSessionJournal(store);
+  expect(begin(journal, 1).ok).toBe(true);
+  const running = store.getItem(SESSION_JOURNAL_KEY)!;
+  expect(journal.settle("intent-1", "CONFIRMED", null).ok).toBe(true);
+  const confirmed = store.getItem(SESSION_JOURNAL_KEY);
+  store.data.set(SESSION_JOURNAL_KEY, running);
+  expect(journal.verify()).toEqual({ kind: "ready" });
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(confirmed);
+  const other = openSessionJournal(store);
+  expect(begin(other, 2).ok).toBe(true);
+  expect(other.settle("intent-2", "UNKNOWN", null).ok).toBe(true);
+  expect(journal.verify()).toEqual({ kind: "ready" });
+  expect([journal.load(), journal.nextSeq()]).toEqual([2, 3]);
+  expect(journal.scopeBlock("subject-2")).toMatchObject({ reason: "unresolved" });
+});
+
+it("quarantines a rollback when restoration fails and reopens with trusted history and counters", () => {
+  const store = new FakeSessionStore();
+  openSessionJournal(store);
+  const older = store.getItem(SESSION_JOURNAL_KEY)!;
+  const journal = openSessionJournal(store);
+  expect(begin(journal, 1).ok).toBe(true);
+  expect(journal.markUnknown("intent-1", "TAB_RESUMED")).toBe(true);
+  expect(begin(journal, 2).ok).toBe(true);
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  const set = store.setItem.bind(store);
+  store.setItem = (key, value) => {
+    if (key !== SESSION_JOURNAL_KEY) set(key, value);
+  };
+  const lost = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
+  expect(journal.verify()).toEqual(lost);
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(older);
+  expect(journal.records()).toMatchObject([
+    { intentRef: "intent-1", outcome: "UNKNOWN", code: "TAB_RESUMED" },
+    { intentRef: "intent-2", outcome: "IN_FLIGHT" },
+  ]);
+  const reopened = openSessionJournal(store);
+  expect(reopened.status()).toEqual(lost);
+  expect(reopened.records()).toEqual([
+    journal.records()[0],
+    { ...journal.records()[1], outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" },
+  ]);
+  expect(reopened.recoveredCount()).toBe(1);
+  expect([reopened.load(), reopened.nextSeq()]).toEqual([2, 3]);
+  expect(reopened.scopeBlock("subject-1")).toMatchObject({ reason: "evidence-lost" });
+  expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+  const again = openSessionJournal(store);
+  expect(again.records()).toEqual(reopened.records());
+  expect(again.recoveredCount()).toBe(0);
+});
+
+it("keeps a newer pending intent when its earlier outcome contradicts a quarantined UNKNOWN", () => {
+  const store = new FakeSessionStore();
+  const first = openSessionJournal(store);
+  const second = openSessionJournal(store);
+  expect(begin(first, 1).ok).toBe(true);
+  const older = store.getItem(SESSION_JOURNAL_KEY)!;
+  store.throwOnSet = true;
+  expect(first.markUnknown("intent-1", "JOURNAL_SETTLE_FAILED")).toBe(false);
+  store.throwOnSet = false;
+  expect(second.settle("intent-1", "CONFIRMED", null).ok).toBe(true);
+  expect(begin(second, 2).ok).toBe(true);
+  const newer = store.getItem(SESSION_JOURNAL_KEY);
+
+  const lost = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
+  expect(first.verify()).toEqual(lost);
+  expect([first.load(), first.nextSeq()]).toEqual([2, 3]);
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(newer);
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  expect(second.verify()).toEqual(lost);
+  const reopened = openSessionJournal(store);
+  expect(reopened.status()).toEqual(lost);
+  expect(reopened.records()).toMatchObject([
+    { intentRef: "intent-1", outcome: "UNKNOWN", code: "JOURNAL_SETTLE_FAILED" },
+    { intentRef: "intent-2", outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" },
+  ]);
+  expect([reopened.load(), reopened.nextSeq()]).toEqual([2, 3]);
+  expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+});
+
+it("keeps a pending intent appended after another journal recovered a rolled-back confirmation", () => {
+  const store = new FakeSessionStore();
+  const first = openSessionJournal(store);
+  expect(begin(first, 1).ok).toBe(true);
+  const older = store.getItem(SESSION_JOURNAL_KEY)!;
+  expect(first.settle("intent-1", "CONFIRMED", "ATTACH_CONFIRMED").ok).toBe(true);
+
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  const second = openSessionJournal(store);
+  expect(second.records()[0]).toMatchObject({ outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" });
+  expect(begin(second, 2).ok).toBe(true);
+  const newer = store.getItem(SESSION_JOURNAL_KEY);
+
+  const lost = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
+  expect(first.verify()).toEqual(lost);
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(newer);
+  expect(first.records()).toEqual([
+    { ...second.records()[0], outcome: "CONFIRMED", code: "ATTACH_CONFIRMED" },
+    second.records()[1],
+  ]);
+  expect([first.load(), first.nextSeq()]).toEqual([2, 3]);
+
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  const reopened = openSessionJournal(store);
+  expect(reopened.status()).toEqual(lost);
+  expect(reopened.records()).toEqual([
+    first.records()[0],
+    { ...first.records()[1], outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" },
+  ]);
+  expect([reopened.load(), reopened.nextSeq()]).toEqual([2, 3]);
+  expect(reopened.scopeBlock("subject-2")).toMatchObject({ reason: "evidence-lost" });
+  expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+});
+
+it("checkpoints an unresolved intent appended at an older load while retaining the load high-water mark", () => {
+  const store = new FakeSessionStore();
+  const first = openSessionJournal(store);
+  expect(begin(first, 1).ok).toBe(true);
+  const older = store.getItem(SESSION_JOURNAL_KEY)!;
+  openSessionJournal(store);
+  openSessionJournal(store);
+  expect(first.verify()).toEqual({ kind: "ready" });
+  expect([first.load(), first.nextSeq()]).toEqual([3, 2]);
+  const trusted = first.records()[0];
+
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  const second = openSessionJournal(store);
+  const pending = begin(second, 2);
+  expect(pending).toMatchObject({ ok: true, record: { seq: 2, outcome: "IN_FLIGHT", loadNo: 2 } });
+  expect([second.load(), second.nextSeq()]).toEqual([2, 3]);
+  const branch = store.getItem(SESSION_JOURNAL_KEY);
+
+  const lost = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
+  expect(first.verify()).toEqual(lost);
+  expect(first.records()).toEqual([trusted, second.records()[1]]);
+  expect([first.load(), first.nextSeq()]).toEqual([3, 3]);
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(branch);
+
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  const reopened = openSessionJournal(store);
+  expect(reopened.status()).toEqual(lost);
+  expect(reopened.records()).toEqual([
+    trusted,
+    { ...second.records()[1], outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" },
+  ]);
+  expect([reopened.load(), reopened.nextSeq()]).toEqual([3, 3]);
+  expect(reopened.scopeBlock("subject-2")).toMatchObject({ reason: "evidence-lost" });
+  expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+});
+
+it("checkpoints both sides of a rollback fork, including intents that reuse a sequence and reference", () => {
+  const store = new FakeSessionStore();
+  const options = { budget: { ...SESSION_JOURNAL_BUDGET, maxRecords: 3 } };
+  const initial = openSessionJournal(store, options);
+  expect(begin(initial, 1).ok).toBe(true);
+  expect(initial.settle("intent-1", "CONFIRMED", null).ok).toBe(true);
+  const older = store.getItem(SESSION_JOURNAL_KEY)!;
+
+  openSessionJournal(store, options);
+  const first = openSessionJournal(store, options);
+  expect(begin(first, 2, "first-branch").ok).toBe(true);
+  expect(first.markUnknown("intent-2", "TAB_RESUMED")).toBe(true);
+  const trusted = first.records();
+
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  const second = openSessionJournal(store, options);
+  expect(begin(second, 2, "second-branch").ok).toBe(true);
+  expect(begin(second, 3).ok).toBe(true);
+  const branch = store.getItem(SESSION_JOURNAL_KEY);
+  const fork = [...trusted, ...second.records().slice(1)];
+
+  const lost = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
+  expect(first.verify()).toEqual(lost);
+  expect(first.records()).toEqual(fork);
+  expect([first.load(), first.nextSeq()]).toEqual([3, 4]);
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(branch);
+
+  // Only the quarantine reader accepts a snapshot with forked identities.
+  const primaryOnly = new FakeSessionStore();
+  primaryOnly.data.set(SESSION_JOURNAL_KEY, store.getItem(SESSION_JOURNAL_QUARANTINE_KEY)!);
+  expect(openSessionJournal(primaryOnly).status()).toEqual({ kind: "evidence-lost", cause: "CORRUPT" });
+
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  expect(second.verify()).toEqual(lost);
+  expect(second.records()).toEqual(fork);
+  const reopened = openSessionJournal(store, options);
+  expect(reopened.status()).toEqual(lost);
+  expect(reopened.records()).toEqual([
+    ...trusted,
+    ...fork.slice(2).map(record => ({ ...record, outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" })),
+  ]);
+  expect(reopened.recoveredCount()).toBe(2);
+  expect([reopened.load(), reopened.nextSeq()]).toEqual([3, 4]);
+  expect(reopened.scopeBlock("new-scope")).toMatchObject({ reason: "evidence-lost" });
+  expect(begin(reopened, 4)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+  expect(reopened.settle("intent-2", "CONFIRMED", null)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+
+  const again = openSessionJournal(store, options);
+  expect(again.records()).toEqual(reopened.records());
+  expect(again.recoveredCount()).toBe(0);
+});
+
+it.each(["UNKNOWN", "IN_FLIGHT"] as const)("keeps a divergent journal's %s suffix across a second rollback under quota", outcome => {
+  const store = new FakeSessionStore();
+  const first = openSessionJournal(store);
+  expect(begin(first, 1).ok).toBe(true);
+  const older = store.getItem(SESSION_JOURNAL_KEY)!;
+  store.throwOnSet = true;
+  expect(first.markUnknown("intent-1", "JOURNAL_SETTLE_FAILED")).toBe(false);
+  store.throwOnSet = false;
+
+  const second = openSessionJournal(store);
+  expect(second.records()[0]).toMatchObject({ outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" });
+  expect(begin(second, 2).ok).toBe(true);
+  if (outcome === "UNKNOWN") expect(second.settle("intent-2", "UNKNOWN", "RESPONSE_LOST").ok).toBe(true);
+  const newer = store.getItem(SESSION_JOURNAL_KEY)!;
+  const trusted = blob({ loads: 1, nextSeq: 2 }, [...first.records()]);
+  store.quota = trusted.length;
+
+  const lost = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
+  expect(first.verify()).toEqual(lost);
+  expect(first.records()).toMatchObject([{ intentRef: "intent-1", outcome: "UNKNOWN", code: "JOURNAL_SETTLE_FAILED" }]);
+  // Also reopen a marker written in the earlier wrapped format.
+  if (outcome === "UNKNOWN") {
+    store.data.set(SESSION_JOURNAL_QUARANTINE_KEY, JSON.stringify({ v: 1, cause: lost.cause, raw: trusted }));
+  }
+  store.throwOnSet = true;
+  const refused = openSessionJournal(store);
+  expect(refused.status()).toEqual(lost);
+  expect(refused.records()).toEqual(first.records());
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(newer);
+  store.throwOnSet = false;
+  store.quota = newer.length;
+
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  expect(second.verify()).toEqual(lost);
+  expect([second.load(), second.nextSeq()]).toEqual([2, 3]);
+
+  const reopened = openSessionJournal(store);
+  expect(reopened.status()).toEqual(lost);
+  expect(reopened.records()).toEqual([
+    first.records()[0],
+    { ...second.records()[1], outcome: "UNKNOWN", code: outcome === "UNKNOWN" ? "RESPONSE_LOST" : "RECOVERED_AFTER_RELOAD" },
+  ]);
+  expect([reopened.load(), reopened.nextSeq()]).toEqual([2, 3]);
+  expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(older);
+
+  if (outcome === "IN_FLIGHT") {
+    const [firstRecord, abandoned] = second.records();
+    const late = blob({ loads: 2, nextSeq: 3 }, [firstRecord, { ...abandoned, outcome: "CONFIRMED", code: null }]);
+    store.data.set(SESSION_JOURNAL_KEY, late);
+    expect(openSessionJournal(store).records()).toEqual(reopened.records());
+    expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(late);
+  }
+
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  const again = openSessionJournal(store);
+  expect(again.status()).toEqual(lost);
+  expect(again.records()).toEqual(reopened.records());
+  expect([again.load(), again.nextSeq()]).toEqual([2, 3]);
+  expect(begin(again, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(older);
+});
+
+it.each([
+  { timing: "during readback", marker: "empty" },
+  { timing: "after verification", marker: "empty" },
+  { timing: "during readback", marker: "installed" },
+  { timing: "after verification", marker: "replaced" },
+  { timing: "during readback", marker: "removed again" },
+])("preserves a competing write when storage rolls back again $timing with quarantine $marker", ({ timing, marker }) => {
+  const store = new FakeSessionStore();
+  const journal = openSessionJournal(store);
+  const older = store.getItem(SESSION_JOURNAL_KEY)!;
+  expect(begin(journal, 1).ok).toBe(true);
+  expect(journal.markUnknown("intent-1", "TAB_RESUMED")).toBe(true);
+  const other = openSessionJournal(store);
+  expect(begin(other, 2).ok).toBe(true);
+  const newer = store.getItem(SESSION_JOURNAL_KEY)!;
+  const pending = other.records();
+  const markerRecord = { ...journalRecord, scope: "marker-scope", intentRef: "marker-intent", loadNo: 3 };
+  const markerSnapshot = blob({ loads: 3, nextSeq: 4 }, [markerRecord]);
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  const set = store.setItem.bind(store);
+  let replace = true;
+  let replaceMarker = marker === "replaced" || marker === "removed again";
+  store.setItem = (key, value) => {
+    if (key === SESSION_JOURNAL_KEY && replace) {
+      replace = false;
+      set(key, newer);
+      if (marker === "installed") set(SESSION_JOURNAL_QUARANTINE_KEY, markerSnapshot);
+    } else if (key === SESSION_JOURNAL_QUARANTINE_KEY && replaceMarker) {
+      replaceMarker = false;
+      set(key, markerSnapshot);
+    } else {
+      set(key, value);
+    }
+  };
+  const get = store.getItem.bind(store);
+  store.getItem = key => {
+    const value = get(key);
+    if (key === SESSION_JOURNAL_KEY && value === newer && timing === "during readback") {
+      store.data.set(key, older);
+    }
+    if (key === SESSION_JOURNAL_QUARANTINE_KEY && marker === "removed again" && value === markerSnapshot) {
+      store.data.delete(key);
+    }
+    return value;
+  };
+
+  const lost = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
+  expect(journal.verify()).toEqual(lost);
+  expect(get(SESSION_JOURNAL_KEY)).toBe(timing === "during readback" ? older : newer);
+  const checkpoint = marker === "empty" ? pending : [markerRecord, ...pending];
+  const counters = marker === "empty" ? [2, 3] : [3, 4];
+  expect(journal.records()).toEqual(checkpoint);
+  expect([journal.load(), journal.nextSeq()]).toEqual(counters);
+
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  const reopened = openSessionJournal(store);
+  expect(reopened.status()).toEqual(lost);
+  expect(reopened.records()).toEqual([
+    ...checkpoint.slice(0, -1),
+    { ...pending[1], outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" },
+  ]);
+  expect([reopened.load(), reopened.nextSeq()]).toEqual(counters);
+  expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+});
+
+it.each(["before checkpoint write", "during checkpoint readback"])("keeps both quarantine markers and newer primary history on reopen when the marker changes %s", timing => {
+  const store = new FakeSessionStore();
+  const older = blob({ nextSeq: 2 }, [journalRecord]);
+  const pending = { ...journalRecord, seq: 2, intentRef: "intent-2", scope: "subject-2", loadNo: 2, outcome: "IN_FLIGHT", code: null };
+  const newer = blob({ loads: 2, nextSeq: 3 }, [journalRecord, pending]);
+  const fork = { ...journalRecord, scope: "fork-scope", loadNo: 3 };
+  const replacement = blob({ loads: 3, nextSeq: 2 }, [fork]);
+  store.data.set(SESSION_JOURNAL_KEY, newer);
+  store.data.set(SESSION_JOURNAL_QUARANTINE_KEY, older);
+
+  const get = store.getItem.bind(store);
+  const set = store.setItem.bind(store);
+  let changed = false;
+  store.getItem = key => {
+    const value = get(key);
+    if (!changed && timing === "before checkpoint write" && key === SESSION_JOURNAL_KEY) {
+      changed = true;
+      set(SESSION_JOURNAL_QUARANTINE_KEY, replacement);
+    }
+    return value;
+  };
+  store.setItem = (key, value) => {
+    if (!changed && timing === "during checkpoint readback" && key === SESSION_JOURNAL_QUARANTINE_KEY) {
+      changed = true;
+      set(key, replacement);
+    } else {
+      set(key, value);
+    }
+  };
+
+  const lost = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
+  const first = openSessionJournal(store);
+  expect(changed).toBe(true);
+  expect(first.status()).toEqual(lost);
+  expect(first.records()).toEqual([
+    journalRecord, fork, { ...pending, outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" },
+  ]);
+  expect(first.recoveredCount()).toBe(1);
+  expect([first.load(), first.nextSeq()]).toEqual([3, 3]);
+  expect(get(SESSION_JOURNAL_KEY)).toBe(newer);
+
+  set(SESSION_JOURNAL_KEY, older);
+  const again = openSessionJournal(store);
+  expect(again.status()).toEqual(lost);
+  expect(again.records()).toEqual(first.records());
+  expect(again.recoveredCount()).toBe(0);
+  expect([again.load(), again.nextSeq()]).toEqual([3, 3]);
+  expect(begin(again, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+});
+
+it.each(["scope", "outcome"] as const)("fences a divergent rewrite of a trusted UNKNOWN's %s", field => {
+  const store = new FakeSessionStore();
+  const journal = openSessionJournal(store);
+  expect(begin(journal, 1).ok).toBe(true);
+  expect(journal.markUnknown("intent-1", "TAB_RESUMED")).toBe(true);
+  const trusted = store.getItem(SESSION_JOURNAL_KEY)!;
+  const env = JSON.parse(trusted);
+  env.records[0][field] = field === "scope" ? "rewritten" : "CONFIRMED";
+  const rewritten = blob({ loads: env.loads, nextSeq: env.nextSeq }, env.records);
+  store.data.set(SESSION_JOURNAL_KEY, rewritten);
+  expect(journal.verify()).toEqual({ kind: "evidence-lost", cause: "LOST_DURING_SESSION" });
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(rewritten);
+  expect(journal.records()).toMatchObject([
+    { scope: "subject-1", outcome: "UNKNOWN" },
+    ...(field === "scope" ? [{ scope: "rewritten", outcome: "UNKNOWN" }] : []),
+  ]);
+  expect(journal.scopeBlock("subject-1")).toMatchObject({ reason: "evidence-lost" });
+  expect(openSessionJournal(store).records()).toEqual(journal.records());
 });

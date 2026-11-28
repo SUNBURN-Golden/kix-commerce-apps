@@ -42,7 +42,8 @@ export const MARKET_FIXTURE = {
     "evidence.chain_owner_current": false, "evidence.funds_executed": false }],
   "market-cancel": ["resale_cancel_listing", { listing_id: listing.listing_id, seller_role: listing.seller_role },
     { ...subject, "listing.phase": "CANCELLED", "listing.terminal": true, "listing.attached": false,
-      "listing.ownership_transferred": false, "listing.payment_ref": null }],
+      "listing.ownership_transferred": false, "listing.payment_ref": null, "listing.hold_id": null,
+      "listing.buyer_role": null, "right.holder_role": listing.seller_role, "right.listing_id": null, "right.version": 1 }],
 } as const;
 
 export const MARKET_STEPS = ["reservation-clock", "market-show", "resale-clock", "market-reserve", "market-order",

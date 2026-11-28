@@ -21,17 +21,17 @@ describe("gift journey (stub, headless Chrome)", () => {
 
   it("SUCCESS: offer_gift, then accept_gift, with the caller's own fields and one operation each", async () => {
     const page = await openGift();
-    await fillDraft(page, "gift_ok");
+    await fillDraft(page, "gift+demo");
     const panel = page.locator("aside.gift-panel");
     await press(stepRow(panel, "offer_gift"), "Send offer_gift");
     await expectStepStatus(stepRow(panel, "offer_gift"), "confirmed");
     await press(stepRow(panel, "accept_gift"), "Send accept_gift");
     await expectStepStatus(stepRow(panel, "accept_gift"), "confirmed");
-    await expectText(page, "gft:gift_ok:1:offer_gift");
-    await expectText(page, "gft:gift_ok:1:accept_gift");
+    await expectText(page, "gft:gift+demo:1:offer_gift");
+    await expectText(page, "gft:gift+demo:1:accept_gift");
     await expectText(page, "Confirmed stub-shape receipt. Not from the gate.");
     expect(await panel.getAttribute("data-gift-path")).toBe("available-stub-shape");
-    expect(await page.getByText("gft:gift_ok:1:offer_gift", { exact: true }).count()).toBe(1);
+    expect(await page.getByText("gft:gift+demo:1:offer_gift", { exact: true }).count()).toBe(1);
     // After accept the offer is settled: nothing may be sent a second time.
     expect(await panel.getByRole("button", { name: /^Send / }).evaluateAll((els) => els.every((el) => (el as HTMLButtonElement).disabled))).toBe(true);
     await suite.pass(page, "gift.SUCCESS");

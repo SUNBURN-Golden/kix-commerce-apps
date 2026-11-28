@@ -6,6 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { HttpProtocolAdapter } from "../src/http-adapter.js";
 import { assertReviewedCheckout, protocolRoot, REVIEWED_GATE_RUNS, startGate, stopGate } from "./support/reviewed-gate.js";
 import { fixtureJourney, orderedActions, resaleScenarios, through } from "./support/resale-journey.js";
+import { fixtureHttpResponse, fixtureReceipt } from "./support/fixture-http.js";
+import { MARKET_STEPS, type MarketStep } from "../src/resale-journey-fixture.js";
 
 describe.skipIf(!REVIEWED_GATE_RUNS)("resale market against the reviewed loopback gate", () => {
   let base: string, child: ChildProcess;
@@ -58,3 +60,32 @@ describe.skipIf(!REVIEWED_GATE_RUNS)("resale market against the reviewed loopbac
     })).toEqual(orderedActions);
   });
 });
+
+// An injected transport keeps the contradictory-receipt regressions in stub CI.
+it.each((["market-list", "market-hold"] as const).flatMap(predecessor =>
+  (["hold_id", "buyer_role"] as const).map(field => ({ predecessor, field }))))(
+  "fences cancellation with a surviving $field after $predecessor",
+  async ({ predecessor, field }) => {
+    const vector = predecessor === "market-list" ? "market-cancel-LISTED" : "market-cancel-BUY_HELD";
+    const steps: readonly MarketStep[] = MARKET_STEPS.slice(0, MARKET_STEPS.indexOf(predecessor) + 1);
+    const responseIds = [...steps, vector];
+    let index = 0;
+    const send = vi.fn<typeof fetch>(async (url, init) => {
+      const id = responseIds[index++];
+      const body = fixtureReceipt(`resale-market/${id}`);
+      if (id === vector) Object.assign(body.listing as object, { [field]: field === "hold_id" ? "buy-hold" : "buyer-2" });
+      return fixtureHttpResponse(String(url), init, body);
+    });
+    const journey = fixtureJourney(new HttpProtocolAdapter("http://127.0.0.1:8765", send));
+    await through(journey, predecessor);
+    const { facts, next } = journey.state();
+    expect(await journey.run("market-cancel")).toMatchObject({
+      kind: "UNKNOWN", code: "INVALID_FSM_RECEIPT", requestId: expect.any(String), correlationId: expect.any(String),
+    });
+    expect(journey.state()).toMatchObject({ facts, confirmed: predecessor, fenced: true });
+    expect(await journey.run("market-cancel")).toBeUndefined();
+    expect(await journey.run(next!)).toBeUndefined();
+    expect(send).toHaveBeenCalledTimes(steps.length + 1);
+    expect(JSON.parse(String(send.mock.calls.at(-1)?.[1]?.body)).action).toBe("resale_cancel_listing");
+  },
+);

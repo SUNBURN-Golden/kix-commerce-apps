@@ -6,6 +6,9 @@ import { commerceJourneyRead, READS } from "../src/commerce-journey-command.js";
 import { FSM_COMMANDS, FSM_FALSE_FLAGS, JOURNEY_FIXTURE } from "../src/commerce-journey-fixture.js";
 import { StubProtocolAdapter } from "../src/stub-adapter.js";
 
+// Exercise the browser build's mutable port arguments without a Node fixture grant.
+vi.mock("#kix-fixture-node", () => ({ fixtureWritesOnNode: false }));
+
 const vendor = new URL("../vendor/commerce-journey/", import.meta.url);
 const read = (path: string) => readFileSync(new URL(path, vendor));
 const fixture = JSON.parse(read("reference/booking_resale_admission/fixtures/commerce_journey_conformance_v1.json").toString());
@@ -66,4 +69,39 @@ it("fences an unexpectedly confirmed optional refusal in the journey even when t
   expect(await journey.run("reserve-A")).toBeUndefined();
   expect(await journey.run("hold-over-capacity")).toBeUndefined();
   expect(port.advanceCommerceJourney).toHaveBeenCalledTimes(3);
+});
+
+it("owns facts, outcomes and links across the fixture port", async () => {
+  const stub = new StubProtocolAdapter();
+  let retained: Record<string, unknown> = {};
+  const port = { advanceCommerceJourney: vi.fn(async (call: Parameters<typeof stub.advanceCommerceJourney>[0]) => {
+    if (call.step === "issue-A") {
+      expect(call.links).toMatchObject({ reservation_id: "reserve-A" });
+      throw new Error("lost receipt");
+    }
+    retained = { ...await stub.advanceCommerceJourney(call) };
+    if (call.step === "order-A") Object.assign(call.links, { reservation_id: "port-mutation" });
+    return retained as Awaited<ReturnType<typeof stub.advanceCommerceJourney>>;
+  }) };
+  const journey = journeyFor("resale", port);
+  for (const step of ["reservation-clock", "register-show", "reserve-A", "order-A"] as const) {
+    expect(await journey.run(step)).toMatchObject({ kind: "CONFIRMED" });
+  }
+  const result = await journey.run("payment-A");
+  expect(result?.kind).toBe("CONFIRMED");
+  const before = journey.state();
+  const snapshot = journey.state();
+  const fact = snapshot.facts.paymentObservation;
+  if (result?.kind !== "CONFIRMED" || fact.state !== "OBSERVED") throw new Error("Missing payment evidence");
+  Object.assign(retained, { "reservation.reservation_id": "retained-mutation" });
+  Object.assign(fact.proof, { "reservation.reservation_id": "snapshot-mutation" });
+  Object.assign(snapshot.last!, { kind: "UNKNOWN" });
+  Object.assign(result.proof, { "reservation.reservation_id": "outcome-mutation" });
+  expect(journey.state()).toEqual(before);
+  const unknown = await journey.run("issue-A");
+  expect(unknown).toMatchObject({ kind: "UNKNOWN" });
+  Object.assign(unknown!, { kind: "CONFIRMED" });
+  expect(await journey.run("issue-A")).toBeUndefined();
+  expect(journey.state()).toMatchObject({ facts: before.facts, fenced: true, last: { kind: "UNKNOWN" } });
+  expect(port.advanceCommerceJourney).toHaveBeenCalledTimes(6);
 });

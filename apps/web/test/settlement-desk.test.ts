@@ -2,13 +2,14 @@ import { describe, expect, it } from "vitest";
 import { StubProtocolAdapter } from "@kix/protocol-adapter";
 import { runSettlementCommand, settlementIdFor, type AttemptStore } from "../src/settlement-desk";
 
-function memoryAttempts(): AttemptStore & { values: Map<string, number> } {
-  const values = new Map<string, number>();
+function memoryAttempts(): AttemptStore & { values: Map<string, number | null> } {
+  const values = new Map<string, number | null>();
   return {
     values,
-    read: (settlementId) => values.get(settlementId) ?? 0,
+    read: (settlementId) => values.has(settlementId) ? values.get(settlementId)! : 0,
     write: (settlementId, attempt) => {
       values.set(settlementId, attempt);
+      return true;
     },
   };
 }

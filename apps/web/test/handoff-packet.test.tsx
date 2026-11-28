@@ -15,12 +15,14 @@ import {
   OPENAPI_CONTRACT_PIN,
   OPENAPI_INTEGRATION_GATE_PIN,
 } from "@kix/protocol-adapter";
+import { LocaleContext, stateFor } from "../src/i18n/locale-context";
 import { App } from "../src/App";
 import { PROMOTED_FROM_PENDING } from "./support/local-evidence-matrix";
 import {
   buildHandoffView,
   claimRefused,
   CONSUMED_PRODUCERS,
+  FIXTURE_HANDOFF,
   FEATURE_ROWS,
   FEATURE_STATUSES,
   filterFeatures,
@@ -49,9 +51,10 @@ const repoRoot = path.resolve(webRoot, "../..");
 
 const BINDINGS_SHA256 = "83816276bc2c281161ad4df78c91d5696051c276e839c6d327dc026348d45249";
 
-function renderScreen(phase: "loading" | "settled", query = "", code = "", role: "buyer" | "organizer" | "operator" = "buyer") {
+function renderScreen(phase: "loading" | "settled", query = "", code = "", role: "buyer" | "organizer" | "operator" = "buyer", locale: "en" | "ko" = "en") {
   return renderToStaticMarkup(
     <MemoryRouter>
+      <LocaleContext.Provider value={stateFor(locale, () => {})}>
       <HandoffScreen
         phase={phase}
         adapter="stub"
@@ -62,11 +65,21 @@ function renderScreen(phase: "loading" | "settled", query = "", code = "", role:
         initialCode={code}
         initialRole={role}
       />
+      </LocaleContext.Provider>
     </MemoryRouter>,
   );
 }
 
 describe("local handoff packet", () => {
+  it.each(["en", "ko"] as const)("publishes both journeys and the separate evidence in %s", locale => {
+    const html = renderScreen("settled", "", "", "operator", locale);
+    for (const marker of ["CommerceJourney", "/booking/:eventId", "ResaleJourney", "/resale/market/demo-001",
+      "SEMANTIC_CONFORMANCE", "FIXTURE_ONLY", "8ba7f6c", "4472b0f", "a74e7c4", "e13bb735",
+      "bootstrap-1", "bootstrap-2", "4c92cf6d905f", "NOT_BOUND"]) expect(html).toContain(marker);
+    expect(html).toContain(locale === "en" ? "Stub browser writes" : "브라우저 스텁 쓰기");
+    expect(html).toContain(locale === "en" ? "browser HTTP writes unavailable" : "브라우저 HTTP 쓰기 불가");
+  });
+
   it("keeps every surface unclassified as protocol integration", () => {
     expect(HANDOFF_RULING).toBe(WORKSPACE_RULING);
     expect(HANDOFF_NON_CLAIMS.publicServiceComplete).toBe(false);
@@ -224,20 +237,31 @@ describe("local handoff packet", () => {
       }
     }
 
-    // The consumed p-sdk-0 producer left the pending list and records its own tuple, derived from the adapter pin.
+    // The consumed p-sdk-0 producer left the pending list and records its own tuple, from Commerce PR #86.
     expect(PENDING_PRODUCERS.map((row) => row.id)).not.toContain("consume-p-sdk-0");
     expect(programIds).toContain("consume-p-sdk-0");
     expect(CONSUMED_PRODUCERS.map((row) => row.id)).toEqual(["consume-p-sdk-0"]);
     const consumed = CONSUMED_PRODUCERS[0];
     expect(consumed.catalogue).toBe("program");
     expect(consumed.pr).toBe(86);
-    expect(consumed.producerRepo).toBe(KIX_SDK_0_PIN.producerRepo);
-    expect(consumed.producerMergeSha).toBe(KIX_SDK_0_PIN.producerMergeSha);
-    expect(consumed.manifestSha256).toBe(KIX_SDK_0_PIN.manifestSha256);
-    expect(consumed.catalogueSha256).toBe(KIX_SDK_0_PIN.catalogueSha256);
-    expect(consumed.profileSha256).toBe(KIX_SDK_0_PIN.profileSha256);
-    expect(consumed.profileKind).toBe("BOOTSTRAP");
-    expect(consumed.profileRevision).toBe(KIX_SDK_0_PIN.profileRevision);
+    expect(consumed).toMatchObject({
+      commerceMergeSha: "e13bb7350582b010771153227acb160ad958c68a",
+      producerRepo: "SUNBURN-Golden/kix-protocol",
+      producerMergeSha: "a74e7c459d3be6754ac3cf24503e43c7bc312358",
+      manifestSha256: "1cce4ee5a9aa64ef40825c0e6dedf920050e594cf20ea0aaf087ecbde46f0cca",
+      catalogueSha256: "891ddd65f29262603bd0f76746a9308c810a71d4afd717b0f4d2e3f7d46dbaa2",
+      profileSha256: "4c92cf6d905f83fb3f5cd52e166dbadf057451ae46441fce1f91baaaa4367d34",
+      profileKind: "BOOTSTRAP", profileRevision: "bootstrap-1",
+    });
+    expect(HANDOFF_PINS).toMatchObject({ profileRevision: "bootstrap-2",
+      protocolMergeSha: "4472b0fb64d377d97fd2993673a4485459986606" });
+    expect(FIXTURE_HANDOFF).toMatchObject({
+      profileKind: "SEMANTIC_CONFORMANCE", profileRevision: "commerce-fixture-8ba7f6c-1",
+      sourceAuthentication: "FIXTURE_ONLY", sourceCommit: "8ba7f6c36373ac0ec49246f51f7471c164ac3a28",
+      gateMergeSha: "4472b0fb64d377d97fd2993673a4485459986606",
+      browserStub: true, nodeLoopback: true, browserHttp: false, reads: "NOT_BOUND",
+      productionEndpoint: false, protocolTruth: false, productionConformance: false,
+    });
     expect(consumed.grants).toBe("catalogue-schema-binding only");
     expect(consumed.connected).toBe(false);
     expect(consumed.implementedHere).toBe(true);
@@ -353,11 +377,11 @@ describe("local handoff packet", () => {
     expect(ready).toContain("bind-admission-fsm");
     expect(ready).toContain("not complete");
     expect(ready).not.toContain("SDK digest is null");
-    expect(ready).toContain("Consumed producer consume-p-sdk-0 (PR #86");
+    expect(ready).toContain("consume-p-sdk-0 · Commerce PR #86");
     expect(ready).toContain(KIX_SDK_0_PIN.manifestSha256.slice(0, 12));
     expect(ready).toContain(KIX_SDK_0_PIN.catalogueSha256.slice(0, 12));
     expect(ready).toContain("catalogue-schema-binding only");
-    expect(ready).toContain("not semantic conformance");
+    expect(ready).toContain("SEMANTIC_CONFORMANCE commerce-fixture-8ba7f6c-1");
     expect(ready).not.toContain("settle_capture");
     expect(ready).not.toContain("invokeLocalCall");
     expect(ready).not.toMatch(/[$₩]|KRW|USD/);

@@ -3,6 +3,7 @@ import {
   SESSION_JOURNAL_BUDGET,
   SESSION_RETENTION_POLICY,
   SESSION_SETTLE_FAILED_CODE,
+  sessionIntentKey,
   type EvidenceLostCause,
   type JournalStatus,
   type SessionJournal,
@@ -344,7 +345,8 @@ export class SessionRecoveryController {
       this.journal.markUnknown(intentRef, SESSION_SETTLE_FAILED_CODE);
     }
     this.observations.push({ intentRef, observed, code: answer.code });
-    const stored = this.journal.records().find((item) => item.intentRef === intentRef);
+    const key = sessionIntentKey(begun);
+    const stored = this.journal.records().find((item) => item.outcome === "UNKNOWN" && sessionIntentKey(item) === key);
     const record: SessionRecord = stored ?? { ...begun, outcome: "UNKNOWN", code: SESSION_SETTLE_FAILED_CODE };
     this.notify();
     return { kind: "UNKNOWN", record, observed };

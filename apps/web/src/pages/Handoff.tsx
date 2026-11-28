@@ -11,8 +11,8 @@ import { StatusMark } from "../a11y/marks";
 import {
   buildHandoffView,
   CONSUMED_PRODUCERS,
-  FEATURE_ROWS,
   FIRST_RUN,
+  FIXTURE_HANDOFF,
   GATE_START,
   HANDOFF_NON_CLAIMS,
   HANDOFF_PINS,
@@ -24,7 +24,6 @@ import {
   ORIGINAL10_EVIDENCE,
   PENDING_PRODUCERS,
   PLACE_HOLD_HANDOFF,
-  ROLE_JOURNEYS,
   STARTUP_FAULTS,
   STUB_MODE,
   SUPPORTED_COMMANDS,
@@ -252,6 +251,19 @@ function HandoffBody({
           {t("svp")}</p>
       ) : null}
 
+      <section className="panel">
+        <h3>{t("merge.fixtureJourneys")}</h3>
+        <ul>{FIXTURE_HANDOFF.journeys.map(({ name, route }) => (
+          <li key={name}><code>{name}</code> · <code>{route}</code></li>
+        ))}</ul>
+        <p>{t("merge.fixtureTransport", { reads: FIXTURE_HANDOFF.reads })}</p>
+        <p>{t("merge.fixtureGrant", {
+          kind: FIXTURE_HANDOFF.profileKind, revision: FIXTURE_HANDOFF.profileRevision,
+          source: FIXTURE_HANDOFF.sourceCommit.slice(0, 12), authentication: FIXTURE_HANDOFF.sourceAuthentication,
+          gate: FIXTURE_HANDOFF.gateMergeSha.slice(0, 12),
+        })}</p>
+      </section>
+
       {view.state === "ready" ? <FeatureTable rows={view.features} /> : null}
       {view.state === "error" && view.features.length > 0 ? <FeatureTable rows={view.features} /> : null}
 
@@ -356,7 +368,6 @@ function HandoffBody({
 
       <section className="panel">
         <h3>{t("s190")}</h3>
-        <p>{t("s1ut")}</p>
         <ul>
           {deskText(t, ORIGINAL10_EVIDENCE.map((item) => (
             <li key={item.id}>
@@ -365,12 +376,16 @@ function HandoffBody({
           )))}
         </ul>
         <p>
-          {t("s187")}{" "}{deskText(t, HANDOFF_PINS.contractOpenApiSha256.slice(0, 12))} {t("s3s")}{" "}{deskText(t, HANDOFF_PINS.gateOpenApiSha256.slice(0, 12))}{t("ssn")}{" "}{deskText(t, HANDOFF_PINS.protocolMergeSha.slice(0, 12))}{". "}{t("merge.featureRows")} {deskText(t, FEATURE_ROWS.length)}{t("spl")}{" "}{deskText(t, Object.keys(ROLE_JOURNEYS).join(", "))}.
+          {t("s187")}{" "}{deskText(t, HANDOFF_PINS.contractOpenApiSha256.slice(0, 12))} {t("s3s")}{" "}{deskText(t, HANDOFF_PINS.gateOpenApiSha256.slice(0, 12))}{t("ssn")}{" "}{deskText(t, HANDOFF_PINS.protocolMergeSha.slice(0, 12))}.
         </p>
+        <p>{t("merge.activeBootstrap", {
+          revision: HANDOFF_PINS.profileRevision, catalogue: HANDOFF_PINS.sdkDigest.slice(0, 12),
+          manifest: HANDOFF_PINS.manifestDigest.slice(0, 12),
+        })}</p>
         <p>
           {CONSUMED_PRODUCERS.map((producer) => (
             <span key={producer.id}>
-              {t("merge.consumedProducer", { id: producer.id, pr: producer.pr, sha: producer.producerMergeSha.slice(0, 12), catalogue: producer.catalogueSha256.slice(0, 12), manifest: producer.manifestSha256.slice(0, 12), profile: producer.profileRevision, grants: producer.grants })}
+              {t("merge.consumedProducer", { id: producer.id, pr: producer.pr, sha: producer.producerMergeSha.slice(0, 12), catalogue: producer.catalogueSha256.slice(0, 12), manifest: producer.manifestSha256.slice(0, 12), profile: producer.profileRevision, profileDigest: producer.profileSha256.slice(0, 12), commerce: producer.commerceMergeSha.slice(0, 8) })}
             </span>
           ))}
         </p>
