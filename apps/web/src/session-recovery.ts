@@ -26,6 +26,7 @@ import {
   identitySender,
   journeyIdentityPortFor,
   openSessionJournal,
+  sessionIntentKey,
   type EvidenceLostCause,
   type JourneyIdentityPort,
   type JourneyIdentityScenario,
@@ -89,11 +90,9 @@ export interface SessionItemRow {
 export type SessionRecordKind = "history" | "recovered-unknown" | "unknown" | "in-flight" | "this-load" | "rejected";
 
 export interface SessionRecordRow {
-  seq: number;
-  intentRef: string;
+  key: string;
   scope: string;
   outcome: string;
-  code: string;
   loadNo: number;
   kind: SessionRecordKind;
   line: string;
@@ -311,11 +310,9 @@ export function buildSessionModel(input: {
   const records: SessionRecordRow[] = (snapshot?.records ?? []).map((record) => {
     const kind = recordKind(record, load);
     return {
-      seq: record.seq,
-      intentRef: record.intentRef,
+      key: sessionIntentKey(record),
       scope: record.scope,
       outcome: record.outcome,
-      code: record.code ?? "",
       loadNo: record.loadNo,
       kind,
       line: recordLine(record, kind, load),

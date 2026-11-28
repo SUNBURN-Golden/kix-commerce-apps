@@ -69,6 +69,21 @@ describe("mounted session recovery", () => {
     expect(container.textContent).toContain("Sent 0 in this load");
     expect(container.querySelector("[data-outcome]")).toBeNull();
   });
+
+  it("renders both unresolved scopes when quarantined intents share a sequence and reference", async () => {
+    sessionStorage.setItem("kix-session-journal-quarantine", journalBlob({ nextSeq: 2 }, [
+      journalRecord,
+      { ...journalRecord, scope: "second-branch", outcome: "IN_FLIGHT", code: null },
+    ]));
+    const { container } = await mountRecovery();
+    expect(container.querySelector('[data-session-state="evidence-lost"]')).not.toBeNull();
+    expect(Array.from(container.querySelectorAll('[data-outcome="UNKNOWN"]'), row => row.getAttribute("data-scope")))
+      .toEqual([journalRecord.scope, "second-branch"]);
+    const attach = button(container, "Attach");
+    expect(attach.getAttribute("aria-disabled")).toBe("true");
+    await click(attach);
+    expect(container.textContent).toContain("Sent 0 in this load");
+  });
 });
 
 describe("mounted counter integrity refusals", () => {

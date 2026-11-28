@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   JOURNEY_IDENTITY_DESK_ACTOR,
   JourneyIdentityController,
+  SESSION_JOURNAL_KEY,
   SessionRecoveryController,
   createNotBoundJourneyIdentity,
   createStubJourneyIdentity,
@@ -93,6 +94,31 @@ describe("session recovery controller", () => {
     expect(spy.submits).toBe(1);
     first.stub.deliverHeld();
     await pending;
+  });
+
+  it("keeps a late answer on its own scope when a fork reused the intent reference", async () => {
+    const store = new FakeSessionStore();
+    const spy: Spy = { submits: 0 };
+    openSessionJournal(store);
+    const older = store.getItem(SESSION_JOURNAL_KEY)!;
+    const first = await load(store, spy);
+    const lost = await first.controller.run(FIRST);
+    expect(lost).toMatchObject({ kind: "UNKNOWN", record: { intentRef: "intent-1" } });
+
+    store.data.set(SESSION_JOURNAL_KEY, older);
+    const second = await load(store, spy, "held-response");
+    const pending = second.controller.run(SECOND);
+    const begun = second.journal.records()[0]!;
+    expect(begun).toMatchObject({ intentRef: "intent-1", outcome: "IN_FLIGHT" });
+    expect(first.journal.verify().kind).toBe("evidence-lost");
+    second.stub.deliverHeld();
+    expect(await pending).toMatchObject({
+      kind: "UNKNOWN",
+      record: { ...begun, outcome: "UNKNOWN", code: "JOURNAL_SETTLE_FAILED" },
+      observed: "confirmed",
+    });
+    expect(await second.controller.run(SECOND)).toMatchObject({ kind: "FENCED", fence: { reason: "evidence-lost" } });
+    expect(spy.submits).toBe(2);
   });
 
   it("holds the scope and sends nothing new or compensating after an UNKNOWN, but lets another scope through", async () => {

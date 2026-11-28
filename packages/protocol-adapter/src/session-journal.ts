@@ -114,7 +114,6 @@ const CODE = /^[A-Z0-9_]{1,32}$/;
 const TAG = /^[0-9a-f]{16}$/;
 const ENVELOPE_KEYS = ["v", "loads", "nextSeq", "records", "digest"];
 const RECORD_KEYS = ["seq", "intentRef", "scope", "contextTag", "outcome", "code", "loadNo"];
-const RECORD_IDENTITY_KEYS = ["seq", "intentRef", "scope", "contextTag", "loadNo"] as const;
 const MAX_CODE = "X".repeat(32);
 
 function byteLength(text: string): number {
@@ -183,9 +182,10 @@ function parseRecord(value: unknown, loads: number, nextSeq: number): SessionRec
 
 type Parsed = { kind: "ok"; env: Envelope } | { kind: "bad"; cause: "CORRUPT" | "UNSUPPORTED_VERSION" };
 
-function parseEnvelope(raw: string, budget: SessionJournalBudget): Parsed {
+/** Only the write-ahead envelope supplies a dispatch budget and requires unique sequences and references. */
+function parseEnvelope(raw: string, budget?: SessionJournalBudget): Parsed {
   const bad = (cause: "CORRUPT" | "UNSUPPORTED_VERSION"): Parsed => ({ kind: "bad", cause });
-  if (byteLength(raw) > budget.maxBytes) {
+  if (budget && byteLength(raw) > budget.maxBytes) {
     return bad("CORRUPT");
   }
   let value: unknown;
@@ -207,7 +207,7 @@ function parseEnvelope(raw: string, budget: SessionJournalBudget): Parsed {
   if (!isPositiveSafeInteger(loads) || !isPositiveSafeInteger(nextSeq)) {
     return bad("CORRUPT");
   }
-  if (!Array.isArray(records) || records.length > budget.maxRecords || typeof digest !== "string") {
+  if (!Array.isArray(records) || (budget && records.length > budget.maxRecords) || typeof digest !== "string") {
     return bad("CORRUPT");
   }
   const parsed: SessionRecord[] = [];
@@ -215,11 +215,13 @@ function parseEnvelope(raw: string, budget: SessionJournalBudget): Parsed {
   let last = 0;
   for (const item of records) {
     const record = parseRecord(item, loads as number, nextSeq as number);
-    if (record === null || record.seq <= last || seen.has(record.intentRef)) {
+    if (record === null || record.seq < last || (budget && record.seq === last)) {
       return bad("CORRUPT");
     }
+    const identity = budget ? record.intentRef : sessionIntentKey(record);
+    if (seen.has(identity)) return bad("CORRUPT");
     last = record.seq;
-    seen.add(record.intentRef);
+    seen.add(identity);
     parsed.push(record);
   }
   const env: Envelope = { v: SESSION_JOURNAL_VERSION, loads: loads as number, nextSeq: nextSeq as number, records: parsed };
@@ -229,8 +231,9 @@ function parseEnvelope(raw: string, budget: SessionJournalBudget): Parsed {
   return { kind: "ok", env };
 }
 
-function sameIntent(left: SessionRecord, right: SessionRecord): boolean {
-  return RECORD_IDENTITY_KEYS.every((key) => left[key] === right[key]);
+/** App-internal identity for validated journal records. The field formats exclude the separator. */
+export function sessionIntentKey(record: SessionRecord): string {
+  return [record.seq, record.intentRef, record.scope, record.contextTag, record.loadNo].join("|");
 }
 
 function extendsHistory(trusted: Envelope, candidate: Envelope): boolean {
@@ -239,29 +242,23 @@ function extendsHistory(trusted: Envelope, candidate: Envelope): boolean {
   return candidate.records.every((record, index) => {
     const previous = trusted.records[index];
     if (previous === undefined) return record.seq >= trusted.nextSeq && record.loadNo >= trusted.loads;
-    if (!sameIntent(record, previous)) return false;
+    if (sessionIntentKey(record) !== sessionIntentKey(previous)) return false;
     // Only in-flight intents may change their outcome. UNKNOWN and all other
     // terminal results keep their original codes and cannot be resolved here.
     return record.outcome === previous.outcome ? record.code === previous.code : previous.outcome === "IN_FLIGHT";
   });
 }
 
-/** Keep compatible appended intents for inspection while the session is fenced. */
-function quarantinedHistory(trusted: Envelope, primary: Envelope): Envelope {
-  if (primary.records.length < trusted.records.length) return trusted;
-  const compatible = primary.records.every((record, index) => {
-    const previous = trusted.records[index];
-    return previous === undefined ? record.seq >= trusted.nextSeq : sameIntent(record, previous);
-  });
-  if (!compatible) return trusted;
-  // A journal opened from a rollback can append at a lower load. Keep the original
-  // load on each intent, the trusted outcomes, and the highest observed counters.
-  return {
-    ...trusted,
-    loads: Math.max(trusted.loads, primary.loads),
-    nextSeq: Math.max(trusted.nextSeq, primary.nextSeq),
-    records: [...trusted.records, ...primary.records.slice(trusted.records.length)].map(copyRecord),
-  };
+/** Retain forked intents for inspection, deduplicating shared history by full intent identity. */
+function quarantinedHistory(trusted: Envelope, candidate: Envelope): Envelope {
+  const loads = Math.max(trusted.loads, candidate.loads);
+  const nextSeq = Math.max(trusted.nextSeq, candidate.nextSeq);
+  const identities = new Set(trusted.records.map(sessionIntentKey));
+  const additions = candidate.records.filter(record => !identities.has(sessionIntentKey(record)));
+  if (additions.length === 0 && loads === trusted.loads && nextSeq === trusted.nextSeq) return trusted;
+  // Keep the existing outcome for a shared intent and the original counters on each forked record.
+  const records = [...trusted.records, ...additions].sort((left, right) => left.seq - right.seq).map(copyRecord);
+  return { v: trusted.v, loads, nextSeq, records };
 }
 
 function readQuarantine(text: string): { cause: EvidenceLostCause; snapshot?: string } {
@@ -269,7 +266,7 @@ function readQuarantine(text: string): { cause: EvidenceLostCause; snapshot?: st
     const value: unknown = JSON.parse(text);
     if (!isPlainObject(value)) return { cause: "CORRUPT" };
     const { v, cause, raw } = value;
-    // Trusted snapshots use the same envelope as the primary key, within its byte budget.
+    // Snapshots use the same envelope as the primary key and can hold records from multiple branches.
     if (v === SESSION_JOURNAL_VERSION && sameKeys(value, ENVELOPE_KEYS)) {
       return { cause: "LOST_DURING_SESSION", snapshot: text };
     }
@@ -408,34 +405,31 @@ export class SessionJournal {
   private observeQuarantine(store: SessionStorePort, marker: string, candidate: Envelope | null, opening: boolean): void {
     const { cause, snapshot } = readQuarantine(marker);
     this.current = { kind: "evidence-lost", cause };
-    const save = (text: string) => byteLength(text) <= this.budget.maxBytes &&
-      writeVerified(store, SESSION_JOURNAL_QUARANTINE_KEY, marker, text);
-    const parsed = snapshot === undefined ? null : parseEnvelope(snapshot, this.budget);
+    const save = (text: string) => writeVerified(store, SESSION_JOURNAL_QUARANTINE_KEY, marker, text);
+    const parsed = snapshot === undefined ? null : parseEnvelope(snapshot);
     if (parsed?.kind !== "ok") {
       if (!opening && candidate && cause === "LOST_DURING_SESSION") save(serialize(candidate));
       return;
     }
     const trusted = parsed.env;
     const env = candidate === null ? trusted : quarantinedHistory(trusted, candidate);
-    const text = env === trusted ? snapshot : serialize(env);
-    const forward = text === snapshot ? undefined : text;
-    // A live journal can carry additional history even after the primary rolls back.
-    if (!opening) {
-      if (forward !== undefined && save(forward)) this.env = env;
+    const forward = env === trusted ? undefined : serialize(env);
+    if (opening) {
+      this.recoveredAtOpen = this.markInFlight(env, "RECOVERED_AFTER_RELOAD");
+      if (this.recoveredAtOpen > 0 && save(serialize(env))) {
+        this.env = env;
+        return;
+      }
+    }
+    if (forward === undefined || save(forward)) {
+      this.env = env;
       return;
     }
-
-    const recovered = this.markInFlight(env, "RECOVERED_AFTER_RELOAD");
-    const savedRecovery = recovered > 0 && save(serialize(env));
-    // Publish a forward view only once its history is saved. If recovery could not be
-    // saved, an in-flight snapshot can still carry the extension to the next open.
-    if (forward !== undefined && !savedRecovery && !save(forward)) {
+    // If storage refused the extension, recover only the last checkpoint on open.
+    if (opening) {
       this.env = trusted;
       this.recoveredAtOpen = this.markInFlight(trusted, "RECOVERED_AFTER_RELOAD");
-      return;
     }
-    this.env = env;
-    this.recoveredAtOpen = recovered;
   }
 
   /** Fences a damaged, missing, or divergent journal. Valid histories are kept in place for inspection. */
@@ -449,15 +443,14 @@ export class SessionJournal {
     const writeMarker = (marker: string) => writeVerified(store, SESSION_JOURNAL_QUARANTINE_KEY, null, marker);
     // Preserve the trusted envelope even when the primary key refuses restoration.
     const lossMarker = (snapshot: string) => JSON.stringify({ v: SESSION_JOURNAL_VERSION, cause, raw: snapshot });
-    const marker = histories ? serialize(histories.trusted) : lossMarker((raw ?? "").slice(0, this.budget.maxBytes));
-    const saved = writeMarker(marker);
     if (histories) {
-      // Checkpoint any compatible extension before another rollback can hide it.
-      if (saved) this.observeQuarantine(store, marker, histories.candidate, false);
-      else writeMarker(lossMarker(""));
+      // Checkpoint both histories before another rollback can hide either branch.
+      const combined = quarantinedHistory(histories.trusted, histories.candidate);
+      if (writeMarker(serialize(combined))) this.env = combined;
+      else if (combined === histories.trusted || !writeMarker(serialize(histories.trusted))) writeMarker(lossMarker(""));
       return;
     }
-    if (!saved) return;
+    if (!writeMarker(lossMarker((raw ?? "").slice(0, this.budget.maxBytes)))) return;
     try {
       if (store.getItem(SESSION_JOURNAL_KEY) === raw) store.removeItem(SESSION_JOURNAL_KEY);
     } catch {

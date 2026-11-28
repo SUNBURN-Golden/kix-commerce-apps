@@ -140,7 +140,7 @@ export function SessionRecoveryPanel({ live }: { live: SessionDeskLive }) {
       ) : (
         <ul>
           {deskText(t, model.records.map((row) => (
-            <li key={row.seq} data-outcome={row.outcome} data-kind={row.kind} data-scope={row.scope} data-load={row.loadNo}>
+            <li key={row.key} data-outcome={row.outcome} data-kind={row.kind} data-scope={row.scope} data-load={row.loadNo}>
               {deskText(t, row.kind === "unknown" || row.kind === "recovered-unknown" ? <AsyncState kind="unknown" label={t("merge.sessionRecord")} announcement="parent"><p>{deskText(t, row.line)}</p></AsyncState> : row.line)}
             </li>
           )))}

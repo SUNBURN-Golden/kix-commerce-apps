@@ -655,6 +655,58 @@ it("checkpoints an unresolved intent appended at an older load while retaining t
   expect(begin(reopened, 3)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
 });
 
+it("checkpoints both sides of a rollback fork, including intents that reuse a sequence and reference", () => {
+  const store = new FakeSessionStore();
+  const options = { budget: { ...SESSION_JOURNAL_BUDGET, maxRecords: 3 } };
+  const initial = openSessionJournal(store, options);
+  expect(begin(initial, 1).ok).toBe(true);
+  expect(initial.settle("intent-1", "CONFIRMED", null).ok).toBe(true);
+  const older = store.getItem(SESSION_JOURNAL_KEY)!;
+
+  openSessionJournal(store, options);
+  const first = openSessionJournal(store, options);
+  expect(begin(first, 2, "first-branch").ok).toBe(true);
+  expect(first.markUnknown("intent-2", "TAB_RESUMED")).toBe(true);
+  const trusted = first.records();
+
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  const second = openSessionJournal(store, options);
+  expect(begin(second, 2, "second-branch").ok).toBe(true);
+  expect(begin(second, 3).ok).toBe(true);
+  const branch = store.getItem(SESSION_JOURNAL_KEY);
+  const fork = [...trusted, ...second.records().slice(1)];
+
+  const lost = { kind: "evidence-lost", cause: "LOST_DURING_SESSION" };
+  expect(first.verify()).toEqual(lost);
+  expect(first.records()).toEqual(fork);
+  expect([first.load(), first.nextSeq()]).toEqual([3, 4]);
+  expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(branch);
+
+  // Only the quarantine reader accepts a snapshot with forked identities.
+  const primaryOnly = new FakeSessionStore();
+  primaryOnly.data.set(SESSION_JOURNAL_KEY, store.getItem(SESSION_JOURNAL_QUARANTINE_KEY)!);
+  expect(openSessionJournal(primaryOnly).status()).toEqual({ kind: "evidence-lost", cause: "CORRUPT" });
+
+  store.data.set(SESSION_JOURNAL_KEY, older);
+  expect(second.verify()).toEqual(lost);
+  expect(second.records()).toEqual(fork);
+  const reopened = openSessionJournal(store, options);
+  expect(reopened.status()).toEqual(lost);
+  expect(reopened.records()).toEqual([
+    ...trusted,
+    ...fork.slice(2).map(record => ({ ...record, outcome: "UNKNOWN", code: "RECOVERED_AFTER_RELOAD" })),
+  ]);
+  expect(reopened.recoveredCount()).toBe(2);
+  expect([reopened.load(), reopened.nextSeq()]).toEqual([3, 4]);
+  expect(reopened.scopeBlock("new-scope")).toMatchObject({ reason: "evidence-lost" });
+  expect(begin(reopened, 4)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+  expect(reopened.settle("intent-2", "CONFIRMED", null)).toEqual({ ok: false, reason: "EVIDENCE_LOST" });
+
+  const again = openSessionJournal(store, options);
+  expect(again.records()).toEqual(reopened.records());
+  expect(again.recoveredCount()).toBe(0);
+});
+
 it.each(["UNKNOWN", "IN_FLIGHT"] as const)("keeps a divergent journal's %s suffix across a second rollback under quota", outcome => {
   const store = new FakeSessionStore();
   const first = openSessionJournal(store);
@@ -763,7 +815,10 @@ it.each(["scope", "outcome"] as const)("fences a divergent rewrite of a trusted 
   store.data.set(SESSION_JOURNAL_KEY, rewritten);
   expect(journal.verify()).toEqual({ kind: "evidence-lost", cause: "LOST_DURING_SESSION" });
   expect(store.getItem(SESSION_JOURNAL_KEY)).toBe(rewritten);
-  expect(journal.records()).toMatchObject([{ scope: "subject-1", outcome: "UNKNOWN" }]);
+  expect(journal.records()).toMatchObject([
+    { scope: "subject-1", outcome: "UNKNOWN" },
+    ...(field === "scope" ? [{ scope: "rewritten", outcome: "UNKNOWN" }] : []),
+  ]);
   expect(journal.scopeBlock("subject-1")).toMatchObject({ reason: "evidence-lost" });
   expect(openSessionJournal(store).records()).toEqual(journal.records());
 });
